@@ -355,6 +355,48 @@ int main() {
 \end{minipage}
 
     \pagebreak \bigbreak \noindent 
+    \subsection{Creating strings without the STL}
+    To create a string \textbf{without} using the C++ standard library (STL), we can create an array of characters. For this we have two options.
+    \bigbreak \noindent 
+    \line(1,0){490}
+    \begin{minted}{cpp}
+int main() {
+
+    // Option I
+    char mystring[] = "hello world";
+
+    // Option II
+    const char* mystring = "Hello World";
+    return 0;
+}
+    \end{minted}
+    \line(1,0){490}
+    \bigbreak \noindent 
+    Note regarding the first option: simply declaring mystring without any sort of initialization will through an error. This is due to the way arrays behave in c++, more on this later.
+    \bigbreak \noindent 
+    For the second option, we declare a pointer of characters. Note that although it is declared constant, it is legal to change the value of mystring. We can't change the characters that are pointed at, but we can change the pointer itself.
+    \bigbreak \noindent 
+    Furthermore, It is worth pointing out that there is a third way of making a string without use of the STL, it is as follows.
+    \bigbreak \noindent 
+    \line(1,0){490}
+    \begin{minted}{cpp}
+#include <iostream>
+
+int main(int argc, char agrv[]){
+
+    char const* mystring = "Hello world";
+
+    return 0;
+}
+    \end{minted}
+    \line(1,0){490}
+    \bigbreak \noindent 
+    The const modifier in C++ binds to the element that is immediately to its left, except when there is nothing to its left, in which case it binds to the element immediately to its right.
+    \bigbreak \noindent 
+    \nt{Usage of the asterisk will be discussed in a later section. This concept is known as the "pointer"}
+
+
+    \pagebreak \bigbreak \noindent 
     \subsection{Retrieve size}
     \bigbreak \noindent 
     To retrieve the size of a variable or data type we can use the sizeof() function.
@@ -370,7 +412,6 @@ int main() {
     cout << sizeof(a) << endl;
 
     return 0;
-
 }
     \end{minted}
     \line(1,0){490}
@@ -777,6 +818,270 @@ This is an alternative to the traditional include guard (#ifndef, #define, #endi
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Input/Output}
     \bigbreak \noindent 
+    This section will discuss the input/output stream, and objects defined in the iostream and iomanip headers.
+    \bigbreak \noindent 
+    \subsection{iostream}
+    \bigbreak \noindent 
+    The $<$iostream$>$ header file in C++ defines classes that provide functionalities for basic input-output operations. These classes are part of the C++ Standard Library and offer a high-level interface for I/O. The primary classes defined by $<$iostream$>$ are:
+    \begin{itemize}
+        \item \textbf{istream:} Input Stream class. Objects of this class are used for input operations. The most commonly used object is cin.
+        \item \textbf{ostream:} Output Stream class. Objects of this class are used for output operations. The most commonly used object is cout.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Output}
+    \bigbreak \noindent 
+    We can output data to the stream buffer with the cout object, here is an example:
+    \bigbreak \noindent 
+    \line(1,0){490}
+    \begin{minted}{cpp}
+#include <iostream>
+using std::cout;
+using std::endl;
+
+int main(int argc, char argv[]){
+
+    cout << "Hello World" << endl;
+
+    return 0;
+}
+    \end{minted}
+    \line(1,0){490}
+    \bigbreak \noindent 
+    \subsection{Input}
+    \bigbreak \noindent 
+    We can read data from the input stream and store in a variable with the cin object, here is an example:
+    \bigbreak \noindent 
+    \line(1,0){490}
+    \begin{minted}{cpp}
+#include <iostream>
+using std::cin;
+using std::cout;
+using std::endl;
+
+int main(int argc, char argv[]){
+    int a;
+    cout << "Input: " << endl;
+    cin >> a;
+    return 0;
+}
+
+    \end{minted}
+    \line(1,0){490}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{IO Manipulators}
+    \bigbreak \noindent 
+    In C++, input/output (I/O) manipulators are objects that are used for controlling the formatting and behavior of streams. These manipulators allow you to change the way data is presented when outputting to a stream (like cout) or read when inputting from a stream (like cin).
+    \bigbreak \noindent 
+    Here are some common manipulators:
+    \begin{itemize}
+        \item \textbf{std::endl}:  Inserts a newline character into the output sequence os and flushes it \footnote{Defined in <ostream> which is included automatically with <iostream>}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << "Hello World" << std::endl;
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::flush}  Explicitly flushes the output buffer. \footnote{Refer to 1}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << "Hello World" << std::flush;
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::setw($n$)} Sets the field width for the next insertion operation. \footnote{Defined in <iomanip>}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::setw(10) << 77 << endl; 
+            // Output will be "        77"
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::setfill(char)} Sets the fill character for the std::setw manipulator. \footnote{Refer to 3}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::setw(10) << std::setfill('_') << 77 << endl; 
+            // Output will be "________77"
+            \end{minted}
+            \line(1,0){370}
+
+        \item \textbf{std::setprecision($n$)} Sets the decimal precision for floating-point output. $n$ should be  \\ one more than the required rounding, this is because $n$ specifys how many significant  \\ figures to include. Thus including any numbers before the decimal. \footnote{Refer to 3}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::setprecision(4) << 3.14159; // 3.142
+            \end{minted}
+            \line(1,0){370}
+            \pagebreak \bigbreak \noindent 
+        \item \textbf{std::fixed($n$)}: Use fixed-point notation. Works in conjunction to setprecision, allowing \\ you to not have to account for digits before the decimal.  \footnote{Defined in <ios>, which is automatically included with <iostream>}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::fixed << std::setprecision(3) << 3.14159; 
+            // 3.142
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::scientific:} Use scientific notation for floating-point numbers. \footnote{Refer to 6}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::scientific << 0.00000014159; 
+            // 1.415900e-07 
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::skipws and std::noskipws:} These control whether leading whitespaces are \\ skipped when performing input operations. \footnote{Refer to 6}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            char a,b;
+            std::cin >> std::noskipws >> a >> b;
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::boolalpha and std::noboolalpha:} These allow you to output bool values as \\ true or false instead of 1 or 0. \footnote{Refer to 6}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << boolalpha << true; // true
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::showpos and std::noshowpos:} Show the positive sign for non-negative \\ numerical values. \footnote{Refer to 6}
+            \smallbreak
+            \line(1,0){370}
+            \begin{minted}{cpp}
+            std::cout << std::showpos << 12; // +12
+            \end{minted}
+            \line(1,0){370}
+        \item \textbf{std::dec} Use decimal base for formatting integers.
+        \item \textbf{std::hex} Use hexadecimal base for formatting integers.
+        \item \textbf{std::oct} Use octal base for formatting integers.
+        \item \textbf{std::showbase}  Show the base when outputting integer values in octal or hexadecimal.
+        \item \textbf{std::uppcase} Convert letters to uppercase in certain format specifiers (like hex or scientific)
+        \item \textbf{std::internal} This flag will right-align the number, but the sign and/or base indicator (if any) are kept to the left of the padding. Note that this function is used in conjunction with std::setw
+        \item \textbf{std::right} Right justify output, used in conjunction with std::setw
+        \item \textbf{std::left} Left justify output, used in conjunction with std::setw
+        % \item \textbf{std::setiosflags} The setiosflags() function is used to set one or more of these flags, \\ enabling you to control how things like numbers or text are formatted when they are input  \\ or output. Note, you can only pass functions to setiosflags if they are a part of the ios base class
+        %     \smallbreak
+        %     \line(1,0){370}
+        %     \begin{minted}{cpp}
+        %     std::cout << std::setiosflags(std::ios::setprecision(4))
+        %     \end{minted}
+        %     \line(1,0){370}
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{std::setiosflags}
+    The setiosflags function in C++ allows you to set various format flags defined in the ios base class. 
+    \bigbreak \noindent 
+    \line(1,0){490}
+    \begin{minted}{cpp}
+    std::cout << std::showpos << std::scientific << 12.128; // +1.212800e+01
+    // Instead...
+    std::cout << std::setiosflags(std::ios::showpos | std::ios::scientific) << 12.128; 
+    \end{minted}
+    \line(1,0){490}
+    \bigbreak \noindent 
+    From the manipulators listed in the previous section, only those from the following list can be used with std::setiosflags:
+    \begin{itemize}
+        \item \textbf{std::dec}: Use decimal base for formatting integers.
+        \item \textbf{std::hex}: Use hexadecimal base for formatting integers.
+        \item \textbf{std::oct}: Use octal base for formatting integers.
+        \item \textbf{std::internal}: This flag will right-align the number, but the sign and/or base indicator (if any) are kept to the left of the padding.
+        \item \textbf{std::right}: Right justify output.
+        \item \textbf{std::left}: Left justify output.
+        \item \textbf{std::showbase}: Show the base when outputting integer values in octal or hexadecimal.
+        \item \textbf{std::skipws}: Skip initial whitespaces before performing input operations. (This is more relevant for input streams)
+        \item \textbf{std::boolalpha}: Output bool values as true or false instead of 1 or 0.
+        \item \textbf{std::showpos}: Show the positive sign for non-negative numerical values.
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Operators}
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+        \subsection*{Arithmetic Operators}
+        \begin{itemize}
+          \item \( + \) (Addition)
+          \item \( - \) (Subtraction)
+          \item \( * \) (Multiplication)
+          \item \( / \) (Division)
+          \item \( \% \) (Modulus)
+        \end{itemize}
+    %\caption{}
+    %\label{fig:}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+     \subsection*{Relational Operators}
+    \begin{itemize}
+      \item \( == \) (Equal to)
+      \item \( != \) (Not equal to)
+      \item \( < \) (Less than)
+      \item \( > \) (Greater than)
+      \item \( <= \) (Less than or equal to)
+      \item \( >= \) (Greater than or equal to)
+    \end{itemize}
+    %\caption{}
+    %\label{fig:}
+    \end{minipage}
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+    \subsection*{Logical Operators}
+    \begin{itemize}
+      \item \( \&\& \) (Logical AND)
+      \item \( || \) (Logical OR)
+      \item \( ! \) (Logical NOT)
+    \end{itemize}
+    %\caption{}
+    %\label{fig:}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        \subsection*{Bitwise Operators}
+        \begin{itemize}
+          \item \( \& \) (Bitwise AND)
+          \item \( | \) (Bitwise OR)
+          \item \( \wedge\) (Bitwise XOR)
+          \item \( \sim \) (Bitwise NOT)
+          \item \( << \) (Left shift)
+          \item \( >> \) (Right shift)
+        \end{itemize}
+    %\caption{}
+    %\label{fig:}
+    \end{minipage}
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+     \subsection*{Assignment Operators}
+    \begin{itemize}
+      \item \( = \) (Assignment)
+      \item \( += \) (Addition assignment)
+      \item \( -= \) (Subtraction assignment)
+      \item \( *= \) (Multiplication assignment)
+      \item \( /= \) (Division assignment)
+      \item \( \%= \) (Modulus assignment)
+      \item \( \&= \) (Bitwise AND assignment)
+      \item \( |= \) (Bitwise OR assignment)
+      \item \( \wedge= \) (Bitwise XOR assignment)
+      \item \( <<= \) (Left shift assignment)
+      \item \( >>= \) (Right shift assignment)
+    \end{itemize}
+   %\caption{}
+    %\label{fig:}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        \subsection*{Increment and Decrement Operators}
+        \begin{itemize}
+          \item \( ++ \) (Increment)
+          \item \( -- \) (Decrement)
+        \end{itemize}
+    %\caption{}
+    %\label{fig:}
+    \end{minipage}
+
+
+
+
+
+
+
 
 
 
