@@ -66,5 +66,5 @@ int main(int argc, char *argv[]) {
         << std::fixed << std::setprecision(3)
         << wilks_score << endl;
 
-    return EXIT_SUCCESS;
+    return 0;
 }
