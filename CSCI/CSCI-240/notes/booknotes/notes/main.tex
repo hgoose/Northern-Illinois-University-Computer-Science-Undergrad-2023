@@ -1808,7 +1808,7 @@ if (inputfile.fail()) {
             \item Literals: 5, true, 'a'
             \item Results of most expressions: x + y, std::move(x)
         \end{itemize}
-    \item \textbf{Binding:} You can't bind an rvalue to a regular (lvalue) reference (T&). However, C++11 introduced rvalue references (T&&) which can bind to rvalues. This is fundamental for move semantics and perfect forwarding.
+    \item \textbf{Binding:} You can't bind an rvalue to a regular (lvalue) reference (T\&). However, C++11 introduced rvalue references (T\&\&) which can bind to rvalues. This is fundamental for move semantics and perfect forwarding.
     \end{enumerate}
 
     \bigbreak \noindent 
@@ -1822,7 +1822,7 @@ if (inputfile.fail()) {
                 \item Dereference of a pointer: *p
                 \item Array subscript: arr[5]
             \end{itemize}
-        \item \textbf{Binding:} An lvalue can be bound to an lvalue reference (T&).
+        \item \textbf{Binding:} An lvalue can be bound to an lvalue reference (T\&).
         
     \end{enumerate}
 
@@ -2806,11 +2806,47 @@ newly allocated memory through its address, so a pointer is required to use thos
 int *ptr = nullptr;
 // Then we can do:
 ptr = new int;
+// A value may be stored in this new variable by dereferencing the pointer:
+*ptr = 15;
     \end{minted}
     \sepline
 
     \bigbreak \noindent 
-    This statement is requesting that the computer allocate enough memory for a new int variable. The operand of the new operator is the data type of the variable being created. Once the statement executes, ptr will contain the address of the newly allocated memory.
+    This statement is requesting that the computer allocate enough memory for a new int variable. The operand of the new operator is the data type of the variable being created. Once the statement executes, ptr will contain the address of the newly allocated memory. Then we store a value in the new variable by dereferencing.
+    \bigbreak \noindent 
+    Although the statements above illustrate the use of the new operator, there’s little purpose
+in dynamically allocating a single variable. A more practical use of the new operator is to
+dynamically create an array. Here is an example of how a 100-element array of integers
+may be allocated:
+\bigbreak \noindent 
+\sepline
+\begin{minted}[linenos]{cpp}
+ptr = new int[100];
+\end{minted}
+\sepline
+\bigbreak \noindent 
+    Once the array is created, the pointer may be used with subscript notation to access it. 
+
+    \bigbreak \noindent 
+     it should
+release it for future use. The delete operator is used to free memory that was allocated
+with new. Here is an example of how delete is used to free a single variable, pointed to
+by iptr :
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+delete ptr;
+delete [] ptr; // If ptr points to a dynamically allocated array
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \nt{Failure to release dynamically allocated memory can cause a program to have a memory leak. Only use pointers with delete that were previously used with new. If you use a pointer with delete that does not reference dynamically allocated memory, unexpected problems could result!}
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Returning pointers from a function}
+    \bigbreak \noindent 
+
 
 
 
