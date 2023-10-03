@@ -2647,34 +2647,172 @@ int* b = nullptr;
     \bigbreak \noindent 
     \nt{If we try to deference the contents of a nullptr, we will get \textbf{address boundary error} at runtime}
 
+    \pagebreak\bigbreak \noindent 
+    \subsection{Arrays as pointers}
+    \bigbreak \noindent 
+    \textbf{Concept.} Array names can be used as constant pointers, and pointers can be used as array names.
+    \bigbreak \noindent 
+    We have already discussed that referencing an array without the subscript operator returns the address of the beginning of the array. Thus, we can conclude that an array is just a \textit{pointer} to the first element.
+    \bigbreak \noindent 
+    If we deference an array, we can get access to the first element.
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int arr[3] = {1,2,3};
+cout << *arr << endl; // 1
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    We can gain access to the other elements via some simply arithmetic:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int arr[3] = {1,4,3};
+cout << *(arr+1); // 4
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    We we add one to \textit{arr}, we are actually adding 1 multiplied by the size of the data type that we are trying to access. This allows us to change the address of the first element to the address of the second.
+    \bigbreak \noindent 
+    Therefore, we can generalize:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+arr[index] = *(arr + index)
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    We can assign pointers to arrays
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int arr[3] = {1,2,3};
+int* b = arr;
+cout << *b << endl; // 1
+for (int i{0}; i < 3; ++i) {
+    cout << b[i] << endl;
+}
+    \end{minted}
+    \sepline
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Pointers as Function Parameters}
+    \bigbreak \noindent 
+    We can also declare pointer parameters in functions, giving the function access to the original variable, much like reference
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+void foobar(int* pt) {
+    *pt = 5;
+}
+
+int a = 10;
+foobar(&a); // Changes a to the value 5
+
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Pointers to constants}
+    \bigbreak \noindent 
+    Sometimes, it is necessary to pass the address of a const item into a pointer. When this is the case, the pointer must be defined as a pointer to a const item.
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+const int* b; 
+const int *b;
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \nt{It should be noted that the keyword const is referring to the thing that $b$ is pointing to, not $b$ itself. Furthermore, it is crucial that we have the const modifier on line 2, if we are trying to point to a constant, then this is required. This does not mean the thing we are trying to point to needs the const qualifier for line 2 to be valid. lastly, because $b$ is a pointer to a const, the compiler will not allow us to write code that changes the thing that $b$ points to.}
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Constant Pointers}
+    \bigbreak \noindent 
+    We can also use the const key word to define a constant pointer. Here are the differences:
+    \begin{itemize}
+        \item A pointer to a const points to a constant item. The data that the pointer points to cannot change, but the pointer itself can change. 
+        \item With a const pointer, it is the pointer itself that is constant.  Once the pointer is initialized with an address, it cannot point to anything else.
+    \end{itemize}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int* const ptr;
+int *const ptr;
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Both pointer to constant and constant pointer}
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+const int* const ptr;
+const int *const ptr;
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Prereq - Static vs Dynmaic memory allocation}
+    \bigbreak \noindent 
+    There are different types of memory allocation in a C++ program. By default, creating variables will utilize "static memory allocation", this is where variables are created on the "stack". The stack is a region of memory where local variables, function parameters, return addresses, and control flow data are stored. It operates in a Last-In-First-Out (LIFO) manner.
+    \bigbreak \noindent 
+    When a function is called, a new "stack frame" is pushed onto the stack. This frame contains the function's local variables, parameters, and the return address.
+    When the function returns, its stack frame is popped off, and the stack pointer moves back to the previous frame.
+    The stack grows and shrinks automatically as functions are called and return.
+    \bigbreak \noindent 
+    \textbf{Characteristics:}
+    \begin{itemize}
+        \item \textbf{Automatic Memory Management:} Memory allocation and deallocation on the stack are automatic. When a function exits, its local variables are automatically deallocated.
+        \item \textbf{Speed:} Stack operations (push and pop) are very fast.
+        \item \textbf{Fixed Size:} The stack has a fixed size, determined at the start of the program. If a program uses more stack space than is available (e.g., due to deep or infinite recursion), it will result in a "stack overflow."
+    \end{itemize}
+    \bigbreak \noindent 
+    In constrast to this, we also have \textbf{dynmaic memory allocation}: In has the following characteristics:
+    \begin{itemize}
+        \item Memory is allocated during runtime.
+        \item Uses functions like malloc(), calloc(), realloc(), and new (in C++) to allocate memory.
+        \item Requires manual deallocation using functions like free() or delete (in C++).
+        \item Memory is allocated on the heap.
+        \item The size of the memory allocation can be determined at runtime based on program needs.
+    \end{itemize}
 
 
 
+    \bigbreak \noindent 
+    \subsection{Dynamic Memory Allocation}
+    \bigbreak \noindent 
+    \textbf{Concept.} Variables may be created and destroyed while a program is running.
+    \bigbreak \noindent 
+    In the cases where we don't know how many variables we will need for a program, we can allow a program to create its own variables "on the fly". This is called \textit{dynamic memory allocation} and this is only possible through pointers.
+    \bigbreak \noindent 
+    To dynamically allocate memory means that a program, while running, asks the computer
+to set aside a chunk of unused memory large enough to hold a variable of a specific data
+type. Let’s say a program needs to create an integer variable. It will make a request to the
+computer that it allocate enough bytes to store an int. When the computer fills this request,
+it finds and sets aside a chunk of unused memory large enough for the variable. It then gives
+the program the starting address of the chunk of memory. The program can only access the
+newly allocated memory through its address, so a pointer is required to use those bytes.
+
+    \bigbreak \noindent 
+    The way a C++ program requests dynamically allocated memory is through the new operator. Assume a program has a pointer to an int defined as
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int *ptr = nullptr;
+// Then we can do:
+ptr = new int;
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    This statement is requesting that the computer allocate enough memory for a new int variable. The operand of the new operator is the data type of the variable being created. Once the statement executes, ptr will contain the address of the newly allocated memory.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-    
 
 
 
