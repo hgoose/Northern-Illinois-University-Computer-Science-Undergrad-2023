@@ -1346,6 +1346,11 @@ std::cin.get(ch)
           \item \( ++ \) (Increment)
           \item \( -- \) (Decrement)
         \end{itemize}
+        \subsection{Pointers and References}
+        \begin{itemize}
+            \item \& (Address-of Operator) (Also used for references)
+            \item * (Indirection Operator)
+        \end{itemize}
     %\caption{}
     %\label{fig:}
     \end{minipage}
@@ -1357,6 +1362,7 @@ std::cin.get(ch)
         \end{itemize}
     
     \end{minipage}
+
 
     \bigbreak \noindent 
     \nt{The C++ does not support exponents without the use of an external library (cmath), when using the pow function, the arguments should be doubles, and the result should be stored in a double}
@@ -2098,6 +2104,564 @@ for (int &i: arr)  {
 for (int i : arr) cout << i << " "; // 5 5 5
    \end{minted}
    \sepline
+
+   \bigbreak \noindent 
+   \subsection{Thou shall not assign}
+   \bigbreak \noindent 
+   It is crucial to understand  that we can not simply assign an array to some other array variable. The only way to copy over the array to a new variable is to use a loop. Whenever we refer to an array by just its identifier, we are only referring to its \textit{beginning memory address}.
+   \bigbreak \noindent 
+   A corollary to this concept would lead to the conclusion that we will also not be able to print the contents of an array by:
+   \bigbreak \noindent 
+   \sepline
+   \begin{minted}[linenos]{cpp}
+int arr[5] = {1,2,3,4,5};
+std::cout << arr << std::endl;
+
+   \end{minted}
+   \sepline
+   \bigbreak \noindent 
+   This will only display the arrays \textbf{memory address}, we must use a loop to display the contents.
+
+   \pagebreak \bigbreak \noindent 
+   \subsection{Getting the size of an array}
+   \bigbreak \noindent 
+   To get the size of the array, we can use the \textit{sizeof()} function. The way this works is we get the size of the entire array, and then divide by the size of any element.
+   \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int arr[3] = {1,2,3};
+std::cout << sizeof(arr) / sizeof(arr[0]) << std::endl;  // 3
+
+// We can also get the last index position by subtracting one
+    std::cout << sizeof(arr) / sizeof(arr[0]) - 1 << std::endl;  // 3
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Arrays as function arguments}
+    \bigbreak \noindent 
+    \textbf{Concept.}  To pass an array as an argument to a function, pass the name of the array. When we pass an array to a function, we are passing a reference to the array, this means any changes to the array in the function will be reflected to the array we passed.
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int main(int argc, const char *argv[]) {
+
+    const int SIZE = 3;
+    int myarr[3] = {1,2,3};
+
+    for (int i: myarr) cout << i << endl; // 1 2 3
+
+    foobar(myarr, SIZE);
+
+    for (int i: myarr) cout << i << endl; // 2 3 4
+
+
+
+    return EXIT_SUCCESS;
+}
+
+void foobar(int arr[], int size) {
+
+    for ( int i=0; i < size; ++i ) {
+        arr[i]++;
+    }
+
+
+}
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \nt{If we do not wish for a function to make any changes to the array argument, we must declare it as const in the function parameters.}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{2D array (matrix)}
+    \bigbreak \noindent 
+    \textbf{Concept.} A two-dimensional array is like sereval identical arrays put together. It is useful for storing multiple sets of data. In mathematics, this type of concept would be called a \textbf{matrix}
+    \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+    Consider the arrays:
+    \begin{center}
+        $A = \{a_{1}, a_{2}, a_{3}\} $ \\
+        $a_{1} = \{1,2,3\} $ \\
+        $a_{2} = \{4,5,6\} $ \\
+        $a_{3} = \{7,8,9\} $ \\
+    \end{center}
+    \end{minipage}
+    \begin{minipage}[]{0.47\textwidth}
+    Then we have:
+    \begin{align*}
+        \begin{bmatrix}
+            1 & 2 & 3 \\
+            4 & 5 & 6 \\
+            7 & 8 & 9
+        \end{bmatrix}
+    .\end{align*}
+    \end{minipage}
+    \bigbreak \noindent 
+    So in C++, this would be:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int arr[3][3] = {{1,2,3}, {4,5,6}, {7,8,9}};
+int arr[3][3] = {
+                {1,2,3},
+                {4,5,6},
+                {7,8,9}
+            };
+// and we can index a matrix with
+arr[row number][column number];
+std::cout << arr[0][0];  // 1
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    The way we can output all elements of this matrix would look something like:
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+
+    const int SIZE = 3;
+    int arr[3][3] = {
+                {1,2,3},
+                {4,5,6},
+                {7,8,9}
+            };
+
+    for (int i{0}; i < SIZE; ++i) {
+        for (int j{0}; j < SIZE; ++j) {
+            cout << arr[i][j] << " ";
+        } 
+        cout << endl;
+    }
+    \end{minted}
+    \sepline
+    \end{minipage}
+    \hspace{0.2in} 
+    \begin{minipage}[t]{0.47\textwidth}
+\bigbreak \noindent 
+\sepline
+\begin{minted}[linenos]{cpp}
+    const int ROW_SIZE = 3;
+    const int COLUMN_SIZE = 4;
+    int arr[ROW_SIZE][COLUMN_SIZE] = {
+                {1,2,3},
+                {4,5,6,6},
+                {7,8,9}
+            };
+
+    for (int i{0}; i < ROW_SIZE; ++i) {
+        for (int j{0}; j < COLUMN_SIZE; ++j) {
+            cout << arr[i][j] << " ";
+        } 
+        cout << endl;
+    }
+\end{minted}
+\sepline
+    
+    \end{minipage}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Passing a matrix to a function}
+    \bigbreak \noindent 
+    Unlike array parameter declarations not needing a size, matrix parameters do.
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+const int ROW_SIZE = 3;
+const int COLUMN_SIZE = 4;
+
+void foobar(const int arr[][COLUMN_SIZE], int row_size) {
+    for (int i{0}; i < row_size; ++i) {
+        for (int j{0}; j < COLUMN_SIZE; ++j) {
+            cout << arr[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+int main(int argc, const char *argv[]) {
+
+
+    int arr[ROW_SIZE][COLUMN_SIZE] = {
+                {1,2,3},
+                {4,5,6,6},
+                {7,8,9}
+            };
+
+    foobar(arr, ROW_SIZE);
+
+    return EXIT_SUCCESS;
+}
+    \end{minted}
+    \sepline
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{The STL Vector}
+    \bigbreak \noindent 
+    \textbf{Concept. } The \textit{Standard Template Library} offers a \textbf{vector} data type, which in many ways, is superior to standard arrays.
+    \bigbreak \noindent 
+    The STL is a collection of data types and algorithms that you may use in your programs. 
+    \bigbreak \noindent 
+    A \textbf{vector} is a container that can store data. It is like an array in the following ways:
+    \begin{itemize}
+        \item A vector holds a sequence of values.
+        \item A vector stores its elements in a contiguous memory location.
+        \item You can use the array subscript operator []
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Defining a vector}
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+#include <vector>
+std::vector<type> name(size); // size is optional 
+// Examples
+std::vector<int> a(3); // Vector of ints, size 3 with fill of zeros
+std::vector<int> a(3, 2); // Vector of ints, size 3 with fill of twos
+std::vector<int> a(othervector) // Copy of some other vector
+std::vector<int> b = {1,2,3}; // Vector of ints
+std::vector<int> b {1,2,3}; // Vector of ints
+std::vector<int> b{1,2,3}; // Vector of ints
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \nt{If we declare a size for the vector, we \textbf{cannot} define its elements in the same statement, defining elements of a vector in the same statement in which it's declared automatically defines its size, so manually doing is not only not needed, but will produce an error.}
+
+    \bigbreak \noindent 
+    \subsection{Get index position of elements}
+    \bigbreak \noindent 
+    To get the index position of an element in a vector, we can use the \textbf{at(\textit{pos})} member function.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+cout << a.at(0); // 1
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Adding to a vector}
+    \bigbreak \noindent 
+    To store a value in a vector that does not have a starting size, or that is already full, use the \textbf{push\_back()} member function. This function accepts an element and stores it at the end of the vector.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+a.push_back(4);
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Getting the size of a vector}
+    \bigbreak \noindent 
+    To get the size of a vector, we can use the \textbf{size()} member function.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+std::cout << size(a) << std::endl;  // 3
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Removing elements of a vector} 
+    \bigbreak \noindent 
+    To remove elements from a vector, we can utilize the \textbf{pop\_back()} member function. This function will remove the last element of the vector.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+a.pop_back(); // Removes the last element (3).
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Clearing a vector}
+    \bigbreak \noindent 
+    To clear a vector we can use the \textbf{clear()} member function.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+a.clear();
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Detecting an Empty vector}
+    \bigbreak \noindent 
+    To determine if a vector is empty, we can use the \textbf{empty()} function. This function will return 0 or 1 depending on whether the vector contains any elements.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+std::vector<int> b;
+cout << a.empty(); // 0
+cout << b.empty(); // 1
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Resizing a vector}
+    \bigbreak \noindent 
+    To resize a vector, we can use the \textbf{resize()} member function.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> a {1,2,3};
+a.resize(5,2); // resize the vector to a total size of 5 elements, filling with 2s.
+a.resize(5); // resize the vector to a total size of 5 elements, filling with 0s.
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Swapping Vectors}
+    \bigbreak \noindent 
+    To swap the contents of two vectors, we can use the \textbf{swap(\textit{vector})} member function.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::vector<int> v1 {1,2,3};
+std::vector<int> v2 {4,5,6};
+
+v1.swap(v2);
+    \end{minted}
+    \sepline
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Searching and Sorting Arrays}
+    \bigbreak \noindent 
+    \textbf{Concept.} A search algorithm is a method of locating a specific item in a larger collection of data. This section discusses two algorithms for searching the contents of an array.
+    \bigbreak \noindent 
+    \subsection{The linear search}
+    \bigbreak \noindent 
+    The linear search is very simple, it uses a loop to sequentially step through an array, starting with the first element.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int main(int argc, const char *argv[]) {
+
+    const int SIZE = 5;
+    int arr[SIZE] = {88,67,5,23,19};
+
+    int target = 5;
+
+    for (int i{0}; i <= SIZE + 1; ++i) {
+        if (i == SIZE + 1) {
+            cout << "Target not in array" << endl;
+        }
+        if ( arr[i] == target ) {
+            cout << "Target [" << target << "] found at index position " << i << endl;
+            break;
+        }
+    }
+    return EXIT_SUCCESS;
+}
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int linearsearch(int arr[], int size, int target) {
+    int index{0}, position{-1};
+    bool found = false;
+
+    while (index < size && !found) {
+        if (arr[index] == target) {
+            position = index;
+            found = true;
+        }
+        ++index;
+    }
+    return position;
+}
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \pagebreak \bigbreak \noindent 
+    One drawback to the linear search is its potential inefficiency, its quite obvious to notice that for large arrays, the linear search will take a long time, if an array has 20,000 elements, and the target is at the end, then the search will have to compare 20,000 elements.
+    \bigbreak \noindent 
+    \subsection{The binary search}
+    \bigbreak \noindent 
+    The binary search algorithm is a clever approach to searching arrays. Instead of testing the array's first element, the algorithm starts with the leement in the middle. If that element happens to contain the desired value, then the search is over. Otherwise, the value in the middle element is either greater than or less than the value being searched for. If it is greater, then the desired value (if it is in the array), will be found somewhere in the first half of the array. If it is less, then the desired value, it will be found somewhere in the last half of the array. In either case, half of the array's elements have been eliminated from further searching.
+    \bigbreak \noindent 
+    \nt{The binary search algorithm requires the array to be sorted.}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int binarysearch(int arr[], int size, int target) {
+    int first{0}, 
+        middle,
+        last = size -1,
+        position{-1};
+
+    bool found = false;
+
+    while (!found && first <= last) {
+        middle = (first + last) / 2;
+        if (arr[middle] == target) {
+            found = true;
+            position = middle;
+        } else if (target > arr[middle]) {
+            first = middle + 1;
+        } else {
+            last = middle - 1;
+        }
+    }
+    return position;
+}
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    Powers of twos are used to calculate the max number of comparisons the binary search will make on an array. Simply find the smallest power of 2 that is greater than or equal to the number of elements in the array. For example:
+    \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+    \begin{align*}
+        n = 50,000 \\
+        2^{15} = 32,768 \\
+        2^{16} = 65,536
+    .\end{align*}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        Thus, there are a maximum of 16 comparisons for a array of size 50,000
+    \end{minipage}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Bubble Sort}
+    \bigbreak \noindent 
+    The bubble sort algorithm makes passes through and compares the elements of the array, certain values "bubble" toward the end of the array with each pass.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+void swap(int &a, int &b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
+void bubblesort(int arr[], int size) {
+
+    for (int max = size; max > 0; --max) {
+        for (int i{0}; i < size; ++i) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i+1]);
+            }
+        }
+    } 
+}
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Selection Sort}
+    \bigbreak \noindent 
+    The bubble sort algorithm is simple, but it is ineffective because values move by only one element at a time toward their final destination in the array. The \textit{selection sort algorithm} usually performs fewer swaps because it moves items immediately to their final position in the array. 
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+void swap(int &a, int &b) {
+    int temp = a;
+    a = b;
+    b = temp;
+}
+
+void selectionsort(int arr[], int size) {
+
+
+    for(int j=0; j < size; ++j) {
+        int &minelement = arr[j];
+        for (int k = j+1; k < size; ++k) {
+            if ( arr[k] < minelement ) {
+                swap(minelement, arr[k]);
+            }
+        }
+
+    }
+}
+    \end{minted}
+    \sepline
+
+    \pagebreak \bigbreak \noindent 
+    The selection sort starts with the assumption that the first element is already the smallest, then it scans the array and tries to find a smaller value. If one is found, it moves that element to the front. Once the iteration is complete, we can be sure that the smallest value is at the front and +1 is added to the loop index.
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Pointers}
+    \bigbreak \noindent 
+    \textbf{Concept.} Pointers are variables that store the memory address of a variable, we can use the \& operator to retrieve the address of a variable. Pointers are like references, any changes we make to the variable the holds the pointer, the change will be reflected in the original variable.
+    \bigbreak \noindent 
+    \nt{In order to access the contents of a pointer, we must \textbf{dereference}, more on this later.}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int a = 12;
+int *b; // Initialize pointer  
+b = &a; // Get the memory address of a and store in b
+cout << b; // Output the memory address
+cout << *b; // Output the contents
+*b = 15; // Change the value of b, change reflected to a
+// We can also put the asterisk next to the type
+int* b;
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    \subsection{Nullptr}
+    \bigbreak \noindent 
+    It is never a good idea to use an uninitialized pointer, this could mean we are affecting some random memory address. To circumvent this, we can use the bulitin keyword \textit{nullptr}. Assigning a pointer to nullptr means we are assigning it to the address zero. When we do this, we say that the pointer points to "nothing".
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+int* b = nullptr;
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    \nt{If we try to deference the contents of a nullptr, we will get \textbf{address boundary error} at runtime}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
