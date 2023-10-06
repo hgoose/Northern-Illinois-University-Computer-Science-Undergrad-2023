@@ -1,0 +1,311 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Warner \thepage}
+\rhead{}
+% \lhead{\leftmark}
+\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Bash Mastery} \\
+           The complete guide to BASH shell scripting
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           August 3, 2023 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak \bigbreak \noindent
+    \section{\LARGE Setting up scripts}
+    \bigbreak \noindent 
+    In order to write shell scripts, we must use the file extension .sh. When we begin the script, we must include a \textit{shebang}, which looks something like:
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+#!/usr/bin/bash
+    \end{minted}
+    \bigbreak \noindent 
+    However, this could depend on the users system. To locate which file path to use, we can use the command:
+    \begin{minted}{bash}
+which bash
+    \end{minted}
+    \bigbreak \noindent 
+    This will provide the path to use for the shebang.
+    \bigbreak \noindent 
+    The anatomy of a shell script can be described with the following parts:
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item Shebang 
+        \item Commands
+        \item Exit statement (0=successful, 1-255=unsuccessful)
+    \end{enumerate}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+#!/usr/bin/bash
+
+echo "Hello World!"
+exit 0
+    \end{minted}
+    \bigbreak \noindent 
+    \end{mdframed}
+    \bigbreak \noindent 
+    \nt{The recommended file permissions for scripts is 744 (chmod 744 \textit{filename})}
+
+    \bigbreak \noindent 
+    \subsection{Adding scripts to PATH}
+    \bigbreak \noindent 
+    To add scripts to your PATH for BASH, we can open up our .bashrc, and add at the bottom of the file:
+    \bigbreak \noindent 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+export PATH="$PATH:$HOME/dirlocation"
+    \end{minted}
+    \end{mdframed}
+    \bigbreak \noindent 
+    This will append some directory to the end of our PATH variable. To do the same for the \textit{fish} shell, in the fish config file, we can add.
+    \bigbreak \noindent 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+set -gx PATH $PATH $HOME/somedirectory
+    \end{minted}
+    \end{mdframed}
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Variables and Shell Expansions}
+    \bigbreak \noindent 
+    \subsection{User-Defined variables and parameter expansion}
+    \bigbreak \noindent 
+    \smallbreak \noindent
+    \begin{definition}
+        A \textbf{parameter} is any entity that stores values. In bash, we have three types:
+        \begin{enumerate}
+            \item Variables
+            \item Positional Parameters
+            \item Special Parameters
+        \end{enumerate}
+    \end{definition}
+    \bigbreak \noindent 
+    To define variables in our script, we can do:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+identifier=value # NO WHITESPACE
+name="nate" # Example
+declare -i a=1 # Integer variable
+
+# Parameter Expansion (Reference variables)
+echo "Hello, ${name}!" 
+    \end{minted}
+    \bigbreak \noindent 
+    \end{mdframed}
+
+    \bigbreak \noindent 
+    \subsection{Shell variables}
+    \bigbreak \noindent 
+    Shell variables are builtin variables that we can access but don't need to define ourself, some common shell variables are:
+    \begin{itemize}
+        \item PATH
+        \item HOME 
+        \item USER 
+        \item HOSTNAME
+        \item HOSTTYPE
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Positional Parameters}
+    \bigbreak \noindent 
+    Positional parameters are variables that hold the command-line arguments to a script or function. They are denoted by numbers.
+    \begin{enumerate}
+        \item \$0 (Contains the name of the script)
+        \item \$1, \$2 ... \$n (The first, second, third, etc. arguments to the script or function.)
+        \item \$\# (The number of arguments passed to the script or function.)
+        \item \$@ (All the arguments. When quoted ("\$@"), it treats each argument as a separate word. Useful for loops, more on this later)
+        \item \$* (All the arguments. When quoted ("\$*"), it treats all arguments as a single word. Useful for loops, more on this later)
+    \end{enumerate}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Special Parameters}
+    \bigbreak \noindent 
+    These are variables that provide special functionality or information about the script or command's execution:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \$?: The exit status of the last executed command. \(0\) usually indicates success, and a non-zero value indicates an error.
+        \item \$\$: The process ID (PID) of the currently executing script or shell instance.
+        \item \$!: The process ID (PID) of the last backgrounded command.
+        \item \$-: The current options set for the shell. For instance, if you used \texttt{set -x} for debugging, \texttt{x} would be part of the value.
+        \item \$\_: The last argument of the previous command. Also sometimes used to get the last path argument to the \texttt{cd} command.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Parameter Expansion Tricks}
+    \bigbreak \noindent 
+    Default Values:
+    \begin{itemize}
+        \item \$\{parameter:-word\}: If parameter is unset or null, this expansion will return word. Otherwise, it returns the value of parameter.
+        \item \$\{parameter:=word\}: If parameter is unset or null, it will be set to word.
+    \end{itemize}
+    \bigbreak \noindent 
+    String Length:
+    \begin{itemize}
+        \item \${\#parameter}: Returns the length of the value of the parameter.
+    \end{itemize}
+    \bigbreak \noindent 
+    Substring Expansion:
+    \begin{itemize}
+        \item \$\{parameter:offset:length\}: Extracts a substring from \$parameter starting at offset (0-indexed) and of length length.
+    \end{itemize}
+    \bigbreak \noindent 
+    String Removal (Pattern Matching):
+    \begin{itemize}
+        \item \$\{parameter\#pattern\}: Removes the shortest match of pattern from the beginning of \$parameter.
+        \item \$\{parameter\#\#pattern\}: Removes the longest match of pattern from the beginning of \$parameter.
+        \item \$\{parameter\%pattern\}: Removes the shortest match of pattern from the end of \$parameter.
+        \item \$\{parameter\%\%pattern\}: Removes the longest match of pattern from the end of \$parameter. 
+    \end{itemize}
+    \bigbreak \noindent 
+    String Replacement:
+    \begin{itemize}
+        \item \$\{parameter/pattern/string\}: Replaces the first match of pattern with string in \$parameter.
+        \item \$\{parameter//pattern/string\}: Replaces all matches of pattern with string in \$parameter
+    \end{itemize}
+    \bigbreak \noindent 
+    Variable Indirection:
+    \begin{itemize}
+        \$\{!parameter\}: Treats the value of parameter as the name of another variable, and fetches the value of that variable.
+    \end{itemize}
+    \bigbreak \noindent 
+    Case Modification:
+    \begin{itemize}
+        \item \$\{parameter$\land$\}: Capitalizes the first letter of the value.
+        \item \$\{parameter$\land\land$\}: Capitalizes all letters of the value.
+        \item \$\{parameter,\}: Converts the first letter to lowercase.
+        \item \$\{parameter,,\}: Converts all letters to lowercase.
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Command Substitution}
+    \bigbreak \noindent 
+    \textbf{Concept.} Command substitution can be used to:
+    \begin{itemize}
+        \item Save the output of commands in variables
+        \item Use the output of one command \textit{inside} another command
+    \end{itemize}
+    \bigbreak \noindent 
+    The syntax for this is:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+$(command)
+# Example...
+time=$(date +%H:%M:%S)
+echo "Hello, the current time is ${time}"
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+
+    \bigbreak \noindent 
+    \subsection{Arithmetic Expansion}
+    \bigbreak \noindent 
+    The syntax for \textit{Arithmetic Expansion} is:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+$((expression))
+# Example...
+echo $((1+1)) # 2
+# When dealing with arithmetic expansion, we do not need a $ to reference variables
+x=1
+y=1
+echo $(( x + y ))
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    
+    \bigbreak \noindent 
+    \subsection{Dealing with floating point numbers}
+    \bigbreak \noindent 
+    To be able to do floating point arithmetic in our scripts, we need to use the \textbf{bc} command.
+    \bigbreak \noindent 
+    Example:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+echo "scale=2; 5/2" | bc # 2.50
+# scale sets the precision of the output
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Tilde Expansion}
+    \bigbreak \noindent 
+    I'm sure you're already familiar with using tilde to jump to your home directory, but we can also use $\sim$- to jump between our current directory, and our home directory
+
+    \bigbreak \noindent 
+    \subsection{Brace Expansion}
+    \bigbreak \noindent 
+    We have two types of brace expansions:
+    \begin{itemize}
+        \item String lists
+        \item Range lists
+    \end{itemize}
+    \bigbreak \noindent 
+    Here is examples of what we can do with brace expansion:
+    \bigbreak \noindent 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+echo {jan,feb,march} # jan feb march NO WHITESPACE IN BRACES
+echo {1..5} # 1 2 3 4 5
+echo {1..10..2} # 1 3 5 7 9
+echo {a..e} # a b c d e
+echo {a,b}{1,2,3} # (Cartesian product...) a1 a2 a3 b1 b2 b3
+# Useful for commands...
+mkdir dir_{1..3}.txt
+touch file_{1..5}.txt
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE How Bash Processes Command Lines}
+    \bigbreak \noindent 
+
+    
+
+
+
+
+
+    
+\end{document}

@@ -1407,8 +1407,9 @@ int main(int argc, char *argv[]){
     To limit the range of possible random numbers, we must do something like this:
     \smallbreak \noindent
     \sepline
-    \begin{minted}{cpp}
-(rand() % (max_value - min_value+1)) + min_value;   
+    \begin{minted}{cpp} 
+min_value + (rand() % (max_value - min_value + 1)); // [min, max]
+min_value + (rand() % (max_value - min_value )); // (min, max)
     \end{minted}
     \sepline
     \bigbreak \noindent 
@@ -2844,8 +2845,90 @@ delete [] ptr; // If ptr points to a dynamically allocated array
     \bigbreak \noindent 
 
     \bigbreak \noindent 
+    \subsection{When to use DMA}
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item Memory Location: The integer is allocated on the heap.
+        \item Lifetime: The memory remains allocated until it's explicitly deallocated using delete.
+        \item Use Cases:
+        \begin{itemize}
+            \item Variable Size: When you need data structures of variable size, like linked lists or dynamic arrays.
+            \item Long-lived Objects: When you need objects that outlive the function they were created in.
+            \item Avoiding Stack Overflow: For large allocations, the stack might not have enough space, leading to stack overflow. In such cases, DMA is preferred.
+            \item For Polymorphism: In object-oriented programming, DMA is often used with pointers to base and derived classes to achieve polymorphism.
+        \end{itemize}
+    \end{enumerate}
+
+    \bigbreak \noindent 
     \subsection{Returning pointers from a function}
     \bigbreak \noindent 
+    \textbf{Concept.} Functions can return pointers, but you must be sure the item the pointer references still exists.
+    \bigbreak \noindent 
+    We should return  a pointer from a function only if it is:
+    \begin{itemize}
+        \item A pointer to an item that was passed into the function as an argument.
+        \item A pointer to a dynamically allocated chuck of memory
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Smart Pointers}
+    \bigbreak \noindent 
+    \textbf{Concept.} C++ 11 introduces smart pointers, objects that work like pointers, but have the ability to automatically delete dynamically allocated memory that is no longer being used.
+    \bigbreak \noindent 
+    We have three types:
+    \begin{itemize}
+        \item \textbf{unique\_ptr}: The sole owner of a piece of dynamically allocated memory. 
+        \item \textbf{shared\_ptr}: Can share ownership of a piece of dynamically allocated memory. Multiple pointers of the shared\_ptr type can point to the same piece of memory
+        \item \textbf{weak\_ptr}: Does not own the memory it points to, and cannot be used to access the memory's contents. Used when the memory pointed to by a shared\_ptr must be referenced without increasing the number of shared\_ptrs that own it.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{To use these smart pointers, we must include <memory>}
+
+    \pagebreak \bigbreak \noindent 
+    Here is the syntax for a unique pointer:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+unique_ptr<type> name( new type );
+// Example
+std::unique_ptr<int> a( new int ); // Basic way 
+std::unique_ptr<int> a = std::make_unique<int>(15); // Preferred Way (Initialization of 15)
+std::unique_ptr<int> a = std::make_unique<int>(); // Preferred Way (initialization of zero)
+std::shared_ptr<int> b = a; //  NOT VALID, unique_ptr must be unique
+    \end{minted}
+    \sepline
+    \bigbreak \noindent 
+    So now we have two entities: a \textbf{unique\_ptr} located on the \textit{stack} and an \textbf{int} located on the \textit{heap}. The unique\_ptr holds the address of the int we created on the heap. Since this is a \textbf{smart pointer}, the integer object will be deleted and the unique pointer that was holding the memory address will be set to nullptr will be deleted and the unique pointer that was holding the memory address will be set to \textbf{nullptr}.
+    \bigbreak \noindent 
+    A \textbf{shared\_ptr} works via a \textbf{reference counter} maintained in a control block. This mechanism keeps track of how many shared\_ptr instances are pointing to the same object. Once the reference count reaches zero, the managed object is deleted. The control block also tracks weak references and is deallocated when both shared and weak counts reach zero. Here is how we build such object:
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::shared_ptr<type> identifier( new int ); // Basic Way
+std::shared_ptr<type> identifier = std::make_shared<type>(initialization); // Preferred Way
+// Example
+std::shared_ptr<int> a( new int );
+std::shared_ptr<int> a = std::make_shared<int>(10);
+std::shared_ptr<int> b = a; // Valid copy
+    \end{minted}
+    \sepline
+
+    \bigbreak \noindent 
+    Lastly, we can define a \textbf{weak\_ptr}, we can assign this object to any shared\_ptr object, but the reference count will not be updated.
+    \bigbreak \noindent 
+    \sepline
+    \begin{minted}[linenos]{cpp}
+std::shared_ptr<int> a = std::make_shared<int>(10);
+std::weak_ptr<int> b = a; // Reference count will NOT be updated.
+    \end{minted}
+    \sepline
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Characters, C-Strings and more about the string class}
+    \bigbreak \noindent 
+    \subsection{Character Testing}
+    \bigbreak \noindent 
+
 
 
 
