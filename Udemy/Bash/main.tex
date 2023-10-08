@@ -218,7 +218,9 @@ echo "Hello, ${name}!"
     \pagebreak \bigbreak \noindent 
     \subsection{Command Substitution}
     \bigbreak \noindent 
-    \textbf{Concept.} Command substitution can be used to:
+    \begin{concept}
+		 Command substitution can be used to:
+	\end{concept}
     \begin{itemize}
         \item Save the output of commands in variables
         \item Use the output of one command \textit{inside} another command
@@ -298,8 +300,188 @@ touch file_{1..5}.txt
     \end{mdframed}
 
     \pagebreak \bigbreak \noindent 
-    \section{\LARGE How Bash Processes Command Lines}
+    \section{\LARGE How Bash Processes Commands}
     \bigbreak \noindent 
+    Bash uses a 5 step process to interpret a command
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item \textbf{Tokenisation:} A token is a sequence of characters that is considered as a single unit by the shell. The shell determines were a token starts and ends with the following special (meta) characters
+            \begin{itemize}
+                \item |
+                \item \&
+                \item ;
+                \item ()
+                \item < >
+                \item Space, tab, newline
+            \end{itemize}
+            The shell then determines whether these tokens are words, or operators. A \textbf{word} is a token that does not contain an unquoted metacharacter. \textbf{Operators} are tokens that contain at least one unquoted metacharacter. This makes quoting a key concept in how the shell operates
+        \item \textbf{Command identification:} The shell breaks the command up into either simple, or compound commands. \textbf{Simple commands} are just a bunch of individual words, and each simple command is terminated by a control operator. \textbf{Compound commands} provide bash with its programming constructs, such as if statements, for loops, while loops, etc...
+        \item \textbf{Expansions:}
+        \item \textbf{Quote removal:} We add quotes to control how the command is interpreted, so this step will simply remove all those supportive quotes.
+        \item \textbf{Redirection:}
+    \end{enumerate}
+    After these 5 steps are completed, bash will then execute the command that is left over.
+
+    \bigbreak \noindent 
+    \subsection{Quoting}
+    \bigbreak \noindent 
+    \begin{concept}
+		 Quoting is about \textbf{removing special meanings}. There are three types of quoting:
+	\end{concept}
+    \begin{itemize}
+        \item \textbf{Backslash (\textbackslash):} This removes special meaning from next character
+        \item \textbf{Single Quotes:} Removes special meaning from all characters inside
+        \item \textbf{Double Quotes:} Removes special meaning from all inside except dollar signs (\$) and backticks (\ \`\ )
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Step 1. Tokenisation}
+    \bigbreak \noindent 
+    We learned earlier that whether or not a token is interpreted as a word or an operator, depends on if there are any \textbf{unquoted metacharacters}. In bash we have two types of operators:
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.5\textwidth}
+    \textbf{Control operators:}
+    \begin{itemize}
+        \item Newline: command separator, similar to the semicolon (;).
+        \item | used to send the output of one command as the input to another command.
+        \item || Used to execute the command following it only if the command preceding it fails 
+        \item \& This is used to execute a command in the background
+        \item \&\& Used to execute the command following it only if the command preceding it succeeds 
+        \item ; Acts as a command separator.
+        \item ;; Used in the context of a case statement in shell scripting. It signifies the end of an option within a case block.
+        \item ;\& Also used in a case statement. After executing the associated block for a matched pattern, the control will flow to the block of the next pattern without testing.
+        \item ;;\& Another operator used in a case statement. The control will test the next pattern after executing the block for the matched pattern.
+        \item |\& This is shorthand for 2>&1 |. It redirects both standard output (stdout) and standard error (stderr) of the command before the pipe to the command after the pipe.
+        \item ( used to group commands and execute them in a subshell. 
+        \item ) used to group commands and execute them in a subshell. 
+    \end{itemize}
+   \end{minipage}
+   \begin{minipage}[t]{0.5\textwidth}
+       \textbf{Redirection Operators}
+       \begin{itemize}
+           \item < Redirects input for a command from a file rather than from the keyboard.
+            \item > Redirects the output of a command to a file
+            \item << Provides multiple lines of input to a command 
+            \item >> Similar to >, but instead of overwriting the file, it appends to the file.
+            \item <\& Duplicates one input file descriptor to another, allowing for more advanced redirections.
+            \item >\& Duplicates one output file descriptor to another.
+            \item >| (Clobber): This is used in conjunction with the noclobber option in Bash (set -o noclobber). It allows you to forcefully overwrite a file when output redirection is used, even if noclobber is set.
+            \item <<- Similar to <<, but it allows leading tabs (not spaces) to be ignored, 
+            \item <>  Opens a file in read-write mode for a command. 
+       \end{itemize}
+   \end{minipage}
+
+   \pagebreak \bigbreak \noindent 
+   \subsection{Step 2. Command Identification (Simple commands)}
+   \bigbreak \noindent 
+   As we stated earlier, we have two types of commands, simple, and complex. Let's have a look at a simple command.
+   \bigbreak \noindent 
+   \begin{center}
+       $\underbrace{\text{echo}}_{\parbox{2cm}{\centering \text{Command}\\ \text{name}}} \underbrace{1\ 2\ 3}_{\parbox{2cm}{individual arguments}}$
+   \end{center}
+   \bigbreak \noindent 
+   All simple commands are terminated by a control operator, which we have discussed earlier. In this case, it is a newline
+   \bigbreak \noindent 
+   Thus, "echo" is identified as the command, and the rest is identified as the commands arguments, since there are no \textbf{control operators}
+
+   \bigbreak \noindent 
+  \subsection{Step 2. Command Identification (Simple commands)}
+  \bigbreak \noindent 
+  \begin{concept}
+		 Compound commands are essentially bash's programming constructs. Each compound command begins with a \textbf{reserved word} and is terminated by a \textbf{reserved word}.
+	\end{concept}
+
+  \bigbreak \noindent 
+  \subsection{Step 3. Expansions}
+  \bigbreak \noindent 
+  The shell goes through 4 stages of expansion.
+  \begin{itemize}
+      \item \textbf{Stage 1:} Brace expansion
+        \item \textbf{Stage 2:}
+            \begin{itemize}
+                \item Parameter expansion
+                \item Arithmetic expansion
+                \item Command substation
+                \item Tilde expansion
+            \end{itemize}
+        \item \textbf{Stage 3:} Word splitting
+        \item \textbf{Stage 4:} Globbing
+  \end{itemize}
+  \bigbreak \noindent 
+  An important thing to know is that expansions in earlier stages, happen before expansions in later stages. This means if we had the code:
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+x=10
+echo {1..$x}
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  We would \textbf{not} get the expected results, this is because the brace expansion will take place \textbf{before} the parameter expansion.
+  \bigbreak \noindent 
+  Another important thing to know is that items in \textbf{stage 2} have the same precedence, thus, they will be preformed left to right. Similar to how multiplication and division works in the rules of PEMDAS.
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{Word splitting}
+  \bigbreak \noindent 
+  \begin{concept}
+     \textbf{Word splitting}  is a process the shell performs to split the result of some unquoted expansions into separate words. Word splitting can have some very significant effects on how your commands are interpreted
+  \end{concept}
+  \bigbreak \noindent 
+  Word splitting is only performed on the results of unquoted 
+  \begin{itemize}
+      \item Parameter expansions
+        \item Command substitutions
+        \item Arithmetic expansions
+  \end{itemize}
+  \bigbreak \noindent 
+  The characters used to split words are governed by the IFS (Internal Field Separator) variable.
+  \begin{itemize}
+      \item Space, tab, and newline
+  \end{itemize}
+  \bigbreak \noindent 
+  Suppose we have:
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+numbers="1 2 3 4 5"
+touch ${numbers}
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  We will get 5 \textbf{different} files, labeled 1-5. This is because the parameter expansion was \textbf{unquoted}. Instead, we can do:
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+numbers="1 2 3 4 5"
+touch "${numbers}"
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  This will prevent word splitting, and treat "1 2 3 4 5" as a single word. Creating just \textbf{one} file.
+  \bigbreak \noindent 
+  So we shall follow one simple rule. If we want the output of a:
+  \begin{itemize}
+      \item Parameter expansion 
+        \item Command substation
+        \item Arithmetic expansion
+  \end{itemize}
+  \bigbreak \noindent 
+  To be considered as a \textbf{single word}, we must \textbf{wrap that expansion in double quotes!}
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{Globbing}
+  \bigbreak \noindent 
+
+
+
+
+  
+
+
+
+
+    
 
     
 
