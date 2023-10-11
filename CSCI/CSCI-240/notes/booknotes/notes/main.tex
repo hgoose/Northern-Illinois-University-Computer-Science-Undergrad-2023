@@ -433,7 +433,7 @@ int main() {
     \end{minted}
     \sepline
     \bigbreak \noindent 
-    \nt{We use \textbf{size_t} for the type of a variable that will house the size (in bytes) of some other variable}
+    \nt{We use \textbf{size\_t} for the type of a variable that will house the size (in bytes) of some other variable}
 
     \bigbreak \noindent \bigbreak \noindent 
     \subsection{Retrieve type}
@@ -1518,7 +1518,7 @@ min_value + (rand() / (RAND_MAX / (max_value - min_value)));
     \smallbreak \noindent
     \sepline
     \begin{minted}{cpp}
-                            If condition ? Statement : Else statement
+                            ( condition ) ? Statement_if_true :  statement_if_false
     \end{minted}
     \sepline
     \bigbreak \noindent 
@@ -1526,7 +1526,7 @@ min_value + (rand() / (RAND_MAX / (max_value - min_value)));
     \smallbreak \noindent
     \sepline
     \begin{minted}[linenos]{cpp}
-x < 0 ? y = 10 : z = 20; 
+( x < 0 ) ? y = 10 : z = 20;  
 
 // Equivalent To
 if (x < 0) {
@@ -1541,7 +1541,7 @@ if (x < 0) {
     \subsection{Switch}
     \bigbreak \noindent 
     \begin{concept}
- The \textbf{switch} statement lets the value of a variable or an expression determine where the program will branch.
+ The \textbf{switch} statement lets the value of a variable or an expression determine where the program will branch. IMPORTANT: Switch can \textbf{ONLY} be used for integers or characters
 	\end{concept}
     \bigbreak \noindent 
     The general syntax for the switch statement is as follows:
@@ -3352,6 +3352,213 @@ Payroll depthead = {} // If we had default values
 	\pagebreak \bigbreak \noindent 
 	\subsection{Arrays of structures}
 	\bigbreak \noindent 
+	\begin{concept}
+	   Arrays of structures can simplify some programming tasks 
+	\end{concept}
+	\bigbreak \noindent 
+	Example:
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+struct BookInfo {
+    string title;
+    string author;
+    string publisher;
+    double price;
+};
+const int SIZE = 20;
+BookInfo bookList[SIZE];
+	\end{minted}
+	\sepline
+	\bigbreak \noindent 
+	Here we defined an array, bookList, that has 20 elements. Each element is a BookInfo structure.
+	\bigbreak \noindent 
+	So we can step through the array to get the contents:
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+for (int i=0; i<SIZE; ++i) {
+        cout << bookList[i].title << endl;
+        cout << bookList[i].author << endl;
+        cout << bookList[i].publisher << endl;
+        cout << bookList[i].price << endl;
+    }
+	\end{minted}
+	\sepline
+	\bigbreak \noindent 
+	\subsection{Initializing a structure array}
+	\bigbreak \noindent 
+	To initialize a structure array, we can simply use a initialize list, still considering the above structure example, we can do:
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+bookInfo bookList[SIZE] = {
+                            {"title1", "author1", "publisher1", 0.1},
+                            {"title2", "author2", "publisher2", 0.2},
+                            {"title3", "author3", "publisher3", 0.3}
+                            };
+	\end{minted}
+	\sepline
+	\bigbreak \noindent 
+
+	\pagebreak \bigbreak \noindent 
+	\subsection{Nested Structures}
+	\bigbreak \noindent 
+	Its possible for a structure variable to be a member of another stricter variable.
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+struct foo {
+    int a;
+    int b;
+};
+struct bar {
+    int c;
+    foo f1;
+};
+bar b1;
+cout << b1.f1.a;
+	\end{minted}
+	\sepline
+
+	\bigbreak \noindent 
+	\subsection{Structures as function arguments}
+	\bigbreak \noindent 
+	\begin{concept}
+	   Structure variables may be passed as arguments to functions 
+	\end{concept}
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+struct Box {
+    double l, w;
+};
+
+void Showbox(Box box) {
+    cout << box.l << endl << box.w;
+}
+	\end{minted}
+	\sepline
+	
+	\bigbreak \noindent 
+	\nt{This is a pretty poor example, but it shows the concept}
+	\bigbreak \noindent 
+
+	\pagebreak \bigbreak \noindent 
+	\subsection{Constant reference parameters}
+	\bigbreak \noindent 
+	\begin{concept}
+	   Sometimes structures can be quite large. Passing large structures by value can decrease a program's performance. Of course, this can be dangerous, as passing by reference means we can alter the original values. However, we can circumvent this by passing the argument as a constant reference.
+	\end{concept}
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+struct Box {
+    double l, w;
+};
+
+void Showbox(const Box& box) {
+    cout << box.l << endl << box.w;
+}
+	\end{minted}
+	\sepline
+
+	\bigbreak \noindent 
+	\subsection{Returning a structure from a function}
+	\bigbreak \noindent 
+	\begin{concept}
+	   A function may return a structure 
+	\end{concept}
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+struct Circle {
+    double radius;
+    double diameter;
+    double area;
+
+};
+Circle getCircleData() {
+    Circle temp;
+
+    temp.radius = 10.0;
+    temp.diameter = 20.0;
+    temp.area = 314.159;
+    return temp;
+}
+myCircle = getCircleData();
+	\end{minted}
+	\sepline
+
+	\pagebreak \bigbreak \noindent 
+	\subsection{Pointers to structures}
+	\bigbreak \noindent 
+	\begin{concept}
+	   You may take the address of a structure variable and create variables that are pointers to structures 
+	\end{concept}
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+Circle myCircle{10.0,20.0,314.159};
+Circle* cirptr = nullptr;
+cirptr = &mycircle;
+// Access
+*cirptr.radius = 10; // Doesn't work
+(*cirptr).radius = 10; // Works
+cirptr->radius = 10; // Special syntax
+	\end{minted}
+	\sepline
+	\bigbreak \noindent 
+
+	\bigbreak \noindent 
+	\subsection{Dynamically allocating a structure}
+	\bigbreak \noindent 
+	We can also use a structure pointer and the new operator to dynamically allocate a structure
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+Circle *cirptr = nullptr;
+cirptr = ( new Circle );
+cirptr->radius = 10;
+delete cirptr; // Don't forget to delete when your done with it.
+	\end{minted}
+	\sepline
+	\bigbreak \noindent 
+	\nt{We use the arrow operator to access \textit{pointers to structure objects}, not structures who's members are pointers. To access structure pointer members, we use the syntax in the above syntax labeled "Doesn't work}
+	\bigbreak \noindent 
+	Lastly, in the case we have a pointer to a structure that contains a pointer member, we need to use a mix of the deference operator \textbf{and} the arrow operator. 
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+*ptr->member;
+// or
+*(*ptr).member;
+	\end{minted}
+	\sepline
+
+	\pagebreak \bigbreak \noindent 
+	\subsection{Enumerated data types}
+	\bigbreak \noindent 
+	\begin{concept}
+	   An \textbf{enumerated} data type is a programmer defined data type. It consists of values known as \textbf{enumerators}, which represent integer constants 
+	\end{concept}
+	\bigbreak \noindent 
+	\sepline
+	\begin{minted}[linenos]{cpp}
+enum Day { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY};
+	\end{minted}
+	\sepline
+	
+
+	
+
+	
+	
+
+
+
+
+	
 	
 	
 	

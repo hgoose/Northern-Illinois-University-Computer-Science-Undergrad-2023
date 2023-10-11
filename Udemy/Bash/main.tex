@@ -37,7 +37,7 @@
                 
            \vspace{0.8cm}
          
-           \includegraphics[width=0.4\textwidth]{}
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
                 
            Computer Science \\
            Northern Illinois University\\
@@ -204,7 +204,7 @@ echo "Hello, ${name}!"
     \bigbreak \noindent 
     Variable Indirection:
     \begin{itemize}
-        \$\{!parameter\}: Treats the value of parameter as the name of another variable, and fetches the value of that variable.
+        \item \$\{!parameter\}: Treats the value of parameter as the name of another variable, and fetches the value of that variable.
     \end{itemize}
     \bigbreak \noindent 
     Case Modification:
@@ -263,6 +263,7 @@ echo $(( x + y ))
     \begin{mdframed}[style=purplebox]
     \begin{minted}{bash}
 echo "scale=2; 5/2" | bc # 2.50
+result=$(echo "scale=2; 5/2" | bc)
 # scale sets the precision of the output
     \end{minted}
     \bigbreak \noindent
@@ -351,7 +352,7 @@ touch file_{1..5}.txt
         \item ;; Used in the context of a case statement in shell scripting. It signifies the end of an option within a case block.
         \item ;\& Also used in a case statement. After executing the associated block for a matched pattern, the control will flow to the block of the next pattern without testing.
         \item ;;\& Another operator used in a case statement. The control will test the next pattern after executing the block for the matched pattern.
-        \item |\& This is shorthand for 2>&1 |. It redirects both standard output (stdout) and standard error (stderr) of the command before the pipe to the command after the pipe.
+        \item |\& This is shorthand for 2>\&1 |. It redirects both standard output (stdout) and standard error (stderr) of the command before the pipe to the command after the pipe.
         \item ( used to group commands and execute them in a subshell. 
         \item ) used to group commands and execute them in a subshell. 
     \end{itemize}
@@ -472,6 +473,295 @@ touch "${numbers}"
   \pagebreak \bigbreak \noindent 
   \subsection{Globbing}
   \bigbreak \noindent 
+  \begin{concept}
+      \textbf{Globbing} is used as shorthand for listing the files that a command should operate on. Globbing is \textbf{only} performed on words (not operators)
+  \end{concept}
+  \bigbreak \noindent 
+  Globbing patters are words that contain unquoted \textbf{Special pattern characters}
+  \begin{itemize}
+      \item * (used as a wildcard for any word)
+        \item ? (used as a wildcard for any character, very strict in terms of length)
+        \item \textlbrackdbl\ \  (Like question mark, but we can control the characters)
+  \end{itemize}
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+ls *.txt # will list all .txt files
+ls file?.txt # will list all .txt files named "file[somecharacter]"
+# Note: Anything with 2 or more characters after "file" will not be listed
+ls file[ab].txt # will list either filea.txt, fileb.txt, or nothing
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  We can also treat the brackets as character classes...
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+ls file[a-z].txt
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+
+  \bigbreak \noindent 
+  \subsection{Quote removal}
+  \bigbreak \noindent 
+  During the quote removal stage, the shell removes ALL unquoted backslashes, single quote characters, and double quote characters that \textbf{did not} result from a shell expansion.
+  \bigbreak \noindent 
+
+  \bigbreak \noindent 
+  \subsection{Redirection}
+  \bigbreak \noindent 
+  \textbf{Data Streams}
+  \begin{itemize}
+      \item Stream 0: Standard input (stdin)
+      \item Stream 0: Standard output (stdout)
+      \item Stream 0: Standard error (stderr)
+  \end{itemize}
+  \bigbreak \noindent 
+  \textbf{Standard input} provides us with an alternative way of providing input to a command, aside from using command line arguments. Default source is keyboard
+  \bigbreak \noindent 
+  \textbf{Standard output} contains the data that is produced after a successful command execution. Default source is terminal 
+  \bigbreak \noindent 
+  \textbf{Standard error} contains all error messages and status messages  that a command produces . Default source is terminal
+  \bigbreak \noindent 
+  Using redirection is all about changing the sources or destinations of these streams. For example, if we use the \textit{cat} command, we are changing the input stream source from the keyboard to a file.
+  \pagebreak \bigbreak \noindent 
+  For redirection we can use the following operators:
+  \begin{itemize}
+      \item > Redirects standard output to a file, overwriting the file if it exists.
+        \item >> Redirects standard output to a file, appending to the file if it exists.
+        \item < Takes input from a file
+        \item 2> Redirects standard error to a file, overwriting the file if it exists.
+        \item 2>> Redirects standard error to a file, appending to the file if it exists.
+        \item \&> or >\& Redirects both standard output and standard error to a file, overwriting the file if it exists.
+        \item \&>> Redirects both standard output and standard error to a file, appending to the file if it exists.
+        \item | (pipe) Takes the standard output of one command and uses it as the standard input for another command.
+  \end{itemize}
+
+  \pagebreak \bigbreak \noindent 
+  \section{\LARGE Requesting user input}
+  \bigbreak \noindent 
+  \subsection{Positional Parameters}
+  \bigbreak \noindent 
+  Recall from 2.3, where we discussed the concept of \textbf{positional parameters}, in this section, we will discuss how we can use them in our scripts.
+  \bigbreak \noindent 
+  Suppose we had some script call
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+./1.sh nate $HOME
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  Here we are passing two arguments to this script. For these arguments to be relevant, let's take a look at the script...
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+echo "Hello, I am ${0}"
+echo "My name is, ${1}"
+echo "My home directory is ${2}"
+# Hello, I am ./1
+# My name is, nate
+# My home directory is /home/datura
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  So you can see we are making use of some \textbf{positional parameters} to gain access to the things that we passed to the script we it was executed.
+  \bigbreak \noindent 
+  \nt{It's important we use the curly brace expansion syntax for double digit numbers or we might get unexpected results}
+
+  \bigbreak \noindent 
+  \subsection{Special Parameters}
+  \bigbreak \noindent 
+  Now that we have learned how to use \textbf{positional parameters} in our scripts. We will take a look at \textbf{Special parameters}, these parameters give us information about the script. The definitions for these were described in 2.4
+  \bigbreak \noindent 
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+echo "Exit code: ${?}"
+echo "PID: ${??}"
+# Exit code: 0 
+# PID: 0
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{The read command}
+  \bigbreak \noindent 
+  We can use the \textbf{read} command in bash to get input from the user, for example:
+  \begin{mdframed}[style=purplebox]
+  \begin{minted}{bash}
+read name age
+# Or
+read -p "Enter your name: " name
+read -p "Enter your age " age
+  \end{minted}
+  \bigbreak \noindent
+  \end{mdframed}
+  \bigbreak \noindent 
+  Then when we run this script, we can enter some data. This data will be stored in the variables "name" and "age". Notice that the second example lets us define a prompt.
+  \bigbreak \noindent 
+  Other options we have for the read command are:
+    \begin{itemize}
+        \item -t: timeout, specified in seconds
+        \item -s: make input s.t it is not visible in the terminal 
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The select command}
+    \bigbreak \noindent 
+    Using the \textbf{select} command, we can create menus for the user, and have the shell carry out different commands based on what is selected. 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+PS3="Enter: "
+select day in a b c d e f 
+do 
+echo $day
+break
+done
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    There are some key things to notice here. For one, we can define the \textbf{PS3} variable to give the user a custom prompt. Second, this select command will by default result in a continuous loop. Thus, we must use the \textbf{break} command to terminate it.
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Logic}
+    \bigbreak \noindent 
+    \subsection{Chaining commands} 
+    \bigbreak \noindent 
+    In bash we have the following operators:
+    \begin{itemize}
+        \item \& (send command to background)
+        \item ; (chain commands)
+        \item \&\& (only execute next command if previous was successful)
+        \item || (only execute next command if previous was unsuccessful)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Test commands and conditional operators}
+    \bigbreak \noindent 
+    \begin{concept}
+       If a test is evaluated to be true, the test will return an exit status of 0. If a test is evaluated to be false, the test will return an exit status of 1. The \textbf{test} command can be used in bash to compare different pieces of information.
+    \end{concept}
+    \bigbreak \noindent 
+    The syntax for the test command is a set of square brackets [\ \ ]. Its important that you have a space separating the contents of the square bracket and the actual square brackets otherwise you will get a syntax error.
+    \bigbreak \noindent 
+    \nt{The set of square brackets is the \textbf{short hand form}, the long hand form is using the \textbf{test} keyword}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    In conjunction with the test command, we can use the following operators:
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+        \textbf{File Tests:}
+        \begin{itemize}
+            \item -e FILE: True if FILE exists.
+            \item -f FILE: True if FILE exists and is a regular file.
+            \item -d FILE: True if FILE exists and is a directory.
+            \item -s FILE: True if FILE exists and has a size greater than zero.
+            \item -r FILE: True if FILE exists and is readable.
+            \item -w FILE: True if FILE exists and is writable.
+            \item -x FILE: True if FILE exists and is executable.
+            \item -h FILE or -L FILE: True if FILE exists and is a symbolic link.
+        \end{itemize}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        \textbf{String tests:}
+        \begin{itemize}
+            \item -z STRING: True if STRING has a length of zero.
+            \item -n STRING: True if STRING has a length greater than zero.
+            \item STRING1 = STRING2: True if STRING1 and STRING2 are the same.
+            \item STRING1 != STRING2: True if STRING1 and STRING2 are not the same.
+        \end{itemize}
+    \end{minipage}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+        \textbf{Arithmetic Comparisons:}
+        \begin{itemize}
+            \item -eq: Equal to.
+            \item -ne: Not equal to.
+            \item -lt: Less than.
+            \item -le: Less than or equal to.
+            \item -gt: Greater than.
+            \item -ge: Greater than or equal to
+        \end{itemize}
+    
+    \end{minipage}
+    \begin{minipage}[]{0.47\textwidth}
+        \textbf{Logical Operators:}
+        \begin{itemize}
+            \item ! (logical not)
+            \item -a (logical and)
+            \item -o (logical or)
+        \end{itemize}
+    \end{minipage}
+
+    \bigbreak \noindent 
+    Example:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+# Long hand
+if test 1 -le 2; then
+    echo "1 is less than 2"
+fi
+# Short hand...
+if [ 1 -le 2 ]; then 
+    echo "1 is less than 2"
+fi
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    Additionally, we have the \textbf{double bracket}. This is known as the extended test command, offers several advantages and additional capabilities over the traditional test command. It allows for:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Word splitting does not occur
+        \item Regex matching using =$\sim$
+        \item String comparison using == or !=
+        \item Compound comparisons using \&\& (and) and || (or)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{If statements}
+    The syntax for if statements
+    \bigbreak \noindent 
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+if [ condition ]; then 
+
+elif [ condition ]; then
+
+else 
+
+fi
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Case statements}
+    \bigbreak \noindent 
+    Syntax:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+case "${var}" in 
+    value)
+        statement
+        ;;
+    value)
+        statement
+        ;;
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+
+
+
+
+
+  
 
 
 
