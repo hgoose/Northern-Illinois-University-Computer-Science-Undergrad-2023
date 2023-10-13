@@ -757,6 +757,87 @@ case "${var}" in
     \end{mdframed}
     \bigbreak \noindent 
 
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Process options and read from files}
+    \bigbreak \noindent 
+    \subsection{While loops}
+    \bigbreak \noindent 
+    Syntax:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+while [[ test ]]; do
+    statements;
+done
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    So for example:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+read -p "Enter a number: " num
+while [[ $num -lt 5 ]]; do
+    echo $num
+    num=$(($num+1))
+done
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+
+
+    \bigbreak \noindent 
+    \subsection{Handling command line options}
+    \bigbreak \noindent 
+    For this we can use the \textbf{getopts} command to get any options that the user runs with the script
+    \bigbreak \noindent 
+    Syntax:
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+getopts "ab" varname # Defines two possible options, 'a', and 'b', stores in varname
+getopts 'a:b:' varname # Lets the options take in values. Stores in varname
+echo $OPTARG # Built in variable to house the option value
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    In order to ensure that the getopts command gets ALL options, we must write the command as the test for a while loop
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+while getopts 'a:b:' varname; do 
+    echo $OPTARG
+done
+# Run script
+./scriptname -a 2 -b 3
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Iterating over files with read-while loop}
+    \bigbreak \noindent 
+    \begin{concept}
+        Read-while loops are while loops that use the \textbf{read} command as their test command
+    \end{concept}
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+while read line; do
+    echo "$line"
+done < "${1}"
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    We can also use a technique called \textbf{process substation} to redirect standard input from a process
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+while read line; do
+    echo "$line"
+done > >(ls $HOME)
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    
+
 
 
 
