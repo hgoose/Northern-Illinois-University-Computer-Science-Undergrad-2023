@@ -654,14 +654,14 @@ done
     \begin{minipage}[t]{0.47\textwidth}
         \textbf{File Tests:}
         \begin{itemize}
-            \item -e FILE: True if FILE exists.
-            \item -f FILE: True if FILE exists and is a regular file.
-            \item -d FILE: True if FILE exists and is a directory.
             \item -s FILE: True if FILE exists and has a size greater than zero.
+            \item -h FILE or -L FILE: True if FILE exists and is a symbolic link.
             \item -r FILE: True if FILE exists and is readable.
+            \item -e FILE: True if FILE exists.
+            \item -d FILE: True if FILE exists and is a directory.
             \item -w FILE: True if FILE exists and is writable.
             \item -x FILE: True if FILE exists and is executable.
-            \item -h FILE or -L FILE: True if FILE exists and is a symbolic link.
+            \item -f FILE: True if FILE exists and is a regular file.
         \end{itemize}
     \end{minipage}
     \begin{minipage}[t]{0.47\textwidth}
@@ -751,6 +751,7 @@ case "${var}" in
     value)
         statement
         ;;
+esac
     \end{minted}
     \bigbreak \noindent
     \end{mdframed}
@@ -831,7 +832,7 @@ done < "${1}"
     \begin{minted}{bash}
 while read line; do
     echo "$line"
-done > >(ls $HOME)
+done < <(ls $HOME)
     \end{minted}
     \bigbreak \noindent
     \end{mdframed}
@@ -839,6 +840,60 @@ done > >(ls $HOME)
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Arrays and For loops}
     \bigbreak \noindent 
+    \subsection{Working with indexed arrays}
+    Arrays in bash are as follows...
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+myarr=(1 2 3)  # Direct assignment
+declare -a myarr=(1 2 3) # Typeset
+myarr[0] # Standard indexing
+myarr[0]=1 # Standard reassigning
+read -a myarr <<< "1 2 3" # nonnatural assignment
+
+# Changing IFS for read command
+IFS="${IFS} ," # add colon to IFS
+read myarr2 >>> "1,2,3"
+
+# Outputting values
+echo ${myarr[0]}
+echo ${myarr[@]} # Output all values
+echo ${#myarr[@]} # Length of array
+echo ${!myarr[@]} # Output index numbers
+
+# Appending to array
+myarr+=(1) # Add to end
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
+    \bigbreak \noindent 
+    To summarize, we have:
+    \begin{itemize}
+        \item Declaring arrays (direct, typeset, read)
+        \item Indexing
+        \item Reassign
+        \item  Read with Custom IFS
+        \item Outputting (specific, all, length, index numbers)
+        \item Appending
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{readarray command}
+    \bigbreak \noindent 
+    We can use the readarray command to create arrays from lines in a file
+    \begin{mdframed}[style=purplebox]
+    \begin{minted}{bash}
+readarray arr < file.txt
+echo "${arr[@]@Q}" # Show raw data (trailing newlines)
+readarray -t arr < file.txt # Not storing trailing newlines
+
+# Alternatively...
+IFS=
+while read -r line; do
+    arr+=($line)
+done < file.txt
+    \end{minted}
+    \bigbreak \noindent
+    \end{mdframed}
 
     
 
