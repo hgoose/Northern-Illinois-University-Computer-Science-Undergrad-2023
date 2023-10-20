@@ -35,9 +35,9 @@ int main(int argc, const char *argv[]) {
     do {
         // Call the menu function, saving the users choice
         int opt = Menu();
+
         // Check if the user quits
         if (opt == 5) { flag = 1; }
-
         // Circumvent non existent choices
         else if (opt < 0 || opt > 4) { cout << "Invalid Option: " << endl; } 
 
