@@ -1,0 +1,224 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Warner \thepage}
+\rhead{}
+% \lhead{\leftmark}
+\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Over the wire solutions} \\
+           Bandit
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           November 5, 2023 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Passwords}
+    \section*{Passwords}
+    \begin{enumerate}[start=0]
+        \item bandit0
+        \item NH2SXQwcBdpmTEzi3bvBHMM9H66vVXjL
+        \item rRGizSaX8Mk1RTb1CNQoXTcYZWU6lgzi
+        \item aBZ0W5EmUfAf7kHTQeOwd8bauFJ2lAiG
+        \item 2EW7BBsr6aMMoJ2HjW067dm8EgX26xNe
+        \item lrIWWI6bB37kxfiCQZqUdOIYfr6eEeqR
+    \end{enumerate}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Commands used}
+    \section*{Commands used}
+    \begin{itemize}
+        \item \textbf{xclip -selection clipboard < filename}: used to save contents of a file into clipboard (can't use on bandit servers)
+        \item \textbf{File:} The file command is used to determine the type of a file. In this game, we use it to determine if a file is human-readable (ASCII text), as apposed to DATA.  
+        \item \textbf{Find:}
+            \begin{itemize}
+                \item Exec flag
+                \item ! -executable (negation of -executable)
+                \item -size 1033c
+            \end{itemize}
+        \item \textbf{grep}
+            \begin{itemize}
+                \item -e (match pattern)
+                \item -v (match NOT pattern)
+            \end{itemize}
+        \item \textbf{Exclude "permission denied" output from grep}
+            \begin{itemize}
+                \item find / [expressions] 2>\&1 | grep -v "Permission denied"
+            \end{itemize}
+        \item \textbf{awk}
+            \begin{itemize}
+                \item awk '\{print $2\}'
+            \end{itemize}
+    \end{itemize}
+
+
+
+    \pagebreak  \bigbreak \noindent 
+    \vspace{2in} \\
+    \begin{Huge}
+        \textbf{Over The Wire \\ \hspace*{.4in} Solutions}
+    \end{Huge}
+    \bigbreak \noindent 
+    \line(1,0){490}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Level 4}
+    \section*{Level 4} 
+    \bigbreak \noindent 
+    The password for the next level is stored in the only human-readable file in the inhere directory
+    \bigbreak \noindent 
+    \subsection*{The file command}
+    The way we solve this level is by use of the file command. The file command will output whether a file is DATA or ASCII text. We are looking for the file that contains ASCII text
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+for i in *;do file "./$i";done
+    \end{minted}
+    \bigbreak \noindent
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Looping with the "find" command}
+    \subsection*{Looping with the "find" command}
+    \bigbreak \noindent 
+    Instead of using a simple for loop, we can instead make use of the \textit{find} command with the -exec flag. The general syntax for this  method is 
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+find [path] [expression] -exec [command] {} \;
+// or
+find [path] [expression] -exec [command] {} +
+    \end{minted}
+    \bigbreak \noindent
+    Where:
+    \begin{itemize}
+        \item \relax [path] is the directory find starts searching from. If omitted, find uses the current directory.
+        \item \relax [expression] is used to specify search criteria such as name, type, size, etc.
+        \item \relax [command] is the command that find will execute on each file that matches the search criteria.
+        \item \relax \{\} is a placeholder that find replaces with the current file name being processed.
+        \item \textbackslash; is used to terminate the command.
+    \end{itemize}
+    \bigbreak \noindent 
+    When using \; at the end of the -exec command, find will execute the command once for each file found. However, when you use + at the end of the -exec command, find will pass all the matched files to the command at once, rather than one by one. This is often more efficient, especially when dealing with a large number of files, because it minimizes the number of times the command is called.
+    \bigbreak \noindent 
+    Thus, the solution would be 
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+find . -type f -exec file {} \; | grep -e 'text'
+// or
+find . -type f -exec file {} + | grep -e 'text'
+    \end{minted}
+    \bigbreak \noindent
+    We grep 'text' because file with either output the file as being data, or ASCII text, so we only want to display the file that has ASCII text.
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Level 5}
+    \section*{Level 5}
+    \bigbreak \noindent 
+    The password for the next level is stored in a file somewhere under the inhere directory and has all of the following properties:
+    \begin{itemize}
+        \item human-readable
+        \item 1033 bytes in size
+        \item not executable
+    \end{itemize}
+    \bigbreak \noindent 
+    The way in which we solve this problem is by use of:
+    \begin{itemize}
+        \item For loop
+        \item Find command 
+        \item file command
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+for i in *;do find "./${i}" -type f -size 1033c ! -executable -exec file {} \; | grep -e 'ASCII' ;done
+    \end{minted}
+    \bigbreak \noindent
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Level 6}
+    \section*{Level 6}
+    \bigbreak \noindent 
+    The password for the next level is stored somewhere on the server and has all of the following properties:
+    \begin{itemize}
+        \item owned by user bandit7
+        \item owned by group bandit6
+        \item 33 bytes in size
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+find / -type f -size 33c -user bandit7 -group bandit6 2>&1 | grep -v "Permission denied"
+    \end{minted}
+    \bigbreak \noindent
+    \nt{The reason we also redirect standard error and standard output to the grep command (btw grep -v excludes matches) is because "permission denied" matches are errors, thus we need to send them to our grep}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Level 7}
+    \section*{Level 7}
+    \bigbreak \noindent 
+    The password for the next level is stored in the file data.txt next to the word millionth
+    \bigbreak \noindent 
+    This one is pretty simple, we just grep with awk
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+grep -e 'millionth' data.txt | awk '{print $2}'
+    \end{minted}
+    \bigbreak \noindent
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Level 8}
+    \section*{Level 8}
+    \bigbreak \noindent 
+    The password for the next level is stored in the file data.txt and is the only line of text that occurs only once
+    \bigbreak \noindent 
+    For this level we use the \textit{uniq} command with the -u flag, this will output unique lines. However, the uniq command  does not detect repeated lines unless they are adjacent.  You may want to sort the input first
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+sort data.txt | uniq -u
+    \end{minted}
+    \bigbreak \noindent
+
+
+
+
+
+    
+\end{document}

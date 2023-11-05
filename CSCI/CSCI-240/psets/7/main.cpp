@@ -20,6 +20,10 @@ sale, and the number of days required for the crops to mature.
 #include <cstdlib>
 #include <fstream>
 
+#ifndef ll
+#define ll endl
+#endif
+
 // PARALLEL ARRAY SIZE
 #ifndef PA_S
 #define PA_S 30
@@ -72,6 +76,7 @@ int main(int argc, const char *argv[]) {
 
     // Function calls
     const int entrys = build(season, name, seed_cost, sell_value, harvest_time);
+    print(season, name, seed_cost, sell_value, harvest_time, entrys);
     sort(season, name, seed_cost, sell_value, harvest_time, entrys);
     print(season, name, seed_cost, sell_value, harvest_time, entrys);
 
