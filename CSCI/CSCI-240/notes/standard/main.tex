@@ -134,27 +134,158 @@
     \bigbreak \noindent 
     \subsection{Manipulation}
     \begin{itemize}
-        \item \textbf{strncpy(char dest, const char src, size\_t n):} Copy up to n characters from the string src to dest.
-        \item \textbf{strncat(char dest, const char src, size\_t n):} Append up to n characters from the string src onto the end of dest.
+        \item \textbf{strncpy(char[] dest, char[] src, size\_t n):}$\mapsto$ const char* --- Copy up to n characters from the string src to dest.
+        \item \textbf{strcpy(char[] dest, char[] src)}$\mapsto$ const char* ---- Copies the C string pointed by source into the array pointed by destination
+        \item \textbf{strncat(char[] dest, char[] src, size\_t n):}$\mapsto$ const char* --- Append up to n characters from the string src onto the end of dest.
+        \item \textbf{strcat(char[] dest, char[] src)}$\mapsto$ const char* --- Appends a copy of the source string to the destination string.
+        \bigbreak \noindent 
+        \textbf{Note:} these return a const char* comprised of the characters from the src array that were used.
     \end{itemize}
 
     \bigbreak \noindent 
     \subsection{Examination}
     \begin{itemize}
-        \item \textbf{strlen(const char s):} Return the length of the string (not including the null terminator).
-        \item \textbf{strncmp(const char s1, const char s2, size\_t n):} Compare up to n characters of two strings.
-        \item \textbf{strchr(const char s, int c):} Return a pointer to the first occurrence of character c in the string s, or nullptr if c is not found.
-        \item \textbf{strrchr(const char s, int c):} Return a pointer to the last occurrence of character c in the string s.
-        \item \textbf{strstr(const char haystack, const char needle):} Return a pointer to the first occurrence of the substring needle in the string haystack, or nullptr if the substring is not found.
+        \item \textbf{strnlen(char[] src, size\_t maxlen)}$\mapsto$ size\_t --- Return the length of the string (not including the null terminator).
+        \item \textbf{strlen(char[] src):}$\mapsto$ size\_t --- Return the length of the string (not including the null terminator).
+        \item \textbf{strncmp(char[] src1, char[] src2, size\_t n):}$\mapsto$ uint (value varies) --- Compare up to n characters of two strings.
+        \item \textbf{strcmp(char[] src1, char[] src2)}$\mapsto$ size\_t (value varires) --- compare two strings
+        \item \textbf{strchr(char[] src, char c):}$\mapsto$ char* ---- get pointer to the first occurrence of character c in the string s, or nullptr if c is not found.
+        \item \textbf{strrchr(char[] src, char c):}$\mapsto$ char* --- get pointer to the last occurrence of character c in the string s.
+        \item \textbf{strstr(char[] src, char[] str):}$\mapsto$ const char* --- Return a pointer to the first occurrence of the substring 
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Searching}
+    \begin{itemize}
+        \item \textbf{strchr(char[] src, char c):}$\mapsto$ char* ---- get pointer to the first occurrence of character c in the string s, or nullptr if c is not found.
+        \item \textbf{strrchr(char[] src, char c):}$\mapsto$ char* --- get pointer to the last occurrence of character c in the string s.
+        \item \textbf{strstr(char[] src, char[] str):}$\mapsto$ const char* --- Return a pointer to the first occurrence of the substring 
+        \item \textbf{strcspn(char[] src, char[] charset):}$\mapsto$ size\_t --- Get position of first character found from charset 
+        \item \textbf{strpbrk(char[] src, char[] charset):}$\mapsto$ const char* --- Return string consisting of first match form character set in string onward
+        \item \textbf{strspn(char[] src, char[] charset):}$\mapsto$ size\_t --- Returns the length of the initial portion of str1 which consists only of characters that are part of str2.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Error}
+    \begin{itemize}
+        \item \textbf{strerror(errno)}$\mapsto$ const char* ---  Get pointer to error message string (we are literally passing in the defined variable \textit{errno})
+            \begin{verbatim}
+std::ifstream inf("file.txt");
+if (inf.fail()) { cout << strerrror(errno); } // No such file in directory 
+(Because that is what the error string is set to after inf.fail())
+            \end{verbatim}
+        we also have control over the error we can pass in, errors that are defined in <cerrno>. Rather than leaving it up to errno. We have:
+    \begin{description}
+      \item[E2BIG (C++11)] Argument list too long (macro constant)
+      \item[EACCES (C++11)] Permission denied (macro constant)
+      \item[EADDRINUSE (C++11)] Address in use (macro constant)
+      \item[EADDRNOTAVAIL (C++11)] Address not available (macro constant)
+      \item[EAFNOSUPPORT (C++11)] Address family not supported (macro constant)
+      \item[EAGAIN (C++11)] Resource unavailable, try again (macro constant)
+      \item[EALREADY (C++11)] Connection already in progress (macro constant)
+      \item[EBADF (C++11)] Bad file descriptor (macro constant)
+      \item[EBADMSG (C++11)] Bad message (macro constant)
+      \item[EBUSY (C++11)] Device or resource busy (macro constant)
+      \item[ECANCELED (C++11)] Operation canceled (macro constant)
+      \item[ECHILD (C++11)] No child processes (macro constant)
+      \item[ECONNABORTED (C++11)] Connection aborted (macro constant)
+      \item[ECONNREFUSED (C++11)] Connection refused (macro constant)
+      \item[ECONNRESET (C++11)] Connection reset (macro constant)
+      \item[EDEADLK (C++11)] Resource deadlock would occur (macro constant)
+      \item[EDESTADDRREQ (C++11)] Destination address required (macro constant)
+      \item[EDOM] Mathematics argument out of domain of function (macro constant)
+      \item[EEXIST (C++11)] File exists (macro constant)
+      \item[EFAULT (C++11)] Bad address (macro constant)
+      \item[EFBIG (C++11)] File too large (macro constant)
+      \item[EHOSTUNREACH (C++11)] Host is unreachable (macro constant)
+      \item[EIDRM (C++11)] Identifier removed (macro constant)
+      \item[EILSEQ] Illegal byte sequence (macro constant)
+      \item[EINPROGRESS (C++11)] Operation in progress (macro constant)
+      \item[EINTR (C++11)] Interrupted function (macro constant)
+      \item[EINVAL (C++11)] Invalid argument (macro constant)
+      \item[EIO (C++11)] I/O error (macro constant)
+      \item[EISCONN (C++11)] Socket is connected (macro constant)
+      \item[EISDIR (C++11)] Is a directory (macro constant)
+      \item[ELOOP (C++11)] Too many levels of symbolic links (macro constant)
+      \item[EMFILE (C++11)] File descriptor value too large (macro constant)
+      \item[EMLINK (C++11)] Too many links (macro constant)
+      \item[EMSGSIZE (C++11)] Message too large (macro constant)
+      \item[ENAMETOOLONG (C++11)] Filename too long (macro constant)
+      \item[ENETDOWN (C++11)] Network is down (macro constant)
+      \item[ENETRESET (C++11)] Connection aborted by network (macro constant)
+      \item[ENETUNREACH (C++11)] Network unreachable (macro constant)
+      \item[ENFILE (C++11)] Too many files open in system (macro constant)
+      \item[ENOBUFS (C++11)] No buffer space available (macro constant)
+      \item[ENODATA (C++11)(deprecated in C++23)] No message is available on the STREAM head read queue (macro constant)
+      \item[ENODEV (C++11)] No such device (macro constant)
+      \item[ENOENT (C++11)] No such file or directory (macro constant)
+      \item[ENOEXEC (C++11)] Executable file format error (macro constant)
+      \item[ENOLCK (C++11)] No locks available (macro constant)
+      \item[ENOLINK (C++11)] Link has been severed (macro constant)
+      \item[ENOMEM (C++11)] Not enough space (macro constant)
+      \item[ENOMSG (C++11)] No message of the desired type (macro constant)
+      \item[ENOPROTOOPT (C++11)] Protocol not available (macro constant)
+      \item[ENOSPC (C++11)] No space left on device (macro constant)
+      \item[ENOSR (C++11)(deprecated in C++23)] No STREAM resources (macro constant)
+      \item[ENOSTR (C++11)(deprecated in C++23)] Not a STREAM (macro constant)
+      \item[ENOSYS (C++11)] Function not supported (macro constant)
+      \item[ENOTCONN (C++11)] The socket is not connected (macro constant)
+      \item[ENOTDIR (C++11)] Not a directory (macro constant)
+      \item[ENOTEMPTY (C++11)] Directory not empty (macro constant)
+      \item[ENOTRECOVERABLE (C++11)] State not recoverable (macro constant)
+      \item[ENOTSOCK (C++11)] Not a socket (macro constant)
+      \item[ENOTSUP (C++11)] Not supported (macro constant)
+      \item[ENOTTY (C++11)] Inappropriate I/O control operation (macro constant)
+      \item[ENXIO (C++11)] No such device or address (macro constant)
+      \item[EOPNOTSUPP (C++11)] Operation not supported on socket (macro constant)
+      \item[EOVERFLOW (C++11)] Value too large to be stored in data type (macro constant)
+      \item[EOWNERDEAD (C++11)] Previous owner died (macro constant)
+      \item[EPERM (C++11)] Operation not permitted (macro constant)
+      \item[EPIPE (C++11)] Broken pipe (macro constant)
+      \item[EPROTO (C++11)] Protocol error (macro constant)
+      \item[EPROTONOSUPPORT (C++11)] Protocol not supported (macro constant)
+      \item[EPROTOTYPE (C++11)] Protocol wrong type for socket (macro constant)
+      \item[ERANGE] Result too large (macro constant)
+      \item[EROFS (C++11)] Read-only file system (macro constant)
+      \item[ESPIPE (C++11)] Invalid seek (macro constant)
+      \item[ESRCH (C++11)] No such process (macro constant)
+      \item[ETIME (C++11)(deprecated in C++23)] Stream ioctl() timeout (macro constant)
+      \item[ETIMEDOUT (C++11)] Connection timed out (macro constant)
+      \item[ETXTBSY (C++11)] Text file busy (macro constant)
+      \item[EWOULDBLOCK (C++11)] Operation would block (macro constant)
+      \item[EXDEV (C++11)] Cross-device link (macro constant)
+    \end{description}
+
     \end{itemize}
 
     \bigbreak \noindent 
     \subsection{Conversion}
     \begin{itemize}
-        \item \textbf{atoi:} converts C-String to an integer 
-        \item \textbf{atol:} converts C-String to a long integer 
-        \item \textbf{atof:} converts C-String to a double
+        \item \textbf{atoi(char[])} - Converts a C-string to an int.
+        \item \textbf{atol(char[])} - Converts a C-string to a long.
+        \item \textbf{atoll(char[])} - Converts a C-string to a long long.
+        \item \textbf{atof(char[])} - Converts a C-string to a double.
+        \item \textbf{strtol(char[], entdptr, base)} - Converts a C-string to a long int, with error checking and more flexibility with base representations.
+        \item \textbf{strtoul(char[], entdptr, base)} - Converts a C-string to an unsigned long int.
+        \item \textbf{strtoll(char[], entdptr, base)} - Converts a C-string to a long long int.
+        \item \textbf{strtoull(char[], entdptr, base)} - Converts a C-string to an unsigned long long int.
+        \item \textbf{strtof(char[], entdptr)} - Converts a C-string to a float.
+        \item \textbf{strtod(char[], entdptr)} - Converts a C-string to a double.
+        \item \textbf{strtold(char[], entdptr)} - Converts a C-string to a long double.
     \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Note:} Consider the codeblock
+    \begin{verbatim}
+const char* a = "12.322string";
+char* ptr;
+
+double val = strtod(a, &ptr); // ptr will hold the value "string"
+    \end{verbatim}
+    \bigbreak \noindent 
+    In this example, you can see that we are making use of the endptr optional parameter, \textit{endptr} is the address to a char pointer. It allows us to send all the string data that is not able to be converted to the requested data type . It allows us to send all the string data that is not able to be converted to the requested data type to this pointer. Only data AFTER the converted data will be sent.
+
+    
+
 
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Characters (<cctype>)}
