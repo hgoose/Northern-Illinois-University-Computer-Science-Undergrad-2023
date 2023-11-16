@@ -3829,6 +3829,110 @@ std::cout << oss.str() << std::endl; // Outputs: Alice is 25 years old.
     \bigbreak \noindent 
 
     \pagebreak \bigbreak \noindent 
+    \section{C++ Lambdas}
+    \bigbreak \noindent 
+    \begin{concept}
+       Lambdas are used to create anonymous functions. 
+    \end{concept}
+    \bigbreak \noindent 
+    General syntax:
+    \bigbreak \noindent 
+    \begin{cppcode}
+auto name = [ capture_clause ] ( parameters ) -> return_type { body }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Where:
+    \begin{itemize}
+        \item \textbf{Capture Clause:} Specifies which variables from the surrounding scope are available inside the lambda, and whether they are captured by value or by reference.
+        \item \textbf{Parameters:} Like regular functions, lambdas can take parameters.
+        \item \textbf{Return Type:} Optional. If omitted, the compiler will infer the return type based on the return statements in the lambda.
+        \item \textbf{Body:} The code to be executed when the lambda is called.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    \begin{cppcode}
+int x = 10;
+auto add = [x](int y=0) -> int { return x+y; };
+int z  = add(5);  // 15
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Options for capturing}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Capture Nothing ([]):} No variables from the enclosing scope are captured. The lambda cannot use any outside variables that are not passed as parameters.
+            \smallbreak \noindent
+            \begin{cppcode}
+                auto lambda = []() { /* ... */ };
+            \end{cppcode}
+        \item \textbf{Capture by Value ([=]):} All variables used in the lambda body are captured by value. Each variable is copied into the lambda.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10;
+                auto lambda = [=]() { return x; }; // x is captured by value
+            \end{cppcode}
+        \item \textbf{Capture by Reference ([&]):} All variables used in the lambda body are captured by reference. The lambda operates on the original variables, not copies.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10;
+                auto lambda = [&]() { x = 20; }; // x is captured by reference
+            \end{cppcode}
+        \item \textbf{Capture Specific Variable by Value ([x]):} Only the specified variable (x in this case) is captured by value.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10, y = 20;
+                auto lambda = [x]() { return x; }; // Only x is captured by value
+            \end{cppcode}
+        \item \textbf{Capture Specific Variable by Reference ([&x]):} Only the specified variable (x in this case) is captured by reference.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10, y = 20;
+                auto lambda = [&x]() { x = 30; }; // Only x is captured by reference
+            \end{cppcode}
+        \item \textbf{Capture Some by Value and Others by Reference ([x, &y]):} You can mix capturing by value and by reference. In this example, x is captured by value and y by reference.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10, y = 20;
+                auto lambda = [x, &y]() { /* ... */ };
+            \end{cppcode}
+        \item \textbf{Capture by Value, but Mutable ([=]() mutable { ... }):} By default, a lambda that captures by value is const, meaning you can't modify the captured variables. Adding mutable allows modification of the copies of the captured variables.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10;
+                auto lambda = [=]() mutable { x = 20; }; // x is a modifiable copy
+            \end{cppcode}
+        \item \textbf{Capture the Current Object by Value ([*this]):} In a member function, captures the current object (*this) by value, useful in C++17 and later.
+            \smallbreak \noindent
+            \begin{cppcode}
+                struct MyClass {
+                int x = 10;
+                auto getLambda() { return [*this]() { return x; }; }
+            };
+            \end{cppcode}
+        \item \textbf{Default Capture by Reference, Specific by Value ([&, x]):} Captures most variables by reference, but x is captured by value.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10, y = 20;
+                auto lambda = [&, x]() { /* ... */ };
+            \end{cppcode}
+        \item \textbf{Default Capture by Value, Specific by Reference ([=, &y]):} Captures most variables by value, but y is captured by reference.
+            \smallbreak \noindent
+            \begin{cppcode}
+                int x = 10, y = 20;
+                auto lambda = [=, &y]() { /* ... */ };
+            \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsection{Why auto as lambda type}
+        \bigbreak \noindent 
+        \begin{concept}
+            The simplest and most common way is to use auto, which lets the compiler deduce the type of the lambda. This is especially convenient because the actual type of a lambda expression is compiler-generated and cannot be written out explicitly.
+        \end{concept}
+        
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
     \section{\LARGE Classes (OOP Principles in C++)}
     \bigbreak \noindent 
     \textbf{Preface} This section will look at the second major programming styles, Object-Oriented programming. In contrast to procedural programming
@@ -4099,6 +4203,31 @@ int main() {
 
     \pagebreak \bigbreak \noindent 
     \subsection{Destructors}
+    \bigbreak \noindent 
+    \begin{concept}
+        In C++, a destructor is a special member function of a class that is executed when an object of that class is destroyed. Destructors are used to perform any necessary cleanup when an object goes out of scope or is deleted, such as releasing memory, closing files, or freeing other resources.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+class MyClass {
+public:
+    MyClass() {
+        // Constructor code (e.g., allocate resources)
+    }
+
+    ~MyClass() {
+        // Destructor code (e.g., release resources)
+    }
+};
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Default destructors}
+    \bigbreak \noindent 
+    \begin{concept}
+        If you don't define a destructor in your C++ class, the compiler will automatically provide a default destructor for you. This default destructor is sufficient in many cases, especially when your class does not manage any resources that require explicit cleanup (like dynamically allocated memory, file handles, network connections, etc.).
+    \end{concept}
+    
 
     \bigbreak \noindent 
     \subsection{Accessors and Mutators}

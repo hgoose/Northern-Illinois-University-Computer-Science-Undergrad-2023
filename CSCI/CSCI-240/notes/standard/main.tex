@@ -317,12 +317,6 @@ double val = strtod(a, &ptr); // ptr will hold the value "string"
     % \section{\LARGE Numeric types}
 
     \pagebreak \bigbreak \noindent 
-    \section{\LARGE Other Containers in C++ }
-    \bigbreak \noindent 
-    So far we have discussed things like arrays and vectors, but we have a few other containers that we can use in c++
-    \bigbreak \noindent 
-
-    \pagebreak \bigbreak \noindent 
     \section{C++ Arrays <array>}
     \bigbreak \noindent 
     \textbf{Note:} C++ Arrays are defined
@@ -352,39 +346,124 @@ std::array<T,N> name;
 
     \pagebreak \bigbreak \noindent 
     \section{\LARGE C-Style Arrays (<algorithm>) }
-    \begin{itemize}
-         \item \textbf{sort(first, last)} -> void: Sorts the elements in the range [first, last).
-        \item \textbf{find(first, last, value)} -> Iterator: Returns an iterator to the first occurrence of value. If not found, returns last.
-        \item \textbf{copy(first, last, destination\_first)} -> Iterator: Copies the elements from [first, last) to the beginning at d\_first.
-        \item \textbf{fill(first, last, value)} -> void: Assigns value to all the elements in the range [first, last).
-        \item \textbf{count(first, last, value)} -> size\_t: Counts elements that are equal to value.
-        \item \textbf{reverse(first, last)} -> void: Reverses the elements in the range [first, last).
-        \item \textbf{replace(first, last, old\_value, new\_value)} -> void: Replaces all elements equal to old\_value with new\_value.
-        \item \textbf{min\_element(first, last)} -> Iterator: Returns an iterator pointing to the first instance of the smallest element.
-        \item \textbf{max\_element(first, last)} -> Iterator: Returns an iterator pointing to the first instance of the largest element.
-        \item \textbf{binary\_search(first, last, value)} -> bool: Checks if value exists in the sorted sequence.
-        \item \textbf{equal(first1, last1, first2)} -> bool: Checks if two sequences are the same.
-        \item \textbf{mismatch(first1, last1, first2)} -> Pair: Returns a pair of iterators pointing to the first unequal elements.
-    \end{itemize}
-    \bigbreak \noindent \bigbreak \noindent 
-    Example: Find function
-    \smallbreak \noindent
-    \begin{minted}{cpp}
-#define _SIZE(a) sizeof(a) / sizeof(a[0])
-
-int arr[] = {5,4,3,2,1};
-auto it = std::find(arr,_SIZE(arr), 3); // Pointer to that element in our array
-
-if (it != _SIZE(a)) {
-    cout << "Found at index pos: " << it - arr;
-}
-    \end{minted}
     \bigbreak \noindent 
-    If the element is not found, the find function will return a iterator to the last element in the array, so we check to see if this is the case.
-    When we subtract two pointers, we are computed the distance between those two pointers. Hence it-arr gives the position of our element.
+    Prereq: Vocab
+    \begin{itemize}
+        \item An \textbf{InputIterator} is a type of iterator that can be used to read data from a sequence of elements. It supports operations like incrementing (to move to the next element in the sequence), dereferencing (to access the value of the element it currently points to), and comparing with other iterators (to check for the end of the sequence). Input iterators are the least powerful, but most widely applicable kind of iterator, as they only require single-pass, read-only access.
+        \item An \textbf{ForwardIterator} is a type of iterator that has all the capabilities of an InputIterator but with some additional properties:
+            \begin{itemize}
+                \item It can be incremented multiple times and will always give the same sequence of results (multi-pass guarantee).
+                \item It supports both it++ and ++it operations with the same effect.
+                \item Two dereferenced copies of a ForwardIterator are guaranteed to reference the same element (if neither is modified).
+            \end{itemize}
+            ForwardIterator is used in contexts where an algorithm might need to pass over a range of elements multiple times.
+        \item A \textbf{UnaryPredicate} is a function or a function object that takes a single argument and returns a bool. It is used to test whether a certain condition is true for the elements in a sequence. The predicate can be a regular function, a lambda expression, or an object of a class that overloads the function call operator.
+    \end{itemize}
+    \bigbreak \noindent  
+    \textbf{std::pair type}: std::pair is a class template that provides a way to store two heterogeneous objects as a single unit. The way we access the elements is with .first and .second
+    \subsection{Non-Modifying}
+    \begin{itemize}
+        \item \textbf{all\_of(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) bool: Returns true if the predicate is true for all elements in the given range.
+        \item \textbf{any\_of(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) bool: Returns true if the predicate is true for any element in the range.
+        \item \textbf{none\_of(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) bool: Returns true if the predicate is false for all elements in the range.
+        \item \textbf{for\_each(InputIterator, InputIterator, Function)} \(\mapsto\) Function: Applies a function to each element in the range.
+        \item \textbf{count(InputIterator, InputIterator, const T\&)} \(\mapsto\) size\_t: Counts elements equal to the specified value.
+        \item \textbf{count\_if(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) size\_t: Counts elements for which the predicate is true.
+        \item \textbf{mismatch(InputIterator1, InputIterator1, InputIterator2)} \(\mapsto\) pair<InputIterator1, InputIterator2>: Finds the first position where two ranges differ.
+        \item \textbf{find(InputIterator, InputIterator, const T\&)} \(\mapsto\) InputIterator: Finds the first element equal to the specified value.
+        \item \textbf{find\_if(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) InputIterator: Finds the first element for which the predicate is true.
+        \item \textbf{find\_if\_not(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) InputIterator: Finds the first element for which the predicate is false.
+        \item \textbf{find\_end(InputIterator, InputIterator, InputIterator, InputIterator)} \(\mapsto\) InputIterator: Finds the last occurrence of a subsequence.
+        \item \textbf{find\_first\_of(InputIterator, InputIterator, InputIterator, InputIterator)} \(\mapsto\) InputIterator: Finds the first element that matches any element in another range.
+        \item \textbf{adjacent\_find(InputIterator, InputIterator, o:UnaryPredicate)} \(\mapsto\) InputIterator: Finds the first two adjacent items that are equal (or satisfy a given predicate).
+        \item \textbf{search(InputIterator, InputIterator, InputIterator, InputIterator)} \(\mapsto\) InputIterator: Searches for the first occurrence of a subsequence.
+        \item \textbf{search\_n(InputIterator, InputIterator, size\_t, const T\&)} \(\mapsto\) InputIterator: Searches for a sequence of repeated elements.
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{notebox}
+       The for\_each function returns the function that was used to map each element.
+    \end{notebox}
 
+    \pagebreak \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{copy(InputIterator, InputIterator, OutputIterator)} \(\mapsto\) OutputIterator: Copies a range of elements to a new location.
+    \item \textbf{copy\_if(InputIterator, InputIterator, OutputIterator, UnaryPredicate)} \(\mapsto\) OutputIterator: Copies elements satisfying a condition to a new location.
+    \item \textbf{copy\_n(InputIterator, Size, OutputIterator)} \(\mapsto\) OutputIterator: Copies a number of elements to a new location.
+    \item \textbf{copy\_backward(BidirectionalIterator1, BidirectionalIterator1, BidirectionalIterator2)} \(\mapsto\) BidirectionalIterator2: Copies elements in reverse order.
+    \item \textbf{move(InputIterator, InputIterator, OutputIterator)} \(\mapsto\) OutputIterator: Moves a range of elements to a new location.
+    \item \textbf{move\_backward(BidirectionalIterator1, BidirectionalIterator1, BidirectionalIterator2)} \(\mapsto\) BidirectionalIterator2: Moves elements in reverse order.
+    \item \textbf{fill(ForwardIterator, ForwardIterator, const T\&)} \(\mapsto\) void: Assigns a value to all elements in a range.
+    \item \textbf{fill\_n(OutputIterator, Size, const T\&)} \(\mapsto\) OutputIterator: Assigns a value to a number of elements.
+    \item \textbf{transform(InputIterator, InputIterator, OutputIterator, UnaryOperation)} \(\mapsto\) OutputIterator: Applies a function to a range of elements.
+    \item \textbf{generate(ForwardIterator, ForwardIterator, Generator)} \(\mapsto\) void: Fills a range with the results of successive function calls.
+    \item \textbf{generate\_n(OutputIterator, Size, Generator)} \(\mapsto\) OutputIterator: Fills a range with N results of successive function calls.
+    \item \textbf{remove(InputIterator, InputIterator, const T\&)} \(\mapsto\) InputIterator: Removes elements equal to a value.
+    \item \textbf{remove\_if(InputIterator, InputIterator, UnaryPredicate)} \(\mapsto\) InputIterator: Removes elements satisfying a condition.
+    \item \textbf{remove\_copy(InputIterator, InputIterator, OutputIterator, const T\&)} \(\mapsto\) OutputIterator: Copies elements not equal to a value.
+    \item \textbf{remove\_copy\_if(InputIterator, InputIterator, OutputIterator, UnaryPredicate)} \(\mapsto\) OutputIterator: Copies elements not satisfying a condition.
+    \item \textbf{replace(InputIterator, InputIterator, const T\&, const T\&)} \(\mapsto\) void: Replaces all values equal to a specified value.
+    \item \textbf{replace\_if(InputIterator, InputIterator, UnaryPredicate, const T\&)} \(\mapsto\) void: Replaces values satisfying a condition.
+    \item \textbf{replace\_copy(InputIterator, InputIterator, OutputIterator, const T\&, const T\&)} \(\mapsto\) OutputIterator: Copies and replaces values.
+    \item \textbf{replace\_copy\_if(InputIterator, InputIterator, OutputIterator, UnaryPredicate, const T\&)} \(\mapsto\) OutputIterator: Copies and replaces values based on a condition.
+    \item \textbf{swap(T\&, T\&)} \(\mapsto\) void: Swaps the values of two objects.
+    \item \textbf{swap\_ranges(ForwardIterator1, ForwardIterator1, ForwardIterator2)} \(\mapsto\) ForwardIterator2: Swaps two ranges of elements.
+    \item \textbf{iter\_swap(ForwardIterator1, ForwardIterator2)} \(\mapsto\) void: Swaps elements pointed to by two iterators.
+    \item \textbf{reverse(BidirectionalIterator, BidirectionalIterator)} \(\mapsto\) void: Reverses the order of elements in a range.
+    \item \textbf{reverse\_copy(BidirectionalIterator, BidirectionalIterator, OutputIterator)} \(\mapsto\) OutputIterator: Creates a reversed copy of a range.
+    \item \textbf{rotate(ForwardIterator, ForwardIterator, ForwardIterator)} \(\mapsto\) ForwardIterator: Rotates the order of elements in a range.
+    \item \textbf{rotate\_copy(ForwardIterator, ForwardIterator, ForwardIterator, OutputIterator)} \(\mapsto\) OutputIterator: Copies and rotates a range of elements.
+    \item \textbf{shift\_left(ForwardIterator, ForwardIterator, Size)} \(\mapsto\) ForwardIterator: Shifts elements in a range to the left.
+    \item \textbf{shift\_right(ForwardIterator, ForwardIterator, Size)} \(\mapsto\) ForwardIterator: Shifts elements in a range to the right.
+    \item \textbf{random\_shuffle(RandomAccessIterator, RandomAccessIterator)} \(\mapsto\) void: Randomly re-orders elements in a range.
+    \item \textbf{shuffle(RandomAccessIterator, RandomAccessIterator, URNG\&)} \(\mapsto\) void: Randomly re-orders elements in a range using a generator.
+    \item \textbf{sample(InputIterator, InputIterator, OutputIterator, Size, URNG\&)} \(\mapsto\) OutputIterator: Selects N random elements from a sequence.
+    \item \textbf{unique(ForwardIterator, ForwardIterator)} \(\mapsto\) ForwardIterator: Removes consecutive duplicate elements in a range.
+    \item \textbf{unique\_copy(InputIterator, InputIterator, OutputIterator)} \(\mapsto\) OutputIterator: Creates a copy of a range without consecutive duplicates.
+    \end{itemize}
+    
+    \bigbreak \noindent 
+    \subsection{Using lambdas for these functions}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int arr[]  = {1,2,3};
+        std::for_each(arr, arr+3, [](int& a) -> int { return ++x; });
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Getting position of element from returned iterator}
+    \bigbreak \noindent 
+    \begin{concept}
+        If we subtract the iterator (which is the address of the array element) from the beginning of the array, we get the distance between the two pointers (so the index position of the iterator value) 
+        \bigbreak \noindent 
+        \begin{cppcode}
+        idx = it - std::begin(array);
+        \end{cppcode}
+    \end{concept}
+
+    \pagebreak \bigbreak \noindent
+    \section{\LARGE Iterators <iterator>}
+    \bigbreak \noindent 
 
     
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Vectors}
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Set}
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Map}
+    \bigbreak \noindent 
+
+
+
+
+%
+%
+%     
 
 %
 %
