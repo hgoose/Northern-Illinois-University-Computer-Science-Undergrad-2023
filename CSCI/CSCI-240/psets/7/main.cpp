@@ -19,21 +19,30 @@ sale, and the number of days required for the crops to mature.
 #include <iomanip>
 #include <cstdlib>
 #include <fstream>
-#include <string>
 
+#ifndef ll
 #define ll endl
+#endif
 
 // PARALLEL ARRAY SIZE
+#ifndef PA_S
 #define PA_S 30
+#endif
 
 // COLUMN LENGTH
+#ifndef COL_L
 #define COL_L 16
+#endif
 
 // ROW WIDTH
+#ifndef ROW_W
 #define ROW_W 6
+#endif
 
 // ERROR OPENING FILE MESSAGE
+#ifndef FILE_ERR
 #define FILE_ERR cerr << "Program terminated with exit code 1: Error opening file, no file named crops.txt" << endl
+#endif
 
 using std::cout;
 using std::cin;
@@ -362,11 +371,11 @@ void SelectionCalculator(const string& choice,
     float options_profit[PA_S];
 
     // Other needed variables
-    int num_seeds = 0, num_price = 0;
+    int num_seeds = 0, num_price{0};
     float yield;
 
     // This will build our subset arrays based on which data entrys we can actually use
-    int counter = 0; // same concept as "entrys" variable in build function
+    int counter{0}; // same concept as "entrys" variable in build function
     for ( int i=0; i < num_of_crops; ++i ) {
         // Only want options that are the correct season, and furthermore follow the "days left in season" constraint
         if (season[i] == choice && harvest_time[i] < days_left) {
