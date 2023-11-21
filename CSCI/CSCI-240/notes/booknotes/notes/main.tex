@@ -3936,6 +3936,31 @@ int z  = add(5);  // 15
     \end{itemize}
 
     \pagebreak \bigbreak \noindent 
+    \section{\LARGE Fancy case syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+int a{5};
+
+switch (a) {
+    case 0 ... 9: cout << "in 0-9";
+    break;
+}
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \section{Static globals}
+    \bigbreak \noindent 
+    When static is used in the global scope or namespace scope (outside any class), it gives internal linkage to variables or functions. This means that the variable or function is only visible within the translation unit (basically the source file) in which it is declared.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    static int globalVar; // Only accessible within this source file
+
+    static void globalFunction() {
+        // Only accessible within this source file
+    }
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
     \section{\LARGE Classes (OOP Principles in C++)}
     \bigbreak \noindent 
     \textbf{Preface} This section will look at the second major programming styles, Object-Oriented programming. In contrast to procedural programming
@@ -4117,8 +4142,12 @@ public:
         height = other.height;
     }
 ];
-
     \end{cppcode}
+    \bigbreak \noindent 
+    \begin{notebox}
+        The reason we pass by reference is to avoid infinite recursion. When a function parameter in C++ is passed by value, the language's semantics dictate that a copy of the argument is made. You can see how passing by value would lead to a stack overflow
+    \end{notebox}
+    
     
     \bigbreak \noindent 
     \subsection{Constructor Overloading}
@@ -4127,7 +4156,7 @@ public:
         Just like other functions in C++, constructors can also be overloaded. This means you can have more than one constructor in a class, each with a different set of parameters.
     \end{concept}
 
-    \bigbreak \noindent 
+    \pagebreak \bigbreak \noindent 
     \subsection{Initialization Lists}
     \bigbreak \noindent 
     \begin{concept}
@@ -4306,14 +4335,226 @@ int main(int argc, const char* argv[]) {
     \pagebreak \bigbreak \noindent 
     \subsection{Static}
     \bigbreak \noindent 
+    \begin{concept}
+        \bigbreak \noindent 
+        \textbf{Static Member Variable}
+        \bigbreak \noindent 
+       A static member variable is shared by all instances of the class. It is not associated with any particular instance of the class but rather with the class itself. There is only one instance of this variable, regardless of how many objects of the class are created. 
+       \bigbreak \noindent 
+       \textbf{Static member function}
+       \bigbreak \noindent 
+       Similarly, static member functions are not associated with any particular object of the class. They can only access static members and cannot access non-static members or functions.
+    \end{concept}
+    
 
     \bigbreak \noindent 
     \subsection{Memberwise assignment}
     \bigbreak \noindent 
+    \begin{concept}
+        Memberwise assignment refers to the default behavior provided by the compiler when one object of a class is assigned to another. This default assignment operator performs a shallow copy, which means it copies the value of each member of the source object to the corresponding member of the destination object. This is fine for classes that only contain non-pointer data members or for cases where a shallow copy is sufficient. However, if the class contains pointers or dynamic resources, a shallow copy might lead to issues like double deletion or resource leaks.
+    \end{concept}
 
-    \bigbreak \noindent 
+    \pagebreak \bigbreak \noindent 
     \subsection{Operator Overloading}
     \bigbreak \noindent 
+    For binary operators like +, -, *, etc., if you overload them as member functions, the left operand must be an object of your class, and the right operand is passed as an argument to the operator function.
+    \bigbreak \noindent 
+    \begin{cppcode}
+class Vector {
+    private:
+        int x,y;
+
+    public:
+        Vector(int x, int y) : x(x), y(y) {}
+
+        Vector operator+(const Vector& other) const {
+            return Vector(x + other.x, y+other.x);
+        }
+};
+    \end{cppcode}
+    \bigbreak \noindent 
+    To overload stream operators
+    \bigbreak \noindent 
+    \begin{cppcode}
+class Vector {
+    private:
+        int x,y;
+
+    public:
+        Vector(int x, int y) : x(x), y(y) {}
+
+        Vector operator+(const Vector& other) const {
+            return Vector(x + other.x, y+other.x);
+        }
+
+        void display() {
+            cout << this->x << endl << this->y;
+        }
+
+    friend  std::ostream& operator<<(std::ostream& os, const Vector& v);
+};
+
+std::ostream& operator<<(std::ostream& os, const Vector& v) {
+    os << "(" << v.x << ", " << v.y << ")";
+    return os;
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+
+
+
+    \pagebreak \bigbreak \noindent 
+    \section{Class Inheritance}
+    \bigbreak \noindent 
+    \begin{concept}
+       In C++, it is possible to inherit attributes and methods from one class to another. We group the "inheritance concept" into two categories:
+       \begin{itemize}
+           \item \textbf{derived class (child)} - the class that inherits from another class
+           \item \textbf{base class (parent)} - the class being inherited from
+       \end{itemize}
+       To inherit from a class, use the : symbol
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+// Base class
+class Vehicle {
+  public:
+    string brand = "Ford";
+    void honk() {
+      cout << "Tuut, tuut! \n" ;
+    }
+};
+
+// Derived class
+class Car: public Vehicle {
+  public:
+    string model = "Mustang";
+};
+
+int main() {
+  Car myCar;
+  myCar.honk();
+  cout << myCar.brand + " " + myCar.model;
+  return 0;
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+    In c++ we have
+    \begin{itemize}
+        \item \textbf{Single Inheritance:} A derived class inherits from one base class.
+        \item \textbf{Multiple Inheritance:} A derived class inherits from more than one base class.
+        \item \textbf{Multilevel Inheritance:} A class is derived from a class which is also derived from another class.
+        \item \textbf{Hierarchical Inheritance:} Several derived classes inherit from a single base class.
+        \item \textbf{Hybrid Inheritance:} A combination of two or more types of inheritance.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Access Specifiers}
+    \bigbreak \noindent 
+    Inheritance can be of three types based on access specifiers: public, protected, or private.
+    \begin{itemize}
+        \item \textbf{Public Inheritance (public):} Public members of the base class remain public in the derived class, and protected members of the base class remain protected in the derived class.
+        \item \textbf{Protected Inheritance (protected):} Public and protected members of the base class become protected in the derived class.
+        \item \textbf{Private Inheritance (private):} Public and protected members of the base class become private in the derived class.
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Constructors and Destructors}
+    \bigbreak \noindent 
+    \begin{concept}
+       \begin{itemize}
+           \item Constructors and destructors are not inherited. However, when you create an object of a derived class, its constructor calls the constructor of the base class. You can also specify which base class constructor should be called using an initializer list.
+           \item The destructor of the base class is called automatically when the derived class object is destroyed.
+       \end{itemize} 
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Virtual functions and the override keyword}
+    \bigbreak \noindent 
+    \begin{concept}
+       In C++, the virtual keyword is used primarily in base classes to ensure that the correct member functions are called on objects of derived classes, even when they are referred to with base class pointers or references. This is a key part of implementing polymorphism in C++. 
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <iostream>
+
+class Base {
+public:
+    virtual void show() {
+        std::cout << "Base class show function called." << std::endl;
+    }
+};
+
+class Derived : public Base {
+public:
+    void show() override {
+        std::cout << "Derived class show function called." << std::endl;
+    }
+};
+
+int main() {
+    Base *bptr;
+    Derived d;
+    bptr = &d;
+
+    // Virtual function, binded at runtime (Runtime polymorphism)
+    bptr->show();
+
+    return 0;
+}
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Virtual Destructors}
+    \bigbreak \noindent 
+    \begin{concept}
+        Virtual destructors are important when you deal with inheritance and dynamic memory allocation. If a base class destructor is not virtual, deleting an instance of a derived class via a pointer to the base class leads to undefined behavior (typically, it results in a memory leak).
+    \end{concept}
+    
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Base class pointer to child class object}
+    \bigbreak \noindent 
+    The primary reason for using base class pointers (or references) to point to derived class objects is to achieve polymorphic behavior. When you have a hierarchy of classes with virtual functions, you can use a base class pointer to work with objects of any derived class without knowing their exact type.
+    \bigbreak \noindent 
+    \begin{cppcode}
+Class Animal {
+public:
+    virtual void speak() = 0; // Pure virtual function
+};
+
+class Dog : public Animal {
+public:
+    void speak() override { std::cout << "Woof!" << std::endl; }
+};
+
+class Cat : public Animal {
+public:
+    void speak() override { std::cout << "Meow!" << std::endl; }
+};
+
+void makeAnimalSpeak(Animal* animal) {
+    animal->speak();
+}
+
+int main() {
+    Dog dog;
+    Cat cat;
+
+    makeAnimalSpeak(&dog); // Outputs: Woof!
+    makeAnimalSpeak(&cat); // Outputs: Meow!
+}
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Interface-Based Programming}
+    \bigbreak \noindent 
+
+
+    
+    
+    
     
 
     \pagebreak \bigbreak \noindent 
@@ -4361,6 +4602,8 @@ void MyClass::myFunction() {
     // Function implementation
 }
     \end{cppcode}
+
+
 
 
 
