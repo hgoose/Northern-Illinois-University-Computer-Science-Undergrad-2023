@@ -1,0 +1,539 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Warner \thepage}
+\rhead{}
+% \lhead{\leftmark}
+\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{GUI Applications with C++} \\
+           Build GUI apps for linux with QT
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           November 23, 2023\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak \bigbreak \noindent
+    \phantomsection
+    \addcontentsline{toc}{section}{\LARGE Preface} 
+    \section*{\LARGE Preface}
+    \bigbreak \noindent 
+    Creating a simple GUI application with Qt in C++ involves several steps. First, ensure you have the Qt framework installed on your Linux system. You can download QT on arch linux using pacman.
+    \bigbreak \noindent 
+    \begin{bashcode}
+pacman -Sy qt5
+    \end{bashcode}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Source File (Simple GUI)}
+    \section*{Source File (Simple GUI)}
+    \bigbreak \noindent 
+    Here we make a simple GUI to show how the projects are built
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <QApplication>
+#include <QProcess>
+#include <QWidget>
+#include <QPushButton>
+#include <iostream>
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
+    QWidget window;
+
+    QPushButton *button = new QPushButton("Click me", &window);
+    button->setGeometry(50, 50, 80, 30);
+
+    window.resize(250, 150);
+    window.setWindowTitle("Button Example");
+    window.show();
+
+    return app.exec();
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{.pro file (Making project)}
+    \section*{.pro file (Making project)}
+    \bigbreak \noindent 
+    To build our projects, we need to assemble a .pro file. A sample .pro file for the file above would look something like
+    \bigbreak \noindent 
+    \begin{cppcode}
+TEMPLATE = app
+TARGET = your_app_name
+CONFIG += console c++11
+QT += widgets
+
+# Input
+SOURCES += main.cpp
+
+# If you have additional source files, list them here
+# SOURCES += source1.cpp source2.cpp
+
+# If you have header files, list them here
+# HEADERS += header1.h header2.h
+
+# If you have UI files created using Qt Designer, list them here
+# FORMS += mainwindow.ui
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{TEMPLATE=app} tells Qt's build system, qmake, that your project is an application. This means qmake will generate a Makefile to build an executable.
+        \item \textbf{TARGET=you\_app\_name} specifies the name for the executable
+        \item \textbf{CONFIG += console c++11} is used to define various configuration options for the build process
+            \begin{itemize}
+                \item \textbf{console:} This option is used to specify that the application is a console application. This is particularly relevant on Windows, where it determines whether a console window is opened alongside your application. For GUI applications, you typically wouldn't include console, as GUI applications on Windows usually don't need a console window. On Linux and macOS, the distinction is less significant, as terminal-based and graphical applications are not as strictly separated as on Windows.
+                \item \textbf{c++11} tells the compiler to use the C++11 standard
+            \end{itemize}
+        \item \textbf{QT += widgets} is used to add the widgets module form the list of modules to be included in the application 
+        \item \textbf{SOURCES += main.cpp} is used to add source files in the build process
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Building the application}
+    \section*{Building the app}
+    \bigbreak \noindent 
+    Once we have made the .pro file, we can begin the build process
+    \bigbreak \noindent 
+    \begin{bashcode}
+qmake filename.pro # First
+make # Then
+    \end{bashcode}
+
+    \pagebreak \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Other options for pro file variables}
+    \section*{Other options for pro file variables}
+    \begin{itemize}
+        \item \textbf{TEMPLATE:} 
+            \begin{itemize}
+                \item \textbf{app:} This is used for building an application. It will create an executable. When you're developing a typical GUI or console application, you use TEMPLATE = app.
+                \item \textbf{lib:} This is used for building a library. If you're developing a library (either static or dynamic), you would use TEMPLATE = lib. When you choose this, qmake will generate a Makefile suitable for building a library instead of an executable.
+                \item \textbf{subdirs:} This is used for a project that contains multiple subprojects. The subdirs template is useful when your project is large and split across multiple directories, each of which is a different project (either an application or a library). With TEMPLATE = subdirs, qmake will manage these subprojects according to the instructions you provide in the .pro file.
+                \item \textbf{aux:} This template is used for auxiliary files that are not compiled but are included in the project. It's less commonly used compared to the other templates.
+                \item \textbf{vcapp and vclib:} These are for Visual Studio integration on Windows.
+            \end{itemize}
+        \item \textbf{CONFIG:}
+            \begin{itemize}
+                \item \textbf{debug:} Builds the application with debugging symbols. Useful for debugging the application.
+                \item \textbf{release:} Builds the application in release mode, which typically includes optimizations and lacks debugging symbols.
+                \item \textbf{qml\_debug:} Enables debugging of QML code. Useful if you are using QML for your application's UI.
+                \item \textbf{qt:} Ensures that Qt-specific build steps are executed, like running the Meta-Object Compiler (MOC) on classes that use Qt's signal and slot mechanism.
+                \item \textbf{c++11, c++14, c++17, c++20:} Specifies the C++ standard to be used. You should match this with the version of C++ your code is written in.
+                \item \textbf{warn\_on:} Enables all compiler warnings. This is useful for ensuring that potential code issues are highlighted during the build process.
+                \item \textbf{static:} When building a library, this option specifies that the library should be static rather than dynamic.
+                \item \textbf{shared:} Opposite of static, this is used for building shared libraries.
+                \item \textbf{testcase:} Used when building a project as a test case using Qt Test.
+                \item \textbf{lex yacc:} Includes support for Lex and Yacc if you are using these tools in your project.
+                \item \textbf{thread:} Enables multi-threading support in your application.
+                \item \textbf{exceptions:} Enables support for C++ exceptions.
+                \item \textbf{no\_keywords:} Disables the use of Qt-specific keywords like slots, signals, and emit to avoid conflicts with third-party libraries.
+                \item \textbf{opengl:} Enables the use of OpenGL in the application.
+                \item \textbf{widgets:} Includes the QtWidgets module, necessary for applications using Qt Widgets.
+                \item \textbf{network:} Includes the QtNetwork module for network programming.
+                \item \textbf{sql:} Includes the Qt SQL module for database operations.
+                \item \textbf{xml:} Includes the Qt XML module for XML processing.
+                \item \textbf{link\_pkgconfig:} Allows the use of pkg-config to find libraries.
+                \item \textbf{precompile\_header:} Enables the use of precompiled headers to speed up compilation.
+            \end{itemize}
+            \pagebreak 
+        \item \textbf{QT: (List of modules we can add or remove)}
+            \begin{itemize}
+                    \item \textbf{core:} This is included by default and provides core non-GUI functionality. It's essential for any Qt application.
+                   \item \textbf{gui:} Also included by default in most cases, this module is necessary for any application that uses Qt's graphical user interface elements.
+                \item \textbf{widgets:} For applications that use QWidget-based user interfaces. This is a key module for traditional desktop GUI applications.
+                \item \textbf{network:} Adds network communication capabilities, like handling TCP/IP connections, for your application.
+                \item \textbf{sql:} If your application needs to interact with SQL databases, this module provides the necessary functionality.
+                \item \textbf{qml:} Necessary for applications that use the QML language for designing user interfaces, especially in combination with the Qt Quick module.
+                \item \textbf{quick:} Used in conjunction with QML to create fluid, dynamic user interfaces. It's a part of the Qt Quick framework.
+                \item \textbf{multimedia:} For applications that need to handle audio, video, radio, and camera functionality.
+                \item \textbf{bluetooth:} Provides classes for writing Bluetooth applications.
+                \item \textbf{concurrent:} Enables easier use of multi-threading in applications.
+                \item \textbf{printsupport:} For applications that require printing capabilities.
+                \item \textbf{webkit or webengine:} For applications that need to embed web content using WebKit or Qt WebEngine.
+                \item \textbf{xml:} Adds support for reading and writing XML data.
+                \item \textbf{opengl:} For applications that use OpenGL for rendering graphics.
+                \item \textbf{testlib:} For writing unit tests.
+                \item \textbf{positioning:} For applications that require location and positioning functionality.
+                \item \textbf{sensors:} Access to various hardware sensors like accelerometers, gyroscopes, etc.
+                \item \textbf{serialport:} For applications that communicate with devices over serial ports.
+                \item \textbf{svg:} Support for Scalable Vector Graphics (SVG) files.
+                \item \textbf{dbus:} For applications that communicate with other applications using the D-Bus protocol (mostly relevant on Linux). 
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Includes}
+    \section*{Includes}
+    \bigbreak \noindent 
+    The main include we need to build our GUI apps is <QApplication>, this class manages the GUI application's control flow and main settings
+    \bigbreak \noindent 
+    The <QWidget> class is the base class of all user interface objects. 
+    \bigbreak \noindent 
+    The <QProcess> allows us to launch external processes
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Example Application}
+    \section*{Example Application}
+    \bigbreak \noindent 
+    Here is a sample application which creates a clickable button that takes us to a certain directory in a new terminal window
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <QApplication>
+#include <QWidget>
+#include <QPushButton>
+#include <QProcess>
+#include <iostream>
+
+class MyWindow : public QWidget {
+    Q_OBJECT
+
+public:
+    MyWindow(QWidget *parent = nullptr) : QWidget(parent) {
+        QPushButton *button = new QPushButton("Open Terminal", this);
+        button->setGeometry(50, 50, 120, 30);
+        connect(button, &QPushButton::clicked, this, &MyWindow::onButtonClicked);
+    }
+
+public slots:
+    void onButtonClicked() {
+        QProcess::startDetached("kitty --working-directory=/home/datura/tmp/cpp");
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
+    MyWindow window;
+    window.resize(250, 150);
+    window.setWindowTitle("Button Example");
+    window.show();
+
+    return app.exec();
+}
+
+#include "main.moc"
+    \end{cppcode}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Q\_OBJECT}
+    \section*{Q\_OBJECT}
+    \bigbreak \noindent 
+    The Q\_OBJECT macro is essential in Qt applications for any class that defines signals or slots, and it enables several key features provided by Qt's meta-object system.
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Signals and Slots}
+    \section*{Signals and Slots}
+    \bigbreak \noindent 
+    Signals and slots are fundamental aspects of Qt and form the basis of its event communication system. They are used for communication between objects and are an integral part of Qt's programming model, especially in GUI applications. Here's a breakdown of what they are and how they work:
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Signals}
+    \subsection*{Signals}
+    \bigbreak \noindent 
+    \textbf{Definition:} A signal is a message sent by an object to indicate that some event has occurred or some state has changed. In Qt, signals are declared in a class, but they are not implemented in the class. They are just emitted (or "fired") when the event they represent occurs.
+    \bigbreak \noindent 
+    \textbf{Usage:} Signals are used to broadcast information. Any number of slots can listen and react to a particular signal.
+    \bigbreak \noindent 
+    \textbf{Syntax:} In Qt, signals are declared with the signals keyword.
+    \bigbreak \noindent 
+    \begin{cppcode}
+signals:
+    void mySignal();
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Slots}
+    \subsection*{Slots}
+    \bigbreak \noindent 
+    \textbf{Definition:} A slot is a function that is used to receive and respond to a signal. Slots can be normal member functions of a class.
+    \bigbreak \noindent 
+    \textbf{Usage:} Slots are used to perform actions in response to the occurrence of the event signified by a signal. A slot does not know if it has received a signal from a signal or directly as a regular function call.
+    \bigbreak \noindent 
+    \textbf{Syntax:} Slots are declared with the slots keyword or can be just regular member functions. They can also be private or protected.
+    \bigbreak \noindent 
+    \begin{cppcode}
+public slots:
+    void mySlot();
+    \end{cppcode}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Connecting Signals to Slots}
+    \subsection*{Connecting Signals to Slots}
+    \bigbreak \noindent 
+    \textbf{Mechanism:} In Qt, objects communicate with each other via signals and slots. When a signal is emitted, all connected slots are called.
+    \bigbreak \noindent 
+    \textbf{Dynamic Connection:} The connection between signals and slots can be made at runtime using the QObject::connect() function.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    connect(sender, SIGNAL(mySignal()), receiver, SLOT(mySlot()));
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{The MyWindow Constructor and Widget Hierarchy}
+    \section*{The MyWindow Constructor and Widget Hierarchy}
+    \bigbreak \noindent
+    In Qt, the concept of parent-child relationships is pivotal for managing widgets (the graphical user interface elements). When you create a custom widget like MyWindow, which inherits from QWidget, you often include a constructor that allows for specifying a parent widget. This relationship is crucial for several aspects of a widget's behavior and lifecycle.
+    \bigbreak \noindent 
+    \begin{cppcode}
+MyWindow(QWidget *parent = nullptr) : QWidget(parent) {
+    // Constructor body
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Optional Parent Argument:} The constructor of MyWindow takes an optional parameter parent, which is a pointer to a QWidget. The default value of this parameter is nullptr.
+        \item \textbf{Delegating to QWidget Constructor:} Inside the constructor, we use an initialization list to call the base class QWidget's constructor with the parent argument. This is a common C++ technique for initializing base class members.
+        \item \textbf{Behavior Based on parent Argument:}
+        \begin{itemize}
+            \item \textbf{Top-Level Window:} If nullptr is passed to MyWindow (or no argument is provided), it implies that MyWindow does not have a parent widget. In this case, MyWindow acts as a top-level window. This means it can be a standalone window with its own window decorations (like a title bar, minimize/maximize buttons, etc.).
+            \item \textbf{Child Widget:} If a valid QWidget pointer is passed as the parent, MyWindow becomes a child widget of the specified parent widget. As a child widget, it will be contained within the parent widget's window and subject to its geometry and visibility. Additionally, the parent widget will manage the lifetime of MyWindow, automatically deleting it when the parent widget is destroyed.
+        \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    This constructor design allows MyWindow to be versatile: it can either be an independent window or part of a larger interface, depending on how it's instantiated. This flexibility is a key feature of Qt's approach to building user interfaces, where the composition of widgets can be dynamically arranged.
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Main Semantics}
+    \section*{Main Semantics}
+    \bigbreak \noindent 
+    In a Qt application, the main function serves as the entry point and is responsible for setting up and running the application's main event loop
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{QApplication Initialization:}
+    \subsection*{QApplication Initialization:}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    QApplication app(argc, argv);
+    \end{cppcode}
+    \begin{itemize}
+        \item QApplication is a class that manages application-wide resources and is necessary for any Qt GUI application.
+        \item It needs to be instantiated at the beginning of main.
+        \item argc and argv are passed to QApplication to handle any command-line arguments that are relevant to Qt applications (like GUI style, plugin paths, etc.).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Creating a Window}
+    \subsection*{Creating a Window}
+    \bigbreak \noindent 
+    If no custom window class is made, we can create a window with
+    \bigbreak \noindent 
+    \begin{cppcode}
+Qwidget window;
+window.resize(250, 150);
+window.setWindowTitle("Title Text");
+Window.show();
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Starting the Event Loop:}
+    \subsection*{Starting the Event Loop:}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    return app.exec();
+    \end{cppcode}
+    \begin{itemize}
+        \item app.exec() starts the application's event loop. This is a crucial call; it enters the main loop where events (like mouse clicks, keypresses, or custom events) are received and dispatched to the appropriate widgets.
+        \item The event loop continues to run until exit() is called, usually as a response to events like closing the main window.
+    \end{itemize}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{main.moc}
+    \section*{main.moc}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{What is main.moc?:} The .moc files are generated by the Meta-Object Compiler (MOC) in Qt. MOC is a tool that processes Qt's specific extensions, like the Q\_OBJECT macro, signals, and slots. It generates standard C++ code from these extensions, enabling features like signal-slot connections and introspection.
+        \item \textbf{Role of main.moc:} Typically, for classes that include the Q\_OBJECT macro or define signals and slots, a corresponding .moc file is generated. However, it's unusual to have a main.moc. In standard Qt applications, the main function usually doesn't define a new class and doesn't include Q\_OBJECT. If your main.cpp includes definitions of such Qt classes, then main.moc might be generated and should be included at the end of the main.cpp file. This is not common practice and usually indicates that the application structure could be improved by moving Qt class definitions out of main.cpp.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Defining our own window object}
+    \section*{Defining our own window object}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <QApplication>
+#include <QWidget>
+#include <iostream>
+#include <iomanip>
+
+class MainWindow : public QWidget {
+private:
+    Q_OBJECT;
+
+public:
+    MainWindow(QWidget* parent=nullptr) : QWidget(parent) {
+
+    }
+
+};
+
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
+
+    MainWindow window;
+    window.resize(1080,700);
+    window.setWindowTitle("Title Name");
+    window.show();
+
+    return app.exec();
+}
+#include "main.moc"
+    \end{cppcode}
+
+    \pagebreak 
+    \phantomsection
+    \addcontentsline{toc}{section}{Creating a button}
+    \section*{Creating a button}
+    \bigbreak \noindent 
+    Now that we have most of the jargon out of the way, lets create some stuff.
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Include Necessary Headers}
+    \subsection*{Include Necessary Headers}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <QPushButton>
+    \end{cppcode}
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Creation}
+    \subsection*{Creation}
+    \bigbreak \noindent 
+    In our custom window class, 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    MainWindow(QWidget *parent = nullptr) : QWidget(parent) {
+        QPushButton *button = new QPushButton("Do Something", this);
+        button->setGeometry(50, 50, 120, 30);
+    }
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{QPushButton *button = new QPushButton("Open Terminal", this):} creates a new instance of QPushButton. The text "Open Terminal" is set as the button's label. The this pointer is passed as the parent of the button, which means the button is a child widget of MyWindow. As a child widget, it will be displayed within MyWindow and will be deleted when MyWindow is deleted (automatic memory management by Qt).
+        \item \textbf{button->setGeometry(50, 50, 120, 30):} sets the position and size of the button within its parent widget (MyWindow). The button is placed at coordinates (50, 50) with a width of 120 pixels and a height of 30 pixels.
+    \end{itemize}
+    
+    \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{subsection}{Making the button do something}
+    \subsection*{Making the button do something}
+    \bigbreak \noindent 
+    First, lets create a member function for our window class that provides functionality for our button
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <QProcess>
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+public slots:
+    void onButtonClick() {
+        QProcess::startDetached("kitty --working-directory=$HOME/tmp/cpp");
+
+    }
+    \end{cppcode}
+    \pagebreak \bigbreak \noindent 
+    Then in the constructor we can add the connection 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    connect(object1, signal1, object2, slot2);
+    connect(button, &QPushButton::clicked, this, &MainWindow::onButtonClicked);
+    \end{cppcode}
+    \begin{itemize}
+        \item connect(button, &QPushButton::clicked, this, &MainWindow::onButtonClicked); establishes a connection between the clicked signal of the button and the onButtonClicked slot method of MainWindow. This is using the signal-slot mechanism in Qt.
+        \item When the button is clicked, the clicked signal is emitted. Because of the connection established by connect, this will trigger the onButtonClicked method in the MainWindow class.
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Args}
+    \begin{itemize}
+        \item \textbf{First Argument - button:}
+            \begin{itemize}
+                \item This is the source object that emits the signal. In your case, it's the pointer to the QPushButton instance you've created. The signal will be emitted from this button.
+            \end{itemize}
+        \item \textbf{Second Argument - &QPushButton::clicked:}
+            \begin{itemize}
+                \item  This specifies the signal you want to connect from the source object. The &QPushButton::clicked is a pointer to the clicked signal of the QPushButton class. This signal is emitted by Qt when the button is clicked.
+            \end{itemize}
+        \item \textbf{Third Argument - this:}
+            \begin{itemize}
+               \item This is the receiver object, which is the object that owns the slot method you want to call. In this case, this refers to the current instance of the MainWindow class, indicating that the slot method belongs to this instance.
+            \end{itemize}
+        \item \textbf{Fourth Argument - &MainWindow::onButtonClicked:}
+            \begin{itemize}
+                \item  This specifies the slot, which is the method that will be called in response to the signal. &MainWindow::onButtonClicked is a pointer to the onButtonClicked method of the Wainwindow class. This method should be defined in MainWindow and will be executed when the button is clicked.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \phantomsection
+    \addcontentsline{toc}{section}{Creating Labels}
+    \section*{Creating Labels}
+    \bigbreak \noindent 
+    First, we need to make sure that we have <QLabel> included 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <QLabel>
+    \end{cppcode}
+    \bigbreak \noindent 
+    Then, in our windows constructor, we can create the label
+    \bigbreak \noindent 
+    \begin{cppcode}
+    label = new QLabel("Hello, World!", this);
+    label->setAlignment(Qt::AlignCenter);
+    label->setGeometry(0, 75, 250, 50); // Adjust geometry as needed
+    label->hide();
+    \end{cppcode}
+
+
+
+    
+    
+\end{document}
