@@ -3875,7 +3875,7 @@ int z  = add(5);  // 15
                 int x = 10;
                 auto lambda = [=]() { return x; }; // x is captured by value
             \end{cppcode}
-        \item \textbf{Capture by Reference ([&]):} All variables used in the lambda body are captured by reference. The lambda operates on the original variables, not copies.
+        \item \textbf{Capture by Reference ([\&]):} All variables used in the lambda body are captured by reference. The lambda operates on the original variables, not copies.
             \smallbreak \noindent
             \begin{cppcode}
                 int x = 10;
@@ -3887,13 +3887,13 @@ int z  = add(5);  // 15
                 int x = 10, y = 20;
                 auto lambda = [x]() { return x; }; // Only x is captured by value
             \end{cppcode}
-        \item \textbf{Capture Specific Variable by Reference ([&x]):} Only the specified variable (x in this case) is captured by reference.
+        \item \textbf{Capture Specific Variable by Reference ([\&x]):} Only the specified variable (x in this case) is captured by reference.
             \smallbreak \noindent
             \begin{cppcode}
                 int x = 10, y = 20;
                 auto lambda = [&x]() { x = 30; }; // Only x is captured by reference
             \end{cppcode}
-        \item \textbf{Capture Some by Value and Others by Reference ([x, &y]):} You can mix capturing by value and by reference. In this example, x is captured by value and y by reference.
+        \item \textbf{Capture Some by Value and Others by Reference ([x, \&y]):} You can mix capturing by value and by reference. In this example, x is captured by value and y by reference.
             \smallbreak \noindent
             \begin{cppcode}
                 int x = 10, y = 20;
@@ -3913,13 +3913,13 @@ int z  = add(5);  // 15
                 auto getLambda() { return [*this]() { return x; }; }
             };
             \end{cppcode}
-        \item \textbf{Default Capture by Reference, Specific by Value ([&, x]):} Captures most variables by reference, but x is captured by value.
+        \item \textbf{Default Capture by Reference, Specific by Value ([\&, x]):} Captures most variables by reference, but x is captured by value.
             \smallbreak \noindent
             \begin{cppcode}
                 int x = 10, y = 20;
                 auto lambda = [&, x]() { /* ... */ };
             \end{cppcode}
-        \item \textbf{Default Capture by Value, Specific by Reference ([=, &y]):} Captures most variables by value, but y is captured by reference.
+        \item \textbf{Default Capture by Value, Specific by Reference ([=, \&y]):} Captures most variables by value, but y is captured by reference.
             \smallbreak \noindent
             \begin{cppcode}
                 int x = 10, y = 20;
@@ -4555,7 +4555,7 @@ int main() {
     \section{Interface-Based Programming}
     \bigbreak \noindent 
     \begin{concept}
-        Interface-based programming is a software design principle that emphasizes the use of interfaces for defining the behavior that classes must implement. In languages like Java or C#, an interface is a formal construct that defines a contract in the form of methods that a class must implement. However, C++ does not have a direct interface keyword or construct like those languages. Instead, C++ uses abstract classes, particularly pure abstract classes, to achieve a similar effect. 
+        Interface-based programming is a software design principle that emphasizes the use of interfaces for defining the behavior that classes must implement. In languages like Java or C\#, an interface is a formal construct that defines a contract in the form of methods that a class must implement. However, C++ does not have a direct interface keyword or construct like those languages. Instead, C++ uses abstract classes, particularly pure abstract classes, to achieve a similar effect. 
     \end{concept}
 
     \bigbreak \noindent 
@@ -4669,6 +4669,69 @@ void MyClass::myFunction() {
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Rvalue references and move semantics}
     \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Iterators}
+    \bigbreak \noindent 
+        \begin{concept}
+        All iterators do not have similar functionality as that of pointers. Depending upon the functionality of iterators they can be classified into five categories, as shown in the diagram below with the outer one being the most powerful one and consequently the inner one is the least powerful in terms of functionality.
+    \end{concept}
+    \begin{figure}[ht]
+        \centering
+        \incfig{iterator}
+        \label{fig:iterator}
+    \end{figure}
+    \bigbreak \noindent 
+    \subsection{Type of Iterators}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Input Iterators:} They are the weakest of all the iterators and have very limited functionality. They can only be used in a single-pass algorithms, i.e., those algorithms which process the container sequentially, such that no element is accessed more than once.
+        \item \textbf{Output Iterators:} Just like input iterators, they are also very limited in their functionality and can only be used in single-pass algorithm, but not for accessing elements, but for being assigned elements.
+        \item \textbf{Forward Iterator:} They are higher in the hierarchy than input and output iterators, and contain all the features present in these two iterators. But, as the name suggests, they also can only move in a forward direction and that too one step at a time.
+        \item \textbf{Bidirectional Iterators:} They have all the features of forward iterators along with the fact that they overcome the drawback of forward iterators, as they can move in both the directions, that is why their name is bidirectional.
+        \item \textbf{Random-Access Iterators:} They are the most powerful iterators. They are not limited to moving sequentially, as their name suggests, they can randomly access any element inside the container. They are the ones whose functionality are same as pointers.
+    \end{itemize}
+    \smallbreak \noindent
+    \begin{figure}[ht]
+        \centering
+        \incfig{it2}
+        \label{fig:it2}
+    \end{figure}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Container Iterators}
+    \begin{itemize}
+        \item \textbf{std::vector<T>::iterator:} RandomAccess
+        \item \textbf{std::array<T, N>::iterator:} RandomAccess
+        \item \textbf{std::list<T>::iterator:} Bidirectional  
+        \item \textbf{std::set<T>::iterator:} Bidirectional
+        \item \textbf{std::map<Key, T>::iterator:} Bidirectional
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::vector<int> vc{1,2,3};
+        std::vector<int>::iterator it;
+        for (it = vc.begin(); it != vc.end(); ++it)
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsection{What about C-Array}
+    \bigbreak \noindent 
+    When we do something of the nature
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int arr[] {1,2,3};
+        for (auto it=std::begin(arr); it != std::end(arr); ++i) { }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The type of iterator we get is essential just a pointer that acts as a Randomaccess iterator
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Containers}
+    \bigbreak \noindent 
+
+
 
 
 
