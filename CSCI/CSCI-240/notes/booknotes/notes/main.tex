@@ -4354,8 +4354,15 @@ int main(int argc, const char* argv[]) {
         Memberwise assignment refers to the default behavior provided by the compiler when one object of a class is assigned to another. This default assignment operator performs a shallow copy, which means it copies the value of each member of the source object to the corresponding member of the destination object. This is fine for classes that only contain non-pointer data members or for cases where a shallow copy is sufficient. However, if the class contains pointers or dynamic resources, a shallow copy might lead to issues like double deletion or resource leaks.
     \end{concept}
 
+
+    \bigbreak \noindent 
+    \subsection{Aggregation}
+    \bigbreak \noindent 
+
     \pagebreak \bigbreak \noindent 
-    \subsection{Operator Overloading}
+    \section{Operator Overloading}
+    \bigbreak \noindent 
+    \subsection{Overloading arithmetic operators}
     \bigbreak \noindent 
     For binary operators like +, -, *, etc., if you overload them as member functions, the left operand must be an object of your class, and the right operand is passed as an argument to the operator function.
     \bigbreak \noindent 
@@ -4373,37 +4380,218 @@ class Vector {
 };
     \end{cppcode}
     \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Overloading Stream Operators}
     To overload stream operators
     \bigbreak \noindent 
     \begin{cppcode}
 class Vector {
     private:
         int x,y;
-
     public:
-        Vector(int x, int y) : x(x), y(y) {}
-
-        Vector operator+(const Vector& other) const {
-            return Vector(x + other.x, y+other.x);
+        Vector() : x(10), y(15) {}
+        Vector(int x, int y) : x(x),  y(y) {}
+        ~Vector() {
+            cout << "Destroyed object: " << *this << endl;
         }
-
-        void display() {
-            cout << this->x << endl << this->y;
-        }
-
-    friend  std::ostream& operator<<(std::ostream& os, const Vector& v);
+    friend std::ostream& operator<<(std::ostream& os, Vector& vc);
+    friend std::istream& operator>>(std::istream& is, Vector& vc);
 };
 
-std::ostream& operator<<(std::ostream& os, const Vector& v) {
-    os << "(" << v.x << ", " << v.y << ")";
+std::ostream& operator<<(std::ostream& os, Vector& vc) {
+    cout << vc.x << " " << vc.y << endl;
     return os;
 }
+std::istream& operator>>(std::istream& is, Vector& vc) {
+    is >> vc.x >> vc.y;
+    return is;
+}
+
+int main(int argc, const char* argv[]) {
+     Vector v1, v2;
+    cout << "Enter values for Vector v1 (x y): ";
+    cin >> v1;
+    cout << "You entered: " << v1 << endl; return EXIT_SUCCESS; }
     \end{cppcode}
     \bigbreak \noindent 
 
+    \pagebreak \bigbreak \noindent 
+    \subsection{Overloading Asssignment operator}
     \bigbreak \noindent 
-    \subsection{Aggregation}
+    \begin{cppcode}
+class Vector {
+    private:
+        int x,y;
+    public:
+        Vector() : x(10), y(15) {}
+        Vector(int x, int y) : x(x),  y(y) {}
+
+        Vector& operator=(const Vector& other) {
+            if (this != &other) {
+                this->x = other.x;
+                this->y = other.y;
+            }
+            cout << "Assignment complete" << endl;
+            return *this;
+        }
+};
+
+int main(int argc, const char* argv[]) {
+    Vector v1{1,2}, v2;
+    v2 = v1;
+
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+
     \bigbreak \noindent 
+    \subsection{Overloading Prefix}
+    \bigbreak \noindent 
+    \begin{cppcode}
+     Vector& operator++() {
+            (this->x)++;
+            (this->y)++;
+            return *this;
+
+    }
+    Vector vc;
+    ++vc;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Overloading Postfix}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    Vector operator++(int) {
+            Vector tmp = *this;
+            ++(this->x);
+            ++(this->y);
+            return  tmp;
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{notebox}
+        Having \texttt{int} as a function parameter is how we distinguish  between prefix and postfix.
+    \end{notebox}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Overloading Relational Operators}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    bool operator<(const Vector& other) const {
+        return (this->x < other.x) && (this->y < other.y);
+    }
+
+    bool operator>(const Vector& other) const {
+        return (this->x > other.x) && (this->y > other.y);
+    }
+
+    bool operator>=(const Vector& other) const {
+        return (this->x >= other.x) && (this->y >= other.y);
+    }
+
+    bool operator<=(const Vector& other) const {
+        return (this->x <= other.x) && (this->y <= other.y);
+    }
+
+    bool operator==(const Vector& other) const {
+        return (this->x == other.x) && (this->y == other.y);
+    }
+
+    bool operator!=(const Vector& other) const {
+        return (this->x != other.x) && (this->y != other.y);
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Overloading subscript operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    const int& operator[](size_t idx) const {
+        return vc[idx];
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Overloading function call operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+class Greet {
+private:
+    string greeting; 
+public:
+    Greet(const string& greeting) : greeting(greeting) {}
+    void operator()(const string& name) {
+        cout << greeting << " " << name << endl;
+    }
+};
+
+int main(int argc, const char* argv[]) {
+    Greet g1("Hello");
+    g1("nate");
+
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Overloading dereference operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+class Resource {
+public:
+    void display() const { std::cout << "Displaying Resource" << std::endl; }
+};
+
+class SmartPointer {
+private:
+    Resource* ptr;
+
+public:
+    SmartPointer(Resource* p = nullptr) : ptr(p) {}
+    ~SmartPointer() { delete ptr; }
+
+    // Overload the dereference operator
+    Resource& operator*() const { return *ptr; }
+};
+
+int main(int argc, const char* argv[]) {
+     SmartPointer smartPtr;
+    (*smartPtr).display();  // Accessing Resource's display metho
+    
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Overloading arrow operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+class Resource {
+public:
+    void display() const { std::cout << "Displaying Resource" << std::endl; }
+};
+
+class SmartPointer {
+private:
+    Resource* ptr;
+
+public:
+    SmartPointer(Resource* p = nullptr) : ptr(p) {}
+    ~SmartPointer() { delete ptr; }
+
+    // Overload the dereference operator
+    Resource* operator->() const { return ptr; }
+};
+
+int main(int argc, const char* argv[]) {
+     SmartPointer smartPtr;
+    smartPtr->display();  // Accessing Resource's display metho
+    
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+
 
 
 
@@ -4669,6 +4857,10 @@ void MyClass::myFunction() {
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Rvalue references and move semantics}
     \bigbreak \noindent 
+    \begin{concept}
+        
+    \end{concept}
+    
 
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Iterators}
