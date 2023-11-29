@@ -15,14 +15,14 @@ use previously defined methods to reduce the amount of code necessary to write t
 #include <iostream> // For input/output tasks
 #include <iomanip> // For input/output manipulators
 #include <cstdlib> // For random, system, exit, EXIT_SUCCESS, and EXIT_FAILURE
-#include <cstdint> // For fixed width data types
+// #include <cstdint> // For fixed width data types
 #include <unistd.h> // Posix API
 #include <typeinfo> // typeid(n).name()
 #include <cctype> // For character functions
 #include <algorithm> // Defined algorithms
 #include <iterator> // Iterator functions and types
 #include <string> // String class
-#include <sstream>
+#include <sstream> // String stream
 
 // Some macros
 #define a_sizeof(x) sizeof(x) / sizeof(x[0])
@@ -40,9 +40,11 @@ using std::string;
 
 class Vector {
 public:
-    int components[3] = {0};
+    // Members
+    int components[3];
 
 public:
+    // Method declarations
     Vector();
     Vector(int components[]);
     void set(int _values[]);
@@ -58,19 +60,9 @@ public:
     bool isSimilar(int _values[]);
     bool isSimilar(Vector& _other);
     string to_string();
-
 };
 
-
-
-
-/************
-
-Make sure to fill this in with your name, etc...
-
-************/
-
-
+// Entry
 int main()
   {
   //Test the both constructors and the to_string method
@@ -191,18 +183,71 @@ int main()
   else
     cout << "No (this is correct)." << endl;
 
+
   return 0;
 }
 
-Vector::Vector() : components{0,0,0} {}
+// Function I
+/***************************************************************
+Function: Default constructor
+
+Use: Construct objects when user does not provide args
+
+Arguments: 
+
+Returns: 
+
+Notes: 
+***************************************************************/
+Vector::Vector() {
+    for (int i=0; i<3; ++i) components[i] = 0;
+}
+
+// Function II
+/***************************************************************
+Function: Parameterized Constructor
+
+Use: Construct objects when user does provide args
+
+Arguments: An integer array for components
+
+Returns: 
+
+Notes: 
+***************************************************************/
 Vector::Vector(int components[]) { this->set(components); } 
 
+
+// Function III
+/***************************************************************
+Function: Set
+
+Use: Sets the values of the users integer array to the data member `components`
+
+Arguments: An integer array
+
+Returns: void
+
+Notes: 
+***************************************************************/
 void Vector::set(int _values[]) {
     for (int i=0; i<3; ++i) {
         this->components[i] = _values[i];
     }
 }
 
+// Function IV
+/***************************************************************
+Function: add
+
+Use: Adds the contents of the components data member and some integer array and returns a new Vector object
+
+Arguments: An array of integers
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::add(int _values[]) {
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
@@ -211,6 +256,18 @@ Vector Vector::add(int _values[]) {
     return Vector(tmp);
 }
 
+// Function V
+/***************************************************************
+Function: add
+
+Use: Overload for the add member, takes in Vector& instead of array
+
+Arguments: Vector&
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::add(Vector& other) { 
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
@@ -219,6 +276,18 @@ Vector Vector::add(Vector& other) {
     return Vector(tmp);
 }
 
+// Function VI
+/***************************************************************
+Function: multiply
+
+Use: Multiply vector componets by some integer scalar
+
+Arguments: An integer scalar
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::multiply(int scalar) {
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
@@ -227,6 +296,18 @@ Vector Vector::multiply(int scalar) {
     return Vector(tmp);
 }
 
+// Function VII
+/***************************************************************
+Function: multiply overload
+
+Use: Find the cross product of vector
+
+Arguments: An integer array
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::multiply(int values[]) {
     int tmp[3] = {
         (this->components[1] * values[2]) - (this->components[2] *values[1]),
@@ -236,6 +317,18 @@ Vector Vector::multiply(int values[]) {
     return Vector(tmp);
 }
 
+// Function VIII
+/***************************************************************
+Function: Multiply overload 
+
+Use: Find the cross product of vector with some other vector object
+
+Arguments: Vector&
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::multiply(Vector& other) {
     int tmp[3] = {
         (this->components[1] * other.components[2]) - (this->components[2] * other.components[1]),
@@ -245,6 +338,18 @@ Vector Vector::multiply(Vector& other) {
     return Vector(tmp);
 }
 
+// Function IX
+/***************************************************************
+Function: Subtract
+
+Use: Subtracts components of Vector and some array of integers
+
+Arguments: An array of integers
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::subtract(int _values[]) {
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
@@ -253,6 +358,18 @@ Vector Vector::subtract(int _values[]) {
     return Vector(tmp);
 }
 
+// Function X
+/***************************************************************
+Function: Subtract overload
+
+Use: Overloads subtract method to take in a vector reference
+
+Arguments: Vector&
+
+Returns: A Vector object
+
+Notes: 
+***************************************************************/
 Vector Vector::subtract(Vector& other) {
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
@@ -261,7 +378,21 @@ Vector Vector::subtract(Vector& other) {
     return Vector(tmp);
 }
 
+// Function XI
+/***************************************************************
+Function: Isequal
+
+Use: Used to check if vector and some array of integers are the same
+
+Arguments: An array of integers
+
+Returns: bool
+
+Notes: 
+***************************************************************/
 bool Vector::isEqual(int _values[]) {
+    // return std::equal(std::begin(this->components), std::end(this->components), _values, _values+3);
+
     bool flag = 1;
     for (int i=0; i<3; ++i) {
         if (this->components[i] != _values[i]) flag=0; 
@@ -269,7 +400,21 @@ bool Vector::isEqual(int _values[]) {
     return flag;
 }
 
+// Function XII
+/***************************************************************
+Function: isequal overload
+
+Use: Used to check if two vectors are equal
+
+Arguments: Vector&
+
+Returns: bool
+
+Notes: 
+***************************************************************/
 bool Vector::isEqual(Vector& other) {
+    // return std::equal(std::begin(this->components), std::end(this->components), std::begin(other.components), std::end(other.components));
+
     bool flag = 1;
     for (int i=0; i<3; ++i) {
         if (this->components[i] != other.components[i]) flag=0; 
@@ -277,71 +422,128 @@ bool Vector::isEqual(Vector& other) {
     return flag;
 }
 
-bool Vector::isSimilar(int _values[]) {
-    /*<note> I did write this, wanted to do one of this methods a lil different (i like lambdas) </note>*/
-    const double check = static_cast<double>(_values[0]) / this->components[0];
-    const double tolerance = 1e-6; // had to define a tolerance, floating point comparsion can get weird.
-    auto lambda = [&](int& x, int& y) -> bool {
-        return std::abs(static_cast<double>(y)/x - check) < tolerance;
-    };
-    return std::equal(
-        std::begin(this->components), // Starting range for data membber
-        std::end(this->components), // Ending range for data member
-        _values, // Starting range for _values array
-        _values+3, // Ending range for _values array
-        lambda // Custom policy defined above
-    );
+// Function XIII
+/***************************************************************
+Function: isSimilar 
 
-    /*<note> This would be a typical solution you are probably looking for </note>*/
-    // int check = _values[0] / this->components[0];
-    // bool flag = 1;
-    // for (int i=1; i<3; ++i) {
-    //     if (static_cast<double>(_values[i]) / this->components[i] != check) flag=0;
-    // }
-    // return flag;
-    // return 0;
+Use: Used to see if a = n*b where n in Z, a is a vector and b is some integer array
+
+Arguments: An array of integers
+
+Returns: bool
+
+Notes: 
+***************************************************************/
+bool Vector::isSimilar(int _values[]) {
+     // This will hold the quotient of one set of componetss (other / this).
+     // If the other columns (besides the zero-rows) have the same quotient, 
+     // the condition a = n*b where n in Z holds and we have similarity
+    double interest = 0.0;
+    bool found = 0;
+    bool flag = 1; // This flag is the decider for whether we proved similarity
+    int count = 0; // used to hold the count of 2-zero columns 
+    const double tolerance = 1e-6; // Useful to solve for floating point issues
+
+    /* If any component is zero while its partner is non-zero, we return false. This automatically disrupts similarity
+     We can also track any partners that are both zero in this step. Partners both being zero can be valid but disrupts the rest of the algorithm */ 
+    for (int i=0; i<3; ++i) {
+        if ((this->components[i] == 0 && _values[i] != 0) || (_values[i] == 0 && this->components[i] != 0)) { return false; } 
+        else if (this->components[i] == 0 && _values[i] == 0) {
+            ++count;
+            continue; 
+        }
+    }
+
+    // Csases where we have two or three columns of zeros
+    if (count == 2 || count == 3) { 
+        for (int i=0; i<3; ++i) { // Want to loop through and find the place that holds non zero terms
+            if (this->components[i] !=0) { 
+                return (_values[i] % this->components[i] == 0 ? 1 : 0); // Here we check for similarity with moudar arithmetic
+            } 
+        }
+        return true; // If we reach this point, we know we have all zeros
+    } else { // If we have either zero or one set of partners with values of zero
+        double check = 0.0;
+        for (int i=0; i<3; ++i) { // We loop through to find the non-zero positions
+            interest = static_cast<double>(_values[i]) / this->components[i];
+            if (this->components[i] != 0 && !found) {
+                check = interest; // This is the quotient we check against the others
+                found=1; // We can stop our search
+            }
+            if (found && ((std::abs(interest) - check) > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
+        }
+    } return flag;
+
 }
 
- bool Vector::isSimilar(Vector& other) {
+// Function XIV
+/***************************************************************
+Function: isSimilar overload
 
-     /*<note>  Things got a bit messy when I realized the case of potential zeros, I might clean it up </note>*/
+Use: Used to see if a = n*b where n in Z, and a,b are both vectors
 
-    double check;
-    bool flag = 1;
-    int count = 0;
-    const double tolerance = 1e-6;
+Arguments: Reference to a vector
+
+Returns: bool
+
+Notes: My solution assuming neither vector has zeros was alot cleaner, but things got messy once I considered that this may not always hold
+***************************************************************/
+bool Vector::isSimilar(Vector& other) {
+
+     // This will hold the quotient of one set of componetss (other / this).
+     // If the other columns (besides the zero-rows) have the same quotient, 
+     // the condition a = n*b where n in Z holds and we have similarity
+    double interest;
+    bool found = 0;
+    bool flag = 1; // This flag is the decider for whether we proved similarity
+    int count = 0; // used to hold the count of 2-zero columns 
+    const double tolerance = 1e-6; // Useful to solve for floating point issues
+
+    /* If any component is zero while its partner is non-zero, we return false. This automatically disrupts similarity
+     We can also track any partners that are both zero in this step. Partners both being zero can be valid but disrupts the rest of the algorithm */ 
     for (int i=0; i<3; ++i) {
-        if ((this->components[i] == 0 && other.components[i] != 0) || (other.components[i] == 0 && this->components[i] != 0)) {
-            return false;
-        } else if (this->components[i] == 0 && other.components[i] == 0) {
+        if ((this->components[i] == 0 && other.components[i] != 0) || (other.components[i] == 0 && this->components[i] != 0)) { return false; } 
+        else if (this->components[i] == 0 && other.components[i] == 0) {
             ++count;
-            continue;
+            continue; 
         }
+
     }
-    if (count == 2) {
-        for (int i=0; i<3; ++i) {
-            if (this->components[i] !=0) {
-                return (other.components[i] % this->components[i] == 0 ? 1 : 0);
-            }
+    // Csases where we have two or three columns of zeros
+    if (count == 2 || count == 3) { 
+        for (int i=0; i<3; ++i) { // Want to loop through and find the place that holds non zero terms
+            if (this->components[i] !=0) { 
+                return (other.components[i] % this->components[i] == 0 ? 1 : 0); // Here we check for similarity with moudar arithmetic
+            } 
         }
-    } else if ( count == 3 ){
-        return true;
-    } else {
-        for (int i=0; i<3; ++i) {
-            if (this->components[i] != 0) {
-                check = static_cast<double>(other.components[i]) / this->components[i];
-                break;
+        return true; // If we reach this point, we know we have all zeros
+    } else { // If we have either zero or one set of partners with values of zero
+        double check = 0.0;
+        for (int i=0; i<3; ++i) { // We loop through to find the non-zero positions
+            interest = static_cast<double>(other.components[i]) / this->components[i];
+            if (this->components[i] != 0 && !found) {
+                check = interest; // This is the quotient we check against the others
+                found=1; // We can stop our search
             }
-        }
-    }
-    for (int i=0; i<3; ++i) { 
-        if (this->components[i] != 0) {
-            if (std::abs(static_cast<double>(other.components[i]) / this->components[i] - check) > tolerance) flag = 0;
+            if (found && ((std::abs(interest)) - check > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
         }
     } return flag;
 }
 
+// Function XV
+/***************************************************************
+Function: To string
+
+Use: Build Vector repr
+
+Arguments: null
+
+Returns: C++-String
+
+Notes: <3 stringstream
+***************************************************************/
 string Vector::to_string() {
+    // Here we use a stringstream to build the string we need
     std::ostringstream oss;
     oss << "<" << this->components[0] << "," << this->components[1] << "," << this->components[2] << ">"; 
     return oss.str();
