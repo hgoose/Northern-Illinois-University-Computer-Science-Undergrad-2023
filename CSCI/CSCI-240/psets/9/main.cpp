@@ -7,7 +7,7 @@ Section: 001
 
 Date Due: December 1
 
-Purpose: implement a class representing a 3D vector which will make extensive use of overloading class methods. 
+Purpose: Implement a class representing a 3D vector which will make extensive use of overloading class methods. 
 This means there will be multiple versions of methods defined that each take different arguments. This assignment 
 rewards one for being "smart but also lazy" when it comes to implementing each of these methods, as they can readily 
 use previously defined methods to reduce the amount of code necessary to write to complete the next one.
@@ -193,7 +193,7 @@ Function: Default constructor
 
 Use: Construct objects when user does not provide args
 
-Arguments: 
+Arguments: none
 
 Returns: 
 
@@ -231,6 +231,8 @@ Returns: void
 Notes: 
 ***************************************************************/
 void Vector::set(int _values[]) {
+
+    // Loop to set values
     for (int i=0; i<3; ++i) {
         this->components[i] = _values[i];
     }
@@ -249,6 +251,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::add(int _values[]) {
+
+    // Simple loop to add each partner
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
         tmp[i] = _values[i] + this->components[i];
@@ -269,6 +273,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::add(Vector& other) { 
+
+    // Simple loop to add each partner
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
         tmp[i] =  this->components[i] + other.components[i];
@@ -289,6 +295,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::multiply(int scalar) {
+
+    // Simple loop to scale each element
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
         tmp[i] = this->components[i] * scalar;
@@ -309,6 +317,7 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::multiply(int values[]) {
+    // Construct a new array using process for cross product
     int tmp[3] = {
         (this->components[1] * values[2]) - (this->components[2] *values[1]),
         (this->components[2] * values[0]) - (this->components[0] *values[2]),
@@ -330,6 +339,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::multiply(Vector& other) {
+
+    // Construct a new array using process for cross product
     int tmp[3] = {
         (this->components[1] * other.components[2]) - (this->components[2] * other.components[1]),
         (this->components[2] * other.components[0]) - (this->components[0] * other.components[2]),
@@ -351,6 +362,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::subtract(int _values[]) {
+
+    // Simple loop to subtract all partners
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
         tmp[i] = this->components[i] - _values[i];
@@ -371,6 +384,8 @@ Returns: A Vector object
 Notes: 
 ***************************************************************/
 Vector Vector::subtract(Vector& other) {
+
+    // Simple loop to subtract all partners
     int tmp[3] = {0};
     for (int i=0; i<3; ++i) {
         tmp[i] = this->components[i] - other.components[i];
@@ -393,6 +408,7 @@ Notes:
 bool Vector::isEqual(int _values[]) {
     // return std::equal(std::begin(this->components), std::end(this->components), _values, _values+3);
 
+    // Simple loop to make sure all values are the same
     bool flag = 1;
     for (int i=0; i<3; ++i) {
         if (this->components[i] != _values[i]) flag=0; 
@@ -415,6 +431,7 @@ Notes:
 bool Vector::isEqual(Vector& other) {
     // return std::equal(std::begin(this->components), std::end(this->components), std::begin(other.components), std::end(other.components));
 
+    // Simple loop to make sure all values are the same
     bool flag = 1;
     for (int i=0; i<3; ++i) {
         if (this->components[i] != other.components[i]) flag=0; 
@@ -470,7 +487,7 @@ bool Vector::isSimilar(int _values[]) {
                 check = interest; // This is the quotient we check against the others
                 found=1; // We can stop our search
             }
-            if (found && ((std::abs(interest) - check) > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
+            if (found && ((std::abs(interest-check)) > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
         }
     } return flag;
 
@@ -493,7 +510,8 @@ bool Vector::isSimilar(Vector& other) {
      // This will hold the quotient of one set of componetss (other / this).
      // If the other columns (besides the zero-rows) have the same quotient, 
      // the condition a = n*b where n in Z holds and we have similarity
-    double interest;
+    double interest = 0.0;
+    double check = 0.0;
     bool found = 0;
     bool flag = 1; // This flag is the decider for whether we proved similarity
     int count = 0; // used to hold the count of 2-zero columns 
@@ -518,14 +536,13 @@ bool Vector::isSimilar(Vector& other) {
         }
         return true; // If we reach this point, we know we have all zeros
     } else { // If we have either zero or one set of partners with values of zero
-        double check = 0.0;
         for (int i=0; i<3; ++i) { // We loop through to find the non-zero positions
             interest = static_cast<double>(other.components[i]) / this->components[i];
             if (this->components[i] != 0 && !found) {
                 check = interest; // This is the quotient we check against the others
                 found=1; // We can stop our search
             }
-            if (found && ((std::abs(interest)) - check > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
+            if (found && ((std::abs(interest - check)) > tolerance)) flag=0;  // Note: \abs{x} < a \implies -a < x < a
         }
     } return flag;
 }
@@ -536,7 +553,7 @@ Function: To string
 
 Use: Build Vector repr
 
-Arguments: null
+Arguments: None
 
 Returns: C++-String
 

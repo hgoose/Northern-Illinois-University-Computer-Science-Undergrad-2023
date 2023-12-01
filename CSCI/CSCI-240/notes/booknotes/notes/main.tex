@@ -4364,6 +4364,10 @@ int main(int argc, const char* argv[]) {
     \bigbreak \noindent 
     \subsection{Aggregation}
     \bigbreak \noindent 
+    \begin{concept}
+       Aggregation occurs when a class contains an instance of another class. 
+    \end{concept}
+    
 
     \pagebreak \bigbreak \noindent 
     \section{Operator Overloading}
@@ -4598,6 +4602,35 @@ int main(int argc, const char* argv[]) {
 }
     \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Object Conversion}
+    \bigbreak \noindent 
+    \begin{concept}
+        Special operator functions may be written to convert a class object to any other type.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class MyNumber {
+        private:
+            double value;
+
+        public:
+            MyNumber(double val) : value(val) {}
+
+            // Conversion operator to convert MyNumber to double
+            operator double() const {
+                return value;
+            }
+        };
+        // Now we can do
+        MyNumber num(42.0);
+        // Implicit conversion to double
+        double x = num;
+        // Explicit conversion to double
+        double y = static_cast<double>(num);
+    \end{cppcode}
+    
+
 
 
 
@@ -4743,6 +4776,36 @@ int main() {
     makeAnimalSpeak(&cat); // Outputs: Meow!
 }
     \end{cppcode}
+    
+    \pagebreak \bigbreak \noindent 
+    \subsection{The Final keyword}
+    \bigbreak \noindent 
+    \begin{concept}
+        In C++, the \texttt{final} keyword is used in two main contexts: with classes and with virtual member functions. It was introduced in C++11 as a way to provide more control over class hierarchies and virtual function overrides.
+        \begin{itemize}
+            \item When final is used with a class, it prevents the class from being inherited. This can be useful when you have a class that is not designed to be a base class or when further derivation could lead to undesirable behaviors or inefficiencies.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                class Base final { /* ... */ };
+
+                class Derived : public Base { /* ... */ }; // Error: Base is a final class
+                \end{cppcode}
+            \item When final is used with a virtual member function, it prevents that function from being overridden in derived classes. This is useful when you have a specific implementation of a virtual function in a derived class and you want to ensure that further derived classes do not override this particular implementation.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                class Base {
+                public:
+                    virtual void doSomething() final; // This function cannot be overridden
+                };
+
+                class Derived : public Base {
+                public:
+                    void doSomething() override; // Error: attempting to override a final function
+                };
+                \end{cppcode}
+        \end{itemize}
+    \end{concept}
+
 
     \pagebreak \bigbreak \noindent 
     \section{Interface-Based Programming}
@@ -4863,8 +4926,86 @@ void MyClass::myFunction() {
     \section{\LARGE Rvalue references and move semantics}
     \bigbreak \noindent 
     \begin{concept}
-        
+       A move operation transfers resources from a source object ot a target object. A move operation is appropriate when the source object is temporary and is about to be destroyed. 
+       \bigbreak \noindent 
+        Move semantics, introduced in C++11, are a significant enhancement to the language, particularly in terms of performance optimization. They are especially useful for managing resources in situations where copying large amounts of data can be expensive or unnecessary. To understand the benefits of move semantics, it's important to first understand the difference between copying and moving.
+        \begin{itemize}
+            \item Copying creates a new object as an exact replica of an existing object. This process involves constructing a new object and then copying the contents of the existing object to the new one. For objects that manage large amounts of memory or resources, this can be a costly operation in terms of performance.
+            \item Moving, on the other hand, transfers resources from one object to another. Instead of creating a copy and then deleting the original, moving simply transfers the ownership of the resources. This is much faster as it avoids unnecessary copying of data.
+        \end{itemize}
+        \bigbreak \noindent 
+        This concept allows us to create \texttt{move constructors}
+        \bigbreak \noindent 
+        Before we talk about move semantics, we must discuss \texttt{rvalue references}
     \end{concept}
+    \bigbreak \noindent 
+    \subsection{Rvalue references}
+    \bigbreak \noindent 
+    An rvalue reference is a type of reference that can bind to rvalues (temporary objects) but not to lvalues (objects with a persistent state). In C++, rvalues are typically objects returned from functions or literals that don't have a specific memory address, whereas lvalues are objects that have a persistent state and an identifiable memory address.
+    \bigbreak \noindent 
+    Rvalue references are denoted by \&\&. For example, int\&\& is an rvalue reference to an int.
+    \bigbreak \noindent 
+    \begin{notebox}
+        When you assign an rvalue reference to a temporary value, your are giving a name to the temporary value and making it possible to access the value from other parts of the program. Therefore, you are transforming a temporary value into an lvalue. Rvalue references \textbf{cannot} refer to lvalues.
+        \bigbreak \noindent 
+        If a function has has an lvalue reference to a temporary object, you can be sure no other part of the program has access to the same object.
+    \end{notebox}
+
+    \bigbreak \noindent 
+    \subsection{Exception to binding references to literals}
+    \bigbreak \noindent 
+    IN the C++ language, we are not allowed to bind references to lvalues like we would with a different object. For example, the following code would not be valid.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int& j = 20; // Not valid
+    \end{cppcode}
+    \bigbreak \noindent 
+    However, we can bind a constant reference to an lvalue.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        const int& j = 20; // IS valid
+    \end{cppcode}
+    \bigbreak \noindent :w
+    When you do this, the compiler creates a temporary object to hold the literal value, and then binds the reference to that temporary object. This temporary object remains alive as long as the reference exists.
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Creating a move constructor and std::move()}
+    \bigbreak \noindent 
+    \begin{cppcode}
+struct A {
+    int b;
+
+    A (const int& b) : b(b) { cout << "Called parameterized constructor..." << endl; }
+
+    A (A& other) {
+        cout << "Copy construtor called" << endl;
+        this->b = other.b;
+    }
+
+    A (A&& other) {
+        cout << "Move constructor called" << endl;
+        this->b = other.b;
+    }
+
+    void display(A& other1, A& other2);
+
+};
+A a1(15); // Create with parameteried constructor
+A a2 = a1; // Copy constructor called
+A a3 = std::move(a1); // Use the move constructor
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Move Operations and noexcept}
+    \bigbreak \noindent 
+    \begin{concept}
+        The \texttt{noexcept} specifier is particularly important for move constructors and move assignment operators. If these operations are noexcept, certain standard library components, like std::vector, can perform more efficient reallocations. If a move operation might throw, the library must use a less efficient, exception-safe approach.
+        \bigbreak \noindent 
+        For instance, if you have a class with a move constructor, marking it noexcept informs the compiler and users that moving objects of this class does not throw exceptions:
+    \end{concept}
+    
+
+    
     
 
     \pagebreak \bigbreak \noindent 
@@ -5089,10 +5230,16 @@ int main(int argc, const char* argv[]) {
     \pagebreak \bigbreak \noindent 
     \section{\LARGE Initializer List as function parameters}
     \bigbreak \noindent 
+    In C++, you can create a function that accepts an initializer list by including the \texttt{<initializer\_list>} header and using \texttt{std::initializer\_list} as a parameter type. This allows you to pass a comma-separated list of elements enclosed in braces \{\} to the function, which is particularly useful for functions that need to accept a variable number of arguments of the same type.
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <initializer_list>
+void fn(std::initializer_list<int> il) { }
 
-    \bigbreak \noindent 
-    \section{\LARGE FINAL KEYWORD (MOVE TO RESPECTIVE PLACE)}
-    \bigbreak \noindent 
+fn({1,2,3});
+    \end{cppcode}
+
+
     
 
 
