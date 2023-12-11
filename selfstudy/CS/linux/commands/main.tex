@@ -1,0 +1,123 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Linux Commands}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Linux Commands} \\
+           A Useful Document
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           December 10, 2023
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak \bigbreak \noindent 
+    \unsect{Find and Replace For a Directory}
+    \bigbreak \noindent 
+    Suppose we have some codebase, and we decide that we want to change every occurrence of the word `foo` with the word `bar`. 
+    \begin{bashcode}
+        find . -type f -exec grep -l 'foo' {} \; -exec sed -i 's/foo/bar/g' {} + 
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item find . -type f: Find all files (-type f) in the current directory (.) and its subdirectories.
+        \item -exec grep -l 'foo' {} \;: For each file found, use grep to search for 'foo'. The -l option makes grep only list the names of files with matching lines.
+        \item -exec sed -i 's/foo/bar/g' {} +: For each file where 'foo' is found, use sed to replace 'foo' with 'bar'. The -i option edits files in place (i.e., it saves the changes to the file). The s/foo/bar/g is the substitution command: s for substitute, foo is the search term, bar is the replacement term, and g is for global replacement (replace all occurrences in the file).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Excluding Directory's}
+    \bigbreak \noindent 
+    \subsubsection{Single Directory}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    find . -type d -path ./excluded_dir -prune -o -type f -exec grep -l 'foo' {} \; -exec sed -i 's/foo/bar/g' {} +
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item -type d -path ./excluded\_dir -prune: This part of the command checks if the current file is a directory (-type d) and matches the path ./excluded\_dir. If it does, -prune is used to exclude it from further processing.
+        \item -o: This is the logical OR operator. It separates the directory exclusion part from the rest of the command.
+    \item The rest of the command (-type f -exec grep -l 'onedark' {} \; -exec sed -i 's/onedark/onedark-fk/g' {} +) remains the same
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{Multiple Directory's}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    find . -type d \( -path ./excluded_dir1 -o -path ./excluded_dir2 \) -prune -o -type f -exec grep -l 'onedark' {} \; -exec sed -i 's/onedark/onedark-fk/g' {} +
+    \end{bashcode}
+
+
+
+
+    \pagebreak 
+    \unsect{Changing File Names for each file in sub-directory's with a specific name}
+    \bigbreak \noindent 
+    Suppose we have some codebase and we want to change every filename that is `foo.cpp` to `bar.cpp`
+    \bigbreak \noindent 
+    \begin{bashcode}
+        find . -type f -name foo.cpp -exec sh -c 'mv "${0}" "$(dirname "${0}")/bar.cpp" ' {} \;
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where
+    \bigbreak \noindent
+    \begin{itemize}
+        \item find . -type f -name 'foo.cpp': This finds all files named foo.cpp in the current directory and its subdirectories.
+        \item -exec sh -c 'mv "\$0" "\$(dirname "\$0")/bar.cpp"' {} \textbackslash ;: For each file found, this executes a shell command. The {} is replaced by the path of each found file.
+            \begin{itemize}
+                \item mv "\$0": Moves the found file.
+                \item "\$(dirname "\$0")/bar.cpp": This constructs the new file path. dirname "\$0" gives the directory of the found file, and /bar.cpp appends the new file name to this path.
+            \end{itemize}
+    \end{itemize}
+    
+\end{document}

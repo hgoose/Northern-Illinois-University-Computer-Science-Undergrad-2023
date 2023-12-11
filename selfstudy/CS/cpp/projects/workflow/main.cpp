@@ -14,6 +14,10 @@
 #include <QImage>
 #include <QColor>
 #include <QGradient>
+#include <QLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 #include <iostream>
 #include <cstdint>
 #include <string>
@@ -34,10 +38,14 @@ private:
     // Pushbutton Stuff
     vector<QPushButton*> buttons;
     QPushButton* button;
-    QPushButton* button2;
+
+    // Layout stuff
+    QWidget* leftDividerWidget; 
+    QVBoxLayout* leftLayout; 
+    int leftDividerEndX;
 
     // Label Stuff
-    QLabel* label;
+    QLabel* selectorHead;
 
     // Color Defititions
     QColor C_blue;
@@ -48,6 +56,10 @@ private:
     QColor C_DBlue;
     QLinearGradient G_purple;
     QLinearGradient G_blue;
+
+    // Stylesheets
+    QString buttonSheet;
+    QString selectorHeadSheet;
 
     // Bools
     bool topBarVisible;
@@ -60,54 +72,54 @@ public:
     // Constructor
     MainWindow(QWidget* parent=nullptr) 
         : QWidget(parent),
-        C_blue("#18353d"),
-        C_gray("#5d5d5d"),
+
+        // Colors
+        C_blue("#2c3f55"),
+        C_gray("#d3d3d3"),
         C_LPurple("#3d2945"),
         C_DPurple("#2d1537"),
-        C_LBlue("#1a192c"),
-        C_DBlue("#100f21"),
+        C_LBlue("#2c3f55"),
+        C_DBlue("#1e2d3e"),
         G_purple(0,0,this->width(), this->height()),
         G_blue(0,0,this->width(), this->height()),
+
+        // Booleans
         topBarVisible(true)
     {
+        // Window size
+        this->resize(1800,1000);
+
         G_purple.setColorAt(0.0, C_LPurple);
         G_purple.setColorAt(1.0, C_DPurple);
 
         G_blue.setColorAt(0.0, C_LBlue);
         G_blue.setColorAt(1.0, C_DBlue);
 
-        // buttons[0]->setStyleSheet("QPushButton {"
-        //            "  border: 2px solid black;"  // Adds a border
-        //           "  border-radius: 50px;"
-        //           "  background-color: lightgray;"  // Sets a background color
-        //           "  color: black;"  // Sets text color
-        //           "}"
-        //           "QPushButton:hover {"
-        //           "  background-color: gray;"  // Changes background on hover
-        //           "}"
-        //           "QPushButton:pressed {"
-        //           "  background-color: darkgray;"  // Changes background when pressed
-        //         "}");
+        leftDividerWidget = new QWidget(this);
+        leftLayout = new QVBoxLayout;
 
-        // button = new QPushButton("Example", this);
-        // button->setGeometry(0,0,150,100);
-        // button->setStyleSheet("QPushButton {"
-        //               "  border: 2px solid black;"  // Adds a border
-        //               "  border-radius: 50px;"
-        //               "  background-color: lightgray;"  // Sets a background color
-        //               "  color: black;"  // Sets text color
-        //               "}"
-        //               "QPushButton:hover {"
-        //               "  background-color: gray;"  // Changes background on hover
-        //               "}"
-        //               "QPushButton:pressed {"
-        //               "  background-color: darkgray;"  // Changes background when pressed
-        //               "}");
-        //
-        // connect(button, &QPushButton::clicked, this, &MainWindow::toggleTopBarVisibility);
-        //
-        // button2 = new QPushButton("Example 2", this);
-        // button2->setGeometry(0,100,150,100);
+        QStringList titlelist{"1", "2"};
+        this->makeButtons(titlelist, 2);
+
+        buttonSheet = "QPushButton {"
+            "background-color: #2c3f55;"
+            "color: #fff;"
+            "border: 0;"
+            "}"
+            "QPushButton:hover {"
+                "background-color: #334459;"     
+                "border-right: 5px solid #63c3ae;"
+        "}";
+
+        this->setButtonStyleSheet(buttonSheet);
+
+        selectorHeadSheet = "QLabel {"
+            "color: white;"
+            "font-size: 20pt;"
+            "margin-bottom: 25px;"
+        "}";
+
+        this->setLabelStyleSheet(this->selectorHead, selectorHeadSheet);
 
     }
 
@@ -119,9 +131,10 @@ public:
     void setFillBrush(QPainter&, const QColor&);
     void setFillBrush(QPainter& obj, const QLinearGradient& gradient, const QColor& penColor);
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent* event) override;
     void setButtonStyleSheet(QString&);
     QPushButton* getButton(const int& position);
-
+    void setLabelStyleSheet(QLabel* label, QString styles);
 
 
 public slots:
@@ -147,11 +160,18 @@ void MainWindow::fn(size_t bn, void (MainWindow::*slotFunction)()) {
 
 
 void MainWindow::makeButtons(QStringList titles, uint32_t size){
+    selectorHead = new QLabel("Options");
+    selectorHead->setAlignment(Qt::AlignCenter);
+    // selectorHead->
+    leftLayout->addWidget(selectorHead);
+
     for (uint32_t i=0; i<size; ++i) {
         button = new QPushButton(titles[i], this);
-        button->hide();
+        button->setFixedHeight(100);
+        leftLayout->addWidget(button); // Add buttons to the left divider's vertical layout
         buttons.push_back(button);
     }
+    leftDividerWidget->setLayout(leftLayout);
 }
 
 void MainWindow::displayButtons(int positions[], int n_buttons, int p_size) { 
@@ -184,31 +204,6 @@ void MainWindow::setFillBrush(QPainter& obj, const QLinearGradient& gradient, co
     obj.setPen(newpen);
 }
 
-
-void MainWindow::paintEvent(QPaintEvent *event) {
-    QPainter painter(this);
-
-    // Get the size of the window
-    int width = this->width();
-    int height = this->height();
-
-    // Calculate the start position of the divider
-    int dividerEndX = width / 5;
-
-    // Leftdivider stuff
-    setFillBrush(painter, G_blue, C_LBlue);
-    QRect leftDividerRect(0, 0, dividerEndX, height);
-    painter.drawRect(leftDividerRect);
-
-    // Right divider stuff
-    setFillBrush(painter, C_gray);
-    QRect topBarRect(dividerEndX, 0, width, 50);
-    if (topBarVisible) {
-        painter.drawRect(topBarRect);
-    }
-
-}
-
 QPushButton* MainWindow::getButton(const int& position) {
     return this->buttons[position];
 }
@@ -219,14 +214,57 @@ void MainWindow::setButtonStyleSheet(QString& styleSheet) {
     }
 }
 
+void MainWindow::setLabelStyleSheet(QLabel* label, QString styles) {
+    label->setStyleSheet(styles);
+}
+
+void MainWindow::paintEvent(QPaintEvent *event) {
+    QPainter painter(this);
+
+    // Get the size of the window
+    int width = this->width();
+    int height = this->height();
+
+    leftDividerEndX = width / 5;
+
+    // Leftdivider stuff
+    setFillBrush(painter, G_blue, C_LBlue);
+    QRect leftDividerRect(0, 0, leftDividerEndX, height);
+    painter.drawRect(leftDividerRect);
+
+    // Right divider stuff
+    setFillBrush(painter, C_gray);
+    QRect topBarRect(leftDividerEndX, 0, width, height);
+    if (topBarVisible) {
+        painter.drawRect(topBarRect);
+    }
+
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    // Call base class implementation (important for proper functionality)
+    QWidget::resizeEvent(event);
+
+    // Recalculate the width of the left divider
+    leftDividerEndX = (this->width() / 5) - 15;
+
+    for (auto it = buttons.begin(); it != buttons.end(); ++it) {
+        (*it)->setFixedWidth(leftDividerEndX);
+    }
+
+    if (selectorHead) {
+        selectorHead->setFixedWidth(leftDividerEndX);
+    }
+}
+
 int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
 
     MainWindow window;
-    window.resize(1800, 1000);
+    // window.resize(1800, 1000);
     window.setWindowTitle("Title");
-    // window.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #f58ef2, stop:1 black);");
+    // window.setStyleSheet("background-color: #eeedef;");
     window.show();
 
 
@@ -237,29 +275,29 @@ int main(int argc, char* argv[]) {
         0, 155, buttonWidth, 150
     };
     int p_size = a_sizeof(positions);
-    QStringList titlelist{"1", "2"};
 
-    window.makeButtons(titlelist, n_buttons);
-    window.displayButtons(positions, n_buttons, p_size);
-    window.fn(0,&MainWindow::cpptmp); // Connect button 1
+    // window.makeButtons(titlelist, n_buttons);
+    // window.displayButtons(positions, n_buttons, p_size);
+    // window.fn(0,&MainWindow::cpptmp); // Connect button 1
     
-    QString styleSheet = ("QPushButton {"                   
-        // "  border: 2px solid white;"  // Adds a border
-        "border-top: 2px solid white;"
-        "border-bottom: 2px solid white;"
-          "  border-radius: 10px;"
-          "  background-color: #2b294d;"  // Sets a background color
-          "  color: white;"  // Sets text color
-          "}"
-          "QPushButton:hover {"
-          "  background-color: gray;"  // Changes background on hover
-          "}"
-          "QPushButton:pressed {"
-          "  background-color: darkgray;"  // Changes background when pressed
-    "}");
-
-    window.setButtonStyleSheet(styleSheet);
+    // QString styleSheet = ("QPushButton {"                   
+    //     // "  border: 2px solid white;"  // Adds a border
+    //     "border-top: 2px solid white;"
+    //     "border-bottom: 2px solid white;"
+    //       "  border-radius: 10px;"
+    //       "  background-color: #2b294d;"  // Sets a background color
+    //       "  color: white;"  // Sets text color
+    //       "}"
+    //       "QPushButton:hover {"
+    //       "  background-color: gray;"  // Changes background on hover
+    //       "}"
+    //       "QPushButton:pressed {"
+    //       "  background-color: darkgray;"  // Changes background when pressed
+    // "}");
+    //
+    // window.setButtonStyleSheet(styleSheet);
     // (window.getButton(0))->setStyleSheet(styleSheet);
+    //
 
 
     return app.exec();
