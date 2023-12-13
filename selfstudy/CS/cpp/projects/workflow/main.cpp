@@ -1,3 +1,4 @@
+// QT Specific
 #include <QApplication>
 #include <QString>
 #include <QWidget>
@@ -17,7 +18,10 @@
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QFont>
 
+
+// Other includes
 #include <iostream>
 #include <cstdint>
 #include <string>
@@ -96,10 +100,10 @@ public:
         G_blue.setColorAt(1.0, C_DBlue);
 
         leftDividerWidget = new QWidget(this);
-        leftLayout = new QVBoxLayout;
+        leftLayout = new QVBoxLayout(this);
 
-        QStringList titlelist{"1", "2"};
-        this->makeButtons(titlelist, 2);
+        QStringList titlelist{"1", "2","3", "4", "5"};
+        this->makeButtons(titlelist, 5);
 
         buttonSheet = "QPushButton {"
             "background-color: #2c3f55;"
@@ -160,8 +164,9 @@ void MainWindow::fn(size_t bn, void (MainWindow::*slotFunction)()) {
 
 
 void MainWindow::makeButtons(QStringList titles, uint32_t size){
-    selectorHead = new QLabel("Options");
+    selectorHead = new QLabel("Options", this);
     selectorHead->setAlignment(Qt::AlignCenter);
+    selectorHead->setFontFormat(Qt::italic);
     // selectorHead->
     leftLayout->addWidget(selectorHead);
 
