@@ -4419,6 +4419,15 @@ int main(int argc, const char* argv[]) {
     \begin{concept}
        Aggregation occurs when a class contains an instance of another class. 
     \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Constant Objects}
+    \bigbreak \noindent 
+    \begin{concept}
+       In C++, objects that are declared constant are only allowed to work with member functions that are marked const. 
+    \end{concept}
+    
+
     
 
     \pagebreak
@@ -5639,6 +5648,16 @@ int main() {
     \bigbreak \noindent 
     A critical consideration when using buffers is ensuring that you do not write more data to a buffer than it can hold. This is known as a buffer overflow and can lead to undefined behavior, program crashes, or security vulnerabilities.
 
+    \bigbreak \noindent 
+    \subsection{Buffer operations}
+    \begin{itemize}
+     \item \textbf{memchr(const void* str, int c, size\_t n)} $\mapsto$ \texttt{void*}: Searches for the first occurrence of the character \texttt{c} (an unsigned char) in the first \texttt{n} bytes of the string pointed to by \texttt{str}. Returns a pointer to the matching byte or NULL if the character does not occur in the given memory area.
+        \item \textbf{memcmp(const void* str1, const void* str2, size\_t n)} $\mapsto$ \texttt{int}: Compares the first \texttt{n} bytes of the memory areas \texttt{str1} and \texttt{str2}. Returns an integer less than, equal to, or greater than zero if \texttt{str1} is found, respectively, to be less than, to match, or be greater than \texttt{str2}.
+        \item \textbf{memset(void* str, int c, size\_t n)} $\mapsto$ \texttt{void*}: Fills the first \texttt{n} bytes of the memory area pointed to by \texttt{str} with the constant byte \texttt{c}. Returns a pointer to the memory area \texttt{str}.
+        \item \textbf{memcpy(void* dest, const void* src, size\_t n)} $\mapsto$ \texttt{void*}: Copies \texttt{n} bytes from memory area \texttt{src} to memory area \texttt{dest}. The memory areas must not overlap. Returns a pointer to \texttt{dest}.
+        \item \textbf{memmove(void* dest, const void* src, size\_t n)} $\mapsto$ \texttt{void*}: Moves \texttt{n} bytes from memory area \texttt{src} to memory area \texttt{dest}. The memory areas may overlap. Returns a pointer to \texttt{dest}.
+    \end{itemize}
+
     \pagebreak 
     \unsect{The Stack, Heap, Code Segment (Text Segment), and Data Segment (static memory)}
     \bigbreak \noindent 
@@ -6292,12 +6311,290 @@ int main() {
     \pagebreak 
     \unsect{Namespaces}
     \bigbreak \noindent 
+    \begin{concept}
+        Namespaces in C++ are a feature used to organize code into discrete sections, helping to prevent name conflicts in larger projects. 
+        \bigbreak \noindent 
+        Namespaces are primarily used to avoid name collisions which can occur when your code base includes multiple libraries. For instance, two different libraries might both define a class or function named Logger. Without namespaces, these would clash, potentially causing errors.
+    \end{concept}
 
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    namespace MyNamespace {
+        void myFunction() {
+            // Function implementation
+        }
+    }
+    \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Using Namespaces}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Accessing Elements:} To use myFunction defined in MyNamespace, you would call it like this: MyNamespace::myFunction().
+        \item \textbf{Using Directive:} If you don't want to prefix every use of elements from a namespace, you can use the using directive:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            using namespace MyNamespace;
+            \end{cppcode}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Nested Namespaces} 
+    \bigbreak \noindent 
+    Namespaces can be nested within each other, allowing for further organization. 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    namespace Outer {
+        namespace Inner {
+            int x;
+        }
+    }
+    cout << outer::inner::x  << endl;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Anonymous Namespaces}
+    \bigbreak \noindent 
+    These are unnamed namespaces that are unique to the translation unit they are defined in. They are useful for declaring objects or functions that should only be accessible within a single file. 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    namespace {
+        int x;
+    }
+    cout << x; 
+    \end{cppcode}
 
     \pagebreak 
     \unsect{Exceptions}
     \bigbreak \noindent 
+    \begin{concept}
+        Exception handling in programming is a mechanism to handle runtime errors in a controlled manner. In languages like C++, Java, and Python, it allows a program to continue executing even if an error occurs, rather than crashing immediately. 
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Concepts}
+    \begin{itemize}
+        \item \textbf{Exception:} An exception is an event, typically an error, that disrupts the normal flow of the program. It could be caused by factors like invalid input, hardware failure, or resource exhaustion.
+        \item \textbf{Try Block:} This is where you place code that might throw an exception. The idea is to "try" to execute this code, but it might lead to an exception.
+        \item \textbf{Catch Block:} If an exception is thrown in the try block, the catch block is executed. This block "catches" the exception and contains code to handle it. In many languages, you can have multiple catch blocks to handle different types of exceptions.
+        \item \textbf{Finally Block (in some languages):} This block is executed after the try and catch blocks, regardless of whether an exception was thrown or caught. It's typically used for cleanup activities.
+        \item \textbf{Throwing Exceptions:} In many languages, you can throw an exception using the throw keyword. You can throw either built-in exception types or custom ones.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        try {
+            // ... code to try
+        } catch ( [ some exception ] ) {
+            // ... code to run if an exception is caught
+        } catch ( [ some exception ] ) {
+            // ... we can define many catch blocks to handle different exceptions
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <exception> // Full exception class
+        #include <stdexcept> // Child with less exceptions
+
+        int main() {
+            try {
+                // Code that may throw an exception
+                throw std::runtime_error("A sample error occurred");
+            } catch (const std::runtime_error& e) {
+                // Code to handle the exception
+                std::cerr << "Caught an exception: " << e.what() << std::endl;
+            }
+            // The program continues here after the catch block
+            return 0;
+        }
+
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Why does catch take a const reference?}
+    \bigbreak \noindent 
+    The catch clause in C++ exception handling is used to capture and handle exceptions that are thrown in the associated try block. When you catch an exception as a const reference (e.g., catch (const std::exception& e)), it's for several important reasons:
+    \bigbreak \noindent 
+    \subsubsection{Safety and Efficiency}
+    \begin{itemize}
+        \item \textbf{Avoiding Copies:} Catching by reference avoids making a copy of the exception object. If you catch by value, C++ creates a copy of the exception object, which can be inefficient, especially for large exception objects.
+        \item \textbf{Preserving Polymorphism:} When you catch by reference, you maintain the polymorphic nature of exceptions. Exceptions in C++ are often used in a hierarchy (e.g., inheriting from std::exception). Catching by reference ensures that the derived class type is preserved. If you catch by value, you might slice the object, meaning that you only catch the base part of a derived object, losing the derived class information.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Const Correctness}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Preventing Modification:} Catching as const ensures that the exception object cannot be modified inside the catch block. This is a good practice because you typically want to treat exception objects as read-only — they are meant to convey information about an error, not to be altered.
+        \item \textbf{Immutable Error State:} By enforcing const-ness, you maintain the integrity of the information contained in the exception object, ensuring that the error state it represents remains unchanged.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Catching any exception}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        catch (const std::exception& e)
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{cerr (standard error)}
+    \bigbreak \noindent 
+    \textbf{std::cerr} in C++ is one of the standard stream objects provided for performing output, specifically for error messages. It stands for "C++ Error". Like \textbf{std::cout}, which is used for general output, \textbf{std::cerr} is used to output to the standard error (stderr) stream. Here are some key points about \textbf{std::cerr}:
+    \bigbreak \noindent 
+    \subsubsection{Unbuffered Output}
+    \begin{itemize}
+        \item \textbf{std::cerr} is unbuffered. This means that output to \textbf{std::cerr} is displayed immediately without being stored in a buffer first. This is especially useful for error messages, where immediate output can be crucial for diagnosing problems, particularly if the program crashes or terminates unexpectedly.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The what() function}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    The what function is a member of exception objects, and it is used to return an explanatory string.
+    \begin{cppcode}
+    virtual const char* what() const throw(); // Having throw() is the same as having noexcept
+    virtual const char* what() const noexcept;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{What can we throw/catch?}
+    \bigbreak \noindent 
+    Throwing and catching errors in C++ is not limited to standard exceptions like \textbf{std::runtime\_error}. We throw whatever objects we want.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x = -1;
+        try {
+            cout << "Inside try \n";
+            if (x < 0) {
+                throw x;
+            }
+        } catch (int intToCatch ) {
+            cerr << "Exception Caught \n";
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{The reason we have \texttt{int intToCatch} in our catch block is because we want to catch integer values that may have been thrown. Since the value we are throwing is an integer, our catch block will handle it}
+
+    \bigbreak \noindent 
+    \subsection{noexcept in function signatures}
+    \bigbreak \noindent 
+    \begin{concept}
+        The \textbf{noexcept} specifier in C++ function signatures is used to indicate that a function is guaranteed not to throw any exceptions. This specifier plays a crucial role in exception safety and can help in optimizing C++ programs. Here's a detailed explanation:
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Syntax and Usage}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void myFunction() noexcept;
+        void myFunction() throw(); // Does the same thing
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{If a noexcept function does throw an exception, the program will call std::terminate(), resulting in immediate program termination. This is a significant difference compared to functions without the noexcept specifier, where thrown exceptions can be caught by a catch block.}
+
+    \bigbreak \noindent 
+    \subsection{Benefits}
+    \begin{itemize}
+        \item \textbf{Optimization:} Compilers can perform optimizations on functions that are marked as noexcept because they don't need to account for the possibility of stack unwinding due to exceptions. This can lead to more efficient code, especially in performance-critical software.
+        \item \textbf{Exception Safety Guarantees:} Using noexcept clearly communicates to other programmers that the function is guaranteed not to throw exceptions. This is part of writing exception-safe code, which is crucial in robust application design.
+        \item \textbf{Move Operations:} In modern C++ (C++11 and later), move constructors and move assignment operators that are noexcept are more likely to be used by the standard library containers. This makes operations like resizing a std::vector more efficient since it can safely move objects rather than copy them.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{OOP Approach to exceptions (Custom exception class)}
+    \bigbreak \noindent 
+    Consider the example\bigbreak \noindent 
+    \begin{cppcode}
+        class foo {
+            private:
+            int x;
+
+            public:
+            foo() = default;
+            class bad { 
+                private:
+                    int value;
+                public:
+                    bad(int val) : value(val) {}
+                    int getValue() const { return this->value; }
+            };
+
+            void set(int val) {
+                if ( val >= 0 ) { this->x = val;} 
+                else { throw bad(val); }
+            }
+        };
+
+        int main(int argc, const char* argv[]) { 
+            foo f1;
+
+            try {
+                f1.set(-5);
+            } catch (const foo::bad& e) {
+                std::cerr << "Error found, bad value: " << e.getValue() << endl;
+            }
+
+            return EXIT_SUCCESS; 
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Custom Exception Class:} class bad {}; defines a simple custom exception class within foo. This class just defines a value member to hold the bad value and a method to retrieve it.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Unwinding the stack}
+    \bigbreak \noindent 
+    \begin{concept}
+        Once an exception has been thrown, the program cannot jump back to the throw point.
+        The function that executes a throw statement will immediately terminate. If that function was called by another function, and the exception is not caught, then the calling
+        function will terminate as well. This process, known as unwinding the stack,continues
+        for the entire chain of nested function calls, from the throw point, all the way back to
+        the try block.
+        \bigbreak \noindent 
+        If an exception is thrown by the member function of a class object, then the class destructor
+        is called. If statements in the try block or branching from the try block created any other
+        objects, their destructors will be called as well. 
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{More on 'new'}
+    \bigbreak \noindent 
+    \subsubsection{Handling bad\_alloc}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int* ptr = nullptr;
+
+        try {
+            ptr = new int[10000000000000];
+            cout << "Allocation success" << endl;
+        } catch(const std::bad_alloc& e) {
+        }
+        std::cerr << "Allocation failed: " << e.what() << endl;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{nothrow}
+    \bigbreak \noindent 
+    The nothrow version of new is a way to instruct the operator not to throw an exception on failure, but to return a null pointer instead.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int* ptr = nullptr;
+        ptr = new(std::nothrow) int[10000000000000];
+
+        if (ptr == nullptr) {
+            cout << "Allocation Failed" << endl;
+        } else {
+            cout << "Allocation Success" << endl;
+        }
+    \end{cppcode}
 
     \pagebreak 
     \unsect{Templates}
@@ -6306,25 +6603,4 @@ int main() {
     \bigbreak \noindent 
     \subsection{decltype}
 
-
-
-
-
-
-
-
-
-
-    
-
-
-
-	
-
-	
-
-
-
-
-    
 \end{document}

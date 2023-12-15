@@ -60,8 +60,8 @@ class PowerLifter {
     char fname[NAME_MAXSIZE];
     char lname[NAME_MAXSIZE];
     float wilks;
-    int maxsquat;
     int maxbench;
+    int maxsquat;
     int maxdeadlift;
 
     // Public method declarations
@@ -255,32 +255,13 @@ Arguments: None
 Returns: Integer which holds the value of the deadlift data member
 
 Notes: 
-***************************************************************/
-int PowerLifter::getDeadlift() {
-    return this->maxdeadlift;
 }
-
-// Function IX
-/***************************************************************
-Function: setDeadlift
 
 Use: Sets the data member for max deadlift
 
-Arguments: integer value for max deadlift value
-
-Returns: void
-
 Notes: 
 ***************************************************************/
-void PowerLifter::setDeadlift(int newDeadlift) {
-    if ( newDeadlift > -1 ) {
-        this->maxdeadlift = newDeadlift;
-    }
 }
-
-// Function X
-/***************************************************************
-Function: getTotal
 
 Use: Returns the summation of the three maxes
 
@@ -375,8 +356,8 @@ void PowerLifter::display() {
         << std::setw(NUMERIC_JUST) << this->wilksScore() << endl;
 }
 
-// Function XV
 /***************************************************************
+// Function XV
 Function: sortBy
 
 Use: Sorts the objects in our object array based on each attribute (selection sort)

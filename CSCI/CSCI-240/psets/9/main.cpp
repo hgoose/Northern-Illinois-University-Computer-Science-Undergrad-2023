@@ -13,14 +13,8 @@ rewards one for being "smart but also lazy" when it comes to implementing each o
 use previously defined methods to reduce the amount of code necessary to write to complete the next one.
 ***************************************************************/
 #include <iostream> // For input/output tasks
-#include <iomanip> // For input/output manipulators
 #include <cstdlib> // For random, system, exit, EXIT_SUCCESS, and EXIT_FAILURE
-// #include <cstdint> // For fixed width data types
 #include <unistd.h> // Posix API
-#include <typeinfo> // typeid(n).name()
-#include <cctype> // For character functions
-#include <algorithm> // Defined algorithms
-#include <iterator> // Iterator functions and types
 #include <string> // String class
 #include <sstream> // String stream
 
@@ -33,8 +27,6 @@ use previously defined methods to reduce the amount of code necessary to write t
 
 // Using
 using std::cout;
-using std::cin;
-using std::cerr;
 using std::endl;
 using std::string;
 
@@ -564,5 +556,8 @@ string Vector::to_string() {
     std::ostringstream oss;
     oss << "<" << this->components[0] << "," << this->components[1] << "," << this->components[2] << ">"; 
     return oss.str();
+
+
+
 }
 

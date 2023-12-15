@@ -25,7 +25,6 @@
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include <functional>
 #include <algorithm>
 
 #define a_sizeof(x) sizeof(x) / sizeof(x[0])
@@ -42,8 +41,8 @@ private:
     // Pushbutton Stuff
     vector<QPushButton*> buttons;
     QPushButton* button;
-
     // Layout stuff
+
     QWidget* leftDividerWidget; 
     QVBoxLayout* leftLayout; 
     int leftDividerEndX;
@@ -304,8 +303,10 @@ int main(int argc, char* argv[]) {
     // (window.getButton(0))->setStyleSheet(styleSheet);
     //
 
-
     return app.exec();
+
+
+
 }
 
 #include "main.moc"
