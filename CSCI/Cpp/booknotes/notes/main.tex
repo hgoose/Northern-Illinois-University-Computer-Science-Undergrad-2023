@@ -3587,37 +3587,50 @@ delete cirptr; // Don't forget to delete when your done with it.
 	
 
 	\pagebreak
-	\subsection{Enumerated data types}
+    \unsect{Enumerated data types}
 	\bigbreak \noindent 
 	\begin{concept}
 	   An \textbf{enumerated} data type is a programmer defined data type. It consists of values known as \textbf{enumerators}, which represent integer constants 
+       \bigbreak \noindent 
+       Enums allow us to define a set of named integral constants. Enums are used to make a program more readable and maintainable by providing meaningful names to those constants.
 	\end{concept}
 	\bigbreak \noindent 
-	
+    \subsection{General Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        enum name {
+            integral, integral, ...
+        };
+
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
 	\begin{cppcode}
 enum Day { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY};
-cout << MONDAY << endl 
-    << TUESDAY << endl 
-    << WEDNESDAY << endl 
-    << THURSDAY << endl 
-    << FRIDAY;
-/*
-0
-1
-2
-3
-4
-*/
-Day d1; //	We can also create variables of the data type
+
+cout << MONDAY << endl      // 0
+    << TUESDAY << endl      // 1
+    << WEDNESDAY << endl    // 2
+    << THURSDAY << endl     // 3
+    << FRIDAY;              // 4
+
+Day d1; // We can also create variables of the data type
 	\end{cppcode}
 	
 	\bigbreak \noindent 
-    Because \textit{d1} is a variable of the Day data type, we may assign any of the enumerators MONDAY, TUESDAY, WEDNESDAY, THURSDAY, or, FRIDAY to it.
-    \bigbreak \noindent 
-    We can think of these enumerators as integer named constants.
+    Because \textit{d1} is a variable of the Day data type, we may assign any of the enumerators that are defined in the \textit{Day} enumerator to it.
 
     \bigbreak \noindent 
-    \subsection{Assigning an integer to an enum variable}
+    \subsection{Basic Concepts}
+    \begin{itemize}
+        \item \textbf{Named Constants:} Enums provide a way to define a group of related constants with names, making the code more readable and maintainable.
+        \item \textbf{Underlying Type:} In C++, the underlying type of an enum is by default an integer, but you can specify a different integral type (like char, short, long, etc.).
+        \item \textbf{Scope:} Enumerators (the individual constants within an enum) are scoped within the enum. This helps prevent name conflicts and improves code clarity.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Assigning an integer to an enumerator}
     \bigbreak \noindent 
     We cannot directly assign integer values to enum variables. For example, the following code will produce an error.
     \bigbreak \noindent 
@@ -3637,7 +3650,7 @@ d1 = static_cast<Day>(10); // Works
     \end{cppcode}
     
 
-    \pagebreak
+    \bigbreak \noindent 
     \subsection{Assigning an enumerator to an int variable}
     \bigbreak \noindent 
     We cannot directly assign an integer value to an enum variable. We can, however, directly assign an enumerator to an integer variable.
@@ -3661,8 +3674,8 @@ int x = d1;
     When we don't need to define any variables of the enumerated type, we can actually skip the naming process. When this occurs, we say we have an \textbf{anonymous enumerated type}
     \bigbreak \noindent 
     \subsection{Using math operators to change the value of an enum variable}
-    \bigbreak \noindent 
-    Again, we must use a cast.
+    \bigbreak \noindent
+    If we perform arithemetic operations on an enum variable, we are implicitly converting the variable to something other than the enumerator type. To perform arithemetic operations on a enumerator that will be reassigned to the enumerator variable we must cast the expression to the type of the enumrator. Consider the following example.
     \bigbreak \noindent 
     
     \begin{cppcode}
@@ -3673,27 +3686,44 @@ d1 = d1 + 1; // Error
 d1 = static_cast<Day>(d1 + 1); // Correct
     \end{cppcode}
     
-
     \bigbreak \noindent 
-    \subsection{Using an enum variable to step through an array's elements}
-    \bigbreak \noindent 
-
-    \pagebreak
     \subsection{Specifying values in enumerators}
     \bigbreak \noindent 
-    
+    If we don't specify any vaules for our enumerators, the first variable will take on a value of zero, and each proceding variable will be incremented by one. However, if we start an enumerator at a different value, then each enumerator proceding the one we changed will be incremented by one.
+    \bigbreak \noindent 
+    We can also provide custom values for each enumerator
+    \bigbreak \noindent 
     \begin{cppcode}
 enum {a=1,b,c,d}; // This will start at 1 instead of 0
 enum {a=1,b=5,c=10,d=15}; 
     \end{cppcode}
     
     \bigbreak \noindent 
-    \subsection{declaring the type and defining the variables in one statement}
+    \subsection{Changing the type}
     \bigbreak \noindent 
-    
+    By defafult the types are integer, but we can also use short, long, long long, char, short char
+    \begin{itemize}
+        \item \textbf{char}
+        \item \textbf{unsigned char}
+        \item \textbf{short }
+        \item \textbf{unsigned short}
+        \item \textbf{long }
+        \item \textbf{unsigned long}
+        \item \textbf{long long}
+        \item \textbf{unsigned long long}
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        enum foo : char {
+            a,b.c
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Quick instantiation}
+    \bigbreak \noindent 
+    We can also instantiate directly after the definition. Consider the following code.
     \begin{cppcode}
 enum myenum {a,b,b,c} e1;
-enum myenum {a,b,b,c} e1,e2;
     \end{cppcode}
     
 
@@ -3725,10 +3755,19 @@ cout static_cast<int>(Presidents::ROOSEVELT);
     \begin{cppcode}
 enum class Day : char {M,T,W,TH,F};
     \end{cppcode}
+
+    \pagebreak 
+    1
+    \unsect{Unions}
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Unions} in C++ are a special data type that allows you to store different data types in the same memory location. They are similar to structures (structs) in that they can contain multiple members of different types, but they differ in how they use memory. 
+    \end{concept}
+    
     
 
 
-        \pagebreak
+    \pagebreak
     \unsect{String streams}
     \bigbreak \noindent 
      String streams in C++ are part of the stream-based I/O library and are very useful when it comes to performing input/output operations on strings. They behave similarly to input and output streams, but instead of reading from or writing to external devices like the console or a file, they operate on in-memory strings.
@@ -4391,18 +4430,106 @@ int main(int argc, const char* argv[]) {
     When we return *this, using the star operator, we are returning the actual current instance. Thus, we should have the return value either be an obj reference or a brand new object. Usually a obj reference.
 
     \bigbreak \noindent 
-    \subsection{Static}
-    \bigbreak \noindent 
+    \subsection{Static Member Variables}
     \begin{concept}
-        \bigbreak \noindent 
-        \textbf{Static Member Variable}
-        \bigbreak \noindent 
-       A static member variable is shared by all instances of the class. It is not associated with any particular instance of the class but rather with the class itself. There is only one instance of this variable, regardless of how many objects of the class are created. 
-       \bigbreak \noindent 
-       \textbf{Static member function}
-       \bigbreak \noindent 
-       Similarly, static member functions are not associated with any particular object of the class. They can only access static members and cannot access non-static members or functions.
-    \end{concept}
+    In C++, the keyword \textbf{static} can be used within classes and structs to define \textbf{static} members. \textbf{Static} members belong to the class itself, rather than to any specific instance of the class. This means that they are shared by all instances of the class, regardless of how many objects of the class are created. 
+    \bigbreak \noindent 
+    \subsubsection{Initialization}
+    \textbf{Static} data members must be defined and initialized outside the class definition, typically in a source file (.cpp). This is because they are not tied to class instances.
+    \bigbreak \noindent 
+    \subsubsection{Access}
+    \bigbreak \noindent 
+    \textbf{Static} data members can be accessed using the class name and the scope resolution operator (::), even without creating an instance of the class.
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class MyClass {
+        public:
+            static int staticValue;
+        };
+
+        // Definition and initialization
+        int MyClass::staticValue = 0;
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Static constant member variables}
+    \bigbreak \noindent 
+    The exception for having to define static members variables outside of the class is when you mark the static member variables as const. In this case, we can define the members directly in the class, in the same line as the declaration.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    struct foo {
+        static const int x = 20;
+    }; 
+
+    cout << foo::x << endl // In main
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{The 'inline' keyword}
+    \bigbreak \noindent 
+    The other exception for defining static member variables inside the class is through the use of the 'inline' keyword
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct foo {
+            static inline int x = 20;
+        };
+        cout << foo::x << endl;
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{The inline keyword was introduced in c++17, so make sure you account for this in the build process. More on the inline keyword in a later section}
+
+    \bigbreak \noindent 
+    \subsection{Static member function}
+    \bigbreak \noindent 
+    \textbf{Static} member functions are not associated with any particular object of the class. They can only access \textbf{static} members and cannot access non-\textbf{static} members or functions.
+    \bigbreak \noindent 
+    \textbf{Static} member functions can be called without an instance of the class. They do not have access to the this pointer.
+    \bigbreak \noindent 
+    \subsubsection{Access}
+    \bigbreak \noindent 
+    Like \textbf{static} data members, \textbf{static} member functions can be accessed using the class name and the scope resolution operator.
+    \bigbreak \noindent 
+    \subsubsection{Restrictions}
+    \bigbreak \noindent 
+    They can only access \textbf{static} data members or other \textbf{static} member functions. They cannot access non-\textbf{static} members because they are not associated with any object instance.
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class MyClass {
+            public:
+            static void staticFunction() {
+                // Can access static members
+            }
+        };
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Pragmatic Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class Counter {
+            public:
+            Counter() { ++count; }
+            ~Counter() { --count; }
+
+            static int getCount() { return count; }
+
+            private:
+            static int count;
+        };
+
+        int Counter::count = 0;
+
+        int main() {
+            Counter c1, c2;
+            std::cout << "Number of Counter objects: " << Counter::getCount() << std::endl;
+            return 0;
+        }
+    \end{cppcode}
+
     
 
     \bigbreak \noindent 
@@ -6599,8 +6726,349 @@ int main() {
     \pagebreak 
     \unsect{Templates}
     \bigbreak \noindent 
+    \subsection{Function Templates}
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Function templates} enable you to write a single function that can operate on different data types. The compiler generates the appropriate function based on the type of argument passed.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    T name(T p1, T p2, ...) {
+        // Function Body...
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    T foo(T a, T, b) {
+        return a*b;
+    }
+    foo(1,2) // Output: 2
+    \end{cppcode}
+
+
+    \pagebreak 
+    \subsection{Class Templates}
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Class templates} allow you to define a class to work with any data type. Like function templates, the compiler generates the necessary class based on the data type used.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T>
+        class foo {
+        private:
+            T* arr;
+            size_t size;
+        public:
+            foo() = default;
+
+            foo(std::initializer_list<T> il) {
+
+                size = il.size();
+                arr = new T[size];
+
+                T tmp[size];
+                std::move(il.begin(), il.end(), tmp);
+
+                memcpy(arr, tmp, sizeof(tmp));
+            }
+
+            void Print() {
+                for (size_t i=0; i<size; ++i) {
+                    cout << arr[i] << " ";
+                }
+                cout << endl;
+            }
+
+            ~foo() { delete[] arr; }
+
+
+        };
+        int main(int argc, const char* argv[]) {
+
+            foo<int> f1({1,2,3});
+            foo<float> f2({1.232,2.232,3.121});
+            foo<char> f3({'a', 'b', 'c'});
+
+            return EXIT_SUCCESS;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Function Template Specialization}
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Template specialization} allows you to define a different implementation for a particular data type.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template <typename T>
+    T min(T x, T y) {
+        return (x < y) ? x : y;
+    }
+
+    template <>
+    const char* min(const char* x, const char* y) {
+        return (strcmp(x, y) < 0) ? x : y;
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Class/Struct Template Specialization}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    struct foo {
+        T x = 20;
+    };
+
+    template<>
+    struct foo<char> {
+        char x = 'z';
+    };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Template Parameters}
+    \bigbreak \noindent 
+    \begin{concept}
+        Templates can have more than one parameter, including non-type parameters.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename T, int size>
+        class FixedArray {
+            private:
+            T arr[size];
+            // implementation
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Trailing return type}
+    \bigbreak \noindent 
+    In traditional C++, the return type of a function is declared at the beginning of the function declaration. However, C++11 introduced a new syntax that allows the return type to be specified after the parameter list, using auto at the beginning and -> Type after the parameter list.
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto functionName(parameters) -> returnType {
+        // function body
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto foo(int a, int b) -> int {
+        return a + b;
+    }
+    \end{cppcode}
 
     \bigbreak \noindent 
     \subsection{decltype}
+
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{decltype} is a keyword in C++ introduced in C++11, which stands for "declared type". It is used to query the type of an expression without actually evaluating that expression. This can be particularly useful in template programming and type deduction, where the type of an expression might not be known until compile time.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        decltype(expression) variable_name;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here, \textbf{variable\_name} will have the same type as the type of \textbf{expression}. It's important to note that \textbf{expression} is not evaluated; \textbf{decltype} only deduces its type.
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a = 5;
+    decltype(a) b = 5;
+
+    cout << typeid(b).name() << endl; // Output: i
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Template functions with mixed types (Trailing return type)}
+    \bigbreak \noindent 
+    \begin{concept}
+        To address the challenge of determining the return type for a template function that accepts two different types, we can utilize a strategy involving \textbf{auto} and a \textbf{trailing return type} with \textbf{decltype}. This approach effectively resolves the ambiguity of the return type in such template functions.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T, typename U>
+        auto add(T t, U u) -> decltype(t + u) {
+            return t + u;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Template functions with mixed types (Deduced return type)}
+    Alternatively, C++14 introduced the concept \textbf{deduced return type}. Which provides a simpler way to handle the situation described above
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T, typename U>
+        decltype(auto) foo(T a, U b)  {
+            return a + b;
+        }
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    \subsection{The use of 'static' in template programming}
+    \bigbreak \noindent 
+    \begin{concept}
+       Using \textbf{static} members in template programming in C++ requires a specific syntax, particularly for the definition and initialization of \textbf{static} data members. Let's go through the key points with an example:
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Declaring and Defining Static Members in a Template Class}
+    \bigbreak \noindent 
+    \textbf{Static} members are declared inside the template class, similar to how you would in a non-template class. However, their definitions and initializations are handled differently.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    struct foo {
+        static T x; 
+
+        // Method to set the value 
+        static void setX(T val) {
+            x = val;
+        }
+    };
+
+    template<typename T> // Note: typename here does not need to be the same as the one above
+    T foo<T>::x = T(); // Just some default initialization for each type
+
+    int main(int argc, const char* argv[]) {
+
+        foo<int>::setX(23);
+        cout << foo<int>::x << endl;
+
+        foo<double>::setX(23.23827);
+        cout << foo<double>::x << endl;
+
+        foo<char>::setX('A');
+        cout << foo<char>::x << endl;
+
+        return EXIT_SUCCESS;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Key points}
+    \begin{itemize}
+        \item \textbf{Separate Instances for Each Type:} Each instantiation of the template class with a different type argument will have its own instance of the static member. 
+        \item \textbf{Explicit Instantiation (Optional):} In some cases, you might want to explicitly instantiate the template for specific types. This can be done as shown in the example. It's useful when you want to limit the types for which the template can be instantiated or when you are dealing with template code in separate .cpp files to manage compilation and linking issues.
+        \item \textbf{Header-Only Libraries:} In header-only libraries, where the entire template implementation is in a header file, you might define the static member directly in the class definition. However, this can lead to issues with multiple definitions if the header is included in multiple translation units. One common workaround is to use inline variables (introduced in C++17) for static data members.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Non-Type Template Parameters}
+    \bigbreak \noindent 
+    \begin{remark}
+        The discussion of non-type template parameters are primarily used for compile-time computations and configurations. We will discuss compile-time computations in greater depth in a later section.
+    \end{remark}
+    
+    \bigbreak \noindent 
+    \begin{concept}
+        Non-type template parameters allow you to pass values, not types, as parameters to templates. These values must be known at compile time.
+        \bigbreak \noindent 
+        You use a non-type template parameter when you need a compile-time constant value in your template. This is common in scenarios like specifying the size of an array, loop unrolling, or other compile-time optimizations.
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsubsection{Array sizes}
+    \bigbreak \noindent 
+    Non-type template parameters are often used to specify the size of an array within a template class. This allows the creation of array-like classes with a size that is known at compile time, leading to more efficient code.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename T, std::size_t Size>
+        class StaticArray {
+            T data[Size];
+            // ...
+        };
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Compile-Time Calculations}
+    Below is an example that uses template metaprogramming to calculate the factorial of a number at compile time, as apposed to runtime.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<int N>
+    struct factorial {
+        static const int value = N * factorial<N-1>::value;
+    };
+
+    template<>
+    struct factorial<0> {
+        const int value = 1;
+    };
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Elementary compile time computations}
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{Extra Information}
+    \bigbreak \noindent 
+    \subsection{constexpr}
+    \bigbreak \noindent 
+    \subsection{consteval}
+    \bigbreak \noindent 
+    \subsection{constinit}
+
+    \bigbreak \noindent 
+    \subsection{More on 'inline'}
+
+    \bigbreak \noindent 
+    \subsection{Measuring the speed of C++ programs}
+    \bigbreak \noindent 
+    \begin{concept}
+        Measuring the speed of C++ programs involves timing the execution of specific parts of your code or the entire program. Here are some common methods:
+        \bigbreak \noindent 
+        The <chrono> library provides a high-precision, flexible way to measure time. Here's a basic example:
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <iostream>
+    #include <chrono>
+
+    int main() {
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Your code here
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds\n";
+    }
+    \end{cppcode}
+    
+
+
+
+
+
+    
+    
+    
+
+
+
+    % \bigbreak \noindent 
+    % \subsubsection{decltype}
+
 
 \end{document}

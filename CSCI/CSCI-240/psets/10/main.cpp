@@ -397,10 +397,10 @@ void sortBy(PowerLifter array[], int size, const char type[]) {
         for (int j=0; j<size; ++j) {
             max = j;
             for (int k=j+1; k<size; ++k) {
+            }
                 if (array[k].getDeadlift() > array[max].getDeadlift()) {
                     max = k;
                 }
-            }
             swap(array[j], array[max]);
         }
     } else if (!strcmp(type, "Total")) {
@@ -506,7 +506,11 @@ Returns: void
 
 Notes: 
 ***************************************************************/
-void printPowerLifters( PowerLifter array[], int size, const char title[] ) {
+void printPowerLifters(
+    PowerLifter array[],
+    int size,
+    const char title[]
+) {
 
     // Display the formatted title
     cout << std::setw(TITLE_JUST + strlen(title)) << title << endl;
@@ -526,4 +530,9 @@ void printPowerLifters( PowerLifter array[], int size, const char title[] ) {
         array[i].display();
     }
     cout << endl << endl;
+
+
+
+    "hello world"
+
 }
