@@ -41,14 +41,17 @@ private:
     // Pushbutton Stuff
     vector<QPushButton*> buttons;
     QPushButton* button;
-    // Layout stuff
 
+    // Layout stuff
     QWidget* leftDividerWidget; 
     QVBoxLayout* leftLayout; 
     int leftDividerEndX;
 
     // Label Stuff
     QLabel* selectorHead;
+
+    // Font stuff
+    QFont selectorHeadFont;
 
     // Color Defititions
     QColor C_blue;
@@ -101,11 +104,12 @@ public:
         leftDividerWidget = new QWidget(this);
         leftLayout = new QVBoxLayout(this);
 
-        QStringList titlelist{"1", "2","3", "4", "5"};
-        this->makeButtons(titlelist, 5);
+        QStringList titlelist{"Math", "Computer Science"};
+        this->makeButtons(titlelist, 2);
 
         buttonSheet = "QPushButton {"
             "background-color: #2c3f55;"
+            "font-size: 14pt;"
             "color: #fff;"
             "border: 0;"
             "}"
@@ -123,6 +127,8 @@ public:
         "}";
 
         this->setLabelStyleSheet(this->selectorHead, selectorHeadSheet);
+
+        fn(0, &MainWindow::toggleTopBarVisibility);
 
     }
 
@@ -163,9 +169,15 @@ void MainWindow::fn(size_t bn, void (MainWindow::*slotFunction)()) {
 
 
 void MainWindow::makeButtons(QStringList titles, uint32_t size){
-    selectorHead = new QLabel("Options", this);
+    selectorHead = new QLabel("Categorys", this);
     selectorHead->setAlignment(Qt::AlignCenter);
-    selectorHead->setFontFormat(Qt::italic);
+    // selectorHead->setTextFormat(Qt::italic);
+    
+    selectorHeadFont = selectorHead->font();
+    selectorHeadFont.setItalic(true);
+    selectorHead->setFont(selectorHeadFont);
+
+
     // selectorHead->
     leftLayout->addWidget(selectorHead);
 
@@ -239,6 +251,7 @@ void MainWindow::paintEvent(QPaintEvent *event) {
     // Right divider stuff
     setFillBrush(painter, C_gray);
     QRect topBarRect(leftDividerEndX, 0, width, height);
+
     if (topBarVisible) {
         painter.drawRect(topBarRect);
     }

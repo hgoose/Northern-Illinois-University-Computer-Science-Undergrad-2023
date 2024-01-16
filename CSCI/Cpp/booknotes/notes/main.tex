@@ -3073,26 +3073,26 @@ std::weak_ptr<int> b = a; // Reference count will NOT be updated.
     \bigbreak \noindent 
     Here's how we get input from a user and store it in a character array (string)...
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-const int SIZE=80;
-char a[];
-cout << "enter some string: ";
-cin.getline(a,SIZE);
+        const int SIZE=80;
+        char a[];
+        cout << "enter some string: ";
+        cin.getline(a,SIZE);
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     Here we are using the cin's member function \textbf{getline()}, where the first argument is where we want to store the input, and the second argument indicates the maximum length of the string, including the null terminator
     \bigbreak \noindent 
     For a summary:
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-std::getline(cin, variable) // Used for std::string objects
-cin.get(variable) // Used for single characters
-cin.getline(variable, size) // Used for character arrays
+        std::getline(cin, variable) // Used for std::string objects
+        cin.get(variable) // Used for single characters
+        cin.getline(variable, size) // Used for character arrays
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     \nt{We cannot use const char* for user input}
 
@@ -3101,16 +3101,16 @@ cin.getline(variable, size) // Used for character arrays
     \bigbreak \noindent 
     To be able to get access to various functios pertaining to C-Strings, we must include <cstring>. Then we can get the size of a string by:
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-char name[] = "NATE";
-int len;
-len = strlen(name);
-// These functions are also going to work for the other type of C-String
-const char* a;
-len = strlen(a);
+        char name[] = "NATE";
+        int len;
+        len = strlen(name);
+        // These functions are also going to work for the other type of C-String
+        const char* a;
+        len = strlen(a);
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     \nt{The strlen function accepts a pointer to a C-String. Also know that sizeof() will include the null terminator, while strlen will not}
 
@@ -3120,42 +3120,42 @@ len = strlen(a);
     \bigbreak \noindent 
     The strcat function accepts two pointers to C-Strings as its arguments. The function then concatenates, or appends one string to another.
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-char a[20] = "Hello ";
-char b[] = "World";
-strcat(a,b);
+        char a[20] = "Hello ";
+        char b[] = "World";
+        strcat(a,b);
 
-cout << a << endl; // Hello World!
+        cout << a << endl; // Hello World!
 
-char a[20] = "Hello ";
-const char* b = "World";
-strcat(a,b);
+        char a[20] = "Hello ";
+        const char* b = "World";
+        strcat(a,b);
 
-cout << a << endl; // Hello World!
+        cout << a << endl; // Hello World!
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     \nt{With the second example, $a$ cannot be a const char*, and they \textbf{cannot} both be const char*}
-    
+
     \bigbreak \noindent 
     \subsection{The Strcopy function}
     \bigbreak \noindent 
     Recall that one array cannot be assigned to another array with the = operator. The strcpy function can be used to copy one string to another.
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-char a[10];
-char b[] = "Hello";
-strcpy(a,b);
-cout << a << endl; // Hello
-// We can also do...
-char a[10];
-const char* b = "Hello";
-strcpy(a,b);
-cout << a << endl; // Hello
+        char a[10];
+        char b[] = "Hello";
+        strcpy(a,b);
+        cout << a << endl; // Hello
+        // We can also do...
+        char a[10];
+        const char* b = "Hello";
+        strcpy(a,b);
+        cout << a << endl; // Hello
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     \nt{For the second example, the thing we are copying to cannot be a const char*}
     \bigbreak \noindent 
@@ -3166,46 +3166,46 @@ cout << a << endl; // Hello
     Because the \textbf{strcat} and \textbf{strcpy} functions can possibly overwrite the bounds of an array, they make it possible to write unsafe code. Instead, you should use \textbf{strncat} and \textbf{strncpy} when possible
     \bigbreak \noindent 
     \begin{remark}
-       "Overwriting the bounds of an array" refers to accessing or modifying elements of an array outside of its valid index range. In simpler terms, it means trying to read from or write to a location that's not within the array's allocated memory.
+        "Overwriting the bounds of an array" refers to accessing or modifying elements of an array outside of its valid index range. In simpler terms, it means trying to read from or write to a location that's not within the array's allocated memory.
     \end{remark}
     \bigbreak \noindent 
     These functions have an additional parameter, it is the maximum number of characters to add to the array. This way, we can define how much space we have left for the string, and pass it to these functions to make sure we don't go out of bounds.
     \bigbreak \noindent 
-    
+
     \begin{cppcode}
-// strncat
-const int SIZE=10;
-char a[SIZE] = "Hello, ";
-const char* b = "World";
+        // strncat
+        const int SIZE=10;
+        char a[SIZE] = "Hello, ";
+        const char* b = "World";
 
-int size_left = SIZE - strlen(a);
-strncat(a,b,size_left); // Hello, Wor
+        int size_left = SIZE - strlen(a);
+        strncat(a,b,size_left); // Hello, Wor
 
-// strncpy
-const int SIZE=3;
-char a[SIZE];
-const char* b = "World";
+        // strncpy
+        const int SIZE=3;
+        char a[SIZE];
+        const char* b = "World";
 
-strncpy(a,b,SIZE);
+        strncpy(a,b,SIZE);
 
-cout << a << endl; // Wor
+        cout << a << endl; // Wor
     \end{cppcode}
-    
+
 
     \bigbreak \noindent 
     \subsection{The strstr function}
     \bigbreak \noindent 
     This function searches for a string inside of a string. For instance, it could be used to search for the string "seven" inside the larger string.
     \bigbreak \noindent 
-    
-    \begin{cppcode}
-const char* a = "hello world";
-const char*b = nullptr;
-b = strstr(a, "hello")
 
-cout << b << endl; // hello world
+    \begin{cppcode}
+        const char* a = "hello world";
+        const char*b = nullptr;
+        b = strstr(a, "hello")
+
+        cout << b << endl; // hello world
     \end{cppcode}
-    
+
     \bigbreak \noindent 
     \nt{If the substr is found, it will return the substr and all that comes after it}
     \bigbreak \noindent 
@@ -3220,27 +3220,27 @@ cout << b << endl; // hello world
         \item The result is positive if string1 comes after string2 in alphabetical order.
     \end{itemize}
     \bigbreak \noindent 
-    
-    \begin{cppcode}
-const char* a = "Nate";
-const char* b = "Warner";
 
-if (!strcmp(a,b)) {
-    cout << "These strings are the same" << endl;
-} else if (strcmp(a,b) < 0) {
-    cout << a << " comes before " << b << " in alphabetical order" << endl;
-} else {
-    cout << a << " comes after " << b << " in alphabetical order" << endl;
-}
+    \begin{cppcode}
+        const char* a = "Nate";
+        const char* b = "Warner";
+
+        if (!strcmp(a,b)) {
+            cout << "These strings are the same" << endl;
+        } else if (strcmp(a,b) < 0) {
+            cout << a << " comes before " << b << " in alphabetical order" << endl;
+        } else {
+            cout << a << " comes after " << b << " in alphabetical order" << endl;
+        }
     \end{cppcode}
-    
+
 
     \bigbreak \noindent 
     \subsection{String/Numeric Conversion Functions}
     \bigbreak \noindent 
     \begin{concept}
- The C++ library provides functions for converting C-Strings and string objects to numeric data types and vice versa.
-	\end{concept}
+        The C++ library provides functions for converting C-Strings and string objects to numeric data types and vice versa.
+    \end{concept}
     \bigbreak \noindent 
     \textbf{String to number (C-String)}
     \begin{itemize}
@@ -3268,7 +3268,7 @@ if (!strcmp(a,b)) {
         \item \textbf{to\_string}
     \end{itemize}
 
-    \pagebreak
+    \bigbreak \noindent 
     \subsection{More on the C++ string (string object)}
     \bigbreak \noindent 
     Unlike C-Strings, there is no need to use a function like strcmp to compare two strings, we can just use the comparison operators. Much like any scripting language you may be familiar with. Not going to go over this stuff, its pretty trivial.
@@ -3298,8 +3298,96 @@ string a('z', 10) // 10 z characters
         \item =
         \item +=
         \item +
-        \item [] (subscript notation)
+        \item \relax [] (subscript notation)
     \end{itemize}
+
+    \pagebreak 
+    \unsect{Type Punning}
+    \bigbreak \noindent 
+    \begin{concept}
+       \textbf{Type punning} in C++ refers to a technique where a value of one type is treated as if it were a value of a different type, without using type conversions. This is typically done for low-level operations, such as interpreting the binary representation of a data type in a different way. However, it's important to note that \textbf{type punning} can lead to undefined behavior according to the C++ standard, and its use should be approached with caution. 
+    \end{concept}
+    \bigbreak \noindent 
+    Suppose we had some integer
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a = 50;
+    \end{cppcode}
+    \bigbreak \noindent 
+    And we wish to convert it to a double. We could of course do 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a = 50;
+    double value = a; // Which is implicit to... double value = (double) a;
+    \end{cppcode}
+    \bigbreak \noindent 
+    This would certainly convert our integer to a double, storing it in a brand new variable. However, perhaps we wanted to just take the existing memory for \textit{a}, and just treat it as a double. We can then write
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a  = 50;
+    double value = *(double*) &a;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here we are taking the memory address of $a$ (an integer pointer), and cast it to a double pointer. Since we are then storing it in a double variable, we must dereference.
+    However, running this code will display unexpected results. Since a integer is 4 bytes, and a double is 8 bytes, the first 4 bytes of our new double will be the same as the integer, but the remaining 4
+    will be uninitialized memory. This is not ideal, we have clearly read from an extra 4 bytes of memory that is not ours.
+    \bigbreak \noindent 
+    \nt{If we don't wish to create a whole new variable (value), we could of course just create a double\& instead. Note that this is dangerous, since we are now writing to that additional 4 bytes that is not ours.}
+    \bigbreak \noindent 
+    Now for a more practical example. Suppose we have some structure.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct Entity {
+            int x,y;
+        };
+        Entity e1 = { 5, 8 };
+    \end{cppcode}
+    \pagebreak \bigbreak \noindent 
+    We could of course get the value of $x$ with 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int x = e1.x
+    \end{cppcode}
+    \bigbreak \noindent 
+    However, instead we can make an array out of this. We write 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int* position = (int*) &e1;
+        cout << position[0] << ", " << position[1] << endl;
+    \end{cppcode}
+    \bigbreak \noindent 
+    With this, we say that the position variable is the begining of an integer array, and then we can index it as if it were a normal c-style array. Where position[1] just looks 4 bytes ahead of position[0].
+    \bigbreak \noindent 
+    Now let's suppose we wanted to get the value of $y$. We write 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int y = *(int*)((char*)&e1 + 4);
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item \textbf{(char*)&e1}: 
+            \begin{itemize}
+                \item The address of the instance \texttt{e} (\texttt{\&e}) is obtained.
+                \item This address is then cast to a \texttt{char*} (pointer to char). In C++, \texttt{char} is typically 1 byte. This casting is done to perform byte-level pointer arithmetic.
+            \end{itemize}
+
+        \item \textbf{+ 4}:
+            \begin{itemize}
+                \item The pointer is then advanced by 4 bytes. Since \texttt{e1.x} is an \texttt{int} and typically occupies 4 bytes, this arithmetic skips over \texttt{e1.x} and points to the start of \texttt{e1.y}.
+            \end{itemize}
+
+        \item \textbf{(int*)}:
+            \begin{itemize}
+                \item The resulting pointer, which now points to \texttt{e1.y}, is cast back to an \texttt{int*} (pointer to int).
+            \end{itemize}
+
+        \item \textbf{* (Dereference)}:
+            \begin{itemize}
+                \item Finally, the pointer is dereferenced to get the value of \texttt{e1.y}.
+            \end{itemize}
+    \end{enumerate}
+    \bigbreak \noindent 
+    \nt{Since adding one to an integer pointer will advance it by the size of an integer (4 bytes), we could instead write \texttt{int y = *((int*)\&e1  + 1); // Output: 8}}
 
     \pagebreak
     \unsect{Structures}
@@ -3757,15 +3845,148 @@ enum class Day : char {M,T,W,TH,F};
     \end{cppcode}
 
     \pagebreak 
-    1
     \unsect{Unions}
     \bigbreak \noindent 
     \begin{concept}
         \textbf{Unions} in C++ are a special data type that allows you to store different data types in the same memory location. They are similar to structures (structs) in that they can contain multiple members of different types, but they differ in how they use memory. 
     \end{concept}
-    
-    
 
+    \subsection{Propertys}
+    \begin{itemize}
+        \item \textbf{Memory Sharing:} All members of a union share the same memory location. This means that at any given time, a union can contain only one of its non-static data members.
+        \item \textbf{Size:} The size of the union is determined by the size of its largest member. This is because the union must allocate enough memory to hold the largest member.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        union MyUnion {
+            int myInt;
+            float myFloat;
+            char myChar;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{In this union, myInt, myFloat, and myChar share the same memory location.}
+    \bigbreak \noindent 
+    \subsubsection{Assigning Values}
+    \bigbreak \noindent 
+    We can assign a value to any one of the union's members, but remember that this overwrites the values of all other members.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        MyUnion u;
+        u.myInt = 3; // Now the memory location holds the value 3 as an integer
+        u.myFloat = 4.5; // Now the same memory location holds 4.5 as a float
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{Accessing Values}
+    \bigbreak \noindent 
+    You can access the value of the member that was most recently written to.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::cout << u.myFloat; // This will output 4.5
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Use Cases}
+    \begin{itemize}
+        \item \textbf{Memory Efficient Storage:} When you have a variable that can be of multiple types but only one type at a time.
+        \item \textbf{Type Punning:} Interpreting the same memory data in different ways. However, this use is generally discouraged due to issues with portability and readability.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Important Points}
+    \begin{itemize}
+        \item \textbf{Undefined Behavior:} Accessing a union member other than the one most recently written to can lead to undefined behavior.
+        \item \textbf{Initialization:} Only the first member of a union can be initialized using brace-enclosed initializer.
+        \item \textbf{Anonymous Unions:} Unions can be declared without a name for creating a set of variables that share the same location.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Type punning with unions}
+    \bigbreak \noindent 
+    Suppose we had 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct Union {
+            union {
+                float a;
+                int b;
+            };
+        };
+        Union u;
+        u.a = 2.0f;
+        cout << u.a << ", " << u.b << endl;
+    \end{cppcode}
+    \bigbreak \noindent 
+    We would get the output: 2, 1073741824. The value 1073741824 is the byte representation of 2 as a float. Thus we have taken the memory that made up the float, and interpreted it as an integer.
+    \bigbreak \noindent 
+    Now suppose we have the following structures
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct vec2 {
+            float x,y
+        };
+        
+        struct vec4 {
+            float x,y,z,w;
+        };
+
+        void PrintVec2(const vec2& vec) {
+            cout << vec.x << ", " << vec.y << endl;
+        }
+    \end{cppcode}
+    \pagebreak \bigbreak \noindent 
+    We notice that a vec4 is essentially just two vec2s'. If we call the components \textit{x,y} $A$, and $z,w$ $B$. We can write 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct vec4 {
+            float x,y,z,w;
+
+            vec2& GetA() {
+                return *(vec2*)&x;
+            }
+
+            vec2& GetB() {
+                return *((vec2*)&x  + 1);
+            }
+        };
+        vec4 vector = { 1.0f, 8.0f, 3.0f, 4.0f };
+
+        PrintVec2(vector.GetA());
+        PrintVec2(vector.GetB());
+    \end{cppcode}
+    \bigbreak \noindent 
+    Which would be the normal way to type pun. However, instead we could use unions. We write
+    \bigbreak \noindent
+    \begin{cppcode}
+        struct vec2 {
+            float x,y;
+        };
+
+        struct vec4 {
+
+            union {
+                struct {
+                    float x,y,z,w;
+                };
+
+                struct {
+                    vec2 a,b;
+                };
+            };
+        };
+
+        void PrintVec2(const vec2& vec) {
+            cout << vec.x << ", " << vec.y << endl;
+        }
+        vec4 vector = { 1.0f, 8.0f, 3.0f, 4.0f };
+
+        PrintVec2(vector.a);
+        PrintVec2(vector.b);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Since our union two members are both 16 byte structures, $a$ will have the same memory as $x$ and $y$, and $b$ will have the same memory as $z$ and $w$.
 
     \pagebreak
     \unsect{String streams}
