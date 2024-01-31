@@ -1,3 +1,11 @@
+//***************************************************************************
+//
+//  hanoi.cpp
+//  CSCI 241 Assignment 4
+//
+//  Created by Nate Warner z2004109
+//
+//***************************************************************************
 #include <iostream>
 #include <cstdlib>
 #include <cctype>
@@ -15,14 +23,16 @@ int main(int argc, const char* argv[]) {
 
     int n_disks;
 
+    // Check for missing arguments
     if (argc == 1) {
         cout << "Missing arguments\n" 
             << "Usage: hanoi number-of-disks\n";
         exit(EXIT_FAILURE);
     }
 
-    for (int i=0; argv[1][i] != '\0'; ++i)  {
 
+    // Make sure the command line argument has only digits
+    for (int i=0; argv[1][i] != '\0'; ++i)  {
         if (!isdigit(argv[1][i])) {
             cout << "Argument must be a number\n" 
                 << "Usage: hanoi number-of-disks\n";
@@ -30,47 +40,46 @@ int main(int argc, const char* argv[]) {
         }
     }
 
+    // Convert argument to integer
     n_disks = atoi(argv[1]);
 
+    // Function call
     move(n_disks, 1,2,3);
 
-    return 0;
+    return EXIT_SUCCESS;
 
 }
 
 /**
- * This first line is a brief description.
+ * Recursive approach to the Towers of Hanoi problem (three pegs, n disks).
  *
- * The rest of the lines are a more detailed description of the
- * function that outlines what it does and anything interesting about
- * how it does it.
+ * &logic
+ * Move n-1 disks to the temporary peg, using the destination peg as temporary storage
+ * Move the last disk to the desination peg 
+ * Move n-1 disks from the temporary peg to the desination peg, using the source peg as temporary storage
  *
- * @param n_disks 
- * @param src_peg
- * @param dest_peg
- * @param temp_peg this wil represent the peg that we use as temp storage.
+ * @param n_disks integer that will represent the number of disks
+ * @param src_peg integer that will represent the source peg
+ * @param dest_peg integer that will represent the destination peg
+ * @param temp_peg integer that will represent the peg that we use as temp storage.
  *
  * @return void
- *
- * @note This is how you can add an optional note about the function that
- *    may be of interest to someone using it.
  *
  */
 void move(int n_disks, int src_peg, int dest_peg, int temp_peg) {
 
+    // Base case
     if (n_disks >= 1) {
 
+        // Move n-1 disks to the temporary peg, using the destination peg as temporary storage
         move(n_disks-1, src_peg, temp_peg, dest_peg);
 
+        // Move the last disk to the desination peg 
         cout << n_disks << " " << src_peg << "->" << dest_peg << endl;
 
+        // Move n-1 disks from the temporary peg to the desination peg, using the source peg as temporary storage
         move(n_disks-1, temp_peg, dest_peg, src_peg);
-
-
-    } else {
-
-        return;
-    }
+    } 
 
 }
 
