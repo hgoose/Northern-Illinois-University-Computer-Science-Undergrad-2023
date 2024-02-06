@@ -1,14 +1,45 @@
-        int last;
-        do  {
-            last = 0;
-            int j=1;
+int partition(int arr[], int start, int end) {
+    int pivot_index, pivot_value, mid, scan;
 
-            for (; j<n; ++j) {
-                if (arr[j-1] > arr[j]) {
-                    std::swap(arr[j-1], arr[j]);
-                    last = j;
-                }
-            }
-            n = last;
+    mid = (start + end) / 2;
+    std::swap(arr[start], arr[mid]);
 
-        } while (n > 0);
+    pivot_index = start;
+    pivot_value = arr[start];
+
+    scan = start + 1;
+
+    while (scan <= end) {
+        if (arr[scan] < pivot_value) {
+            ++pivot_index;
+            std::swap(arr[pivot_index], arr[scan]);
+        }
+        ++scan;
+    }
+    std::swap(arr[start], arr[pivot_index]);
+
+    return pivot_index;
+}
+
+void quicksort(int arr[], int start, int end) {
+    int pivot_point;
+    if (start < end) {
+        pivot_point = partition(arr, start, end);
+        quicksort(arr, start, pivot_point - 1);
+        quicksort(arr, pivot_point + 1, end);
+    }
+}
+
+void quicksort(int arr[], int n) {
+    quicksort(arr, 0, n-1);
+}
+
+int main(int argc, const char* argv[]) {
+
+    int arr[]  = {3,6,1,9,12,7,36,24,18,4};
+    int n = 10;
+
+    quicksort(arr,n);
+
+    return EXIT_SUCCESS;
+}
