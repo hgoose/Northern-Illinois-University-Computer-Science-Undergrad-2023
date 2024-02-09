@@ -1,45 +1,37 @@
-int partition(int arr[], int start, int end) {
-    int pivot_index, pivot_value, mid, scan;
+procedure sift_down(array : list of sortable items, start : starting
+  subscript of heap, end : ending subscript of heap)
+    // root : array subscript
+    // largest : array subscript
+    // child : array subscript
 
-    mid = (start + end) / 2;
-    std::swap(arr[start], arr[mid]);
+    // Repair the heap whose root element is at subscript 'start',
+    // assuming the heaps rooted at its children are valid
 
-    pivot_index = start;
-    pivot_value = arr[start];
+    root = start
 
-    scan = start + 1;
+    // While the root has at least one child
+    while (2 * root + 1) <= end
+        child = 2 * root + 1 // Left child of root
+        largest = root // Assume root is largest
 
-    while (scan <= end) {
-        if (arr[scan] < pivot_value) {
-            ++pivot_index;
-            std::swap(arr[pivot_index], arr[scan]);
-        }
-        ++scan;
-    }
-    std::swap(arr[start], arr[pivot_index]);
+        // If left child is larger than root, left child is largest
+        if array[largest] < array[child]
+            largest = child
+        end if
 
-    return pivot_index;
-}
+        // If there is a right child and it is greater than largest,
+        // right child is largest
+        if (child + 1) <= end and array[largest] < array[child+1]
+            largest = child + 1
+        end if
 
-void quicksort(int arr[], int start, int end) {
-    int pivot_point;
-    if (start < end) {
-        pivot_point = partition(arr, start, end);
-        quicksort(arr, start, pivot_point - 1);
-        quicksort(arr, pivot_point + 1, end);
-    }
-}
+        // If root is largest, no need to continue
+        if largest == root
+            return
+        else
+            swap array[root] and array[largest]
+            root = largest
+        end if
 
-void quicksort(int arr[], int n) {
-    quicksort(arr, 0, n-1);
-}
-
-int main(int argc, const char* argv[]) {
-
-    int arr[]  = {3,6,1,9,12,7,36,24,18,4};
-    int n = 10;
-
-    quicksort(arr,n);
-
-    return EXIT_SUCCESS;
-}
+    end while
+end procedure

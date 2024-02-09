@@ -728,22 +728,263 @@ int main(int argc, const char* argv[]) {
         \end{itemize}
     \end{concept}
     \bigbreak \noindent 
-    \fig{.9}{./figures/1.svg}
+    \fig{.5}{./figures/merge.png}
+    \bigbreak \noindent 
+    This algorithm makes use of a variable length temporary array, which is most easily represented in C++ using the \textbf{vector} class from the standard library. When implementing the algorithm, include the following code at the top of the source file:
+    \pagebreak 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure merge_sort(array : list of sortable items, start : first element of list, 
+end : last element of list)
+    if start < end
+        mid ← (start + end) / 2
+    
+        merge_sort(array, start, mid)
+        merge_sort(array, mid + 1, end)
+    
+        merge(array, start, mid, end)
+    end if
+end procedure
+
+procedure merge(array : list of items to merge, start : first element of first sublist, mid : last element of first sublist,
+  end : last element of second sublist)
+    vector<int> temp(end - start + 1);
+
+    i ← start
+    j ← mid + 1
+    k ← 0
+    
+    while i <= mid and j <= end
+        if array[i] < array[j]
+            temp[k] ← array[i]
+            i ← i + 1
+        else
+            temp[k] ← array[j]
+            j ← j + 1
+        end if
+        k ← k + 1
+    end while
+    
+    while i <= mid
+        temp[k] ← array[i]
+        i ← i + 1
+        k ← k + 1
+    end while
+    
+    while j <= end
+        temp[k] ← array[j]
+        j ← j + 1
+        k ← k + 1
+    end while
+    
+    Copy the elements of the vector temp back into array
+end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+void merge(int arr[], int start, int mid, int end) {
+
+    vector<int> temp(end - start + 1);
+
+    int i,j,k;
+
+    i = start;
+    j = mid + 1;
+    k = 0;
+
+    while (i <= mid && j<= end) {
+        if (arr[i] < arr[j]) {
+            temp[k] = arr[i];
+            ++i;
+        } else {
+            temp[k] = arr[j];
+            ++j;
+        }
+        ++k;
+    }
+
+    while (i <= mid) {
+        temp[k] = arr[i];
+        ++i;
+        ++k;
+    }
+
+    while (j <= end) {
+        temp[k] = arr[j];
+        ++j;
+        ++k;
+    }
+
+    for ( i=start, j=0; i<=end; ++i, ++j) {
+        arr[i] = temp[j];
+    }
+}
+
+void merge_sort(int arr[], int start, int end) {
+
+    int mid;
+    if (start < end) {
+        mid = (start + end) / 2;
+
+        merge_sort(arr, start, mid);
+        merge_sort(arr, mid+1, end);
+
+        merge(arr, start, mid, end);
+    }
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Binary Heap}
+    \bigbreak \noindent 
+    \begin{concept}
+        A \textbf{binary heap} is a data structure that takes the form of binary tree with two additional constraints
+        \begin{itemize}
+            \item The binary tree must be complete or almost complete; that is, all levels of the tree, except possibly the last (deepest) one, are fully filled. If the last level of the tree is not complete, the nodes of that level are filled from left to right.
+            \item The key stored in each node is either greater than or equal to or less than or equal to the keys in the node’s children.
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+    A binary heap where the parent key is greater than or equal to the child keys is called a \textbf{max-heap}; a heap where the parent key is less than or equal to  the child keys is called a \textbf{min-heap.}
+    \bigbreak \noindent 
+    Because a binary heap is always a complete or almost complete binary tree, the tree nodes can be efficiently stored in an array with no wasted space. The top-level node (or root) of the tree is stored in the first element of the array. Then, for each node in the tree that is stored at subscript $k$. the node's left child can be stored at subscript $2k+1$ and the right child can be stored at subscript $2k+2 $.
+    \bigbreak \noindent 
+    \subsection{Example}
+    \begin{figure}[ht]
+        \centering
+        \incfig{heap}
+        \label{fig:heap}
+    \end{figure}
+    \pagebreak 
+    \subsection{Insertion}
+    \bigbreak \noindent 
+    When placing nodes, we first place the root. From there, we add from left to right.
+    \bigbreak \noindent 
+    When adding new nodes to the head, we place them at the bottom. However, this may lead to a violation in the trees order. In this case, we compare the newly inserted node to its parent, swapping them if necessary, we do this until the node is in the correct position.
+
+    \bigbreak \noindent 
+    \subsection{Binary heap imbalance}
+    \bigbreak \noindent 
+    It is not always possible to have a balanced heap. That is, for each level of the tree, each side has the same number of nodes. To account for this, we allow the left sub tree to hold one more than the right sub tree.
+    \bigbreak \noindent 
+    \subsection{Deletion}
+    \bigbreak \noindent 
+    Because the binary heap is designed to give us access to the minimum element (min-head), or maximum element (max-head), we can only delete the root node.
+    \bigbreak \noindent 
+    Once we delete the root node, you may notice that the shape is disrupted. That is, we no longer have a root node. To solve this, we first get the tree back to its correct shape, and then focus on the invariance.
+    \bigbreak \noindent 
+    \textbf{Note:} Invariance in a binary heap referes to the property that ensures the status of the min or max heap.
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{
+        Heap Sort
+    }
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Heapsort} is a comparison-based sorting algorithm that uses an implicit binary heap. Heapsort can be thought of as an improved selection sort: like selection sort, heapsort divides its input into a sorted and an unsorted region, and it iteratively shrinks the unsorted region by extracting the largest element from it and inserting it into the sorted region. Unlike selection sort, heapsort does not waste time with a linear-time scan of the unsorted region; rather, heap sort maintains the unsorted region in a heap data structure to find the largest element more quickly in each step.
+        \bigbreak \noindent 
+        The heapsort algorithm can be divided into two parts:
+        \begin{itemize}
+            \item In the first part, the elements of an unsorted array are rearranged to create a binary heap (a max-heap if the array is to be sorted in ascending order).
+            \item In the second part, a sorted array is created by repeatedly swapping the largest element from the heap (the root of the heap) with the last element of the heap and then decrementing the heap size (which effectively removes that element from the heap). The heap is updated after each removal to recreate the max-heap property. Once all elements have been removed from the heap, the result is a sorted array.
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure heap_sort(array : list of sortable items, n : length of list)
+    // end : array subscript
+    // Build the heap in array so that largest value is at the
+    // root.
+    heapify(array, n);
+
+    end = n - 1
+
+    while end > 0
+        // array[0] is the root and largest value. The swap
+        // moves it in front of the sorted elements.
+        swap array[end] and array[0]
+
+        // The heap size is reduced by 1.
+        end = end - 1
+
+        // The swap ruined the heap property, so restore it.
+        sift_down(array, 0, end);
+    end while
+end procedure
+
+procedure heapify(array : list of sortable items, n : length of list)
+    // start : array subscript
+    start = (n - 2) / 2 // Find parent of last element of array
+    while start >= 0
+        // Sift down the value at subscript 'start' to the proper place
+        // such that all values below the start subscript are in max
+        // heap order
+
+        sift_down(array, start, n - 1)
+
+        // Go to next parent
+        start = start - 1
+    end while
+
+    // All elements are now in max heap order
+end procedure
+    \end{cppcode}
+
+    \pagebreak 
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure sift_down(array : list of sortable items, start : starting
+  subscript of heap, end : ending subscript of heap)
+    // root : array subscript
+    // largest : array subscript
+    // child : array subscript
+
+    // Repair the heap whose root element is at subscript 'start',
+    // assuming the heaps rooted at its children are valid
+
+    root = start
+
+    // While the root has at least one child
+    while (2 * root + 1) <= end
+        child = 2 * root + 1 // Left child of root
+        largest = root // Assume root is largest
+
+        // If left child is larger than root, left child is largest
+        if array[largest] < array[child]
+            largest = child
+        end if
+
+        // If there is a right child and it is greater than largest,
+        // right child is largest
+        if (child + 1) <= end and array[largest] < array[child+1]
+            largest = child + 1
+        end if
+
+        // If root is largest, no need to continue
+        if largest == root
+            return
+        else
+            swap array[root] and array[largest]
+            root = largest
+        end if
+
+    end while
+end procedure
+    \end{cppcode}
+    
+
     
 
 
-
-
-    
-    
-
-
-
-
-
-
-
-    
 
 
 
