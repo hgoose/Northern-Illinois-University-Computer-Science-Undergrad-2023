@@ -378,6 +378,250 @@
     scp z123456@hopper.cs.niu.edu:assign1.cc .
     \end{bashcode}
 
+    \pagebreak 
+    \unsect{Shell: Part 1}
+    \bigbreak \noindent 
+    \subsection{Basics}
+    \bigbreak \noindent 
+    \subsubsection{Customization}
+    \begin{itemize}
+        \item variables, prompt, aliases
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Command line behavior}
+    \begin{itemize}
+        \item history
+        \item sequence and substitution
+        \item redirections and pipe
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Predefined variables}
+    \begin{itemize}
+        \item \textbf{HOME}: full pathname of home directory
+        \item \textbf{PATH}: list of directories to search for commands
+        \item \textbf{USER}: your user name, also UID for user id
+        \item \textbf{SHELL}: full pathname of your login shell
+        \item \textbf{PWD}: Current working directory
+        \item \textbf{HOSTNAME}: current hostname of the system
+        \item \textbf{HISTSIZE}: Number of commands to remember
+        \item \textbf{PS1}: Primary prompty (also PS2, ...)
+        \item \textbf{?}: Return status of most recently executed command
+        \item \textbf{\$}: Process id of current process
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Customizing bash shell prompt}
+    \bigbreak \noindent 
+    Can be set via the PS1 shell variable
+    \bigbreak \noindent 
+    \subsubsection{Example:}
+    \begin{bashcode}
+    PS1="$USER > " 
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Special PS1 shell variable settings}
+    \begin{itemize}
+        \item \textbf{\textbackslash w}: current working directory
+        \item \textbf{\textbackslash h}: hostname
+        \item \textbf{\textbackslash u}: username
+        \item \textbf{\textbackslash d}: date
+        \item \textbf{\textbackslash t}: time
+        \item \textbf{\textbackslash a}: ring the "bell"
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Customization}
+    \begin{itemize}
+        \item Via command line options: Rarely done
+        \item Instead we use startup initialization file
+            \begin{itemize}
+                \item $\sim$/.profile (login session shell)
+                \item $\sim$/.bashrc (invoked from command line)
+            \end{itemize}
+    \end{itemize}
+    \textbf{Note:} we also have /etc/profile and /etc/bash.bashrc
+
+    \bigbreak \noindent 
+    \subsection{Command line behavior}
+    \begin{itemize}
+        \item History
+        \item Sequence
+        \item Substition
+        \item I/O redirection and pipe
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Shell history}
+    \begin{itemize}
+        \item Record of previously entered commands
+            \begin{itemize}
+                \item can be re-called, edited, and re-executed
+            \end{itemize}
+        \item Size of history is set via shell variables
+            \begin{itemize}
+                \item HISTSIZE=500 (per session)
+                \item HISTFILESIZE=100 (per user)
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \begin{bashcode}
+        history [-c] [count]
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where -c is used to search for specific text
+    \bigbreak \noindent 
+    \nt{We use arrow keys to navigate, delete and backspace to remove, and tab to execute command}
+    \bigbreak \noindent 
+    \subsection{Command substitution}
+    \bigbreak \noindent 
+    \subsubsection{Backtics}
+    The first method is using backticks
+    \begin{itemize}
+        \item Command surrounded by back quotes `` is run and replaced by its standard output
+        \item Newlines in the output are replaced by spaces
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Dollar sign parenthesis notation}
+    \bigbreak \noindent 
+    Alternatively, we use the following syntax
+    \begin{bashcode}
+    $(command)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Here document}
+    \bigbreak \noindent 
+    This uses $<<$. With this we can read input for current source
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \begin{bashcode}
+    command << LABEL
+    \end{bashcode}
+    \bigbreak \noindent 
+    Reads following lines until line starting with "LABEL"
+    \bigbreak \noindent 
+    \subsubsection{Example:}
+    \begin{bashcode}
+     wc -l << DONE
+        > line one
+        > line two 
+        > DONE
+    2
+    \end{bashcode}
+    \pagebreak 
+    \subsection{File Descriptor}
+    \begin{itemize}
+        \item Positive integer for every open file
+        \item Process tracks its open files with this number
+            \begin{itemize}
+                \item 0 - standard input
+                \item 1 - standard output
+                \item 2 - standard error output
+            \end{itemize}
+        \item Bash can use file descriptor to refer to a file
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Table of redirection operators}
+    \bigbreak \noindent 
+    \begin{table}[ht]
+        \centering
+        \caption{Common Redirection Syntaxes in Linux}
+        \label{tab:redirection}
+        \begin{tabular}{@{}ll@{}}
+            \toprule
+            Syntax      & Description                                           \\ \midrule
+            \texttt{>} or \texttt{1>}  & Redirects standard output (\texttt{stdout}) to a file, overwriting the file. \\
+            \texttt{>>} or \texttt{1>>} & Redirects standard output (\texttt{stdout}) to a file, appending to the file. \\
+            \texttt{2>}  & Redirects standard error (\texttt{stderr}) to a file, overwriting the file. \\
+            \texttt{2>>} & Redirects standard error (\texttt{stderr}) to a file, appending to the file. \\
+            \texttt{\&>} & Redirects both standard output and standard error to a file, overwriting the file. \\
+            \texttt{>\&} & Redirects both standard output and standard error to a file, overwriting the file. \\
+            \texttt{<} or \texttt{0<}  & Redirects a file to standard input (\texttt{stdin}). \\
+            \texttt{<<}  & Here document: redirects inline input to standard input. \\
+            \texttt{<<<} & Here string: redirects a single line of input to standard input. \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+
+    \bigbreak \noindent 
+    \subsubsection{Combining redirection}
+    \bigbreak \noindent 
+    Before $&>$ was introduced, the way to redirect both stderr and stdout to a file looked something like
+    \bigbreak \noindent 
+    \begin{bashcode}
+        command > file 2>&1
+    \end{bashcode}
+    \bigbreak \noindent 
+    This tells bash to redirect stdout from command to file, and then redirect stderr (2) to stdout (which is now pointing to file). Note that the order does matter, for example the following will not work
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command 2>&1 > file 
+    \end{bashcode}
+    \bigbreak \noindent 
+    This would redirect stderr to whereever stdout is pointing, and then redirect stdout to file. Thus not bringing along stderr
+
+    \pagebreak 
+    \subsection{The pipe}
+    \bigbreak \noindent 
+    Bash introduced a concise way to redirect the output from a command as the input to some other command. For this, we use the pipe (|)
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command1 | command2
+    \end{bashcode}
+    \bigbreak \noindent 
+    Before the pipe syntax, we would have to do something like
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command1 > file; command2 < file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Wildcards}
+    \bigbreak \noindent 
+    Bash has special characters knows as wildcards, these allow us to match filenames on the command line
+    \begin{itemize}
+        \item * (asterisk): Matches zero or more characters
+        \item ? (question mark): Matches exactly one character (any character)
+        \item \relax [...] (characters enclosed by brackets): Maches any of the enclosed characters
+        \item \relax [a-z] (range syntax): matches any characters in the specified range
+        \item \{word1, word2,...\} (brace syntax): Similar to the brackets, but for words
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Character classes}
+    \bigbreak \noindent 
+    Character classes are defined by the bracket syntax, as we say in the previous list.
+    \bigbreak \noindent 
+    \begin{bashcode}
+        ls test[a-z] # Matches test followed by any character a-z
+        ls test[a-z]* # Matches test followed by any character a-z followed by any character
+        ls test[^a-z] # matches test followed by any character not found within the range a-z
+        ls test[!a-z] # matches test followed by any character not found within the range a-z
+        ls test[123] # maches test1, test2, or test3
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Posix character classes}
+    \bigbreak \noindent 
+    POSIX character classes are a special notation used in regular expressions and pattern matching that provides a locale-independent way to specify groups of characters. 
+    \bigbreak \noindent 
+    \begin{bashcode}
+        ls [[:upper:]]* 
+    \end{bashcode}
+    \bigbreak \noindent 
+    The first set of brackets defines a bash character class, and within that we define a posix character class. We also have
+    \begin{itemize}
+        \item \relax[[:alpha:]]: Matches any letter.
+        \item \relax[[:digit:]]: Matches any digit.
+        \item \relax[[:lower:]]: Matches any lowercase letter.
+        \item \relax[[:upper:]]: Matches any uppercase letter.
+        \item \relax[[:space:]]: Matches any whitespace character (including spaces, tabs, and form feeds).
+        \item \relax[[:alnum:]]: Matches any alphanumeric character (letters and digits).
+    \end{itemize}
+
+
+
+
 
 
     

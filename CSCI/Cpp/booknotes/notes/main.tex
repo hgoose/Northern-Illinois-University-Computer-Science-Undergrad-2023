@@ -56,7 +56,7 @@
     \bigbreak \noindent 
     
     \bigbreak \noindent 
-    \href{https://github.com/JiaRuiShao/CPP/blob/master/Starting%20Out%20with%20C%2B%2B%20from%20Control%20Structures%20to%20Objects%208%20Tony%20Gaddis.pdf}{(Textbook Access (pdf))}
+    \href{https://github.com/JiaRuiShao/CPP/blob/master/Starting\%20Out\%20with\%20C\%2B\%2B\%20from\%20Control\%20Structures\%20to\%20Objects\%208\%20Tony\%20Gaddis.pdf}{(Textbook Access (pdf))}
     \bigbreak \noindent 
     This document serves as a supplementary guide to \textit{C++ from Control Structures Through Objects by Tony Gaddis}. While the original text is geared towards beginners, this guide aims to assist those who already have programming experience, possibly in other languages.
     \bigbreak \noindent 
@@ -3365,7 +3365,7 @@ string a('z', 10) // 10 z characters
     \end{cppcode}
     \bigbreak \noindent 
     \begin{enumerate}
-        \item \textbf{(char*)&e1}: 
+        \item \textbf{(char*)\&e1}: 
             \begin{itemize}
                 \item The address of the instance \texttt{e} (\texttt{\&e}) is obtained.
                 \item This address is then cast to a \texttt{char*} (pointer to char). In C++, \texttt{char} is typically 1 byte. This casting is done to perform byte-level pointer arithmetic.
@@ -5785,7 +5785,7 @@ int main(int argc, const char* argv[]) {
     \end{concept}
     \begin{itemize}
         \item \textbf{Function Objects (Functors):} These are objects that can be used in a way similar to functions. They are instances of classes that have the operator() defined. This allows objects of these classes to be used with the same syntax as a function call. Standard functors include arithmetic operations (like std::plus, std::minus), comparisons (like std::less, std::greater), and logical operations (like std::logical\_and, std::logical\_or).
-        \item \textbf{std::function:} This is a general-purpose polymorphic function wrapper. Instances of std::function can store, copy, and invoke any Callable target — functions, lambda expressions, bind expressions, or other function objects, as well as pointers to member functions and pointers to data members. The stored callable object is called the target of std::function. If a std::function contains no target, it is considered empty and calling its operator() results in std::bad\_function_call being thrown.
+        \item \textbf{std::function:} This is a general-purpose polymorphic function wrapper. Instances of std::function can store, copy, and invoke any Callable target — functions, lambda expressions, bind expressions, or other function objects, as well as pointers to member functions and pointers to data members. The stored callable object is called the target of std::function. If a std::function contains no target, it is considered empty and calling its operator() results in std::bad\_function\_call being thrown.
             \bigbreak \noindent 
             \begin{cppcode}
                 std::function<int(int, int)> add = [](int a, int b) { return a + b; };
@@ -6445,7 +6445,7 @@ int main() {
         \begin{itemize}
             \item In C and C++, when you allocate memory using malloc, calloc, or realloc, you should deallocate it using free. These functions are part of the C standard library and are focused solely on memory allocation and deallocation.
             \item In C++, when you allocate memory using new, you should deallocate it using delete. Similarly, for arrays allocated with new[], use delete[] to deallocate. The new and delete operators handle both memory management and object lifecycle (calling constructors and destructors).
-        \end{itemize}
+        \end{itemize}
     \end{concept}
     \bigbreak \noindent 
     \subsubsection{Why Mixing Them is Bad}
@@ -6507,8 +6507,8 @@ int main() {
    \bigbreak \noindent 
    \subsubsection{Requirements}
    \begin{itemize}
-        \item \textbf{Polymorphic Base Class:} For dynamic_cast to work, the class from which you are casting must be polymorphic, which means it should have at least one virtual function. This is required because dynamic_cast relies on runtime type information (RTTI) to check the validity of the cast.
-        \item \textbf{Public Inheritance:} dynamic_cast can only be used with classes that are publicly inherited. It doesn’t work with private or protected inheritance.
+        \item \textbf{Polymorphic Base Class:} For dynamic\_cast to work, the class from which you are casting must be polymorphic, which means it should have at least one virtual function. This is required because dynamic\_cast relies on runtime type information (RTTI) to check the validity of the cast.
+        \item \textbf{Public Inheritance:} dynamic\_cast can only be used with classes that are publicly inherited. It doesn’t work with private or protected inheritance.
    \end{itemize}
 
    \bigbreak \noindent 
@@ -6612,7 +6612,7 @@ int main() {
     
 
     \bigbreak \noindent 
-    \subsection{reinterpret_cast}
+    \subsection{reinterpret\_cast}
     \bigbreak \noindent 
     \begin{concept}
         \textbf{reinterpret\_cast} in C++ is a type of casting operator that allows you to convert any pointer type to any other pointer type, including unrelated types. It also allows casting from pointer to an integer type and vice versa. This cast performs no runtime checks, which makes it a powerful but potentially dangerous tool if used incorrectly.
@@ -6759,7 +6759,7 @@ int main() {
     \bigbreak \noindent 
     \subsection{Why does catch take a const reference?}
     \bigbreak \noindent 
-    The catch clause in C++ exception handling is used to capture and handle exceptions that are thrown in the associated try block. When you catch an exception as a const reference (e.g., catch (const std::exception& e)), it's for several important reasons:
+    The catch clause in C++ exception handling is used to capture and handle exceptions that are thrown in the associated try block. When you catch an exception as a const reference (e.g., catch (const std::exception\& e)), it's for several important reasons:
     \bigbreak \noindent 
     \subsubsection{Safety and Efficiency}
     \begin{itemize}
@@ -7232,6 +7232,210 @@ int main() {
     \pagebreak 
     \unsect{Elementary compile time computations}
     \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{Linkage}
+    \bigbreak \noindent 
+    \subsection{Basics}
+    \bigbreak \noindent 
+    Lets first cover two rudimentary concepts that we’ll need to properly discuss linkage:
+    \begin{itemize}
+        \item The difference between a declaration and a definition
+        \item Translation Units
+    \end{itemize}
+    Also, just a quick word on naming: we’ll use the term symbol to refer to any kind of “code entity” that a linker works with, i.e. variables and functions (and also classes/structs, but we won’t talk much about those).
+    \bigbreak \noindent 
+    \subsection{Declaration vs. Definition}
+    \bigbreak \noindent 
+    Let's clarify the difference between declaring and defining a symbol in programming. A declaration informs the compiler about a symbol's existence, allowing its use without needing its memory details. In contrast, a definition specifies the symbol's structure or allocates its required memory, such as a function's body or a variable's memory size.
+    \bigbreak \noindent 
+    Declarations are insufficient when dealing with non-pointer class members because their exact size must be known. However, pointers to an undeclared type are permissible since they have a fixed size (e.g., 8 bytes on 64-bit systems), independent of the pointed-to type's size. The actual type definition is only needed when the pointer is dereferenced. For functions, parameters and return types need only be declared, not defined, until the function itself is defined.
+    \bigbreak \noindent 
+    \subsubsection{Variables}
+    \bigbreak \noindent 
+    For variables, it is a bit different. Declaration and definition are usually not explicitly separate. Most importantly, this:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int x; 
+    \end{cppcode}
+    \bigbreak \noindent 
+    Does not just declare $x$, but also define it. In this case, by calling the default constructor of int. The value of $x$ above will be whatever garbage lay at the memory address allocated for it by the compiler. 
+    \bigbreak \noindent 
+    You can, however, explicitly separate the declaration of a variable from its definition by using the extern keyword:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    extern int x; // declaration
+    int x = 42;   // definition
+    \end{cppcode}
+    \bigbreak \noindent 
+    However, when extern is prepended to the declaration and an initialization is provided as well, then the expression turns into a definition and the extern keyword essentially becomes useless:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    extern int x = 5; // is the same thing as
+    int x = 5;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Forward Declaring}
+    \bigbreak \noindent 
+    In C++ there exists the concept of forward declaring a symbol. What we mean by this is that we declare the type and name of a symbol so that we can use it where its definition is not required. By doing so, we don’t have to include the full definition of a symbol (usually a header file) when it is not explicitly necessary. This way, we reduce dependency on the file containing the definition. The main advantage of this is that when the file containing the definition changes, the file where we forward declared that symbol does not need to be re-compiled (and therefore, also not all further files including it).
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    Say we have a function declaration (also called prototype) for $f$, taking an object of type Class by value:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // file.hpp
+    
+    void f(Class object);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Now, the naïve thing to do would be to include Class’s definition right away. But because we only declare $f$ here, it is sufficient to provide the compiler with a declaration of Class. This way, the compiler can identify the function by its prototype, but we can remove the dependency of file.hpp on the file containing the definition of Class, say class.hpp:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // file.hpp
+
+        class Class;
+
+        void f(Class object);
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Usage Frequency}
+    \bigbreak \noindent 
+    One very important difference between declarations and definitions is that a symbol may be declared many times, but defined only once. For example, you can forward declare a function or class however often you want, but you may only ever have one definition for it
+
+    \bigbreak \noindent 
+    \subsection{Translation Units}
+    \bigbreak \noindent 
+    Programmers usually deal with header files and implementation files. Compilers don’t – they deal with translation units (TUs), sometimes referred to as compilation units. The definition of such a translation unit is very simple: Any file, fed to the compiler, after it has been pre-processed. In detail, this means that it is the file resulting from the pre-processor expanding macros, conditionally including source code depending on #ifdef and \#ifndef statements and copy-pasting any \#includeed files.
+    \bigbreak \noindent 
+    \subsection{Linkage}
+    \bigbreak \noindent 
+    linkage will refer to the visibility of symbols to the linker when processing files. Linkage can be either internal or external.
+    \bigbreak \noindent 
+    \subsection{External Linkage}
+    \bigbreak \noindent 
+    When a symbol (variable or function) has external linkage, that means that that symbol is visible to the linker from other files, i.e. it is “globally” visible and can be shared between translation units. In practice, this means that you must define such a symbol in a place where it will end up in one and only one translation unit, typically an implementation file (.c/.cpp), such that it has only one visible definition. If you were to define such a symbol on the spot, along with declaring it, or to place its definition in the same file you declare it, you run the risk of making your linker very angry. As soon as you include that file in more than one implementation file, such that its definition ends up in more than one translation unit, your linker will start crying.
+    \bigbreak \noindent 
+    In C and C++, the extern keyword (explicitly) declares a symbol to have external linkage:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    extern int x;
+    extern void f(const std::string& argument);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Both of these symbols have external linkage. Above it was mentioned that const global variables have internal linkage by default, and non-const global variables have external linkage by default. That means that int x; is the same as extern int x;, right? Not quite. int x; is actually the same as extern int x{}; (using C++11 uniform/brace initialization syntax to avoid the most vexing parse), as int x; not only declares, but also defines x. Therefore, not prepending extern to int x; in the global scope is just as bad as also defining a variable when declaring it as extern:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x;          // is the same as
+        extern int x{}; // which will both likely cause linker errors.
+
+        extern int x;   // while this only declares the integer, which is ok.
+    \end{cppcode}
+    \bigbreak \noindent 
+    Key takeaways:
+    \begin{itemize}
+        \item const-global variables have internal linkage by default
+        \item non-const global variables have external linkage by default
+        \item all functions have external linkage by default
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Usage}
+    \bigbreak \noindent 
+    A common use case for declaring variables explicitly extern are global variables. The C (evil) way of declaring such a global variable would be a macro:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #define CLK 1000000
+    \end{cppcode}
+    \bigbreak \noindent 
+     A C++ programmer, naturally despising macros, would rather use real code. So you could do this:
+    \begin{cppcode}
+        // global.hpp
+
+        namespace Global
+        {
+            extern unsigned int clock_rate;
+        }
+
+        // global.cpp
+        namespace Global
+        {
+            unsigned int clock_rate = 1'000'000;
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Internal Linkage}
+    \bigbreak \noindent 
+    When a symbol has internal linkage, it will only be visible within the current translation unit. Do not confuse the term visible here with access rights like private. Visibility here means that the linker will only be able to use this symbol when processing the translation unit in which the symbol was declared, and not later (as with symbols with external linkage). In practice, this means that when you declare a symbol to have internal linkage in a header file, each translation unit you include this file in will get its own unique copy of that symbol. I.e. it will be as if you redefined each such symbol in every translation unit. For objects, this means that the compiler will literally allocate an entirely new, unique copy for each translation unit, which can obviously incur high memory costs.
+    \bigbreak \noindent 
+    To declare a symbol with internal linkage, C and C++ provide the static keyword. Its usage here is entirely separate from its usage in classes or functions (or, generally, any block).
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // header.hpp
+        static int variable = 42;
+
+        // file1.hpp
+        void function1();
+
+        // file2.hpp
+        void function2();
+
+        // file1.cpp
+        #include "header.hpp"
+        void function1() { variable = 10; }
+
+        // file2.cpp
+        #include "header.hpp"
+        void function2() { variable = 123; }
+
+        // main.cpp
+        #include "header.hpp"
+        #include "file1.hpp"
+        #include "file2.hpp"
+
+        #include <iostream>
+
+        auto main() -> int
+        {
+            function1();
+            function2();
+
+            std::cout << variable << std::endl;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Because variable has internal linkage, each translation unit that includes header.hpp gets its own unique copy of variable. Here, there are three translation units:
+    \begin{itemize}
+        \item file1.cpp
+        \item file2.cpp
+        \item main.cpp
+    \end{itemize}
+    When function1 is called, file1.cpp’s copy of variable is set to 10. When function2 is called, file2.cpp’s copy of variable is set to 123. However, the value printed out in main.cpp is variable, unchanged: 42.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     \pagebreak 
     \unsect{Extra Information}

@@ -1,0 +1,182 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={GNU Debugger}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{The GNU Debuger} \\
+           For C++ Projects
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           February 20, 2024 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Compile Your Program with Debugging Information}
+    \bigbreak \noindent 
+    To compile your program with debugging information, you'll use the \texttt{-g} option with \texttt{g++}. This option tells the compiler to include extra debugging information in the executable, which GDB can use to provide more detailed information during debugging.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    g++ -g program.cpp -o bin
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \unsect{Start GDB}
+    \bigbreak \noindent 
+    To start debugging your program with GDB, you run GDB and pass the name of the executable as an argument:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    gdb ./bin
+    \end{bashcode}
+    \bigbreak \noindent 
+    \unsect{Set Breakpoints}
+    \bigbreak \noindent 
+    Before running your program, you might want to set breakpoints at certain lines of code or in specific functions so that execution will stop and allow you to inspect the state of your program. For example, to set a breakpoint at the \textbf{foo} function, you can use:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    break foo
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{If there are multiple functions with the same name (overloaded functions), GDB will ask which one you want to set the breakpoint on. You can specify by including the parameter types.}
+    \bigbreak \noindent 
+    \subsection{Line breakpoints}
+    \bigbreak \noindent 
+    These are the most common type of breakpoints. You set them on a specific line of code. The program execution will pause \textbf{before} that line of code is executed.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    break 20
+    break quicksort.cpp:20 # If you need to specify the file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Conditional breakpoints}
+    \bigbreak \noindent 
+     These are line breakpoints with a condition. The debugger will only pause the program if the condition is true. This is useful for stopping the program in more specific scenarios, like when a variable reaches a certain value.
+     \bigbreak \noindent 
+     \begin{bashcode}
+     break 20 if x==5
+     \end{bashcode}
+
+     \bigbreak \noindent 
+     \unsect{Run Your Program}
+     \bigbreak \noindent 
+     To start your program under GDB, use the run command. If your program requires command-line arguments, you can provide them after the run command:
+     \bigbreak \noindent 
+     \begin{bashcode}
+     run
+     \end{bashcode}
+     \bigbreak \noindent 
+     \unsect{Inspect the Call Stack}
+     \bigbreak \noindent 
+     Once your program hits a breakpoint (or if you've manually paused it using the pause command), you can inspect the call stack using the backtrace command (or bt for short). This command shows you the function call stack at the current point of execution:
+     \bigbreak \noindent 
+     \begin{bashcode}
+     backtrace
+     \end{bashcode}
+     \bigbreak \noindent 
+     \unsect{Stepping Through the Code (Execution Control)}
+     \bigbreak \noindent 
+     You can use various commands to step through your code:
+     \begin{itemize}
+         \item \textbf{step (or s):} Execute the next line of code, stepping into functions.
+         \item \textbf{next (or n):} Execute the next line of code, stepping over functions.
+         \item \textbf{continue (or c):} Continue execution until the next breakpoint or the program ends.
+         \item \textbf{finish:} Runs until the current function is finished and returns to the caller.
+         \item \textbf{kill:} Stops the execution of your program.
+     \end{itemize}
+     \bigbreak \noindent 
+     \unsect{Inspecting Variables}
+     \bigbreak \noindent 
+     To inspect the value of a variable, use the print command (or p for short):
+     \bigbreak \noindent 
+     \begin{bashcode}
+     print variable_name
+     \end{bashcode}
+     \bigbreak \noindent 
+     \unsect{Exiting GDB}
+     \bigbreak \noindent 
+     To exit GDB, use the quit command (or q for short).
+     \bigbreak \noindent 
+     \begin{bashcode}
+     q
+     \end{bashcode}
+
+     \bigbreak \noindent 
+     \unsect{Other commands}
+     \bigbreak \noindent 
+     \subsection{Breakpoints and Watchpoints}
+     \begin{itemize}
+         \item \textbf{break [location] (or b [location]):} Sets a breakpoint at the specified location. The location can be a line number, function name, or address.
+         \item \textbf{watch [expr]:} Sets a watchpoint for an expression (usually a variable). The program stops whenever the value of the expression changes.
+         \item \textbf{info breakpoints:} Lists all breakpoints and watchpoints.
+         \item \textbf{delete breakpoints [number]:} Deletes the breakpoint or watchpoint with the specified number. Without a number, deletes all breakpoints/watchpoints.
+         \item \textbf{disable breakpoints [number]:} Disables the specified breakpoint or watchpoint without removing it.
+         \item \textbf{enable breakpoints [number]:} Enables a previously disabled breakpoint or watchpoint.
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsection{Inspecting the Program}
+     \begin{itemize}
+         \item \textbf{print [expr] (or p [expr]):} Evaluates and prints the value of an expression. The expression can involve variables, function calls, etc.
+         \item \textbf{info locals:} Displays local variables of the current frame.
+         \item \textbf{info args:} Shows the arguments of the current function.
+         \item \textbf{backtrace (or bt):} Displays the call stack, showing which functions have been called to reach the current point.
+         \item \textbf{list (or l):} Lists the source code. By default, it shows ten lines around the current line.
+         \item \textbf{frame [number]:} Selects a frame from the call stack. Without a number, it shows the current frame.
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsection{Modifying the Program State}
+     \begin{itemize}
+         \item \textbf{set var [variable]=[value]:} Changes the value of a variable to the specified value.
+         \item \textbf{jump [location]:} Transfers execution to the specified location (line number or function).
+     \end{itemize}
+
+
+\end{document}
