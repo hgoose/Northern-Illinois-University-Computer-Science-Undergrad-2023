@@ -1,37 +1,55 @@
-procedure sift_down(array : list of sortable items, start : starting
-  subscript of heap, end : ending subscript of heap)
-    // root : array subscript
-    // largest : array subscript
-    // child : array subscript
+#include <utility>
 
-    // Repair the heap whose root element is at subscript 'start',
-    // assuming the heaps rooted at its children are valid
+void heapify(int [], int n);
+void sift_down(int [], int, int);
 
-    root = start
+void heap_sort(int array[], int n) {
+	int end;
+	
+	heapify(array, n);
+	
+	end = n - 1;
+	
+	while(end > 0) {
+		std::swap(array[end], array[0]);
+		
+		end--;
+		
+		sift_down(array, 0, end);
+	}
+}
 
-    // While the root has at least one child
-    while (2 * root + 1) <= end
-        child = 2 * root + 1 // Left child of root
-        largest = root // Assume root is largest
+void heapify(int array[], int n) {
+	int start = (n - 2)/2;
+	
+	while(start >= 0) {
+		sift_down(array, start, n-1);
+		start--;
+	}
+}
 
-        // If left child is larger than root, left child is largest
-        if array[largest] < array[child]
-            largest = child
-        end if
-
-        // If there is a right child and it is greater than largest,
-        // right child is largest
-        if (child + 1) <= end and array[largest] < array[child+1]
-            largest = child + 1
-        end if
-
-        // If root is largest, no need to continue
-        if largest == root
-            return
-        else
-            swap array[root] and array[largest]
-            root = largest
-        end if
-
-    end while
-end procedure
+void sift_down(int array[], int start, int end) {
+	int root = start;
+	int child;
+	int largest;
+	
+	while(2 * root + 1 <= end) {
+		child = 2 * root + 1;
+		largest = root;
+		
+		if(array[largest] < array[child]) {
+			largest = child;
+		}
+		
+		if(child + 1 <= end && array[largest] < array[child + 1]) {
+			largest = child + 1;
+		}
+		
+		if(largest == root) {
+			return;
+		} else {
+			std::swap(array[root], array[largest]);
+			root = largest;
+		}
+	}
+}

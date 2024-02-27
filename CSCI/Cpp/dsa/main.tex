@@ -880,6 +880,25 @@ void merge_sort(int arr[], int start, int end) {
     \textbf{Note:} Invariance in a binary heap referes to the property that ensures the status of the min or max heap.
     \bigbreak \noindent 
 
+    \bigbreak \noindent 
+    \subsection{Formulas for a binary heap}
+    \begin{itemize}
+        \item For any node at index $i$ is left and right children are at index positions
+            \begin{align*}
+                &2i + 1 \quad \text{(left child)} \\
+                &2i+2 \quad \text{(right child)}
+            .\end{align*}
+        \item For any node at index $i$ its parent is at index position
+            \begin{align*}
+                \frac{i-1}{2}
+            .\end{align*}
+        \item The index position of the last non-leaf node is given by 
+            \begin{align*}
+                \frac{n-2}{2}
+            .\end{align*}
+            Where $n$ is the number of elements in the binary heap
+    \end{itemize}
+
     \pagebreak 
     \unsect{
         Heap Sort
@@ -979,6 +998,67 @@ procedure sift_down(array : list of sortable items, start : starting
 
     end while
 end procedure
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <utility>
+
+void heapify(int [], int n);
+void sift_down(int [], int, int);
+
+void heap_sort(int array[], int n) {
+	int end;
+	
+	heapify(array, n);
+	
+	end = n - 1;
+	
+	while(end > 0) {
+		std::swap(array[end], array[0]);
+		
+		end--;
+		
+		sift_down(array, 0, end);
+	}
+}
+
+void heapify(int array[], int n) {
+	int start = (n - 2)/2;
+	
+	while(start >= 0) {
+		sift_down(array, start, n-1);
+		start--;
+	}
+}
+
+void sift_down(int array[], int start, int end) {
+	int root = start;
+	int child;
+	int largest;
+	
+	while(2 * root + 1 <= end) {
+		child = 2 * root + 1;
+		largest = root;
+		
+		if(array[largest] < array[child]) {
+			largest = child;
+		}
+		
+		if(child + 1 <= end && array[largest] < array[child + 1]) {
+			largest = child + 1;
+		}
+		
+		if(largest == root) {
+			return;
+		} else {
+			std::swap(array[root], array[largest]);
+			root = largest;
+		}
+	}
+}
     \end{cppcode}
     
 
