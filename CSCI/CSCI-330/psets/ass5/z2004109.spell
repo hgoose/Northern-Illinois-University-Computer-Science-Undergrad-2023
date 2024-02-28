@@ -1,0 +1,69 @@
+#!/usr/bin/bash
+
+function ProcessArgs() {
+    if [[ $# -eq 0 ]]; then
+        echo "Invalid usage: Expected argument."
+        echo "Usage: $0 <filename>"
+        exit 1
+    elif [[ $# -gt 1 ]]; then
+        echo "Invalid usage: Too many arguments"
+        echo "Usage: $0 <filename>"
+        exit 1
+    fi
+}
+
+function ExamineFile() {
+    if [[ ! -e "${1}" || ! -r "${1}" ]]; then
+        echo "Error: $1 does not exist or it is not readable "
+        exit 1
+    fi
+}
+
+function FindWords() {
+
+    if [[ -e ${HOME}/aux.pws && -r ${HOME}/aux.pws && $(wc -l ${HOME}/aux.pws | awk '{ print $1 }') -eq 0 ]]; then
+        echo "personal_ws-1.1 en 1" >> ${HOME}/aux.pws
+    fi
+
+    readarray -t words < <(aspell list --extra-dicts=${HOME}/aux.pws < "${1}")
+    for word in "${words[@]}"; do
+        echo -ne "${word} is misspelled. Press \"Enter\" to keep \nthis spelling, or type a correct here: "
+        read -r update
+        echo 
+
+        if [[ $update ]]; then
+            corrected+=($update)
+        else 
+            uncorrected+=($word)
+            echo $word >> ${HOME}/aux.pws
+        fi
+    done
+
+}
+
+function Output() {
+
+    maxIndex="${#uncorrected[@]}"
+    if [[ "${#corrected[@]}" -ge "${#uncorrected[@]}" ]]; then
+        maxIndex="${#corrected[@]}"
+    fi
+
+    printf "%-20s %s\n" "MISSPELLED:" "CORRECTED:"
+    for i in $(seq 0 ${maxIndex}); do
+        printf "%-20s %s\n" "${corrected[$i]}" "${uncorrected[$i]}" 
+    done
+
+    
+}
+
+function main() {
+    ProcessArgs "${@}"
+    ExamineFile "${1}"
+    FindWords "${@}"
+    Output "${corrected}" "${uncorrected}"
+}
+
+# Forward args to main
+main "${@}"
+
+
