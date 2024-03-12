@@ -1,10 +1,15 @@
 #!/usr/bin/bash
 
+# Check for the correct amount of arguments
 function ProcessArgs() {
+
+    # Not enough arguments
     if [[ $# -eq 0 ]]; then
         echo "Invalid usage: Expected argument."
         echo "Usage: $0 <filename>"
         exit 1
+    
+    # Too many arguments
     elif [[ $# -gt 1 ]]; then
         echo "Invalid usage: Too many arguments"
         echo "Usage: $0 <filename>"
@@ -12,20 +17,28 @@ function ProcessArgs() {
     fi
 }
 
+# Check if the file exists and is readable
 function ExamineFile() {
-    if [[ ! -e "${1}" || ! -r "${1}" ]]; then
+    if [[ ! -e "${1}" && ! -r "${1}" ]]; then
         echo "Error: $1 does not exist or it is not readable "
         exit 1
     fi
 }
 
+# Find misspelled words
 function FindWords() {
 
-    if [[ -e ${HOME}/aux.pws && -r ${HOME}/aux.pws && $(wc -l ${HOME}/aux.pws | awk '{ print $1 }') -eq 0 ]]; then
+    # Create a file in the users home directory to store insisted words, the first line is specific to the required 
+    # format so we add it if it does not exist, this if statement ensures we only add it once
+    touch ${HOME}/aux.pws
+    if [[ $(wc -l ${HOME}/aux.pws | awk '{ print $1 }') -eq 0 ]]; then
         echo "personal_ws-1.1 en 1" >> ${HOME}/aux.pws
     fi
 
+    # Read the misspelled words into an array
     readarray -t words < <(aspell list --extra-dicts=${HOME}/aux.pws < "${1}")
+
+    # Loop through the misspelled and add them to the correct array by user specification
     for word in "${words[@]}"; do
         echo -ne "${word} is misspelled. Press \"Enter\" to keep \nthis spelling, or type a correct here: "
         read -r update
@@ -34,33 +47,27 @@ function FindWords() {
         if [[ $update ]]; then
             corrected+=($update)
         else 
-            uncorrected+=($word)
-            echo $word >> ${HOME}/aux.pws
+            echo $word >> ${HOME}/aux.pws # Send the insisted word to the auxiliary dictionary
         fi
     done
 
 }
 
+# Output to show misspelled and corrected words
 function Output() {
 
-    maxIndex="${#uncorrected[@]}"
-    if [[ "${#corrected[@]}" -ge "${#uncorrected[@]}" ]]; then
-        maxIndex="${#corrected[@]}"
-    fi
-
-    printf "%-20s %s\n" "MISSPELLED:" "CORRECTED:"
-    for i in $(seq 0 ${maxIndex}); do
-        printf "%-20s %s\n" "${corrected[$i]}" "${uncorrected[$i]}" 
+    printf "%-20s %s\n\n" "MISSPELLED:" "CORRECTIONS:"
+    for i in $(seq 0 ${#words[@]}); do
+        printf "%-20s %s\n" "${words[$i]}" "${corrected[$i]}" 
     done
-
-    
 }
 
+# Entry
 function main() {
     ProcessArgs "${@}"
     ExamineFile "${1}"
     FindWords "${@}"
-    Output "${corrected}" "${uncorrected}"
+    Output "${corrected}" "${words}"
 }
 
 # Forward args to main

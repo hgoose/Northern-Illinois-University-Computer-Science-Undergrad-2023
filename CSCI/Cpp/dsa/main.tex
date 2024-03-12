@@ -512,7 +512,7 @@ end procedure
     \bigbreak \noindent 
     We commonly see O(log N) in runtimes. Where does this come from?
     \bigbreak \noindent 
-    Let’s look at binary search as an example. In binary search, we are looking for an item search\_key in an N element sorted array. We first compare search\_key to the midpoint of the array. If search_key == array[mid], then we return. If search_key $<$ array[mid], then we search on the left side of the array. If search_key $>$ array[mid], then we search on the right side of the array.
+    Let’s look at binary search as an example. In binary search, we are looking for an item search\_key in an N element sorted array. We first compare search\_key to the midpoint of the array. If search\_key == array[mid], then we return. If search\_key $<$ array[mid], then we search on the left side of the array. If search\_key $>$ array[mid], then we search on the right side of the array.
     \bigbreak \noindent 
     We start off with with an N-element array to search. Then, after a single step, we’re down to N/2 elements. One more step, and we’re down to N/4 elements. We stop when we either find the value
     \bigbreak \noindent 
@@ -577,7 +577,7 @@ end procedure
 
             int j;
             int tmp = arr[i];
-            for (j = i; j>=iv && arr[j-iv] > arr[j]; j-=iv) {
+            for (j = i; j>=iv && arr[j-iv] > tmp; j-=iv) {
                 arr[j] = arr[j-iv];
             }
             arr[j] = tmp;
@@ -1005,7 +1005,6 @@ end procedure
     \bigbreak \noindent 
     \begin{cppcode}
 #include <utility>
-
 void heapify(int [], int n);
 void sift_down(int [], int, int);
 
@@ -1024,7 +1023,6 @@ void heap_sort(int array[], int n) {
 		sift_down(array, 0, end);
 	}
 }
-
 void heapify(int array[], int n) {
 	int start = (n - 2)/2;
 	
@@ -1033,7 +1031,6 @@ void heapify(int array[], int n) {
 		start--;
 	}
 }
-
 void sift_down(int array[], int start, int end) {
 	int root = start;
 	int child;
@@ -1046,20 +1043,116 @@ void sift_down(int array[], int start, int end) {
 		if(array[largest] < array[child]) {
 			largest = child;
 		}
-		
 		if(child + 1 <= end && array[largest] < array[child + 1]) {
 			largest = child + 1;
 		}
-		
-		if(largest == root) {
-			return;
-		} else {
+		if(largest == root) { return; } else {
 			std::swap(array[root], array[largest]);
 			root = largest;
 		}
 	}
 }
     \end{cppcode}
+
+    \pagebreak 
+    \unsect{Linear search}
+        \subsection{The linear search}
+    \bigbreak \noindent 
+    The linear search is very simple, it uses a loop to sequentially step through an array, starting with the first element.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int main(int argc, const char *argv[]) {
+
+    const int SIZE = 5;
+    int arr[SIZE] = {88,67,5,23,19};
+
+    int target = 5;
+
+    for (int i{0}; i <= SIZE + 1; ++i) {
+        if (i == SIZE + 1) {
+            cout << "Target not in array" << endl;
+        }
+        if ( arr[i] == target ) {
+            cout << "Target [" << target << "] found at index position " << i << endl;
+            break;
+        }
+    }
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int linearsearch(int arr[], int size, int target) {
+    int index{0}, position{-1};
+    bool found = false;
+
+    while (index < size && !found) {
+        if (arr[index] == target) {
+            position = index;
+            found = true;
+        }
+        ++index;
+    }
+    return position;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    \pagebreak
+    One drawback to the linear search is its potential inefficiency, its quite obvious to notice that for large arrays, the linear search will take a long time, if an array has 20,000 elements, and the target is at the end, then the search will have to compare 20,000 elements.
+    \pagebreak 
+    \unsect{Binary search}
+    \bigbreak \noindent 
+    The binary search algorithm is a clever approach to searching arrays. Instead of testing the array's first element, the algorithm starts with the leement in the middle. If that element happens to contain the desired value, then the search is over. Otherwise, the value in the middle element is either greater than or less than the value being searched for. If it is greater, then the desired value (if it is in the array), will be found somewhere in the first half of the array. If it is less, then the desired value, it will be found somewhere in the last half of the array. In either case, half of the array's elements have been eliminated from further searching.
+    \bigbreak \noindent 
+    \nt{The binary search algorithm requires the array to be sorted.}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int binarysearch(int arr[], int size, int target) {
+    int first{0}, 
+        middle,
+        last = size -1,
+        position{-1};
+
+    bool found = false;
+
+    while (!found && first <= last) {
+        middle = (first + last) / 2;
+        if (arr[middle] == target) {
+            found = true;
+            position = middle;
+        } else if (target > arr[middle]) {
+            first = middle + 1;
+        } else {
+            last = middle - 1;
+        }
+    }
+    return position;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    Powers of twos are used to calculate the max number of comparisons the binary search will make on an array. Simply find the smallest power of 2 that is greater than or equal to the number of elements in the array. For example:
+    \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+    \begin{align*}
+        n = 50,000 \\
+        2^{15} = 32,768 \\
+        2^{16} = 65,536
+    .\end{align*}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        Thus, there are a maximum of 16 comparisons for a array of size 50,000
+    \end{minipage}
+
     
 
     

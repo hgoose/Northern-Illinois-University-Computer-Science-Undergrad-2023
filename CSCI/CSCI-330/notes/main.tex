@@ -627,7 +627,657 @@
     \begin{concept}
         In the Bash shell, variables defined within functions are not automatically local to those functions. By default, \textbf{variables in Bash functions are global}, meaning if you define or modify a variable within a function without explicitly declaring it as local, its value is accessible and can affect the script outside the function. 
     \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Local variables}
+    \bigbreak \noindent 
+    To make a variable local to a function, we prefix the variable with the keyword \texttt{local}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    function fn() {
+        local x=12
+    }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Return from function}
+    \bigbreak \noindent 
+    The return keyword ends the execution of the function, optional return value sets return status
+
+    \bigbreak \noindent 
+    \subsubsection{Exit command}
+    \bigbreak \noindent 
+    The exit command is similar to return but it will exit the program
+
+    \begin{align*}
+        f(x,y) = 3x+y
+    .\end{align*}
+    find 
+    \begin{align*}
+        f(<2,1> + h<0,1>)
+    .\end{align*}
+
+
+    \bigbreak \noindent 
+    \subsection{Functions}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    Functions are defined in the following way
+    \bigbreak \noindent 
+    \begin{bashcode}
+        function name() {
+            body ...
+        }
+        name # Call to function
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Parameters}
+    \bigbreak \noindent 
+    In Bash scripting, unlike many programming languages where you define function parameters within parentheses next to the function name, you do not specify parameters in the function definition itself. Instead, you simply pass the arguments to the function when you call it, and within the function, you access these arguments using $1, $2, etc., without declaring them in the function definition.
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/bin/bash
+
+# Define a function without specifying parameters in the definition
+function add {
+    # Access parameters using $1, $2, etc.
+    local sum=$(( $1 + $2 ))
+    echo "The sum is: $sum"
+}
+
+# Call the function with arguments
+add 5 7
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Echo}
+    \bigbreak \noindent 
+    The \texttt{echo} command is a simple way to write to standard output
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo [-ne] arg[s]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{-n} Suppresses trailing newlines
+        \item \textbf{-e} Enables escapes
+            \begin{itemize}
+                \item \textbf{\textbackslash t} tab
+                \item \textbf{\textbackslash b} backspace
+                \item \textbf{\textbackslash a} alert
+                \item \textbf{\textbackslash n} newline
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Printf}
+    \bigbreak \noindent 
+    \texttt{printf} is a command similar to \texttt{echo}, but it allows us to format the output 
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        printf format [arg[s]]
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    printf "\%-10s" "Hello world" #Left justified with field width of 10 
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The set command}
+    \bigbreak \noindent 
+    The set command is a shell builtin that allows for debugging by tracing the execution
+    \bigbreak \noindent 
+    \subsubsection{Options}
+    \begin{itemize}
+        \item \textbf{-v} print shell input lines as they are read 
+        \item \textbf{-x} displays expanded commands and its arguments
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Turning options on or off}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    set -xv
+    set +xv
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Setting args withing the shebang}
+    \bigbreak \noindent 
+    The options described above can also be set directly in the shebang
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/bash -xv # Turns on the options
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The until loop}
+    \bigbreak \noindent 
+    The until loop is essentially the opposite of the while loop, where the while loop executes the body as long as the test is true, the until loop will execute its body while the test is false ("until" the body is true)
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    until test-command; do 
+        body ...
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    a=1
+
+    until [[ $a -gt 5 ]]; do 
+        echo $a
+        a=$(( $a + 1 ))
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Simple looping over args}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        for parm; do
+            echo $parm
+        done
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{The name is not important}
+
+    \pagebreak 
+    \unsect{Awk}
+    \bigbreak \noindent 
+    \subsection{What is awk?}
+    \bigbreak \noindent 
+    Awk is a scripting language used for manipulating data and generating reports. The awk command programming language requires no compiling and allows the user to use variables, numeric functions, string functions, and logical operators. 
+    \bigbreak \noindent 
+    Awk is a utility that enables a programmer to write tiny but effective programs in the form of statements that define text patterns that are to be searched for in each line of a document and the action that is to be taken when a match is found within a line. Awk is mostly used for pattern scanning and processing. It searches one or more files to see if they contain lines that matches with the specified patterns and then perform the associated actions.
+    \bigbreak \noindent 
+    \subsection{Awk operations}
+    \begin{enumerate}[label=(\alph*)]
+        \item  Scans a file line by line 
+        \item  Splits each input line into fields 
+        \item  Compares input line/fields to pattern 
+        \item  Performs action(s) on matched lines 
+    \end{enumerate}
     
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    awk options 'selection _criteria { action }' input-file >
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Options}
+    \begin{itemize}
+        \item \textbf{-f}: Reads the AWK program source from the file program-file, instead of from the first command line argument
+        \item \textbf{-F}: Change the field separator
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{Example}
+    \begin{bashcode}
+        # File that contains awk commands "filname: actions"
+
+        { print $1 }
+
+        # File that contains data "filename: data"
+
+        0.999,0.18179,0.2711768644                                                                                                                                                                                        
+        1.0323,0.195853,0.47739746                                                                                                                                                                                        
+        1.0656,0.217119,0.6253140641                                                                                                                                                                                        
+
+        # In command line
+        aws -F ',' -f actions data
+
+        # Output
+        0.999
+        1.0323
+        1.0656           
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{The print action}
+    \bigbreak \noindent 
+    One of the simplest actions we can preform with awk is the print action
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{ print }' <filename>
+        awk '{ print $1}' <filename>
+        awk '{ print $1,$3}' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    Awk will scan the file line by line, split the input line into fields, with space as the field separator, and then perform the action print. With a bare print statement, each line will be printed. We can of course be more specific with our statement. We can access each field with \$0-\$n, where \$0 is the entire line, and  \$n is a specific field number
+
+    \bigbreak \noindent 
+    \subsection{Regex}
+    \bigbreak \noindent 
+    We can as you might expect use regular expressions with awk, let's take a look 
+    \bigbreak \noindent 
+    \subsubsection{Whole lines}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '/foo/ { print }' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    This will print all lines that contain the word 'foo'
+
+    \bigbreak \noindent 
+    \subsubsection{Field matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '$0~/day/'
+        man date | awk '$0!~/day/'
+    \end{bashcode}
+    \bigbreak \noindent 
+    Here we use awk on the manual for the date command, and we output any line that contains the word day. In the second line, we do the same thing, but output any line that does not contain the word day
+
+    \bigbreak \noindent 
+    \subsubsection{Range matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '/DESCRIPTION/,/EXAMPLES/'
+    \end{bashcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Other Awk variables}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{NR}: Number of the current record
+        \item \textbf{NF}: Number of fields in the current record
+        \item \textbf{FS}: Field separator
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{BEGIN and END blocks}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{BEGIN\{...\}}  Executes whatever is inside the brackets before starting to view the input file 
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { FS=":" } { print $1 }' /etc/passwd
+            \end{bashcode}
+            This command sets the field separator to : before processing any lines of the input file /etc/passwd. It then prints the first field of each line, which typically contains the usernames in a Unix/Linux system.
+        \item \textbf{END\{...\}}  Executes whatever is inside the brackets after awk is finished reading the input file
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { count=0 } { count++ } END { print "Number of lines: ", count }' /etc/passwd
+            \end{bashcode}
+            Before processing the file, it initializes a counter count to 0. For each line in /etc/passwd, it increments count. After processing all lines, it prints the total count, effectively giving the number of lines in the file.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Typical awk script}
+    \bigbreak \noindent 
+    \fig{1}{./figures/9.png}
+    \bigbreak \noindent 
+    \nt{The symbol for comments are the same as bash, the hashtag \#}
+
+    \bigbreak \noindent 
+    \subsection{If statements in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    awk supports conditional statements, allowing you to perform actions based on specific conditions. The syntax for an if statement in awk is similar to that in other programming languages. Here's the basic structure:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (condition) {
+            // actions to perform if condition is true
+        } else {
+            // actions to perform if condition is false
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{Awk does not have the concept of elseif}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo -e "3\n-1\n0\n5" | awk '{ if ($1 > 0) print $1 " is positive"; else print $1 " is not positive" }'
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Checking for existence in array}
+    \bigbreak \noindent 
+    Similar to python, we can do the following
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (item in array) {
+            ...
+        } else {
+            ...
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{For loops in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    for (initialization; condition; increment) {
+        // Code block to execute
+    }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk 'BEGIN {
+            for (i = 1; i <= 5; i++) {
+                print "Number is", i
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Iterating Over an Array}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        for (index in array) {
+            // Code block using array[index]
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The while loop in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        while (condition) {
+            // Code block to execute
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{
+            while ($0 !~ /stop/) {
+                print "Processing:", $0
+                if (getline <= 0) break
+            }
+        }' input.txt
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Awk variables}
+    \bigbreak \noindent 
+    In awk, we can define variables with an assignent statement. We can define integers, strings, and arrays. Variables only come into existence when first used. Variables are initialized to either 0 or ""
+    \bigbreak \noindent 
+    \subsection{Awk arrays}
+    \bigbreak \noindent 
+    Awk allows the creation of one dimensional arrays, the index (and the elements) can be either a number or a string. Unlike arrays in $c$, we need not declare the size or type of the array. The array elements are created when first used and initialized either 0 or ""
+    \bigbreak \noindent 
+    \nt{When we use strings as indicies, we are essentially creating a map}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arrayName[index] = value
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arr[1] = "some value"
+        arr[2] = 25
+        arr["foo"] = "bar"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example: Process sales data}
+    \bigbreak \noindent 
+    Suppose we have the data file 
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{array}{llr}
+            1 & \text { clothing } & 3141 \\
+            1 & \text { computers } & 9161 \\
+            1 & \text { textbooks } & 21321 \\
+            2 & \text { clothing } & 3252 \\
+            2 & \text { computers } & 12321 \\
+            2 & \text { textbooks } & 15462
+            2 & \text { supplies } & 2242 \\
+        \end{array}
+    \end{center}
+    \bigbreak \noindent 
+    We wish to output a summary of department sales, then we could write an awk program
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # p.awk (awk -f p.awk data)
+        {
+            deptsales[$2] += $3
+        }
+        END {
+            for (x in deptsales) {
+                print x, deptsales[x]
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Builtin Functions}
+    \bigbreak \noindent 
+    \subsubsection{Arithmetic}
+    \begin{itemize}
+        \item sqrt
+        \item rand
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{String}
+    \begin{itemize}
+        \item index
+        \item length
+        \item split
+        \item substr
+        \item sprintf
+        \item tolower
+        \item toupper
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Misc}
+    \begin{itemize}
+        \item system
+        \item systime
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The split function}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    split(string, array, fieldsep)
+    \end{bashcode}
+    \bigbreak \noindent 
+    The split function divides \textbf{string} into pieces separated by \textbf{fieldsep} and stores the pieces in \textbf{arary}. If \textbf{fieldsep} is omitted, the value of FS is used.
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        split("26:Miller:Comedian", fields, ":")    
+    \end{bashcode}
+    \bigbreak \noindent 
+    Now we have a fields array with the contents of the string
+
+    \bigbreak \noindent 
+    \subsection{The gsub function}
+    \bigbreak \noindent 
+    The gsub function in AWK is a powerful tool for performing global search and replace operations on strings. It searches for all occurrences of a pattern in a string and replaces them with a specified replacement text. 
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    gsub(regexp, replacement, target)
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Stream Editor (sed)}
+    \bigbreak \noindent 
+    \subsection{What is sed?}
+    \bigbreak \noindent 
+    Sed is a non-interactive stream editor. We use sed to 
+    \begin{itemize}
+        \item Automatically perform edits on files
+        \item Simplify doing the same edit on multiple files
+        \item Write conversion programs
+        \item Do editing operations from shell script
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -e 'address command' input_file # (inline script)
+    sed -f script.sed input_file # (script file)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{How does sed work? }
+    \bigbreak \noindent 
+    Sed reads files line by line, each lien of input is copied into a temporary buffer called the \textbf{pattern space}, then the editing instructions are applied to line in the pattern space. Next, the line is sent to output (unless -n was used). Last, the line is removed from the pattern space. Sed does this for all lines until the end of the file
+    \bigbreak \noindent 
+    \nt{Input file is unchanged unless -i option is used}
+
+    \bigbreak \noindent 
+    \subsection{Instruction format}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/10.png}
+    \bigbreak \noindent 
+    The address determines which lines in the input file are to be processed by the commands, if no address is given, then the command is applied to each input line
+    \bigbreak \noindent 
+    \subsubsection{Address types}
+    \begin{itemize}
+        \item Single-line address
+        \item Set-of-lines address
+        \item Range address
+    \end{itemize}
+    \bigbreak \noindent 
+
+    \subsubsection{Single-line address}
+    \bigbreak \noindent 
+    A Single-line address specifies only one line in the input file
+    \bigbreak \noindent
+    \nt{The dollar sign denotes the last line of input file}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e "3 p" infile # Show only line 3
+    sed -n -e "$ p" inflie # Show last line
+    sed -e "10 s/endif/fi/" infile # Substitute "endif" with "fi" on line 10
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Set-of-lines address}
+    \bigbreak \noindent 
+    With this, we can use regex to match lines
+    \begin{itemize}
+        \item Written between two slashes 
+        \item Process only lines that match
+        \item May match several lines
+        \item Lines don't have to be consecutive
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -i -e "/Key/ s/more/other" infile
+    sed -n -e "/r..t/ p" input-file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Range address}
+    \bigbreak \noindent 
+    Defines a set of consecutive lines. Format: startAddr,endAddr (inclusive)
+    \bigbreak \noindent 
+    \textbf{Examples:}
+    \begin{itemize}
+        \item 10,50
+        \item 10,/funny/
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Address complement}
+    \bigbreak \noindent 
+    Address with an exclamation point (!). Command applies to lines that \textbf{don't} match the address
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e '/Obsolete/!p' infile # (print lines that do not contain "Obsolete")
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Sed commands}
+    \bigbreak \noindent 
+    \subsubsection{Modify}
+    \begin{itemize}
+        \item insert 
+        \item append
+        \item change
+        \item delete
+        \item substitute
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Input/Output}
+    \begin{itemize}
+        \item Next, print
+        \item Read, write
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Other}
+    \begin{itemize}
+        \item quit
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Commands i,a,c}
+    \begin{itemize}
+        \item \textbf{i} adds lines before the address
+        \item \textbf{a} adds lines after the address
+        \item \textbf{c} replaces an entire matched line with new text
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] i\
+        text
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Delete command}
+    \bigbreak \noindent 
+    Deletes the entire pattern space
+    \bigbreak \noindent 
+    \nt{Commands following the delete command are ignored since the deleted text is no longer in the pattern space}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    [address] d 
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Substitute command (s)}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] s/search/replacement/[flag]
+    \end{bashcode}
+
+
+
+
 
 
 
