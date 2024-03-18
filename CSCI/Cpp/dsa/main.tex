@@ -1153,6 +1153,398 @@ int binarysearch(int arr[], int size, int target) {
         Thus, there are a maximum of 16 comparisons for a array of size 50,000
     \end{minipage}
 
+    \pagebreak 
+    \unsect{Array Based Stack Implementation}
+    \bigbreak \noindent 
+    \begin{concept}
+        An array-based stack in C++ is a linear data structure that follows the Last In, First Out (LIFO) principle. This means the last element added to the stack will be the first one to be removed. Stacks can be implemented using various underlying data structures, but using an array is one of the most straightforward methods. In this implementation, the array holds the stack elements, and an integer variable (often named top) tracks the index of the last element inserted into the stack.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Data members}
+    \begin{itemize}
+        \item \textbf{stk\_array} - Stack array pointer. A pointer to the data type of the items stored in the stack; points to the first element of a dynamically-allocated array.
+        \item \textbf{stk\_capacity} - Stack capacity. The number of elements in the stack array.
+        \item \textbf{stk\_size} - Stack size. The number of items currently stored in the stack. The top item in the stack is always located at subscript stk\_size - 1. Member Functions
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor:} Sets stack to initial empty state. The stack capacity and stack size should be set to 0. The stack array pointer should be set to nullptr.
+        \item \textbf{size()} Returns the stack size.
+        \item \textbf{capacity()} Returns the stack capacity.
+        \item \textbf{empty()} Returns true if the stack size is 0; otherwise, false.
+        \item \textbf{clear()} Sets the stack size back to 0. Does not deallocate any dynamic storage.
+        \item \textbf{top()} Returns the top item of the stack (stk\_array[stk\_size - 1]).
+        \item \textbf{push()} Inserts a new item at the top of the stack.
+        \item \textbf{pop()} Removes the top item from the stack.
+        \item \textbf{Copy constructor} Similar to the copy constructor for the example Vector class in the notes on dynamic storage allocation.
+        \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation.
+        \item \textbf{Destructor} Deletes the stack array.
+        \item \textbf{reserve()} Reserves additional storage for the stack array.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Reference: Vector copy constructor}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector::Vector(const Vector& other)
+        {
+            // Step 1
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+
+            // Step 2
+            if (vCapacity > 0)
+            vArray = new int[vCapacity];
+            else
+            vArray = nullptr;
+
+            // Step 3
+            for (size_t i = 0; i < vSize; ++i)
+            vArray[i] = other.vArray[i];
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Reference: Vector copy assignment operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector& Vector::operator=(const Vector& other)
+        {
+            // Step 1
+        if (this != &other)
+        {
+            // Step 2
+            delete[] vArray;
+
+            // Step 3
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+
+            // Step 4
+            if (vCapacity > 0)
+            vArray = new int[vCapacity];
+            else
+            vArray = nullptr;
+
+
+            // Step 5
+            for (size_t i = 0; i < vSize; ++i)
+            vArray[i] = other.vArray[i];
+        }
+
+        // Step 6
+        return *this;
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Auxiliary: Vector move constructor}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector::Vector(Vector&& other)    // rvalue reference to a Vector
+        {
+            // Step 1 - "pilfer" other object's resources
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+            vArray = other.vArray;
+
+            // Step 2 - set other object to default state
+            other.vCapacity = 0;
+            other.vSize = 0;
+            other.vArray = nullptr;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Array based stack example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class mystack {
+            // Pointer to dynamically allocated array for stack elements
+            char* m_stack = nullptr;
+            // Current capacity of the stack
+            size_t m_capacity = 0;
+            // Current number of elements in the stack
+            size_t m_size = 0;
+
+            public:
+            // Copy constructor
+            mystack(const mystack& x) {
+                // Copy capacity and size from source object
+                this->m_capacity = x.m_capacity;
+                this->m_size = x.m_size;
+
+                // Allocate memory if capacity is greater than 0
+                if (this->m_capacity > 0) {
+                    this->m_stack = new char[this->m_capacity];
+                } else {
+                    this->m_stack = nullptr;
+                }
+
+                // Copy the stack elements from source to this object
+                memcpy(this->m_stack, x.m_stack, x.m_size);
+            }
+
+            // Copy assignment operator
+            mystack& operator=(const mystack& x) {
+                // Allocate new memory space for the copy
+                this->m_capacity = x.m_capacity;
+                this->m_size = x.m_size;
+
+                if (this->m_capacity > 0) {
+                    this->m_stack = new char[this->m_capacity];
+                } else {
+                    this->m_stack = nullptr;
+                }
+
+                // Copy the elements
+                memcpy(this->m_stack, x.m_stack, x.m_size);
+
+                return *this; // Return a reference to the current object
+            }
+
+            // Returns the current capacity of the stack
+            size_t capacity() const {
+                return this->m_capacity;
+            }
+
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+        // Returns the current size of the stack
+        size_t size() const {
+            return this->m_size;
+        }
+
+        // Checks if the stack is empty
+        bool empty() const {
+            return this->m_size == 0;
+        }
+
+        // Clears the stack (does not deallocate memory)
+        void clear(){
+            this->m_size = 0;
+        }
+
+        // Ensures the stack has at least the specified capacity
+        void reserve(size_t n){
+            // Only proceed if the new capacity is greater than the current capacity
+            if (n <= this->m_capacity) { return; }
+
+            // Update the capacity
+            this->m_capacity = n;
+            // Allocate new memory
+            char* tmp = new char[this->m_capacity];
+            // Copy existing elements to the new memory
+            memcpy(tmp, this->m_stack, this->m_size);
+
+            // Delete old stack and update pointer
+            delete[] this->m_stack;
+            this->m_stack = tmp;
+        }
+
+        // Returns a reference to the top element of the stack
+        const char& top() const{
+            return this->m_stack[(this->m_size)-1];
+        }
+
+        // Adds a new element to the top of the stack
+        void push(char value){
+            // If the stack is full, increase its capacity
+            if (this->m_size == this->m_capacity) {
+                this->reserve((this->m_capacity == 0 ? 1 : this->m_capacity * 2));
+            }
+
+            // Add the new element and increment the size
+            this->m_stack[(this->m_size)++] = value;
+        }
+
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+        // Removes the top element from the stack
+        void pop(){
+            if (this->m_size > 0) {
+                --(this->m_size);
+            }
+        }
+
+        // Destructor: deallocates the dynamically allocated stack
+        ~mystack() {
+            delete[] this->m_stack;
+        }
+
+        // Friend function to output the contents of the stack to a stream
+        friend std::ostream& operator<<(std::ostream& os, const mystack& obj);
+    };
+
+    // Outputs the contents of the stack to a stream
+    std::ostream& operator<<(std::ostream& os, const mystack& obj) {
+        // Iterate through each element in the stack
+        for (size_t i = 0; i < obj.m_size; ++i) {
+            // Print the element, followed by a comma unless it's the last element
+            os << obj.m_stack[i] << (i == (obj.m_size - 1) ? "" : ", ");
+        }
+        return os;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Array based stack application: Infix to postfix conversion algorithm}
+    \bigbreak \noindent 
+    \begin{concept}
+       In computer science, the conversion of an expression from infix notation to postfix notation is a well-known problem that can be efficiently solved using an array-based stack. This process is crucial in computer science because computers can more easily evaluate expressions in postfix notation (also known as Reverse Polish Notation, RPN) than in infix notation.
+       \bigbreak \noindent 
+       \subsection{Infix Notation}
+       \bigbreak \noindent 
+       In infix notation, operators are written between the operands they operate on, e.g., $A+B$. While this notation is straightforward for human readers, it requires that the computer understand precedence rules and parentheses to evaluate expressions correctly.
+       \bigbreak \noindent 
+       \subsection{Postfix Notation}
+       \bigbreak \noindent 
+       In postfix notation, the operator follows all of its operands, e.g., $AB+$. This arrangement eliminates the need for parentheses to dictate order of operations; the order of the operators in the expression does the job instead. Evaluation of postfix expressions can be performed straightforwardly using a stack, making it very attractive for computer processing.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{The algorithm}
+The algorithm for converting an infix expression to a postfix expression using an array-based stack involves the following steps:
+
+\begin{enumerate}
+    \item Create a stack for storing characters and an empty string for the postfix expression.
+    
+    \item Iterate through each character of the infix expression.
+    
+    \begin{enumerate}[i.]
+        \item If the current character is a lowercase letter, append it to the postfix string followed by a space, and continue to the next character.
+        
+        \item If the current character is a digit, append all consecutive digits to the postfix string as part of the same number, add a space after the last digit, and then continue to the next character.
+        
+        \item If the current character is a space, simply continue to the next character without doing anything.
+        
+        \item If the current character is a left parenthesis `(`, push it onto the stack, and continue to the next character.
+        
+        \item If the current character is a right parenthesis `)`, repeatedly pop from the stack and append to the postfix string each character until a left parenthesis `(` is encountered. Pop the left parenthesis from the stack but do not append it to the postfix string. Add a space after each popped character.
+        
+        \item If the current character is an operator, pop from the stack and append to the postfix string all operators that have greater or equal precedence than the current operator. Add a space after each popped operator. Then, push the current operator onto the stack.
+    \end{enumerate}
+    
+    \item After the infix expression has been fully processed, pop and append all remaining operators from the stack to the postfix string, adding a space after each one.
+    
+    \item Return the resulting postfix string.
+\end{enumerate}
+\bigbreak \noindent 
+The \texttt{precedence} function assigns a numerical precedence level to operators, with unary negation and exponentiation having the highest precedence, followed by multiplication and division, and then addition and subtraction with the lowest precedence.
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \begin{cppcode}
+#include <cctype>
+#include "inpost.h"
+#include "mystack.h"
+std::string convert(const std::string& infix) {
+    mystack stack; // Create a stack for characters
+    std::string postfix = ""; // Create the return string
+    // Step through the infix string
+    for (auto it = infix.c_str(); *it; ++it) {
+        // Check if the character is lowercase
+        if (islower(*it)) {
+            // Append the current infix character to the return string
+            postfix += *it;
+            postfix += ' ';
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a digit
+        } else if (isdigit(*it)) {
+            // Keep going to get all the consecutive digits
+            while (isdigit(*it)) {
+                postfix += *it; // Append to the return string
+                ++it; // Proceed to the next character
+            }
+            postfix += ' '; // Tack on a space
+            --it; // Handle the extraneous increment
+
+        // Check if the character is a space
+        } else if (isspace(*it)) {
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a left parenthesis
+        } else if (*it == '(') {
+            stack.push(*it); // Push the current infix character onto the stack
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a right parenthesis
+        } else if (*it == ')') {
+            // Loop while the stack is not empty and the character at the top of the stack is not a left parenthesis
+            while (stack.size() && stack.top() != '(') {
+                postfix+=stack.top(); // Append the character on the top of the stack to the return string
+                postfix += ' '; // Tack on a space
+                stack.pop(); // Pop the stack
+            }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+            // If the top of the stack is left parenthesis
+            if (stack.size()) {
+                stack.pop(); // pop the stack
+                continue; // Proceed to the next infix character
+            }
+
+        // The character is an operator
+        } else {
+
+            // While the stack is not empty, and the precedence of the current infix character is <= the precedence of the character at the top of the stack
+            while (stack.size() && (precedence(*it) <= precedence(stack.top()))) {
+                postfix += stack.top(); // Append the character on the top of the stack to the return string
+                postfix += ' '; // Tack on a space
+                stack.pop(); // Pop the stack
+            }
+
+            stack.push(*it); // Push the current infix character to the stack
+            continue; // Proceed to the next infix character
+        }
+    }
+
+    // While the stack is not empty
+    while (stack.size()) {
+        postfix += stack.top(); // Append the character on the top of the stack to the return string
+        postfix += ' '; // Tack on a space
+        stack.pop(); // Pop the stack
+    }
+
+    // Return the result
+    return postfix;
+
+}
+    \end{cppcode}
+    \pagebreak 
+    \begin{cppcode}
+unsigned precedence(const char& op) {
+
+    /*
+     The operators used, in order of precedence from highest to lowest are.
+        1. ~ (Unary negation) and ^ (Exponentiation)
+        2. * (Multiplication) and / (Division)
+        3. + (Addition) and - (Subtraction)
+    */
+
+    switch (op) {
+        case '~': case '^':
+            return 3;
+            break;
+        case '*': case '/':
+            return 2;
+            break;
+        case '+': case '-':
+            return 1;
+            break;
+        default:
+            return 0;
+    }
+}
+    \end{cppcode}
+    
     
 
     
