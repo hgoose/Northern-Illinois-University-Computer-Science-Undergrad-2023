@@ -1544,6 +1544,257 @@ unsigned precedence(const char& op) {
     }
 }
     \end{cppcode}
+
+    \pagebreak 
+    \unsect{Array based queue}
+    \bigbreak \noindent 
+    \begin{concept}
+        An array-based queue is a linear data structure that follows the First-In-First-Out (FIFO) principle, where elements are added (enqueued) at the rear end and removed (dequeued) from the front end. It uses an array to store the elements. 
+        \bigbreak \noindent 
+        In C++, we could implement an array-based queue as a class. To conserve space, we'll implement it as a "circular queue", an array in which the last position is logically connected back to the first position to make a circle. This is sometimes also called a "ring buffer".
+        \bigbreak \noindent 
+        \fig{1}{./figures/queue.png}
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Data members}
+    \begin{itemize}
+        \item \textbf{q\_array} - Queue array pointer. A pointer to the data type of the items stored in the queue; points to the first element of a dynamically-allocated array.
+        \item \textbf{q\_capacity} - Queue capacity. The number of elements in the queue array.
+        \item \textbf{q\_size} - Queue size. The number of items currently stored in the queue.
+        \item \textbf{q\_front} - Queue front. The subscript of the front (or head) item in the queue.
+        \item \textbf{q\_back} - Queue back. The subscript of the back (or rear or tail) item in the queue.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor} Sets queue to initial empty state. The queue capacity and queue size should be set to 0. The queue array pointer should be set to nullptr. q\_front should be set to 0, while q\_back is set to q\_capacity - 1.
+        \item \textbf{size()} Returns the queue size.
+        \item \textbf{capacity()} Returns the queue capacity.
+        \item \textbf{empty()} Returns true if the queue size is 0; otherwise, false.
+        \item \textbf{clear()} Sets the queue size back to 0 and resets q\_front and q\_back to their initial values. Does not deallocate any dynamic storage or change the queue capacity.
+        \item \textbf{front()} Returns the front item of the queue (q\_array[q\_front]).
+        \item \textbf{back()} Returns the back item of the queue (q\_array[q\_back]).
+        \item \textbf{push()} Inserts a new item at the back of the queue.
+        \item \textbf{pop()} Removes the front item from the queue.
+        \item \textbf{Copy constructor Similar} to the copy constructor for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Destructor} Deletes the queue array.
+        \item \textbf{reserve()} Reserves additional storage for the queue array. The process of copying the original array contents into the new, larger array is complicated by the fact that the exact locations of the queue items within the queue array are unknown and that there is no guarantee that q\_front is less than q\_back.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{the push() operation described here is frequently called "enqueue" while the pop() operation is frequently called "dequeue".}
+
+    \bigbreak \noindent 
+    \subsection{Double-Ended Queue}
+    We can also easily implement a double-ended queue using an array. The push() operation becomes push\_back() while the pop() operation becomes pop\_front(). No other changes to the code previously described are required. The following two operations can be added to insert an item at the front of the double-ended queue and to remove an item from the back of the double-ended queue.
+    \begin{itemize}
+        \item \textbf{push\_front()} Inserts a new item at the front of the queue.
+        \item \textbf{pop\_back()} Removes the back item from the queue.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Singly-linked list}
+    \bigbreak \noindent 
+    \begin{concept}
+        A singly linked list is a linear data structure that consists of a sequence of elements, where each element is contained in a "node." The list is called "singly" linked because each node points to the next node in the sequence, forming a single chain of nodes. Unlike arrays, the elements in a singly linked list are not stored in contiguous memory locations; instead, each node contains a reference (or pointer) to the next node, allowing for dynamic memory usage and flexibility in adding or removing elements.
+        \bigbreak \noindent 
+        \subsection{Structure of a Node}
+        \bigbreak \noindent 
+        Each node in a singly linked list typically has two components:
+        \begin{itemize}
+            \item \textbf{Data:} The actual value or information that the node represents.
+            \item \textbf{Next:} A pointer (or reference) to the next node in the list.
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsection{Advantages}
+        \begin{itemize}
+            \item \textbf{Dynamic Size:} Unlike arrays, singly linked lists can easily grow or shrink in size, making efficient use of memory.
+            \item \textbf{Ease of Insertion/Deletion:} Adding or removing elements from a singly linked list does not require shifting elements, as in the case of arrays, making these operations potentially more efficient.
+        \end{itemize}
+        \bigbreak \noindent 
+        \subsection{Disadvantages}
+        \begin{itemize}
+            \item \textbf{Sequential Access:} Elements in a singly linked list can only be accessed sequentially, starting from the first node. This makes access times slower compared to arrays, which offer constant time access.
+            \item \textbf{Extra Memory:} Each node requires extra memory for the pointer, in addition to the data it holds.
+            \item \textbf{No Backward Traversal:} Since each node only points to the next node, it's not possible to traverse the list backward without additional structures or references.
+        \end{itemize}
+        \bigbreak \noindent 
+        Singly linked lists are a fundamental data structure, useful in scenarios where dynamic memory allocation is needed and the benefits of easy insertion/deletion outweigh the costs of slower access times and extra memory usage for pointers.
+    \end{concept}
+    \pagebreak 
+    \subsection{Sample node structure}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct node
+        {
+            data-type value;
+            node* next;
+
+            node(data-type value, node* next = nullptr)
+            {
+                this->value = value;
+                this->next = next;
+            }
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Class to represent a stack}
+    \bigbreak \noindent 
+    \subsubsection{Data members}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{stk\_top} - Stack top pointer. Pointer to the top (first) node in the linked list.
+        \item \textbf{stk\_size} - Number of items currently stored in the stack.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor} Sets stack to initial empty state. The stack top pointer should be set to nullptr. The stack size should be set to 0.
+        \item \textbf{size()} Returns the stack size.
+        \item \textbf{empty()} Returns true if the stack size is 0; otherwise, false.
+        \item \textbf{clear()} We can easily set the stack back to the empty state by repeatedly calling pop() until the stack is empty.
+        \item \textbf{top()} Returns the top item of the stack (stk\_top->value).
+        \item \textbf{push()} Inserts a new item at the top of the stack.
+        \item \textbf{pop()} Removes the top item from stack.
+        \item \textbf{Copy Constructor}
+        \item \textbf{Copy Assignment Operator}
+        \item \textbf{Destructor} We can delete all of the dynamic storage for the stack by calling the clear() member function.
+        \item \textbf{clone()} Copies the linked list from the stack x to this object.
+    \end{itemize}
+
+    \pagebreak
+    \subsection{Example (as a stack)}
+    \bigbreak \noindent 
+    \begin{cppcode}
+// Define a node structure for use in the mystack class
+struct node {
+    node* next = nullptr; // Pointer to the next node in the stack
+    int value = 0; // The value stored in this node
+
+    node() = default; // Default constructor
+    node(node* next, int value) : next(next), value(value) {}; // Constructor initializing members
+};
+
+// Define a class to represent a stack using a linked list
+class mystack {
+    node* stack_top = nullptr; // Pointer to the top node of the stack
+    size_t m_size = 0; // Current size of the stack
+
+public:
+    // Allow ostream to access private members of mystack for printing
+    friend std::ostream& operator<<(std::ostream& os, const mystack& obj);
+
+    // Copy constructor
+    mystack(const mystack& x) {
+        this->stack_top = nullptr; // Initialize stack_top to nullptr
+        this->m_size = x.size(); // Copy size from x
+        clear(); // Clear existing content
+        clone(x); // Deep copy nodes from x
+    }
+
+    // Copy assignment operator
+    mystack& operator=(const mystack& x) {
+        if (this != &x) { // Check for self-assignment
+            this->stack_top = nullptr; // Reset stack_top
+            this->m_size = x.size(); // Copy size from x
+            clear(); // Clear existing content
+            clone(x); // Deep copy nodes from x
+        }
+        return *this; // Return a reference to the current object
+    }
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{cppcode}
+    // Return the current size of the stack
+    size_t size() const {
+        return this->m_size;
+    }
+
+    // Check if the stack is empty
+    bool empty() const {
+        return this->m_size == 0;
+    }
+
+    // Remove the top element from the stack
+    void pop(){
+        node* del = this->stack_top; // Temporary pointer to the top node
+        this->stack_top = this->stack_top->next; // Move the top pointer to the next node
+        delete del; // Deallocate the removed node
+        (this->m_size)--; // Decrement the size of the stack
+    }
+
+    // Clear all elements from the stack
+    void clear(){
+        while (this->stack_top != nullptr) { // While there are nodes in the stack
+            this->pop(); // Remove the top node
+        }
+    }
+
+    // Access the value of the top element in the stack
+    const int& top() const{
+        return stack_top->value;
+    }
+
+    // Add a new element to the top of the stack
+    void push(int value){
+        node* new_node = new node(this->stack_top, value); // Create a new node with the given value
+        this->stack_top = new_node; // Make the new node the top of the stack
+        ++this->m_size; // Increment the size of the stack
+    }
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{cppcode}
+    // Clone the stack from another mystack object
+    void clone(const mystack& obj) {
+        if (obj.stack_top == nullptr) { // If the source stack is empty
+            this->stack_top = nullptr; // Make the current stack empty
+            return;
+        }
+        stack_top = new node(nullptr, obj.stack_top->value); // Copy the top node
+        node* src = obj.stack_top->next; // Pointer to traverse the source stack
+        node* dest = stack_top; // Pointer to build the current stack
+
+        while(src != nullptr) { // While there are more nodes to copy
+            dest->next = new node(nullptr, src->value); // Copy the node
+            dest = dest->next; // Move to the next node
+            src = src->next; // Move to the next source node
+        }
+        this->m_size = obj.m_size; // Copy the size
+    }
+
+    // Destructor to clean up the stack
+    ~mystack() {
+        this->clear(); // Clear the stack
+    }
+};
+
+// Overload the << operator to print the stack
+std::ostream& operator<<(std::ostream& os, const mystack& obj) {
+    node* current = obj.stack_top; // Start from the top of the stack
+
+    if (current == nullptr) { return os; }
+
+    while (current != nullptr) { // Iterate through the stack
+        os << current->value; // Print the current node's value
+        if (current->next != nullptr)
+                os << ", "; // If this is not the last node, print a comma and a space
+            }
+            current = current->next; // Move to the next node
+        }
+        return os;
+}
+    \end{cppcode}
+
+
+    
+
+
+    
     
     
 

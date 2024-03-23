@@ -1,23 +1,39 @@
-unsigned precedence(const char& op) {
+    // Clone the stack from another mystack object
+    void clone(const mystack& obj) {
+        if (obj.stack_top == nullptr) { // If the source stack is empty
+            this->stack_top = nullptr; // Make the current stack empty
+            return;
+        }
+        stack_top = new node(nullptr, obj.stack_top->value); // Copy the top node
+        node* src = obj.stack_top->next; // Pointer to traverse the source stack
+        node* dest = stack_top; // Pointer to build the current stack
 
-    /*
-     The operators used, in order of precedence from highest to lowest are.
-        1. ~ (Unary negation) and ^ (Exponentiation)
-        2. * (Multiplication) and / (Division)
-        3. + (Addition) and - (Subtraction)
-    */
-
-    switch (op) {
-        case '~': case '^':
-            return 3;
-            break;
-        case '*': case '/':
-            return 2;
-            break;
-        case '+': case '-':
-            return 1;
-            break;
-        default:
-            return 0;
+        while(src != nullptr) { // While there are more nodes to copy
+            dest->next = new node(nullptr, src->value); // Copy the node
+            dest = dest->next; // Move to the next node
+            src = src->next; // Move to the next source node
+        }
+        this->m_size = obj.m_size; // Copy the size
     }
+
+    // Destructor to clean up the stack
+    ~mystack() {
+        this->clear(); // Clear the stack
+    }
+};
+
+// Overload the << operator to print the stack
+std::ostream& operator<<(std::ostream& os, const mystack& obj) {
+    node* current = obj.stack_top; // Start from the top of the stack
+
+    if (current == nullptr) { return os; }
+
+    while (current != nullptr) { // Iterate through the stack
+        os << current->value; // Print the current node's value
+        if (current->next != nullptr)
+                os << ", "; // If this is not the last node, print a comma and a space
+            }
+            current = current->next; // Move to the next node
+        }
+        return os;
 }

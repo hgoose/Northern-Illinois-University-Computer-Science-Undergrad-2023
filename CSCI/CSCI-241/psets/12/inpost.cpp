@@ -1,7 +1,31 @@
-#include <cctype>
+//***************************************************************************
+//  inpost.cpp
+//
+//  postfix to infix conversion implementation
+//  InPostA12
+//
+//  Created by Nate Warner z2004109
+//
+//***************************************************************************
+
+#include <cctype> // For character testing
 #include "inpost.h"
 #include "mystack.h"
 
+/**
+ * Converts an infix expression to a postfix expression. This function iterates over each character 
+ * of the input string, handling operands, operators, and parentheses according to their 
+ * precedence to produce a postfix expression.
+ * 
+ * Operands (lowercase letters and digits) are directly added to the postfix string. Operators are
+ * pushed onto a stack, but only after popping off operators of higher or equal precedence (except
+ * for parentheses, which are handled differently). 
+ * 
+ * @param infix The infix expression as a std::string, which may include lowercase letters (as variables),
+ *        digits, operators, and parentheses.
+ *
+ * @return A std::string containing the equivalent postfix expression
+ */
 std::string convert(const std::string& infix) {
 
     mystack stack; // Create a stack for characters
@@ -81,14 +105,23 @@ std::string convert(const std::string& infix) {
 
 }
 
+/**
+ * Determines the precedence of an operator. This function assigns a precedence level to the operators. 
+ * Higher return values indicate higher precedence. The function supports unary negation (~),
+ * exponentiation (^), multiplication (*), division (/), addition (+), and subtraction (-).
+ * 
+ * Precedence levels: 
+ * - 3: Unary negation (~) and exponentiation (^)
+ * - 2: Multiplication (*) and division (/)
+ * - 3: Addition (+) and subtraction (-)
+ * 
+ * @param op A character representing an operator 
+ * @return An unsigned integer representing the precedence level of the operator.
+ *
+ * @note If the character is not recognized as an operator by this function, it returns 0, indicating
+ * no precedence.
+ */
 unsigned precedence(const char& op) {
-
-    /*
-     The operators used, in order of precedence from highest to lowest are.
-        1. ~ (Unary negation) and ^ (Exponentiation)
-        2. * (Multiplication) and / (Division)
-        3. + (Addition) and - (Subtraction)
-    */
 
     switch (op) {
         case '~': case '^':
