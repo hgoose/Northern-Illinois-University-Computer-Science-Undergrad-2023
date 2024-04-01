@@ -1,0 +1,1811 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Data Structures and Algorithms}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Data Structures and Algorithms} \\
+           In C++
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           February 16, 2023 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Selection Sort}
+    \bigbreak \noindent 
+    \begin{concept}
+        The selection sort algorithm sorts an array by repeatedly finding the minimum element (if sorting in ascending order) from the unsorted part of the array and putting it at the end of the sorted part of the array. The algorithm maintains two subarrays in a given array:
+    \end{concept}
+    \begin{itemize}
+        \item A subarray of already sorted elements.
+        \item A subarray of elements that remain to be sorted.
+    \end{itemize}
+    At the start of the algorithm, the first subarray is empty. In each pass through the outer loop of the selection sort, the minimum element from the unsorted subarray is selected and moved to the end of the sorted subarray.
+    \bigbreak \noindent 
+    \subsection{Psuedocode}
+    \begin{cppcode}
+procedure selection_sort(array : list of sortable items, n : length of list)
+    i := 0
+    while i < n - 1
+        min_index ← i
+        j := i + 1
+        while j < n
+            if array[j] < array[min_index]
+                min_index ← j
+            end if
+            j = j + 1
+        end while
+        swap array[i] and array[min_index]
+        i = i + 1
+    end while
+end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \begin{cppcode}
+        int main(int argc, const char* argv[]) {
+            int arr[] = {2,4,1,3,5}; int n = 5;
+
+            for (int j=0; j <n-1; ++j) {
+                int min = j;
+                for (int k=j+1; k <n-1; ++k) {
+                    if (arr[k] < arr[min]) {
+                        min = k;
+                    }
+                }
+                std::swap(arr[j], arr[min]);
+            }
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Complexity}
+    \begin{itemize}
+        \item \textbf{Time Complexity: $O(n^{2})$} 
+        \item \textbf{Space Complexity: $O(1)$} 
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{The primary advantage of selection sort is that it never makes more than $O(n)$ swaps, which can be useful if the array elements are large and copying them is a costly operation.}
+    
+    \pagebreak 
+    \unsect{Insertion Sort}
+    \bigbreak \noindent 
+    \begin{concept}
+        The insertion sort algorithm sorts a list by repeatedly inserting an unsorted element into the correct position in a sorted sublist. The algorithm maintains two sublists in a given array:
+
+        \begin{itemize}
+            \item A sorted sublist. This sublist initially contains a single element (an array of one element is always sorted).
+            \item A sublist of elements to be inserted one at a time into the sorted sublist.
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Psuedocode}
+    \begin{cppcode}
+procedure insertion_sort(array : list of sortable items, n : length of list)
+    i ← 1
+    while i < n
+        j ← i
+        while j > 0 and array[j - 1] > array[j]
+            swap array[j - 1] and array[j]
+            j ← j - 1
+        end while
+        i ← i + 1
+    end while
+end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int main(int argc, const char* argv[]) {
+            int arr[] = {2,4,1,3,5};
+            int n = 5;
+
+            for (int j=1; j<n; ++j) {
+                for (int k=j; k>0; --k) {
+                    if (arr[k-1] > arr[k]) {
+                        std::swap(arr[k-1], arr[k]);
+                    }
+                }
+            }
+        }
+    \end{cppcode}
+
+
+    \pagebreak 
+    \subsection{Optimizing Insertion Sort}
+    \bigbreak \noindent 
+    Performing a full swap of the array elements in each inner for loop iteration is not necessary. Instead, we save the value that we want to insert into the sorted subarray in temporary storage. In place of performing a full swap, we simply copy elements to the right. The saved value can then be inserted into its proper position once that has been located.
+    \bigbreak \noindent 
+    This alternative approach can potentially save a considerable number of assignment statements. If $N$ swaps are performed by the inner loop, the original version of insertion sort requires $N \cdot 3 $ assignment statements to perform those swaps. The improved version listed below only requires $N+2$ assignment statements to accomplish the same task.
+    \subsubsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure insertion_sort(array : list of sortable items, n : length of list)
+    i ← 1
+    while i < n
+        temp ← array[i]
+        j ← i
+        while j > 0 and array[j - 1] > temp
+            array[j] ← array[j - 1]
+            j ← j - 1
+        end while
+        array[j] ← temp
+        i ← i + 1
+    end while
+end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int arr[] = {5,6,4,3,1};
+        int n = 5;
+
+        for (int j=1; j<n; ++j) {
+            int tmp = arr[j];
+            int k=j;
+            for (; k>0; --k) {
+                if (arr[k-1] > tmp) {
+                    arr[k] = arr[k-1];
+                } else {
+                    break;
+                }
+            }
+            arr[k] = tmp;
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Complexity}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Time Complexity: $O(n^{2})$}
+        \item \textbf{Space Complexity: $O(1)$}
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{The primary advantage of insertion sort over selection sort is that selection sort must always scan all remaining unsorted elements to find the minimum element in the unsorted portion of the list, while insertion sort requires only a single comparison when the element to be inserted is greater than the last element of the sorted sublist. When this is frequently true (such as if the input list is already sorted or partially sorted), insertion sort is considerably more efficient than selection sort. The best case input is a list that is already correctly sorted. In this case, insertion sort has O(n) complexity.}
+
+    \pagebreak 
+    \unsect{Bubble Sort}
+    \bigbreak \noindent 
+    \begin{concept}
+       Bubble sort, sometimes referred to as sinking sort, is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. The pass through the list is repeated until the list is sorted.
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure bubble_sort(array : list of sortable items, n : length of list)
+    do
+        swapped ← false
+        i ← 1
+        while i < n
+            if array[i - 1] > array[i]
+                swap array[i - 1] and array[i]
+                swapped ← true
+            end if
+            i ← i + 1
+        end while
+    while swapped
+end procedure
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{If no items are swapped during a pass through the outer loop (i.e., the variable swapped remains false), then the array is already sorted and the algorithm can terminate.}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int arr[] = {5,6,4,3,1};
+        int n = 5;
+
+        bool swapped;
+        do {
+            swapped = 0;
+
+            for (int i=0; i<n; ++i) { 
+                if (arr[i-1] > arr[i]) {
+                    std::swap(arr[i-1], arr[i]);
+                    swapped = 1;
+                }
+            }
+
+        } while (swapped);
+
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Optimizing Bubble Sort}
+    \bigbreak \noindent 
+    The bubble sort algorithm can be optimized by observing that the n-th pass finds the n-th largest element and puts it into its final place. Therefore the inner loop can avoid looking at the last $n-1$ items when running for the n-th time:
+    \bigbreak \noindent 
+    \subsubsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure bubble_sort(array : list of sortable items, n : length of list)
+    do
+        swapped ← false
+        i ← 1
+        while i < n
+            if array[i - 1] > array[i]
+                swap array[i - 1] and array[i]
+                swapped ← true
+            end if
+            i ← i + 1
+        end while
+        n ← n - 1
+    while swapped
+end procedure
+    \end{cppcode}
+    \bigbreak \noindent 
+    It is common for multiple elements to be placed in their final positions on a single pass. In particular, after every pass through the outer loop, all elements after the position of the last swap are sorted and do not need to be checked again. Taking this into account makes it possible to skip over many elements, resulting in about a worst case 50\% improvement in comparison count (though no improvement in swap counts), and adds very little complexity because the new code subsumes the swapped variable:
+    \bigbreak \noindent 
+    \begin{cppcode}
+     do
+        last ← 0
+        i ← 1
+        while i < n
+            if array[i - 1] > array[i]
+                swap array[i - 1] and array[i]
+                last ← i
+            end if
+            i ← i + 1
+        end while
+        n ← last
+    while n > 1
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int last;
+        do  {
+            last = 0;
+            int j=1;
+
+            for (; j<n; ++j) {
+                if (arr[j-1] > arr[j]) {
+                    std::swap(arr[j-1], arr[j]);
+                    last = j;
+                }
+            }
+            n = last;
+
+        } while (n > 0);
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Complexity}
+    \begin{itemize}
+        \item \textbf{Time Complexity:} $O(n^{2})$
+        \item \textbf{Space Complexity:} $O(1)$
+    \end{itemize}
+    \bigbreak \noindent
+    \nt{Other $O(n^{2})$ sorting algorithms, such as insertion sort, generally run faster than bubble sort (even with optimizations) and are no more complex. Therefore, bubble sort is not a practical sorting algorithm.
+        The only significant advantage that bubble sort has over most other sorting algorithms (but not insertion sort), is that the ability to detect that the list is sorted is built into the algorithm. When the list is already sorted (best-case), the complexity of bubble sort is only $O(n)$.
+    }
+
+    \pagebreak 
+    \unsect{Two-Dimensional Array}
+
+    \pagebreak 
+    \unsect{Recursion}
+
+    \pagebreak 
+    \unsect{Complexity Analysis}
+    \bigbreak \noindent 
+    \subsection{Time Complexity}
+    \bigbreak \noindent 
+    \begin{concept}
+        Time complexity in algorithms is a way to describe the efficiency of an algorithm in terms of the time it takes to run as a function of the length of the input. It gives us an idea of the growth rate of the runtime of an algorithm as the size of input data increases. Big O notation is a mathematical notation used to express this time complexity, focusing on the worst-case scenario or the upper limit of the algorithm's running time.
+        \bigbreak \noindent 
+        Big O notation describes the upper bound of the time complexity, ignoring constants and lower order terms which are less significant for large input sizes. Here are some common Big O notations and their meanings:
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Common time complexities}
+    \bigbreak \noindent 
+    The following is a list of the common time complexities, in order from best to worst
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{lc}
+            Notation & Name \\
+        \hline
+            $O(1)$ & Constant \\
+            $O(\log{n}) $ & Logarithmic \\
+            $O(n)$ & Linear \\
+            $O(n\log_{}{n}) $ & Log-linear \\
+            $O(n^{2}) $ & Quadratic \\
+            $O(n^{3}) $ & Cubic \\
+            $O(n^{k}) $ & Polynomial \\
+            $O(2^{n}) $ & Exponential  \\
+            $O(n!) $ & Factorial
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    You can also have multiple variables in your runtime. For example, the time required to paint a fence that is $w$ meters wide and $h$ meters high could be described as $O(wh)$. If you needed $p$ layers of paint, then you could say that the time is $O(whp)$
+
+    \bigbreak \noindent 
+    \subsubsection{Constant time}
+    An O(1) time complexity, also known as constant time complexity, describes an algorithm where the time to complete does not depend on the size of the input data set. 
+    \bigbreak \noindent 
+    \subsubsection{Big O, Big Omega, and Big Theta}
+    \bigbreak \noindent 
+    Academics use big $O$, big $\Theta$, and big $\Omega$ to describe runtimes.
+    \begin{itemize}
+        \item \textbf{Big $\mathbf{O}$} notation (denoted as $O$) is widely used in academia to describe an upper bound on the time complexity of an algorithm. For instance, an algorithm that prints all the values in an array could be described as $O(N)$. However, it could also be described as $O(N^2)$, $O(N^3)$, or $O(2^N)$, among other possible Big O notations. The algorithm's execution time is at least as fast as each of these, making them upper bounds on the runtime. This relationship is akin to a less-than-or-equal-to relationship. For example, if Bob is $X$ years old (assuming no one lives past age 130), then it would be correct to say that $X \leq 130$. Similarly, it would also be correct, albeit less useful, to say that $X \leq 1,000$ or $X \leq 1,000,000$. While these statements are technically true, they are not particularly informative. Likewise, a simple algorithm to print the values in an array is $O(N)$, but it is also correct to describe it as $O(N^3)$ or any runtime larger than $O(N)$. This illustrates that while multiple Big O notations can technically describe the time complexity of an algorithm, the most informative description is the one that provides the tightest upper bound.
+        \item \textbf{Big $\mathbf{\Omega}$}: In academia, $\Omega$ is the equivalent concept but for the lower bound. Printing the values in an array is $\Omega(N)$ as well as $\Omega(\log N)$ and $\Omega(1)$. After all, you know it won’t be faster than those runtimes. The $\Omega$ notation is used to describe the best-case scenario or the minimum amount of time an algorithm will take to complete. It ensures that the algorithm's execution time will not be less than the specified complexity, providing a guarantee on the lower limit of the algorithm's performance.
+        \item \textbf{Big $\mathbf{\Theta}$}: In academia, $\Theta$ notation signifies that an algorithm's time complexity has both an upper and a lower bound. That is, an algorithm is $\Theta(N)$ if it is both $O(N)$ and $\Omega(N)$. $\Theta$ notation provides a tight bound on runtime, indicating that the algorithm's execution time grows at a rate directly proportional to the size of the input, neither faster nor slower. This precise characterization makes $\Theta$ especially useful for describing algorithms where the upper and lower bounds converge to the same complexity, offering a complete understanding of the algorithm's efficiency.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{In the industry, when people refer to big $O$ notation, they are likely talking about big $\mathbf{\Theta}$}
+
+    \bigbreak \noindent 
+    \subsubsection{Best Case, Worst Case, and Expected (or Average) Case}
+    \bigbreak \noindent 
+    We can actually describe our runtime for an algorithm in three different ways. Let’s look at this from the perspective of quick sort.
+    \begin{itemize}
+        \item \textbf{Best Case:} If all elements of the array are equal, then quick sort will, on average, just traverse through the array once. This is $\mathcal{O}(N)$. (This actually depends slightly on the implementation of quick sort. There are implementations that will run very quickly on a sorted array.)
+        \item \textbf{Worst Case:} What if we get really unlucky and the pivot is repeatedly the biggest element in the array? (Actually, this can easily happen. If the pivot is chosen to be the first element in the subarray and the array is sorted in reverse order, we’ll have just this situation.) In this case, our recursion doesn’t divide the array in half and recursively sort each half, it just shrinks the subarray by one element. We end up with something similar to selection sort and the runtime degenerates to $\mathcal{O}(N^2)$.
+        \item \textbf{Expected Case:} Usually, though, these wonderful or terrible situations won’t happen. Sure, sometimes the pivot will be very low or very high, but it won’t happen over and over again. We can expect a runtime of $\mathcal{O}(N \log N)$.
+    \end{itemize}
+    \bigbreak \noindent 
+    We rarely discuss best case time complexity because it’s not a very useful concept. After all, wecould take essentially any algorithm, special case some input, and then get a O(1) runtime in thebest case.For many – probably most – algorithms, the worst case and the expected case are the same.Sometimes they’re different though and we need to describe both of the runtimes
+
+    \bigbreak \noindent 
+    \subsection{Space complexity}
+    \bigbreak \noindent 
+    Time is not the only thing that matters in an algorithm. We might also care about the amount of memory – or space – required by the algorithm. Space complexity is a parallel concept to time complexity. If we need to create an array of size $n$,this will require $O(n)$ space. If we need a two-dimensional array of size $n \times n$, this will require $O(n^{2})$ space.
+    \bigbreak \noindent 
+    \subsubsection{Constant time}
+    \bigbreak \noindent 
+    An algorithm has O(1) space complexity when the amount of memory it requires does not grow with the size of the input data set. This means the algorithm needs a constant amount of memory space, regardless of how large the input is.
+
+    \bigbreak \noindent 
+    \subsubsection{Space complexity in recursive algorithms}
+    \bigbreak \noindent 
+    Stack space in recursive calls counts too. For example, code like this would take $O(n)$ time and $O(n)$ space
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // Example 1
+    int sum(int n) {
+    if (n <= 0) 
+        return 0;
+    else
+        return n + sum(n - 1);
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Each of these calls results in a stack frame with a copy of the variable n being pushed onto the program call stack and takes up actual memory
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Drop the constants}
+    \bigbreak \noindent 
+    It is entirely possible for $O(n)$ code to run faster than $O(1)$ code for specific inputs. Big O just describes the rate of increase, not the specific time required
+    \bigbreak \noindent 
+    For this reason, we drop the constants in runtimes. An algorithm that one might have described as \(O(2N)\) is actually \(O(N)\). If you’re going to try to count the number of instructions, then you’d have to go to the assembly level and take into account that multiplication requires more instructions than addition, how the compiler would optimize something, and all sorts of other details. 
+    \bigbreak \noindent 
+    That would be horrendously complicated, so don’t even start going down that road. Big O allows us to express how the runtime scales. We just need to accept that it doesn’t mean that \(O(N)\) is always better than \(O(N^2)\).
+
+    \bigbreak \noindent 
+    \subsection{Drop the non-dominant terms}
+    \bigbreak \noindent 
+    What do you do about an expression such as \(O(N^2 + N)\)? That second \(N\) isn’t exactly a constant. But it’s not especially important. We already said that we drop constants. \(O(N^2 + N^2)\) is \(O(2N^2)\), and therefore it would be \(O(N^2)\). If we don’t care about the latter \(N^2\) term, why would we care about \(N\)? We don’t.
+    \bigbreak \noindent 
+    We might still have a sum in a runtime. For example, the expression $O(B^{2} + A)$ cannot be reduced (without some special knowledge of $A$ and $B$)
+
+    \bigbreak \noindent 
+    \subsection{Multi-Part Algorithms: Add vs. Multiply}
+    \bigbreak \noindent 
+    Suppose you have an algorithm that has two steps. When do you multiply the runtimes and when do you add them?
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // Program 1
+
+    for (int i=0; i<A; ++i) {
+        cout << arrayA[i];
+    }
+
+    for (int i=0; i<B; ++i) {
+        cout << arrayB[i];
+    }
+
+    // Program 2
+    for (int i=0; i<A; ++i) {
+        for (int j=0; j<B; ++j) {
+            cout << arrayA[i] << ", " << arrayB[j];
+        }
+    }
+    \end{cppcode}
+    \pagebreak \bigbreak \noindent 
+    In the first example, we do $A$ chunks of work then $B$ chunks of work. Therefore, the total amount of work is $O(A + B)$.In the second example, we do $B$ chunks of work for each element in $A$. Therefore, the total amount of work is $O(A * B)$
+
+    \bigbreak \noindent 
+    \subsection{Amortized Time}
+    \bigbreak \noindent 
+    A \texttt{C++} vector object allows you to have the benefits of an array while offering flexibility in size.
+    You won’t run out of space in the vector since its capacity will grow as you insert elements.
+    A vector is implemented with a dynamic array. When the number of stored in the array hits the
+    array’s capacity, the vector class will create a new array with double the capacity and copy all of
+    the elements over to the new array. The old array is then deleted.
+    \bigbreak \noindent 
+    How do you describe the runtime of insertion? This is a tricky question.
+    The array could be full. If the array contains \(N\) elements, then inserting a new element will take
+    \(O(N)\) time. You will have to create a new array of capacity \(2N\) and then copy \(N\) elements over. This
+    insertion will take \(O(N)\) time.
+    However, we also know that this doesn’t happen very often. The vast majority of the time, insertion
+    will be in \(O(1)\) time.
+    \bigbreak \noindent 
+    We need a concept that takes both possibilities into account. This is what amortized time does. It
+    allows us to describe that, yes, this worst case happens every once in a while. But once it
+    happens, it won’t happen again for so long that the cost is “amortized.”
+    \bigbreak \noindent 
+    In this case, what is the amortized time?
+    As we insert elements, we double the capacity when the size of the array is a power of 2. So after
+    \(X\) elements, we double the capacity at array sizes 1, 2, 4, 8, 16, \(\ldots\), \(X\). That doubling takes,
+    respectively, 1, 2, 4, 8, 16, 32, 64, \(\ldots\), \(X\) copies.
+    \bigbreak \noindent 
+    What is the sum of \(1 + 2 + 4 + 8 + 16 + \ldots + X\)? If you read this sum left to right, it starts with 1 and
+    doubles until it gets to \(X\). If you read right to left, it starts with \(X\) and halves until it gets to 1.
+    What then is the sum of \(X + X/2 + X/4 + X/8 + \ldots + 1\)? This is roughly \(2X\).
+    (It's \(2X - 1\) to be exact, but this is big O notation, so we can drop the constant.).
+    \bigbreak \noindent 
+    Therefore, \(X\) insertions take \(O(2X)\) time. The amortized time for each insertion is therefore \(O(1)\).
+
+    \bigbreak \noindent 
+    \subsection{Log N Runtimes}
+    \bigbreak \noindent 
+    We commonly see O(log N) in runtimes. Where does this come from?
+    \bigbreak \noindent 
+    Let’s look at binary search as an example. In binary search, we are looking for an item search\_key in an N element sorted array. We first compare search\_key to the midpoint of the array. If search\_key == array[mid], then we return. If search\_key $<$ array[mid], then we search on the left side of the array. If search\_key $>$ array[mid], then we search on the right side of the array.
+    \bigbreak \noindent 
+    We start off with with an N-element array to search. Then, after a single step, we’re down to N/2 elements. One more step, and we’re down to N/4 elements. We stop when we either find the value
+    \bigbreak \noindent 
+    or we’re down to just one element. The total runtime is then a matter of how many steps (dividing N by 2 each time) we can take until N becomes 1.
+    \bigbreak \noindent 
+    We could look at this in reverse (going from 1 to 16 instead of 16 to 1). How many times can we multiply N by 2 until we get N?
+    \bigbreak \noindent 
+    What is k in the expression $2^{k} = n$? This is exactly what log expresses.
+    \begin{align*}
+        &2^{k} = n \\
+        &=\log_{2}{n} = k
+    .\end{align*}
+
+    \bigbreak \noindent 
+    \subsection{Recursive runtime}
+    \bigbreak \noindent 
+    Here’s a tricky one. What’s the runtime of this code?
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int f(int n) {
+            if (n <= 1) {
+                return 1;
+            } else {
+                return f(n-1) + f(n-1);
+            }
+        }
+            
+    \end{cppcode}
+    \bigbreak \noindent 
+    let’s derive the runtime by walking through the code. Suppose we call f(4). This calls f(3) twice. Each of those calls to f(3) calls f(2), until we get down to f(1).
+    \bigbreak \noindent 
+    \fig{.8}{./figures/1.png}
+    \bigbreak \noindent 
+    How many calls are in this tree?
+    \bigbreak \noindent 
+    The tree will have depth N. Each node (i.e., function call) has two children. Therefore, each level will have twice as many calls as the one above it.
+    \bigbreak \noindent 
+    Therefore, there will be $2^{0} + 2^{1} + 2^{2} + 2^{3} + 2^{4} + \ldots + 2^{N}$ (which is $2^{N+1} – 1$) nodes.
+    \bigbreak \noindent 
+    Try to remember this pattern. When you have a recursive function that makes multiple calls, the runtime will often (but not always) look like $O(\text{branches}^{\text{depth}}) $ where branches is the number of time each recursive call branches. In this case, this gives us O(2N).
+    \bigbreak \noindent 
+    The space complexity of this algorithm will be $O(N)$. Although we have O(2N) function calls in the tree total, only $O(N)$ exist on the call stack at any given time. Therefore, we would only need to have $O(N)$ memory available.
+
+    \pagebreak 
+    \unsect{Shell sort}
+    \bigbreak \noindent 
+    \begin{concept}
+        Shell sort is an advanced variant of insertion sort. It first sorts elements that are far apart from each other and successively reduces the interval (gap) between the elements to be compared. The idea is to arrange the list of elements into a sequence of incrementally more sorted arrays, which are then finally sorted with a simple insertion sort.
+        \bigbreak \noindent 
+        The key concept in Shell sort is the use of an interval to compare elements. Initially, elements far apart are compared and swapped if necessary. As the algorithm progresses, the interval decreases, making the array more and more sorted, until the interval is 1. At an interval of 1, the algorithm is essentially performing a standard insertion sort, but by this time, the array is partially sorted, making the insertion sort more efficient.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int arr[] = {6,3,2,1,8};
+    int n = 5;
+
+    for (int iv=n/2; iv>0; iv/=2) {
+
+        for (int i=iv; i<n; ++i) {
+
+            int j;
+            int tmp = arr[i];
+            for (j = i; j>=iv && arr[j-iv] > tmp; j-=iv) {
+                arr[j] = arr[j-iv];
+            }
+            arr[j] = tmp;
+        }
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Quick Sort (Recursive)}
+    \bigbreak \noindent 
+    \begin{concept}
+        The quicksort algorithm is a divide and conquer algorithm. Quicksort first divides a large array into two smaller sub-arrays: the low elements and the high elements. Quicksort can then recursively sort the sub-arrays. The steps are:
+    \end{concept}
+    \begin{itemize}
+        \item Pick an element, called a pivot, from the array.
+        \item Reorder the array so that all elements with values less than the pivot come before the pivot, while all elements with values greater than the pivot come after it (equal values can go either way). After this reordering, the pivot is in its final, sorted position. This reordering is called the partition operation.
+        \item Recursively apply the above steps to the sub-array of elements with smaller values and separately to the sub-array of elements with greater values.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Base case}
+    \bigbreak \noindent 
+    The base case of the recursion is an array of size zero or one, which is in order by definition and requires no further sorting.
+    \bigbreak \noindent 
+    \subsection{Pivot selection}
+    \bigbreak \noindent The pivot selection and partitioning steps can be done in several different ways; the choice of specific implementation schemes greatly affects the algorithm's performance.
+
+    \bigbreak \noindent 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+
+    \subsubsection{What main calls}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    procedure quicksort(array : list of sortable items, n : length of list)
+        quicksort(array, 0, n - 1)
+    end procedure
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Recursive function}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    procedure quicksort(array : list of sortable items, start : first element of list,
+    end : last element of list)
+        if start < end
+            pivot_point ← partition(array, start, end)
+            quick_sort(array, start, pivot_point - 1)
+            quick_sort(array, pivot_point + 1, end)
+        end if
+    end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Partition function}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure partition(array : list of sortable items, start : first element of list,
+end : last element of list)
+    mid ← (start + end) / 2
+    swap array[start] and array[mid]
+
+    pivot_index ← start
+    pivot_value ← array[start]
+    
+    scan ← start + 1
+    while scan <= end
+        if array[scan] < pivot_value
+            pivot_index ← pivot_index + 1
+            swap array[pivot_index] and array[scan]
+        end if
+        scan ← scan + 1
+    end while
+
+    swap array[start] and array[pivot_index]
+
+    return pivot_index
+end procedure
+    \end{cppcode}
+
+
+    \pagebreak 
+    \subsection{Examples}
+    \bigbreak \noindent 
+    \begin{cppcode}
+int partition(int arr[], int start, int end) {
+    int pivot_index, pivot_value, mid, scan;
+
+    mid = (start + end) / 2;
+    std::swap(arr[start], arr[mid]);
+
+    pivot_index = start;
+    pivot_value = arr[start];
+
+    scan = start + 1;
+
+    while (scan <= end) {
+        if (arr[scan] < pivot_value) {
+            ++pivot_index;
+            std::swap(arr[pivot_index], arr[scan]);
+        }
+        ++scan;
+    }
+    std::swap(arr[start], arr[pivot_index]);
+
+    return pivot_index;
+}
+
+void quicksort(int arr[], int start, int end) {
+    int pivot_point;
+    if (start < end) {
+        pivot_point = partition(arr, start, end);
+        quicksort(arr, start, pivot_point - 1);
+        quicksort(arr, pivot_point + 1, end);
+    }
+}
+
+void quicksort(int arr[], int n) {
+    quicksort(arr, 0, n-1);
+}
+
+int main(int argc, const char* argv[]) {
+
+    int arr[]  = {3,6,1,9,12,7,36,24,18,4};
+    int n = 10;
+
+    quicksort(arr,n);
+
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Complexity}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Time Complexity:} $O(n \log_{}{n})$
+        \item \textbf{Space Complexity:} $O(\log_{}{n})$
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Merge Sort Algorithm}
+    \bigbreak \noindent 
+    \begin{concept}
+        Merge sort works as follows:
+        \begin{itemize}
+            \item Divide the unsorted list into n sublists, each containing one element. A list of one element is sorted by definition.
+            \item Repeatedly merge sorted sublists (called "runs") to produce longer runs until there is only one run remaining. This is the sorted list
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/merge.png}
+    \bigbreak \noindent 
+    This algorithm makes use of a variable length temporary array, which is most easily represented in C++ using the \textbf{vector} class from the standard library. When implementing the algorithm, include the following code at the top of the source file:
+    \pagebreak 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure merge_sort(array : list of sortable items, start : first element of list, 
+end : last element of list)
+    if start < end
+        mid ← (start + end) / 2
+    
+        merge_sort(array, start, mid)
+        merge_sort(array, mid + 1, end)
+    
+        merge(array, start, mid, end)
+    end if
+end procedure
+
+procedure merge(array : list of items to merge, start : first element of first sublist, mid : last element of first sublist,
+  end : last element of second sublist)
+    vector<int> temp(end - start + 1);
+
+    i ← start
+    j ← mid + 1
+    k ← 0
+    
+    while i <= mid and j <= end
+        if array[i] < array[j]
+            temp[k] ← array[i]
+            i ← i + 1
+        else
+            temp[k] ← array[j]
+            j ← j + 1
+        end if
+        k ← k + 1
+    end while
+    
+    while i <= mid
+        temp[k] ← array[i]
+        i ← i + 1
+        k ← k + 1
+    end while
+    
+    while j <= end
+        temp[k] ← array[j]
+        j ← j + 1
+        k ← k + 1
+    end while
+    
+    Copy the elements of the vector temp back into array
+end procedure
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+void merge(int arr[], int start, int mid, int end) {
+
+    vector<int> temp(end - start + 1);
+
+    int i,j,k;
+
+    i = start;
+    j = mid + 1;
+    k = 0;
+
+    while (i <= mid && j<= end) {
+        if (arr[i] < arr[j]) {
+            temp[k] = arr[i];
+            ++i;
+        } else {
+            temp[k] = arr[j];
+            ++j;
+        }
+        ++k;
+    }
+
+    while (i <= mid) {
+        temp[k] = arr[i];
+        ++i;
+        ++k;
+    }
+
+    while (j <= end) {
+        temp[k] = arr[j];
+        ++j;
+        ++k;
+    }
+
+    for ( i=start, j=0; i<=end; ++i, ++j) {
+        arr[i] = temp[j];
+    }
+}
+
+void merge_sort(int arr[], int start, int end) {
+
+    int mid;
+    if (start < end) {
+        mid = (start + end) / 2;
+
+        merge_sort(arr, start, mid);
+        merge_sort(arr, mid+1, end);
+
+        merge(arr, start, mid, end);
+    }
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Binary Heap}
+    \bigbreak \noindent 
+    \begin{concept}
+        A \textbf{binary heap} is a data structure that takes the form of binary tree with two additional constraints
+        \begin{itemize}
+            \item The binary tree must be complete or almost complete; that is, all levels of the tree, except possibly the last (deepest) one, are fully filled. If the last level of the tree is not complete, the nodes of that level are filled from left to right.
+            \item The key stored in each node is either greater than or equal to or less than or equal to the keys in the node’s children.
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+    A binary heap where the parent key is greater than or equal to the child keys is called a \textbf{max-heap}; a heap where the parent key is less than or equal to  the child keys is called a \textbf{min-heap.}
+    \bigbreak \noindent 
+    Because a binary heap is always a complete or almost complete binary tree, the tree nodes can be efficiently stored in an array with no wasted space. The top-level node (or root) of the tree is stored in the first element of the array. Then, for each node in the tree that is stored at subscript $k$. the node's left child can be stored at subscript $2k+1$ and the right child can be stored at subscript $2k+2 $.
+    \bigbreak \noindent 
+    \subsection{Example}
+    \begin{figure}[ht]
+        \centering
+        \incfig{heap}
+        \label{fig:heap}
+    \end{figure}
+    \pagebreak 
+    \subsection{Insertion}
+    \bigbreak \noindent 
+    When placing nodes, we first place the root. From there, we add from left to right.
+    \bigbreak \noindent 
+    When adding new nodes to the head, we place them at the bottom. However, this may lead to a violation in the trees order. In this case, we compare the newly inserted node to its parent, swapping them if necessary, we do this until the node is in the correct position.
+
+    \bigbreak \noindent 
+    \subsection{Binary heap imbalance}
+    \bigbreak \noindent 
+    It is not always possible to have a balanced heap. That is, for each level of the tree, each side has the same number of nodes. To account for this, we allow the left sub tree to hold one more than the right sub tree.
+    \bigbreak \noindent 
+    \subsection{Deletion}
+    \bigbreak \noindent 
+    Because the binary heap is designed to give us access to the minimum element (min-head), or maximum element (max-head), we can only delete the root node.
+    \bigbreak \noindent 
+    Once we delete the root node, you may notice that the shape is disrupted. That is, we no longer have a root node. To solve this, we first get the tree back to its correct shape, and then focus on the invariance.
+    \bigbreak \noindent 
+    \textbf{Note:} Invariance in a binary heap referes to the property that ensures the status of the min or max heap.
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Formulas for a binary heap}
+    \begin{itemize}
+        \item For any node at index $i$ is left and right children are at index positions
+            \begin{align*}
+                &2i + 1 \quad \text{(left child)} \\
+                &2i+2 \quad \text{(right child)}
+            .\end{align*}
+        \item For any node at index $i$ its parent is at index position
+            \begin{align*}
+                \frac{i-1}{2}
+            .\end{align*}
+        \item The index position of the last non-leaf node is given by 
+            \begin{align*}
+                \frac{n-2}{2}
+            .\end{align*}
+            Where $n$ is the number of elements in the binary heap
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{
+        Heap Sort
+    }
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Heapsort} is a comparison-based sorting algorithm that uses an implicit binary heap. Heapsort can be thought of as an improved selection sort: like selection sort, heapsort divides its input into a sorted and an unsorted region, and it iteratively shrinks the unsorted region by extracting the largest element from it and inserting it into the sorted region. Unlike selection sort, heapsort does not waste time with a linear-time scan of the unsorted region; rather, heap sort maintains the unsorted region in a heap data structure to find the largest element more quickly in each step.
+        \bigbreak \noindent 
+        The heapsort algorithm can be divided into two parts:
+        \begin{itemize}
+            \item In the first part, the elements of an unsorted array are rearranged to create a binary heap (a max-heap if the array is to be sorted in ascending order).
+            \item In the second part, a sorted array is created by repeatedly swapping the largest element from the heap (the root of the heap) with the last element of the heap and then decrementing the heap size (which effectively removes that element from the heap). The heap is updated after each removal to recreate the max-heap property. Once all elements have been removed from the heap, the result is a sorted array.
+        \end{itemize}
+    \end{concept}
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \subsection{Psuedocode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure heap_sort(array : list of sortable items, n : length of list)
+    // end : array subscript
+    // Build the heap in array so that largest value is at the
+    // root.
+    heapify(array, n);
+
+    end = n - 1
+
+    while end > 0
+        // array[0] is the root and largest value. The swap
+        // moves it in front of the sorted elements.
+        swap array[end] and array[0]
+
+        // The heap size is reduced by 1.
+        end = end - 1
+
+        // The swap ruined the heap property, so restore it.
+        sift_down(array, 0, end);
+    end while
+end procedure
+
+procedure heapify(array : list of sortable items, n : length of list)
+    // start : array subscript
+    start = (n - 2) / 2 // Find parent of last element of array
+    while start >= 0
+        // Sift down the value at subscript 'start' to the proper place
+        // such that all values below the start subscript are in max
+        // heap order
+
+        sift_down(array, start, n - 1)
+
+        // Go to next parent
+        start = start - 1
+    end while
+
+    // All elements are now in max heap order
+end procedure
+    \end{cppcode}
+
+    \pagebreak 
+    \bigbreak \noindent 
+    \begin{cppcode}
+procedure sift_down(array : list of sortable items, start : starting
+  subscript of heap, end : ending subscript of heap)
+    // root : array subscript
+    // largest : array subscript
+    // child : array subscript
+
+    // Repair the heap whose root element is at subscript 'start',
+    // assuming the heaps rooted at its children are valid
+
+    root = start
+
+    // While the root has at least one child
+    while (2 * root + 1) <= end
+        child = 2 * root + 1 // Left child of root
+        largest = root // Assume root is largest
+
+        // If left child is larger than root, left child is largest
+        if array[largest] < array[child]
+            largest = child
+        end if
+
+        // If there is a right child and it is greater than largest,
+        // right child is largest
+        if (child + 1) <= end and array[largest] < array[child+1]
+            largest = child + 1
+        end if
+
+        // If root is largest, no need to continue
+        if largest == root
+            return
+        else
+            swap array[root] and array[largest]
+            root = largest
+        end if
+
+    end while
+end procedure
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <utility>
+void heapify(int [], int n);
+void sift_down(int [], int, int);
+
+void heap_sort(int array[], int n) {
+	int end;
+	
+	heapify(array, n);
+	
+	end = n - 1;
+	
+	while(end > 0) {
+		std::swap(array[end], array[0]);
+		
+		end--;
+		
+		sift_down(array, 0, end);
+	}
+}
+void heapify(int array[], int n) {
+	int start = (n - 2)/2;
+	
+	while(start >= 0) {
+		sift_down(array, start, n-1);
+		start--;
+	}
+}
+void sift_down(int array[], int start, int end) {
+	int root = start;
+	int child;
+	int largest;
+	
+	while(2 * root + 1 <= end) {
+		child = 2 * root + 1;
+		largest = root;
+		
+		if(array[largest] < array[child]) {
+			largest = child;
+		}
+		if(child + 1 <= end && array[largest] < array[child + 1]) {
+			largest = child + 1;
+		}
+		if(largest == root) { return; } else {
+			std::swap(array[root], array[largest]);
+			root = largest;
+		}
+	}
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Linear search}
+        \subsection{The linear search}
+    \bigbreak \noindent 
+    The linear search is very simple, it uses a loop to sequentially step through an array, starting with the first element.
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int main(int argc, const char *argv[]) {
+
+    const int SIZE = 5;
+    int arr[SIZE] = {88,67,5,23,19};
+
+    int target = 5;
+
+    for (int i{0}; i <= SIZE + 1; ++i) {
+        if (i == SIZE + 1) {
+            cout << "Target not in array" << endl;
+        }
+        if ( arr[i] == target ) {
+            cout << "Target [" << target << "] found at index position " << i << endl;
+            break;
+        }
+    }
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int linearsearch(int arr[], int size, int target) {
+    int index{0}, position{-1};
+    bool found = false;
+
+    while (index < size && !found) {
+        if (arr[index] == target) {
+            position = index;
+            found = true;
+        }
+        ++index;
+    }
+    return position;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    \pagebreak
+    One drawback to the linear search is its potential inefficiency, its quite obvious to notice that for large arrays, the linear search will take a long time, if an array has 20,000 elements, and the target is at the end, then the search will have to compare 20,000 elements.
+    \pagebreak 
+    \unsect{Binary search}
+    \bigbreak \noindent 
+    The binary search algorithm is a clever approach to searching arrays. Instead of testing the array's first element, the algorithm starts with the leement in the middle. If that element happens to contain the desired value, then the search is over. Otherwise, the value in the middle element is either greater than or less than the value being searched for. If it is greater, then the desired value (if it is in the array), will be found somewhere in the first half of the array. If it is less, then the desired value, it will be found somewhere in the last half of the array. In either case, half of the array's elements have been eliminated from further searching.
+    \bigbreak \noindent 
+    \nt{The binary search algorithm requires the array to be sorted.}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    
+    \begin{cppcode}
+int binarysearch(int arr[], int size, int target) {
+    int first{0}, 
+        middle,
+        last = size -1,
+        position{-1};
+
+    bool found = false;
+
+    while (!found && first <= last) {
+        middle = (first + last) / 2;
+        if (arr[middle] == target) {
+            found = true;
+            position = middle;
+        } else if (target > arr[middle]) {
+            first = middle + 1;
+        } else {
+            last = middle - 1;
+        }
+    }
+    return position;
+}
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    Powers of twos are used to calculate the max number of comparisons the binary search will make on an array. Simply find the smallest power of 2 that is greater than or equal to the number of elements in the array. For example:
+    \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+    \begin{align*}
+        n = 50,000 \\
+        2^{15} = 32,768 \\
+        2^{16} = 65,536
+    .\end{align*}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        Thus, there are a maximum of 16 comparisons for a array of size 50,000
+    \end{minipage}
+
+    \pagebreak 
+    \unsect{Array Based Stack Implementation}
+    \bigbreak \noindent 
+    \begin{concept}
+        An array-based stack in C++ is a linear data structure that follows the Last In, First Out (LIFO) principle. This means the last element added to the stack will be the first one to be removed. Stacks can be implemented using various underlying data structures, but using an array is one of the most straightforward methods. In this implementation, the array holds the stack elements, and an integer variable (often named top) tracks the index of the last element inserted into the stack.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Data members}
+    \begin{itemize}
+        \item \textbf{stk\_array} - Stack array pointer. A pointer to the data type of the items stored in the stack; points to the first element of a dynamically-allocated array.
+        \item \textbf{stk\_capacity} - Stack capacity. The number of elements in the stack array.
+        \item \textbf{stk\_size} - Stack size. The number of items currently stored in the stack. The top item in the stack is always located at subscript stk\_size - 1. Member Functions
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor:} Sets stack to initial empty state. The stack capacity and stack size should be set to 0. The stack array pointer should be set to nullptr.
+        \item \textbf{size()} Returns the stack size.
+        \item \textbf{capacity()} Returns the stack capacity.
+        \item \textbf{empty()} Returns true if the stack size is 0; otherwise, false.
+        \item \textbf{clear()} Sets the stack size back to 0. Does not deallocate any dynamic storage.
+        \item \textbf{top()} Returns the top item of the stack (stk\_array[stk\_size - 1]).
+        \item \textbf{push()} Inserts a new item at the top of the stack.
+        \item \textbf{pop()} Removes the top item from the stack.
+        \item \textbf{Copy constructor} Similar to the copy constructor for the example Vector class in the notes on dynamic storage allocation.
+        \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation.
+        \item \textbf{Destructor} Deletes the stack array.
+        \item \textbf{reserve()} Reserves additional storage for the stack array.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Reference: Vector copy constructor}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector::Vector(const Vector& other)
+        {
+            // Step 1
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+
+            // Step 2
+            if (vCapacity > 0)
+            vArray = new int[vCapacity];
+            else
+            vArray = nullptr;
+
+            // Step 3
+            for (size_t i = 0; i < vSize; ++i)
+            vArray[i] = other.vArray[i];
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Reference: Vector copy assignment operator}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector& Vector::operator=(const Vector& other)
+        {
+            // Step 1
+        if (this != &other)
+        {
+            // Step 2
+            delete[] vArray;
+
+            // Step 3
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+
+            // Step 4
+            if (vCapacity > 0)
+            vArray = new int[vCapacity];
+            else
+            vArray = nullptr;
+
+
+            // Step 5
+            for (size_t i = 0; i < vSize; ++i)
+            vArray[i] = other.vArray[i];
+        }
+
+        // Step 6
+        return *this;
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Auxiliary: Vector move constructor}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Vector::Vector(Vector&& other)    // rvalue reference to a Vector
+        {
+            // Step 1 - "pilfer" other object's resources
+            vCapacity = other.vCapacity;
+            vSize = other.vSize;
+            vArray = other.vArray;
+
+            // Step 2 - set other object to default state
+            other.vCapacity = 0;
+            other.vSize = 0;
+            other.vArray = nullptr;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Array based stack example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class mystack {
+            // Pointer to dynamically allocated array for stack elements
+            char* m_stack = nullptr;
+            // Current capacity of the stack
+            size_t m_capacity = 0;
+            // Current number of elements in the stack
+            size_t m_size = 0;
+
+            public:
+            // Copy constructor
+            mystack(const mystack& x) {
+                // Copy capacity and size from source object
+                this->m_capacity = x.m_capacity;
+                this->m_size = x.m_size;
+
+                // Allocate memory if capacity is greater than 0
+                if (this->m_capacity > 0) {
+                    this->m_stack = new char[this->m_capacity];
+                } else {
+                    this->m_stack = nullptr;
+                }
+
+                // Copy the stack elements from source to this object
+                memcpy(this->m_stack, x.m_stack, x.m_size);
+            }
+
+            // Copy assignment operator
+            mystack& operator=(const mystack& x) {
+                // Allocate new memory space for the copy
+                this->m_capacity = x.m_capacity;
+                this->m_size = x.m_size;
+
+                if (this->m_capacity > 0) {
+                    this->m_stack = new char[this->m_capacity];
+                } else {
+                    this->m_stack = nullptr;
+                }
+
+                // Copy the elements
+                memcpy(this->m_stack, x.m_stack, x.m_size);
+
+                return *this; // Return a reference to the current object
+            }
+
+            // Returns the current capacity of the stack
+            size_t capacity() const {
+                return this->m_capacity;
+            }
+
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+        // Returns the current size of the stack
+        size_t size() const {
+            return this->m_size;
+        }
+
+        // Checks if the stack is empty
+        bool empty() const {
+            return this->m_size == 0;
+        }
+
+        // Clears the stack (does not deallocate memory)
+        void clear(){
+            this->m_size = 0;
+        }
+
+        // Ensures the stack has at least the specified capacity
+        void reserve(size_t n){
+            // Only proceed if the new capacity is greater than the current capacity
+            if (n <= this->m_capacity) { return; }
+
+            // Update the capacity
+            this->m_capacity = n;
+            // Allocate new memory
+            char* tmp = new char[this->m_capacity];
+            // Copy existing elements to the new memory
+            memcpy(tmp, this->m_stack, this->m_size);
+
+            // Delete old stack and update pointer
+            delete[] this->m_stack;
+            this->m_stack = tmp;
+        }
+
+        // Returns a reference to the top element of the stack
+        const char& top() const{
+            return this->m_stack[(this->m_size)-1];
+        }
+
+        // Adds a new element to the top of the stack
+        void push(char value){
+            // If the stack is full, increase its capacity
+            if (this->m_size == this->m_capacity) {
+                this->reserve((this->m_capacity == 0 ? 1 : this->m_capacity * 2));
+            }
+
+            // Add the new element and increment the size
+            this->m_stack[(this->m_size)++] = value;
+        }
+
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+        // Removes the top element from the stack
+        void pop(){
+            if (this->m_size > 0) {
+                --(this->m_size);
+            }
+        }
+
+        // Destructor: deallocates the dynamically allocated stack
+        ~mystack() {
+            delete[] this->m_stack;
+        }
+
+        // Friend function to output the contents of the stack to a stream
+        friend std::ostream& operator<<(std::ostream& os, const mystack& obj);
+    };
+
+    // Outputs the contents of the stack to a stream
+    std::ostream& operator<<(std::ostream& os, const mystack& obj) {
+        // Iterate through each element in the stack
+        for (size_t i = 0; i < obj.m_size; ++i) {
+            // Print the element, followed by a comma unless it's the last element
+            os << obj.m_stack[i] << (i == (obj.m_size - 1) ? "" : ", ");
+        }
+        return os;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Array based stack application: Infix to postfix conversion algorithm}
+    \bigbreak \noindent 
+    \begin{concept}
+       In computer science, the conversion of an expression from infix notation to postfix notation is a well-known problem that can be efficiently solved using an array-based stack. This process is crucial in computer science because computers can more easily evaluate expressions in postfix notation (also known as Reverse Polish Notation, RPN) than in infix notation.
+       \bigbreak \noindent 
+       \subsection{Infix Notation}
+       \bigbreak \noindent 
+       In infix notation, operators are written between the operands they operate on, e.g., $A+B$. While this notation is straightforward for human readers, it requires that the computer understand precedence rules and parentheses to evaluate expressions correctly.
+       \bigbreak \noindent 
+       \subsection{Postfix Notation}
+       \bigbreak \noindent 
+       In postfix notation, the operator follows all of its operands, e.g., $AB+$. This arrangement eliminates the need for parentheses to dictate order of operations; the order of the operators in the expression does the job instead. Evaluation of postfix expressions can be performed straightforwardly using a stack, making it very attractive for computer processing.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{The algorithm}
+The algorithm for converting an infix expression to a postfix expression using an array-based stack involves the following steps:
+
+\begin{enumerate}
+    \item Create a stack for storing characters and an empty string for the postfix expression.
+    
+    \item Iterate through each character of the infix expression.
+    
+    \begin{enumerate}[i.]
+        \item If the current character is a lowercase letter, append it to the postfix string followed by a space, and continue to the next character.
+        
+        \item If the current character is a digit, append all consecutive digits to the postfix string as part of the same number, add a space after the last digit, and then continue to the next character.
+        
+        \item If the current character is a space, simply continue to the next character without doing anything.
+        
+        \item If the current character is a left parenthesis `(`, push it onto the stack, and continue to the next character.
+        
+        \item If the current character is a right parenthesis `)`, repeatedly pop from the stack and append to the postfix string each character until a left parenthesis `(` is encountered. Pop the left parenthesis from the stack but do not append it to the postfix string. Add a space after each popped character.
+        
+        \item If the current character is an operator, pop from the stack and append to the postfix string all operators that have greater or equal precedence than the current operator. Add a space after each popped operator. Then, push the current operator onto the stack.
+    \end{enumerate}
+    
+    \item After the infix expression has been fully processed, pop and append all remaining operators from the stack to the postfix string, adding a space after each one.
+    
+    \item Return the resulting postfix string.
+\end{enumerate}
+\bigbreak \noindent 
+The \texttt{precedence} function assigns a numerical precedence level to operators, with unary negation and exponentiation having the highest precedence, followed by multiplication and division, and then addition and subtraction with the lowest precedence.
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \begin{cppcode}
+#include <cctype>
+#include "inpost.h"
+#include "mystack.h"
+std::string convert(const std::string& infix) {
+    mystack stack; // Create a stack for characters
+    std::string postfix = ""; // Create the return string
+    // Step through the infix string
+    for (auto it = infix.c_str(); *it; ++it) {
+        // Check if the character is lowercase
+        if (islower(*it)) {
+            // Append the current infix character to the return string
+            postfix += *it;
+            postfix += ' ';
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a digit
+        } else if (isdigit(*it)) {
+            // Keep going to get all the consecutive digits
+            while (isdigit(*it)) {
+                postfix += *it; // Append to the return string
+                ++it; // Proceed to the next character
+            }
+            postfix += ' '; // Tack on a space
+            --it; // Handle the extraneous increment
+
+        // Check if the character is a space
+        } else if (isspace(*it)) {
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a left parenthesis
+        } else if (*it == '(') {
+            stack.push(*it); // Push the current infix character onto the stack
+            continue; // Proceed to the next infix character
+
+        // Check if the character is a right parenthesis
+        } else if (*it == ')') {
+            // Loop while the stack is not empty and the character at the top of the stack is not a left parenthesis
+            while (stack.size() && stack.top() != '(') {
+                postfix+=stack.top(); // Append the character on the top of the stack to the return string
+                postfix += ' '; // Tack on a space
+                stack.pop(); // Pop the stack
+            }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+            // If the top of the stack is left parenthesis
+            if (stack.size()) {
+                stack.pop(); // pop the stack
+                continue; // Proceed to the next infix character
+            }
+
+        // The character is an operator
+        } else {
+
+            // While the stack is not empty, and the precedence of the current infix character is <= the precedence of the character at the top of the stack
+            while (stack.size() && (precedence(*it) <= precedence(stack.top()))) {
+                postfix += stack.top(); // Append the character on the top of the stack to the return string
+                postfix += ' '; // Tack on a space
+                stack.pop(); // Pop the stack
+            }
+
+            stack.push(*it); // Push the current infix character to the stack
+            continue; // Proceed to the next infix character
+        }
+    }
+
+    // While the stack is not empty
+    while (stack.size()) {
+        postfix += stack.top(); // Append the character on the top of the stack to the return string
+        postfix += ' '; // Tack on a space
+        stack.pop(); // Pop the stack
+    }
+
+    // Return the result
+    return postfix;
+
+}
+    \end{cppcode}
+    \pagebreak 
+    \begin{cppcode}
+unsigned precedence(const char& op) {
+
+    /*
+     The operators used, in order of precedence from highest to lowest are.
+        1. ~ (Unary negation) and ^ (Exponentiation)
+        2. * (Multiplication) and / (Division)
+        3. + (Addition) and - (Subtraction)
+    */
+
+    switch (op) {
+        case '~': case '^':
+            return 3;
+            break;
+        case '*': case '/':
+            return 2;
+            break;
+        case '+': case '-':
+            return 1;
+            break;
+        default:
+            return 0;
+    }
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Array based queue}
+    \bigbreak \noindent 
+    \begin{concept}
+        An array-based queue is a linear data structure that follows the First-In-First-Out (FIFO) principle, where elements are added (enqueued) at the rear end and removed (dequeued) from the front end. It uses an array to store the elements. 
+        \bigbreak \noindent 
+        In C++, we could implement an array-based queue as a class. To conserve space, we'll implement it as a "circular queue", an array in which the last position is logically connected back to the first position to make a circle. This is sometimes also called a "ring buffer".
+        \bigbreak \noindent 
+        \fig{1}{./figures/queue.png}
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsection{Data members}
+    \begin{itemize}
+        \item \textbf{q\_array} - Queue array pointer. A pointer to the data type of the items stored in the queue; points to the first element of a dynamically-allocated array.
+        \item \textbf{q\_capacity} - Queue capacity. The number of elements in the queue array.
+        \item \textbf{q\_size} - Queue size. The number of items currently stored in the queue.
+        \item \textbf{q\_front} - Queue front. The subscript of the front (or head) item in the queue.
+        \item \textbf{q\_back} - Queue back. The subscript of the back (or rear or tail) item in the queue.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor} Sets queue to initial empty state. The queue capacity and queue size should be set to 0. The queue array pointer should be set to nullptr. q\_front should be set to 0, while q\_back is set to q\_capacity - 1.
+        \item \textbf{size()} Returns the queue size.
+        \item \textbf{capacity()} Returns the queue capacity.
+        \item \textbf{empty()} Returns true if the queue size is 0; otherwise, false.
+        \item \textbf{clear()} Sets the queue size back to 0 and resets q\_front and q\_back to their initial values. Does not deallocate any dynamic storage or change the queue capacity.
+        \item \textbf{front()} Returns the front item of the queue (q\_array[q\_front]).
+        \item \textbf{back()} Returns the back item of the queue (q\_array[q\_back]).
+        \item \textbf{push()} Inserts a new item at the back of the queue.
+        \item \textbf{pop()} Removes the front item from the queue.
+        \item \textbf{Copy constructor Similar} to the copy constructor for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Destructor} Deletes the queue array.
+        \item \textbf{reserve()} Reserves additional storage for the queue array. The process of copying the original array contents into the new, larger array is complicated by the fact that the exact locations of the queue items within the queue array are unknown and that there is no guarantee that q\_front is less than q\_back.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{the push() operation described here is frequently called "enqueue" while the pop() operation is frequently called "dequeue".}
+
+    \bigbreak \noindent 
+    \subsection{Double-Ended Queue}
+    We can also easily implement a double-ended queue using an array. The push() operation becomes push\_back() while the pop() operation becomes pop\_front(). No other changes to the code previously described are required. The following two operations can be added to insert an item at the front of the double-ended queue and to remove an item from the back of the double-ended queue.
+    \begin{itemize}
+        \item \textbf{push\_front()} Inserts a new item at the front of the queue.
+        \item \textbf{pop\_back()} Removes the back item from the queue.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Singly-linked list}
+    \bigbreak \noindent 
+    \begin{concept}
+        A singly linked list is a linear data structure that consists of a sequence of elements, where each element is contained in a "node." The list is called "singly" linked because each node points to the next node in the sequence, forming a single chain of nodes. Unlike arrays, the elements in a singly linked list are not stored in contiguous memory locations; instead, each node contains a reference (or pointer) to the next node, allowing for dynamic memory usage and flexibility in adding or removing elements.
+        \bigbreak \noindent 
+        \subsection{Structure of a Node}
+        \bigbreak \noindent 
+        Each node in a singly linked list typically has two components:
+        \begin{itemize}
+            \item \textbf{Data:} The actual value or information that the node represents.
+            \item \textbf{Next:} A pointer (or reference) to the next node in the list.
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsection{Advantages}
+        \begin{itemize}
+            \item \textbf{Dynamic Size:} Unlike arrays, singly linked lists can easily grow or shrink in size, making efficient use of memory.
+            \item \textbf{Ease of Insertion/Deletion:} Adding or removing elements from a singly linked list does not require shifting elements, as in the case of arrays, making these operations potentially more efficient.
+        \end{itemize}
+        \bigbreak \noindent 
+        \subsection{Disadvantages}
+        \begin{itemize}
+            \item \textbf{Sequential Access:} Elements in a singly linked list can only be accessed sequentially, starting from the first node. This makes access times slower compared to arrays, which offer constant time access.
+            \item \textbf{Extra Memory:} Each node requires extra memory for the pointer, in addition to the data it holds.
+            \item \textbf{No Backward Traversal:} Since each node only points to the next node, it's not possible to traverse the list backward without additional structures or references.
+        \end{itemize}
+        \bigbreak \noindent 
+        Singly linked lists are a fundamental data structure, useful in scenarios where dynamic memory allocation is needed and the benefits of easy insertion/deletion outweigh the costs of slower access times and extra memory usage for pointers.
+    \end{concept}
+    \pagebreak 
+    \subsection{Sample node structure}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct node
+        {
+            data-type value;
+            node* next;
+
+            node(data-type value, node* next = nullptr)
+            {
+                this->value = value;
+                this->next = next;
+            }
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Class to represent a stack}
+    \bigbreak \noindent 
+    \subsubsection{Data members}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{stk\_top} - Stack top pointer. Pointer to the top (first) node in the linked list.
+        \item \textbf{stk\_size} - Number of items currently stored in the stack.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor} Sets stack to initial empty state. The stack top pointer should be set to nullptr. The stack size should be set to 0.
+        \item \textbf{size()} Returns the stack size.
+        \item \textbf{empty()} Returns true if the stack size is 0; otherwise, false.
+        \item \textbf{clear()} We can easily set the stack back to the empty state by repeatedly calling pop() until the stack is empty.
+        \item \textbf{top()} Returns the top item of the stack (stk\_top->value).
+        \item \textbf{push()} Inserts a new item at the top of the stack.
+        \item \textbf{pop()} Removes the top item from stack.
+        \item \textbf{Copy Constructor}
+        \item \textbf{Copy Assignment Operator}
+        \item \textbf{Destructor} We can delete all of the dynamic storage for the stack by calling the clear() member function.
+        \item \textbf{clone()} Copies the linked list from the stack x to this object.
+    \end{itemize}
+
+    \pagebreak
+    \subsection{Example (as a stack)}
+    \bigbreak \noindent 
+    \begin{cppcode}
+// Define a node structure for use in the mystack class
+struct node {
+    node* next = nullptr; // Pointer to the next node in the stack
+    int value = 0; // The value stored in this node
+
+    node() = default; // Default constructor
+    node(node* next, int value) : next(next), value(value) {}; // Constructor initializing members
+};
+
+// Define a class to represent a stack using a linked list
+class mystack {
+    node* stack_top = nullptr; // Pointer to the top node of the stack
+    size_t m_size = 0; // Current size of the stack
+
+public:
+    // Allow ostream to access private members of mystack for printing
+    friend std::ostream& operator<<(std::ostream& os, const mystack& obj);
+
+    // Copy constructor
+    mystack(const mystack& x) {
+        this->stack_top = nullptr; // Initialize stack_top to nullptr
+        this->m_size = x.size(); // Copy size from x
+        clear(); // Clear existing content
+        clone(x); // Deep copy nodes from x
+    }
+
+    // Copy assignment operator
+    mystack& operator=(const mystack& x) {
+        if (this != &x) { // Check for self-assignment
+            this->stack_top = nullptr; // Reset stack_top
+            this->m_size = x.size(); // Copy size from x
+            clear(); // Clear existing content
+            clone(x); // Deep copy nodes from x
+        }
+        return *this; // Return a reference to the current object
+    }
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{cppcode}
+    // Return the current size of the stack
+    size_t size() const {
+        return this->m_size;
+    }
+
+    // Check if the stack is empty
+    bool empty() const {
+        return this->m_size == 0;
+    }
+
+    // Remove the top element from the stack
+    void pop(){
+        node* del = this->stack_top; // Temporary pointer to the top node
+        this->stack_top = this->stack_top->next; // Move the top pointer to the next node
+        delete del; // Deallocate the removed node
+        (this->m_size)--; // Decrement the size of the stack
+    }
+
+    // Clear all elements from the stack
+    void clear(){
+        while (this->stack_top != nullptr) { // While there are nodes in the stack
+            this->pop(); // Remove the top node
+        }
+    }
+
+    // Access the value of the top element in the stack
+    const int& top() const{
+        return stack_top->value;
+    }
+
+    // Add a new element to the top of the stack
+    void push(int value){
+        node* new_node = new node(this->stack_top, value); // Create a new node with the given value
+        this->stack_top = new_node; // Make the new node the top of the stack
+        ++this->m_size; // Increment the size of the stack
+    }
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{cppcode}
+    // Clone the stack from another mystack object
+    void clone(const mystack& obj) {
+        if (obj.stack_top == nullptr) { // If the source stack is empty
+            this->stack_top = nullptr; // Make the current stack empty
+            return;
+        }
+        stack_top = new node(nullptr, obj.stack_top->value); // Copy the top node
+        node* src = obj.stack_top->next; // Pointer to traverse the source stack
+        node* dest = stack_top; // Pointer to build the current stack
+
+        while(src != nullptr) { // While there are more nodes to copy
+            dest->next = new node(nullptr, src->value); // Copy the node
+            dest = dest->next; // Move to the next node
+            src = src->next; // Move to the next source node
+        }
+        this->m_size = obj.m_size; // Copy the size
+    }
+
+    // Destructor to clean up the stack
+    ~mystack() {
+        this->clear(); // Clear the stack
+    }
+};
+
+// Overload the << operator to print the stack
+std::ostream& operator<<(std::ostream& os, const mystack& obj) {
+    node* current = obj.stack_top; // Start from the top of the stack
+
+    if (current == nullptr) { return os; }
+
+    while (current != nullptr) { // Iterate through the stack
+        os << current->value; // Print the current node's value
+        if (current->next != nullptr)
+                os << ", "; // If this is not the last node, print a comma and a space
+            }
+            current = current->next; // Move to the next node
+        }
+        return os;
+}
+    \end{cppcode}
+
+
+    
+
+
+    
+    
+    
+
+    
+
+
+
+
+
+
+
+    
+    
+\end{document}
