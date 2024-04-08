@@ -102,7 +102,7 @@
     \end{concept}
 
     \pagebreak 
-    \subsubsection{exit}
+    \subsection{exit}
     \bigbreak \noindent 
     \textbf{Signature}
     \bigbreak \noindent 
@@ -116,7 +116,7 @@
     \bigbreak \noindent 
 
     \bigbreak \noindent 
-    \subsubsection{system}
+    \subsection{system}
     \bigbreak \noindent 
     \textbf{Signature}
     \bigbreak \noindent 
@@ -142,11 +142,259 @@
         }
     \end{cppcode}
 
-    \pagebreak 
-    \unsect{Regular expressions library <regex.h>}
     \bigbreak \noindent 
-    \subsection{}
+    \subsection{Perror}
+    \bigbreak \noindent 
+    \begin{concept}
+       The perror function in C is a standard library function that prints a descriptive error message to the standard error stream (stderr). The message corresponds to the current value of the global variable errno, which is set by system calls and some library functions in the event of an error to indicate what went wrong. 
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    void void perror(const char *s);
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{s:} A C string containing a custom message to be printed before the error message itself. If this argument is not NULL, the string pointed to by s is printed first, followed by a colon (:) and a space. If s is an empty string or NULL, only the error message is printed.        
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Behavior}
+    \bigbreak \noindent 
+    \textbf{perror} produces a message on the standard error output, describing the last error encountered during a call to a system or library function. The actual error message printed by perror is system-dependent but generally reflects the error state represented by errno.
+    \bigbreak \noindent 
+    \subsubsection{Setting errno manually}
+    \bigbreak \noindent 
+    You can set errno simply by assigning it a value. First, you need to include the errno.h header to ensure that you have access to the errno variable and the standard error codes.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <errno.h>
 
+    errno = ENOENT; // No such file or directory
+    \end{cppcode}
+
+
+    
+
+
+    \pagebreak 
+    \unsect{Posix regex API <regex.h>}
+    \bigbreak \noindent 
+    \subsection{regcomp}
+    \bigbreak \noindent 
+    \begin{concept}
+        Compiles a regular expression into a format that the \textbf{regexec()} function can use to perform pattern matching.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+       int regcomp(regex_t *preg, const char *regex, int cflags) 
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{preg:} A pointer to a regex\_t structure that will store the compiled regular expression.
+        \item \textbf{regex:} The regular expression to compile.
+        \item \textbf{cflags:} Compilation flags that modify the behavior of the compilation. Common flags include REG\_EXTENDED (use extended regular expression syntax), REG\_ICASE (ignore case in match), REG\_NOSUB (don't report the match), and REG\_NEWLINE (newline-sensitive matching).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Regexec}
+    \bigbreak \noindent 
+    \begin{concept}
+        After compiling a regular expression, we can use regexec to match against strings.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+         int regexec(const regex\_t *preg, const char *string, size\_t nmatch, regmatch\_t pmatch[], int eflags)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{preg:} The compiled regular expression.
+        \item \textbf{string:} The string to match against the regular expression.
+        \item \textbf{nmatch:} The maximum number of matches and submatches to find.
+        \item \textbf{pmatch:} An array of regmatch\_t structures that will hold the offsets of matches and submatches.
+        \item \textbf{eflags:} Execution flags that modify the behavior of the match. A common flag is REG\_NOTBOL which indicates that the beginning of the specified string is not the beginning of a line.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Regerror}
+    \bigbreak \noindent 
+    \begin{concept}
+        This function translates error codes from regcomp() and regexec() into human-readable messages.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        size_t regerror(int errcode, const regex\_t *preg, char *errbuf, size\_t errbuf\_size)
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{errcode:} The error code returned by regcomp() or regexec().
+        \item \textbf{preg:} The compiled regular expression (if the error is related to regexec()).
+        \item \textbf{errbuf:} The buffer where the error message will be stored.
+        \item \textbf{errbuf\_size:} The size of the buffer.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Regfree}
+    \bigbreak \noindent 
+    \begin{concept}
+        Frees the memory allocated to the compiled regular expression.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void regfree(regex\_t *preg)
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{preg:} The compiled regular expression to free.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{regmatch\_t and pmatch}
+    \bigbreak \noindent 
+    \subsubsection{regmatch\_t}
+    \bigbreak \noindent 
+    regmatch\_t is a structure used to describe a single match (or submatch) found by regexec(). It contains at least the following two fields:
+    \begin{itemize}
+        \item \textbf{rm\_eo:} This is the end offset of the match, which is one more than the index of the last character of the match. In other words, rm\_eo - rm\_so gives the length of the match.
+        \item \textbf{rm\_so:} This is the start offset of the match, relative to the beginning of the string passed to regexec(). If the match is successful, rm\_so will be the index of the first character of the match.
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{pmatch array}
+    \bigbreak \noindent 
+    When you call regexec(), you can pass it an array of regmatch\_t structures as the pmatch argument. This array is where regexec() will store information about the matches (and submatches) it finds. The size of this array (nmatch) determines how many matches regexec() will look for and fill in. The zeroth element of this array corresponds to the entire pattern's match, and the subsequent elements correspond to parenthesized subexpressions (submatches) within the regular expression, in the order they appear.
+
+    \bigbreak \noindent 
+    \subsection{Regex Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        regex_t regex;
+        int reti;
+        char msgbuf[100];
+        regmatch_t pmatch[1]; // Array to store the match positions
+        const char* search = "abc";
+
+        // Compile regular expression
+        reti = regcomp(&regex, "^a[[:alnum:]]", REG_EXTENDED);
+        if (reti) {
+            fprintf(stderr, "Could not compile regex\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // Execute regular expression
+        // Note: Changed the third argument to 1 to indicate we want to capture up to 1 match
+        // and the fourth argument to pmatch to store the match position.
+        reti = regexec(&regex, search, 1, pmatch, 0);
+        if (!reti) {
+            printf("Match\n");
+            // If you want to use the match information, you can do so here.
+            // For example, to print the start and end positions of the match:
+            printf("Match at position %d to %d\n", (int)pmatch[0].rm_so, (int)pmatch[0].rm_eo - 1);
+        }
+        else if (reti == REG_NOMATCH) {
+            printf("No match\n");
+        }
+        else {
+            regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+            fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+            exit(EXIT_FAILURE);
+        }regex_t regex;
+    int reti;
+    char msgbuf[100];
+    regmatch_t pmatch[1]; // Array to store the match positions
+
+    // Compile regular expression
+    reti = regcomp(&regex, "^a[[:alnum:]]", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(EXIT_FAILURE);
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    // Execute regular expression
+    // Note: Changed the third argument to 1 to indicate we want to capture up to 1 match
+    // and the fourth argument to pmatch to store the match position.
+    reti = regexec(&regex, "abc", 1, pmatch, 0);
+    if (!reti) {
+        printf("Match\n");
+        // If you want to use the match information, you can do so here.
+        // For example, to print the start and end positions of the match:
+        printf("Match at position %d to %d\n", (int)pmatch[0].rm_so, (int)pmatch[0].rm_eo - 1);
+    }
+    else if (reti == REG_NOMATCH) {
+        printf("No match\n");
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(EXIT_FAILURE);
+    }
+
+    // Free the compiled regular expression
+    regfree(&regex);
+
+        for (int i=(int)pmatch[0].rm_so; i<=(int)pmatch[0].rm_eo; ++i) {
+            cout << search[i];
+        }
+        cout << endl;
+
+        regfree(&regex);
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Directory Input/Output <dirent.h>}
+    \bigbreak \noindent 
+    \subsection{Functions}
+    \begin{itemize}
+        \item \textbf{chdir(const char *path)} $\mapsto$ \texttt{int}: Changes the current working directory of the calling process to the directory specified in \texttt{path}. Returns zero on success, and -1 on failure, setting \texttt{errno} to indicate the error.
+        \item \textbf{getcwd(char *buf, size\_t size)} $\mapsto$ \texttt{char*}: Copies an absolute pathname of the current working directory to the array pointed to by \texttt{buf}, which is of length \texttt{size}. If \texttt{size} is large enough, returns \texttt{buf}; if \texttt{size} is too small, NULL is returned, and \texttt{errno} is set to \texttt{ERANGE}; on other errors, NULL is returned, and \texttt{errno} is set appropriately.
+        \item \textbf{opendir(const char *name)} $\mapsto$ \texttt{DIR*}: Opens a directory stream corresponding to the directory name, and returns a pointer to the directory stream. The stream is positioned at the first entry in the directory. Returns NULL if an error occurs, setting \texttt{errno} to indicate the error.
+        \item \textbf{readdir(DIR *dirp)} $\mapsto$ \texttt{struct dirent*}: Reads the next directory entry from the directory stream pointed to by \texttt{dirp}. Returns a pointer to a \texttt{struct dirent} representing the next directory entry, or NULL when reaching the end of the directory stream or if an error occurs.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{The DIR type}
+    \bigbreak \noindent 
+    The DIR type is an opaque data type that represents a directory stream. A directory stream is an ordered sequence of all the directory entries in a particular directory. Directory entries include files, subdirectories, and other types of file system objects contained in the directory.
+    \bigbreak \noindent 
+    You cannot see the structure of DIR directly, as it is hidden (opaque) to provide abstraction and portability across different operating systems and filesystems. This means you interact with directory streams using pointer variables of type DIR *, and you manipulate these streams through the functions provided by <dirent.h>, such as opendir(), readdir(), and closedir().
+    \bigbreak \noindent 
+    \subsection{dirent Structure}
+    \bigbreak \noindent 
+    The struct dirent structure represents an individual directory entry, which could be a file, a subdirectory, or another type of file system object. The exact contents of this structure can vary between different operating systems, but it generally includes the following members:
+
+    \begin{itemize}
+        \item \textbf{d\_ino:} The inode number of the directory entry. The inode number is a unique identifier within a filesystem.
+        \item \textbf{d\_name:} A character array (string)} containing the name of the directory entry. This name is not the full path, but just the filename or directory name.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    DIR* d;
+    struct dirent* dir;
+    d = opendir("."); // Open the current directory
+    
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir->d_name); // Print the name of each directory entry
+        }
+        closedir(d); // Close the directory stream
+    }
+
+    return 0;
+
+    \end{cppcode}
+
+
+
+
+
+    
     
 
     

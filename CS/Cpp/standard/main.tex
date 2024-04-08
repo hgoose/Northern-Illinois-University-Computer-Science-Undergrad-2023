@@ -863,7 +863,7 @@ int main() {
     \end{itemize}
 
     \pagebreak 
-    \unsect{Miscellaneous utilities: <cstdlib}
+    \unsect{Miscellaneous utilities: <cstdlib>}
     \bigbreak \noindent 
     \subsection{Process control}
     \begin{itemize}
@@ -876,6 +876,69 @@ int main() {
         \item \textbf{system(const char* command)} $\mapsto$ \texttt{int}: Calls the host environment's command processor (`/bin/sh` on Unix, `CMD.EXE` on Windows) with the specified command. Returns an implementation-defined value if successful, and a negative value if an error occurs or if the command processor is not available.
         \item \textbf{getenv(const char* name)} $\mapsto$ \texttt{char*}: Provides access to the list of environment variables. Returns a pointer to the value associated with the environment variable `name`, or `NULL` if the variable is not found. The returned pointer points to static data whose content should not be modified.
     \end{itemize}
+
+    \pagebreak 
+    \unsect{Posix regex API <regex.h>}
+    \bigbreak \noindent 
+    \nt{This is not the standard regex library}
+    \begin{itemize}
+        \item \textbf{regcomp(regex\_t *preg, const char *regex, int cflags)} $\mapsto$ \texttt{int}: Compiles a regular expression into a format that can be used for pattern matching. It stores the result in the object pointed to by \texttt{preg}. The \texttt{cflags} argument is used to customize the compilation process. Returns zero on success, and a non-zero error code on failure.
+        \item \textbf{regexec(const regex\_t *preg, const char *string, size\_t nmatch, regmatch\_t pmatch[], int eflags)} $\mapsto$ \texttt{int}: Matches a null-terminated string against the precompiled pattern specified by \texttt{preg}. \texttt{nmatch} and \texttt{pmatch} are used to specify how many matches to find and where to store them. The \texttt{eflags} argument can be used to modify the execution behavior. Returns zero if the regular expression matches; otherwise, returns a non-zero value indicating the error or mismatch.
+        \item \textbf{regerror(int errcode, const regex\_t *preg, char *errbuf, size\_t errbuf\_size)} $\mapsto$ \texttt{size\_t}: Translates an error code returned by `regcomp()` or `regexec()` into a human-readable error message. The error message is stored in `errbuf`, which is a buffer provided by the caller, with a maximum size specified by `errbuf\_size`. Returns the size of the error message (including the terminating null byte). If `errbuf\_size` is too small to hold the error message, the message is truncated but the return value still reflects the full length of the message.
+        \item \textbf{regfree(regex\_t *preg)} $\mapsto$ \texttt{void}: Frees any memory that was allocated by `regcomp()` for the compiled regular expression pointed to by `preg`. After calling `regfree()`, the `regex\_t` object should not be used again until it has been reinitialized by another call to `regcomp()`.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{
+        Directory Input/Output <dirent.h>
+    }
+    \begin{itemize}
+        \item \textbf{chdir(const char *path)} $\mapsto$ \texttt{int}: Changes the current working directory of the calling process to the directory specified in \texttt{path}. Returns zero on success, and -1 on failure, setting \texttt{errno} to indicate the error.
+        \item \textbf{getcwd(char *buf, size\_t size)} $\mapsto$ \texttt{char*}: Copies an absolute pathname of the current working directory to the array pointed to by \texttt{buf}, which is of length \texttt{size}. If \texttt{size} is large enough, returns \texttt{buf}; if \texttt{size} is too small, NULL is returned, and \texttt{errno} is set to \texttt{ERANGE}; on other errors, NULL is returned, and \texttt{errno} is set appropriately.
+        \item \textbf{opendir(const char *name)} $\mapsto$ \texttt{DIR*}: Opens a directory stream corresponding to the directory name, and returns a pointer to the directory stream. The stream is positioned at the first entry in the directory. Returns NULL if an error occurs, setting \texttt{errno} to indicate the error.
+        \item \textbf{readdir(DIR *dirp)} $\mapsto$ \texttt{struct dirent*}: Reads the next directory entry from the directory stream pointed to by \texttt{dirp}. Returns a pointer to a \texttt{struct dirent} representing the next directory entry, or NULL when reaching the end of the directory stream or if an error occurs.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{The DIR type}
+    \bigbreak \noindent 
+    The DIR type is an opaque data type that represents a directory stream. A directory stream is an ordered sequence of all the directory entries in a particular directory. Directory entries include files, subdirectories, and other types of file system objects contained in the directory.
+    \bigbreak \noindent 
+    You cannot see the structure of DIR directly, as it is hidden (opaque) to provide abstraction and portability across different operating systems and filesystems. This means you interact with directory streams using pointer variables of type DIR *, and you manipulate these streams through the functions provided by <dirent.h>, such as opendir(), readdir(), and closedir().
+    \bigbreak \noindent 
+    \subsection{dirent Structure}
+    \bigbreak \noindent 
+    The struct dirent structure represents an individual directory entry, which could be a file, a subdirectory, or another type of file system object. The exact contents of this structure can vary between different operating systems, but it generally includes the following members:
+
+    \begin{itemize}
+        \item \textbf{d\_ino:} The inode number of the directory entry. The inode number is a unique identifier within a filesystem.
+        \item \textbf{d\_name:} A character array (string)} containing the name of the directory entry. This name is not the full path, but just the filename or directory name.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    DIR* d;
+    struct dirent* dir;
+    d = opendir("."); // Open the current directory
+    
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir->d_name); // Print the name of each directory entry
+        }
+        closedir(d); // Close the directory stream
+    }
+
+    return 0;
+
+    \end{cppcode}
+
+    \pagebreak 
+
+
+
+
+
+
 
 
 

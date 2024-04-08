@@ -1,39 +1,23 @@
-    // Clone the stack from another mystack object
-    void clone(const mystack& obj) {
-        if (obj.stack_top == nullptr) { // If the source stack is empty
-            this->stack_top = nullptr; // Make the current stack empty
-            return;
-        }
-        stack_top = new node(nullptr, obj.stack_top->value); // Copy the top node
-        node* src = obj.stack_top->next; // Pointer to traverse the source stack
-        node* dest = stack_top; // Pointer to build the current stack
+        ostream& operator<<(ostream& os, const hash_table& obj)
+        {
+            os << "Index  Key    Value\n";
+            os << "===========================================================\n";
 
-        while(src != nullptr) { // While there are more nodes to copy
-            dest->next = new node(nullptr, src->value); // Copy the node
-            dest = dest->next; // Move to the next node
-            src = src->next; // Move to the next source node
-        }
-        this->m_size = obj.m_size; // Copy the size
-    }
+            for (int i = 0; i < obj.TABLE_SIZE; i++)
+            {
+                os << setfill(' ') << '[' << setw(2) << right << i << "]   ";
 
-    // Destructor to clean up the stack
-    ~mystack() {
-        this->clear(); // Clear the stack
-    }
-};
+                if (obj.table[i].state == EMPTY)
+                os << "EMPTY";
+                else if (obj.table[i].state == DELETED)
+                os << "DELETED";
+                else
+                os << setfill('0') << right << setw(4) << obj.table[i].key
+                << "   " << setfill(' ') << left << obj.table[i].value;
 
-// Overload the << operator to print the stack
-std::ostream& operator<<(std::ostream& os, const mystack& obj) {
-    node* current = obj.stack_top; // Start from the top of the stack
-
-    if (current == nullptr) { return os; }
-
-    while (current != nullptr) { // Iterate through the stack
-        os << current->value; // Print the current node's value
-        if (current->next != nullptr)
-                os << ", "; // If this is not the last node, print a comma and a space
+                os << endl;
             }
-            current = current->next; // Move to the next node
+
+            return os;
         }
-        return os;
-}
+

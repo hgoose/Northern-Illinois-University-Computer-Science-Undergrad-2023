@@ -1,0 +1,465 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Exam 2 prep}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Exam 2 prep}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           April 2, 2024 
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Preface}
+    \bigbreak \noindent 
+    \subsection{Structure}
+    Exam 2 consists of 30 questions. The breakdown by question type is:
+    \begin{itemize}
+        \item 4 True / False questions (1 point each, 4 points total)
+        \item 10 Multiple Choice questions (2 points each, 20 points total)
+        \item 6 Fill-in-the-Blank(s) questions (varying point values, 19 points total)
+        \item 10 Essay questions (definitions, coding, etc.) (varying point values, 57 points total)
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Topics}
+    The topics that are covered
+    \begin{itemize}
+        \item \textbf{C++ Pointers and References}
+        \item \textbf{C++ Variable Declarations }
+        \item \textbf{The const Keyword}
+        \item \textbf{Default Function Arguments }
+        \item \textbf{Function and Member Function Overloading }
+        \item \textbf{The this Pointer}
+        \item \textbf{The friend Keyword }
+        \item \textbf{Operator Overloading}
+        \item \textbf{Dynamic Storage Allocation}
+        \item \textbf{Destructor}
+        \item \textbf{Copy Constructor }
+        \item \textbf{Copy Assignment Operator }
+        \item \textbf{Abstract Data Type Definition}
+        \item \textbf{Stack and Queue ADTs}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Pointers}
+    \bigbreak \noindent 
+    \subsection{Types of pointers}
+    \begin{itemize}
+        \item Pointer
+            \bigbreak \noindent 
+            \begin{cppcode}
+            type* name;
+            \end{cppcode}
+        \item Pointer to constant data
+            \bigbreak \noindent 
+            \begin{cppcode}
+            const int* ptrToConst; // A pointer to a constant integer. You cannot change the integer value via ptrToConst.
+            int const* ptrToConstAlt; // Alternative syntax, identical meaning.
+            \end{cppcode}
+        \item Constant pointer
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int value = 5;
+            int* const constPtr = &value; // A constant pointer to an integer. You cannot change what constPtr points to after initialization.
+            \end{cppcode}
+        \item \textbf{Constant pointer to constant data}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            const int* const constPtrToConst = &value; // A constant pointer to a constant integer.
+            \end{cppcode}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Indirection operator (*)}
+    \bigbreak \noindent 
+    This operator is used to access the value at the address a pointer is holding. It "dereferences" the pointer.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int value = 5;
+        int* ptr = &value;
+        int dereferencedValue = *ptr; // dereferencedValue is now 5.
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{"Address of" operator (\&)}
+    \bigbreak \noindent 
+    This operator is used to obtain the memory address of a variable.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int value = 5;
+    int* ptr = &value; // ptr now holds the address of value.
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Relationship between a pointer and the variable it points to}
+    \bigbreak \noindent 
+    A pointer holds the memory address of another variable. Through the pointer, you can read or modify the value of the variable it points to (unless it's a pointer to constant data). The relationship is such that the pointer acts as a direct link to another variable's storage location in memory.
+
+    \pagebreak 
+    \unsect{The const keyword}
+    \bigbreak \noindent 
+    \subsection{Reference to const data and its restrictions}
+    \bigbreak \noindent 
+    A reference to const data is declared by placing the const keyword before the reference type. For example:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    const int& refToConst = someInt;
+    \end{cppcode}
+    \bigbreak \noindent 
+    In this declaration, refToConst is a reference to an int that cannot be modified through refToConst. It's important to note that the constness applies to the access path through the reference, not necessarily to the object itself. The original variable someInt could be modified through other means, but not through refToConst.
+    \bigbreak \noindent 
+    \subsubsection{Restrictions}
+    \bigbreak \noindent 
+    The primary restriction of a reference to const data is that you cannot modify the object it refers to through that reference.
+    \bigbreak \noindent 
+    A non-const reference cannot bind to temporary objects, but a const reference can. This feature is often used to extend the lifetime of a temporary object to the lifetime of the reference itself.
+    \bigbreak \noindent 
+     When passing objects to functions, using a reference to const data ensures that the function can read the object without copying it, but cannot modify it. This is a form of "read-only" access.
+
+     \bigbreak \noindent 
+     \subsection{Restrictions on const member functions}
+     \bigbreak \noindent 
+    In C++, const member functions are those that do not modify the object on which they are called. Marking a member function with const at the end of its declaration promises not to alter any member variables of the object or to call any non-const member functions that might. This constness applies to the *this pointer, making it a pointer to a const object, thereby preventing modification of any member variables directly or indirectly.
+    \bigbreak \noindent 
+    \subsection{Changing the Data Members of the Object}
+    \bigbreak \noindent 
+    In a const member function, you cannot modify any of the object's data members (except those marked as \textbf{mutable}). Attempting to do so will result in a compile-time error. This restriction is in place because the primary purpose of a const member function is to provide a guarantee that calling it will not alter the state of the object.
+    \bigbreak \noindent 
+    \subsection{Calling a Non-Const Member Function}
+    \bigbreak \noindent 
+    A const member function cannot call non-const member functions on the same object. This is because non-const member functions are not guaranteed to preserve the object's state—they may modify the object. Since a const member function promises not to alter the object, calling a function that could potentially change the object would violate this promise.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class MyClass {
+            public:
+            int value;
+            void modify() {
+                value = 10;
+            }
+            void tryModify() const {
+                modify(); // Error: 'this' argument to member function 'modify' has type 'const MyClass', but function is not marked const
+            }
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{An object that is not const can call a const member function or a non-const member
+        function. An object that is const (or a pointer to a const object or a reference to a const
+        object) can \textbf{only} call member functions that are const. }
+
+    \pagebreak 
+    \unsect{Default function arguments}
+    \bigbreak \noindent 
+    To specify a default value for a parameter, you include an equals sign (=) followed by the default value in the function declaration. Default parameters must be the trailing parameters in the function signature; once you give a parameter a default value, all subsequent parameters in that function must also have default values.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void displayMessage(const std::string& message, bool newline = true) {
+            std::cout << message;
+            if (newline) std::cout << std::endl;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{ If a function is declared before it is defined (such as in a header file), the default parameters should be specified in the declaration, not the definition. This helps to avoid confusion and ensures that the function signature is consistent across different translation units.}
+
+    \pagebreak 
+    \unsect{Function and Member Function Overloading }
+    \bigbreak \noindent 
+    \subsection{Criteria}
+    \bigbreak \noindent 
+    know the criteria used by the compiler to distinguish between two or more functions or member functions with the same name and in the same scope:
+    \begin{itemize}
+        \item The number of arguments
+        \item The data types of the arguments
+        \item The order of the data types
+        \item Whether or not a member function is const
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Note that the return data type of the function is not one of the criteria used.}
+
+    \pagebreak 
+    \unsect{Aspects of an Operator That Cannot Be Changed by Operator Overloading}
+    \begin{itemize}
+        \item \textbf{Precedence:} The precedence of an operator determines how expressions involving multiple operators are parsed. For example, * has higher precedence than +, so a + b * c is treated as a + (b * c). Operator precedence is fixed and cannot be altered through overloading.
+        \item \textbf{Number of Arguments:} Operators inherently have a fixed arity. Unary operators (like !, &, + (unary plus), and - (unary minus)) operate on one operand. Binary operators (like +, -, *, /) operate on two operands. Overloading an operator does not change the number of operands it works with.
+        \item \textbf{Direction of Evaluation:} The order in which the operands of an operator are evaluated is determined by the language's evaluation strategy and cannot be changed by overloading. For most operators in C++, the evaluation order is unspecified.
+        \item \textbf{Behavior with Built-in Types:} Overloading an operator for a custom class or struct does not affect how that operator works with built-in types. For example, overloading + for your class does not change how + works for integers or other built-in types.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Must be overloaded as member functions}
+    \begin{itemize}
+        \item Assignment operator (=)
+        \item Subscript operator ([])
+        \item Function call operator (())
+        \item Member access operators (->, ->*)
+        \item Any compound assignment operators (like +=, -=, etc.) technically don't have to be member functions, but in practice, they are implemented as members to modify the object's state directly.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{When an operator function is implemented as a member, the leftmost operand must be a class object (or a reference to a class object) of the operator's class.}
+
+    \bigbreak \noindent 
+    \subsection{Must be overloaded as standalone functions}
+    \bigbreak \noindent 
+    For operators other than the ones described above, overloaded operator functions can be member functions or standalone functions that are not part of a class.
+    \bigbreak \noindent 
+    If the left operand of an overloaded operator is an object of a C++ standard library class or is not an object at all, then the operator function must be implemented as a standalone function. A standalone operator function is usually made a friend of the class to improve performance by avoiding the overhead of calls to accessor and mutator methods.
+    \bigbreak \noindent 
+    \subsection{Function Call Generated by the Compiler}
+    \bigbreak \noindent 
+    When you overload an operator, the compiler translates uses of that operator into function calls. The way this translation occurs depends on whether the operator is overloaded as a member function or a standalone function.
+    \bigbreak \noindent 
+    \subsubsection{Member Function Operator Overload}
+    \bigbreak \noindent 
+     If the operator is overloaded as a member function, the object on the left-hand side of the operator is used to invoke the member function, and the right-hand side operand is passed as an argument to the function.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         class MyClass {
+             public:
+             MyClass operator+(const MyClass& rhs) const; // Member function
+         };
+
+         MyClass a, b, c;
+         c = a + b; // Translates to c = a.operator+(b);
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Standalone Function Operator Overload}
+     \bigbreak \noindent 
+     If the operator is overloaded as a standalone function, both operands are passed as arguments to the function.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         class MyClass {
+             // friend declaration is often used for standalone overloads to allow access to private members
+             friend MyClass operator+(const MyClass& lhs, const MyClass& rhs);
+         };
+
+         MyClass a, b, c;
+         c = a + b; // Translates to c = operator+(a, b);
+     \end{cppcode}
+
+     \pagebreak 
+     \unsect{Dynamic Class members}
+     \bigbreak \noindent 
+     A “shallow” copy of an object copies only the object but not the dynamic storage that it owns. A “deep” copy of an object copies the object and the dynamic storage that it owns.
+\bigbreak \noindent 
+     A class that allocates dynamic storage for one or more of its data members requires coding all three of following member functions:
+     \begin{itemize}
+         \item Destructor
+         \item Copy constructor
+         \item Copy assignment operator
+     \end{itemize}
+
+     \pagebreak 
+     \unsect{Copy constructor}
+     \bigbreak \noindent 
+     \subsection{Situations which may result in a call to the copy constructor}
+     \begin{enumerate}
+         \item When an object is declared and initialized with another object of the same class
+         \item When an object is passed by value
+         \item When an object is returned by value
+     \end{enumerate}
+
+     \pagebreak 
+     \subsection{Copy constructor and copy assignment operator}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         class c {
+             size_t sz = 0;
+             int* a = nullptr;
+             public:
+             c() = default;
+             ~c() {
+                 delete[] a;
+             }
+
+             c(int arr[], size_t sz) {
+                 this->sz = sz;
+                 int* tmp = new int[this->sz];
+                 for (size_t i=0; i<sz; ++i) {
+                     tmp[i] = arr[i];
+                 }
+                 this->a = tmp;
+             }
+
+             c(const c& obj) {
+                 this->sz = obj.sz;
+                 int* tmp = new int[obj.sz];
+
+                 for (size_t i = 0; i<obj.sz; ++i) {
+                     tmp[i] = obj.a[i];
+                 }
+                 this->a = tmp;
+             }
+
+             c& operator=(const c& obj) {
+                 if (this != &obj) {
+                     delete[] this->a; // Free old memory
+
+                     this->sz = obj.sz;
+                     int* tmp = new int[obj.sz];
+
+                     for (size_t i = 0; i<obj.sz; ++i) {
+                         tmp[i] = obj.a[i];
+                     }
+                     this->a = tmp;
+                 }
+                 return *this;
+             }
+         };
+     \end{cppcode}
+
+     \pagebreak 
+     \unsect{Abstract Data Type Definition }
+     \bigbreak \noindent 
+     An abstract data type is a data type defined in terms of what data may be stored and the
+     operations that may be performed on it. It does not specify how the data is represented in
+     memory.
+
+     \pagebreak 
+     \unsect{ADTs}
+     \bigbreak \noindent 
+     \subsection{Stack ADT}
+     \bigbreak \noindent 
+     \subsubsection{Principle}
+     \bigbreak \noindent 
+     The array based stack follows the LIFO (last in first out) principle. This means that items are inserted at the top of the stack and removed from the top of the stack.
+     \bigbreak \noindent 
+     \subsubsection{Data Members}
+     \begin{itemize}
+         \item \textbf{stk\_array} - Stack array pointer. A pointer to the data type of the items stored in the stack; points to the first element of a dynamically-allocated array.
+         \item \textbf{stk\_capacity} - Stack capacity. The number of elements in the stack array.
+         \item \textbf{stk\_size} - Stack size. The number of items currently stored in the stack. The top item in the stack is always located at subscript stk\_size - 1. Member Functions
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{Member functions}
+     \begin{itemize}
+         \item \textbf{Default constructor:} Sets stack to initial empty state. The stack capacity and stack size should be set to 0. The stack array pointer should be set to nullptr.
+         \item \textbf{size()} Returns the stack size.
+         \item \textbf{capacity()} Returns the stack capacity.
+         \item \textbf{empty()} Returns true if the stack size is 0; otherwise, false.
+         \item \textbf{clear()} Sets the stack size back to 0. Does not deallocate any dynamic storage.
+         \item \textbf{top()} Returns the top item of the stack (stk\_array[stk\_size - 1]).
+         \item \textbf{push()} Inserts a new item at the top of the stack.
+         \item \textbf{pop()} Removes the top item from the stack.
+         \item \textbf{Copy constructor} Similar to the copy constructor for the example Vector class in the notes on dynamic storage allocation.
+         \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation.
+         \item \textbf{Destructor} Deletes the stack array.
+         \item \textbf{reserve()} Reserves additional storage for the stack array.
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Queue ADT}
+     \bigbreak \noindent 
+     \subsubsection{Principle}
+     \bigbreak \noindent 
+     The queue follows the FIFO (first in first out) principle. This means items are inserted at the back of the queue and removed from the front.
+     \bigbreak \noindent 
+     \subsubsection{Data Members}
+     \begin{itemize}
+        \item \textbf{q\_array} - Queue array pointer. A pointer to the data type of the items stored in the queue; points to the first element of a dynamically-allocated array.
+        \item \textbf{q\_capacity} - Queue capacity. The number of elements in the queue array.
+        \item \textbf{q\_size} - Queue size. The number of items currently stored in the queue.
+        \item \textbf{q\_front} - Queue front. The subscript of the front (or head) item in the queue.
+        \item \textbf{q\_back} - Queue back. The subscript of the back (or rear or tail) item in the queue.
+    \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{Member functions}
+\subsection{Member Functions}
+    \begin{itemize}
+        \item \textbf{Default constructor} Sets queue to initial empty state. The queue capacity and queue size should be set to 0. The queue array pointer should be set to nullptr. q\_front should be set to 0, while q\_back is set to q\_capacity - 1.
+        \item \textbf{size()} Returns the queue size.
+        \item \textbf{capacity()} Returns the queue capacity.
+        \item \textbf{empty()} Returns true if the queue size is 0; otherwise, false.
+        \item \textbf{clear()} Sets the queue size back to 0 and resets q\_front and q\_back to their initial values. Does not deallocate any dynamic storage or change the queue capacity.
+        \item \textbf{front()} Returns the front item of the queue (q\_array[q\_front]).
+        \item \textbf{back()} Returns the back item of the queue (q\_array[q\_back]).
+        \item \textbf{push()} Inserts a new item at the back of the queue.
+        \item \textbf{pop()} Removes the front item from the queue.
+        \item \textbf{Copy constructor Similar} to the copy constructor for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Copy assignment operator} Similar to the copy assignment operator for the example Vector class in the notes on dynamic storage allocation. A key difference is that we cannot assume that the items in the queue are stored in elements 0 to q\_size - 1 the way we can in the Vector or an array-based stack. It is therefore necessary to copy the entire queue array.
+        \item \textbf{Destructor} Deletes the queue array.
+        \item \textbf{reserve()} Reserves additional storage for the queue array. The process of copying the original array contents into the new, larger array is complicated by the fact that the exact locations of the queue items within the queue array are unknown and that there is no guarantee that q\_front is less than q\_back.
+    \end{itemize}
+
+
+     \bigbreak \noindent 
+     \subsection{Common errors in the stack and queue}
+     \bigbreak \noindent 
+     \subsubsection{Underflow}
+     \begin{itemize}
+         \item \textbf{Stack Underflow:} This happens when calling pop() or top() on an empty stack. The pop() function tries to remove the top element of the stack, and top() tries to access the top element without removing it. If the stack is empty, there's no top element to access or remove, leading to an underflow condition.
+         \item \textbf{Queue Underflow:} Similar to stack underflow, this occurs when calling pop() or front() on an empty queue. The pop() function (or dequeue() in some implementations) attempts to remove the front element, and front() tries to access the front element. If the queue is empty, these operations cannot be completed, resulting in underflow.
+     \end{itemize}
+     \bigbreak \noindent 
+     \nt{Stack underflow happens when we try to pop (remove) an item from the stack, when nothing is actually there to remove. This will raise an alarm of sorts in the computer because we told it to do something that cannot be done.}
+
+     \bigbreak \noindent 
+     \subsubsection{Access Errors on Empty Structures}
+     \bigbreak \noindent 
+     While not always classified separately from underflow errors, trying to access the front or back of an empty queue, or the top of an empty stack, without removing elements, can also lead to errors. These are specific cases of underflow where the error is due to an attempt to read from an empty structure rather than to modify it.
+     \begin{itemize}
+         \item \textbf{Accessing the Top of an Empty Stack:} Invoking top() on an empty stack does not modify the stack but still results in an error because there's no element to return.
+         \item \textbf{Accessing the Front or Back of an Empty Queue:} Similarly, calling front() or back() on an empty queue tries to access elements that do not exist, leading to errors.        
+     \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+\end{document}
