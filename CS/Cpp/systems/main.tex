@@ -62,7 +62,7 @@
     \pagebreak 
     \unsect{C Library Functions}
     \bigbreak \noindent 
-    \subsection{cstdlib utils}}
+    \subsection{cstdlib utils}
     \bigbreak \noindent 
     \subsection{getenv}
     \bigbreak \noindent 
@@ -369,7 +369,7 @@
 
     \begin{itemize}
         \item \textbf{d\_ino:} The inode number of the directory entry. The inode number is a unique identifier within a filesystem.
-        \item \textbf{d\_name:} A character array (string)} containing the name of the directory entry. This name is not the full path, but just the filename or directory name.
+        \item \textbf{d\_name:} A character array (string) containing the name of the directory entry. This name is not the full path, but just the filename or directory name.
     \end{itemize}
     \bigbreak \noindent 
     \subsubsection{Example}
@@ -389,6 +389,292 @@
     return 0;
 
     \end{cppcode}
+
+    \pagebreak 
+    \unsect{Unix System Calls <sys/stat.h>}
+    \bigbreak \noindent 
+    \begin{concept}
+       A system call is how a program requests services from the operating system. System calls execute code in the kernel and makes direct use of facilities provided by the kernel. Verus a library function which is linked to the executable, hence it becomes part of the executable.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{System Call Categories}
+    \bigbreak \noindent 
+    \subsubsection{File management}
+    \begin{itemize}
+        \item Create/delete file, open/close, read/write, get/set attributes 
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Process Control}
+    \begin{itemize}
+        \item Create/terminate process, wait/signal event, allocate/free memory
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Communication}
+    \begin{itemize}
+        \item Create/delete connection, send/recieve messages, remote devices
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Device management}
+    \begin{itemize}
+        \item Attach/request/release/detach device, read/write/position
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{System Call Invocation}
+    \begin{itemize}
+        \item Declare system call via appropriate C header file
+        \item Prepare parametrs using basic C data types
+        \item Prepare suitable return value variable
+    \end{itemize}
+    \bigbreak \noindent 
+    Then we call like any other function.
+
+    \pagebreak 
+    \unsect{File Management}
+    \begin{itemize}
+        \item \textbf{Open}: Open a file
+        \item \textbf{Read}: Read data from a file
+        \item \textbf{Write}: Write data to a file
+        \item \textbf{Close}: Close a file
+        \item \textbf{creat}:  Make a new file
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{All calls share file descriptor, ie number to identify file}
+
+    \bigbreak \noindent 
+    \subsection{Open}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int open(const char* pathname, int flags)
+    \end{cppcode}
+    \begin{itemize}
+        \item Opens file specified as \textbf{pathname} for access
+        \item Flags determine access type
+            \begin{itemize}
+                \item \textbf{O\_RDONLY}: Read only
+                \item \textbf{O\_WRONLY}: Write only
+                \item \textbf{O\_RDWR}: Read and write
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns file descriptor, to be used in read/write/close, returns -1 on error}
+    \bigbreak \noindent 
+    \subsubsection{Additonal flags, used with O\_WRONlY}
+    \begin{itemize}
+        \item \textbf{O\_APPEND}: To append to an existing file
+        \item \textbf{O\_TRUNC}: existing file will be overwritten (Default)
+        \item \textbf{O\_CREAT}: Creates file, if file does not exist
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Example:}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    O_WRONLY | O_TRUNC 
+    O_WRONLY | O_APPEND 
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Open with mode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int open(const char* pathname, int flags, mode_t mode)
+    \end{cppcode}
+    \bigbreak \noindent 
+    The parameter \textbf{mode} is used to specify permissions of type mode\_t
+    \begin{itemize}
+        \item \textbf{S\_IRWXU (00700)}: User has read, write, and execute permissions
+        \item \textbf{S\_IRUSR (00400)}: User has read permissions
+        \item \textbf{S\_IWUSR (00200)}: User has read, write, and execute permissions
+        \item \textbf{S\_IXUSR (00100)}: User has write permissions
+        \item \textbf{S\_IRWXG (00070)}: User has execute permissions
+        \item \textbf{S\_IRWXO (00007)}: Others have read, write, and execute permissions
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    open("ex.txt", O_WRONLY | O_APPEND | O_CREAT, 00666)
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Read}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    ssize_t read(int fd, void* buf, size_t count)
+    \end{cppcode}
+    \begin{itemize}
+        \item Attempts to read \textbf{count} bytes from file descriptor \textbf{fd} into the buffer starting at \textbf{buf}
+            \begin{itemize}
+                \item \textbf{Note:} ssize\_t is like size\_t can also be -1
+            \end{itemize}
+        \item Returns the number of bytes read
+            \begin{itemize}
+                \item May be smaller than count, zero indicates end of file
+                \item file position is advanced by this number
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns -1 on error}
+
+    \bigbreak \noindent 
+    \subsection{Close}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int close(int fd)
+    \end{cppcode}
+    \begin{itemize}
+        \item Closes file specified by \textbf{fd} file descriptor, makes file descriptor available
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns 0 on success}
+
+    \bigbreak \noindent 
+    \subsection{Write}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        ssize_t write(int fd, const void* buf, size_t count)
+    \end{cppcode}
+    \begin{itemize}
+        \item Writes up to \textbf{count} bytes from buffer starting at \textbf{buf} to the file referred to by file descriptor \textbf{fd}
+        \item \textbf{Returns the number of bytes written}
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns -1 on error}
+
+    \bigbreak \noindent 
+    \subsection{Creat}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int creat(const char* pathname, mode_t mode)
+    \end{cppcode}
+    \begin{itemize}
+        \item Creates new file specified as pathname and opens file for write access
+        \item \textbf{mode} specifies permissions of type mode\_t
+        \item returns file descriptor
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns -1 on error}
+
+    \pagebreak 
+    \unsect{I/O Management}
+    \begin{itemize}
+        \item \textbf{unlink}: Remove file
+        \item \textbf{dup}: Duplicate file descriptor
+        \item \textbf{stat}: Get file information
+        \item \textbf{chmod}: Change permissions
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Unlink}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int unlink(const char* pathname)
+    \end{cppcode}
+    \begin{itemize}
+        \item Removes a \textbf{pathname} from the file system
+        \item If \textbf{pathname} was the last link to a file, then it is deleted
+        \item If \textbf{pathname} refers to a symbolic link, then it is removed
+        \item Returns zero on success
+    \end{itemize}
+    \nt{Returns -1 on error}
+
+    \bigbreak \noindent 
+    \subsection{Dup}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int dup(int oldfd)
+    \end{cppcode}
+    \begin{itemize}
+        \item Creates a copy of file descriptor \textbf{oldfd}
+        \item Uses lowest-numbered unused descriptor
+        \item Returns a new file descriptor
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{Returns -1 on error}
+
+    \bigbreak \noindent 
+    \subsection{Stat}
+    \begin{concept}
+        Family of system calls to inquire about a file
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int stat(const char* path, struct stat* buf) // Takes pathname
+    int fstat(int fd, struct stat* buf) // Takes file descriptor
+    int lstat(const char* path, struct stat* buf) // Reports on symbolic link as is
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct stat  {
+            dev_t       st_dev;         /* ID of device containing file */ 
+            ino_t       st_ino;         /* inode number */ 
+            mode_t      st_mode;        /* file mode: contains permissions */ 
+            nlink_t     st_nlink;       /* number of hard links  * /
+            uid_t       st_uid;         /* user ID of owner */ 
+            gid_t       st_gid;         /* group ID of owner  * /
+            dev_t       st_rdev;        /* device ID (if special file) */ 
+            off_t       st_size;        /* total size, in bytes */ 
+            blksize_t   st_blksize;     /* blocksize for file system I/O */ 
+            blkcnt_t    st_blocks;      /* number of blocks allocated */ 
+            time_t      st_atime;       /* time of last access */ 
+            time_t      st_mtime;       /* time of last modification */
+            time_t      st_otime;       /* time of last status change */ 
+        };
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsubsection{stat structure st\_mode field}
+        \bigbreak \noindent 
+        This contains the file mode, including permissions
+        \bigbreak \noindent 
+        To check permissions:
+        \begin{itemize}
+            \item \textbf{st\_mode \& S\_IRUSR}: User has read permissions
+            \item \textbf{st\_mode \& S\_IWUSR}: User has write permissions
+            \item \textbf{st\_mode \& S\_IXUSR}: User has execute permissions
+        \end{itemize}
+        \bigbreak \noindent 
+        To check file type:
+        \begin{itemize}
+            \item \textbf{S\_ISREG(st\_mode)}: It is a regular file
+            \item \textbf{S\_ISDIR(st\_mode)}: It is a directory
+            \item \textbf{S\_IFLNK(st\_mode)}: It is a symbolic link
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsection{Chmod}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int chmod(const char* path, mode_t mode)
+        \end{cppcode}
+        \begin{itemize}
+            \item Change permission settings for file given in \textbf{path} string
+            \item new file permissions are specified in \textbf{mode}
+            \item Returns zero on success, or -1 on error
+        \end{itemize}
+        \bigbreak \noindent 
+        \nt{Must be called by owner of file, or superuser, returns -1 on error}
+
+        \bigbreak \noindent 
+        \subsection{Fchmod}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int fchmod(int fd, mode_t mode)
+        \end{cppcode}
+        \begin{itemize}
+            \item Change permission settings for file given in \textbf{fd}
+            \item new file permissions are specified in \textbf{mode}
+            \item Returns zero, or -1 on error
+        \end{itemize}
+        \bigbreak \noindent 
+        \nt{Must be called by owner of file, or superuser, returns -1 on error}
+        \bigbreak \noindent 
+        \subsubsection{Permission modes}
+        \bigbreak \noindent 
+        \fig{1}{./figures/1.png}
+
+    
 
 
 

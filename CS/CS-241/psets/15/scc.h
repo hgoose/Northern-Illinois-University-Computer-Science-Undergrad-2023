@@ -1,13 +1,16 @@
 #ifndef SCC_H
 #define SCC_H
 
-//**************************************************************************
+//********************************************************************
 //
 //  scc.h
-//  CSCI 241 Assignment 9
-//  Created by your-name (your-zid)
+//  CSCI 241 Assignment 15
+//  Created by Nate Warner z2004109
 //
-//**************************************************************************
+//********************************************************************
+
+#include <sstream>
+#include <string>
 
 /**
  * Symbol table entry.
@@ -51,7 +54,21 @@ private:
     int next_const_or_var_addr = MEMORY_SIZE - 1;
     int next_symbol_table_idx = 0;
     
-    // Add additonal private member functions as desired.
+    // Add additional private member functions as desired.
+    void handle_input(std::istringstream&);
+    void handle_data(std::istringstream&);
+    void handle_let(std::istringstream&, const std::string&);
+    void handle_goto(std::istringstream&);
+    void handle_if(std::istringstream&);
+    void handle_print(std::istringstream&);
+    void handle_end();
+
+    void memory_check() const;
+    void data_check() const;
+    void stack_space_check(int) const;
+
+    int get_symbol_location(const std::string&);
+    int search_symbol_table(int, char) const;
 };
 
 #endif

@@ -7,7 +7,7 @@
     
 # Compiler variables
 CXX = g++
-CXXFLAGS = -Wall -Werror -ansi -pedantic -std=c++14
+CXXFLAGS = -Wall -Werror -ansi -pedantic -std=c++14 -g
         
 # Rule to link object code files to create executable file
 scc: main.o scc.o inpost.o mystack.o
