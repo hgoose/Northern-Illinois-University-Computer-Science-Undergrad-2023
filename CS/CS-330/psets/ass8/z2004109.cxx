@@ -56,16 +56,8 @@ int main(int argc, const char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    if (fileStat.st_mode & S_IRUSR 
-            || fileStat.st_mode & S_IWUSR 
-            || fileStat.st_mode & S_IXUSR 
-            || fileStat.st_mode & S_IRGRP 
-            || fileStat.st_mode & S_IWGRP 
-            || fileStat.st_mode & S_IXGRP 
-            || fileStat.st_mode & S_IROTH 
-            || fileStat.st_mode & S_IWOTH 
-            || fileStat.st_mode & S_IXOTH) {
-        std::cerr <<  out_file << " is not secure. Ignoring" << endl;
+    if (fileStat.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) {
+        std::cerr <<  out_file << "is not secure. Ignoring" << endl;
     }
 
     if (chmod(out_file, S_IWUSR) < 0) {
