@@ -674,8 +674,343 @@
         \bigbreak \noindent 
         \fig{1}{./figures/1.png}
 
-    
+        \pagebreak 
+        \unsect{Processes and Pipe}
+        \bigbreak \noindent 
+        \subsection{System call: fork}
+        \bigbreak \noindent 
+        \begin{concept}
+            Fork creates a new process that is a duplicate of a current process. The new process is almost the same as current process.
+            \bigbreak \noindent 
+            New process is \textbf{child} of current process. Old process is \textbf{parent} of new process
+            \bigbreak \noindent 
+            After the call to fork, both processes run concurrently
+        \end{concept}
+        \bigbreak \noindent 
+        \subsubsection{Signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            pid_t fork(void);
+        \end{cppcode}
+        \bigbreak \noindent 
+        \subsubsection{Return values}
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item \textbf{Parent:} fork returns process id of child process
+            \item \textbf{Child:} fork returns zero
+            \item fork returns -1 on failure
+        \end{itemize}
+        
+        \bigbreak \noindent 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            cout << "Before fork\n";
 
+            pid_t pid = fork();
+
+            if (pid == -1) {
+                perror("Error: ");
+                exit(EXIT_FAILURE);
+            }
+            cout << "After fork\n";
+            cout << "Hello world" << endl;
+
+            /* Output:
+                Before fork
+                After fork
+                Hello world
+                After fork
+                Hello world
+            */
+        \end{cppcode}
+        \bigbreak \noindent 
+
+        \bigbreak \noindent 
+        \subsubsection{Example with typical branching logic}
+        \bigbreak \noindent 
+        \begin{cppcode}
+           pid_t pid = fork();
+           if (pid == 0) {
+               // Child code here
+           } else {
+               // Parent code here
+           }
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsection{System call: wait}
+        \bigbreak \noindent 
+        \begin{concept}
+           Wait lets parent process wait until a child process terminates, parent is resumed onec child process terminates 
+        \end{concept}
+        \bigbreak \noindent 
+        \subsubsection{Signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            pid_t wait(int* status);
+        \end{cppcode}
+        \bigbreak \noindent 
+        Where \textit{status} holds exit status of child
+        \bigbreak \noindent 
+        \subsubsection{WEXITSTATUS(status)}
+        \bigbreak \noindent 
+        This function allows us to examine \textit{status} (the parameter in the fork call).
+
+        \bigbreak \noindent 
+        \subsubsection{Returns}
+        \bigbreak \noindent 
+        Wait returns process id of terminated child, or -1 if there is no child to wait for.
+
+        \pagebreak 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        pid_t pid, status;
+
+        cout << "Before fork\n";
+
+        fork();
+
+        pid = wait(&status)
+
+        if (pid == -1) {
+            cout << "Nothing to wait for \n";
+        } else {
+            cout << "Done waiting for: " << pid << endl;
+        }
+
+        cout << "After fork\n";
+
+        /* Output:
+             Before fork
+             Nothing to wait for 
+             After fork
+             Done waiting for: 66983
+             After fork
+        */
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsubsection{Understanding the output of the example}
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item \textbf{Before the fork() call:} The program begins execution and prints "Before fork". At this point, there is only one process running—the parent process.
+            \item \textbf{The fork() system call:} This call creates a new process, referred to as the child process. After fork() is executed, there are now two processes in execution: the parent and the child. Both processes will execute the code following the fork() call, but in their separate memory spaces.
+
+            \item \textbf{The wait(&status) system call:}
+                \begin{itemize}
+                    \item This is used by a process to wait for one of its child processes to exit or to be terminated. The call also retrieves the exit status of the child.
+                    \item \textbf{In the parent process:} The wait() call will block the parent process until the child process finishes its execution. The pid variable will receive the process ID of the terminated child. Therefore, the parent process will print "Done waiting for: ", followed by the PID of the child process.
+                    \item \textbf{In the child process:} There is no call to fork(), so wait() immediately returns with a value of -1, indicating that there are no child processes to wait for (since the child process itself hasn't created any child processes). As a result, the child process prints "Nothing to wait for \n".
+                \end{itemize}
+            \item \textbf{After the wait() call:} Both processes continue execution. The child process, having printed "Nothing to wait for \n", will print "After fork\n" and then terminate. The parent process, after waiting for the child to terminate and printing the message indicating it is done waiting, will also print "After fork\n" before finishing execution.
+        \end{enumerate}
+
+        \bigbreak \noindent 
+        \subsection{System call: exec}
+        \bigbreak \noindent 
+        \begin{concept}
+            Family of functions that replace current process image with a new process image.
+            \bigbreak \noindent 
+            The \textbf{actual} system call is \textit{execve}
+        \end{concept}
+
+        \bigbreak \noindent 
+        \subsubsection{Function}
+        \begin{itemize}
+            \item \textbf{execl}: Specify arguments and environment as list
+            \item \textbf{execlp}: Specify arguments and environment as list, look for new executable via PATH
+            \item \textbf{execle}: Specify arguments and environment as list
+            \item \textbf{execv}: Specify arguments and environment as array of string values
+            \item \textbf{execvp}: Specify arguments and environment as array of string values, look for new executable via PATH
+        \end{itemize}
+
+
+        \bigbreak \noindent 
+        \subsubsection{Signatures}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int execl(const char *path, const char *arg, ..., NULL);
+            int execle(const char *path, const char *arg, ..., NULL, char * const envp[]);
+            int execv(const char *path, char *const argv[]);
+            int execlp(const char *file, const char *arg, ..., NULL);
+            int execvp(const char *file, char *const argv[]);
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsubsection{Returns}
+        \bigbreak \noindent 
+        These functions return -1 on error and does not return on success
+        \bigbreak \noindent 
+        \nt{Does not return on success because the calling process's image is entirely replaced}
+        
+        \pagebreak 
+        \subsubsection{Example: execl}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int rs;
+        cout << "Proram started in process: " << getpid() << endl;
+
+        rs = execl("/bin/ps", "ps", (char*) NULL);
+
+        if (rs == -1) {
+            perror("excel");
+            exit(rs);
+        }
+        cout << "Maybe we see this?\n";
+        \end{cppcode}
+        
+        \bigbreak \noindent 
+        \subsection{getpid() and getppid() functions}
+        \bigbreak \noindent 
+        getpid() returns the process ID of the current process. It never throws any error therefore is always successful.
+        \bigbreak \noindent 
+        getppid() returns the process ID of the parent of the calling process. If the calling process was created by the fork() function and the parent process still exists at the time of the getppid function call, this function returns the process ID of the parent process. Otherwise, this function returns a value of 1 which is the process id for init process.
+        \bigbreak \noindent 
+        \subsubsection{Signatures}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            #include <unistd.h>
+            pid_t getpid(void)
+            pid_t getppid(void)
+        \end{cppcode}
+        \bigbreak \noindent 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int pid = fork(); 
+            if (pid == 0) {
+                cout << "\nCurrent process id of Process : " 
+                     << getpid() << endl; 
+            }
+        \end{cppcode}
+        \bigbreak \noindent 
+        \subsection{Together: fork and exec}
+        \bigbreak \noindent 
+        Unix does not have a single system call to spawn a new additional process with a new executable, instead
+        \begin{enumerate}
+            \item fork to duplicate current process
+            \item exec to morph child process into new executable
+        \end{enumerate}
+
+        \bigbreak \noindent 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int rs, pid, status;
+
+        pid = fork();
+        if (pid == -1) {
+            perror("fork");
+            exit(pid);
+        }
+        if (pid == 0) {  // Child process
+            rs = execvp("echo", argv);
+            if (rs == -1) {
+                perror("execvp");
+                exit(rs);
+            }
+        } else { // Parent process
+            cout << "Done waiting for: " << wait(&status) << endl;
+        }
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsection{Unix Pipe: Pipe system call}
+        \bigbreak \noindent 
+        The \textbf{software pipeline} is a set of processes chained by their standard IO. The output of one process becomes the input of second process
+        \bigbreak \noindent 
+        Implemented via \textbf{pipe} system call.
+        \bigbreak \noindent 
+        \subsubsection{signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int pipe(int pipefd[2])
+        \end{cppcode}
+        \bigbreak \noindent 
+        This system call has two directions: one side to write, one side to read
+        \begin{itemize}
+            \item \textbf{read side}: pipefd[0]
+            \item \textbf{write side}: pipefd[1]
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            cout << "Before pipe\n";
+
+            int pipefd[2], rs;
+
+            rs=pipe(pipefd);
+            if (rs == -1) {
+                perror("pipe");
+                exit(EXIT_FAILURE);
+            }
+
+            write(pipefd[1],"Hello", 6);
+
+            char buffer[256];
+            read(pipefd[0], buffer, sizeof(buffer));
+
+            cout << "pipe contained: " << buffer << endl;
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsection{Process communication: pipe and fork}
+        \bigbreak \noindent 
+        Idea: read and write end of pipe in different processes
+        \bigbreak \noindent 
+        Fork creates two processes 
+        \begin{itemize}
+            \item \textbf{Parent process}:
+                \begin{itemize}
+                    \item Close read end of pipe
+                    \item Write to write end of pipe
+                \end{itemize}
+            \item \textbf{Child process}:
+                \begin{itemize}
+                    \item close write end of pipe
+                    \item read from read end of pipe
+                \end{itemize}
+        \end{itemize}
+
+        \pagebreak 
+        \subsubsection{Example}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int pipefd[2], rs;
+            char buffer[256];
+
+            // create pipe
+            rs = pipe(pipefd);
+            if (rs == -1) { perror("pipe"); exit(EXIT_FAILURE); }
+            cout << "pipe created\n";
+
+            // fork into 2 processes
+            rs = fork();
+            if (rs == -1) { perror("fork"); exit(EXIT_FAILURE); }
+
+            if (rs == 0) { // child process	
+                // close write end of pipe
+                close(pipefd[1]);
+                // read from read end of pipe
+                read(pipefd[0], buffer, sizeof(buffer));
+                cout << "Child: pipe contained: " << buffer << endl;			
+            } else {  // parent process	
+                // close read end of pipe
+                close(pipefd[0]);
+                // write to write end of pipe
+                write(pipefd[1],"Hello", 6);
+                wait(NULL);	
+                cout << "parent resumes after wait for child\n";
+            }	
+        \end{cppcode}
+
+        
+
+    
 
 
 

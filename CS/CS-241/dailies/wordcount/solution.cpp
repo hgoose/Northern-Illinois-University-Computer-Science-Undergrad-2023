@@ -17,7 +17,6 @@ bool wc(const string& file_name, int& lines, int& words, int& characters) {
         return false;
     }
 
-    
     // String to hold entire line, and each word
     string line, s_tmp;
 

@@ -1,0 +1,142 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Second Cpp Notes}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Extended CPP Notes}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           April 17, 2024 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Templates}
+    \bigbreak \noindent 
+    \subsection{Class vs typename keyword}
+    \bigbreak \noindent 
+    The choice between using \textbf{class} and \textbf{typename} in template declarations in C++ is largely a matter of style and historical context, as both keywords serve the same purpose
+
+    \bigbreak \noindent 
+    \subsection{Handle friend functions}
+    \bigbreak \noindent 
+
+    \subsubsection{Friendship to a Non-Template Function}
+    \bigbreak \noindent 
+    This is straightforward. You directly declare a non-template function as a friend inside your template class. This grants that specific function access to all instances of the template class, regardless of the type parameter.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename T>
+        class MyClass {
+            friend void someFunction(MyClass<T>&);
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{Friendship to a Template Function}
+    \bigbreak \noindent 
+    More commonly, you want a template function to be a friend to a template class. This allows each instantiation of the function template to access the corresponding instantiation of the class template.To achieve this, you need to forward declare the function template and then declare it as a friend inside your class template. The tricky part is that the syntax for declaring a template function as a friend inside a template class can vary based on what you're trying to achieve:
+    \pagebreak \bigbreak \noindent 
+    \textbf{How to forward declare:}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    class myclass;
+
+    template<typename T>
+    void foo(myclass<T>&); 
+
+
+    template<typename T>
+    class myclass {
+
+    public:
+        friend void foo <T>(const myclass<T>& obj);
+    };
+
+template <typename T>
+void foo(myclass<T>& obj) {
+    // Define
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{Different types:}
+    \begin{itemize}
+        \item More general form used when you want the friendship to apply to all instantiations of the function template
+            \bigbreak \noindent 
+            \begin{cppcode}
+                template <typename T>
+                class MyClass {
+                    friend void someFunction<>(MyClass<T>&); // Specific instantiation
+                };
+            \end{cppcode}
+        \item All instantiations of the function template are friends:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                template <typename T>
+                class MyClass {
+                    template <typename U>
+                    friend void someFunction(MyClass<U>&); // All instantiations
+                };
+            \end{cppcode}
+        \item This form ties the friendship to the specific template instantiation of both MyClass and someFunction using the same template argument T. The function template that takes the same template parameters:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                template <typename T>
+                class MyClass {
+                    friend void someFunction<T>(MyClass<T>&); // Matched instantiation
+                };
+            \end{cppcode}
+
+
+
+    \end{itemize}
+    
+\end{document}
