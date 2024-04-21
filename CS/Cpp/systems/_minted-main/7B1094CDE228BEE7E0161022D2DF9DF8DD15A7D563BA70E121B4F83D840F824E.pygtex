@@ -1,0 +1,27 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+
+\PYG{+w}{    }\PYG{c+c1}{// create pipe}
+\PYG{+w}{	}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{];}
+\PYG{+w}{	}\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{pipe}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{);}
+\PYG{+w}{	}\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{perror}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}pipe\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{exit}\PYG{p}{(}\PYG{n}{EXIT\PYGZus{}FAILURE}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{	}\PYG{c+c1}{// fork into 2 processes}
+\PYG{+w}{	}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{fork}\PYG{p}{();}
+\PYG{+w}{	}\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{perror}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}fork\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{exit}\PYG{p}{(}\PYG{n}{EXIT\PYGZus{}FAILURE}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{	}\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{c+c1}{// child process	1}
+
+\PYG{+w}{		}\PYG{c+c1}{// close read end of pipe, keep write end open}
+\PYG{+w}{		}\PYG{n}{close}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]);}
+\PYG{+w}{		}\PYG{c+c1}{// close standard output}
+\PYG{+w}{		}\PYG{n}{close}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{);}
+\PYG{+w}{		}\PYG{c+c1}{// duplicate write end of pipe into standard output}
+\PYG{+w}{		}\PYG{n}{dup}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]);}
+\PYG{+w}{		}\PYG{c+c1}{// close write end of pipe}
+\PYG{+w}{		}\PYG{n}{close}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]);}\PYG{+w}{		}
+\PYG{+w}{		}\PYG{c+c1}{// run first command}
+\PYG{+w}{		}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{execlp}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}ls\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}ls\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{char}\PYG{o}{*}\PYG{p}{)}\PYG{n+nb}{NULL}\PYG{p}{);}
+\PYG{+w}{		}\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{perror}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}execlp\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{exit}\PYG{p}{(}\PYG{n}{EXIT\PYGZus{}FAILURE}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{	}
+
+\PYG{+w}{	}\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

@@ -1008,6 +1008,174 @@
             }	
         \end{cppcode}
 
+        \pagebreak 
+        \subsection{Implementing unix pipe, goal: ls | wc}
+        \bigbreak \noindent 
+        \begin{cppcode}
+
+    // create pipe
+	int pipefd[2];
+	int rs = pipe(pipefd);
+	if (rs == -1) { perror("pipe"); exit(EXIT_FAILURE); }
+	
+	// fork into 2 processes
+	rs = fork();
+	if (rs == -1) { perror("fork"); exit(EXIT_FAILURE); }
+
+	if (rs == 0) { // child process	1
+			
+		// close read end of pipe, keep write end open
+		close(pipefd[0]);
+		// close standard output
+		close(1);
+		// duplicate write end of pipe into standard output
+		dup(pipefd[1]);
+		// close write end of pipe
+		close(pipefd[1]);		
+		// run first command
+		rs = execlp("ls", "ls", (char*)NULL);
+		if (rs == -1) { perror("execlp"); exit(EXIT_FAILURE); }	
+				
+	} 
+        \end{cppcode}
+        \pagebreak 
+        \begin{cppcode}
+            else {  // parent process
+                // close write end of pipe, keep read end open
+                close(pipefd[1]);
+
+                // fork into 2 processes
+                rs = fork();
+                if (rs == -1) { perror("fork"); exit(EXIT_FAILURE); }
+
+                if (rs == 0) { // child process	2
+                    // close standard input
+                    close(0);
+                    // duplicate read end of pipe into standard input
+                    dup(pipefd[0]);
+                    // close read end of pipe
+                    close(pipefd[0]);
+
+                    // run second command
+                    rs = execlp("wc", "wc", (char*)NULL);
+                    if (rs == -1) { perror("execlp"); exit(EXIT_FAILURE); }
+
+                } else { // parent process
+
+                    // close read end of pipe
+                    close(pipefd[0]);
+
+                    wait(NULL); // for first child
+                    wait(NULL); // for second child
+                    cout << "Parent done\n";
+
+                }
+            }
+        \end{cppcode}
+
+        \pagebreak 
+        \unsect{
+            C-Style user input
+        }
+        \bigbreak \noindent 
+        \begin{concept}
+            Getting user input in C can be done in several ways, depending on the type of input you want to capture. The standard library provides functions like scanf, getchar, and fgets for this purpose. Below are examples of how to use each to get user input.
+        \end{concept}
+        \bigbreak \noindent 
+        \subsection{Scanf}
+        \bigbreak \noindent 
+        scanf is used to read formatted input from stdin. It's useful for reading specific types of data directly into variables, but it requires careful handling to avoid security issues and ensure good user experience.
+        \bigbreak \noindent 
+        \subsubsection{Signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int scanf(const char *format, ...);
+        \end{cppcode}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int number;
+            printf("Enter a number: ");
+            scanf("%d", &number);
+            printf("You entered: %d\n", number);
+            return 0;
+        \end{cppcode}
+        \bigbreak \noindent 
+        \nt{scanf can lead to issues if the input doesn't match the expected format. It's often better to read a whole line of input and then parse it.}
+        \bigbreak \noindent 
+        \subsection{getchar}
+        \bigbreak \noindent 
+        getchar reads a single character from stdin. It's useful for capturing single keystrokes.
+        \bigbreak \noindent 
+        \subsubsection{Signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int getchar(void);
+        \end{cppcode}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            char ch;
+            printf("Press a key: ");
+            ch = getchar();
+            printf("You pressed: %c\n", ch);
+            return 0;
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsection{fgets}
+        \bigbreak \noindent 
+        fgets reads a string from stdin. It's safer than scanf for string input as it allows you to specify a maximum length, reducing the risk of buffer overflow.
+        \bigbreak \noindent 
+        \subsubsection{Signature}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        char* fgets(char *str, int num, FILE *stream);
+        \end{cppcode}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            char str[100];
+            printf("Enter a string: ");
+            fgets(str, 100, stdin);
+            printf("You entered: %s", str);
+            return 0;
+        \end{cppcode}
+        \bigbreak \noindent 
+        \nt{fgets includes the newline character (\textbackslash n) in the buffer if there's space, so you might want to remove it after capturing input.}
+
+        \bigbreak \noindent 
+        \subsection{Continously capture input}
+        \bigbreak \noindent 
+        To continuously get user input in a loop until a special string, such as "exit", is entered, you can use fgets to read the input into a buffer and then compare the input with the special string. Here’s an example using strcmp to compare strings. Remember, fgets captures the newline character when the user presses enter, so you might want to remove that from the input before comparing.
+        \bigbreak \noindent 
+        \begin{cppcode}
+    char input[100]; // Buffer to hold the input
+
+    // Prompt the user
+    printf("Enter text (type 'exit' to quit): ");
+
+    // fgets reads until a newline or EOF. It keeps the newline, so we'll need to remove it.
+    while (fgets(input, sizeof(input), stdin)) {
+        // Remove newline character, if present
+        input[strcspn(input, "\n")] = 0;
+
+        // Check if the input is "exit"
+        if (strcmp(input, "exit") == 0) {
+            printf("Exiting...\n");
+            break;
+        }
+
+        // Echo the input back to the user
+        printf("You entered: %s\n", input);
+        printf("Enter text (type 'exit' to quit): ");
+    }
+        \end{cppcode}
+
+
+
+
+        
+
+
+
         
 
     

@@ -1,0 +1,33 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{else}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{  }\PYG{c+c1}{// parent process}
+\PYG{+w}{    }\PYG{c+c1}{// close write end of pipe, keep read end open}
+\PYG{+w}{    }\PYG{n}{close}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]);}
+
+\PYG{+w}{    }\PYG{c+c1}{// fork into 2 processes}
+\PYG{+w}{    }\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{fork}\PYG{p}{();}
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{perror}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}fork\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{exit}\PYG{p}{(}\PYG{n}{EXIT\PYGZus{}FAILURE}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{c+c1}{// child process	2}
+\PYG{+w}{        }\PYG{c+c1}{// close standard input}
+\PYG{+w}{        }\PYG{n}{close}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{);}
+\PYG{+w}{        }\PYG{c+c1}{// duplicate read end of pipe into standard input}
+\PYG{+w}{        }\PYG{n}{dup}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]);}
+\PYG{+w}{        }\PYG{c+c1}{// close read end of pipe}
+\PYG{+w}{        }\PYG{n}{close}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]);}
+
+\PYG{+w}{        }\PYG{c+c1}{// run second command}
+\PYG{+w}{        }\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{execlp}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}wc\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}wc\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{char}\PYG{o}{*}\PYG{p}{)}\PYG{n+nb}{NULL}\PYG{p}{);}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rs}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n}{perror}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}execlp\PYGZdq{}}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{exit}\PYG{p}{(}\PYG{n}{EXIT\PYGZus{}FAILURE}\PYG{p}{);}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{c+c1}{// parent process}
+
+\PYG{+w}{        }\PYG{c+c1}{// close read end of pipe}
+\PYG{+w}{        }\PYG{n}{close}\PYG{p}{(}\PYG{n}{pipefd}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]);}
+
+\PYG{+w}{        }\PYG{n}{wait}\PYG{p}{(}\PYG{n+nb}{NULL}\PYG{p}{);}\PYG{+w}{ }\PYG{c+c1}{// for first child}
+\PYG{+w}{        }\PYG{n}{wait}\PYG{p}{(}\PYG{n+nb}{NULL}\PYG{p}{);}\PYG{+w}{ }\PYG{c+c1}{// for second child}
+\PYG{+w}{        }\PYG{n}{cout}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}Parent done}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}
