@@ -1,0 +1,1291 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Unix and Network Programming}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Unix and Network Programming} \\
+           With Linux and C++
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           February 16, 2023 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Commands}
+    \begin{itemize}
+        \item \textbf{more, less, pg}: Display contents of file one page at a time
+        \item \textbf{head}: Display beginning  portion of file (Default: 10 lines)
+        \item \textbf{tail}: Display end portion of file 
+        \item \textbf{wc}: Count file content (-l -w -c)  (lines, words, characters)
+        \item \textbf{diff}: Compare two files line by line
+        \item \textbf{gzip, gunzip, zcat}: compress file content (.gz files)
+        \item \textbf{sort}: Sort file contents (-r -n -t -k -f) (reverse, numeric, field delimiter, field1[,field2], ignore case)
+        \item \textbf{quota -v}: Disk quota
+        \item \textbf{lpr}: Send files to printer, -P to specify printer (lpcsl, lpfrl, etc)
+        \item \textbf{lpq}: Show print queue
+        \item \textbf{lprm}: Remove job from print queue
+    \end{itemize}
+
+
+
+    \pagebreak 
+    \unsect{Permissions}
+    \bigbreak \noindent 
+    Unix uses discretionary access control (DAC) model
+    \begin{itemize}
+        \item Each directory/file has owner
+        \item Owner has discretion over access control details
+    \end{itemize}
+    With the exception of the super user
+
+    \bigbreak \noindent 
+    \subsection{Changing Permissions}
+    \bigbreak \noindent 
+    There are four categories regarding permissions 
+    \begin{itemize}
+        \item User 
+        \item Group
+        \item Other
+        \item All
+    \end{itemize}
+    \bigbreak \noindent 
+    To change the permissions of a file, we use the \texttt{chmod} command
+    \bigbreak \noindent 
+    \begin{bashcode}
+    chmod -options mode file/directory
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Changing Permissions: Symbolic mode}
+    \bigbreak \noindent 
+    \fig{0.5}{./figures/1.png}
+    \bigbreak \noindent  \bigbreak \noindent 
+    \fig{0.5}{./figures/2.png}
+
+
+
+    \pagebreak 
+    \subsubsection{Changing permissions: Octal mode}
+    \fig{.8}{./figures/3.png}
+
+    \bigbreak \noindent 
+    \subsubsection{Exercise: Changing permissions}
+    \bigbreak \noindent 
+    Suppose we want to change the permissions of "myfile". We want
+    \begin{itemize}
+        \item Read, write, and execute for user 
+        \item Read and execute for group
+        \item Execute for other
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    chmod u=rwx, g=rx, o=x myfile
+    chmod 751 myfile
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Special Permissions}
+    \bigbreak \noindent 
+    3 additional permissions can be set on files and directories
+    \begin{itemize}
+        \item Set user ID (SUID)
+        \item Set group ID (SGID)
+        \item Sticky bit
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Set user ID (SUID)}
+    \bigbreak \noindent 
+    \begin{concept}
+       SUID is used for executable files, it makes executables run with permissions of file owner, rather than invoker 
+    \end{concept}
+    \bigbreak \noindent 
+    For example, the passwd command uses this permission. This allows user access to otherwise protected system files while changing password
+
+    \pagebreak 
+    \subsubsection{Set group ID (SGID)}
+    \bigbreak \noindent 
+    \begin{concept}
+        \begin{itemize}
+            \item \textbf{For executables}: The logic for SGID is the same as SUID, but for group owner rather than file owner
+            \item \textbf{For directories}: A file created in the directory will be owned by the group owner of the directory, not the group of the user who created the file
+        \end{itemize}
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsubsection{Sticky Bit}
+    \bigbreak \noindent 
+    \begin{concept}
+       \begin{itemize}
+           \item \textbf{For executables}: Executable is kept in memory even after it ended
+            \item \textbf{For directories}: Files can only be deleted by the user that created it 
+       \end{itemize} 
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsubsection{Displaying special permissions}
+    \bigbreak \noindent 
+    \begin{concept}
+        The \texttt{ls -l}  command does not display special permission bits. However, since special permissions require execute, they mask the execute permission when displayed with \texttt{ls -l}
+    \end{concept}
+
+    \bigbreak \noindent 
+    \subsubsection{Setting special permissions (octal)}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/4.png}
+
+    \pagebreak 
+    \subsubsection{Setting special permissions (Symbolic)}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/5.png}
+
+    \bigbreak \noindent 
+    \subsection{User mask (umask)}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/6.png}
+
+    \pagebreak 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/7.png}
+
+    \bigbreak \noindent 
+    \subsection{Permissions needed for file and directory actions}
+    \bigbreak \noindent 
+    \subsubsection{Files}
+    \begin{itemize}
+        \item \textbf{Read:} View file contents (open, read)
+        \item \textbf{Write:} Change file contents
+        \item \textbf{Execute:} Run executable file
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Directories}
+    \begin{itemize}
+        \item \textbf{Read:} List directory contents (Only names)
+        \item \textbf{Write:} Change directory contents (need execute aswell)
+        \item \textbf{Execute:} Make it current directory, search for files in it 
+        \item \textbf{Renaming files:} Write and execute permissions on the directory
+        \item \textbf{Deleting files:} Write and execute permissions on the directory
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Both files and directories}
+    \begin{itemize}
+        \item \textbf{Moving files:} Read permissions on file and write permissions on target directory
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Network Utilitys}
+
+    \begin{itemize}
+        \item Login to another computer 
+            \begin{itemize}
+                \item telnet, rlogin, rsh, ssh
+            \end{itemize}
+        \item Copy files to another computer 
+            \begin{itemize}
+                \item scp
+                \item ftp, sftp
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Login to another computer}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item telnet rlogin, rsh no longer used
+            \begin{itemize}
+                \item Transmit username/password without encryption
+            \end{itemize}
+        \item ssh
+            \begin{itemize}
+                \item Invokes shell on remote computer securely
+                \item \textbf{Used to:} Remote login and run command on remote computer
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{ssh}
+
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \begin{bashcode}
+        ssh [user@]hostname [command]
+    \end{bashcode}
+    \bigbreak \noindent 
+    This command logs in user to hostname, or if command is given, runs it on remote host 
+
+    \bigbreak \noindent 
+    \subsubsection{Common options}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{-l}: login-name 
+        \item \textbf{-X}: enable X11 forwarding
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \fig{1}{./figures/8.png}
+
+    \pagebreak 
+    \subsection{Copy files to another computer}
+
+    \bigbreak \noindent 
+    \subsubsection{Currently in use}
+    \begin{itemize}
+        \item ftp
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Secure, encrypted, part of OpenSSH}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{sftp}: Secure file transfer
+        \item \textbf{scp}: Secure copy to remote host
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{ftp}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        ftp hostname
+    \end{bashcode}
+    \bigbreak \noindent 
+    This will prompt for userid and password
+
+    \bigbreak \noindent 
+    \subsubsection{Anonymous ftp}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Userid}: ftp or anonymous
+        \item \textbf{Password}: Your email address
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Commands}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{help}
+        \item \textbf{ls}
+        \item \textbf{cd} 
+        \item \textbf{put, get}
+            \begin{itemize}
+                \item copy a file from local to remote host, or vice versa 
+            \end{itemize}
+        \item \textbf{mput, mget}
+            \begin{itemize}
+                \item put/get multiple files, can use wildcards
+            \end{itemize}
+        \item \textbf{bye}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{sftp (Secure file transfer)}
+
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sftp user@hostname
+    \end{bashcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Will prompt for password
+        \item Same commands as ftp
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{scp}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        scp source target
+    \end{bashcode}
+    \begin{itemize}
+        \item source and target use extended form of pathname
+            \bigbreak \noindent 
+            \begin{bashcode}
+            user@host:pathname
+            \end{bashcode}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Common options}
+    \begin{itemize}
+        \item \textbf{-r}: Recursively copy entire directories
+        \item \textbf{-C}: Enables compression
+        \item \textbf{-l}: Limit bandwidth, specified in Kbit/s
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    scp screenshot.png z123456@turing.cs.niu.edu:
+    scp z123456@hopper.cs.niu.edu:assign1.cc .
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Shell: Part 1}
+    \bigbreak \noindent 
+    \subsection{Basics}
+    \bigbreak \noindent 
+    \subsubsection{Customization}
+    \begin{itemize}
+        \item variables, prompt, aliases
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Command line behavior}
+    \begin{itemize}
+        \item history
+        \item sequence and substitution
+        \item redirections and pipe
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Predefined variables}
+    \begin{itemize}
+        \item \textbf{HOME}: full pathname of home directory
+        \item \textbf{PATH}: list of directories to search for commands
+        \item \textbf{USER}: your user name, also UID for user id
+        \item \textbf{SHELL}: full pathname of your login shell
+        \item \textbf{PWD}: Current working directory
+        \item \textbf{HOSTNAME}: current hostname of the system
+        \item \textbf{HISTSIZE}: Number of commands to remember
+        \item \textbf{PS1}: Primary prompty (also PS2, ...)
+        \item \textbf{?}: Return status of most recently executed command
+        \item \textbf{\$}: Process id of current process
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Customizing bash shell prompt}
+    \bigbreak \noindent 
+    Can be set via the PS1 shell variable
+    \bigbreak \noindent 
+    \subsubsection{Example:}
+    \begin{bashcode}
+    PS1="$USER > " 
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Special PS1 shell variable settings}
+    \begin{itemize}
+        \item \textbf{\textbackslash w}: current working directory
+        \item \textbf{\textbackslash h}: hostname
+        \item \textbf{\textbackslash u}: username
+        \item \textbf{\textbackslash d}: date
+        \item \textbf{\textbackslash t}: time
+        \item \textbf{\textbackslash a}: ring the "bell"
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Customization}
+    \begin{itemize}
+        \item Via command line options: Rarely done
+        \item Instead we use startup initialization file
+            \begin{itemize}
+                \item $\sim$/.profile (login session shell)
+                \item $\sim$/.bashrc (invoked from command line)
+            \end{itemize}
+    \end{itemize}
+    \textbf{Note:} we also have /etc/profile and /etc/bash.bashrc
+
+    \bigbreak \noindent 
+    \subsection{Command line behavior}
+    \begin{itemize}
+        \item History
+        \item Sequence
+        \item Substition
+        \item I/O redirection and pipe
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Shell history}
+    \begin{itemize}
+        \item Record of previously entered commands
+            \begin{itemize}
+                \item can be re-called, edited, and re-executed
+            \end{itemize}
+        \item Size of history is set via shell variables
+            \begin{itemize}
+                \item HISTSIZE=500 (per session)
+                \item HISTFILESIZE=100 (per user)
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \begin{bashcode}
+        history [-c] [count]
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where -c is used to search for specific text
+    \bigbreak \noindent 
+    \nt{We use arrow keys to navigate, delete and backspace to remove, and tab to execute command}
+    \bigbreak \noindent 
+    \subsection{Command substitution}
+    \bigbreak \noindent 
+    \subsubsection{Backtics}
+    The first method is using backticks
+    \begin{itemize}
+        \item Command surrounded by back quotes `` is run and replaced by its standard output
+        \item Newlines in the output are replaced by spaces
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Dollar sign parenthesis notation}
+    \bigbreak \noindent 
+    Alternatively, we use the following syntax
+    \begin{bashcode}
+    $(command)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Here document}
+    \bigbreak \noindent 
+    This uses $<<$. With this we can read input for current source
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \begin{bashcode}
+    command << LABEL
+    \end{bashcode}
+    \bigbreak \noindent 
+    Reads following lines until line starting with "LABEL"
+    \bigbreak \noindent 
+    \subsubsection{Example:}
+    \begin{bashcode}
+     wc -l << DONE
+        > line one
+        > line two 
+        > DONE
+    2
+    \end{bashcode}
+    \pagebreak 
+    \subsection{File Descriptor}
+    \begin{itemize}
+        \item Positive integer for every open file
+        \item Process tracks its open files with this number
+            \begin{itemize}
+                \item 0 - standard input
+                \item 1 - standard output
+                \item 2 - standard error output
+            \end{itemize}
+        \item Bash can use file descriptor to refer to a file
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Table of redirection operators}
+    \bigbreak \noindent 
+    \begin{table}[ht]
+        \centering
+        \caption{Common Redirection Syntaxes in Linux}
+        \label{tab:redirection}
+        \begin{tabular}{@{}ll@{}}
+            \toprule
+            Syntax      & Description                                           \\ \midrule
+            \texttt{>} or \texttt{1>}  & Redirects standard output (\texttt{stdout}) to a file, overwriting the file. \\
+            \texttt{>>} or \texttt{1>>} & Redirects standard output (\texttt{stdout}) to a file, appending to the file. \\
+            \texttt{2>}  & Redirects standard error (\texttt{stderr}) to a file, overwriting the file. \\
+            \texttt{2>>} & Redirects standard error (\texttt{stderr}) to a file, appending to the file. \\
+            \texttt{\&>} & Redirects both standard output and standard error to a file, overwriting the file. \\
+            \texttt{>\&} & Redirects both standard output and standard error to a file, overwriting the file. \\
+            \texttt{<} or \texttt{0<}  & Redirects a file to standard input (\texttt{stdin}). \\
+            \texttt{<<}  & Here document: redirects inline input to standard input. \\
+            \texttt{<<<} & Here string: redirects a single line of input to standard input. \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+
+    \bigbreak \noindent 
+    \subsubsection{Combining redirection}
+    \bigbreak \noindent 
+    Before $&>$ was introduced, the way to redirect both stderr and stdout to a file looked something like
+    \bigbreak \noindent 
+    \begin{bashcode}
+        command > file 2>&1
+    \end{bashcode}
+    \bigbreak \noindent 
+    This tells bash to redirect stdout from command to file, and then redirect stderr (2) to stdout (which is now pointing to file). Note that the order does matter, for example the following will not work
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command 2>&1 > file 
+    \end{bashcode}
+    \bigbreak \noindent 
+    This would redirect stderr to whereever stdout is pointing, and then redirect stdout to file. Thus not bringing along stderr
+
+    \pagebreak 
+    \subsection{The pipe}
+    \bigbreak \noindent 
+    Bash introduced a concise way to redirect the output from a command as the input to some other command. For this, we use the pipe (|)
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command1 | command2
+    \end{bashcode}
+    \bigbreak \noindent 
+    Before the pipe syntax, we would have to do something like
+    \bigbreak \noindent 
+    \begin{bashcode}
+    command1 > file; command2 < file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Wildcards}
+    \bigbreak \noindent 
+    Bash has special characters knows as wildcards, these allow us to match filenames on the command line
+    \begin{itemize}
+        \item * (asterisk): Matches zero or more characters
+        \item ? (question mark): Matches exactly one character (any character)
+        \item \relax [...] (characters enclosed by brackets): Maches any of the enclosed characters
+        \item \relax [a-z] (range syntax): matches any characters in the specified range
+        \item \{word1, word2,...\} (brace syntax): Similar to the brackets, but for words
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Character classes}
+    \bigbreak \noindent 
+    Character classes are defined by the bracket syntax, as we say in the previous list.
+    \bigbreak \noindent 
+    \begin{bashcode}
+        ls test[a-z] # Matches test followed by any character a-z
+        ls test[a-z]* # Matches test followed by any character a-z followed by any character
+        ls test[^a-z] # matches test followed by any character not found within the range a-z
+        ls test[!a-z] # matches test followed by any character not found within the range a-z
+        ls test[123] # maches test1, test2, or test3
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Posix character classes}
+    \bigbreak \noindent 
+    POSIX character classes are a special notation used in regular expressions and pattern matching that provides a locale-independent way to specify groups of characters. 
+    \bigbreak \noindent 
+    \begin{bashcode}
+        ls [[:upper:]]* 
+    \end{bashcode}
+    \bigbreak \noindent 
+    The first set of brackets defines a bash character class, and within that we define a posix character class. We also have
+    \begin{itemize}
+        \item \relax[[:alpha:]]: Matches any letter.
+        \item \relax[[:digit:]]: Matches any digit.
+        \item \relax[[:lower:]]: Matches any lowercase letter.
+        \item \relax[[:upper:]]: Matches any uppercase letter.
+        \item \relax[[:space:]]: Matches any whitespace character (including spaces, tabs, and form feeds).
+        \item \relax[[:alnum:]]: Matches any alphanumeric character (letters and digits).
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Shell Scripts}
+    \bigbreak \noindent 
+    \subsection{Local / Global Variables}
+    \bigbreak \noindent 
+    \begin{concept}
+        In the Bash shell, variables defined within functions are not automatically local to those functions. By default, \textbf{variables in Bash functions are global}, meaning if you define or modify a variable within a function without explicitly declaring it as local, its value is accessible and can affect the script outside the function. 
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Local variables}
+    \bigbreak \noindent 
+    To make a variable local to a function, we prefix the variable with the keyword \texttt{local}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    function fn() {
+        local x=12
+    }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Return from function}
+    \bigbreak \noindent 
+    The return keyword ends the execution of the function, optional return value sets return status
+
+    \bigbreak \noindent 
+    \subsubsection{Exit command}
+    \bigbreak \noindent 
+    The exit command is similar to return but it will exit the program
+
+    \begin{align*}
+        f(x,y) = 3x+y
+    .\end{align*}
+    find 
+    \begin{align*}
+        f(<2,1> + h<0,1>)
+    .\end{align*}
+
+
+    \bigbreak \noindent 
+    \subsection{Functions}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    Functions are defined in the following way
+    \bigbreak \noindent 
+    \begin{bashcode}
+        function name() {
+            body ...
+        }
+        name # Call to function
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Parameters}
+    \bigbreak \noindent 
+    In Bash scripting, unlike many programming languages where you define function parameters within parentheses next to the function name, you do not specify parameters in the function definition itself. Instead, you simply pass the arguments to the function when you call it, and within the function, you access these arguments using $1, $2, etc., without declaring them in the function definition.
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/bin/bash
+
+# Define a function without specifying parameters in the definition
+function add {
+    # Access parameters using $1, $2, etc.
+    local sum=$(( $1 + $2 ))
+    echo "The sum is: $sum"
+}
+
+# Call the function with arguments
+add 5 7
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Echo}
+    \bigbreak \noindent 
+    The \texttt{echo} command is a simple way to write to standard output
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo [-ne] arg[s]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{-n} Suppresses trailing newlines
+        \item \textbf{-e} Enables escapes
+            \begin{itemize}
+                \item \textbf{\textbackslash t} tab
+                \item \textbf{\textbackslash b} backspace
+                \item \textbf{\textbackslash a} alert
+                \item \textbf{\textbackslash n} newline
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Printf}
+    \bigbreak \noindent 
+    \texttt{printf} is a command similar to \texttt{echo}, but it allows us to format the output 
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        printf format [arg[s]]
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    printf "\%-10s" "Hello world" #Left justified with field width of 10 
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The set command}
+    \bigbreak \noindent 
+    The set command is a shell builtin that allows for debugging by tracing the execution
+    \bigbreak \noindent 
+    \subsubsection{Options}
+    \begin{itemize}
+        \item \textbf{-v} print shell input lines as they are read 
+        \item \textbf{-x} displays expanded commands and its arguments
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Turning options on or off}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    set -xv
+    set +xv
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Setting args withing the shebang}
+    \bigbreak \noindent 
+    The options described above can also be set directly in the shebang
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/bash -xv # Turns on the options
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The until loop}
+    \bigbreak \noindent 
+    The until loop is essentially the opposite of the while loop, where the while loop executes the body as long as the test is true, the until loop will execute its body while the test is false ("until" the body is true)
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    until test-command; do 
+        body ...
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    a=1
+
+    until [[ $a -gt 5 ]]; do 
+        echo $a
+        a=$(( $a + 1 ))
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Simple looping over args}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        for parm; do
+            echo $parm
+        done
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{The name is not important}
+
+    \pagebreak 
+    \unsect{Awk}
+    \bigbreak \noindent 
+    \subsection{What is awk?}
+    \bigbreak \noindent 
+    Awk is a scripting language used for manipulating data and generating reports. The awk command programming language requires no compiling and allows the user to use variables, numeric functions, string functions, and logical operators. 
+    \bigbreak \noindent 
+    Awk is a utility that enables a programmer to write tiny but effective programs in the form of statements that define text patterns that are to be searched for in each line of a document and the action that is to be taken when a match is found within a line. Awk is mostly used for pattern scanning and processing. It searches one or more files to see if they contain lines that matches with the specified patterns and then perform the associated actions.
+    \bigbreak \noindent 
+    \subsection{Awk operations}
+    \begin{enumerate}[label=(\alph*)]
+        \item  Scans a file line by line 
+        \item  Splits each input line into fields 
+        \item  Compares input line/fields to pattern 
+        \item  Performs action(s) on matched lines 
+    \end{enumerate}
+    
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    awk options 'selection _criteria { action }' input-file >
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Options}
+    \begin{itemize}
+        \item \textbf{-f}: Reads the AWK program source from the file program-file, instead of from the first command line argument
+        \item \textbf{-F}: Change the field separator
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{Example}
+    \begin{bashcode}
+        # File that contains awk commands "filname: actions"
+
+        { print $1 }
+
+        # File that contains data "filename: data"
+
+        0.999,0.18179,0.2711768644                                                                                                                                                                                        
+        1.0323,0.195853,0.47739746                                                                                                                                                                                        
+        1.0656,0.217119,0.6253140641                                                                                                                                                                                        
+
+        # In command line
+        aws -F ',' -f actions data
+
+        # Output
+        0.999
+        1.0323
+        1.0656           
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{The print action}
+    \bigbreak \noindent 
+    One of the simplest actions we can preform with awk is the print action
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{ print }' <filename>
+        awk '{ print $1}' <filename>
+        awk '{ print $1,$3}' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    Awk will scan the file line by line, split the input line into fields, with space as the field separator, and then perform the action print. With a bare print statement, each line will be printed. We can of course be more specific with our statement. We can access each field with \$0-\$n, where \$0 is the entire line, and  \$n is a specific field number
+
+    \bigbreak \noindent 
+    \subsection{Regex}
+    \bigbreak \noindent 
+    We can as you might expect use regular expressions with awk, let's take a look 
+    \bigbreak \noindent 
+    \subsubsection{Whole lines}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '/foo/ { print }' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    This will print all lines that contain the word 'foo'
+
+    \bigbreak \noindent 
+    \subsubsection{Field matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '$0~/day/'
+        man date | awk '$0!~/day/'
+    \end{bashcode}
+    \bigbreak \noindent 
+    Here we use awk on the manual for the date command, and we output any line that contains the word day. In the second line, we do the same thing, but output any line that does not contain the word day
+
+    \bigbreak \noindent 
+    \subsubsection{Range matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '/DESCRIPTION/,/EXAMPLES/'
+    \end{bashcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Other Awk variables}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{NR}: Number of the current record
+        \item \textbf{NF}: Number of fields in the current record
+        \item \textbf{FS}: Field separator
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{BEGIN and END blocks}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{BEGIN\{...\}}  Executes whatever is inside the brackets before starting to view the input file 
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { FS=":" } { print $1 }' /etc/passwd
+            \end{bashcode}
+            This command sets the field separator to : before processing any lines of the input file /etc/passwd. It then prints the first field of each line, which typically contains the usernames in a Unix/Linux system.
+        \item \textbf{END\{...\}}  Executes whatever is inside the brackets after awk is finished reading the input file
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { count=0 } { count++ } END { print "Number of lines: ", count }' /etc/passwd
+            \end{bashcode}
+            Before processing the file, it initializes a counter count to 0. For each line in /etc/passwd, it increments count. After processing all lines, it prints the total count, effectively giving the number of lines in the file.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Typical awk script}
+    \bigbreak \noindent 
+    \fig{1}{./figures/9.png}
+    \bigbreak \noindent 
+    \nt{The symbol for comments are the same as bash, the hashtag \#}
+
+    \bigbreak \noindent 
+    \subsection{If statements in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    awk supports conditional statements, allowing you to perform actions based on specific conditions. The syntax for an if statement in awk is similar to that in other programming languages. Here's the basic structure:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (condition) {
+            // actions to perform if condition is true
+        } else {
+            // actions to perform if condition is false
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{Awk does not have the concept of elseif}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo -e "3\n-1\n0\n5" | awk '{ if ($1 > 0) print $1 " is positive"; else print $1 " is not positive" }'
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Checking for existence in array}
+    \bigbreak \noindent 
+    Similar to python, we can do the following
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (item in array) {
+            ...
+        } else {
+            ...
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{For loops in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    for (initialization; condition; increment) {
+        // Code block to execute
+    }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk 'BEGIN {
+            for (i = 1; i <= 5; i++) {
+                print "Number is", i
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Iterating Over an Array}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        for (index in array) {
+            // Code block using array[index]
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The while loop in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        while (condition) {
+            // Code block to execute
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{
+            while ($0 !~ /stop/) {
+                print "Processing:", $0
+                if (getline <= 0) break
+            }
+        }' input.txt
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Awk variables}
+    \bigbreak \noindent 
+    In awk, we can define variables with an assignent statement. We can define integers, strings, and arrays. Variables only come into existence when first used. Variables are initialized to either 0 or ""
+    \bigbreak \noindent 
+    \subsection{Awk arrays}
+    \bigbreak \noindent 
+    Awk allows the creation of one dimensional arrays, the index (and the elements) can be either a number or a string. Unlike arrays in $c$, we need not declare the size or type of the array. The array elements are created when first used and initialized either 0 or ""
+    \bigbreak \noindent 
+    \nt{When we use strings as indicies, we are essentially creating a map}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arrayName[index] = value
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arr[1] = "some value"
+        arr[2] = 25
+        arr["foo"] = "bar"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example: Process sales data}
+    \bigbreak \noindent 
+    Suppose we have the data file 
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{array}{llr}
+            1 & \text { clothing } & 3141 \\
+            1 & \text { computers } & 9161 \\
+            1 & \text { textbooks } & 21321 \\
+            2 & \text { clothing } & 3252 \\
+            2 & \text { computers } & 12321 \\
+            2 & \text { textbooks } & 15462
+            2 & \text { supplies } & 2242 \\
+        \end{array}
+    \end{center}
+    \bigbreak \noindent 
+    We wish to output a summary of department sales, then we could write an awk program
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # p.awk (awk -f p.awk data)
+        {
+            deptsales[$2] += $3
+        }
+        END {
+            for (x in deptsales) {
+                print x, deptsales[x]
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Builtin Functions}
+    \bigbreak \noindent 
+    \subsubsection{Arithmetic}
+    \begin{itemize}
+        \item sqrt
+        \item rand
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{String}
+    \begin{itemize}
+        \item index
+        \item length
+        \item split
+        \item substr
+        \item sprintf
+        \item tolower
+        \item toupper
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Misc}
+    \begin{itemize}
+        \item system
+        \item systime
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The split function}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    split(string, array, fieldsep)
+    \end{bashcode}
+    \bigbreak \noindent 
+    The split function divides \textbf{string} into pieces separated by \textbf{fieldsep} and stores the pieces in \textbf{arary}. If \textbf{fieldsep} is omitted, the value of FS is used.
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        split("26:Miller:Comedian", fields, ":")    
+    \end{bashcode}
+    \bigbreak \noindent 
+    Now we have a fields array with the contents of the string
+
+    \bigbreak \noindent 
+    \subsection{The gsub function}
+    \bigbreak \noindent 
+    The gsub function in AWK is a powerful tool for performing global search and replace operations on strings. It searches for all occurrences of a pattern in a string and replaces them with a specified replacement text. 
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    gsub(regexp, replacement, target)
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Stream Editor (sed)}
+    \bigbreak \noindent 
+    \subsection{What is sed?}
+    \bigbreak \noindent 
+    Sed is a non-interactive stream editor. We use sed to 
+    \begin{itemize}
+        \item Automatically perform edits on files
+        \item Simplify doing the same edit on multiple files
+        \item Write conversion programs
+        \item Do editing operations from shell script
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -e 'address command' input_file # (inline script)
+    sed -f script.sed input_file # (script file)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{How does sed work? }
+    \bigbreak \noindent 
+    Sed reads files line by line, each lien of input is copied into a temporary buffer called the \textbf{pattern space}, then the editing instructions are applied to line in the pattern space. Next, the line is sent to output (unless -n was used). Last, the line is removed from the pattern space. Sed does this for all lines until the end of the file
+    \bigbreak \noindent 
+    \nt{Input file is unchanged unless -i option is used}
+
+    \bigbreak \noindent 
+    \subsection{Instruction format}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/10.png}
+    \bigbreak \noindent 
+    The address determines which lines in the input file are to be processed by the commands, if no address is given, then the command is applied to each input line
+    \bigbreak \noindent 
+    \subsubsection{Address types}
+    \begin{itemize}
+        \item Single-line address
+        \item Set-of-lines address
+        \item Range address
+    \end{itemize}
+    \bigbreak \noindent 
+
+    \subsubsection{Single-line address}
+    \bigbreak \noindent 
+    A Single-line address specifies only one line in the input file
+    \bigbreak \noindent
+    \nt{The dollar sign denotes the last line of input file}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e "3 p" infile # Show only line 3
+    sed -n -e "$ p" inflie # Show last line
+    sed -e "10 s/endif/fi/" infile # Substitute "endif" with "fi" on line 10
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Set-of-lines address}
+    \bigbreak \noindent 
+    With this, we can use regex to match lines
+    \begin{itemize}
+        \item Written between two slashes 
+        \item Process only lines that match
+        \item May match several lines
+        \item Lines don't have to be consecutive
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -i -e "/Key/ s/more/other" infile
+    sed -n -e "/r..t/ p" input-file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Range address}
+    \bigbreak \noindent 
+    Defines a set of consecutive lines. Format: startAddr,endAddr (inclusive)
+    \bigbreak \noindent 
+    \textbf{Examples:}
+    \begin{itemize}
+        \item 10,50
+        \item 10,/funny/
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Address complement}
+    \bigbreak \noindent 
+    Address with an exclamation point (!). Command applies to lines that \textbf{don't} match the address
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e '/Obsolete/!p' infile # (print lines that do not contain "Obsolete")
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Sed commands}
+    \bigbreak \noindent 
+    \subsubsection{Modify}
+    \begin{itemize}
+        \item insert 
+        \item append
+        \item change
+        \item delete
+        \item substitute
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Input/Output}
+    \begin{itemize}
+        \item Next, print
+        \item Read, write
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Other}
+    \begin{itemize}
+        \item quit
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Commands i,a,c}
+    \begin{itemize}
+        \item \textbf{i} adds lines before the address
+        \item \textbf{a} adds lines after the address
+        \item \textbf{c} replaces an entire matched line with new text
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] i\
+        text
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Delete command}
+    \bigbreak \noindent 
+    Deletes the entire pattern space
+    \bigbreak \noindent 
+    \nt{Commands following the delete command are ignored since the deleted text is no longer in the pattern space}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    [address] d 
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Substitute command (s)}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] s/search/replacement/[flag]
+    \end{bashcode}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+\end{document}

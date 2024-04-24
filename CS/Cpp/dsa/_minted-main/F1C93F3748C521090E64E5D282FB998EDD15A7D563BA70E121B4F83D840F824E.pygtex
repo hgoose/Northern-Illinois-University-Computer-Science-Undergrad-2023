@@ -1,0 +1,40 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{n}{procedure}\PYG{+w}{ }\PYG{n}{remove}\PYG{p}{(}\PYG{n}{key}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{key}\PYG{+w}{ }\PYG{n}{to}\PYG{+w}{ }\PYG{n}{remove}\PYG{+w}{ }\PYG{n}{from}\PYG{+w}{ }\PYG{n}{the}\PYG{+w}{ }\PYG{n}{tree}\PYG{p}{)}
+\PYG{+w}{    }\PYG{c+c1}{// root           : pointer to the root of the binary search tree}
+\PYG{+w}{    }\PYG{c+c1}{// t\PYGZus{}size         : tree size}
+\PYG{+w}{    }\PYG{c+c1}{// p              : pointer to the node to delete from the tree}
+\PYG{+w}{    }\PYG{c+c1}{// parent         : pointer to the parent node of the node to delete from the tree (or}
+\PYG{+w}{    }\PYG{c+c1}{//                  nullptr if deleting the root node)}
+\PYG{+w}{    }\PYG{c+c1}{// replace        : pointer to node that will replace the deleted node}
+\PYG{+w}{    }\PYG{c+c1}{// replace\PYGZus{}parent : pointer to parent of node that will replace the deleted node}
+
+\PYG{+w}{    }\PYG{c+c1}{// Start at the root of the tree and search for the key to delete.}
+\PYG{+w}{    }\PYG{n}{p}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{root}
+\PYG{+w}{    }\PYG{n}{parent}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{k}{nullptr}
+\PYG{+w}{    }\PYG{k}{while}\PYG{+w}{ }\PYG{n}{p}\PYG{+w}{ }\PYG{o}{!=}\PYG{+w}{ }\PYG{k}{nullptr}\PYG{+w}{ }\PYG{n}{and}\PYG{+w}{ }\PYG{n}{key}\PYG{+w}{ }\PYG{o}{!=}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{key}
+\PYG{+w}{        }\PYG{n}{parent}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{p}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{key}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{key}
+\PYG{+w}{            }\PYG{n}{p}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{left}
+\PYG{+w}{        }\PYG{k}{else}
+\PYG{+w}{            }\PYG{n}{p}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{right}
+\PYG{+w}{        }\PYG{n}{end}\PYG{+w}{ }\PYG{k}{if}
+\PYG{+w}{    }\PYG{n}{end}\PYG{+w}{ }\PYG{k}{while}
+
+\PYG{+w}{    }\PYG{c+c1}{// If the node to delete was not found, signal failure.}
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{p}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k}{nullptr}
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{false}
+\PYG{+w}{    }\PYG{n}{end}\PYG{+w}{ }\PYG{k}{if}
+
+\PYG{+w}{    }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{left}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k}{nullptr}
+\PYG{+w}{        }\PYG{c+c1}{// Case 1a: p has no children. Replace p with its right child}
+\PYG{+w}{        }\PYG{c+c1}{// (which is nullptr).}
+\PYG{+w}{        }\PYG{c+c1}{//   \PYGZhy{} or \PYGZhy{}}
+\PYG{+w}{        }\PYG{c+c1}{// Case 1b: p has no left child but has a right child. Replace}
+\PYG{+w}{        }\PYG{c+c1}{// p with its right child.}
+\PYG{+w}{        }\PYG{n}{replace}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{right}
+\PYG{+w}{    }\PYG{k}{else}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{right}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k}{nullptr}
+\PYG{+w}{        }\PYG{c+c1}{// Case 2: p has a left child but no right child. Replace p}
+\PYG{+w}{        }\PYG{c+c1}{// with its left child.}
+\PYG{+w}{        }\PYG{n}{replace}\PYG{+w}{ }\PYG{err}{←}\PYG{+w}{ }\PYG{n}{p}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{left}
+\PYG{+w}{    }\PYG{k}{else}
+\end{Verbatim}

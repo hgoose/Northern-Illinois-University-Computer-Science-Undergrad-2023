@@ -1,0 +1,282 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Networking}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Networking}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           April 22, 2024 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \bigbreak \noindent 
+    \unsect{A brief overview}
+    \bigbreak \noindent 
+    In the context of network programming, "networking" refers to the practice and techniques involved in designing, implementing, and managing communication between computers and devices over a network. This can include a wide array of tasks and principles, including but not limited to:
+    \begin{itemize}
+        \item \textbf{Data Communication:} The fundamental aspect of networking, involving the exchange of data between two or more devices over a network. This can be achieved through various communication protocols and standards.
+        \item \textbf{Protocols and Standards:} Networking relies on a set of rules and conventions (protocols) for communication between network devices. These protocols define how data is formatted, transmitted, and received. Examples include TCP/IP (Transmission Control Protocol/Internet Protocol), HTTP (HyperText Transfer Protocol), and FTP (File Transfer Protocol).
+        \item \textbf{Network Architecture:} The design and layout of a network, including its components (e.g., routers, switches, gateways) and topology (e.g., star, mesh, ring). Network architecture decisions impact the network's performance, scalability, and security.
+        \item \textbf{Socket Programming:} A means of connecting two nodes on a network to communicate with each other. One node listens on a particular port at an IP, while another node connects to it. Socket programming is used to facilitate communication between applications running on different computing devices.
+        \item \textbf{APIs for Network Communication:} Programming interfaces such as Winsock for Windows, POSIX sockets for Unix/Linux, and various cross-platform networking libraries (e.g., Boost.Asio) that allow developers to implement networking functionalities.
+        \item \textbf{Network Services Development:} Creating software that provides specific functionalities over a network, such as web servers, email servers, and file sharing systems.
+        \item \textbf{Network Security:} Ensuring the confidentiality, integrity, and availability of data in the network. This includes implementing secure protocols (like HTTPS), encryption, firewalls, and intrusion detection systems.
+        \item \textbf{Network Management:} Monitoring and maintaining network operations. This involves performance analysis, troubleshooting network problems, and ensuring that network resources are allocated efficiently.
+    \end{itemize}
+
+    \unsect{Network Terminology}
+    \bigbreak \noindent 
+    \subsection{Nodes, links, and paths}
+    \bigbreak \noindent 
+     node refers to any device that can send, receive, or forward information over a communications channel. Nodes can be computers, mobile devices, routers, switches, and other devices capable of processing or storing data.
+     \bigbreak \noindent 
+     A link, on the other hand, is the physical or logical connection between two or more nodes, enabling them to communicate. Links can be wired connections like Ethernet cables, optical fibers, or wireless connections such as Wi-Fi or Bluetooth.
+     \bigbreak \noindent 
+     Together, nodes and links form the basic components of a network, allowing for the transmission of data across diverse and complex systems.
+     \bigbreak \noindent 
+     A path is a sequence of nodes and links
+     \bigbreak \noindent 
+     In other words...
+     \begin{itemize}
+         \item \textbf{Node:} Host or intermediary
+         \item \textbf{Link:} Point-to-point or broadcast to many other nodes at the same time
+        \item \textbf{Link medium:} wired or wireless
+        \item \textbf{Path:} Routed or switched (Elaborated in later section)
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsection{Networking protocol}
+     \bigbreak \noindent 
+     Networking protocols are standardized sets of rules that determine how data is transmitted and received across a network. These protocols specify the formats for data packets, the procedures for signaling, error handling, and data encryption to ensure successful communication between devices.
+     \bigbreak \noindent 
+     More broadly, information is exchanged between nodes via \textbf{messages}, each message has an exact meaning intended to provoke a defined response of the reciever
+     \bigbreak \noindent 
+     \nt{Messages used \textbf{well-defined format}}
+
+     \pagebreak 
+     \unsect{The OSI (Opens systems interconnection) Model}
+     \bigbreak \noindent 
+     The OSI (Open Systems Interconnection) model is a conceptual framework used to understand and standardize the functions of a telecommunications or computing system without regard to its underlying internal structure and technology. Developed by the International Organization for Standardization (ISO), the OSI model divides the process of communication between two end-points in a network into seven layers. Each layer serves a specific function and communicates with the layers directly above and below it. From top to bottom, the layers are \textbf{APS TNDP}:
+     \begin{itemize}
+         \item \textbf{Application Layer (Layer 7):} The closest to the end user, this layer interacts with software applications that implement a communicating component. It provides protocols that allow software to send and receive information and present meaningful data to the user (e.g., HTTP for web browsing, SMTP for email).
+         \item \textbf{Presentation Layer (Layer 6):} Translates data between the application layer and the network format. It ensures data is in a usable format and can encrypt or compress data if necessary.
+         \item \textbf{Session Layer (Layer 5):} Manages sessions between applications, establishing, managing, and terminating connections between local and remote applications.
+         \item \textbf{Transport Layer (Layer 4):} Responsible for data transfer between end systems and provides reliable data transfer services to the upper layers. This includes breaking down messages into smaller units if needed, and ensuring error-free data transfer (e.g., TCP and UDP).
+         \item \textbf{Network Layer (Layer 3):} Manages device addressing, identifies the best paths for data transmission, and routes data packets between devices that are not locally attached. Routers operate at this layer.
+         \item \textbf{Data Link Layer (Layer 2):} Provides data transfer across the physical link established by the physical layer. It deals with MAC addresses, error detection and correction, and frames data packets.
+         \item \textbf{Physical Layer (Layer 1):} Concerns the physical equipment involved in data transfer, such as cables, switches, and the electrical signals that traverse these media.
+     \end{itemize}
+     \bigbreak \noindent 
+     In other words, these seven layers help to describe communications in a network
+     \bigbreak \noindent 
+     \fig{.5}{./figures/1.png}
+     \pagebreak \bigbreak \noindent 
+     \fig{.5}{./figures/2.png}
+     \bigbreak \noindent 
+     \fig{.7}{./figures/3.png}
+
+     \bigbreak \noindent 
+     \subsection{Main idea}
+     \bigbreak \noindent 
+     The complexities of communication is organized into successive layers of protocols
+     \begin{itemize}
+         \item \textbf{Lower-level layers}: Specific to medium
+         \item \textbf{Higher-level layers}: Specific to application
+     \end{itemize}
+     \pagebreak 
+     \subsection{Physical layer: Wired media}
+     \begin{itemize}
+         \item \textbf{Ethernet}
+             \begin{itemize}
+                 \item 10BASE-T, 100BASE-T, 1000BASE-T
+                \item 10GbE, 40GbE, 100GbE
+             \end{itemize}
+         \item \textbf{Business/backbone}
+             \begin{itemize}
+                 \item DS1(T1): 1.54Mbs to DS5: 400Mbs
+                    \item OC-1: 50Mbs to OC-768: 40Gbs
+             \end{itemize}
+            \item \textbf{Last mile:}
+                \begin{itemize}
+                    \item Modem
+                    \item DSL (Digital subscriber lines)
+                    \item Cable: DOCSIS
+                    \item FiOS (Fiber optic service)
+                \end{itemize}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Physical layer: Wireless media}
+     \begin{itemize}
+         \item \textbf{Cellphone Data:}
+             \begin{itemize}
+                 \item EDGE, GPRS, HSPA+
+                    \item 4G LTE up to 100Mbs
+                    \item 5G over 100Mbs
+             \end{itemize}
+            \item \textbf{Satellite}
+                \begin{itemize}
+                    \item Wildblue: 12Mbs
+                    \item Hughesnet: 15Mbs
+                    \item Starlink: 200Mbs
+                \end{itemize}
+            \item \textbf{WiFi:} 802.11
+                \begin{itemize}
+                    \item Up to 150Mbs \& MIMO
+                    \item New: "ac" up to 1Gbs
+                \end{itemize}
+            \item \textbf{WiMax:} 802.16
+                \begin{itemize}
+                    \item up to 40Mbs
+                \end{itemize}
+            \item \textbf{WPAN}
+                \begin{itemize}
+                    \item Bluetooth up to 2Mbs
+                    \item NFC up to 423Kbs
+                    \item ZigBee up to 256Kbs
+                \end{itemize}
+     \end{itemize}
+     
+     \bigbreak \noindent 
+     \subsection{Data link layer: Functionalities}
+     \begin{itemize}
+         \item \textbf{Medium access control}: Arbitrate who transmits
+            \item \textbf{Addressing}: address of receiver, address of sender
+            \item \textbf{Framing:} Delimited  unit of transmission for data \& control
+            \item \textbf{Error control and reliability} 
+            \item \textbf{Flow control}
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{Example: Ethernet frame}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/4.png}
+     \bigbreak \noindent 
+     \subsubsection{Example: Data link flow}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/5.png}
+
+     \bigbreak \noindent 
+     \subsection{Network layer (Internet protocol layer)}
+     \bigbreak \noindent 
+     Provides host to host transmission service, where hosts are not necessarily adjacent
+     \bigbreak \noindent 
+     Layer provides services
+     \begin{itemize}
+         \item Addressing
+             \begin{itemize}
+                 \item Hosts have global addresses: IPv4, IPv6
+                    \item Uses data link layer protocol to translate address
+             \end{itemize}
+         \item \textbf{Routing and forwarding:} Find path from host to host
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{IPv4 Address}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/6.png}
+
+     \bigbreak \noindent 
+     \subsubsection{IPv6 Address}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/7.png}
+     \bigbreak \noindent 
+     \subsubsection{IP Packet}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/8.png}
+
+     \bigbreak \noindent 
+     \subsection{IP Layer: Routing and Forwarding}
+     \bigbreak \noindent 
+     Done by hosts on path from sending to reciever
+     \begin{itemize}
+         \item \textbf{Forwarding:} Host has 2 network interfaces, transfers packet from incoming to outgoing interface
+            \item \textbf{Routing:} 
+                \begin{itemize}
+                    \item Finds path from sender to receiver
+                    \item \textbf{Simple routing:} know receiver or send to gateway
+                    \item \textbf{Advanced routing:} determine which gateway to send to (typically with multiple outgoing network interfaces)
+                \end{itemize}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Transport layer}
+     \bigbreak \noindent 
+     Provides end-to-end communication services for applications
+     \bigbreak \noindent 
+     Btye format as abstraction on underlying system format. Raises reliability
+     \bigbreak \noindent 
+     Also enables multiplexing, which provides multiple endpoints on a single node: \textbf{port}.
+     \bigbreak \noindent 
+     Refines connection address via port number
+     \bigbreak \noindent 
+     \subsection{Ports}
+     \bigbreak \noindent 
+     \fig{.5}{./figures/10.png}
+
+     \bigbreak \noindent 
+     \subsubsection{Transport layer programming}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{Common abstraction:} Socket
+            \item Socket is end-point of communication link
+                \begin{itemize}
+                    \item Identified as Ip address + port number
+                \end{itemize}
+            \item operates as client and server
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsubsection{Transport layer protocols}
+     \bigbreak \noindent 
+    \fig{.5}{./figures/11.png}
+
+    
+\end{document}
