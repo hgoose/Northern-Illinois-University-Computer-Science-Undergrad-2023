@@ -134,9 +134,505 @@ void foo(myclass<T>& obj) {
                     friend void someFunction<T>(MyClass<T>&); // Matched instantiation
                 };
             \end{cppcode}
-
-
-
     \end{itemize}
+
+    \pagebreak 
+    \unsect{When initializer lists are required}
+    \bigbreak \noindent 
+    Using initialization lists to initialize data members in a constructor can be convenient if you don't need to do any error-checking on the constructor arguments. There are also several instances in C++ where the use of an initializer list to initialize a data member is actually required:
+
+    \begin{itemize}
+        \item Data members that are const but not static must be initialized using an initialization list.
+        \item Data members that are references must be initialized using an initialization list.
+        \item An initialization list can be used to explicitly call a constructor that takes arguments for a data member that is an object of another class (see the employee constructor example above).
+        \item In a derived class constructor, an initialization list can be used to explicitly call a base class constructor that takes arguments.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Inheritence and Subtype Polymorphism}
+    \bigbreak \noindent 
+    \subsection{OOP Main Concepts}
+    \bigbreak \noindent 
+    An \textbf{object} is a software bundle of related state (data members or properties) and behavior (member functions or methods). Software objects are often used to model the real-world objects that you find in everyday life.
+    \bigbreak \noindent 
+    A \textbf{class} is a blueprint or prototype from which objects are created. A class is an abstract definition that is made concrete at run-time when objects based upon the class are created.
+    \bigbreak \noindent 
+    \textbf{Encapsulation}, also known as data hiding, is the act of concealing the functionality of a class so that the internal operations are hidden, and irrelevant, to the programmer. With correct encapsulation, the developer does not need to understand how the class actually operates in order to communicate with it via its publicly available member functions and data members, known as its public interface. Encapsulation is essential to creating maintainable object-oriented programs. When the interaction with an object uses only the publicly available interface of member functions and properties, the class of the object becomes a correctly isolated unit. This unit can then be replaced independently to fix bugs, to change internal behavior or to improve functionality or performance. Encapsulation also promotes data integrity by allowing public "set" member functions to validate new values that are to be assigned to private data members.
+    \bigbreak \noindent 
+    \textbf{Message passing}, also known as interfacing, describes the communication between objects using their public interfaces. The primary way of passing a message to an object in C++ is to call a member function for that object.
+    \bigbreak \noindent 
+    \textbf{Abstraction} is the process of representing simplified versions of real-world objects in your classes and objects. A car class does not describe every possible detail of a car, only the relevant parts for the system being developed. Modeling software around real-world objects can vastly reduce the time required to understand a solution and be able to develop and maintain it.
+    \bigbreak \noindent 
+    \subsection{Object Relationships}
+    \bigbreak \noindent 
+    Objects can work together in many ways within a system. In some situations, classes and objects can be tightly coupled together to provide more complex functionality. This "has-a" relationship is known as composition. For example, modeling a car might involve creating individual classes such as wheel, engine, and transmission. The car class could then contain objects of these classes as data members, since a car "has" an engine, wheels, and a transmission. The internal workings of each class are not important due to encapsulation as the communication between the objects is still via passing messages to their public interfaces.
+    \bigbreak \noindent 
+    Other types of relationships may be modeled. A class may simply "use" an object of another class (perhaps creating the object as a local variable in one of its member functions). A class may also "know" about an object of another class without owning it (in C++, this association relationship might be modeled using a pointer or reference to the object).
+    \bigbreak \noindent 
+    Inheritance is an object-oriented programming concept used to model an "is-a" relationship between two classes. It allows one class (the derived class or subclass) to be based upon another (the base class or superclass) and inherit all of its functionality automatically. Additional code may then be added to create a more specialized version of the base class.
+
+    \bigbreak \noindent 
+    \subsection{Ineritance}
+    \bigbreak \noindent 
+    A \textbf{derived class} is more specific than its base class and represents a smaller group of objects.
+    \bigbreak \noindent 
+    A \textbf{direct base class} is the base class from which a derived class explicitly inherits. An indirect base class is inherited from two or more levels up the class hierarchy.
+    \bigbreak \noindent 
+    In the case of single inheritance, a class is derived from one base class. C++ also supports multiple inheritance, in which a derived class inherits from multiple (possibly unrelated) classes. Single inheritance is straightforward. Multiple inheritance can be complex and error prone.
+    \bigbreak \noindent 
+    Single-inheritance relationships form tree-like hierarchical structures - a base class exists in a hierarchical relationship with its derived classes.
+    \bigbreak \noindent 
+    C++ offers three kinds of inheritance - public, protected, and private. public inheritance in C++ is used to model "is a" relationships. Every object of a derived class is also an object of that derived class's base class. However, base-class objects are not objects of their derived classes. For example, all car objects are also vehicle objects, but not all vehicle objects are car objects.
+    \bigbreak \noindent 
+    With public inheritance, a derived class may
+    \begin{itemize}
+        \item add new data members
+        \item add new member functions
+        \item override member functions defined in the base class
+    \end{itemize}
+    private and protected inheritance do not model "is-a" relationships and are not used as frequently.
+
+    \bigbreak \noindent 
+    \subsection{Inheritance and Member Access}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{c|c|c|c}
+            Base class modifier	& public Inheritance	& protected Inheritance	& private Inheritance \\
+            \hline
+            public	&public 	&protected 	&Hidden  \\
+            protected &	protected 	&protected 	&Hidden  \\
+            private	&Hidden 	&Hidden 	&Hidden 
+        \end{tabular}
+
+    \end{center}
+    \bigbreak \noindent 
+    A base class's public members are accessible anywhere that the program has a "handle" to an object (an object name or a pointer or reference to an object) of the base class or to an object of one of that base class's derived classes. Derived class member functions can access public base class data members directly.
+    \bigbreak \noindent 
+    A base class's private members are "hidden" - they are accessible only within the definition of that base class or from a friend of that class. A derived class cannot access the private members of its base class directly; allowing this would violate the encapsulation of the base class. A derived class can only access private base-class members through non-private member functions defined in the base class and inherited by the derived class.
+    \bigbreak \noindent 
+    A base class's protected members have an intermediate level of protection between public and private access. A base class's protected members can be directly accessed by member functions of that base class, by a friend of that base class, by member functions of a class derived from that base class, and by a friend of a class derived from that base class.
+    \bigbreak \noindent 
+    The use of protected data members allows for a slight increase in performance, because we avoid incurring the overhead of a call to a "set" or "get" member function. Unfortunately, protected data members often yield two major problems. First, the derived class object does not have to use a "set" member function to change the value of the base class's protected data. A derived class object can easily assign an illegal value to a protected data member. Second, derived class member functions are more likely to depend on base class implementation details. Changes to the base class may require changes to some or all of the derived classes of that base class.
+    \bigbreak \noindent 
+    Declaring data members private, while providing non-private member functions to manipulate and perform validation checking on this data, enforces good software engineering. The programmer should be able to change the base class implementation freely, while still providing the same services to the derived class. The performance increases gained by using protected data members are often negligible compared to the optimizations that compilers can perform. It is appropriate to use the protected access modifier when a base class should provide a service (i.e., a member function) only to its derived classes and should not provide the service to other clients.
+    \bigbreak \noindent 
+    When a base class member function is inappropriate for a derived class, that member function can be redefined in the derived class with an appropriate implementation. This is called overriding the base class member function.
+    \bigbreak \noindent 
+    When a derived class member function overrides a base class member function, the base class member function can still be accessed from the derived class by preceding the base class member function name with the base class name and the scope resolution operator (::).
+    \bigbreak \noindent 
+    When an object of a derived class is created, the base class's constructor is called immediately (either explicitly or implicitly) to initialize the base class data members in the derived class object (before the derived class data members are initialized). Explicitly calling a base class constructor requires using the same special "member initialization list syntax" used with composition and const data members.
+    \bigbreak \noindent 
+    When a derived class object is destroyed, the destructors are called in the reverse order of the constructors - first the derived class destructor is called, then the base class destructor is called.
+    \bigbreak \noindent 
+    \bigbreak \noindent 
+
+    \subsection{Inheritance Syntax}
+    \bigbreak \noindent 
+    To declare a derived class:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // car is a derived class of vehicle.
+        class car : public vehicle
+        {
+            // Car data members and member functions
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    A constructor initialization list can be used to pass arguments from a derived class constructor to a base class constructor:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // Pass the string color to the base class vehicle constructor.
+        car::car(const string& color, int num_doors) : vehicle(color)
+        {
+            this->num_doors = num_doors;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    A derived class member function that overrides a base class member function can call the base class version of the function to do part of its work:
+    \begin{cppcode}
+        void car::print() const
+        {
+            vehicle::print();   // Call the vehicle version of print() to print the car's color.
+            cout << num_doors;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Upcasting and Downcasting}
+    \bigbreak \noindent 
+    \textbf{Upcasting} is converting a derived class pointer (or reference) to a pointer (or reference) of the derived class's base class. In other words, upcasting allows us to treat a derived type as though it were its base type. It is always allowed for public inheritance, without an explicit type cast. This is a result of the "is-a" relationship between the base and derived classes. For example, if car is a class derived from vehicle, the following code is legal:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        vehicle* vptr = new car();
+    \end{cppcode}
+    \bigbreak \noindent 
+    The car object does not actually become a vehicle object as a result of this type cast (in a sense, it already is one). However, the vehicle pointer can only be used to access parts of the car object that are defined in the vehicle class. For example, you can only call member functions that are defined in the vehicle class. The car object is treated like any other vehicle, and its car-specific data members and member functions are unavailable.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        vehicle* vptr = (vehicle*) new car();
+        vehicle* vptr = dynamic_cast<vehicle*>(new car()); // Using c++ casting
+        vehicle* vptr = static_cast<vehicle*>(new car()); // Using c++ casting
+    \end{cppcode}
+    \bigbreak \noindent 
+    The opposite process, converting a base class pointer (or reference) to a derived class pointer (or reference) is called \textbf{downcasting}. Downcasting is not allowed without an explicit type cast. The reason for this restriction is that the "is-a" relationship is not always symmetric. A car is a vehicle, but a vehicle may or may not be a car. For example:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        car c1;
+
+        vehicle* vptr = &c1;          // Upcast - no type cast required.
+
+        car* car_ptr = (car*) vptr;   // Downcast - type cast required.
+    \end{cppcode}
+    \bigbreak \noindent 
+    The code shown above works, because the object pointed to by vptr actually is a car object. If it wasn't, the results could lead to an unsafe operation.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bus b1;                       // Assume bus is also a derived class of vehicle.
+
+        vehicle* vptr = &b1;          // Upcast - no type cast required.
+
+        car* car_ptr = (car*) vptr;   // Downcast - type cast required. Fails because vptr
+                                        // points to a bus, not a car.
+    \end{cppcode}
+    \bigbreak \noindent 
+    C++ provides a special explicit cast called \textbf{dynamic\_cast} that allows for safe downcasting. If the type cast fails, it will return nullptr rather than crashing your program:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        car* carptr = dynamic_cast<car*>(vptr);
+        if (carptr != nullptr)
+        {
+            // Type cast succeeded, vptr was pointing to a car object
+            // Can now safely call car-specific member functions using carptr
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Subtype Polymorphism}
+    \bigbreak \noindent 
+    The term binding means matching a function or member function call to a function or member function definition.
+    \bigbreak \noindent 
+    In C++, binding normally takes place when the program is compiled and linked. This is referred to as early binding or static binding.
+    \bigbreak \noindent 
+    In object-oriented programming, subtype polymorphism refers to the ability of objects belonging to different types to respond to member function calls of the same name, each one according to an appropriate type-specific behavior. The calling code does not have to know the exact type of the called object; which member function definition is called is determined at run-time (this is called late binding or dynamic binding).
+    \bigbreak \noindent 
+    In order for dynamic binding to take place in C++, several conditions must be met:
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item The call must be to a member function, not a standalone function. Function calls in C++ always use static binding.
+        \item The member function must have been declared using the keyword virtual. Calls to non-virtual member functions always use static binding.
+        \item The member function must be called through a pointer or reference to an object, not an object name. All calls to member functions (including those to virtual member functions) through object names use static binding.
+    \end{enumerate}
+    \bigbreak \noindent 
+    With dynamic binding, C++ distinguishes between a static type and a dynamic type of a variable. The static type is determined at compile time. It's the type specified in the pointer declaration. For example, the static type of vptr is vehicle*. However, the dynamic type of the pointer is determined by the type of object to which it actually points: car* in this case. When a virtual member function is called using vptr, C++ resolves the dynamic type of vptr and ensures that the appropriate version of the member function is invoked, a process referred to as virtual dispatch.
+    \bigbreak \noindent 
+    Dynamic binding exacts a toll. Resolving the dynamic type of an object takes place at runtime and therefore incurs performance overhead. However, this penalty is negligible in most cases.
+    \bigbreak \noindent 
+    One of the most common runtime techniques for implementing virtual dispatch is a virtual member function table, or v-table. A v-table is simply an array of pointers to member functions. Each class that contains virtual member functions has a v-table. Each object that is an instance of a class with virtual member functions contains, as a hidden field, a pointer to the class's v-table. The compiler encodes a member function call as an offset into a v-table, and the appropriate v-table is used with that offset at runtime to access the correct member function.
+    \bigbreak \noindent 
+    \subsection{Declaring Virtual Member Functions}
+    \bigbreak \noindent 
+    Declaring Virtual Member Functions
+    \bigbreak \noindent 
+    \begin{cppcode}
+        virtual void print() const;
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{A member function in a derived class that overrides a virtual member function in a base class is automatically virtual as well.
+        \bigbreak \noindent 
+        Destructors may also be virtual. You should make the destructor for your class virtual if it contains any virtual member functions.
+    }
+    \bigbreak \noindent 
+    In C++, when you overload a virtual function from a base class in a derived class, you do not necessarily need to mark the function in the derived class as virtual again for it to behave as a virtual function. It will still be virtual in any further derived classes. However, explicitly marking it as virtual in the derived class can improve code readability and make the class's design intentions clearer.
+    \bigbreak \noindent 
+    \subsubsection{The override keyword}
+    \bigbreak \noindent 
+    Using override: Instead of (or in addition to) marking functions as virtual in derived classes, C++11 introduced the override specifier. This ensures that the function is intended to override a virtual function in a base class. Using override helps catch errors at compile-time where the function signature does not match any virtual function in the base class, thus preventing unintended behavior.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class Base {
+            public:
+            virtual void foo() { /* implementation */ }
+        };
+
+        class Derived : public Base {
+            public:
+            virtual void foo() override { /* new implementation */ }  // Using 'virtual' and 'override' for clarity
+            void foo() override; // Better approach... no need for another virtual keyword
+        };
+        void Base::foo() {
+            // Base class definition
+        }
+        void Derived::foo() {
+            // Derived class definition
+        }
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Abstract or Pure virtual Member Functions}
+    \bigbreak \noindent 
+    An abstract member function is a member function that has a special prototype, but no definition. C++ refers to abstract member functions as pure virtual member functions. The prototype for a pure virtual member function ends with = 0, like this:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        virtual void earnings() const = 0;
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{Since a pure virtual member function has no definition, you can't really call it. However, if a base class contains a pure virtual member function, a derived class is allowed to override the member function and provide a definition.}
+    \bigbreak \noindent 
+    \subsection{Abstract Classes}
+    \bigbreak \noindent 
+    A class that contains one or more pure virtual member functions is called an abstract class (as opposed to a concrete class that provides definitions for all of its member functions).
+    \bigbreak \noindent 
+    You cannot create an object of an abstract class. However, an abstract class can be used as a base class for inheritance purposes. A class derived from an abstract class must provide definitions for any pure virtual member functions that it inherits, or it is also an abstract class.
+    \bigbreak \noindent 
+    You can also declare a pointer (or a reference) of an abstract class type. Such a pointer (or reference) would typically be used to point to a derived class object.
+    \bigbreak \noindent 
+    \subsection{Interface Inheritance}
+    \bigbreak \noindent 
+    \textbf{Interface inheritance} allows a derived class to inherit a base class's data type (which can be useful for subtype polymorphism) without actually inheriting any of the base class's implementation (member function definitions, etc.).
+    \bigbreak \noindent 
+        An interface can be defined in C++ as an abstract class that contains only pure virtual member functions and symbolic constants (public data members that are static and const).
+
+    \pagebreak 
+    \unsect{<regex.h> Pattern Matching and String Validation}
+    \bigbreak \noindent 
+    \subsection{regcomp}
+    \bigbreak \noindent 
+    \begin{concept}
+        Compiles a regular expression into a format that the \textbf{regexec()} function can use to perform pattern matching.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+       int regcomp(regex_t *preg, const char *regex, int cflags) 
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{preg:} A pointer to a regex\_t structure that will store the compiled regular expression.
+        \item \textbf{regex:} The regular expression to compile.
+        \item \textbf{cflags:} Compilation flags that modify the behavior of the compilation. Common flags include REG\_EXTENDED (use extended regular expression syntax), REG\_ICASE (ignore case in match), REG\_NOSUB (don't report the match), and REG\_NEWLINE (newline-sensitive matching).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Return value}
+    \bigbreak \noindent 
+    Upon successful completion, the regcomp() function shall return 0. Otherwise, it shall return an integer value indicating an error as described in <regex.h>, and the content of preg is undefined.
+
+    \bigbreak \noindent 
+    \subsubsection{Return errors}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{REG\_NOMATCH}: regexec() failed to match.
+        \item \textbf{REG\_BADPAT}: Invalid regular expression.
+        \item \textbf{REG\_ECOLLATE}: Invalid collating element referenced.
+        \item \textbf{REG\_ECTYPE}: Invalid character class type referenced.
+        \item \textbf{REG\_EESCAPE}: Trailing '\textbackslash' in pattern.
+        \item \textbf{REG\_ESUBREG}: Number in "\textbackslash digit" invalid or in error.
+        \item \textbf{REG\_EBRACK}: "$[]$" imbalance.
+        \item \textbf{REG\_EPAREN}: "\textbackslash(\textbackslash)" or "()" imbalance.
+        \item \textbf{REG\_EBRACE}: "\textbackslash\{\textbackslash\}" imbalance.
+        \item \textbf{REG\_BADBR}: Content of "\textbackslash\{\textbackslash\}" invalid: not a number, number too large, more than two numbers, first larger than second.
+        \item \textbf{REG\_ERANGE}: Invalid endpoint in range expression.
+        \item \textbf{REG\_ESPACE}: Out of memory.
+        \item \textbf{REG\_BADRPT}: '?', '*', or '+' not preceded by valid regular expression.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Flags}
+    \begin{itemize}
+        \item \textbf{REG\_EXTENDED:} Enables the use of Extended Regular Expressions (ERE) rather than Basic Regular Expressions (BRE). EREs allow a broader set of regex features, such as more flexible quantifiers and additional metacharacters without needing to escape them.
+        \item \textbf{REG\_ICASE:} Makes the pattern matching case-insensitive. This means that characters will match regardless of being in upper or lower case. For example, using REG\_ICASE, the pattern "a" would match both 'a' and 'A'.
+        \item \textbf{REG\_NOSUB:} Disables the reporting of the position of matches. This flag is useful when you only need to know if a match occurred but not where it occurred. It can lead to performance improvements because the regex engine does not need to track and store the match positions.
+        \item \textbf{REG\_NEWLINE:} Alters the handling of newline characters in the text. Specifically, it:
+            \begin{itemize}
+                \item Prevents the match from spanning multiple lines. The ^ and $ metacharacters will match the start and end of the input string but not the start or end of a line within the string.
+                \item Causes the dot . metacharacter to stop matching at a newline, which it normally would match.
+                \item Treats newline characters in the input as a boundary that cannot be crossed by the quantifiers *, +, ?, and {n} unless explicitly included in a character class.
+            \end{itemize}
+        \item \textbf{REG\_NOTBOL and REG\_NOTEOL:}
+            \begin{itemize}
+                \item \textbf{REG\_NOTBOL (Not Beginning Of Line):} Tells the regex engine that the beginning of the provided string should not be treated as the beginning of the line. This affects how the $\land$ anchor (which normally matches the start of the string) behaves. Use this if the string is a substring that does not start at the beginning of a new line.
+                \item \textbf{REG\_NOTEOL (Not End Of Line):} Indicates that the end of the provided string should not be treated as the end of the line. This affects how the \$ anchor (which normally matches the end of the string) behaves. Use this if the string is a substring that does not end at the end of a line.
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Regexec}
+    \bigbreak \noindent 
+    \begin{concept}
+        After compiling a regular expression, we can use regexec to match against strings.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+         int regexec(const regex\_t *preg, const char *string, size\_t nmatch, regmatch\_t pmatch[], int eflags)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{preg:} The compiled regular expression.
+        \item \textbf{string:} The string to match against the regular expression.
+        \item \textbf{nmatch:} The maximum number of matches and submatches to find.
+        \item \textbf{pmatch:} An array of regmatch\_t structures that will hold the offsets of matches and submatches.
+        \item \textbf{eflags:} Execution flags that modify the behavior of the match. A common flag is REG\_NOTBOL which indicates that the beginning of the specified string is not the beginning of a line.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Return value}
+    \bigbreak \noindent 
+    Upon successful completion, the regexec() function shall return 0. Otherwise, it shall return REG\_NOMATCH to indicate no match.
+
+    \bigbreak \noindent 
+    \subsection{Regerror}
+    \bigbreak \noindent 
+    \begin{concept}
+        This function translates error codes from regcomp() and regexec() into human-readable messages.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        size_t regerror(int errcode, const regex\_t *preg, char *errbuf, size\_t errbuf\_size)
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{errcode:} The error code returned by regcomp() or regexec().
+        \item \textbf{preg:} The compiled regular expression (if the error is related to regexec()).
+        \item \textbf{errbuf:} The buffer where the error message will be stored.
+        \item \textbf{errbuf\_size:} The size of the buffer.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Return value}
+    \bigbreak \noindent 
+    Upon successful completion, the regerror() function shall return the number of bytes needed to hold the entire generated string, including the null termination. If the return value is greater than errbuf_size, the string returned in the buffer pointed to by errbuf has been truncated.
+
+    \bigbreak \noindent 
+    \subsection{Regfree}
+    \bigbreak \noindent 
+    \begin{concept}
+        Frees the memory allocated to the compiled regular expression.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void regfree(regex\_t *preg)
+    \end{cppcode}
+    \begin{itemize}
+        \item \textbf{preg:} The compiled regular expression to free.
+    \end{itemize}
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \subsection{regmatch\_t and pmatch}
+    \bigbreak \noindent 
+    \subsubsection{regmatch\_t}
+    \bigbreak \noindent 
+    regmatch\_t is a structure used to describe a single match (or submatch) found by regexec(). It contains at least the following two fields:
+    \begin{itemize}
+        \item \textbf{rm\_eo:} This is the end offset of the match, which is one more than the index of the last character of the match. In other words, rm\_eo - rm\_so gives the length of the match.
+        \item \textbf{rm\_so:} This is the start offset of the match, relative to the beginning of the string passed to regexec(). If the match is successful, rm\_so will be the index of the first character of the match.
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{pmatch array}
+    \bigbreak \noindent 
+    When you call regexec(), you can pass it an array of regmatch\_t structures as the pmatch argument. This array is where regexec() will store information about the matches (and submatches) it finds. The size of this array (nmatch) determines how many matches regexec() will look for and fill in. The zeroth element of this array corresponds to the entire pattern's match, and the subsequent elements correspond to parenthesized subexpressions (submatches) within the regular expression, in the order they appear.
+
+    \bigbreak \noindent 
+    \subsection{Regex Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        regex_t regex;
+        int reti;
+        char msgbuf[100];
+        regmatch_t pmatch[1]; // Array to store the match positions
+        const char* search = "abc";
+
+        // Compile regular expression
+        reti = regcomp(&regex, "^a[[:alnum:]]", REG_EXTENDED);
+        if (reti) {
+            fprintf(stderr, "Could not compile regex\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // Execute regular expression
+        // Note: Changed the third argument to 1 to indicate we want to capture up to 1 match
+        // and the fourth argument to pmatch to store the match position.
+        reti = regexec(&regex, search, 1, pmatch, 0);
+        if (!reti) {
+            printf("Match\n");
+            // If you want to use the match information, you can do so here.
+            // For example, to print the start and end positions of the match:
+            printf("Match at position %d to %d\n", (int)pmatch[0].rm_so, (int)pmatch[0].rm_eo - 1);
+        }
+        else if (reti == REG_NOMATCH) {
+            printf("No match\n");
+        }
+        else {
+            regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+            fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+            exit(EXIT_FAILURE);
+        }regex_t regex;
+    int reti;
+    char msgbuf[100];
+    regmatch_t pmatch[1]; // Array to store the match positions
+
+    // Compile regular expression
+    reti = regcomp(&regex, "^a[[:alnum:]]", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(EXIT_FAILURE);
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    // Execute regular expression
+    // Note: Changed the third argument to 1 to indicate we want to capture up to 1 match
+    // and the fourth argument to pmatch to store the match position.
+    reti = regexec(&regex, "abc", 1, pmatch, 0);
+    if (!reti) {
+        printf("Match\n");
+        // If you want to use the match information, you can do so here.
+        // For example, to print the start and end positions of the match:
+        printf("Match at position %d to %d\n", (int)pmatch[0].rm_so, (int)pmatch[0].rm_eo - 1);
+    }
+    else if (reti == REG_NOMATCH) {
+        printf("No match\n");
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(EXIT_FAILURE);
+    }
+
+    // Free the compiled regular expression
+    regfree(&regex);
+
+        for (int i=(int)pmatch[0].rm_so; i<=(int)pmatch[0].rm_eo; ++i) {
+            cout << search[i];
+        }
+        cout << endl;
+
+        regfree(&regex);
+    \end{cppcode}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 \end{document}

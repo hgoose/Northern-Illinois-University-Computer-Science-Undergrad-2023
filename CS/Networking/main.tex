@@ -24,7 +24,7 @@
 
 % Change the title
 \hypersetup{
-    pdftitle={Networking}
+    pdftitle={Network Programing}
 }
 
 \begin{document}
@@ -33,7 +33,7 @@
        \begin{center}
            \vspace*{1cm}
     
-           \textbf{Networking}
+           \textbf{Network Programming}
     
            \vspace{0.5cm}
             
@@ -51,7 +51,6 @@
                 
            Computer Science \\
            Northern Illinois University\\
-           April 22, 2024 \\
            United States\\
            
                 
@@ -59,6 +58,7 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+        \pagebreak 
     \bigbreak \noindent 
     \unsect{A brief overview}
     \bigbreak \noindent 
@@ -277,6 +277,1269 @@
      \subsubsection{Transport layer protocols}
      \bigbreak \noindent 
     \fig{.5}{./figures/11.png}
+
+    \pagebreak 
+    \unsect{Domain Name Service (DNS)}
+    \bigbreak \noindent 
+    \subsection{Domain Names}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item hierarchical distributed naming system
+        \item Uses \textbf{FQDN}: Fully qualified domain name
+        \item \textbf{DNS:} Domain name service
+            \begin{itemize}
+                \item Resolves query for FQDN into ip address
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{C library function: getaddrinfo}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int getaddrinfo(const char* node, const char* service, const struct addrinfo* hints, struct addrinfo** res)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Translates FQDN \textbf{node} into IP address
+        \item \textbf{res} is pointer to a list of address info structures
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{\textbf{service} and \textbf{hints} can be NULL}
+
+    \bigbreak \noindent 
+    \subsubsection{Address info structure}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct addrinfo {
+            int                 ai_flags;
+            int                 ai_family;
+            int                 ai_socktype;
+            int                 ai_protocol;
+            size_t              ai_addrlen;
+            struct sockaddr     *ai_addr; // Socket address
+            char                *ai_cannonname;
+            struct addrinfo     *ai_next;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{Socket address info structure}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct sockaddr_in {
+            short               sin_family  // e.g. AF_INET
+            unsigned_short      sin_port    // Port
+            struct in_addr      sin_addr    // IP Address
+            char                sin_zero[8] // Padding
+        };
+
+        struct in_addr {
+            unsigned long       s_addr;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{sin\_addr can be printed via \textbf{inet\_ntoa} fn}
+    \pagebreak 
+    \subsubsection{Example: Get host by name}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        /*
+        * getHostName.cxx
+        * 
+        * 	do DNS lookup
+        * 
+        */
+        #include <sys/types.h>
+        #include <sys/socket.h>
+        #include <netinet/in.h>
+        #include <arpa/inet.h>
+        #include <netdb.h>
+        #include <cstdio>
+        #include <cstdlib>
+        #include <iostream>
+        using namespace std;
+
+        int main(int argc, char*argv[]) {
+            struct addrinfo *res;
+            int error;
+            const char *hostname = "faculty.cs.niu.edu";
+
+            if (argc > 1) {
+                hostname = argv[1];
+            } 
+
+            error = getaddrinfo(hostname, NULL, NULL, &res);
+            if (error) {
+                cerr << hostname << ": " << gai_strerror(error) << endl;
+                exit(EXIT_FAILURE);
+            }	
+
+            // convert generic sockaddr to Internet sockaddr_in
+            struct sockaddr_in *addr = (struct sockaddr_in *) res->ai_addr;
+            // convert network representation into printable presentation
+            cout << hostname << " is: " << inet_ntoa(addr->sin_addr) << endl;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{gai\_strerror}
+    \bigbreak \noindent 
+    \begin{concept}
+        The \textbf{gai\_strerror()} function shall return a text string describing an error value for the \textbf{getaddrinfo()} and \textbf{getnameinfo()} functions listed in the <netdb.h> header.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    const char* gai_strerror(int ecode);
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{ecodes}
+    \bigbreak \noindent 
+    When the ecode argument is one of the following values listed in the <netdb.h> header:
+    \bigbreak \noindent 
+    \begin{center}
+        $[$EAI\_AGAIN$]$\\
+        $[$EAI\_BADFLAGS$]$\\
+        $[$EAI\_FAIL$]$\\
+        $[$EAI\_FAMILY$]$\\
+        $[$EAI\_MEMORY$]$\\
+        $[$EAI\_NONAME$]$\\
+        $[$EAI\_OVERFLOW$]$\\
+        $[$EAI\_SERVICE$]$\\
+        $[$EAI\_SOCKTYPE$]$\\
+        $[$EAI\_SYSTEM$]$
+    \end{center}
+    \bigbreak \noindent 
+    the function return value shall point to a string describing the error. If the argument is not one of those values, the function shall return a pointer to a string whose contents indicate an unknown error.
+    \bigbreak \noindent 
+    \subsubsection{Return value}
+    \bigbreak \noindent 
+    Upon successful completion, \textbf{gai\_strerror()} shall return a pointer to an implementation-defined string.
+
+
+
+    
+
+    \pagebreak 
+    \unsect{User Datagram Protocol (UDP)}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Simple message-based connection-less protocol
+            \begin{itemize}
+                \item Transmits information in one direction from source to destination without verifying the readiness or state of the reciever
+            \end{itemize}
+        \item Uses \textbf{datagram} as message
+        \item Stateless and fast
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{UDP Packet Format}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/udppacket.png}
+
+    \bigbreak \noindent 
+    \subsection{UDP Progamming}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Common abstraction:} Socket 
+        \item Socket is end-point of communication link
+            \begin{itemize}
+                \item Identified as IP address + port number
+                \item can recieve data, can send data
+            \end{itemize}
+        \item \textbf{Typical logic:} Server vs client
+            \begin{itemize}
+                \item Server ready to recieve datagram from any client 
+                \item client sends datagram to specific server
+                \item server responds with datagram to client
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Socket system calls}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/syscals2.png}
+
+    \bigbreak \noindent 
+    \subsubsection{UDP communications pattern}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/udpcomm.png}
+
+    \bigbreak \noindent 
+    \subsection{System call: Socket}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int socket(int domain, int type, int protocol)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Creates a new socket, as end point to a communications link
+        \item \textbf{Domain} is set to \textbf{AF\_INET}
+        \item \textbf{Type} is set to \textbf{SOCK\_DGRAM} for datagrams
+        \item \textbf{Protocol} is set to 0, i.e. default UDP
+        \item Returns socket descriptor 
+            \begin{itemize}
+                \item Used in \textbf{bind, sendto, recvfrom, close} (System calls)
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{System call: Bind}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Assigns address to socket:} IP number and port
+        \item \textbf{struct sockaddr} holds address information
+            \begin{itemize}
+                \item Will accept \textbf{struct sockaddr\_in} pointer
+            \end{itemize}
+        \item \textbf{addrlen} specifies length of \textbf{addr} structure
+        \item \textbf{Returns} 0 on success, -1 otherwise
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Structure sockaddr: 16 bytes}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct sockaddr {
+            short       sa_family   // Address family
+            char        sa_data[14] // Address data
+        };
+
+        struct sockaddr_in {
+            short               sin_family   // address family
+            unsigned short      sin_port     // port number: 2 bytes
+            struct in_addr      sin_addr     // IP address: 4 bytes
+            char                sin_zero[8]
+        };
+
+        struct in_addr {
+            unsigned long       s_addr;
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{sockaddr\_in members we care about}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{sin\_family}: Always AF\_INET in ipv4 communications
+        \item \textbf{sin\_port}: We use \textbf{htons(n)} fn to convert a c++ integer to a 16bit unsigned integer. e.g. \textbf{htons(4444)}
+        \item \textbf{sin\_addr}: Either
+            \begin{itemize}
+                \item \textbf{INADDR\_ANY}: For server, to specify the server IP
+                \item \textbf{inet\_addr("numeric ip (quad) as string")}: For client.
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Byte order}
+    \bigbreak \noindent 
+    In C programming, especially when dealing with network applications, it's crucial to manage byte order correctly due to differences in how data is stored in memory across different computer architectures. Byte order refers to the sequence in which bytes are arranged into larger data types (like integers) when stored in memory. The two most common byte orders are:
+    \begin{enumerate}
+        \item \textbf{Big-endian:} The most significant byte (MSB) is stored at the smallest address, the next significant byte in the next address, down to the least significant byte (LSB) at the highest address.
+        \item \textbf{Little-endian:} The LSB is at the smallest address, and the MSB is at the highest address.
+    \end{enumerate}
+
+
+
+    \subsection{Helper functions: htons, htonl, ntohs, ntohl}
+    \bigbreak \noindent 
+    To ensure data consistency across different systems, certain helper functions are used in network programming to convert between host and network byte orders. These are part of the POSIX (Portable Operating System Interface) standards, available in <arpa/inet.h> in C.
+    \begin{itemize}
+        \item \textbf{htonl() (Host TO Network Long):} Converts a 32-bit integer from host byte order to network byte order.
+        \item \textbf{htons() (Host TO Network Short):} Converts a 16-bit integer from host byte order to network byte order.
+        \item \textbf{ntohl() (Network TO Host Long):} Converts a 32-bit integer from network byte order to host byte order.
+        \item \textbf{ntohs() (Network TO Host Short):} Converts a 16-bit integer from network byte order to host byte order.
+    \end{itemize}
+    \bigbreak \noindent 
+    When sending data across a network, you would typically use these functions to convert multi-byte integers from the host's native byte order to network byte order before transmission. Similarly, upon receipt, you would convert the data from network byte order back to the host's native byte order. This handling ensures that applications developed on different platforms can communicate effectively over a network.
+    \bigbreak \noindent 
+    For example, if you're developing a network application that sends a 32-bit integer from a little-endian machine (like most Intel and AMD processors), you would use htonl() to convert the integer to big-endian format before sending it. On the receiving side, if the machine is big-endian, it would use ntohl() to convert the received integer back to its native byte order.
+    \bigbreak \noindent 
+    \subsubsection{Signatures}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        uint16_t htons(uint16_t hostshort);
+        uint32_t htonl(uint32_t hostlong);
+        uint16_t ntohs(uint16_t netshort);
+        uint32_t ntohl(uint32_t netlong);
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Helper function: inet\_addr}
+    \bigbreak \noindent 
+    The \textbf{inetb\_addr} function is a commonly used helper function in C network programming, provided by the <arpa/inet.h> header file. Its primary purpose is to convert an IPv4 address in its standard text representation (a string in dotted-decimal format) into a numeric binary format, which is used in various network-related system calls and structures.
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \begin{cppcode}
+     in_addr_t inet_addr(const char* cp) 
+    \end{cppcode}
+    \bigbreak \noindent 
+    Where \textbf{cp} is a constant character pointer to a null-terminated string representing the IPv4 address in dotted-decimal notation (e.g., "192.168.0.1").
+    \bigbreak \noindent 
+    \subsubsection{Return values}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item On success, \textbf{inet\_addr} returns the IPv4 address as a uint32\_t in \textbf{network byte order (big-endian)}.
+        \item If the string in cp does not contain a valid IP address, the function returns \textbf{INADDR\_NONE} (usually defined as (uint32\_t) -1).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{System call: recvfrom}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    ssize_t recvfrom(int sockfd, void* buf, size_t len, int flags, struct sockaddr* src_addr, socklen_t* addrlen)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Recieves a datagram \textbf{buf} of size \textbf{len} from socket \textbf{sockfd}
+            \begin{itemize}
+                \item will wait until a datagram is available
+                \item \textbf{flags} specify wait behavior, e.g: 0 for default
+            \end{itemize}
+        \item \textbf{src\_addr} will hold address information of sender
+            \begin{itemize}
+                \item \textbf{struct sockaddr} defines address structure
+                \item \textbf{addrlen} specifies length of \textbf{src\_addr} structure
+            \end{itemize}
+        \item Returns the number of bytes recieved, i.e size of datagram
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{System call: sendto}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    ssize_t sendto(int sockfd, const void* buf, size_t len, int flags, const struct sockaddr* dest_addr, socklen_t addrlen)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Sends datagram \textbf{buf} of size \textbf{len} to socket \textbf{sockfd}
+            \begin{itemize}
+                \item Will wait if there is no ready reciever
+                \item Flags specifies wait behavior, e.g: 0 for default
+            \end{itemize}
+        \item \textbf{dest\_addr} holds address information of reciever
+            \begin{itemize}
+                \item \textbf{struct sockaddr} defines address structure
+                \item \textbf{addrlen} specifies length of \textbf{dest\_addr} structure
+            \end{itemize}
+        \item Returns the number of bytes sent, i.e size of datagram
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{System call: close}
+    \bigbreak \noindent 
+    \subsubsection{signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int close(int fd)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Closes socket specified by \textbf{fd} socket descriptor
+        \item returs zero on success
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{UDP Programming example: simple server - echo}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        /*
+        * echoServer.cxx
+        * 
+        * UPD echo server
+        * 
+        * 	loops/waits for message received from client 
+        * 	      send message back to client
+        * 
+        * 	command line arguments:
+        * 		argv[1] port number to receive from
+        * 
+        */
+        #include <sys/socket.h>
+        #include <arpa/inet.h>
+        #include <unistd.h>
+
+        #include <cstdio>
+        #include <cstdlib>
+        #include <cstring>
+        #include <iostream>
+        using namespace std;
+
+        int main(int argc, char *argv[]) {
+
+            if (argc != 2) {
+                cerr << "USAGE: echoServer port\n";
+                exit(EXIT_FAILURE);
+            }
+
+            char buffer[256];
+            int received = 0;
+
+            int sock;
+            struct sockaddr_in server_address;  // structure for address of server
+            struct sockaddr_in client_address;  // structure for address of client
+            unsigned int addrlen = sizeof(client_address);
+
+            // Create the UDP socket 
+            if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+                perror("socket");
+                exit(EXIT_FAILURE);
+            }
+
+    \end{cppcode}
+    \pagebreak 
+    \begin{cppcode}
+        // Construct the server sockaddr_in structure 
+        memset(&server_address, 0, sizeof(server_address));    /* Clear struct */
+        server_address.sin_family = AF_INET;                   /* Internet/IP */
+        server_address.sin_addr.s_addr = INADDR_ANY;           /* Any IP address */
+        server_address.sin_port = htons(atoi(argv[1]));        /* server port */
+
+        // Bind the socket
+        if (bind(sock, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+            perror("bind");
+            exit(EXIT_FAILURE);
+        }
+
+        cout << "echoServer listening on port: " << argv[1] << endl;
+
+        // Run until cancelled 
+        while (true) {
+            // Receive a message from the client
+            if ((received = recvfrom(sock, buffer, 256, 0, (struct sockaddr *) &client_address, &addrlen)) < 0) {
+                perror("recvfrom");
+                exit(EXIT_FAILURE);
+            }
+            cout << "Client (" << inet_ntoa(client_address.sin_addr) << ") sent " << received << " bytes: " << buffer << endl;
+            // Send the message back to client 
+            if (sendto(sock, buffer, received, 0, (struct sockaddr *) &client_address, addrlen) < 0) {
+                perror("sendto");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        close(sock);
+        return 0;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{UDP programming example: Simple client - echo}
+    \bigbreak \noindent 
+    \begin{cppcode}
+ /*
+ * echoClient.cxx
+ * 
+ * UPD echo client
+ * 
+ * 	sends message to echo server
+ * 	waits for message received from server 
+ * 	      
+ * 	command line arguments:
+ * 		argv[1] IP number of server
+ * 		argv[2] port number to send to
+ * 		argv[3] message to send
+ *  
+ */
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+using namespace std;
+
+int main(int argc, char *argv[]) {
+	
+	if (argc != 4) {
+		cerr << "USAGE: echoClient server_ip port message\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	char buffer[256];
+	int echolen, received = 0;
+	
+	int sock;
+	struct sockaddr_in server_address;  // structure for address of server
+	unsigned int addrlen = sizeof(server_address);
+	
+	// Create the UDP socket
+	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		perror("Failed to create socket");
+		exit(EXIT_FAILURE);
+	}
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    // Construct the server sockaddr_in structure
+	memset(&server_address, 0, sizeof(server_address));    /* Clear struct */
+	server_address.sin_family = AF_INET;                   /* Internet/IP */
+	server_address.sin_addr.s_addr = inet_addr(argv[1]);   /* IP address */
+	server_address.sin_port = htons(atoi(argv[2]));        /* server port */
+	
+	// Send the message to the server (don't forget to count the terminating null)
+	echolen = strlen(argv[3]) + 1;
+	if (sendto(sock, argv[3], echolen, 0, (struct sockaddr *) &server_address, sizeof(server_address)) != echolen) {
+		perror("sendto");
+		exit(EXIT_FAILURE);
+	}
+	
+	// Receive the message back from the server 
+	if ((received = recvfrom(sock, buffer, 256, 0, (struct sockaddr *) &server_address, &addrlen)) != echolen) {
+		perror("recvfrom");
+		exit(EXIT_FAILURE);
+	}
+	
+	cout << "Server (" << inet_ntoa(server_address.sin_addr) << ") echoed: " << received << " bytes: " << buffer << endl;
+	
+	close(sock);
+	return 0;
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Transmission Control Protocol (TCP)}
+    \bigbreak \noindent 
+    \subsection{TCP / IP Protocol packet}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/tcp1.png}
+    \bigbreak \noindent 
+    \subsection{TCP Communication}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/tcp2.png}
+
+    \pagebreak 
+    \subsection{Socket System Calls}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/tcp3.png}
+
+    \bigbreak \noindent 
+    \subsection{TCP Communications Pattern}
+    \bigbreak \noindent 
+    \fig{.61}{./figures/tcp5.png}
+
+    \bigbreak \noindent 
+    \subsection{System call: Socket}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int socket(int domain, int type, int protocol)
+    \end{cppcode}
+    \begin{itemize}
+        \item Creates a new socket, as end point to a communications link
+        \item \textbf{Domain} is set to \textbf{AF\_INET}
+        \item \textbf{Type} is set to \textbf{SOCK\_STREAM} for stream communications
+        \item \textbf{Protocol} is set to 0, i.e 0 default TCP
+        \item Returns socket descriptor
+            \begin{itemize}
+                \item used in bind, listen, accept, connect, write, read, close
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Client System call: connect}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int connect(int sockfd, const struct sockaddr* addr, socklen_t addrlen)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item connects socket to remote IP number and port
+        \item \textbf{struct sockaddr} holds address information
+            \begin{itemize}
+                \item will accept \textbf{struct sockaddr\_in} pointer
+            \end{itemize}
+        \item \textbf{addrlen} specifies length of \textbf{addr} structure
+        \item returns 0 on success, -1 otherwise
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{TCP Client illustration}
+    \bigbreak \noindent 
+    \begin{cppcode}
+/*
+ * echoTCPClient.cxx
+ * 
+ * TCP echo client
+ * 
+ * 	sends message to echo server
+ * 	waits for message received from server 
+ * 	      
+ * 	command line arguments:
+ * 		argv[1] IP number of server
+ * 		argv[2] port number to send to
+ * 		argv[3] message to send
+ *  
+ */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+using namespace std;
+
+int main(int argc, char *argv[]) {
+	
+	if (argc != 4) {
+		cerr << "USAGE: echoTCPClient server_ip port message\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	char buffer[256];
+	int echolen, received = 0;
+	
+	int sock;
+	struct sockaddr_in server_address;  // structure for address of server
+	
+	// Create the TCP socket
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
+	
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    // Construct the server sockaddr_in structure
+	memset(&server_address, 0, sizeof(server_address));    /* Clear struct */
+	server_address.sin_family = AF_INET;                   /* Internet/IP */
+	server_address.sin_addr.s_addr = inet_addr(argv[1]);   /* IP address */
+	server_address.sin_port = htons(atoi(argv[2]));        /* server port */
+	
+	// connect to server
+	if (connect(sock, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+		perror("connect");
+		exit(EXIT_FAILURE);
+	}
+	
+	// Send the message to the server (don't forget to count the terminating null) 
+	echolen = strlen(argv[3]) + 1;
+	if (write(sock, argv[3], echolen) < 0) {
+		perror("write");
+		exit(EXIT_FAILURE);
+	}
+	
+	// Receive the message back from the server 
+	if ((received = read(sock, buffer, 256)) < 0) {
+		perror("read");
+		exit(EXIT_FAILURE);
+	}
+	
+	cout << "Server (" << inet_ntoa(server_address.sin_addr) << ") echoed: " << received << " bytes: " << buffer << endl;
+	
+	close(sock);
+	return 0;
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Server system call: bind}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen)
+    \end{cppcode}
+    \begin{itemize}
+        \item assigns address to socket: IP number and port
+        \item \textbf{struct sockaddr} holds address information
+            \begin{itemize}
+                \item will accept \textbf{struct sockaddr\_in} pointer
+            \end{itemize}
+        \item \textbf{addrlen} specifies length of \textbf{addr} structure
+        \item returns 0 on success, -1 otherwise
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Server system call: Listen}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int listen(int sockfd, int backlog)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item marks socket as passive socket
+            \begin{itemize}
+                \item it will be used to accept incoming requests via accept
+                \item Term: "server socket"
+            \end{itemize}
+        \item \textbf{backlog} specifies length of incoming connection queue
+        \item returns 0 on success, -1 otherwise
+    \end{itemize}
+
+
+
+    \bigbreak \noindent 
+    \subsection{Server system call: Accept}
+    \bigbreak \noindent 
+    \subsubsection{Signature}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int accept(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item extracts connection request from incoming queue
+        \item creates a new connected socket
+            \begin{itemize}
+                \item returns a new file descriptor for that socket, returns -1 on failure
+            \end{itemize}
+        \item \textbf{struct sockaddr} holds address information
+            \begin{itemize}
+                \item will accept struct \textbf{sockaddr\_in} pointer
+            \end{itemize}
+        \item \textbf{addrlen} specifies length of \textbf{addr} structure
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{TCP Server illustration}
+    \bigbreak \noindent
+    \begin{cppcode}
+/*
+ * echoTCPServer.cxx
+ * 
+ * TCP echo server
+ * 
+ * 	loops/waits for message received from client 
+ * 	      send message back to client
+ * 
+ * 	command line arguments:
+ * 		argv[1] port number to receive from
+ * 
+ */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+using namespace std;
+        
+int main(int argc, char *argv[]) {
+	// check arguments
+	if (argc != 2) {
+		cerr << "USAGE: echoTCPServer port\n";
+		exit(EXIT_FAILURE);
+	}
+		
+	// Create the TCP socket 
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}	
+	// create address structures
+	struct sockaddr_in server_address;  // structure for address of server
+	struct sockaddr_in client_address;  // structure for address of client
+	unsigned int addrlen = sizeof(client_address);	
+    \end{cppcode}
+    \pagebreak 
+    \begin{cppcode}
+    // Construct the server sockaddr_in structure 
+	memset(&server_address, 0, sizeof(server_address));   /* Clear struct */
+	server_address.sin_family = AF_INET;                  /* Internet/IP */
+	server_address.sin_addr.s_addr = INADDR_ANY;          /* Any IP address */
+	server_address.sin_port = htons(atoi(argv[1]));       /* server port */
+
+	// Bind the socket
+	if (bind(sock, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+		perror("bind");
+		exit(EXIT_FAILURE);
+	}	
+
+	// listen: make socket passive and set length of queue
+	if (listen(sock, 64) < 0) {
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}	
+	
+	cout << "echoServer listening on port: " << argv[1] << endl;
+
+	// Run until cancelled 
+	while (true) {
+		int connSock=accept(sock, (struct sockaddr *) &client_address, &addrlen);
+		if (connSock < 0) {
+			perror("accept");
+			exit(EXIT_FAILURE);
+		}
+		// read a message from the client
+		char buffer[1024];
+		int received = read(connSock, buffer, sizeof(buffer));
+		if (received < 0) {
+			perror("read");
+			exit(EXIT_FAILURE);
+		}
+		cout << "Client (" << inet_ntoa(client_address.sin_addr) << ") sent " << received << " bytes: " << buffer << endl;
+		// write the message back to client 
+		if (write(connSock, buffer, received) < 0) {
+			perror("write");
+			exit(EXIT_FAILURE);
+		}
+		close(connSock);
+	}
+	
+	close(sock);
+	return 0;
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{TCP Server \& Shell Job Control}
+    \bigbreak \noindent 
+    \subsection{Improve TCP Client}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Become Useful as generic client to any TCP server
+        \item \textbf{Improvements:}
+            \begin{itemize}
+                \item Accept FQDN as serve address
+                \item read and process complete server response
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Accept FQDN as server address}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // Lookup FQDN
+    struct addrinfo* res, hints;
+    memset(&hints,0,sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    int error = getaddrinfo(argv[1], argv[2], &hints, &res);
+
+    if (error) { ... }
+
+    // Create the tcp socket as normal
+
+    // Connect to server
+    if (connect(sock, res->ai_addr, res->ai_addrlen) < 0 ) { ... }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Process complete server response}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // Recieve the message back from the server
+        do {
+            recieved = read(sock, buf, sizeof(buf))
+            if (recieved < 0) { ... }
+            cout.write(buf, received);
+        } while (recieved > 0);
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Full example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+/*
+ * TCPClient.cxx
+ * 
+ * TCP client
+ * 
+ * 	sends message to TCP server
+ * 	waits for message received from server 
+ * 	      
+ * 	command line arguments:
+ * 		argv[1] FQDN of server
+ * 		argv[2] port number to send to
+ * 		argv[3] request to send
+ *  
+ */
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <iostream>
+using namespace std;
+
+int main(int argc, char *argv[]) {
+	if (argc != 4) {
+		cerr << "USAGE: TCPClient server_name port request\n";
+		exit(EXIT_FAILURE);
+	}	
+	// lookup FQDN
+	struct addrinfo *res, hints;
+		
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	
+	int error = getaddrinfo(argv[1], argv[2], &hints, &res);
+	if (error) {
+		cerr << argv[1] << ": " << gai_strerror(error) << endl;
+		exit(EXIT_FAILURE);
+	}		
+	char buffer[1024];
+	int sent, received;
+	
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+	// Create the TCP socket
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+		perror("Failed to create socket");
+		exit(EXIT_FAILURE);
+	}	
+	
+	// connect to server
+	if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
+		perror("connect");
+		exit(EXIT_FAILURE);
+	}
+		
+	// Send the message string to the server 
+	sent = write(sock, argv[3], strlen(argv[3])+1);
+	if (sent < 0) {
+		perror("write");
+		exit(EXIT_FAILURE);
+	}
+			
+	// Receive the message back from the server 
+	do {
+		received = read(sock, buffer, sizeof(buffer));
+		if (received < 0) {
+			perror("read");
+			exit(EXIT_FAILURE);
+		}
+		cout.write(buffer, received);
+	} while (received > 0);
+	cout << endl;	
+		
+	close(sock);
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Improve TCP server}
+    \bigbreak \noindent 
+    \subsubsection{TCP Server Fork}
+    \begin{itemize}
+        \item server starts loop
+            \begin{itemize}
+                \item blocks on accept for connection from client
+                \item after accept:
+                    \begin{itemize}
+                        \item accept returns dedicated connection socket
+                        \item server forks into parent and child process
+                    \end{itemize}
+            \end{itemize}
+        \item parent process
+            \begin{itemize}
+                \item closes dedicated connection socket
+                \item continues to block for next accept
+            \end{itemize}
+        \item child process
+            \begin{itemize}
+                \item serves client request
+                \item communicates with client via dedicated connection socket
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{TCP Server Fork basic logic}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        while (true) {
+            connSock = accept(sock, ...);
+            if (fork()) { // Parent 
+                close(connSock);
+            } else { // Child
+                // Process client's request via connSock
+                ...
+            }
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{TCP Server Fork example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+ /*
+ * TCPServerFork.cxx
+ * 
+ * TCP echo server
+ * 
+ * 	loops/waits/forks for message received from client 
+ * 	      send message back to client
+ * 
+ * 	command line arguments:
+ * 		argv[1] port number to receive from
+ * 
+ */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+using namespace std;
+
+void processClientRequest( int connSock) {
+	int received;
+	char buffer[1024];
+	
+	// read a message from the client
+	if ((received = read(connSock, buffer, sizeof(buffer))) <= 0) {
+		perror("read");
+		exit(EXIT_FAILURE);
+	}
+	
+	cout << "Client sent " << received << " bytes: " << buffer << endl;
+		
+	// write the message back to client 
+	if (write(connSock, buffer, received) < 0) {
+		perror("write");
+		exit(EXIT_FAILURE);
+	}
+	close(connSock);
+	exit(EXIT_SUCCESS);
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		cerr << "USAGE: TCPServerFork port\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	// Create the TCP socket 
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}	
+	// create address structures
+	struct sockaddr_in server_address;  // structure for address of server
+	struct sockaddr_in client_address;  // structure for address of client
+	unsigned int addrlen = sizeof(client_address);	
+
+	// Construct the server sockaddr_in structure 
+	memset(&server_address, 0, sizeof(server_address));   /* Clear struct */
+	server_address.sin_family = AF_INET;                  /* Internet/IP */
+	server_address.sin_addr.s_addr = INADDR_ANY;          /* Any IP address */
+	server_address.sin_port = htons(atoi(argv[1]));       /* server port */
+
+	// Bind the socket
+	if (bind(sock, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+		perror("bind");
+		exit(EXIT_FAILURE);
+	}	
+	
+	// listen: make socket passive and set length of queue
+	if (listen(sock, 64) < 0) {
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}
+	
+	cout << "TCPServer listening on port: " << argv[1] << endl;
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+	// Run until cancelled 
+	while (true) {
+		int connSock=accept(sock, (struct sockaddr *) &client_address, &addrlen);
+		if (connSock < 0) {
+			perror("accept");
+			exit(EXIT_FAILURE);
+		}
+		// fork
+		if (fork()) { 	    // parent process
+			close(connSock);
+		} else { 			// child process
+			processClientRequest(connSock);
+		}
+	}	
+	close(sock);
+	return 0;
+}   
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Improved TCP Server and Client example: List directory}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item After accept, server forks to service client request
+            \begin{itemize}
+                \item Parent process will loop to next accept
+            \end{itemize}
+        \item Child process serves client request
+            \begin{itemize}
+                \item Read directory path name from client
+                \item Open directory
+                \item Read directory entries, send file names to client
+                \item End process
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Program}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    /*
+ * TCPServerReadDir.cxx
+ * 
+ * TCP server
+ * 
+ * 	loops/forks to serve request from client 
+ * 	      opens directory, sends back lines of file names to client
+ * 
+ * 	command line arguments:
+ * 		argv[1] port number to receive requests on
+ * 
+ */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+using namespace std;
+
+void processClientRequest(int connSock) {
+	int received;
+	char path[1024], buffer[1024];
+
+	// read a message from the client
+	if ((received = read(connSock, path, sizeof(path))) < 0) {
+		perror("receive");
+		exit(EXIT_FAILURE);
+	}
+	cout << "Client request: " << path << endl;
+
+	// open directory	
+	DIR *dirp = opendir(path);
+	if (dirp == 0) {
+		// tell client that an error occurred
+		strcpy(buffer, path);
+		strcat(buffer, ": could not open directory\n");
+		if (write(connSock, buffer, strlen(buffer)) < 0) {
+			perror("write");
+		 	exit(EXIT_FAILURE);
+		}
+		exit(EXIT_SUCCESS);
+	}
+	
+	// read directory entries
+	struct dirent *dirEntry;
+	while ((dirEntry = readdir(dirp)) != NULL) {
+		strcpy(buffer, dirEntry->d_name);
+		strcat(buffer, "\n");
+		if (write(connSock, buffer, strlen(buffer)) < 0) {
+			perror("write");
+			exit(EXIT_FAILURE);
+		}
+		cout << "sent: " << buffer;		
+	}	
+	closedir(dirp);
+	cout << "done with client request\n";
+	close(connSock);
+	exit(EXIT_SUCCESS);
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+int main(int argc, char *argv[]) {
+
+	if (argc != 2) {
+		cerr << "USAGE: TCPServerReadDir port\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	// Create the TCP socket 
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}	
+	// create address structures
+	struct sockaddr_in server_address;  // structure for address of server
+	struct sockaddr_in client_address;  // structure for address of client
+	unsigned int addrlen = sizeof(client_address);	
+
+	// Construct the server sockaddr_in structure 
+	memset(&server_address, 0, sizeof(server_address));   /* Clear struct */
+	server_address.sin_family = AF_INET;                  /* Internet/IP */
+	server_address.sin_addr.s_addr = INADDR_ANY;          /* Any IP address */
+	server_address.sin_port = htons(atoi(argv[1]));       /* server port */
+
+	// Bind the socket
+	if (bind(sock, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+		perror("bind");
+		exit(EXIT_FAILURE);
+	}	
+	
+	// listen: make socket passive and set length of queue
+	if (listen(sock, 64) < 0) {
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}
+	
+	cout << "TCPServerReadDir listening on port: " << argv[1] << endl;
+
+	// Run until cancelled 
+	while (true) {
+		int connSock=accept(sock, (struct sockaddr *) &client_address, &addrlen);
+		if (connSock < 0) {
+			perror("accept");
+			exit(EXIT_FAILURE);
+		}
+		// fork
+		if (fork()) { 	    // parent process
+			close(connSock);
+		} else { 			// child process
+			processClientRequest(connSock);
+		}
+	}	
+	close(sock);
+	return 0;
+} 
+    \end{cppcode}
 
     
 \end{document}

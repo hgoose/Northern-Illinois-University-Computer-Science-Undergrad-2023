@@ -900,6 +900,57 @@ void merge_sort(int arr[], int start, int end) {
     \end{itemize}
 
     \pagebreak 
+    \subsection{Derivation: Number of leafs in a complete or almost complete tree}
+    \bigbreak \noindent 
+    Consider the almost complete binary tree (max heap in this case)
+    \bigbreak \noindent 
+    \fig{1}{./figures/bintree1.png}
+    \bigbreak \noindent 
+    To compute the number of leaf nodes in this tree, we need two quantitys, 
+    \begin{enumerate}
+        \item The number of unfilled nodes at depth $d$
+        \item The number of leaf nodes at depth $d-1$
+    \end{enumerate}
+    \bigbreak \noindent 
+    To find the number of unfilled nodes at depth $d$, we use
+    \begin{align*}
+        n - (2^{d} -1) = n-2^{d} + 1
+    .\end{align*}
+    The quantity $2^{d}-1$ returns the number of nodes at depth $d-1$, Hence, subtracting $n$ from this quantity gives the number of leaf nodes at depth $d$
+    \bigbreak \noindent 
+    To find the number of leaf nodes at depth $d-1$, we use
+    \begin{align*}
+        \floor{
+            \frac{2^{d+1}-n-1}{2}
+        }
+    .\end{align*}
+    Where $d$ is the depth of the tree, and $n$ is the total number of nodes in the tree. The idea behind this formula is, we find the total number of possible nodes at depth $d$ ($2^{d}$), then subtract the number of leaf nodes at depth $d$ to get the number of nodes it will take to completly fill $d$, divding by 2 gives the number of leaf nodes at depth $d-1$ (flooring the result of course).
+    \bigbreak \noindent 
+    The summation of these results gives the total number of leaf nodes $L$. That is,
+    \begin{align*}
+        L = \floor{\frac{2^{d+1}-n-1}{2}} + (n-2^{d}+1)
+    .\end{align*}
+
+    \pagebreak 
+    \subsection{Algorithm: Verify max heap (assuming complete or almost complete binary tree)}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool is_max_heap(int a[], int n) {
+
+            int depth = log2(n);
+            int leaf = (pow(2,(depth + 1)) - n -1) / 2 + (n - pow(2,depth) + 1);
+
+            for (int i=0,j=1,k=2; i<(n-leaf); ++i, j=j+2, k=k+2) {
+                if (a[i] < a[j] || a[i] < a[k]) {
+                    return false;
+                }
+            }
+
+        }
+    return true;
+    \end{cppcode}
+
+    \pagebreak 
     \unsect{
         Heap Sort
     }
@@ -2304,6 +2355,94 @@ bool hash_table::erase(int key)
     \end{cppcode}
 
     \pagebreak 
+    \unsect{Sorted Singly-linked list: Insert, remove, remove all}
+    \bigbreak \noindent 
+    \begin{cppcode}
+void sorted_list::insert(int value)
+{
+    // Create a new node with value
+    node* newnode = new node(value, nullptr);
+
+    // Create traversal and lagging pointers
+    node* ptr = l_front, *trail = nullptr;
+
+    // Traverse list, either we get to the end, or we find 
+    // the correct slot to put the new node
+    while (ptr != nullptr && value > ptr->value) {
+        // Havent found a spot yet, push pointers forward
+        trail = ptr; 
+        ptr = ptr->next;
+    }
+
+    // Value was never greater than any elements, we can insert at the start
+    if (trail == nullptr) { 
+        newnode->next = l_front;
+        l_front = newnode;
+    // Else, trail will be at the slot we need to insert, and ptr will the node after,
+    } else {
+        newnode->next = trail->next; // Have newnode next point to node after trail
+        trail->next = newnode; // Have trail->next point to newnode
+    }
+    ++l_size; // Increment the size
+}
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+void sorted_list::remove_first(int value) {
+    node* ptr = l_front;
+    node* trail = nullptr;
+
+    while (ptr != nullptr) {
+        if (ptr->value == value) {
+            if (trail == nullptr) {
+                // The node to be removed is the first node
+                l_front = ptr->next; // Move the head to the next node
+            } else {
+                // The node to be removed is not the first node
+                trail->next = ptr->next; // Bypass the node to be removed
+            }
+            delete ptr; // Delete the node to avoid memory leak
+            --l_size;   // Decrement the size of the list
+            break;      // Exit the loop after removing the first occurrence
+        } else {
+            trail = ptr;      // Move trail to the current node
+            ptr = ptr->next;  // Move to the next node
+        }
+    }
+}
+    \end{cppcode}
+    \pagebreak 
+    \begin{cppcode}
+void sorted_list::remove(int value)
+{
+    node* ptr = l_front, *trail = nullptr, *temp;
+
+    while (ptr != nullptr) {
+        // Check if the current node contains the value to be removed
+        if (ptr->value == value) {
+            temp = ptr;
+            if (trail == nullptr) {
+                // Removing the first element
+                l_front = ptr->next;
+                ptr = l_front;  // Move ptr to the next node in the list
+            } else {
+                // Link previous node to the next node, skipping the current node
+                trail->next = ptr->next;
+                ptr = ptr->next;  // Move ptr to the next node in the list
+            }
+            delete temp;  // Delete the current node
+            l_size--;     // Decrement the size of the list
+        } else {
+            // Move to the next node if the current node does not contain the value to be removed
+            trail = ptr;
+            ptr = ptr->next;
+        }
+    }
+}
+    \end{cppcode}
+
+    \pagebreak 
     \unsect{Doubly-linked list as a template class}
     \bigbreak \noindent 
     \begin{cppcode}
@@ -3167,9 +3306,9 @@ end procedure
     \bigbreak \noindent 
     \subsection{Binary Search Tree Insertion}
     \bigbreak \noindent 
-    Insertion into a binary search tree can be coded either iteratively or recursively. If the tree is empty, 
+    Insertion into a binary search tree can be coded either iteratively or recursively. 
     \bigbreak \noindent 
-    \nt{the new element is inserted as the root node of the tree. Otherwise, the key of the new element is compared to the key of the root node to determine whether it must be inserted in the root's left subtree or its right subtree. This process is repeated until a null link is found or we find a key equal to the key we are trying to insert (if duplicate keys are disallowed). The new tree node is always inserted as a leaf node.}
+    \nt{If the tree is empty, the new element is inserted as the root node of the tree. Otherwise, the key of the new element is compared to the key of the root node to determine whether it must be inserted in the root's left subtree or its right subtree. This process is repeated until a null link is found or we find a key equal to the key we are trying to insert (if duplicate keys are disallowed). The new tree node is always inserted as a leaf node.}
     \bigbreak \noindent 
     \subsubsection{Iterative Insertion into a Binary Search Tree Pseudocode}
     \bigbreak \noindent 

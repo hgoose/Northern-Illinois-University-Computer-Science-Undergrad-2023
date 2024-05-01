@@ -1,0 +1,508 @@
+//***************************************************************************
+//
+//  bstree.h
+//  CSCI 241 A17
+//  Binary search tree
+//
+//  Created by Nate Warner z2004109
+//
+//***************************************************************************
+
+#ifndef BSTREE_H
+#define BSTREE_H
+
+#include <iostream> // Cout and such
+#include <algorithm> // For std::max
+#include <functional> // To create recursive lambda helper functions
+#include <queue> // To help with the level order traversal
+
+/* 
+ * Node structure
+*/
+template <typename K, typename V>
+struct node {
+
+    // Node structure data members
+    K key = K{};
+    V value = V{};
+    node<K,V>* left;
+    node<K,V>* right;
+
+    // Constructors
+    node() = default;
+    node(K key, V value, node<K,V>* left, node<K,V>* right) : key(key), value(value), left(left), right(right) {}
+};
+
+
+/* 
+ * Binary search tree class
+*/
+template <typename K, typename V>
+class bstree {
+
+    // Data members
+    node<K,V>* root = nullptr;
+    size_t m_size = 0;
+
+public:
+
+    // Defining the copy lambda up here because its used in more than one method
+    std::function<void(const node<K, V>*)> preorderCopy = [&](const node<K, V>* n) {
+        if (n != nullptr) {
+            insert(n->key, n->value);  // Insert the node into the new tree
+            preorderCopy(n->left);  // Recursively copy the left subtree
+            preorderCopy(n->right);  // Recursively copy the right subtree
+        }
+    };
+
+    // Member function declarations
+    bstree() = default;
+    ~bstree();
+    bstree(const bstree<K, V>& x);
+    bstree<K, V>& operator=(const bstree<K, V>& x);
+    void clear();
+    size_t size() const;
+    size_t height() const;
+    bool empty() const;
+    const K& min() const;
+    const K& max() const;
+    bool insert(const K& key, const V& value);
+    bool remove(const K& key);
+    const node<K, V>* find(const K& key) const;
+    void preorder() const;
+    void inorder() const;
+    void postorder() const;
+    void level_order() const;
+    void printNode(const node<K,V>* node) const;
+};
+
+/*
+ * Function to print the contents of a node. 
+ * Format: 
+ *          Key: Value
+ * @param node node to be printed
+*/
+template<typename K, typename V>
+void bstree<K,V>::printNode(const node<K,V>* node) const{
+    // Print the contents of the node in specific format
+    std::cout << node->key << ": " << node->value << std::endl;
+}
+
+
+/**
+ * Destructor that cleans up all nodes in the tree.
+*/
+template<typename K, typename V>
+bstree<K,V>::~bstree() {
+    this->clear();
+}
+
+
+/**
+ * Copy constructor. Creates a new tree as a copy of an existing tree.
+ * 
+ * @param x the existing binary search tree that will have its contents copied
+*/
+template<typename K, typename V>
+bstree<K, V>::bstree(const bstree<K, V>& x) {
+    if (x.empty()) return;  // If the original tree is empty, leave the new tree empty as well
+    
+    // Call the lambda fn defined above
+    preorderCopy(x.root);  // Start copying from the root of the source tree
+}
+
+
+/**
+ * Copy assignment operator. Replaces the contents of the tree with a copy
+ * of the contents of another tree.
+ *
+ * @param x the existing binary search tree that will have its contents copied
+ * @return a reference to this tree
+*/
+template<typename K, typename V>
+bstree<K, V>& bstree<K,V>::operator=(const bstree<K, V>& x) {
+
+    if (this != &x) {  // Check for self-assignment
+        clear();  // Clear the current tree
+        m_size = 0;  // Reset size
+
+        // Call the lambda fn defined above
+        preorderCopy(x.root);  // Start copying from the root of the source tree
+    }
+    return *this;  // Return a reference to this tree
+}
+
+
+/**
+ * Clears the tree of its elements and resets its size to 0.
+*/
+template<typename K, typename V>
+void bstree<K,V>::clear() {
+
+    // Recursive lambda
+    std::function<void(node<K,V>*)> clearNode = [&](node<K,V>* n) {
+        if (n != nullptr) {
+            clearNode(n->left);
+            clearNode(n->right);
+            delete n;
+        }
+    };
+    clearNode(root); // Call lambda starting with root
+    root = nullptr; // Make sure to reset the root after clearing
+    m_size = 0; // Reset size to 0 as the tree is now empty
+}
+
+
+/**
+ * Returns the number of elements in the tree.
+ * 
+ * @return size_t the size of the tree
+*/
+template<typename K, typename V>
+size_t bstree<K, V>::size() const {
+    return this->m_size;
+}
+
+
+/**
+ * Calculates the height of the tree.
+ * 
+ * @return the height of the tree
+ *
+ * @note An empty tree has a height of zero. The root node has a height of one, all other nodes have height: height(parent) + 1. 
+ * This function finds the maxmimum height
+*/
+template<typename K, typename V>
+size_t bstree<K, V>::height() const {
+
+    // Recursive lambda
+    std::function<size_t(node<K,V>* p, size_t currentheight)> getheight = [&](node<K,V>* p, size_t parentheight) -> size_t {
+
+        // Base case, node we called the function with is not valid, return zero
+        if (p == nullptr) {
+            return 0;
+        }
+
+        // Compute the height of the node (parentheight + 1)
+        int currentheight = parentheight + 1;
+
+        // Recursively call the lambda to get the height of the left and right subtree
+        int leftheight = getheight(p->left, currentheight);
+        int rightheight = getheight(p->right, currentheight);
+
+        // Find and return the max
+        return std::max(currentheight, std::max(leftheight, rightheight));
+    };
+
+    // Call lambda starting with root and its parent height (0)
+    return getheight(this->root, 0);
+}
+
+
+/**
+ * Checks if the tree is empty (i.e., its size is 0).
+ * 
+ * @return true if the tree is empty, false otherwise
+*/
+template<typename K, typename V>
+bool bstree<K, V>::empty() const {
+    return !(this->m_size);
+}
+
+
+/**
+ * Finds the minimum key in the tree. We assume the tree will not be empty when called
+ * 
+ * @return the minimum key
+ *
+ * @note in a BST, the minimum element will be the leftmost node
+*/
+template<typename K, typename V>
+const K& bstree<K, V>::min() const {
+
+    node<K,V>* curr = root, *trail = nullptr;
+    
+    // Traverse to the leftmost node, with the trail pointer always one behind
+    while (curr != nullptr) {
+        trail = curr;
+        curr = curr->left;
+    }
+    // Trail will point to the leftmost node, return its key
+    return trail->key;
+}
+
+
+/**
+ * Finds the maximum key in the tree. We assume the tree will not be empty when called
+ * 
+ * @return the maxmimum key
+ *
+ * @note in a BST, the minimum element will be the rightmost node
+*/
+template<typename K, typename V>
+const K& bstree<K, V>::max() const {
+    node<K,V>* curr = root, *trail = nullptr;
+
+    // Traverse to the rightmode node, with the trail pointer always one behind
+    while (curr != nullptr) {
+        trail = curr;
+        curr = curr->right;
+    }
+    // Trail will point to the rightmost node, return its key
+    return trail->key;
+}
+
+
+/**
+ * Inserts a key-value pair into the tree if the key does not already exist.
+ *
+ * @param key the key to insert
+ * @param value the value associated with the key
+ * @return true if the insertion was successful, false if the key already exists
+*/
+template<typename K, typename V>
+bool bstree<K, V>::insert(const K& key, const V& value) {
+
+    node<K,V>* p = root, *parent = nullptr;
+
+    // Traverse the tree, either we find a position to insert, 
+    // or we find a key the same as the one we want to insert.
+    while (p!=nullptr && key !=p->key) {
+        parent = p; // Assign parent
+        
+        // Find direction to go next
+        if (key < p->key) {
+            p = p->left;
+        } else {
+            p = p->right;
+        }
+    }
+
+    // We found a duplicate, return false we are not inserting
+    if (p != nullptr) {
+        return false;
+    }
+
+    // Else, we can insert the node
+    node<K,V>* new_node = new node<K,V>(key,value, nullptr, nullptr);
+
+    // Root was always nullptr (empty list), we can insert the newnode as the root
+    if (parent == nullptr) {
+        root = new_node;
+
+    // Else, we find the direction to insert
+    } else {
+        if (new_node->key < parent->key) {
+            parent->left = new_node;
+        } else {
+            parent->right = new_node;
+        }
+    }
+
+    // Increase the size and return true
+    ++m_size;
+    return true;
+}
+
+
+/**
+ * Removes a key from the tree if it exists.
+ *
+ * @param key the key to remove
+ * @return true if the key was removed, false if the key was not found
+*/
+template<typename K, typename V>
+bool bstree<K, V>::remove(const K& key) {
+
+    node<K,V>* p = root, *parent = nullptr, *replace = nullptr, *replace_parent = nullptr;
+
+    // Traverse the tree, until we reach the end or find the node with the specified key
+    while (p!=nullptr && key != p->key) {
+        parent = p; // Assign the parent
+
+        // find the direction to go next
+        if (key < p->key) {
+            p = p->left;
+        } else {
+            p = p->right;
+        }
+    }
+
+    // Reached the end, didnt find the node. Return false
+    if (p == nullptr) {
+        return false;
+    }
+
+    // Case 1: Node to remove has no left child, replace with right child
+    if (p->left == nullptr) {
+        replace = p->right;
+
+    // Case 2: Node to remove has no right child, replace with left child
+    } else if (p->right == nullptr) {
+        replace = p->left;
+
+    // Case 3: Node to remove has left and right child
+    } else {
+
+        // Go left once
+        replace_parent = p;
+        replace = p->left;
+
+        // Go as far right as possible
+        while (replace->right != nullptr) {
+            replace_parent = replace;
+            replace = replace->right;
+        }
+
+        // If we were able to go to the right, make the replacement node's
+        // left child the right child of its parent. Then make the left child
+        // of p the replacement's left child.
+        if (replace_parent != p) {
+            replace_parent->right = replace->left;
+            replace->left = p->left;
+        }
+
+        // Make the right child of p the replacement's right child.
+        replace->right = p->right;
+    }
+
+    // Assign replace as new root
+    if (parent == nullptr) {
+        root = replace;
+
+    // Else, Find the direction
+    } else {
+        if (p->key < parent->key) {
+            parent->left = replace;
+        } else {
+            parent->right = replace;
+        }
+    }
+
+    // Remove the node, decrease the size, and return true
+    delete p;
+    --m_size;
+    return true;
+}
+
+
+/**
+ * Finds a node by key and returns a pointer to it.
+ *
+ * @param key the key to find
+ * @return a const pointer to the node containing the key, or nullptr if the key is not found
+*/
+template<typename K, typename V>
+const node<K, V>* bstree<K, V>::find(const K& key) const {
+
+    node<K,V>* curr = root;
+
+    // Traverse through the tree
+    while (curr != nullptr) {
+
+        // Find which direction to go next, unless the key specified is the current nodes key, 
+        // in which case we can just return the current node
+        if (key < curr->key) {
+            curr = curr->left;
+        } else if (key > curr->key) {
+            curr = curr->right;
+        } else {
+            return curr;
+        }
+    }
+    // Couldnt find the node with the specified key
+    return nullptr;
+}
+
+
+/**
+ * Performs a preorder traversal of the tree and prints each node.
+*/
+template<typename K, typename V>
+void bstree<K, V>::preorder() const {
+
+    // Recursive lambda
+    std::function<void(node<K,V>* p)> visit = [&](node<K,V>* p) -> void {
+
+        // Base case
+        if (p == nullptr) return;
+
+        printNode(p); // Print the current node
+        visit(p->left); // Visit the left subtree
+        visit(p->right); // Visit the right subtree
+    };
+    visit(this->root); // Start recursion with the root node
+}
+
+
+/**
+ * Performs an inorder traversal of the tree and prints each node.
+*/
+template<typename K, typename V>
+void bstree<K, V>::inorder() const {
+
+    // Recursive lambda
+    std::function<void(node<K,V>* p)> visit = [&](node<K,V>* p) -> void {
+
+        // Base case
+        if (p == nullptr) return;
+
+        visit(p->left); // Visit the left subtree
+        printNode(p); // Print the current node
+        visit(p->right); // Visit the right subtree
+    };
+    visit(this->root); // Start recursion with the root node
+}
+
+
+/**
+ * Performs an postorder traversal of the tree and prints each node.
+*/
+template<typename K, typename V>
+void bstree<K, V>::postorder() const {
+
+    // Recursive lambda
+    std::function<void(node<K,V>* p)> visit = [&](node<K,V>* p) -> void {
+
+        // Base case
+        if (p == nullptr) return;
+
+        visit(p->left); // Visit the left subtree
+        visit(p->right); // Visit the right subtree
+        printNode(p); // Print the current node
+    };
+    visit(this->root); // Start recursion with the root node
+}
+
+
+/**
+ * Performs an level order traversal of the tree and prints each node.
+*/
+template<typename K, typename V>
+void bstree<K, V>::level_order() const {
+    node<K,V>* p = nullptr;
+    std::queue<node<K,V>*> q;
+
+    // If the tree is empty, return
+    if (this->empty()) {
+        return;
+    }
+
+    // Push the root to queue
+    q.push(this->root);
+
+    while (!q.empty()) {
+        p = q.front();
+        q.pop();
+        printNode(p);
+
+        if (p->left != nullptr) {
+            q.push(p->left);
+        }
+
+        if (p->right != nullptr) {
+            q.push(p->right);
+        }
+    }
+}
+#endif
