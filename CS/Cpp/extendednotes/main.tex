@@ -61,6 +61,73 @@
     \pagebreak 
     \unsect{Templates}
     \bigbreak \noindent 
+    Templates in C++ are a powerful feature that allows writing generic and reusable code. They enable functions and classes to operate with different data types without being rewritten for each specific type.
+    \bigbreak \noindent 
+    \subsection{Template Function}
+    \bigbreak \noindent 
+    A template function defines a family of functions that work with different data types. Here's how to write and use a template function:
+    \bigbreak \noindent 
+    \begin{cppcode}
+template <typename T>
+T add(T a, T b) {
+    return a + b;
+}
+
+int main() {
+    std::cout << add<int>(3, 4) << std::endl; // Instantiates add<int>
+    std::cout << add<double>(2.5, 3.1) << std::endl; // Instantiates add<double>
+    return 0;
+}
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \pagebreak 
+    \subsection{Template Class}
+    \bigbreak \noindent 
+    \begin{cppcode}
+template <typename T>
+class Stack {
+    std::vector<T> data;
+
+public:
+    void push(T value) {
+        data.push_back(value);
+    }
+    void pop() {
+        data.pop_back();
+    }
+    T top() const {
+        return data.back();
+    }
+    bool empty() const {
+        return data.empty();
+    }
+};
+
+int main() {
+    Stack<int> intStack; // Instantiates Stack<int>
+    intStack.push(10);
+    intStack.push(20);
+    std::cout << intStack.top() << std::endl;
+
+    Stack<double> doubleStack; // Instantiates Stack<double>
+    doubleStack.push(1.1);
+    doubleStack.push(2.2);
+    std::cout << doubleStack.top() << std::endl;
+    return 0;
+}
+    \end{cppcode}
+
+
+
+
+
+
+
+
+
+
+    \bigbreak \noindent 
     \subsection{Class vs typename keyword}
     \bigbreak \noindent 
     The choice between using \textbf{class} and \textbf{typename} in template declarations in C++ is largely a matter of style and historical context, as both keywords serve the same purpose
@@ -83,7 +150,7 @@
     \subsubsection{Friendship to a Template Function}
     \bigbreak \noindent 
     More commonly, you want a template function to be a friend to a template class. This allows each instantiation of the function template to access the corresponding instantiation of the class template.To achieve this, you need to forward declare the function template and then declare it as a friend inside your class template. The tricky part is that the syntax for declaring a template function as a friend inside a template class can vary based on what you're trying to achieve:
-    \pagebreak \bigbreak \noindent 
+     \bigbreak \noindent 
     \textbf{How to forward declare:}
     \bigbreak \noindent 
     \begin{cppcode}
@@ -106,7 +173,7 @@ void foo(myclass<T>& obj) {
     // Define
 }
     \end{cppcode}
-    \bigbreak \noindent 
+    \pagebreak 
     \textbf{Different types:}
     \begin{itemize}
         \item More general form used when you want the friendship to apply to all instantiations of the function template
@@ -135,6 +202,128 @@ void foo(myclass<T>& obj) {
                 };
             \end{cppcode}
     \end{itemize}
+
+    \pagebreak 
+    \subsection{Function Template Specialization}
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{Template specialization} allows you to define a different implementation for a particular data type.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template <typename T>
+    T min(T x, T y) {
+        return (x < y) ? x : y;
+    }
+
+    template <>
+    const char* min(const char* x, const char* y) {
+        return (strcmp(x, y) < 0) ? x : y;
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Class/Struct Template Specialization}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    struct foo {
+        T x = 20;
+    };
+
+    template<>
+    struct foo<char> {
+        char x = 'z';
+    };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Template Parameters}
+    \bigbreak \noindent 
+    \begin{concept}
+        Templates can have more than one parameter, including non-type parameters.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename T, int size>
+        class FixedArray {
+            private:
+            T arr[size];
+            // implementation
+        };
+    \end{cppcode}
+
+     \bigbreak \noindent 
+    \subsection{Trailing return type}
+    \bigbreak \noindent 
+    In traditional C++, the return type of a function is declared at the beginning of the function declaration. However, C++11 introduced a new syntax that allows the return type to be specified after the parameter list, using auto at the beginning and -> Type after the parameter list.
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto functionName(parameters) -> returnType {
+        // function body
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto foo(int a, int b) -> int {
+        return a + b;
+    }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{decltype}
+
+    \bigbreak \noindent 
+    \begin{concept}
+        \textbf{decltype} is a keyword in C++ introduced in C++11, which stands for "declared type". It is used to query the type of an expression without actually evaluating that expression. This can be particularly useful in template programming and type deduction, where the type of an expression might not be known until compile time.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        decltype(expression) variable_name;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here, \textbf{variable\_name} will have the same type as the type of \textbf{expression}. It's important to note that \textbf{expression} is not evaluated; \textbf{decltype} only deduces its type.
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a = 5;
+    decltype(a) b = 5;
+
+    cout << typeid(b).name() << endl; // Output: i
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Template functions with mixed types (Trailing return type)}
+    \bigbreak \noindent 
+    \begin{concept}
+        To address the challenge of determining the return type for a template function that accepts two different types, we can utilize a strategy involving \textbf{auto} and a \textbf{trailing return type} with \textbf{decltype}. This approach effectively resolves the ambiguity of the return type in such template functions.
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T, typename U>
+        auto add(T t, U u) -> decltype(t + u) {
+            return t + u;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Template functions with mixed types (Deduced return type)}
+    Alternatively, C++14 introduced the concept \textbf{deduced return type}. Which provides a simpler way to handle the situation described above
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T, typename U>
+        decltype(auto) foo(T a, U b)  {
+            return a + b;
+        }
+    \end{cppcode}
 
     \pagebreak 
     \unsect{When initializer lists are required}
@@ -304,6 +493,276 @@ void foo(myclass<T>& obj) {
             // Can now safely call car-specific member functions using carptr
         }
     \end{cppcode}
+        \bigbreak \noindent 
+    \subsection{More on Downcasting}
+    \bigbreak \noindent 
+    Downcasting is the process of converting a base class pointer or reference to a derived class pointer or reference
+    \begin{itemize}
+        \item Downcasting is potentially unsafe, so it requires an explicit cast.
+        \item dynamic\_cast should be used for safe downcasting to check if the cast is valid at runtime.
+        \item Downcasting typically requires polymorphic classes with virtual functions to enable dynamic\_cast.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    In C++, the dynamic\_cast operator, used for safe downcasting, requires that the base class has at least one virtual function. This is because dynamic\_cast relies on runtime type information (RTTI), which is only available for polymorphic classes.
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{RTTI Availability:}
+            \begin{itemize}
+                \item RTTI is used to store type information at runtime, which dynamic\_cast uses to determine the exact type of the object being cast.
+                \item RTTI is only generated by the compiler for polymorphic classes, which are classes that have at least one virtual function.
+            \end{itemize}
+        \item \textbf{Polymorphic Behavior:} Virtual functions enable polymorphic behavior, allowing derived classes to override base class functions. This is the essence of polymorphism, which dynamic\_cast utilizes to ensure safe downcasting.
+        \item \textbf{Checking Actual Type:} The type information stored in RTTI allows dynamic\_cast to check if the object being cast is indeed of the target derived type. If not, it returns nullptr (for pointers) or throws a std::bad\_cast exception (for references).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{What Happens Without Virtual Functions}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{No RTTI:} If the base class has no virtual functions, it is not polymorphic, and the compiler doesn't generate RTTI for it. Without RTTI, dynamic\_cast cannot validate types at runtime.
+        \item \textbf{Compile-Time Error:} Attempting to use dynamic\_cast on a class without virtual functions will lead to a compile-time error indicating that the class type is not polymorphic.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Downcasting example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <iostream>
+
+        class Base {
+            public:
+            virtual ~Base() = default; // Make the class polymorphic
+        };
+
+        class Derived1 : public Base {
+            public:
+            void func1() {
+                std::cout << "Derived1 Function\n";
+            }
+        };
+
+        class Derived2 : public Base {
+            public:
+            void func2() {
+                std::cout << "Derived2 Function\n";
+            }
+        };
+
+        int main() {
+            // Case 1: Valid downcast, will not get nullptr
+            Base* basePtr1 = new Derived1(); // Base pointer to Derived1
+            Derived1* derived1Ptr = dynamic_cast<Derived1*>(basePtr1);
+            if (derived1Ptr) {
+                derived1Ptr->func1(); // This will execute correctly
+            } else {
+                std::cout << "Downcast to Derived1 failed\n";
+            }
+
+            // Case 2: Invalid downcast, will get nullptr
+            Base* basePtr2 = new Derived2(); // Base pointer to Derived2
+            Derived1* derived1PtrInvalid = dynamic_cast<Derived1*>(basePtr2);
+            if (derived1PtrInvalid) {
+                derived1PtrInvalid->func1(); // This will not execute
+            } else {
+                std::cout << "Downcast to Derived1 failed\n"; // This will be printed
+            }
+
+            // Clean up
+            delete basePtr1;
+            delete basePtr2;
+
+            return 0;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \nt{When a Base* points to a Base object and we attempt to downcast it to a derived type using dynamic\_cast, the cast will fail and return nullptr. This is because the actual type of the object being pointed to is Base, not the derived type.}
+
+    \bigbreak \noindent 
+    \subsubsection{Base class pointer example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+class base {
+
+public:
+    virtual void print() const {
+        cout << "Base class" << endl;
+    }
+
+};
+
+
+class derived : public base {
+    void print() const override {
+        cout << "Child class" << endl;
+    }
+};
+
+
+int main(int argc, char* argv[]) {
+
+    base* bptr = new derived();
+
+    bptr->print(); // Child class
+    bptr->base::print(); // Base class
+
+    return EXIT_SUCCESS;
+}
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{Notice we are able to call the private method, this is because the virtual function mechanism directs the call to the most derived method.}
+
+    \bigbreak \noindent 
+    \subsection{Object Slicing}
+    \bigbreak \noindent 
+    Object slicing occurs when a derived class object is assigned or copied to a base class object, causing the derived class's specific members to be "sliced off."
+    \bigbreak \noindent 
+    \begin{cppcode}
+    base b1 = base();
+    derived d1 = derived();
+
+    b1 = d1; // Slicing
+    d1 = b1; // Does not work
+    \end{cppcode}
+
+        \pagebreak 
+    \subsection{Multiple Inheritance}
+    \bigbreak \noindent 
+    Multiple inheritance is a feature in C++ that allows a derived class to inherit from more than one base class.
+    \bigbreak \noindent 
+    \subsubsection{Why Use Multiple Inheritance?}
+    \begin{itemize}
+        \item \textbf{Combining Functionality:} When a derived class needs to combine the functionalities of multiple base classes.
+        \item \textbf{Mixins:} Allows implementing mixins, which are small base classes that provide specific functionalities to derived classes.
+        \item \textbf{Interface Implementation:} Multiple inheritance can also be used to implement interfaces (abstract base classes) in C++.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <iostream>
+
+class Base1 {
+public:
+    void func1() {
+        std::cout << "Base1 Function" << std::endl;
+    }
+};
+
+class Base2 {
+public:
+    void func2() {
+        std::cout << "Base2 Function" << std::endl;
+    }
+};
+
+class Derived : public Base1, public Base2 {
+    // Derived class inherits from both Base1 and Base2
+public:
+    void func3() {
+        std::cout << "Derived Function" << std::endl;
+    }
+};
+
+int main() {
+    Derived d;
+    d.func1(); // Inherited from Base1
+    d.func2(); // Inherited from Base2
+    d.func3(); // Own function
+
+    return 0;
+}
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Issues with Multiple Inheritance}
+    \begin{enumerate}
+        \item \textbf{Ambiguity:}
+        \begin{itemize}
+            \item If two base classes have the same method or attribute name, calling it from the derived class can cause ambiguity.
+            \item This can be resolved using the scope resolution operator :: to specify which base class method to call.
+        \end{itemize}
+    \item \textbf{Diamond Problem:}
+        \begin{itemize}
+            \item If two base classes inherit from the same class and a derived class inherits from both base classes, it leads to ambiguity in the derived class about which base class's implementation to use.
+            \item This can be addressed using virtual inheritance to ensure only one copy of the shared base class exists.
+        \end{itemize}
+    \end{enumerate}
+    \pagebreak 
+    \subsection{Virtual inheritance}
+    \bigbreak \noindent 
+    Virtual inheritance in C++ is a mechanism to prevent multiple "copies" of a base class when using multiple inheritance. It ensures that the derived class has only one shared instance of the base class, thus preventing ambiguity and redundant base class objects.
+    \bigbreak \noindent 
+    \subsubsection{The Diamond Problem}
+    \bigbreak \noindent 
+    The diamond problem occurs when two classes inherit from the same base class and another class inherits from those two classes. This results in ambiguity and multiple copies of the shared base class.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <iostream>
+
+        class Base {
+            public:
+            int data;
+            Base() : data(0) {}
+        };
+
+        class Derived1 : public Base {};
+
+        class Derived2 : public Base {};
+
+        class FinalDerived : public Derived1, public Derived2 {};
+
+        int main() {
+            FinalDerived obj;
+
+            // Error: Ambiguity, which Base::data to access?
+            // obj.data = 10;
+            // Explicit resolution:
+            obj.Derived1::data = 10;
+            obj.Derived2::data = 20;
+
+            std::cout << obj.Derived1::data << ", " << obj.Derived2::data << std::endl;
+
+            return 0;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    There are two separate instances of the Base class, one inherited through Derived1 and one through Derived2 This leads to ambiguity and multiple instances.
+    \pagebreak 
+    \subsubsection{Solution with Virtual Inheritance}
+    \bigbreak \noindent 
+    Virtual inheritance addresses this problem by ensuring that the shared base class is inherited virtually. This makes the derived class have a single, shared instance of the base class.
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <iostream>
+class Base {
+public:
+    int data;
+    Base() : data(0) {}
+};
+
+class Derived1 : virtual public Base {};
+
+class Derived2 : virtual public Base {};
+
+class FinalDerived : public Derived1, public Derived2 {};
+
+int main() {
+    FinalDerived obj;
+
+    // No ambiguity, only one instance of Base exists
+    obj.data = 10;
+
+    std::cout << obj.data << std::endl;
+
+    return 0;
+}
+    \end{cppcode}
+
+
     \bigbreak \noindent 
     \subsection{Subtype Polymorphism}
     \bigbreak \noindent 
@@ -390,6 +849,11 @@ void foo(myclass<T>& obj) {
     \textbf{Interface inheritance} allows a derived class to inherit a base class's data type (which can be useful for subtype polymorphism) without actually inheriting any of the base class's implementation (member function definitions, etc.).
     \bigbreak \noindent 
         An interface can be defined in C++ as an abstract class that contains only pure virtual member functions and symbolic constants (public data members that are static and const).
+
+
+
+
+
 
     \pagebreak 
     \unsect{<regex.h> Pattern Matching and String Validation}

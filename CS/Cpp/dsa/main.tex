@@ -1662,7 +1662,7 @@ unsigned precedence(const char& op) {
                 arr = new int[m_capacity];
                 for (size_t i = 0; i < m_size; ++i) {
                     // Copy elements starting from m_front and wrapping around as necessary
-                    arr[(m_front + i) \% m_capacity] = other.arr[(other.m_front + i) \% other.m_capacity];
+                    arr[(m_front + i) % m_capacity] = other.arr[(other.m_front + i) \% other.m_capacity];
                 }
             }
 
@@ -1677,7 +1677,7 @@ unsigned precedence(const char& op) {
                     arr = new int[m_capacity]; // Allocate new resource
                     for (size_t i = 0; i < m_size; ++i) {
                         // Copy elements starting from m_front and wrapping around as necessary
-                        arr[(m_front + i) \% m_capacity] = other.arr[(other.m_front + i) \% other.m_capacity];
+                        arr[(m_front + i) % m_capacity] = other.arr[(other.m_front + i) \% other.m_capacity];
                     }
                 }
                 return *this;
@@ -1724,7 +1724,7 @@ unsigned precedence(const char& op) {
                     this->reserve((m_capacity > 0 ? m_capacity * 2 : 1));
                 }
 
-                m_back = (m_back  + 1) \% m_capacity;
+                m_back = (m_back  + 1) % m_capacity;
 
                 arr[m_back] = value;
                 ++m_size;
@@ -1732,7 +1732,7 @@ unsigned precedence(const char& op) {
 
             void pop() {
                 if (!empty()) {
-                    m_front = (m_front + 1) \% m_capacity;
+                    m_front = (m_front + 1) % m_capacity;
                     --m_size;
                 }
             }
@@ -1752,7 +1752,7 @@ unsigned precedence(const char& op) {
 
                 while (i < this->m_size) {
                     tmp[i] = this->arr[j];
-                    j = (j+1) \% this->m_capacity;
+                    j = (j+1) % this->m_capacity;
                     ++i;
                 }
                 this->m_capacity = n;
@@ -1763,6 +1763,156 @@ unsigned precedence(const char& op) {
                 this->m_back = this->m_size-1;
             }
         };
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Deque (Double ended queue)}
+    \bigbreak \noindent 
+    The changes that must be made to turn the queue from the section above into a deque, is to have
+    \begin{enumerate}
+        \item \textbf{push\_front}: Add item at the front of the queue
+        \item \textbf{push\_back}: Add item at the back of the queue
+        \item \textbf{pop\_front}: Remove item from the front of the queue
+        \item \textbf{pop\_back}: Remove item from the back of the queue
+    \end{enumerate}
+    \bigbreak \noindent 
+    As opposed to the standard queue where we only have \textbf{push()} and \textbf{pop()} methods (pushing to the back and popping from the front).
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <cstdlib>
+
+class q {
+    int* arr = nullptr;
+    size_t m_capacity = 0;
+    size_t m_size = 0;
+    int m_front = 0;
+    int m_back = -1;
+
+public:
+    q() = default;
+
+    q(const q& other) : m_capacity(other.m_capacity), m_size(other.m_size), m_front(other.m_front), m_back(other.m_back) {
+        arr = new int[m_capacity];
+        for (size_t i = 0; i < m_size; ++i) {
+            arr[(m_front + i) % m_capacity] = other.arr[(other.m_front + i) % other.m_capacity];
+        }
+    }
+
+    q& operator=(const q& other) {
+        if (this != &other) {
+            delete[] arr;
+            m_capacity = other.m_capacity;
+            m_size = other.m_size;
+            m_front = other.m_front;
+            m_back = other.m_back;
+
+            arr = new int[m_capacity];
+            for (size_t i = 0; i < m_size; ++i) {
+                arr[(m_front + i) % m_capacity] = other.arr[(other.m_front + i) % other.m_capacity];
+            }
+        }
+        return *this;
+    }
+
+    ~q() {
+        delete[] arr;
+    }
+
+    size_t size() const {
+        return m_size;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+
+    size_t capacity() const {
+        return m_capacity;
+    }
+
+    bool empty() const {
+        return m_size == 0;
+    }
+
+    void clear() {
+        m_size = 0;
+        m_front = 0;
+        m_back = -1;
+    }
+
+    int front() const {
+        return arr[m_front];
+    }
+
+    int back() const {
+        return arr[m_back];
+    }
+
+    void push_back(int value) {
+        if (m_size == m_capacity) {
+            reserve((m_capacity > 0 ? m_capacity * 2 : 1));
+        }
+
+        m_back = (m_back + 1) % m_capacity;
+        arr[m_back] = value;
+        ++m_size;
+    }
+
+    void push_front(int value) {
+        if (m_size == m_capacity) {
+            reserve((m_capacity > 0 ? m_capacity * 2 : 1));
+        }
+
+        m_front = (m_front - 1 + m_capacity) % m_capacity;
+        arr[m_front] = value;
+        ++m_size;
+    }
+
+    void pop_front() {
+        if (!empty()) {
+            m_front = (m_front + 1) % m_capacity;
+            --m_size;
+        }
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    void pop_back() {
+        if (!empty()) {
+            m_back = (m_back - 1 + m_capacity) % m_capacity;
+            --m_size;
+        }
+    }
+
+    void reserve(int n) {
+        if (n <= m_capacity) {
+            return;
+        }
+
+        int* tmp = new int[n];
+        int i = 0;
+        int j = m_front;
+
+        while (i < m_size) {
+            tmp[i] = arr[j];
+            j = (j + 1) % m_capacity;
+            ++i;
+        }
+        m_capacity = n;
+        delete[] arr;
+
+        arr = tmp;
+        m_front = 0;
+        m_back = m_size - 1;
+    }
+};
+
+int main(int argc, const char* argv[]) {
+    return EXIT_SUCCESS;
+}
     \end{cppcode}
 
     \pagebreak 
@@ -1962,7 +2112,7 @@ std::ostream& operator<<(std::ostream& os, const mystack& obj) {
 
     while (current != nullptr) { // Iterate through the stack
         os << current->value; // Print the current node's value
-        if (current->next != nullptr)
+        if (current->next != nullptr) {
                 os << ", "; // If this is not the last node, print a comma and a space
             }
             current = current->next; // Move to the next node
@@ -2137,6 +2287,171 @@ std::ostream& operator<<(std::ostream& os, const mystack& obj) {
     };
 
 \end{cppcode}
+
+    \pagebreak 
+    \unsect{Doubly-linked list (as a deque)}
+    \bigbreak \noindent 
+    To modify the singly linked list queue into a doubly-ended queue (deque), you'll need to:
+    \begin{itemize}
+        \item \textbf{Modify the node Structure:} Add a prev pointer to allow traversal in both directions.
+        \item \textbf{Implement push\_front:} Add a function to insert elements at the front of the deque.
+        \item \textbf{Implement push\_back:} Add a function to insert elements at the back of the deque.
+        \item \textbf{Implement pop\_front:} Add a function to remove elements from the front of the deque.
+        \item \textbf{Implement pop\_back:} Add a function to remove elements from the back of the deque.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{In order to make a linked-list deque, the linked list \textbf{must} be doubly}
+
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{cppcode}
+#include <iostream>
+
+using std::endl;
+
+struct node {
+    node* next = nullptr;
+    node* prev = nullptr;  // Add previous pointer
+    int value = 0;
+
+    node() = default;
+    node(node* next, node* prev, int value) : next(next), prev(prev), value(value) {}
+};
+
+class deque {
+    node* m_front = nullptr;
+    node* m_back = nullptr;
+    size_t m_size = 0;
+
+public:
+    deque() = default;
+
+    deque(const deque& other) {
+        m_front = m_back = nullptr;
+        m_size = 0;
+        clone(other);
+    }
+
+    deque& operator=(const deque& other) {
+        if (this != &other) {
+            this->clear();
+            clone(other);
+        }
+        return *this;
+    }
+
+    ~deque() {
+        this->clear();
+    }
+
+    size_t size() const {
+        return m_size;
+    }
+
+    bool empty() const {
+        return m_size == 0;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    void clear() {
+        while (!empty()) {
+            pop_front();
+        }
+    }
+
+    int front() const {
+        return m_front ? m_front->value : 0;
+    }
+
+    int back() const {
+        return m_back ? m_back->value : 0;
+    }
+
+    void push_back(int value) {
+        node* new_node = new node(nullptr, m_back, value);
+
+        if (empty()) {
+            m_front = new_node;
+        } else {
+            m_back->next = new_node;
+        }
+
+        m_back = new_node;
+        ++m_size;
+    }
+
+    void push_front(int value) {
+        node* new_node = new node(m_front, nullptr, value);
+
+        if (empty()) {
+            m_back = new_node;
+        } else {
+            m_front->prev = new_node;
+        }
+
+        m_front = new_node;
+        ++m_size;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \begin{cppcode}
+    void pop_front() {
+        if (m_front == nullptr) return;
+
+        node* del = m_front;
+        m_front = m_front->next;
+
+        if (m_front == nullptr) {
+            m_back = nullptr;
+        } else {
+            m_front->prev = nullptr;
+        }
+
+        delete del;
+        --m_size;
+    }
+
+    void pop_back() {
+        if (m_back == nullptr) return;
+
+        node* del = m_back;
+        m_back = m_back->prev;
+
+        if (m_back == nullptr) {
+            m_front = nullptr;
+        } else {
+            m_back->next = nullptr;
+        }
+
+        delete del;
+        --m_size;
+    }
+
+    void clone(const deque& other) {
+        node* current = other.m_front;
+        while (current != nullptr) {
+            push_back(current->value);
+            current = current->next;
+        }
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const deque& obj) {
+        node* current = obj.m_front;
+        while (current != nullptr) {
+            os << current->value << endl;
+            current = current->next;
+        }
+        return os;
+    }
+};
+int main() { return EXIT_SUCCESS; }
+    \end{cppcode}
+
+
 
 
 
