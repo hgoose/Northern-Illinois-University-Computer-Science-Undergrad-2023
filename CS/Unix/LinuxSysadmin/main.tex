@@ -1,0 +1,440 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Linux Sysadmin }
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Linux Systems Administrator}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    
+    \pagebreak 
+    \unsect{Shell Job control}
+    \bigbreak \noindent 
+    \subsubsection{Terminology}
+    \begin{itemize}
+        \item Process is a program in execution
+            \begin{itemize}
+                \item process is reated every time you run a command
+                \item each process has a unique process id
+                \item processes are removed from the system when the command finishes its execution
+            \end{itemize}
+        \item Job is a unit of work
+            \begin{itemize}
+                \item Consists of the commands specified in a single command line
+                \item A single job may involve several processes, each consisitng of an executable program
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Job contral Terminology}
+    \begin{itemize}
+        \item \textbf{Foreground job:}
+            \begin{itemize}
+                \item A job that has our immediate attention
+                \item user has to wait for job to complete
+            \end{itemize}
+        \item \textbf{Background job:}
+            \begin{itemize}
+                \item a job that the user does not wait for 
+                \item it runs independently of user interaction
+            \end{itemize}
+        \item \textbf{Unix shells allow users to:}
+            \begin{itemize}
+                \item Make jobs execute in the background
+                \item move jobs from foreground to background
+                \item determine their status, and terminate them
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Background jobs}
+    \begin{itemize}
+        \item How do we deiced which jobs to place in the background?
+            \begin{itemize}
+                \item jobs that are run non-interactively 
+                \item jobs that do not require user input
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    To execute a command in the background, we put \& after it
+
+    \bigbreak \noindent 
+    \subsubsection{Managing jobs}
+    \begin{itemize}
+        \item \textbf{Display jobs}
+            \begin{itemize}
+                \item Command "jobs" lists your active jobs
+                \item each job has job number
+                \item job number with "\%" is used to refer to job
+            \end{itemize}
+        \item \textbf{Send job to background:} bg
+        \item \textbf{Move job to foreground:} fg
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Signaling jobs}
+    \begin{itemize}
+        \item \textbf{Command to send signal to job:} kill
+            \begin{itemize}
+                \item Example: kill -HUP 12324
+                \item Example: kill -INT  \%1
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Ending jobs}
+    \begin{itemize}
+        \item \textbf{To stop a job:}
+            \begin{itemize}
+                \item kill -STOP
+                \item resume via "bg" or "fg" command
+            \end{itemize}
+        \item \textbf{To terminate a job:}
+            \begin{itemize}
+                \item kill
+                \item kill -INT
+                \item kill -9
+            \end{itemize}
+        \item Once a job finishes it will display exit status
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Scheduling utils}
+    \begin{itemize}
+        \item \textbf{crontab}
+            \begin{itemize}
+                \item Run a job based on a schedule
+                \item Job is executed on a periodic basis
+            \end{itemize}
+        \item \textbf{at}
+            \begin{itemize}
+                \item run a job some time in the future
+            \end{itemize}
+        \item \textbf{batch}
+            \begin{itemize}
+                \item run a job when system load is low
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Crontab}
+    \begin{itemize}
+        \item Crontab is based on control file
+        \item crontab file has 6 columns
+            \begin{center}
+                \begin{verbatim}
+                    minute    hour    day    month    weekday    command
+                \end{verbatim}
+            \end{center}
+        \item \textbf{Meaning:}
+            \begin{enumerate}
+                \item Minute 0-59
+                \item Hour 0-23
+                \item Day 1-31
+                \item Month 1-12
+                \item Weekday 1-7 (1=mon, 2=tue,..., 7=sun)
+                \item Command Any unix command
+            \end{enumerate}
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{"*" means any value}
+    \bigbreak \noindent 
+    \subsubsection{Example crotab file}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/cron.png}
+
+    \bigbreak \noindent 
+    \subsubsection{Crontab command}
+    \bigbreak \noindent 
+    \textbf{Options:}
+    \begin{itemize}
+        \item -e to edit the control file
+        \item -l to list the control file
+        \item -r to remove the control file
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{For superuser:}
+    \begin{itemize}
+        \item -u to edit another user's control file 
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{One time execution: at}
+    \begin{itemize}
+        \item Utility to run command(s) at a later time
+            \begin{itemize}
+                \item Must specify on the command the time and date on which your command to be executed
+                \item No need to be logged in when the commands are scheduled to run
+                \item Any output from command is sent via email
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{At command syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    at timeDate
+        > command
+        > <EOT>
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{at examples}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/at.png}
+
+    \bigbreak \noindent 
+    \subsubsection{at utils}
+    \begin{itemize}
+        \item atq lists users's scheduled jobs
+        \ime atrm removes specified job from at queue
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Batch command}
+    \begin{itemize}
+        \item \textbf{batch:} Schedules job to be performed while system load is \textit{low}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Batch command syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    batch command
+    \end{bashcode}
+
+
+
+    \pagebreak 
+    \unsect{Linux System Administration}
+    \begin{itemize}
+        \item User management
+            \begin{itemize}
+                \item adduser, sudo
+            \end{itemize}
+        \item software management
+            \begin{itemize}
+                \item apt-get, synaptic
+            \end{itemize}
+        \item file system management
+            \begin{itemize}
+                \item fdisk, mkfs, mount, fsck
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{User Configuration}
+    \begin{itemize}
+        \item User info is stored in file /etc/passwd
+            \begin{itemize}
+                \item userid, user name, group, home directory, shell
+                \item passwords are stored in separate file: /etc/shadow
+            \end{itemize}
+        \item Group info is stored in file /etc/group
+            \begin{itemize}
+                \item group id, group name
+                \item additional group members
+            \end{itemize}
+        \item To find out group info, use: groups user-id
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Steps to create a new user}
+    \begin{enumerate}
+        \item add info to /etc/passwd
+        \item add info to /etc/shadow
+        \item add info to /etc/group
+        \item create home directory
+        \item add default content to home directory
+        \item set password
+    \end{enumerate}
+    \bigbreak \noindent 
+    \subsubsection{Common debian utils}
+    \begin{itemize}
+        \item adduser, deluser
+        \item addgroup, delgroup
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \begin{itemize}
+    \subsection{Sudo}
+        \item Execute commands as super user "root"
+            \begin{itemize}
+                \item Will be prompted for password  
+            \end{itemize}
+        \item /etc/sudoers
+            \begin{itemize}
+                \item list designated users/groups
+                    \begin{itemize}
+                        \item group "sudo"
+                    \end{itemize}
+            \end{itemize}
+        \item lists allowed commands
+            \begin{itemize}
+                \item root can do anything
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{sudo -s}
+    \bigbreak \noindent 
+    Runs new shell with super user privileges
+
+    \bigbreak \noindent 
+    \subsection{Software management}
+    \begin{itemize}
+        \item applications are bundled into package file
+            \begin{itemize}
+                \item tar
+                    \begin{itemize}
+                        \item original (tape) archive format
+                    \end{itemize}
+                \item rpm
+                    \begin{itemize}
+                        \item Redhat package manager format, download and intall via: \textbf{yum}
+                    \end{itemize}
+                \item deb
+                    \begin{itemize}
+                        \item Debian package format, download and install via: apt-get 
+                    \end{itemize}
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Deb pacakge management}
+    \begin{itemize}
+        \item Basic utils
+            \begin{itemize}
+                \item dpkg - package manager
+                \item apt-get - package handling util
+            \end{itemize}
+        \item User friendly interfaces
+            \begin{itemize}
+                \item aptitude - command line frontend
+                \item synaptic - GUI frontend
+            \end{itemize}
+        \item Software manager
+            \begin{itemize}
+                \item Unifed web-based application store
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{apt-get config}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item /etc/apt/sources.list - contains locations of packages
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{apt-get sub-commands}
+    \begin{itemize}
+        \item update
+            \begin{itemize}
+                \item re-sync pacakge listing
+            \end{itemize}
+        \item install
+            \begin{itemize}
+                \item Install packages 
+            \end{itemize}
+        \item upgrade
+            \begin{itemize}
+                \item Update packages
+            \end{itemize}
+        \item remove, purge
+            \begin{itemize}
+                \item remove packages (delete config files)
+            \end{itemize}
+        \item dist-upgrade
+            \begin{itemize}
+                \item Update system
+            \end{itemize}
+        \item clean
+            \begin{itemize}
+                \item Empty local cache of downloaded packages
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{File system commands}
+    \begin{itemize}
+        \item df - displays make up of logical file system
+        \item fdisk - prepare partitions on physical medium
+        \item mkfs
+            \begin{itemize}
+                \item Create file system on physical device 
+                \item select file system type, ex: ext4
+            \end{itemize}
+        \item mount
+            \begin{itemize}
+                \item add additional physical into logical file system
+                \item undone via: umount
+                \item made permanent with entry into /etc/fstab
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Steps to enable new hard drive}
+    \begin{itemize}
+        \item Find device name: \textbf{fdisk -l}
+        \item Edit partition table: \textbf{fdisk /dev/sdb}
+            \begin{itemize}
+                \item Create partition /dev/sdb1
+            \end{itemize}
+        \item create file system: \textbf{mkfs -t ext4 /dev/sdb1}
+        \item mount file system
+            \begin{itemize}
+                \item mkdir /mnt/extra
+                \item mount /dev/sdb1 /mnt/extra
+            \end{itemize}
+        \item see file systems: \textbf{df}
+    \end{itemize}
+    
+\end{document}

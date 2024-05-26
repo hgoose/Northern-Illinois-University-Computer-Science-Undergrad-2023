@@ -1,0 +1,777 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Bash++}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Bash++}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{The Set Builtin}
+    \bigbreak \noindent 
+    This builtin is so complicated that it deserves its own section. set allows you to change the values of shell options and set the positional parameters, or to display the names and values of shell variables.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        set [-abefhkmnptuvxBCEHPT] [-o option-name] [--] [-] [argument …]
+        set [+abefhkmnptuvxBCEHPT] [+o option-name] [--] [-] [argument …]
+    \end{bashcode}
+    \bigbreak \noindent 
+    If no options or arguments are supplied, set displays the names and values of all shell variables and functions, sorted according to the current locale, in a format that may be reused as input for setting or resetting the currently-set variables. Read-only variables cannot be reset. In POSIX mode, only shell variables are listed.
+    \bigbreak \noindent 
+    When options are supplied, they set or unset shell attributes. Options, if specified, have the following meanings:
+
+    \bigbreak \noindent 
+    \subsection{Basic structure}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    set [options] [--] [arguments]
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Options}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{[-abefhkmnptuvxBCEHPT]:} These are single-character options prefixed with a - (dash).
+        \item \textbf{[+abefhkmnptuvxBCEHPT]:} These are the same options prefixed with a + (plus), which can be used to disable the corresponding option.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Long options}
+    \begin{itemize}
+        \item \textbf{[-o option-name]:} This is used to enable a long-form option by its name.
+        \item \textbf{[+o option-name]:} This is used to disable a long-form option by its name.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Special Symbols}
+    \begin{itemize}
+        \item \textbf{--:} This indicates the end of options. Any arguments following -- are treated as positional parameters and not options.
+        \item \textbf{-:} Ends the parsing of options without any following arguments and resets positional parameters.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Arguments}
+    \begin{itemize}
+        \item \textbf{[argument ...]:} These are the positional parameters or arguments that follow the options.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Examples}
+    \begin{itemize}
+        \item \textbf{Enable xtrace and errexit options:}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                set -ex
+            \end{bashcode}
+        \item \textbf{Disable xtrace and errexit options:}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                set +ex 
+            \end{bashcode}
+        \item \textbf{Enable the pipefail option using its long name:}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                set -o pipefail
+            \end{bashcode}
+        \item \textbf{Disable the pipefail option using its long name:}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                set +o pipefail
+            \end{bashcode}
+        \item \textbf{Setting positional parameters:}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                set -- arg1 arg2 arg3
+            \end{bashcode}
+            \bigbreak \noindent 
+            After this command, \$1 will be arg1, \$2 will be arg2, and \$3 will be arg3.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{set - and set --}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # Before resetting, setting positional parameters
+        set -- foo bar
+        echo $1  # Outputs: foo
+        echo $2  # Outputs: bar
+
+        # Resetting positional parameters
+        set -
+        echo $1  # Outputs: (empty)
+        echo $2  # Outputs: (empty)
+    \end{bashcode}
+    \bigbreak \noindent 
+    In this example, the - resets the positional parameters, effectively setting \$1, \$2, etc., to empty.
+
+
+
+
+
+
+    \bigbreak \noindent 
+    \subsection{Commonly used options}
+    begin{itemize}
+    \item \texttt{-e (errexit)}
+        \begin{itemize}
+            \item \textbf{Description}: Exit immediately if a command exits with a non-zero status.
+            \item \textbf{Usage}: \texttt{set -e}
+            \item \textbf{Example}: Useful in scripts to stop execution if any command fails, ensuring errors are caught early.
+        \end{itemize}
+
+    \item \texttt{-u (nounset)}
+        \begin{itemize}
+            \item \textbf{Description}: Treat unset variables as an error when substituting.
+            \item \textbf{Usage}: \texttt{set -u}
+            \item \textbf{Example}: Helps catch typos and other errors by ensuring all variables are defined.
+        \end{itemize}
+
+    \item \texttt{-x (xtrace)}
+        \begin{itemize}
+            \item \textbf{Description}: Print commands and their arguments as they are executed.
+            \item \textbf{Usage}: \texttt{set -x}
+            \item \textbf{Example}: Useful for debugging scripts by showing the flow of execution and values of variables.
+        \end{itemize}
+
+    \item \texttt{-o pipefail}
+        \begin{itemize}
+            \item \textbf{Description}: Return the exit status of the last command in the pipeline that failed.
+            \item \textbf{Usage}: \texttt{set -o pipefail}
+            \item \textbf{Example}: Ensures that a failure in any part of a pipeline is detected.
+        \end{itemize}
+
+    \item \texttt{-n (noexec)}
+        \begin{itemize}
+            \item \textbf{Description}: Read commands but do not execute them.
+            \item \textbf{Usage}: \texttt{set -n}
+            \item \textbf{Example}: Useful for checking the syntax of a script without executing it.
+        \end{itemize}
+
+    \item \texttt{-v (verbose)}
+        \begin{itemize}
+            \item \textbf{Description}: Print shell input lines as they are read.
+            \item \textbf{Usage}: \texttt{set -v}
+            \item \textbf{Example}: Helps in debugging by showing the script’s input as it is being read.
+        \end{itemize}
+
+    \item \texttt{-f (noglob)}
+        \begin{itemize}
+            \item \textbf{Description}: Disable filename expansion (globbing).
+            \item \textbf{Usage}: \texttt{set -f}
+            \item \textbf{Example}: Prevents wildcard characters from being expanded into filenames.
+        \end{itemize}
+
+    \item \texttt{-a (allexport)}
+        \begin{itemize}
+            \item \textbf{Description}: Automatically export all variables to the environment.
+            \item \textbf{Usage}: \texttt{set -a}
+            \item \textbf{Example}: Useful for ensuring all variables are available to child processes.
+        \end{itemize}
+
+    \item \texttt{-b (notify)}
+        \begin{itemize}
+            \item \textbf{Description}: Enable asynchronous notification of background job completion.
+            \item \textbf{Usage}: \texttt{set -b}
+            \item \textbf{Example}: Useful to be notified immediately when background jobs finish.
+        \end{itemize}
+
+    \item \texttt{-h (hashall)}
+        \begin{itemize}
+            \item \textbf{Description}: Enable the command hashing feature.
+            \item \textbf{Usage}: \texttt{set -h}
+            \item \textbf{Example}: Speeds up command lookup by storing the location of commands.
+        \end{itemize}
+\end{itemize}
+
+
+
+    \pagebreak 
+    \unsect{The Shopt Builtin}
+    \bigbreak \noindent 
+    \begin{concept}
+        This builtin allows you to change additional shell optional behavior.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    shopt [-pqsu] [-o] [optname …]
+    \end{bashcode}
+    \bigbreak \noindent 
+    Toggle the values of settings controlling optional shell behavior. The settings can be either those listed below, or, if the -o option is used, those available with the -o option to the set builtin command (see The Set Builtin). With no options, or with the -p option, a list of all settable options is displayed, with an indication of whether or not each is set; if optnames are supplied, the output is restricted to those options. The -p option causes output to be displayed in a form that may be reused as input. Other options have the following meanings:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{-s:} Enable (set) each optname.
+        \item \textbf{-u:} Disable (unset) each optname.
+        \item \textbf{-q:} Suppresses normal output; the return status indicates whether the optname is set or unset. If multiple optname arguments are given with -q, the return status is zero if all optnames are enabled; non-zero otherwise.
+        \item \textbf{-o:} Restricts the values of optname to be those defined for the -o option to the set builtin (see The Set Builtin).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Commonly used options}
+    \begin{itemize}
+        \item \texttt{autocd}
+            \begin{itemize}
+                \item \textbf{Description}: Change to a directory just by typing its name.
+            \end{itemize}
+
+        \item \texttt{cdspell}
+            \begin{itemize}
+                \item \textbf{Description}: Correct minor spelling errors in directory names during \texttt{cd}.
+            \end{itemize}
+
+        \item \texttt{checkhash}
+            \begin{itemize}
+                \item \textbf{Description}: Check that the command hashes are up to date before using them.
+            \end{itemize}
+
+        \item \texttt{checkwinsize}
+            \begin{itemize}
+                \item \textbf{Description}: Check the window size after each command and update \texttt{LINES} and \texttt{COLUMNS}.
+            \end{itemize}
+
+        \item \texttt{cmdhist}
+            \begin{itemize}
+                \item \textbf{Description}: Save multi-line commands as a single history entry.
+            \end{itemize}
+
+        \item \texttt{dotglob}
+            \begin{itemize}
+                \item \textbf{Description}: Include hidden files (starting with \texttt{.}) in filename expansions.
+            \end{itemize}
+
+        \item \texttt{expand\_aliases}
+            \begin{itemize}
+                \item \textbf{Description}: Enable alias expansion.
+            \end{itemize}
+
+        \item \texttt{extglob}
+            \begin{itemize}
+                \item \textbf{Description}: Enable extended pattern matching features.
+            \end{itemize}
+
+        \item \texttt{histappend}
+            \begin{itemize}
+                \item \textbf{Description}: Append to the history file, rather than overwriting it.
+            \end{itemize}
+
+        \item \texttt{histverify}
+            \begin{itemize}
+                \item \textbf{Description}: Allow history substitution to be edited before execution.
+            \end{itemize}
+
+        \item \texttt{hostcomplete}
+            \begin{itemize}
+                \item \textbf{Description}: Enable hostname completion.
+            \end{itemize}
+
+        \item \texttt{lithist}
+            \begin{itemize}
+                \item \textbf{Description}: Save multi-line commands in the history with embedded newlines rather than using semicolons.
+            \end{itemize}
+
+        \item \texttt{nocaseglob}
+            \begin{itemize}
+                \item \textbf{Description}: Perform case-insensitive filename matching.
+            \end{itemize}
+
+        \item \texttt{nullglob}
+            \begin{itemize}
+                \item \textbf{Description}: Allow filename patterns that match no files to expand to a null string, rather than themselves.
+            \end{itemize}
+
+        \item \texttt{progcomp}
+            \begin{itemize}
+                \item \textbf{Description}: Enable programmable completion features.
+            \end{itemize}
+
+        \item \texttt{promptvars}
+            \begin{itemize}
+                \item \textbf{Description}: Enable the expansion of \texttt{\$\{...\}} in prompt strings.
+            \end{itemize}
+
+        \item \texttt{sourcepath}
+            \begin{itemize}
+                \item \textbf{Description}: Use the value of \texttt{\$PATH} to find the directory containing the file supplied as an argument to the \texttt{source} builtin.
+            \end{itemize}
+    \end{itemize}    
+
+    \pagebreak 
+    \unsect{Ansi escape codes}
+    \bigbreak \noindent 
+    \begin{concept}
+        ANSI escape codes are sequences of characters used to control formatting, color, and other output options on text terminals. These codes are defined by the ANSI (American National Standards Institute) standard. They are widely supported in terminal emulators and command-line interfaces.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Basic Format}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        \e[<parameters><command>
+    \end{bashcode}
+
+    \begin{itemize}
+        \item \textbf{\textbackslash e:} The escape character, which can be written as \textbackslash 033 or \textbackslash x1b in some contexts.
+        \item \textbf{[:} The CSI (Control Sequence Introducer) character.
+        \item \textbf{<parameters>:} A sequence of one or more parameters separated by semicolons.
+        \item \textbf{<command>:} A letter that specifies the action to take (e.g., m for text formatting).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Commonly used escape codes in bash}
+
+    \subsubsection{Reset Formatting}
+    \begin{itemize}
+        \item \texttt{\textbackslash e[0m}: Reset all attributes to their defaults.
+    \end{itemize}
+
+    \subsubsection{Text Styles}
+    \begin{itemize}
+        \item \texttt{\textbackslash e[1m}: Bold text.
+        \item \texttt{\textbackslash e[4m}: Underlined text.
+        \item \texttt{\textbackslash e[7m}: Inverse text (swap background and foreground colors).
+    \end{itemize}
+
+    \subsubsection{Text Colors}
+    \begin{itemize}
+        \item \texttt{\textbackslash e[30m}: Black text.
+        \item \texttt{\textbackslash e[31m}: Red text.
+        \item \texttt{\textbackslash e[32m}: Green text.
+        \item \texttt{\textbackslash e[33m}: Yellow text.
+        \item \texttt{\textbackslash e[34m}: Blue text.
+        \item \texttt{\textbackslash e[35m}: Magenta text.
+        \item \texttt{\textbackslash e[36m}: Cyan text.
+        \item \texttt{\textbackslash e[37m}: White text.
+    \end{itemize}
+
+    \subsubsection{Background Colors}
+    \begin{itemize}
+        \item \texttt{\textbackslash e[40m}: Black background.
+        \item \texttt{\textbackslash e[41m}: Red background.
+        \item \texttt{\textbackslash e[42m}: Green background.
+        \item \texttt{\textbackslash e[43m}: Yellow background.
+        \item \texttt{\textbackslash e[44m}: Blue background.
+        \item \texttt{\textbackslash e[45m}: Magenta background.
+        \item \texttt{\textbackslash e[46m}: Cyan background.
+        \item \texttt{\textbackslash e[47m}: White background.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Locale Env variables} 
+    \bigbreak \noindent 
+    \begin{concept}
+        A locale in Linux and Bash defines a set of parameters that tailor the environment to a specific language, region, or cultural preference. These parameters include settings for character encoding, date and time formats, numeric formats, collation (sort order), and more. Locales help ensure that software behaves correctly for users in different regions and with different languages.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{Components of a Locale}
+    \bigbreak \noindent 
+    A locale typically consists of several categories, each controlling a different aspect of the environment:
+    \begin{itemize}
+        \item \textbf{LC\_CTYPE:} Character classification and case conversion. This includes settings for character encoding (e.g., UTF-8).
+        \item \textbf{LC\_NUMERIC:} Numeric formatting, such as the decimal point and thousands separator.
+        \item \textbf{LC\_TIME:} Date and time formatting.
+        \item \textbf{LC\_COLLATE:} String collation (sorting order).
+        \item \textbf{LC\_MONETARY:} Monetary formatting, such as the currency symbol and decimal places.
+        \item \textbf{LC\_MESSAGES:} Localization of messages and responses (e.g., "yes" and "no").
+        \item \textbf{LC\_PAPER:} Paper size settings.
+        \item \textbf{LC\_NAME:} Name format.
+        \item \textbf{LC\_ADDRESS:} Address format.
+        \item \textbf{LC\_TELEPHONE:} Telephone number format.
+        \item \textbf{LC\_MEASUREMENT:} Measurement units (e.g., metric vs. imperial).
+        \item \textbf{LC\_IDENTIFICATION:} Metadata about the locale itself.
+
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Locale Environment Variables}
+    \bigbreak \noindent 
+    Several environment variables control the locale settings in Linux and Bash:
+    \begin{itemize}
+        \item \textbf{LANG:} Sets the default locale for all categories unless overridden by more specific LC\_* variables.
+        \item \textbf{LC\_ALL:} Overrides all other locale settings, ensuring a uniform locale for all categories.
+        \item \textbf{LC\_CTYPE, LC\_NUMERIC, LC\_TIME, etc.:} Set the locale for specific categories.
+    \end{itemize}
+
+
+
+
+    
+    \bigbreak \noindent 
+    \subsection{LC\_ALL=C}
+    \begin{itemize}
+        \item \textbf{LC\_ALL:} This environment variable overrides all other locale settings. When it is set, it ensures that all aspects of the locale (such as character encoding, collation, date/time formats, etc.) use the specified locale value.
+        \item \textbf{C:} The C locale, also known as the POSIX locale, is a standard locale that provides a consistent environment across all systems. It uses the ASCII character set and provides predictable, straightforward behavior.
+    \end{itemize}
+    \bigbreak \noindent 
+    Setting LC\_ALL=C ensures that all locale-related operations in the script use the C locale. This can be useful for ensuring consistent behavior regardless of the user's local settings, especially for text processing, sorting, and other locale-sensitive operations.
+
+    \pagebreak 
+    \unsect{POSIX character classes and regex string matching}
+    \bigbreak \noindent 
+    \begin{concept}
+        POSIX character classes are a set of predefined character classes used in regular expressions to match specific types of characters. They are defined by the POSIX (Portable Operating System Interface) standard and provide a convenient way to specify common character types in a portable and readable manner.
+    \end{concept}
+    \bigbreak \noindent 
+    \subsection{List of POSIX Character Classes}
+    \begin{itemize}
+        \item \texttt{[:alnum:]}
+            \begin{itemize}
+                \item Matches any alphanumeric character, which includes both letters and digits.
+                \item Equivalent to \texttt{[A-Za-z0-9]}.
+            \end{itemize}
+        \item \texttt{[:alpha:]}
+            \begin{itemize}
+                \item Matches any alphabetic character, which includes both uppercase and lowercase letters.
+                \item Equivalent to \texttt{[A-Za-z]}.
+            \end{itemize}
+        \item \texttt{[:blank:]}
+            \begin{itemize}
+                \item Matches any blank character, which includes spaces and tabs.
+                \item Equivalent to \texttt{[ \textbackslash{}t]}.
+            \end{itemize}
+        \item \texttt{[:cntrl:]}
+            \begin{itemize}
+                \item Matches any control character. These are non-printable characters in the ASCII range 0–31 and 127.
+                \item Examples include newline (\texttt{\textbackslash{}n}), carriage return (\texttt{\textbackslash{}r}), and escape (\texttt{\textbackslash{}e}).
+            \end{itemize}
+        \item \texttt{[:digit:]}
+            \begin{itemize}
+                \item Matches any digit.
+                \item Equivalent to \texttt{[0-9]}.
+            \end{itemize}
+        \item \texttt{[:graph:]}
+            \begin{itemize}
+                \item Matches any printable character except for spaces. This includes punctuation, digits, and letters.
+                \item Equivalent to \texttt{[$\land$[:space:]]} but excluding space.
+            \end{itemize}
+        \item \texttt{[:lower:]}
+            \begin{itemize}
+                \item Matches any lowercase letter.
+                \item Equivalent to \texttt{[a-z]}.
+            \end{itemize}
+        \item \texttt{[:print:]}
+            \begin{itemize}
+                \item Matches any printable character, including spaces. This includes punctuation, digits, letters, and space.
+                \item Equivalent to \texttt{[$\land$[:cntrl:]]}.
+            \end{itemize}
+        \item \texttt{[:punct:]}
+            \begin{itemize}
+                \item Matches any punctuation character. This includes symbols and punctuation marks but not spaces, letters, or digits.
+                \item Examples include \texttt{!}, \texttt{@}, \texttt{\#}, \texttt{\$}, etc.
+            \end{itemize}
+        \item \texttt{[:space:]}
+            \begin{itemize}
+                \item Matches any whitespace character. This includes spaces, tabs, newlines, carriage returns, vertical tabs, and form feeds.
+                \item Equivalent to \texttt{[ \textbackslash{}t\textbackslash{}r\textbackslash{}n\textbackslash{}v\textbackslash{}f]}.
+            \end{itemize}
+        \item \texttt{[:upper:]}
+            \begin{itemize}
+                \item Matches any uppercase letter.
+                \item Equivalent to \texttt{[A-Z]}.
+            \end{itemize}
+        \item \texttt{[:xdigit:]}
+            \begin{itemize}
+                \item Matches any hexadecimal digit.
+                \item Equivalent to \texttt{[0-9A-Fa-f]}.
+            \end{itemize}
+    \end{itemize}
+    \pagebreak 
+    \subsection{With Regex Matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        check_characters() {
+            local str="$1"
+
+            if [[ "$str" =~ [[:alnum:]] ]]; then
+            echo "String contains alphanumeric characters."
+            fi
+
+            if [[ "$str" =~ [[:alpha:]] ]]; then
+            echo "String contains alphabetic characters."
+            fi
+
+            if [[ "$str" =~ [[:blank:]] ]]; then
+            echo "String contains blank characters (space or tab)."
+            fi
+
+            if [[ "$str" =~ [[:digit:]] ]]; then
+            echo "String contains digits."
+            fi
+
+            if [[ "$str" =~ [[:lower:]] ]]; then
+            echo "String contains lowercase letters."
+            fi
+
+            if [[ "$str" =~ [[:upper:]] ]]; then
+            echo "String contains uppercase letters."
+            fi
+
+            if [[ "$str" =~ [[:punct:]] ]]; then
+            echo "String contains punctuation characters."
+            fi
+
+            if [[ "$str" =~ [[:space:]] ]]; then
+            echo "String contains whitespace characters."
+            fi
+
+            if [[ "$str" =~ [[:xdigit:]] ]]; then
+            echo "String contains hexadecimal digits."
+            fi
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{Notice the extra set of brackets, this is because we put the Posix character class inside of a regex character class. This means we can use the outer set of brackets as a normal regex class, add negation symbol, other characters, etc}
+
+    \pagebreak 
+    \unsect{The tr command (translate)}
+    \bigbreak \noindent 
+    The tr command in Unix and Unix-like operating systems is a utility for translating or deleting characters. It reads from standard input and writes to standard output. The tr command is commonly used in scripts and command-line operations to perform simple text transformations.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    tr [OPTION]... SET1 [SET2]
+    \end{bashcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{SET1:} The set of characters to be replaced or deleted.
+        \item \textbf{SET2:} The set of characters to replace the characters in SET1 (if provided).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \begin{itemize}
+        \item \textbf{-d:} Delete characters in SET1, do not translate.
+        \item \textbf{-s:} Squeeze repeated characters in SET1 into a single character.
+        \item \textbf{-c:} Complement the characters in SET1.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Convert lowercase to uppercase}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "Hello World" | tr "[:lower:]" "[:upper:]"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Deleting characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo "Hello World" | tr -d "aeiou"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Basic Example: Squeezing Characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo "Hello     world" | tr -s " "
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Complimenting characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "abcd123efg" | tr -c "[:digit:]" "-"
+    \end{bashcode}
+    \bigbreak \noindent 
+    Replaces all characters \textbf{except} digits with a hyphen:
+    \bigbreak \noindent 
+
+
+
+
+
+
+    
+
+    \pagebreak 
+    \unsect{Exercise solutions}
+    \bigbreak \noindent 
+    \subsection{Exercise 1}
+    \bigbreak \noindent 
+    \subsubsection{Problem Statement}
+    \bigbreak \noindent 
+    Calculate the Hamming Distance between two DNA strands.
+    \bigbreak \noindent 
+    Your body is made up of cells that contain DNA. Those cells regularly wear out and need replacing, which they achieve by dividing into daughter cells. In fact, the average human body experiences about 10 quadrillion cell divisions in a lifetime!
+    \bigbreak \noindent 
+    When cells divide, their DNA replicates too. Sometimes during this process mistakes happen and single pieces of DNA get encoded with the incorrect information. If we compare two strands of DNA and count the differences between them we can see how many mistakes occurred. This is known as the "Hamming Distance".
+    \bigbreak \noindent 
+    We read DNA using the letters C,A,G and T. Two strands might look like this:
+    \bigbreak \noindent 
+    \begin{center}
+        GAGCCTACTAACGGGAT \\
+        CATCGTAATGACGGCCT \\
+    \end{center}
+    They have 7 differences, and therefore the Hamming Distance is 7.
+    \bigbreak \noindent 
+    \subsubsection{Solution 1}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        #!/usr/bin/env bash
+
+        main() {
+            if [[ $# -ne 2 ]]; then
+                echo "Usage: hamming.sh <string1> <string2>"
+                exit 1
+            fi
+
+            if [[ ${#1} != ${#2} ]]; then
+                echo "strands must be of equal length"
+                exit 1
+            fi
+
+            counter=0;
+            for (( i=0; i<${#1}; i++ )); do
+                if [[ "${1:i:1}" != "${2:i:1}" ]]; then
+                    ((counter++)) // or -> counter=$((counter + 1))
+                fi
+            done
+
+            echo $counter
+        }
+        main "${@}"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Alternative solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        #!/usr/bin/env bash
+        error () {
+            printf '%s\n' "$*"
+            exit 1
+        }
+        main () {
+            (( $# == 2 )) || error 'Usage: hamming.sh <string1> <string2>'
+
+            # Regular vars are easier to read when doing fancy parameter expansion.
+            a=$1 b=$2 
+
+            # Using the a==b||... pattern everywhere in this function. I like consistency.
+            (( ${#a} == ${#b} )) || error 'left and right strands must be of equal length'
+
+            declare -i count
+            for (( i = 0; i < ${#a}; i++ )); do
+                [[ ${a:i:1} == "${b:i:1}" ]] || count+=1
+            done
+
+            printf '%d\n' "$count"
+        }
+        main "$@"
+    \end{bashcode}
+
+    \pagebreak 
+    \subsection{Exercise 2}
+    \bigbreak \noindent 
+    \subsubsection{Problem Statement}
+    \bigbreak \noindent 
+    Convert a phrase to its acronym.
+    \bigbreak \noindent 
+    Techies love their TLA (Three Letter Acronyms)!
+    \bigbreak \noindent 
+    Help generate some jargon by writing a program that converts a long name like Portable Network Graphics to its acronym (PNG).
+    \bigbreak \noindent 
+    Punctuation is handled as follows: hyphens are word separators (like whitespace); all other punctuation can be removed from the input.
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{c|c}
+            Input	&Output \\
+            \hline
+            As Soon As Possible	& ASAP \\
+            Liquid-crystal display	& LCD \\
+            Thank George It's Friday!	&TGIF \\
+        \end{tabular}
+    \end{center}
+    \subsubsection{Solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    main() {
+
+        ac=""
+        str=$(echo "$1" | sed 's/[^[:alnum:][:space:][:digit:]-]//g')
+
+        [[ ${str:0:1} =~ [[:alpha:]] ]] && ac+=${str:0:1}
+
+        for (( i=0; i<${#str}; i++ )); do
+            if [[ ${str:i:1} =~ [[:space:]-] ]]  && [[ ${str:i+1:1} =~ [[:alpha:]] ]]; then
+                ac+=$(echo ${str:i+1:1} | tr "[:lower:]" "[:upper:]")
+            fi
+        done
+
+        echo $ac
+
+    }
+    main "${@}"
+    \end{bashcode}
+
+    \pagebreak 
+    \subsubsection{Alternative solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+    set -o errexit
+    set -o nounset
+    main() {
+        local line="$1"
+        IFS=' -_*' read -r -a words <<< "$line"
+        local output=""
+        local word
+        for word in "${words[@]}"; do
+            local letter="${word:0:1}"
+            output+="${letter^^}"
+        done
+        echo "$output"
+    }
+    main "$@"
+    \end{bashcode}
+
+
+
+
+
+\end{document}
