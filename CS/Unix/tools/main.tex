@@ -1,0 +1,1274 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Tools}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Some useful command line tools}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+ \pagebreak 
+    \unsect{Awk}
+    \bigbreak \noindent 
+    \subsection{What is awk?}
+    \bigbreak \noindent 
+    Awk is a scripting language used for manipulating data and generating reports. The awk command programming language requires no compiling and allows the user to use variables, numeric functions, string functions, and logical operators. 
+    \bigbreak \noindent 
+    Awk is a utility that enables a programmer to write tiny but effective programs in the form of statements that define text patterns that are to be searched for in each line of a document and the action that is to be taken when a match is found within a line. Awk is mostly used for pattern scanning and processing. It searches one or more files to see if they contain lines that matches with the specified patterns and then perform the associated actions.
+    \bigbreak \noindent 
+    \subsection{Awk operations}
+    \begin{enumerate}[label=(\alph*)]
+        \item  Scans a file line by line 
+        \item  Splits each input line into fields 
+        \item  Compares input line/fields to pattern 
+        \item  Performs action(s) on matched lines 
+    \end{enumerate}
+    
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    awk options 'selection _criteria { action }' input-file >
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Options}
+    \begin{itemize}
+        \item \textbf{-f}: Reads the AWK program source from the file program-file, instead of from the first command line argument
+        \item \textbf{-F}: Change the field separator
+    \end{itemize}
+    \pagebreak 
+    \subsubsection{Example}
+    \begin{bashcode}
+        # File that contains awk commands "filname: actions"
+
+        { print $1 }
+
+        # File that contains data "filename: data"
+
+        0.999,0.18179,0.2711768644                                                                                                                                                                                        
+        1.0323,0.195853,0.47739746                                                                                                                                                                                        
+        1.0656,0.217119,0.6253140641                                                                                                                                                                                        
+
+        # In command line
+        aws -F ',' -f actions data
+
+        # Output
+        0.999
+        1.0323
+        1.0656           
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{The print action}
+    \bigbreak \noindent 
+    One of the simplest actions we can preform with awk is the print action
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{ print }' <filename>
+        awk '{ print $1}' <filename>
+        awk '{ print $1,$3}' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    Awk will scan the file line by line, split the input line into fields, with space as the field separator, and then perform the action print. With a bare print statement, each line will be printed. We can of course be more specific with our statement. We can access each field with \$0-\$n, where \$0 is the entire line, and  \$n is a specific field number
+
+    \bigbreak \noindent 
+    \subsection{Regex}
+    \bigbreak \noindent 
+    We can as you might expect use regular expressions with awk, let's take a look 
+    \bigbreak \noindent 
+    \subsubsection{Whole lines}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '/foo/ { print }' <filename>
+    \end{bashcode}
+    \bigbreak \noindent 
+    This will print all lines that contain the word 'foo'
+
+    \bigbreak \noindent 
+    \subsubsection{Field matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '$0~/day/'
+        man date | awk '$0!~/day/'
+    \end{bashcode}
+    \bigbreak \noindent 
+    Here we use awk on the manual for the date command, and we output any line that contains the word day. In the second line, we do the same thing, but output any line that does not contain the word day
+
+    \bigbreak \noindent 
+    \subsubsection{Range matching}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        man date | awk '/DESCRIPTION/,/EXAMPLES/'
+    \end{bashcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Other Awk variables}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{NR}: Number of the current record
+        \item \textbf{NF}: Number of fields in the current record
+        \item \textbf{FS}: Field separator
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{BEGIN and END blocks}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{BEGIN\{...\}}  Executes whatever is inside the brackets before starting to view the input file 
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { FS=":" } { print $1 }' /etc/passwd
+            \end{bashcode}
+            This command sets the field separator to : before processing any lines of the input file /etc/passwd. It then prints the first field of each line, which typically contains the usernames in a Unix/Linux system.
+        \item \textbf{END\{...\}}  Executes whatever is inside the brackets after awk is finished reading the input file
+            \smallbreak \noindent
+            \begin{bashcode}
+            awk 'BEGIN { count=0 } { count++ } END { print "Number of lines: ", count }' /etc/passwd
+            \end{bashcode}
+            Before processing the file, it initializes a counter count to 0. For each line in /etc/passwd, it increments count. After processing all lines, it prints the total count, effectively giving the number of lines in the file.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Typical awk script}
+    \bigbreak \noindent 
+    \fig{1}{./figures/9.png}
+    \bigbreak \noindent 
+    \nt{The symbol for comments are the same as bash, the hashtag \#}
+
+    \bigbreak \noindent 
+    \subsection{If statements in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    awk supports conditional statements, allowing you to perform actions based on specific conditions. The syntax for an if statement in awk is similar to that in other programming languages. Here's the basic structure:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (condition) {
+            // actions to perform if condition is true
+        } else {
+            // actions to perform if condition is false
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{Awk does not have the concept of elseif}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo -e "3\n-1\n0\n5" | awk '{ if ($1 > 0) print $1 " is positive"; else print $1 " is not positive" }'
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Checking for existence in array}
+    \bigbreak \noindent 
+    Similar to python, we can do the following
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if (item in array) {
+            ...
+        } else {
+            ...
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{For loops in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    for (initialization; condition; increment) {
+        // Code block to execute
+    }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk 'BEGIN {
+            for (i = 1; i <= 5; i++) {
+                print "Number is", i
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Iterating Over an Array}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        for (index in array) {
+            // Code block using array[index]
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The while loop in awk commands}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        while (condition) {
+            // Code block to execute
+        }
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        awk '{
+            while ($0 !~ /stop/) {
+                print "Processing:", $0
+                if (getline <= 0) break
+            }
+        }' input.txt
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Awk variables}
+    \bigbreak \noindent 
+    In awk, we can define variables with an assignent statement. We can define integers, strings, and arrays. Variables only come into existence when first used. Variables are initialized to either 0 or ""
+    \bigbreak \noindent 
+    \subsection{Awk arrays}
+    \bigbreak \noindent 
+    Awk allows the creation of one dimensional arrays, the index (and the elements) can be either a number or a string. Unlike arrays in $c$, we need not declare the size or type of the array. The array elements are created when first used and initialized either 0 or ""
+    \bigbreak \noindent 
+    \nt{When we use strings as indicies, we are essentially creating a map}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arrayName[index] = value
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Examples}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        arr[1] = "some value"
+        arr[2] = 25
+        arr["foo"] = "bar"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Example: Process sales data}
+    \bigbreak \noindent 
+    Suppose we have the data file 
+    \bigbreak \noindent 
+    \begin{center}
+        \[
+        \begin{array}{llr}
+            1 & \text { clothing } & 3141 \\
+            1 & \text { computers } & 9161 \\
+            1 & \text { textbooks } & 21321 \\
+            2 & \text { clothing } & 3252 \\
+            2 & \text { computers } & 12321 \\
+            2 & \text { textbooks } & 15462 \\
+            2 & \text { supplies } & 2242 \\
+        \end{array}
+    \]
+    \end{center}
+    \bigbreak \noindent 
+    We wish to output a summary of department sales, then we could write an awk program
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # p.awk (awk -f p.awk data)
+        {
+            deptsales[$2] += $3
+        }
+        END {
+            for (x in deptsales) {
+                print x, deptsales[x]
+            }
+        }
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Builtin Functions}
+    \bigbreak \noindent 
+    \subsubsection{Arithmetic}
+    \begin{itemize}
+        \item sqrt
+        \item rand
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{String}
+    \begin{itemize}
+        \item index
+        \item length
+        \item split
+        \item substr
+        \item sprintf
+        \item tolower
+        \item toupper
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Misc}
+    \begin{itemize}
+        \item system
+        \item systime
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The split function}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    split(string, array, fieldsep)
+    \end{bashcode}
+    \bigbreak \noindent 
+    The split function divides \textbf{string} into pieces separated by \textbf{fieldsep} and stores the pieces in \textbf{arary}. If \textbf{fieldsep} is omitted, the value of FS is used.
+
+    \bigbreak \noindent 
+    \subsubsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        split("26:Miller:Comedian", fields, ":")    
+    \end{bashcode}
+    \bigbreak \noindent 
+    Now we have a fields array with the contents of the string
+
+    \bigbreak \noindent 
+    \subsection{The gsub function}
+    \bigbreak \noindent 
+    The gsub function in AWK is a powerful tool for performing global search and replace operations on strings. It searches for all occurrences of a pattern in a string and replaces them with a specified replacement text. 
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    gsub(regexp, replacement, target)
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Stream Editor (sed)}
+    \bigbreak \noindent 
+    \subsection{What is sed?}
+    \bigbreak \noindent 
+    Sed is a non-interactive stream editor. We use sed to 
+    \begin{itemize}
+        \item Automatically perform edits on files
+        \item Simplify doing the same edit on multiple files
+        \item Write conversion programs
+        \item Do editing operations from shell script
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -e 'address command' input_file # (inline script)
+    sed -f script.sed input_file # (script file)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{How does sed work? }
+    \bigbreak \noindent 
+    Sed reads files line by line, each lien of input is copied into a temporary buffer called the \textbf{pattern space}, then the editing instructions are applied to line in the pattern space. Next, the line is sent to output (unless -n was used). Last, the line is removed from the pattern space. Sed does this for all lines until the end of the file
+    \bigbreak \noindent 
+    \nt{Input file is unchanged unless -i option is used}
+
+    \bigbreak \noindent 
+    \subsection{Instruction format}
+    \bigbreak \noindent 
+    \fig{.8}{./figures/10.png}
+    \bigbreak \noindent 
+    The address determines which lines in the input file are to be processed by the commands, if no address is given, then the command is applied to each input line
+    \bigbreak \noindent 
+    \subsubsection{Address types}
+    \begin{itemize}
+        \item Single-line address
+        \item Set-of-lines address
+        \item Range address
+    \end{itemize}
+    \bigbreak \noindent 
+
+    \subsubsection{Single-line address}
+    \bigbreak \noindent 
+    A Single-line address specifies only one line in the input file
+    \bigbreak \noindent
+    \nt{The dollar sign denotes the last line of input file}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e "3 p" infile # Show only line 3
+    sed -n -e "$ p" inflie # Show last line
+    sed -e "10 s/endif/fi/" infile # Substitute "endif" with "fi" on line 10
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Set-of-lines address}
+    \bigbreak \noindent 
+    With this, we can use regex to match lines
+    \begin{itemize}
+        \item Written between two slashes 
+        \item Process only lines that match
+        \item May match several lines
+        \item Lines don't have to be consecutive
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -i -e "/Key/ s/more/other" infile
+    sed -n -e "/r..t/ p" input-file
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Range address}
+    \bigbreak \noindent 
+    Defines a set of consecutive lines. Format: startAddr,endAddr (inclusive)
+    \bigbreak \noindent 
+    \textbf{Examples:}
+    \begin{itemize}
+        \item 10,50
+        \item 10,/funny/
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Address complement}
+    \bigbreak \noindent 
+    Address with an exclamation point (!). Command applies to lines that \textbf{don't} match the address
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sed -n -e '/Obsolete/!p' infile # (print lines that do not contain "Obsolete")
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Sed commands}
+    \bigbreak \noindent 
+    \subsubsection{Modify}
+    \begin{itemize}
+        \item insert 
+        \item append
+        \item change
+        \item delete
+        \item substitute
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Input/Output}
+    \begin{itemize}
+        \item Next, print
+        \item Read, write
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Other}
+    \begin{itemize}
+        \item quit
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Commands i,a,c}
+    \begin{itemize}
+        \item \textbf{i} adds lines before the address
+        \item \textbf{a} adds lines after the address
+        \item \textbf{c} replaces an entire matched line with new text
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] i\
+        text
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Delete command}
+    \bigbreak \noindent 
+    Deletes the entire pattern space
+    \bigbreak \noindent 
+    \nt{Commands following the delete command are ignored since the deleted text is no longer in the pattern space}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    [address] d 
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Substitute command (s)}
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        [address] s/search/replacement/[flag]
+    \end{bashcode}
+
+
+    \pagebreak 
+    \unsect{tr (translate)}
+    \bigbreak \noindent 
+    The tr command in Unix and Unix-like operating systems is a utility for translating or deleting characters. It reads from standard input and writes to standard output. The tr command is commonly used in scripts and command-line operations to perform simple text transformations.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        tr [OPTION]... SET1 [SET2]
+    \end{bashcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{SET1:} The set of characters to be replaced or deleted.
+        \item \textbf{SET2:} The set of characters to replace the characters in SET1 (if provided).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \begin{itemize}
+        \item \textbf{-d:} Delete characters in SET1, do not translate.
+        \item \textbf{-s:} Squeeze repeated characters in SET1 into a single character.
+        \item \textbf{-c:} Complement the characters in SET1.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Convert lowercase to uppercase}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "Hello World" | tr "[:lower:]" "[:upper:]"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Deleting characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "Hello World" | tr -d "aeiou"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Basic Example: Squeezing Characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "Hello     world" | tr -s " "
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Basic Example: Complimenting characters}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "abcd123efg" | tr -c "[:digit:]" "-"
+    \end{bashcode}
+    \bigbreak \noindent 
+    Replaces all characters \textbf{except} digits with a hyphen:
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{rev (reverse)}
+    \bigbreak \noindent 
+    \subsection{Reversing Strings}
+    \bigbreak \noindent 
+    To reverse a string, we can use the rev command. The rev command words similar to the bc command
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "string" | rev
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Reversing arrays}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        declare -a arr1=("a" "b" "c")
+        declare -a arr2=($(echo "${arr1[@]}" | rev))
+
+        echo "${arr1[@]}" // Output: a b c
+        echo "${arr2[@]}" // Output: c b a
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{fold}
+    \bigbreak \noindent 
+    The fold command in Unix-like operating systems is used to wrap each input line to fit within a specified width. It's particularly useful for breaking long lines of text into shorter, more manageable pieces. By default, fold breaks lines at a width of 80 characters, but this can be adjusted using options.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        fold [OPTION]... [FILE]...
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \begin{itemize}
+        \item \textbf{-w, \texttt{--}width=WIDTH:} Specify the maximum line width. Lines longer than this width will be broken.
+        \item \textbf{-s, \texttt{--}spaces:} Break lines at word boundaries (spaces) instead of exactly at the specified width.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "This is a long line that needs to be wrapped" | fold -w 20
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        str="Helloworld"
+        str=$(fold -w 5 <<< $str)
+
+        echo $str // Output: Hello world
+    \end{bashcode}
+    \pagebreak 
+    \unsect{bc (Basic Calculator)} 
+    \bigbreak \noindent 
+    The bc command in Unix-like systems is an arbitrary precision calculator language, which is useful for performing mathematical operations that go beyond the capabilities of standard shell arithmetic. Here's a detailed explanation of the bc command, how it works, and some examples to illustrate its use.
+    \bigbreak \noindent 
+    \subsection{Basic Use}
+    \bigbreak \noindent 
+    You can use bc interactively by simply typing bc in the terminal, or you can use it non-interactively within a script or from the command line by echoing expressions into it.
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "expression" | bc
+
+        echo "2+2" | bc
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Exponentiation}
+    \bigbreak \noindent 
+    We use the carrot ($\land$) for exponentiation
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "2^64" | bc
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Floating-Point Arithmetic}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "scale=2; 5/3" | bc
+    \end{bashcode}
+    \bigbreak \noindent 
+    Where \textit{scale=2} Sets the number of decimal places to 2
+
+    \pagebreak 
+    \unsect{Basename}
+    \bigbreak \noindent 
+    The basename command in Unix-like operating systems is used to strip the directory and suffix from filenames. It's particularly useful in shell scripts for manipulating paths and extracting the filename or the file's base name.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    basename NAME [SUFFIX]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{NAME:} The name of the file (can include the path).
+        \item \textbf{SUFFIX:} An optional suffix to remove from the base name.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    basename /usr/local/bin/script.sh
+    // Output: script.sh
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # Full path to a file
+        full_path="/usr/local/bin/my_script.sh"
+
+        # Get the base name without directory
+        file_name=$(basename "$full_path")
+
+        # Get the base name without directory and suffix
+        base_name=$(basename "$full_path" .sh)
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{expr}
+    \bigbreak \noindent 
+    The expr utility in Unix-like systems is used for evaluating expressions. It can perform a variety of operations including arithmetic, string operations, and logical comparisons. While it is not as commonly used as other methods in modern scripting due to the availability of more powerful tools and built-in shell capabilities, it remains a useful tool for certain tasks.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    expr EXPRESSION
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Arithmetic operations}
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/usr/bin/env bash
+
+# Addition
+sum=$(expr 5 + 3)
+echo "5 + 3 = $sum"
+
+# Subtraction
+difference=$(expr 10 - 4)
+echo "10 - 4 = $difference"
+
+# Multiplication (note the backslash to escape the asterisk)
+product=$(expr 7 \* 2)
+echo "7 * 2 = $product"
+
+# Division
+quotient=$(expr 20 / 5)
+echo "20 / 5 = $quotient"
+
+# Modulus
+remainder=$(expr 11 % 3)
+echo "11 % 3 = $remainder"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{String operations}
+    \bigbreak \noindent 
+    expr can also handle string operations, such as finding the length of a string, extracting substrings, and locating substrings within a string.
+    \bigbreak \noindent 
+    \subsubsection{String length}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    str="Hello, world!"
+    length=$(expr length "$str")
+    echo "Length of '$str' is $length"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Substring Extraction}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    str="Hello, world!"
+    substring=$(expr substr "$str" 8 5)
+    echo "Substring of '$str' starting at position 8 with length 5 is '$substring'"
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Logical Comparisons}
+    \bigbreak \noindent 
+    \subsubsection{Numeric comparisons}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    a=10
+    b=20
+
+    if [ $(expr $a \< $b) -eq 1 ]; then
+      echo "$a is less than $b"
+    fi
+
+    if [ $(expr $a \> $b) -eq 0 ]; then
+      echo "$a is not greater than $b"
+    fi
+    \end{bashcode}
+
+    \pagebreak 
+    \subsubsection{String comparisons}
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/usr/bin/env bash
+
+str1="abc"
+str2="xyz"
+
+if [ $(expr "$str1" = "$str2") -eq 0 ]; then
+  echo "'$str1' is not equal to '$str2'"
+fi
+
+if [ $(expr "$str1" \> "$str2") -eq 1 ]; then
+  echo "'$str1' is greater than '$str2'"
+else
+  echo "'$str1' is not greater than '$str2'"
+fi
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Combining expressions}
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/usr/bin/env bash
+
+a=5
+b=10
+c=15
+
+# Combining arithmetic operations
+result=$(expr $a + $b \* $c)
+echo "Result of $a + $b * $c = $result"
+
+# Combining logical comparisons
+if [ $(expr $a \< $b \& $b \< $c) -eq 1 ]; then
+  echo "$a is less than $b and $b is less than $c"
+fi
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{cut}
+    \bigbreak \noindent 
+    The cut utility in Unix and Bash scripting is used for extracting sections from each line of input data (usually a text file). It is often used in data processing and text manipulation tasks. 
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    cut [OPTION]... [FILE]...
+    \end{bashcode}
+    \bigbreak \noindent 
+    If no file is specified, cut reads from the standard input.
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{-b}: Selecting by byte position
+            \bigbreak \noindent 
+            \begin{bashcode}
+                cut -b LIST [FILE]...
+            \end{bashcode}
+            \begin{itemize}
+                \item LIST specifies the byte positions to extract.
+                \item \textbf{Example:} cut -b 1-3 file.txt extracts bytes 1 through 3 from each line.
+            \end{itemize}
+        \item \textbf{-c}: Selecting by Character Position
+            \bigbreak \noindent 
+            \begin{bashcode}
+                cut -c LIST [FILE]...
+
+                // Example
+                echo "abcdef" | cut -c 2-4
+
+                // Output: bcd
+            \end{bashcode}
+            \begin{itemize}
+                \item LIST specifies the character positions to extract.
+                \item \textbf{Example:} cut -c 1-3 file.txt extracts characters 1 through 3 from each line.
+            \end{itemize}
+        \item \textbf{-f}: Selecting by Field
+            \bigbreak \noindent 
+            \begin{bashcode}
+            cut -f LIST [-d DELIMITER] [FILE]...
+             
+            // Example:
+            echo "name,age,location" | cut -f 1,3 -d ','
+
+            // Output: name,location
+            \end{bashcode}
+            \begin{itemize}
+                \item LIST specifies the fields to extract, where fields are separated by a delimiter.
+                \item -d DELIMITER specifies the delimiter that separates fields. The default delimiter is a tab.
+                \item \textbf{Example:} cut -f 1,3 -d ',' file.csv extracts the first and third fields from a CSV file.
+            \end{itemize}
+        \item \textbf{-s}: Suppressing Lines without Delimiters
+            \bigbreak \noindent 
+            \begin{bashcode}
+            cut -s -f LIST [-d DELIMITER] [FILE]...
+            \end{bashcode}
+            \begin{itemize}
+                \item The -s option suppresses lines that do not contain the delimiter.
+                \item \textbf{Example:} cut -s -f 2 -d ':' file.txt extracts the second field but skips lines without a colon.
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Reading from a file}
+    \bigbreak \noindent 
+    Assume we have the file
+    \bigbreak \noindent 
+    \begin{bashcode}
+    // data.txt
+
+    alpha,beta,gamma,delta
+    epsilon,zeta,eta,theta
+    \end{bashcode}
+    \bigbreak \noindent 
+    We can extract the second and fourth fields using:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    cut -f 2,4 -d ',' data.txt 
+
+    // Output:
+    beta,delta
+    zeta,theta
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{More on -s}
+    \bigbreak \noindent 
+    The -s option in the cut command is used to suppress lines that do not contain the delimiter specified with the -d option. When you use the -s option, cut will ignore and not output any lines from the input that do not include the specified delimiter.
+    \bigbreak \noindent 
+    \subsubsection{Without -s}
+    \bigbreak \noindent 
+    The -s option in the cut command is used to suppress lines that do not contain the delimiter specified with the -d option. When you use the -s option, cut will ignore and not output any lines from the input that do not include the specified delimiter.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    // example.txt
+
+    apple:banana:cherry
+    date:fig:grape
+    kiwi
+    lemon:mango:nectarine
+    \end{bashcode}
+    \bigbreak \noindent 
+    If you run cut without the -s option to extract the second field:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        cut -d ':' -f 2 example.txt
+    \end{bashcode}
+    \bigbreak \noindent 
+    The output will include all lines, with empty lines for those that do not have the delimiter:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    // Output
+
+    banana
+    fig
+
+    mango
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{With -s Option}
+    \bigbreak \noindent 
+    When you use the -s option, cut will skip lines that do not contain the delimiter:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    cut -d ':' -f 2 -s example.txt
+    \end{bashcode}
+    \bigbreak \noindent 
+    The output will exclude the line kiwi because it does not contain the : delimiter:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    // Output:
+
+    banana
+    fig
+    mango
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Exercise: Extracting Data from a Sample File}
+    \bigbreak \noindent 
+    Assume a file named students.txt with the following content
+    \bigbreak \noindent 
+    \begin{bashcode}
+    // Student.txt
+
+    ID,Name,Age,Grade,Email
+    1,John Doe,20,A,john.doe@example.com
+    2,Jane Smith,21,B,jane.smith@example.com
+    3,Emily Jones,19,A,emily.jones@example.com
+    4,Michael Brown,22,C,michael.brown@example.com
+    5,Jessica White,20,B,jessica.white@example.com
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{1. Extract the Names of All Students}
+    \bigbreak \noindent 
+    Use the cut command to extract the Name field from the students.txt file.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    cut -f 2 -d ',' studets.txt
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{tac}
+    \bigbreak \noindent 
+    The tac command in Unix-like operating systems is used to concatenate and print files in reverse. Unlike the cat command, which outputs the contents of a file in the same order, tac outputs the contents in reverse order, meaning it prints the last line first and the first line last.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    tac [OPTION]... [FILE]...
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Options}
+    \begin{itemize}
+        \item \textbf{-b, --before:} Attach the separator before each line instead of after.
+        \item \textbf{-r, --regex:} Treat the separator string as a regular expression.
+        \item \textbf{-s, --separator=STRING:} Use STRING as the line separator instead of the default newline.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{sort}
+    \bigbreak \noindent 
+    The sort command in Unix-like operating systems is used to sort lines of text files. It is a powerful tool that can sort data in various ways based on different criteria such as numerical order, alphabetical order, and more.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sort [OPTION]... [FILE]...
+    \end{bashcode}
+    \bigbreak \noindent 
+    If no file is specified, sort reads from standard input.
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \begin{itemize}
+        \item \textbf{-n, \texttt{--}numeric-sort}: Sorts the input numerically.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -n file.txt
+            \end{bashcode}
+        \item \textbf{-r, \texttt{--}reverse}: Reverses the sorting order.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -r file.txt
+            \end{bashcode}
+        \item \textbf{-k, \texttt{--}key=POS1[,POS2]}: Specifies the field separator character.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -k 2 file.txt
+            \end{bashcode}
+        \item \textbf{-t, \texttt{--}field-separator=SEP}:  Specifies the field separator character.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -t ',' -k 2 file.csv
+            \end{bashcode}
+        \item \textbf{-u, \texttt{--}unique}: Outputs only the first of an equal run (removes duplicates).
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -u file.txt
+            \end{bashcode}
+        \item \textbf{-o, \texttt{--}output=FILE}: Writes the result to the specified file.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -o sorted.txt file.txt
+            \end{bashcode}
+        \item \textbf{-b, \texttt{--}ignore-leading-blanks}: Ignores leading blanks.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -b file.txt            
+            \end{bashcode}
+        \item \textbf{-f, \texttt{--}ignore-case}: Ignores case differences.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -f file.txt
+            \end{bashcode}
+        \item \textbf{-M, \texttt{--}month-sort}: Sorts by month name.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            sort -M file.txt
+            \end{bashcode}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{uniq}
+    \bigbreak \noindent 
+    The uniq command in Unix-like operating systems is used to filter out or report repeated lines in a file. It is typically used in conjunction with the sort command because uniq only detects adjacent duplicate lines. The sort command ensures that all duplicate lines are next to each other
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    uniq [OPTION]... [INPUT [OUTPUT]]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{INPUT:} The input file to process. If omitted, uniq reads from standard input.
+        \item \textbf{OUTPUT:} The file to write the results to. If omitted, uniq writes to standard output.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Common options}
+    \begin{itemize}
+        \item \textbf{-c, \texttt{--}count}:  Prefixes lines with the number of occurrences.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -c file.txt
+            \end{bashcode}
+        \item \textbf{-d, \texttt{--}repeated}: Only prints duplicate lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -d file.txt
+            \end{bashcode}
+        \item \textbf{-u, \texttt{--}unique}: Only prints unique lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -u file.txt
+            \end{bashcode}
+        \item \textbf{-i, \texttt{--}ignore-case}: Ignores differences in case when comparing lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -i file.txt
+            \end{bashcode}
+        \item \textbf{-f N, \texttt{--}skip-fields=N}: Ignores the first N fields when comparing lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -f 1 file.txt
+            \end{bashcode}
+        \item \textbf{-s N, \texttt{--}skip-chars=N}: Ignores the first N characters when comparing lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -s 2 file.txt
+            \end{bashcode}
+        \item \textbf{-w N, \texttt{--}check-chars=N}: Compares no more than N characters in lines.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            uniq -w 5 file.txt
+            \end{bashcode}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{split}
+    \bigbreak \noindent 
+    The split command in Unix-like operating systems is used to split a file into smaller files. It is a useful tool for managing large files by breaking them down into more manageable pieces. The split command provides various options to customize the splitting process, such as specifying the size of each split file, the number of lines per split file, or using a custom suffix for the split files
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    split [OPTION]... [INPUT [PREFIX]]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{INPUT:} The input file to be split. If omitted, split reads from standard input.
+        \item \textbf{PREFIX:} The prefix to use for the split files. The default prefix is x.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Common options}
+    \begin{itemize}
+        \item \textbf{-l, \texttt{--}lines=NUMBER:} Splits the file into pieces with NUMBER lines each.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split -l 1000 input.txt
+            \end{bashcode}
+        \item \textbf{-b, \texttt{--}bytes=SIZE:} Splits the file into pieces of SIZE bytes each.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split -b 1M input.txt
+            \end{bashcode}
+        \item \textbf{-b, \texttt{--}bytes=SIZE:} Splits the file into pieces of SIZE bytes each.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split -C 1M input.txt
+            \end{bashcode}
+        \item \textbf{-d, \texttt{--}numeric-suffixes:} Uses numeric suffixes instead of alphabetic suffixes
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split -d input.txt
+            \end{bashcode}
+        \item \textbf{-a, \texttt{--}suffix-length=N:} Uses suffixes of length N.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split -a 3 input.txt
+            \end{bashcode}
+        \item \textbf{\texttt{--}additional-suffix=SUFFIX:} Adds an additional suffix to the split file names.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split --additional-suffix=.txt input.txt
+            \end{bashcode}
+        \item \textbf{\texttt{--}number=CHUNKS:} Splits the file into CHUNKS number of files.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            split --number=4 input.txt
+            \end{bashcode}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{shuf}
+    \bigbreak \noindent     
+    The shuf command in Unix-like operating systems is used to generate random permutations of input lines. It can be used to shuffle lines in a file, select random lines, or generate random numbers within a specified range. shuf is part of the GNU core utilities and is commonly used for tasks that require randomization.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    shuf [OPTION]... [FILE]
+    \end{bashcode}
+    \bigbreak \noindent 
+    If no file is specified, shuf reads from standard input.
+    \bigbreak \noindent 
+    \subsection{Common options}
+    \begin{itemize}
+        \item \textbf{-e, \texttt{--}echo:} Treats each command-line argument as an input line.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf -e item1 item2 item3
+            \end{bashcode}
+        \item \textbf{-i, \texttt{--}input-range=LO-HI:} Acts as if input came from a file containing the range of numbers from LO to HI, one per line.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf -i 1-10
+            \end{bashcode}
+        \item \textbf{-n, \texttt{--}head-count=COUNT:} Outputs at most COUNT lines.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf -n 5 file.txt
+            \end{bashcode}
+        \item \textbf{-o, \texttt{--}output=FILE:} Writes the output to FILE instead of standard output.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf -o shuffled.txt file.txt
+            \end{bashcode}
+        \item \textbf{-r, \texttt{--}repeat:} Repeats the input lines indefinitely.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf -r -n 10 file.txt
+            \end{bashcode}
+        \item \textbf{\texttt{--}random-source=FILE:} Uses FILE as a source of random numbers instead of \texttt{/dev/urandom}.
+            \bigbreak \noindent
+            \begin{bashcode}
+                shuf --random-source=random.txt file.txt
+            \end{bashcode}
+    \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

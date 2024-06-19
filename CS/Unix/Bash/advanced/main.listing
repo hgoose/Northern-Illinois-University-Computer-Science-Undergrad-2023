@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
-total=0
-for x in $(echo ${1^^} | grep -o .); do
-    case $x in
-        [AEIOULNRST]) ((total++));;
-        [DG])         ((total+=2));;
-        [BCMP])       ((total+=3));;
-        [FHVWY])      ((total+=4));;
-        K)            ((total+=5));;
-        [JX])         ((total+=8));;
-        *)            ((total+=10));;
-    esac
-done
-echo $total
+die () { echo "$1"; exit 1; }
+(( $# != 2 )) && die "Invalid arg count"
+for i; do [[ $i = *[^[:digit:].-]* ]] && die "Non-numeric arg"; done
+bc <<< "scale=4
+        x=$1 ; y=$2 ; d=sqrt(x^2 + y^2 )
+        if (d <= 1) 10 else if (d <= 5) 5 else if (d <= 10) 1 else 0"
+exit 0

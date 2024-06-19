@@ -620,6 +620,70 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
     \bigbreak \noindent 
 
     \pagebreak 
+    \unsect{The reverse (rev) command}
+    \bigbreak \noindent 
+    \subsection{Reversing Strings}
+    \bigbreak \noindent 
+    To reverse a string, we can use the rev command. The rev command words similar to the bc command
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo "string" | rev
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Reversing arrays}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    declare -a arr1=("a" "b" "c")
+    declare -a arr2=($(echo "${arr1[@]}" | rev))
+
+    echo "${arr1[@]}" // Output: a b c
+    echo "${arr2[@]}" // Output: c b a
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{The fold command}
+    \bigbreak \noindent 
+    The fold command in Unix-like operating systems is used to wrap each input line to fit within a specified width. It's particularly useful for breaking long lines of text into shorter, more manageable pieces. By default, fold breaks lines at a width of 80 characters, but this can be adjusted using options.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        fold [OPTION]... [FILE]...
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Common Options}
+    \begin{itemize}
+        \item \textbf{-w, \texttt{--}width=WIDTH:} Specify the maximum line width. Lines longer than this width will be broken.
+        \item \textbf{-s, \texttt{--}spaces:} Break lines at word boundaries (spaces) instead of exactly at the specified width.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    echo "This is a long line that needs to be wrapped" | fold -w 20
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Example}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    str="Helloworld"
+    str=$(fold -w 5 <<< $str)
+
+    echo $str // Output: Hello world
+    \end{bashcode}
+
+
+
+
+
+
+
+
+
+
+    \pagebreak 
     \unsect{Export}
     \bigbreak \noindent 
     the export command is used to set environment variables that will be available to child processes. When you export a variable, it becomes part of the environment of subsequently executed commands, including scripts and other programs.
@@ -869,7 +933,7 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
     \pagebreak 
     \unsect{Patterns-Matching operators}
     \begin{itemize}
-        \item \textbf{\$\{variable#pattern\}}: If the pattern matches the beginning of the variable's value, delete the shortest part that matches and return the rest.
+        \item \textbf{\$\{variable\#pattern\}}: If the pattern matches the beginning of the variable's value, delete the shortest part that matches and return the rest.
             \bigbreak \noindent 
             \begin{bashcode}
             path="/home/user/docs/report.txt"
@@ -877,7 +941,7 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
             # Remove the shortest match of pattern from the beginning
             result=${path#*/} // Output: home/user/docs/report.txt
             \end{bashcode}
-        \item \textbf{\$\{variable##pattern\}}: If the pattern matches the beginning of the variable's value, delete the longest part that matches and return the rest
+        \item \textbf{\$\{variable\#\#pattern\}}: If the pattern matches the beginning of the variable's value, delete the longest part that matches and return the rest
             \bigbreak \noindent 
             \begin{bashcode}
              path="/home/user/docs/report.txt"
@@ -1092,6 +1156,42 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
     \bigbreak \noindent 
     Where \textit{scale=2} Sets the number of decimal places to 2
 
+    \bigbreak \noindent 
+    \subsection{Converting Decimal to Binary}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    num=32
+
+    echo "obase=2; $num" | bc
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Advanced floating-point arithmetic}
+    \bigbreak \noindent 
+    In general when we are dealing with floating point arithmetic in scripts, we should pipe the result into bc -l. 
+    \bigbreak \noindent 
+    For example:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    local x y sum_squares res
+    x=$1;y=$2
+    res=0
+
+    sum_squares=$(echo "$x^2 + $y^2" | bc -l)
+
+    if (( $(echo "$sum_squares <= 1" | bc -l)  )); then 
+        (( res+=10 ))
+    elif (( $(echo "$sum_squares <= 25"  | bc -l) )); then
+        (( res+= 5 ))
+    elif (( $(echo "$sum_squares <= 100" | bc -l) )); then
+        (( res+= 1 ))
+    fi
+
+    echo $res
+    \end{bashcode}
+
     \pagebreak 
     \unsect{printf}
     \bigbreak \noindent 
@@ -1110,14 +1210,571 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
 
     \bigbreak \noindent 
     \subsection{Format Specifiers}
+    % \begin{itemize}
+    %     \item \textbf{\%d:} Decimal integer.
+    %     \item \textbf{\%u:} Unsigned integer
+    %     \item \textbf{\%f:} Floating-point number.
+    %     \item \textbf{\%s:} String.
+    %     \item \textbf{\%x:} Hexadecimal number.
+    %     \item \textbf{\%o:} Octal number.
+    % \end{itemize}
+
     \begin{itemize}
-        \item \textbf{\%d:} Decimal integer.
-        \item \textbf{\%f:} Floating-point number.
-        \item \textbf{\%s:} String.
-        \item \textbf{\%x:} Hexadecimal number.
-        \item \textbf{\%o:} Octal number.
+    \item \textbf{Integer Format Specifiers}
+    \begin{itemize}
+        \item \verb|%d| or \verb|%i|: Signed decimal integer.
+        \item \verb|%u|: Unsigned decimal integer.
+        \item \verb|%o|: Unsigned octal integer.
+        \item \verb|%x|: Unsigned hexadecimal integer (lowercase letters).
+        \item \verb|%X|: Unsigned hexadecimal integer (uppercase letters).
+    \end{itemize}
+    
+    \item \textbf{Floating-Point Format Specifiers}
+    \begin{itemize}
+        \item \verb|%f|: Floating-point number (fixed-point notation).
+        \item \verb|%F|: Floating-point number (fixed-point notation, uppercase).
+        \item \verb|%e|: Floating-point number (scientific notation, lowercase).
+        \item \verb|%E|: Floating-point number (scientific notation, uppercase).
+        \item \verb|%g|: Floating-point number (uses \verb|%e| or \verb|%f| format, whichever is shorter).
+        \item \verb|%G|: Floating-point number (uses \verb|%E| or \verb|%F| format, whichever is shorter).
+    \end{itemize}
+    
+    \item \textbf{Character and String Format Specifiers}
+    \begin{itemize}
+        \item \verb|%c|: Single character.
+        \item \verb|%s|: String.
+    \end{itemize}
+    
+    \item \textbf{Pointer Format Specifier}
+    \begin{itemize}
+        \item \verb|%p|: Pointer address.
+    \end{itemize}
+    
+    \item \textbf{Special Characters}
+    \begin{itemize}
+        \item \verb|%%|: A literal \verb|%| character.
+    \end{itemize}
+    
+    \item \textbf{Width and Precision}
+    \begin{itemize}
+        \item \verb|%N.d|: Width \verb|N|, with \verb|d| decimal places for floating-point numbers (e.g., \verb|%6.2f|).
+        \item \verb|%-N|: Left-align within the specified width \verb|N|.
+    \end{itemize}
+    
+    \item \textbf{Example Usages}
+    \begin{itemize}
+        \item \textbf{Integer with leading zeros}: \verb|printf "%05d\n" 42| outputs \verb|00042|.
+        \item \textbf{Floating-point with precision}: \verb|printf "%.2f\n" 3.14159| outputs \verb|3.14|.
+        \item \textbf{Left-aligned string}: \verb|printf "%-10s\n" "bash"| outputs \verb|bash      |.
+    \end{itemize}
+    
+    \item \textbf{Flags}
+    \begin{itemize}
+        \item \verb|-|: Left-align the output within the specified field width.
+        \item \verb|+|: Force a sign (\verb|+| or \verb|-|) to be used on a number.
+        \item \verb|0|: Pad the field with leading zeros.
+        \item \verb|#|: Use an alternate form: prefix for octal \verb|0|, prefix for hexadecimal \verb|0x| or \verb|0X|.
+    \end{itemize}
+    
+    \item \textbf{Examples with Flags}
+    \begin{itemize}
+        \item \textbf{Left-aligned integer}: \verb|printf "%-5d\n" 42| outputs \verb|42   |.
+        \item \textbf{Force sign}: \verb|printf "%+d\n" 42| outputs \verb|+42|.
+        \item \textbf{Alternate form}: \verb|printf "%#x\n" 42| outputs \verb|0x2a|.
+    \end{itemize}
+\end{itemize}
+
+
+    \pagebreak 
+    \unsect{More on variable assignment}
+    \bigbreak \noindent 
+    \subsection{Let}
+    \bigbreak \noindent 
+    The let command in Bash is used to perform arithmetic operations. It allows for calculations to be done directly within a script. Here is an explanation of let along with some examples of how it can be used:
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    let expression
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Features}
+    \begin{itemize}
+        \item \textbf{No Need for \$(()):} With let, you don't need to use \$(()) for arithmetic expressions.
+        \item \textbf{Multiple Expressions:} You can evaluate multiple expressions separated by spaces.
+        \item \textbf{Return Status:} let returns 1 if the expression evaluates to 0, and 0 if the expression evaluates to a non-zero value.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Basic Usage}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    count=0
+
+    let count=count+1
+    let count+=1
+    let count++
+    let ++count
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{readonly}
+    \bigbreak \noindent 
+    Marks a variable as read-only, preventing any modification after its initial assignment.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    readonly var=value
+
+    readonly a=15
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{declare and typeset}
+    \bigbreak \noindent 
+    Used to declare variables and set their attributes. The typeset command is often considered synonymous with declare in many shells.
+    \bigbreak \noindent 
+    \begin{bashcode}
+        declare VAR_NAME=value
+        declare -r VAR_NAME=value   # Read-only
+        declare -i VAR_NAME=10      # Integer
+        declare -a VAR_NAME         # Array
+        declare -A VAR_NAME         # Associative array
+
+        typeset VAR_NAME=value
+        typeset -r VAR_NAME=value   # Read-only
+        typeset -i VAR_NAME=10      # Integer
+        typeset -a VAR_NAME         # Array
+        typeset -A VAR_NAME         # Associative array
+    \end{bashcode}
+
+
+    \pagebreak 
+    \unsect{Understand the "for item in list" loop}
+    \bigbreak \noindent 
+    \subsection{What we mean by "list"}
+    \bigbreak \noindent 
+    To understand this type of loop we first need to understand what we mean when we say "lists". 
+    \bigbreak \noindent 
+    The term list can mean array, but it can also mean something like a space separated string.
+    \bigbreak \noindent 
+    \subsubsection{Strings separated by delimiters defined in the IFS}
+    \bigbreak \noindent 
+    This is a simpler form of list but lacks the advanced features of arrays.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    fruits="apple banana cherry"
+
+    # Iterating over space-separated string
+    for fruit in $fruits; do
+        echo "Fruit: $fruit"
+    done
+
+    IFS=:
+    fruits="apple:banana:cherry"
+
+    for fruit in $fruits; do
+        echo "$fruit"
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{The loop}
+    \bigbreak \noindent 
+    The for item in loop in Bash is a versatile and commonly used loop structure that iterates over a list of items. This loop allows you to execute a set of commands for each item in the list.
+    \bigbreak \noindent 
+    hen you provide a space-separated list to a for loop, Bash splits the list into individual words based on these delimiters.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    list="apple banana cherry"
+    for item in $list; do
+        echo "Item: $item"
+    done
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{Its crucial that \$list remains unquoted, this allows bash to perform word splitting based on the IFS variable.}
+
+    \pagebreak 
+    \unsect{for i; Looping through each argument}
+    \bigbreak \noindent 
+    the for i; do ... done syntax in Bash is a shorthand for looping through each positional parameter (argument) passed to the script. This is a simplified way of writing for i in "\$@"; do ... done, where "\$@" represents all the positional parameters.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    for i; do
+        echo $i
+    done
+
+    // Calling with ./script "hello" "world"
+    // Output: 
+    hello
+    world
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Converting from string to int: Arithmetic expansion base prefixs}
+    \bigbreak \noindent 
+    In arithmetic expansion, you can specify the base (radix) of the number using a prefix before the number. Common prefixes include:
+    \begin{itemize}
+        \item \textbf{2\#}: for binary (base-2)
+        \item \textbf{8\#}: for octal (base-8)
+        \item \textbf{10\#}: for decimal (base-10)
+        \item \textbf{16\#}: for hexadecimal (base-16)   
+    \end{itemize}
+    \bigbreak \noindent 
+    Effect of 10\# Prefix: By using 10\#, you explicitly tell Bash to interpret the following string as a base-10 number, which effectively removes any leading zeros because the leading zeros are irrelevant in base-10 arithmetic.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    str="0010"
+    stoi=$((10#$str)) && echo $stoi
+
+    // Or simply
+
+    echo "$((10#$str))"
+    \end{bashcode}
+
+
+    \pagebreak 
+    \unsect{Associative array (maps)}
+    \bigbreak \noindent 
+    In Bash, associative arrays must be explicitly declared using declare -A (or typeset -A in some shells) before you can use them. This is because Bash needs to know that you intend to use string keys for your array, which is a different behavior from standard indexed arrays.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    declare -A arr
+
+    arr["key1"]=val1
+    arr["key2"]=val2
+
+    echo "${arr["key1"]}"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    declare -A abilities=(
+        [strength]=''
+        [dexterity]=''
+        [constitution]=''
+        [intelligence]=''
+        [wisdom]=''
+        [charisma]=''
+  )
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Looping through the map}
+    \bigbreak \noindent 
+    In Bash, when you loop through an associative array using a for loop, you need the ! symbol to get the list of keys from the array.
+    \bigbreak \noindent 
+    \begin{bashcode}
+     declare -A arr
+
+    arr["key1"]=val1
+    arr["key2"]=val2
+
+    for key in "${!arr[@]}"; do
+        echo "Key: ${key}  Value: ${arr[$key]}"
+    done
+
+    // Output:
+    Key: key2  Value: 2
+    Key: key3  Value: 3
+    Key: key1  Value: 1
+    \end{bashcode}
+    \bigbreak \noindent 
+    \nt{The order in which keys are iterated in an associative array in Bash is not guaranteed. Associative arrays in Bash do not maintain insertion order}
+
+
+    \pagebreak 
+    \unsect{Random}
+    \bigbreak \noindent 
+    Bash provides several methods to generate random numbers, including the use of built-in variables, external commands, and utilities.
+    \bigbreak \noindent 
+    \subsection{\$RANDOM}
+    \bigbreak \noindent 
+    Bash has a built-in variable called \$RANDOM that generates a pseudo-random integer in the range 0 to 32767.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    random_number=$RANDOM
+    echo "Random number: $random_number"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Generating Random Numbers in a Range}
+    \bigbreak \noindent 
+    You can generate random numbers within a specific range by using modulo arithmetic and adjusting the base.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    # Generate a random number between 1 and 100
+    random_number=$(( (RANDOM % 100) + 1 ))
+    echo "Random number between 1 and 100: $random_number    
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Using shuf}
+    \bigbreak \noindent 
+    The shuf command can be used to generate random numbers or shuffle lines in a file. It is more flexible than $RANDOM.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    # Generate a random number between 1 and 100 using shuf
+    random_number=$(shuf -i 1-100 -n 1)
+    echo "Random number between 1 and 100: $random_number"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Using /dev/urandom or /dev/random}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    random_number=$(od -An -N1 -i /dev/urandom)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Breakdown}
+    \begin{itemize}
+        \item \textbf{/dev/urandom:}
+            \begin{itemize}
+                \item /dev/urandom is a special file in Unix-like operating systems that provides random data. It is suitable for most cryptographic purposes and is non-blocking, meaning it won't wait for high-quality entropy and will return data as soon as it is available.
+            \end{itemize}
+        \item \textbf{od Command:}
+            \begin{itemize}
+                od stands for "octal dump," but it can also be used to display data in various formats, including decimal, hexadecimal, and ASCII.
+                It reads binary data from a file (or standard input) and formats it for output.
+        \end{itemize}
+        \item \textbf{Options Used with od:}
+            \begin{itemize}
+                \item \textbf{-A n:} Suppresses the output of file offsets (addresses). Normally, od outputs the byte offsets at the beginning of each line. -A n tells od not to print these offsets.
+                \item \textbf{-N1:} Tells od to read only one byte of input.
+                \item \textbf{-i:} Interprets the input as a signed decimal integer
+            \end{itemize}
     \end{itemize}
 
+    \bigbreak \noindent 
+    \subsection{Random Floating-Point Number with awk}
+    \bigbreak \noindent 
+    Bash does not support floating-point arithmetic directly, but you can use awk or bc to generate random floating-point numbers.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    #!/usr/bin/env bash
+
+    # Generate a random floating-point number between 0 and 1 using awk
+    random_float=$(awk -v seed=$RANDOM 'BEGIN { srand(seed); print rand() }')
+    echo "Random floating-point number between 0 and 1: $random_float"
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Shift}
+    \bigbreak \noindent 
+    The shift keyword in Bash is used to manipulate the positional parameters of a script or function. Specifically, it shifts the positional parameters to the left by a specified number of positions. When you use shift, the value of \$1 is discarded, \$2 becomes \$1, \$3 becomes \$2, and so on. This is useful for processing command-line arguments one at a time.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    shift [n]
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{n:} The number of positions to shift. If n is not specified, it defaults to 1.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{unset}
+    \bigbreak \noindent 
+    The unset command in Bash is used to remove variables or functions from the shell environment. When a variable or function is unset, it is no longer recognized by the shell and cannot be used until it is redefined.
+    \bigbreak \noindent 
+    \subsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    unset [OPTION] NAME...
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{NAME:} The name of the variable or function to be unset.
+        \item \textbf{[OPTION]:} Optional flags to modify the behavior of unset.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Options}
+    \begin{itemize}
+        \item \textbf{-v:} Treats the NAME arguments as variable names. This is the default behavior.
+        \item \textbf{-f:} Treats the NAME arguments as function names
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Unsetting Variables}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    myvar="Hello, World!"
+    echo $myvar  # Output: Hello, World!
+
+    unset myvar
+    echo $myvar  # Output: (empty, since myvar is unset)
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Unsetting Array Elements}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    myarray=(apple banana cherry)
+    unset 'myarray[1]'  # Note the use of quotes
+    echo "${myarray[@]}"  # Output: apple cherry
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Unsetting Functions}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        myfunc() {
+            echo "This is a function"
+        }
+        myfunc  # Output: This is a function
+
+        unset -f myfunc
+        myfunc  # Output: (command not found, since myfunc is unset)
+    \end{bashcode}
+
+    \pagebreak 
+    \unsect{Processing command line options}
+    \bigbreak \noindent 
+    \subsection{Without getopts}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        while [[ -n "$(echo $1 | grep '-')" ]]; do
+            case "$1" in
+                -a) process -a ;;
+                -b) process -b with arg as $2
+                    shift ;;
+                -c) process -c ;;
+                *) echo "Usage: ./script [-a] [-b barg] [-c args...]"
+            esac
+            shift
+        done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{With getopts}
+    \bigbreak \noindent 
+    getopts is a built-in command in Bash that simplifies parsing command-line options and arguments. It handles both short options (e.g., -a) and options with arguments (e.g., -b value).
+    \bigbreak \noindent 
+    \subsubsection{Syntax}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    while getopts "options_string" opt; do
+        case $opt in
+            opt1) ;;
+            opt2) ;;
+            opt3) ;;
+
+            ...
+
+            *) ;;
+        esac
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Options string}
+    \bigbreak \noindent 
+    Suppose we wanted our script to be run with three optional options a, b, and c. Our options string would be
+    \bigbreak \noindent 
+    \begin{bashcode}
+    "abc"
+    \end{bashcode}
+    \bigbreak \noindent 
+    If we wanted these options to take in arguments, we add a colon after the option name
+    \bigbreak \noindent 
+    \begin{bashcode}
+    "a:b:c:"
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsubsection{Getting the options arguments (OPTARG)}
+    \bigbreak \noindent 
+    OPTARG is a special variable used in conjunction with the getopts built-in command in Bash to retrieve the argument value associated with an option. When you specify that an option requires an argument (by appending a colon : to the option character in the options string), getopts automatically assigns the argument to OPTARG.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    while getopts "ab:c:" opt; do
+      case $opt in
+        a)
+          echo "Option -a triggered"
+          ;;
+        b)
+          echo "Option -b triggered with argument: $OPTARG"
+          ;;
+        c)
+          echo "Option -c triggered with argument: $OPTARG"
+          ;;
+        *)
+          usage
+          ;;
+      esac
+    done
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Shifting after processing with getopts}
+    \bigbreak \noindent 
+    The command shift \$((OPTIND - 1)) is used in a Bash script to adjust the positional parameters (\$1, \$2, etc.) after parsing options with getopts. This ensures that any remaining arguments (those not processed as options) are correctly indexed for further processing.
+    \begin{itemize}
+        \item getopts processes options passed to a script. As it processes each option, it increments a special variable called OPTIND (Option Index).
+        \item OPTIND starts at 1 and points to the next argument to be processed. After getopts has processed all options, OPTIND holds the index of the first non-option argument.
+        \item By using shift \$((OPTIND - 1)), you adjust the positional parameters to remove the options processed by getopts. This means that after the shift, \$1 will point to the first non-option argument.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{A list of ALL IO redirectors}
+    \bigbreak \noindent 
+    \begin{longtable}{|l|p{10cm}|}
+        \hline
+        \textbf{Redirector} & \textbf{Function} \\
+        \hline
+        \endfirsthead
+        \hline
+        \textbf{Redirector} & \textbf{Function} \\
+        \hline
+        \endhead
+        \hline
+        \endfoot
+        cmd1 \textbar\ cmd2 & Pipe; take standard output of cmd1 as standard input to cmd2. \\
+        \hline
+        $>$ file & Direct standard output to file. \\
+        \hline
+        $<$ file & Take standard input from file. \\
+        \hline
+        $>>$ file & Direct standard output to file; append to file if it already exists. \\
+        \hline
+        $>$\textbar file & Force standard output to file even if noclobber is set. \\
+        \hline
+        n$>$\textbar file & Force output to file from file descriptor n even if noclobber is set. \\
+        \hline
+        $<>$ file & Use file as both standard input and standard output. \\
+        \hline
+        n$<>$ file & Use file as both input and output for file descriptor n. \\
+        \hline
+        $<<$ label & Here-document; see text. \\
+        \hline
+        n $>$ file & Direct file descriptor n to file. \\
+        \hline
+        n $<$ file & Take file descriptor n from file. \\
+        \hline
+        n $>>$ file & Direct file descriptor n to file; append to file if it already exists. \\
+        \hline
+        n$>$\& & Duplicate standard output to file descriptor n. \\
+        \hline
+        n$<$\& & Duplicate standard input from file descriptor n. \\
+        \hline
+        n$>$\&m & File descriptor n is made to be a copy of the output file descriptor. \\
+        \hline
+        n$<$\&m & File descriptor n is made to be a copy of the input file descriptor. \\
+        \hline
+        \&$>$file & Directs standard output and standard error to file. \\
+        \hline
+        \&$<$- & Close the standard input. \\
+        \hline
+        \&$>$- & Close the standard output. \\
+        \hline
+        n$>$\&- & Close the output from file descriptor n. \\
+        \hline
+        n$<$\&- & Close the input from file descriptor n. \\
+        \hline
+        n$>$\&word & If n is not specified, the standard output (file descriptor 1) is used. If the digits in word do not specify a file descriptor open for output, a redirection error occurs. As a special case, if n is omitted, and word does not expand to one or more digits, the standard output and standard error are redirected as described previously. \\
+        \hline
+        n$<$\&word & If word expands to one or more digits, the file descriptor denoted by n is made to be a copy of that file descriptor. If the digits in word do not specify a file descriptor open for input, a redirection error occurs. If word evaluates to -, file descriptor n is closed. If n is not specified, the standard input (file descriptor 0) is used. \\
+        \hline
+        n$>$\&digit- & Moves the file descriptor digit to file descriptor n, or the standard output (file descriptor 1) if n is not specified. \\
+        \hline
+        n$<$\&digit- & Moves the file descriptor digit to file descriptor n, or the standard input (file descriptor 0) if n is not specified. digit is closed after being duplicated to n. \\
+        \hline
+    \end{longtable}
 
 
 
@@ -1137,7 +1794,12 @@ Setting LC\_ALL=C ensures that all locale-related operations in the script use t
 
 
 
-    
+
+
+
+
+
+
 
     \pagebreak 
     \unsect{Exercise solutions}
@@ -1361,6 +2023,119 @@ for x in $(echo ${1^^} | grep -o .); do
 done
 echo $total
     \end{bashcode}
+
+    \pagebreak 
+    \subsection{Exercise 4}
+    \bigbreak \noindent 
+    \subsubsection{Problem Statement}
+    \bigbreak \noindent 
+    Create an implementation of the atbash cipher, an ancient encryption system created in the Middle East.
+    \bigbreak \noindent 
+    The Atbash cipher is a simple substitution cipher that relies on transposing all the letters in the alphabet such that the resulting alphabet is backwards. The first letter is replaced with the last letter, the second with the second-last, and so on.
+    \bigbreak \noindent 
+    An Atbash cipher for the Latin alphabet would be as follows:
+    \bigbreak \noindent 
+    \begin{center}
+        Plain:  abcdefghijklmnopqrstuvwxyz \\
+        Cipher: zyxwvutsrqponmlkjihgfedcba
+    \end{center}
+    \bigbreak \noindent 
+    It is a very weak cipher because it only has one possible key, and it is a simple mono-alphabetic substitution cipher. However, this may not have been an issue in the cipher's time.
+    \bigbreak \noindent 
+    Ciphertext is written out in groups of fixed length, the traditional group size being 5 letters, leaving numbers unchanged, and punctuation is excluded. This is to make it harder to guess things based on word boundaries. All text will be encoded as lowercase letters.
+
+    \bigbreak \noindent 
+    \subsubsection{Solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        #!/usr/bin/env bash
+
+        main() {
+
+            result=$( tr "abcdefghijklmnopqrstuvwxyz" "zyxwvutsrqponmlkjihgfedcba" <<< ${2,,} | tr -d " .," )
+
+            [ "$1" == "encode" ] && result=$(fold -w 5 <<< $result)
+
+            echo $result
+        }
+        main "$@"
+    \end{bashcode}
+
+    \pagebreak 
+    \subsection{Exercise 5}
+    \bigbreak \noindent 
+    \subsubsection{Problem Statement}
+    \bigbreak \noindent 
+    Calculate the points scored in a single toss of a Darts game.
+    \bigbreak \noindent 
+    Darts is a game where players throw darts at a target.
+    \bigbreak \noindent 
+    In our particular instance of the game, the target rewards 4 different amounts of points, depending on where the dart lands:
+    \begin{itemize}
+        \item If the dart lands outside the target, player earns no points (0 points).
+        \item If the dart lands in the outer circle of the target, player earns 1 point.
+        \item If the dart lands in the middle circle of the target, player earns 5 points.
+        \item If the dart lands in the inner circle of the target, player earns 10 points.
+    \end{itemize}
+    \bigbreak \noindent 
+    The outer circle has a radius of 10 units (this is equivalent to the total radius for the entire target), the middle circle a radius of 5 units, and the inner circle a radius of 1. Of course, they are all centered at the same point — that is, the circles are concentric defined by the coordinates (0, 0).
+    \bigbreak \noindent 
+    Given a point in the target (defined by its Cartesian coordinates x and y, where x and y are real), calculate the correct score earned by a dart landing at that point.
+    \pagebreak 
+    \subsubsection{Basic Solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/usr/bin/env bash
+
+function quit {
+    echo "# there is _some_ output" && exit 1
+}
+
+
+function main {
+
+    (( $# != 2 ))  && quit
+
+    if ! [[ $1 =~ ^-?[0-9]+(\.[0-9]+)?$ && $2 =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        quit
+    fi
+
+    local x y sum_squares res
+    x=$1;y=$2
+    res=0
+
+    sum_squares=$(echo "$x^2 + $y^2" | bc -l)
+
+    if (( $(echo "$sum_squares <= 1" | bc -l)  )); then 
+        (( res+=10 ))
+    elif (( $(echo "$sum_squares <= 25"  | bc -l) )); then
+        (( res+= 5 ))
+    elif (( $(echo "$sum_squares <= 100" | bc -l) )); then
+        (( res+= 1 ))
+    fi
+
+    echo $res
+}
+main "$@"
+    \end{bashcode}
+
+    \pagebreak 
+    \subsubsection{Advanced solution}
+    \bigbreak \noindent 
+    \begin{bashcode}
+#!/usr/bin/env bash
+die () { echo "$1"; exit 1; }
+(( $# != 2 )) && die "Invalid arg count"
+for i; do [[ $i = *[^[:digit:].-]* ]] && die "Non-numeric arg"; done
+bc <<< "scale=4 
+        x=$1 ; y=$2 ; d=sqrt(x^2 + y^2 )
+        if (d <= 1) 10 else if (d <= 5) 5 else if (d <= 10) 1 else 0"
+exit 0
+    \end{bashcode}
+
+
+
+
 
 
 

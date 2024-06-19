@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+function main {
+
+    declare -a rolls
+    rolls=("$@")
+    frame=1
+    score=0
+    i=0
+
+    echo ${#rolls[@]}
+    # (( ${#rolls} > 20 )) && echo "Cannot roll after game is over" && exit 0
+
+    # Handle frames 1-9
+    while (( frame <= 9 )); do
+        if (( rolls[i] == 10 )); then
+            # Strike
+            score=$((score + 10 + rolls[i+1] + rolls[i+2]))
+            ((i++))
+        else
+            # Not a strike, process the frame normally
+            frame_score=$((rolls[i] + rolls[i+1]))
+            if (( frame_score == 10 )); then
+                # Spare
+                score=$((score + 10 + rolls[i+2]))
+            else
+                # Open frame
+                score=$((score + frame_score))
+            fi
+            ((i+=2))
+        fi
+        ((frame++))
+    done
+
+    for (( i=${#rolls[@]}-2; i<${#rolls[@]}; ++i )); do
+        score=$((score + rolls[i]))
+    done
+
+    echo $score
+
+}
+
+main "$@"
