@@ -1302,6 +1302,112 @@ std::cin.get(ch)
     Where $n$ tells cin to skip $n$ number of characters, or until the character $c$ is encountered. If no arguments are used, cin will skip only the very next character.
 
 
+    \pagebreak 
+    \subsection{Ingnore the rest of the line}
+    \bigbreak \noindent 
+    For this we use
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <limits>
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n')
+    \end{cppcode}
+    \bigbreak \noindent 
+    Or if we were using an input file instead of cin we would use
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <limits>
+    #include <ifstream>
+    #include <string>
+    using std::ifstream;
+    using std::string;
+
+    ifstream input_file("file_name");
+
+    int a,b;
+    string c;
+    
+    // Say we read some data, into a and b, where both these values are on the same line in the input file.
+    input_file >> a >> b;
+
+    // Then we want to just start grabbing lines, but we need to skip the rest of the first line. We do
+    input_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n')
+
+    while (std::getline(input_file), c) { ... }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{Numeric limits}
+    \bigbreak \noindent 
+    \texttt{std::numeric\_limits<T>} is a C++ template that provides information about the properties of a given data type $T$. It allows you to query things like the maximum, minimum, and precision of the type.
+    \bigbreak \noindent 
+    \textbf{Example:} \texttt{std::numeric\_limits<int>::max()} returns the largest possible value an int can hold.
+
+
+    \subsubsection{streamsize}
+    \bigbreak \noindent 
+    \texttt{std::streamsize} is a type used in C++ for representing the size of input/output operations (like how many characters are read or written). It is typically a typedef for a large integer type (e.g., long long).
+    \bigbreak \noindent 
+    \subsubsection{max}
+    \bigbreak \noindent 
+    \texttt{max()} is a member function of \texttt{std::numeric\_limits<T>} that returns the maximum finite value that a type $T$ can represent.
+
+    \pagebreak 
+    \unsect{Redirecting file to program (./program < file)}
+    \bigbreak \noindent 
+    For this we just use cin and such as normal, but it will read from the file instead of stdin
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <iostream>
+    using std::cout;
+    using std::endl;
+    using std::cin;
+
+    int main() {
+        int a,b,c;
+        cin >> a >> b >> c;
+
+        cout << a << endl << b << endl << c << endl;
+
+        return 0;
+    }
+
+    // If file data.txt has 
+    10
+    20
+    30
+
+    Then ./program < data.txt has output 
+    10
+    20
+    30
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Passing cin to a function}
+    \bigbreak \noindent 
+    We can also pass `std::cin` to a function as a `std::istream&`. This allows the function to read input from `std::cin` (or any other input stream) in the same way as processing input from a file or another stream.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <iostream>
+    using std::cout;
+    using std::endl;
+    using std::cin;
+
+    void fn(std::istream& input) {
+        std::string tmp;
+        while (std::getline(input, tmp)) {
+            cout << tmp << endl;
+        }
+    }
+    int main() {
+        fn(cin);
+
+        return 0;
+    }
+    \end{cppcode}
+
+
+
 
 
 
