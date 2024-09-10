@@ -1,0 +1,103 @@
+#include <iostream>
+#include <iomanip>
+#include <typeinfo>
+#include <limits>
+#include <string>
+#include <vector>
+#include <map>
+
+using std::endl;
+using std::cout;
+using std::string;
+using std::vector;
+using std::map;
+
+template <typename T>
+using matrix = vector<vector<T>>;
+
+using imap = map<short, vector<map<short, vector<short>>>>; 
+using transition_table = map<short, matrix<short>>;
+
+// #define prshort() cout << "Hello world" << endl;
+#define prshort(x) cout << x << endl;
+
+void get_info(std::istream& input, short& nstates, short& naccepting, vector<short>& accepting, transition_table& transitions, int& nstrings) {
+    string stmp;
+    matrix<short> vtmp_large;
+    vector<short> vtmp_small;
+    short line_idx, state_transitions;
+
+    input >> nstates >> naccepting;
+    input.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    // Read the accepting states
+    std::getline(input, stmp);
+    while (stmp.size() == 1) {
+        accepting.push_back((short) stmp[0] - '0');
+        std::getline(input, stmp);
+    }
+
+    // For each state (line)
+    for (short state=0; state< nstates; ++state) {
+        // Clear the large one because we're on a new line
+        vtmp_large.clear();
+
+        // Line index control
+        line_idx=0, state_transitions=0;
+
+        while (line_idx < (short) stmp.size()) {
+            vtmp_small.clear();
+            state_transitions=(stmp[line_idx] - '0');
+            line_idx+=2;
+
+            for (short j=0;j<state_transitions && line_idx < (short) stmp.size(); ++j) {
+                vtmp_small.push_back(stmp[line_idx] - '0');
+                line_idx+=2;
+            }
+            vtmp_large.push_back(vtmp_small);
+        }
+        transitions.insert({state, vtmp_large});
+        std::getline(input, stmp);
+    }
+
+    nstates=stmp
+
+
+
+}
+
+int main(int argc, const char* argv[]) {
+    short nstates = 0, naccepting = 0;
+    int nstrings=0;
+    vector<short> accepting;
+    transition_table transitions;
+
+    // Call the function to read data
+    get_info(std::cin, nstates, naccepting, accepting, transitions, nstrings);
+
+    // Output number of states and accepting states
+    cout << "Nstates: " << nstates << endl 
+         << "Naccepting: " << naccepting << endl << endl;
+
+    cout << "Accepting states: ";
+    for (const auto& item : accepting) {
+        cout << item << " ";
+    }
+    cout << endl << endl;
+
+    cout << "Transitions" << endl;
+    for (const auto& item : transitions) {
+        cout << "State: " << item.first << endl;
+
+        for (const auto& vecitem : item.second) {
+            for (const auto& veciteminner : vecitem) {
+                cout << veciteminner << " " << endl;
+            }
+
+        }
+    }
+
+
+
+    return 0;
+}
