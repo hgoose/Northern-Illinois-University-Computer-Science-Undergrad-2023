@@ -486,6 +486,150 @@
         \item \textbf{$\delta$ – DFA, NFA, and NFA with $\epsilon$-moves}:
             \bigbreak \noindent 
             \fig{.35}{./figures/36.png}
+        \item \textbf{DFA, NFA, or NFA with $\epsilon$ moves, who can define the most languages?}: We begin by noting, by definition, every DFA is an NFA. This means that any language you can define with a DFA can also be defined by an NFA. Thus,
+            \begin{align*}
+                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA}
+            .\end{align*}
+            Also, by definition, every DFA is an NFA with $\epsilon$-moves, an NFA is an NFA with $\epsilon$ moves, even if it doesnt have any. Thus,
+            \begin{align*}
+                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
+            .\end{align*}
+            \bigbreak \noindent 
+            But, by definition, every NFA is an NFA with $\epsilon$-moves. Thus,
+            \begin{align*}
+                \text{Languages defined by NFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
+            .\end{align*}
+            \bigbreak \noindent 
+            This tells us that
+            \begin{itemize}
+                
+                \item NFAs are at least as powerful in defining languages as DFAs
+                \item NFAs with $\epsilon$-moves are at least as powerful in defining languages as DFAs and NFAs.
+            \end{itemize}
+            \bigbreak \noindent 
+            It turns out that these three are \textbf{equally} as powerful. We assert
+            \begin{align*}
+                &\text{Languages defined by DFA's} \\
+                &=\text{Languages defined by NFA's} \\
+                &=\text{Languages defined by NFA's with $\epsilon$-moves} \\
+            .\end{align*}
+            We prove this by showing an algorithm that converts any NFA with $\epsilon$-moves (or any NFA) to a DFA that accepts the exact same language
+            \bigbreak \noindent 
+            This means that there does not exist a language that can be defined by an NFA with $\epsilon$-moves (or NFA) that cannot also be defined by a DFA.
+        \item \textbf{$\epsilon$-closure}: Before we can look at the algorithm we must first define the $\epsilon$-closure of a set of states 
+            \bigbreak \noindent 
+            Given:
+            \begin{itemize}
+                \item an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $
+                \item Some set of states $S \subseteq Q$
+            \end{itemize}
+            \bigbreak \noindent 
+            \text{We define the } \varepsilon\text{-closure}(S) \text{ as the set of states that are reachable from the set of states } S \text{ using only zero or more } \varepsilon\text{-moves in } \delta.
+            \bigbreak \noindent 
+            \text{Note: it is always the case that } S \subseteq \varepsilon\text{-closure}(S)
+        \item \textbf{Algorithm: Converting NFA with $\epsilon$-moves to DFA}: The algorithm constructs a new DFA $M^{\prime}(Q^{\prime}, \Sigma, q_{0}^{\prime}, T^{\prime}, \delta^{\prime}) $ From an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $. $\Sigma$ will remain the same
+            \bigbreak \noindent 
+            Things to note about the conversion:
+            \begin{itemize}
+                \item Same alphabet $\Sigma $
+                \item Lose column $\epsilon$
+                \item Lose all nondeterminism
+                \item Lose all empty sets
+                \item Cell values change from sets of states to states
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Example}:
+            \textbf{Consider the following NFA with $\varepsilon$-moves M(Q, $\Sigma$, $q_0$, T, $\delta$) over $\Sigma = \{0, 1\}$ and its associated transition table $\delta$: Q $\times$ ($\Sigma \cup \{\varepsilon\}$) $\rightarrow$ P(Q)}
+            \bigbreak \noindent 
+            \[
+                \begin{array}{|c|c|c|c|}
+                    \hline
+                     & 0 & 1 & \varepsilon \\
+                    \hline
+                    X & \{Y\} & \{Y\} & \emptyset \\
+                    \hline
+                    Y & \{X, Z\} & \{Z\} & \{Z\} \\
+                    \hline
+                    Z & \emptyset & \{Y\} & \emptyset \\
+                    \hline
+                \end{array}
+            \]
+            \bigbreak \noindent 
+            Start by computing the $\epsilon$-closure of the start state in $\delta$.
+            \bigbreak \noindent 
+            \fig{.4}{./figures/37.png}
+            \bigbreak \noindent 
+            There is a subtle - but very important - point to be made here …
+            \bigbreak \noindent 
+            we cannot simply take the $\epsilon$-closure (a set) and use it to create a row in $\delta^{\prime}$ (which needs to be a state). What we do is create a label for the new state in $\delta^{\prime}$ that represents the set of states from $\delta$ and then add that new state to $\delta^{\prime}$
+            \bigbreak \noindent 
+            In this instance we represented the set of states $\{X\}$ by a single state whose label is $X^{\prime}$
+            \bigbreak \noindent 
+            We continue by filling the columns of the start state for each symbol $\Sigma = \{0, 1\}$
+            \bigbreak \noindent 
+            Processing $\delta'$ state $X'$ which represents the set of states $\{X\}$ in $M$:
+            \begin{itemize}
+                \item Processing input symbol 0 (process each state in $\{X\}$ using $\delta$):
+                    \begin{itemize}
+                        \item Process $X$
+                            \[
+                                \delta(X, 0) = \{Y\}
+                            \]
+                            \[
+                                \varepsilon\text{-closure}(\{Y\}) = \{Y, Z\}
+                            \]
+                    \end{itemize}
+            \end{itemize}
+    Since there are no more states in $\{X\}$ to process, we have finished processing the symbol 0 and have produced the set of states $\{Y, Z\}$.
+    \bigbreak \noindent 
+    We create a new state with label $Y'Z'$ (or $Z'Y'$, order does not matter) for $\delta'$ that represents $\{Y, Z\}$ in $M$ and define:
+    \[
+    \delta'(X', 0) = Y'Z'
+    \]
+    We note that $Y'Z'$ is a new state in $\delta'$ and so we create a new row for it in $\delta'$.
+    \bigbreak \noindent 
+    We continue this until we reach 
+    \bigbreak \noindent 
+    \fig{.8}{./figures/38.png}
+    \bigbreak \noindent 
+    Processing $\delta'$ state $Y'Z'$ which represents the set of states $\{Y, Z\}$ in $M$:
+    \begin{itemize}
+        \item Processing 0:
+            \begin{itemize}
+                \item Process $Y$
+                    \[
+                        \delta(Y, 0) = \{X, Z\}, \quad \varepsilon\text{-closure}(\{X, Z\}) = \{X, Z\}
+                    \]
+                \item Process $Z$
+                    \[
+                        \delta(Z, 0) = \emptyset, \quad \varepsilon\text{-closure}(\emptyset) = \emptyset
+                    \]
+            \end{itemize}
+    \end{itemize}
+    Here is our first instance of processing a state and symbol where the state in $\delta'$ represents multiple states in NFA $M$. When this happens, the set of states in NFA $M$ is computed by \textit{taking the union of the $\varepsilon$-closures}: $\{X, Z\} \cup \emptyset = \{X, Z\}$.
+    \bigbreak \noindent 
+    This produces a new label $X'Z'$ which we use to define:
+    \[
+        \delta'(X'Y', 0) = X'Z'
+    \]
+    and since $X'Z'$ is a new state, we add it to $\delta'$.
+    \bigbreak \noindent 
+    We continue this until we reach 
+    \bigbreak \noindent 
+    \fig{.8}{./figures/39.png}
+    \bigbreak \noindent 
+    A state in $M^{\prime}$ is an accepting state iff at least one of the states that it represents in $M$ is an accepting state … in this case $T^{\prime}= \{Y^{\prime}Z^{\prime}\}$.
+    \bigbreak \noindent 
+    We can now draw the new DFA 
+    \bigbreak \noindent 
+    \fig{.7}{./figures/40.png}
+    \bigbreak \noindent 
+    \textbf{Note:} If the closure or union of closures is the empty set, we do this
+    \bigbreak \noindent 
+    \fig{.7}{./figures/41.png}
+
+
+
 
     \end{itemize}
 
