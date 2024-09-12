@@ -627,6 +627,138 @@
     \textbf{Note:} If the closure or union of closures is the empty set, we do this
     \bigbreak \noindent 
     \fig{.7}{./figures/41.png}
+\item \textbf{Kleene's theorem revisited}: The following are equivalent for a language $L$
+    \begin{enumerate}
+        \item There is a DFA for $L$
+        \item There is an NFA for $L$
+        \item There is an RE for $L$
+    \end{enumerate}
+    \item \textbf{Union of two DFA's (cartesian product construction)}:
+        The process of finding the union of two deterministic finite automata (DFAs) involves creating a new DFA that accepts the union of the languages accepted by the original DFAs. This is done using a product construction (also called the Cartesian product construction), where you combine the states of both DFAs in a systematic way to ensure the resulting DFA accepts strings from either of the original DFAs.
+        \bigbreak \noindent 
+        Let’s say we have two DFAs:
+        \[
+            D_1 = (Q_1, \Sigma, \delta_1, q_1^{\text{start}}, F_1)
+        \]
+        that recognizes language \( L_1 \).
+        \[
+            D_2 = (Q_2, \Sigma, \delta_2, q_2^{\text{start}}, F_2)
+        \]
+        that recognizes language \( L_2 \).
+        \bigbreak \noindent 
+        \textbf{Create a New DFA State Set}:
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item The states of the new DFA are pairs of states, one from each of the original DFAs. The new state set will be the Cartesian product \(Q_1 \times Q_2\), meaning every possible combination of a state from \(D_1\) and a state from \(D_2\).
+            \item If \(D_1\) has \(n\) states and \(D_2\) has \(m\) states, the new DFA will have \(n \times m\) states.
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Define the New Start State}:
+        \begin{itemize}
+            \item The new start state is \((q_1^{\text{start}}, q_2^{\text{start}})\), where \(q_1^{\text{start}}\) is the start state of \(D_1\) and \(q_2^{\text{start}}\) is the start state of \(D_2\).
+        \end{itemize}
+        \textbf{Define the New Transition Function:}
+        \begin{itemize}
+            \item The transition function \(\delta\) for the new DFA operates by taking an input symbol and applying the transition functions of both original DFAs in parallel.
+            \item For each input symbol \(a \in \Sigma\), the new DFA transitions from state \((q_1, q_2)\) to state \((\delta_1(q_1, a), \delta_2(q_2, a))\).
+            \item In other words, if \(q_1\) moves to \(q_1'\) on input \(a\) in \(D_1\), and \(q_2\) moves to \(q_2'\) on input \(a\) in \(D_2\), the new DFA will move from \((q_1, q_2)\) to \((q_1', q_2')\).
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Define the New Set of Accepting (Final) States}:
+        The new DFA will accept a string if either of the original DFAs would accept it. Therefore, the set of final states \( F \) in the new DFA is defined as:
+        \[
+            F = \{ (q_1, q_2) \mid q_1 \in F_1 \ \text{or} \ q_2 \in F_2 \}
+        \]
+        This means that if either \( q_1 \) is a final state in \( D_1 \), or \( q_2 \) is a final state in \( D_2 \), the pair \( (q_1, q_2) \) is a final state in the new DFA.
+        \bigbreak \noindent 
+        \textbf{Note:} It is possible in the new DFA (constructed as the union of two DFAs) to have states that are unreachable—meaning there are states in the DFA that cannot be reached from the start state. This typically happens because, in the product construction, we generate all possible pairs of states from the two original DFAs, but not all of these pairs are necessarily reachable.
+        \bigbreak \noindent 
+        The union of two finite automata (FAs) is useful for constructing a new automaton that recognizes any string accepted by either of the two original automata. This has several practical applications in theoretical computer science and programming:
+    \item \textbf{Finding the intersection of two DFA's}: The process is basically the same as finding the union, but it differs in how we define the accepting states in the new machine, the accepting states will be
+        \begin{align*}
+            T = \{(q_{1},q_{2}):\ q_{1} \in T_{1} \text{ and } q_{2} \in T_{2}\}
+        .\end{align*}
+        \bigbreak \noindent 
+        \textbf{Note:} The intersection of two DFAs is useful in various practical applications where you need to accept only the strings that satisfy the conditions or rules of both automata
+    \item \textbf{Concatenation of two DFA's}
+        \bigbreak \noindent 
+        \textbf{Note:} The concatenation of two DFAs has practical uses in many scenarios where the language of interest is the concatenation of two sublanguages. Concatenating two DFAs allows you to recognize strings that can be divided into two parts, where the first part is recognized by one DFA and the second part is recognized by the other.
+    \item \textbf{Finding the union of two NFA's}
+    \item \textbf{Finding the intersection of two NFA's}
+    \item \textbf{Convert DFA into RE}: To convert a DFA (Deterministic Finite Automaton) into a Regular Expression (RE), you can use the state elimination method or generalized transition automaton method. This process works by gradually reducing the DFA's states and transitions until only a regular expression representing the entire language remains.
+        \bigbreak \noindent 
+        Given a DFA $M(Q, \Sigma, \delta, q_{0}, F)$, the goal is to find a regular expression that represents the language recognized by this DFA.
+        \bigbreak \noindent 
+        \textbf{Process:}
+        \begin{enumerate}
+            \item \textbf{Add a new Start and accept state}:
+                \begin{itemize}
+                    \item Add a new start state \( q_s \) with an \(\epsilon\)-transition (empty string) to the original start state \( q_0 \). 
+                        \bigbreak \noindent 
+                        \textbf{Note:} Once you add the new start state \( q_s \) with an \(\epsilon\)-transition to the original start state \( q_0 \), \( q_0 \) is no longer considered the start state. Instead, \( q_0 \) becomes just another intermediate state in the automaton. The new start state is \( q_s \), and it immediately transitions to \( q_0 \) without consuming any input (via the \(\epsilon\)-transition).
+                    \item Add a new accept state \( q_f \) and add \(\epsilon\)-transitions from each of the original accept states to this new accept state \( q_f \).
+                        \bigbreak \noindent 
+                        \textbf{Note:} Similarly, when you add the new accept state \( q_f \) and connect it via \(\epsilon\)-transitions from the original final states in \( F \), the original final states are no longer considered final states in the sense of marking the end of a string's acceptance. Now, the new final state \( q_f \) serves as the sole final state, and the automaton reaches \( q_f \) via \(\epsilon\)-transitions from the original final states.
+                \end{itemize}
+                These new states simplify the process because now there's exactly one start state and one accept state.
+            \item \textbf{Eliminate States One by One}:
+                \begin{itemize}
+                    \item The idea is to progressively eliminate states from the DFA while updating the transitions between the remaining states with regular expressions.
+                    \item Every time you eliminate a state $r$, you need to update the regular expressions on the transitions between the remaining states to account for the paths that go through $r$.
+                \end{itemize}
+                For any three states \( p \), \( r \), and \( q \), if there is a path from \( p \) to \( q \) that goes through \( r \), the new transition after eliminating \( r \) will include the regular expression:
+                \[
+                    R(p \rightarrow q) = R(p \rightarrow q) + R(p \rightarrow r) R(r \rightarrow r)^* R(r \rightarrow q)
+                \]
+                \pagebreak \bigbreak \noindent 
+                Where:
+                \begin{itemize}
+                    \item \( R(p \rightarrow q) \) is the regular expression for the direct transition from \( p \) to \( q \).
+                    \item \( R(p \rightarrow r) \) is the regular expression for the transition from \( p \) to \( r \).
+                    \item \( R(r \rightarrow r) \) is the regular expression for the loop on state \( r \).
+                    \item \( R(r \rightarrow q) \) is the regular expression for the transition from \( r \) to \( q \).
+                    \item \( + \) represents union, and \( * \) represents the Kleene star (zero or more repetitions).
+                \end{itemize}
+                \bigbreak \noindent 
+                After updating the transitions, remove the state \( r \).
+                \bigbreak \noindent 
+            \item \textbf{Repeat the Elimination Until Only Two States Remain}:
+                Continue eliminating states and updating the transitions until only two states remain: the start state \( q_s \) and the new accept state \( q_f \).
+                \bigbreak \noindent 
+                At this point, the regular expression on the transition from \( q_s \) to \( q_f \) represents the language of the DFA.
+        \end{enumerate}
+        \bigbreak \noindent 
+        \textbf{Example}: For the alphabet $\Sigma = \{0,1\}$, let's take the machine that accepts the strings with any number of ones, but the total number of zero's must be odd, and convert it to a RE.
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine1}
+            \label{fig:machine1}
+        \end{figure}
+        \bigbreak \noindent 
+        Let's start by making the new start and end states
+        \pagebreak \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine4}
+            \label{fig:machine4}
+        \end{figure}
+        \bigbreak \noindent 
+        Now we start eliminating states, note that it does not matter in which order we eliminate the states, but for this example we will begin by eliminating state $A$. To get from the start state $q_{0}$ to state $B$, we need to pass through $A$, to get from $A$ to $B$, we can have any number of $1's$ followed by a zero which takes us to be. Thus, the transition from $q_{0}$ to $B$ is the regular expression $1^{*}0$
+        \bigbreak \noindent 
+        We also have to consider the original transition from $B$ to $A$, and then back to $B$, for this we have the RE $1^{*}01^{*}0$. Thus the machine becomes
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine7}
+            \label{fig:machine7}
+        \end{figure}
+        \bigbreak \noindent 
+        To eliminate $B$, we need to consider the transitions through $B$ ie from $q_{0}$ to $q_{f}$. We know to get from $q_{0}$ to $B$ we have the RE $1^{*}0$, then from $B$ to $q_{f}$ we have $(1 + 1^{*}01^{*}0)^{*} $. Thus, the transition for $q_{0}$ to $q_{f}$ is $1^{*}0(1 + 1^{*}01^{*}0)^{*} $. And the final machine with only one regular expression is 
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine8}
+            \label{fig:machine8}
+        \end{figure}
 
 
 
