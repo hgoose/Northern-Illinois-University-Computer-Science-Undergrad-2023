@@ -435,6 +435,93 @@
 
         \item \textbf{Kleene's theorem}:
             There is an FA for a language if and only if there is an RE for the language
+        \item \textbf{Regular expressions order of operations}: From highest to lowest precedence
+            \begin{enumerate}
+                \item Parenthesis  
+                \item Kleene star
+                \item Concatenation
+                \item Union (+ or \|)
+            \end{enumerate}
+    \item \textbf{Properties of regular expressions}:
+        \bigbreak \noindent 
+        \textbf{Note:} Intersection is a operation not defined for regular expressions
+        \bigbreak \noindent 
+        \textbf{Union}
+        \begin{itemize}
+            \item \textbf{Commutative}:
+                \[
+                    R_1 \cup R_2 = R_2 \cup R_1
+                \]
+
+            \item \textbf{Associative}:
+                \[
+                    (R_1 \cup R_2) \cup R_3 = R_1 \cup (R_2 \cup R_3)
+                \]
+
+            \item \textbf{Identity Element}:
+                \[
+                    R_1 \cup \emptyset = R_1
+                \]
+
+            \item \textbf{Idempotent}:
+                \[
+                    R_1 \cup R_1 = R_1
+                \]
+        \end{itemize}
+        \textbf{2. Concatenation (\(\cdot\))}
+        \begin{itemize}
+            \item \textbf{Non-commutative}:
+                \[
+                    R_1 \cdot R_2 \neq R_2 \cdot R_1
+                \]
+
+            \item \textbf{Associative}:
+                \[
+                    (R_1 \cdot R_2) \cdot R_3 = R_1 \cdot (R_2 \cdot R_3)
+                \]
+
+            \item \textbf{Identity Element}:
+                \[
+                    R_1 \cdot \epsilon = \epsilon \cdot R_1 = R_1
+                \]
+
+            \item \textbf{Concatenation with \(\emptyset\)}:
+                \[
+                    R_1 \cdot \emptyset = \emptyset \cdot R_1 = \emptyset
+                \]
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Kleene Star (\(*\))}
+        \begin{itemize}
+            \item \textbf{Kleene Star of \(\epsilon\)}:
+                \[
+                    \epsilon^* = \{\epsilon\}
+                \]
+
+            \item \textbf{Kleene Star of \(\emptyset\)}:
+                \[
+                    \emptyset^* = \{\epsilon\}
+                \]
+
+            \item \textbf{Idempotent}:
+                \[
+                    (R^*)^* = R^*
+                \]
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Distributive Properties}
+        \begin{itemize}
+            \item \textbf{Union over Concatenation}:
+                \[
+                    R_1 \cdot (R_2 \cup R_3) = (R_1 \cdot R_2) \cup (R_1 \cdot R_3)
+                \]
+
+            \item \textbf{Concatenation over Union}:
+                \[
+                    (R_1 \cup R_2) \cdot R_3 = (R_1 \cdot R_3) \cup (R_2 \cdot R_3)
+                \]
+        \end{itemize}
+
     \end{itemize}
 
     \pagebreak 
@@ -627,6 +714,8 @@
     \textbf{Note:} If the closure or union of closures is the empty set, we do this
     \bigbreak \noindent 
     \fig{.7}{./figures/41.png}
+    \bigbreak \noindent 
+    This "emtpy" is a state and represents a garbage state, what goes does not leave.
 \item \textbf{Kleene's theorem revisited}: The following are equivalent for a language $L$
     \begin{enumerate}
         \item There is a DFA for $L$
@@ -680,11 +769,57 @@
         .\end{align*}
         \bigbreak \noindent 
         \textbf{Note:} The intersection of two DFAs is useful in various practical applications where you need to accept only the strings that satisfy the conditions or rules of both automata
-    \item \textbf{Concatenation of two DFA's}
+    \item \textbf{Concatenation of two DFA's}: The process is simple
         \bigbreak \noindent 
+        For two machines $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1})$, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2})$ 
+        \begin{enumerate}
+            \item Connect the final states of the first machine to the start state of the second machine (With $\epsilon$-transitions)
+            \item Clear $T_{1}$, There are no more final states in the first machine
+            \item Convert $\epsilon$-NFA to DFA
+        \end{enumerate}
         \textbf{Note:} The concatenation of two DFAs has practical uses in many scenarios where the language of interest is the concatenation of two sublanguages. Concatenating two DFAs allows you to recognize strings that can be divided into two parts, where the first part is recognized by one DFA and the second part is recognized by the other.
-    \item \textbf{Finding the union of two NFA's}
-    \item \textbf{Finding the intersection of two NFA's}
+    \item \textbf{Finding the union of two NFA's}:
+        taking the union of two nondeterministic finite automata (NFAs) involves constructing a new NFA that accepts any string that is accepted by either of the original NFAs. This process can be done by creating a new NFA that combines the two original NFAs. 
+        \bigbreak \noindent 
+        Given $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1}) $, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2}) $
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item \textbf{New start state}: Start by defining a new start state $q^{\prime}_{0}$, this state will have $\epsilon$ transitions to the start states of both machines.
+            \item \textbf{Define $Q^{\prime}$, the new set of states}: The new set of states will be the set of all states in $M_1$, and it will include all the states in $M_2$, along with the new start state. Thus,
+                \begin{align*}
+                    Q^{\prime} = Q_{1} \cup Q_{2} \cup \{q^{\prime}_{0}\}
+                .\end{align*}
+            \item \textbf{Define the transition function}: The transition function $\delta^{\prime}$ of the new NFA will include:
+                \begin{itemize}
+                    \item All the transitions of $M_{1}$ and $M_{2}$
+                    \item Two $\epsilon$ transitions from the new start state to the start states of the two original machines $q_{0_{1}}$ and $q_{0_{2}}$. Thus,
+                        \begin{align*}
+                            \delta^{\prime}(q_{0}^{\prime}, \epsilon) = \{q_{0_{1}}, q_{0_{2}}\}
+                        .\end{align*}
+                \end{itemize}
+            \item \textbf{Define the set of accepting states}: The set of accepting states will be
+                \begin{align*}
+                    T^{\prime} = T_{1} \cup T_{2}
+                .\end{align*}
+        \end{enumerate}
+        \pagebreak \bigbreak \noindent 
+        \textbf{Example:}
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine10}
+            \label{fig:machine10}
+        \end{figure}
+        \bigbreak \noindent 
+        $M_1 \cup M_2$ is then
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine11}
+            \label{fig:machine11}
+        \end{figure}
+        \pagebreak \bigbreak \noindent 
+    \item \textbf{Finding the intersection of two NFA's}: 
+        For NFAs, intersection is more complex because NFAs are nondeterministic and don’t handle intersection naturally. Typically, you convert the NFAs to DFAs and then apply the DFA product construction
+    \item \textbf{Concatenation of two NFA's}: The process is the same as with two DFA's (see above), but you don't need to convert to a DFA at the end.
     \item \textbf{Convert DFA into RE}: To convert a DFA (Deterministic Finite Automaton) into a Regular Expression (RE), you can use the state elimination method or generalized transition automaton method. This process works by gradually reducing the DFA's states and transitions until only a regular expression representing the entire language remains.
         \bigbreak \noindent 
         Given a DFA $M(Q, \Sigma, \delta, q_{0}, F)$, the goal is to find a regular expression that represents the language recognized by this DFA.
@@ -745,20 +880,110 @@
         \bigbreak \noindent 
         Now we start eliminating states, note that it does not matter in which order we eliminate the states, but for this example we will begin by eliminating state $A$. To get from the start state $q_{0}$ to state $B$, we need to pass through $A$, to get from $A$ to $B$, we can have any number of $1's$ followed by a zero which takes us to be. Thus, the transition from $q_{0}$ to $B$ is the regular expression $1^{*}0$
         \bigbreak \noindent 
-        We also have to consider the original transition from $B$ to $A$, and then back to $B$, for this we have the RE $1^{*}01^{*}0$. Thus the machine becomes
+        We also have to consider the original transition from $B$ to $A$, and then back to $B$, for this we have the RE $01^{*}0$. Thus the machine becomes
         \bigbreak \noindent 
         \begin{figure}[ht]
             \centering
-            \incfig{machine7}
-            \label{fig:machine7}
+            \incfig{machine9}
+            \label{fig:machine9}
         \end{figure}
         \bigbreak \noindent 
-        To eliminate $B$, we need to consider the transitions through $B$ ie from $q_{0}$ to $q_{f}$. We know to get from $q_{0}$ to $B$ we have the RE $1^{*}0$, then from $B$ to $q_{f}$ we have $(1 + 1^{*}01^{*}0)^{*} $. Thus, the transition for $q_{0}$ to $q_{f}$ is $1^{*}0(1 + 1^{*}01^{*}0)^{*} $. And the final machine with only one regular expression is 
+        To eliminate $B$, we need to consider the transitions through $B$ ie from $q_{0}$ to $q_{f}$. We know to get from $q_{0}$ to $B$ we have the RE $1^{*}0$, then from $B$ to $q_{f}$ we have $(1 + 01^{*}0)^{*} $. Thus, the transition for $q_{0}$ to $q_{f}$ is $1^{*}0(1 + 1^{*}01^{*}0)^{*} $. And the final machine with only one regular expression is 
         \begin{figure}[ht]
             \centering
             \incfig{machine8}
             \label{fig:machine8}
         \end{figure}
+        \pagebreak 
+    \item \textbf{Convert RE to NFA}: Before we begin, recall order of operations (From highest to lowest )
+        \begin{enumerate}
+            \item Parenthesis  
+            \item Kleene star
+            \item Concatenation
+            \item Union (+ or \|)
+        \end{enumerate}
+        Let's consider the regular expression $aa(a+b)^{*}bb$
+        \begin{enumerate}
+            \item We start by defining simple NFA's for each symbol ($a$ and $b$)
+        \end{enumerate}
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine12}
+            \label{fig:machine12}
+        \end{figure}
+        \bigbreak \noindent 
+        Then, by precedence, we design an NFA for inside the parenthesis, and then for the kleene star of the parenthesis. To make the NFA for $a + b$, we follow the rules for the union of two NFAs
+        \bigbreak \noindent 
+    \begin{figure}[ht]
+        \centering
+        \incfig{machine13}
+        \label{fig:machine13}
+    \end{figure}
+    \bigbreak \noindent 
+    In order to take the kleen star of this machine, we need to allow for zero or more repetitions. Thus,
+    \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{machine14}
+    \label{fig:machine14}
+\end{figure}
+\bigbreak \noindent 
+Now we create two more NFA's, one for $aa$, and one for $bb$
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{machine15}
+    \label{fig:machine15}
+\end{figure}
+\pagebreak \bigbreak \noindent 
+Now, we combine them all using the logic of concatenation. The final product is then
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{machine17}
+    \label{fig:machine17}
+\end{figure}
+\bigbreak \noindent 
+Notice we added the extra epsilon transition (pink), this is to bypass the kleene star if the choice of zero occurences is executed.
+
+
+
+    \pagebreak 
+    \item \textbf{Properties of union, intersect, and concatenation for two FA's}: the properties of union, intersection, and concatenation for finite automata (FAs) are directly tied to the properties of regular languages.
+        \bigbreak \noindent 
+        \textbf{Union of two FA}
+        \begin{itemize}
+            \item \textbf{Closure}: The class of regular languages (those recognized by FA) is closed under union. This means the union of two regular languages is also regular, and there exists an FA that recognizes the union of the languages.
+            \item \textbf{Commutative:} Union is commutative for FA, meaning the order of combining automata does not matter.
+            \item \textbf{Associative:} Union is associative, so it doesn't matter how automata are grouped when performing multiple unions.
+            \item \textbf{Distributive over Intersection} Union distributes over intersection for regular languages, just as with sets.
+        \end{itemize}
+        \textbf{Intersection of two FA}
+        \begin{itemize}
+            \item \textbf{Closure:} The class of regular languages is also closed under intersection, meaning there is always an FA (typically constructed as a DFA) that recognizes the intersection of two regular languages.
+            \item \textbf{Commutative:} Intersection is commutative, meaning the order of combining automata doesn't matter.
+            \item \textbf{Associative:} Intersection is associative, so the grouping doesn't matter.
+            \item \textbf{Distributive over Union:} Intersection distributes over union for regular languages, just as with sets.
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Concatenation}
+        \begin{itemize}
+            \item \textbf{Closure:} Regular languages are closed under concatenation.
+            \item \textbf{Associativity:} Concatenation is associative. This means that the way in which you group the automata when performing concatenation doesn't matter. 
+            \item \textbf{Identity Element:} The identity element for concatenation is the language that contains only the empty string,
+                \begin{align*}
+                    L(A)  \cdot \{\epsilon\} = L(A)
+                .\end{align*}
+            \item \textbf{Distributivity Over Union:} Concatenation distributes over union. This means:
+                \begin{align*}
+                    L(A) \cdot (L(B) \cup (L(C)) = L(A) \cdot L(B)) \cup (L(A) \cdot L(C))
+                .\end{align*}
+            \item \textbf{Concatenation with the Empty Set:} Concatenating any language with the empty set results in the empty set. This is because there are no strings to concatenate if one of the languages is empty:
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Not commutative}
+
+
 
 
 
