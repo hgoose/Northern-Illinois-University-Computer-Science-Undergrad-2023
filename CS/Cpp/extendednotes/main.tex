@@ -325,6 +325,149 @@ void foo(myclass<T>& obj) {
         }
     \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Dependent name resolution}
+    \bigbreak \noindent 
+    Suppose we have the code
+    \begin{cppcode}
+    template <typename T>
+    void showcont(const T& cont) {
+        typename T::iterator it;
+        for (it = cont.begin(); it! = cont.end(); ++it) 
+            cout << *it << endl;
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Why do we need the word "\texttt{typename}" before the iterator \texttt{it} is declared?
+    \bigbreak \noindent 
+    This concept is called "\textbf{dependent name resolution}" in C++. Specifically, it falls under the broader topic of dependent types and dependent names in template programming.
+    \bigbreak \noindent 
+    \subsubsection{Dependent names}
+    \bigbreak \noindent 
+    In templates, a dependent name is any name that depends on a template parameter. For example, \texttt{T::iterator} in the code above depends on the template parameter \texttt{T}. The compiler cannot determine the exact meaning of T::iterator until the template is instantiated with a concrete type.
+    \bigbreak \noindent 
+    \subsubsection{Typename Keyword}
+    \bigbreak \noindent 
+     In C++, the typename keyword is used to indicate that a dependent name refers to a type. Without typename, the compiler might interpret T::iterator as something else, such as a static member variable or a constant. Using typename helps disambiguate and ensures the compiler treats T::iterator as a type.
+     \bigbreak \noindent 
+     \textit{Dependent name resolution} is the process by which the compiler determines the meaning of dependent names during template instantiation. When the template is instantiated with a specific type, the compiler resolves T::iterator to the actual nested type within T.
+     \bigbreak \noindent 
+     C++ uses a two-phase name lookup process for templates. In the first phase, the compiler parses the template without knowing the actual template arguments. In the second phase, the compiler instantiates the template with the provided arguments. Since T::iterator cannot be resolved in the first phase (before knowing what T actually is), typename is required to instruct the compiler that iterator is indeed a type
+     \bigbreak \noindent 
+     \subsubsection{Nested types}
+     \bigbreak \noindent 
+     Any nested type within a template parameter requires the typename keyword. For example:
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         void foo() {
+             typename T::value_type val; // T::value_type is a nested type within T
+         }
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Prereq: Using aliases defined in classes}
+     \bigbreak \noindent 
+     We can define aliases inside classes, but then we need to reference them outside the class by using the \textit{scope resolution operator}
+     \bigbreak \noindent 
+     \begin{cppcode}
+        class foo {
+        public:
+            alias ll = long long;
+            ll b = 10;
+         };
+
+         int main() {
+             foo::ll a = 5;
+             return 0;
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     This also applies to typedefs...
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class foo {
+        public:
+            typedef long long ll;
+        }
+
+        int main() {
+            foo::ll a = 10;
+            return 0;
+        }
+    \end{cppcode}
+
+     \bigbreak \noindent 
+     \nt{We can define aliases inside functions, but we can't use them outside the function they are defined in}
+
+     \bigbreak \noindent 
+     \subsubsection{Type Aliases}
+     \bigbreak \noindent 
+     If a class template has a type alias defined inside it, you need to use typename when referring to that alias in another template. For example:
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         class Wrapper {
+             public:
+             using PointerType = T*; // A type alias within Wrapper
+         };
+
+         template <typename T>
+         void bar() {
+             typename Wrapper<T>::PointerType ptr; // typename is required here
+         }
+     \end{cppcode}
+
+     \pagebreak 
+     \subsubsection{Return Types in Template Functions}
+     \bigbreak \noindent 
+     When using a dependent type as a return type for a function within a template, typename is necessary:
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         typename T::value_type getValue(const T& container) {
+             return *container.begin();
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     \subsubsection{Base Class Members}
+     \bigbreak \noindent 
+     When accessing a member of a base class that is a dependent type, typename is required. 
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         class foo {
+         public:
+             typedef T* tp;
+         };
+
+         template <typename T>
+         class bar : public foo<T> {
+         public:
+             typename foo<T>::tp a;
+         };
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Dependent Types in Expressions}
+     \bigbreak \noindent 
+     If you use a dependent type within an expression, you must indicate it with typename:
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         void example(const T& cont) {
+             typename T::size_type size = cont.size(); // typename required here
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     Where size\_type is a type alias defined inside the class or container type T. In this context, size\_type typically represents an unsigned integer type used to express sizes and counts of elements in the container.
+
+     
+
+
+
+
+
     \pagebreak 
     \unsect{When initializer lists are required}
     \bigbreak \noindent 
