@@ -432,6 +432,29 @@
             \textbf{Recursive step:} The second rule allows you to take any string \( x \) already in \( L^* \) and concatenate it with a string \( y \in L \) to produce a new string \( xy \in L^* \).
             \bigbreak \noindent 
             After using the second rule once to generate a new string \( xy \in L^* \), you can apply the rule again by concatenating this new string with another string from \( L \). This recursive process can continue indefinitely, generating all possible strings that can be formed by concatenating zero or more strings from \( L \).
+        \item \textbf{Recursive definition of the kleene star (other)}
+            \begin{enumerate}
+                \item $L^{0} = \{\epsilon\}$ $\quad$ (Start with the empty string, always in the closure)
+                \item $L^{i}=LL^{i-1}$ for $i>0$ $\quad$ (Start recursively building strings)
+                \item $L^{*} = \bigcup_{i=0}^{\infty} L^{i}$ $\quad$ (the whole thing)
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{Note:} We also define the positive closure of \( L \), denoted \( L^+ \), as \( L^* - \{\epsilon\} \) or
+            \[
+                L^+ = \bigcup_{i=1}^{\infty} L^i.
+            \]
+        \item \textbf{Closure of the empty language}: $\Phi^{*} = \{\epsilon\} $
+        \item \textbf{Regular expression for the empty language}: $\Phi  = \varnothing$  is the regular expression for the empty language (empty set)
+        \item \textbf{More on language composition operators}:
+            The language composition operators were defined over any language and, in turn, generate new languages. As such, composition operators take any one or two languages from $P(\Sigma^{*})$ and can produce any language in $P(\Sigma^{*})$.
+            \begin{align*}
+                \in \quad \epsilon
+            .\end{align*}
+        \item \textbf{Regular languages (regular sets), regular expression limits}: Although regular expressions are based on language composition operators, their recursive definition (i.e., only regular expressions, therefore only languages defined by regular expressions) limits the languages that they can define.
+            \bigbreak \noindent 
+            \textbf{Note:} Regular expressions cannot produce all languages in $P(\Sigma^{*})$.
+            \bigbreak \noindent 
+            In fact, the set of languages that regular expressions can define have a special name – they are called regular languages (or sometimes regular sets).
 
         \item \textbf{Kleene's theorem}:
             There is an FA for a language if and only if there is an RE for the language
@@ -541,6 +564,178 @@
             \item \textbf{Distributive Property:} $R_{1}(R_{2} \mid R_{3}) = R_{1}R_{2} \mid R_{1}R_{3} $
             \item \textbf{Absorption:} $R\mid (RR^{*})  = RR^{*} = R^{+}$
         \end{itemize}
+    \item \textbf{The RE operators with the empty language $\Phi$}:
+        \begin{enumerate}
+            \item $\varnothing r  = r\varnothing = \varnothing\varnothing = \varnothing$ for any regular expression $r$
+            \item $r + \varnothing = \varnothing + r = r $
+            \item $\varnothing + \varnothing = \varnothing $
+            \item $\varnothing^{*} = \{\epsilon\} $
+        \end{enumerate}
+        These cases can also be represented with language notation
+        \begin{enumerate}
+            \item $\Phi L  = L\Phi = \Phi\Phi = \Phi$\ $\forall L$
+            \item $L + \Phi = \Phi + L = L $
+            \item $\Phi + \Phi = \Phi $
+            \item $\Phi^{*} = \{\epsilon\} $
+        \end{enumerate}
+    \item \textbf{Convert RE to NFA-$\epsilon$}: The conversion algorithm starts by defining an NFA with $\epsilon$-moves for each of the three base cases from the recursive definition of a regular expressions over an alphabet $\Sigma$
+        \begin{enumerate}
+            \item $\varnothing$ is a regular expression and denotes the empty set (i.e., the empty language $\Phi$)
+            \item $\epsilon$ is a regular expression and denotes the set $\{\epsilon\}$
+            \item For each symbol $x \in \Sigma$, $x$ is a regular expression and denotes the set $\{x\} $.
+        \end{enumerate}
+        \bigbreak \noindent 
+        Conditions on the NFAs with $\epsilon$-moves for This Algorithm
+        \begin{enumerate}
+            \item  There must be exactly one accepting state.
+            \item No transitions (not even $\epsilon$-moves) may leave the one accepting state.
+        \end{enumerate}
+        \bigbreak \noindent 
+        \textbf{Note:} If faced with an NFA with $\epsilon$-moves that has more than one accepting state and/or accepting states with transitions leaving it then simply modify the NFA with $\epsilon$-moves by
+        \begin{enumerate}
+            \item Adding a new accepting state.
+            \item Add an $\epsilon$-move from each of the original accepting states to the newly added accepting state.
+            \item Convert all of the original accepting states to non-accepting states.
+        \end{enumerate}
+        \bigbreak \noindent 
+        The three base cases have the following nfa that satisfy the above criteria
+        \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{crit2}
+    \label{fig:crit2}
+\end{figure}
+\bigbreak \noindent 
+We use those NFAs as the basic building blocks to iteratively build more complex NFA’s with $\epsilon$-moves (all the while honoring the accepting state conditions for this algorithm) as we apply the recursive part of the regular expression definition. Recall:
+\bigbreak \noindent 
+If $r$ and $s$ are regular expressions denoting the sets $R$ and $S$, respectively, then
+\begin{enumerate}
+    \item $r+s$ is a regular expression denoting the set $R + S$, (i.e,. union of languages),
+    \item $rs$ is a regular expression denoting the set $RS$ (i.e., concatenating languages), and
+\item $r*$ is a regular expression denoting the set $R^{*}$ (i.e., Kleene closure of a language).
+\end{enumerate}
+\bigbreak \noindent 
+Once we define an NFA with $\epsilon$-moves for each of the base cases (which we have done) then when we address each recursive part of the definition (e.g., union above)
+\begin{enumerate}
+    \item We may assume that there already exists NFAs with $\epsilon$-moves for each of the regular expressions $r$ and $s$ (and that each also satisfies the acceptance state conditions of this algorithm) and 
+    \item Then our job is to use those NFAs with $\epsilon$-moves to create a new NFA with $\epsilon$-moves that accepts $r+s$ and that also satisfies the acceptance state conditions of this algorithm.
+\end{enumerate}
+\bigbreak \noindent 
+\textbf{The algorithm:}
+\begin{itemize}
+    \item \textbf{Handling union:} We start by assuming there already exists NFAs with $\epsilon$-moves $M_{1}$ and $M_{2}$ that accept regular expressions $r$ and $s$, respectively, and that both $M_{1}$ and $M_{2}$ satisfy the acceptance state conditions (i.e., one accepting state, no exit) of this algorithm.
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{crit3}
+            \label{fig:crit3}
+        \end{figure}
+        \bigbreak \noindent 
+        \textbf{Note:} The details of the machine arn't important here, all we know is the machine has a start, does whatever else it needs to (repesented by the elipsis), and then accepts strings represented by $r$ in the top machine and $s$ in the bottom
+        \bigbreak \noindent 
+        We then use these machines $M_{1}$ and $M_{2}$ to create a new machine $M$ that accepts $r+s$
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{crit4}
+            \label{fig:crit4}
+        \end{figure}
+        \bigbreak \noindent 
+        So what did we do here
+        \begin{enumerate}
+            \item Create new start state and add $\epsilon$-moves to the original start states
+            \item Create new accepting state and add emoves from all the original accepting states.
+            \item Change the original accepting states to non-accepting states.
+        \end{enumerate}
+    \item \textbf{Handle Concatenation}: We again start by assuming there already exists NFAs with $\epsilon$-moves $M_{1}$ and $M_{2}$ that accept regular expressions $r$ and $s$, respectively, and that both $M_{1}$ and $M_{2}$ satisfy the acceptance state conditions (i.e., one accepting state, no exit) of this algorithm.
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{crit5}
+            \label{fig:crit5}
+        \end{figure}
+        \bigbreak \noindent 
+        We use $M_{1}$ and $M_{2}$ to construct new NFA with $\epsilon$-move $M$ that accepts $rs$.
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{crit6}
+            \label{fig:crit6}
+        \end{figure}
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item Add an $\epsilon$-move from $M_{1}$’s accepting state to $M_{2}$’s start state.
+            \item Change $M_{1}$’s accepting state to a nonaccepting state.
+        \end{enumerate}
+        \pagebreak 
+    \item \textbf{Handle Kleene closure}: We again start by assuming there already exists an NFA with $\epsilon$-moves $M_{1}$ that accepts regular expressions $r$ and that satisfies the acceptance state conditions (i.e., one accepting state, no exit) of this algorithm.
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{crit7}
+            \label{fig:crit7}
+        \end{figure}
+\end{itemize}
+\bigbreak \noindent 
+We use $M_{1}$ to construct new NFA with $\epsilon$-move $M$ that accepts $r^{*}$
+\begin{figure}[ht]
+    \centering
+    \incfig{crit9}
+    \label{fig:crit9}
+\end{figure}
+\bigbreak \noindent 
+\begin{enumerate}
+    \item Create new start and accepting states.
+    \item Add $\epsilon$-move from new start to $M_{1}$ start, $M_{1}$ accepting to new accepting, and new start to new accepting.
+    \item Add $\epsilon$-move from $M_{1}$ accepting to $M_{1}$ start. 
+    \item Change $M_{1}$'s accepting state to a non accepting state.
+\end{enumerate}
+
+    \item \textbf{RE to NFA conversion: Special cases}: Recall the special case with regular expressions, the empty language $\Phi$ – and how it behaved with the three regular expression operators;
+    \begin{enumerate}
+        \item $\Phi L  = L\Phi = \Phi\Phi = \Phi$\ $\forall L$
+        \item $L + \Phi = \Phi + L = L $
+        \item $\Phi + \Phi = \Phi $
+        \item $\Phi^{*} = \{\epsilon\} $
+    \end{enumerate}
+    \bigbreak \noindent 
+    \pagebreak \bigbreak \noindent 
+    We can now check these operations using the algorithm with $\Phi $. First, we define the base case NFA's
+    \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{base}
+    \label{fig:base}
+\end{figure}
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item Confirming $L+\Phi = \Phi+L= L$ and $\Phi+\Phi = \Phi$:
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{base2}
+                \label{fig:base2}
+            \end{figure}
+            \pagebreak 
+        \item Confirming $\Phi L = L\Phi = \Phi\Phi = \Phi$
+            \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{base6}
+    \label{fig:base6}
+\end{figure}
+        \item Confirming $\Phi^{*} = \{\epsilon\}$
+            \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{base7}
+    \label{fig:base7}
+\end{figure}
+    \end{enumerate}
+
+
+
+
 
     \end{itemize}
 
@@ -925,57 +1120,57 @@
             \label{fig:machine8}
         \end{figure}
         \pagebreak 
-    \item \textbf{Convert RE to NFA}: Before we begin, recall order of operations (From highest to lowest )
-        \begin{enumerate}
-            \item Parenthesis  
-            \item Kleene star
-            \item Concatenation
-            \item Union (+ or \|)
-        \end{enumerate}
-        Let's consider the regular expression $aa(a+b)^{*}bb$
-        \begin{enumerate}
-            \item We start by defining simple NFA's for each symbol ($a$ and $b$)
-        \end{enumerate}
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine12}
-            \label{fig:machine12}
-        \end{figure}
-        \bigbreak \noindent 
-        Then, by precedence, we design an NFA for inside the parenthesis, and then for the kleene star of the parenthesis. To make the NFA for $a + b$, we follow the rules for the union of two NFAs
-        \bigbreak \noindent 
-    \begin{figure}[ht]
-        \centering
-        \incfig{machine13}
-        \label{fig:machine13}
-    \end{figure}
-    \bigbreak \noindent 
-    In order to take the kleen star of this machine, we need to allow for zero or more repetitions. Thus,
-    \bigbreak \noindent 
-\begin{figure}[ht]
-    \centering
-    \incfig{machine14}
-    \label{fig:machine14}
-\end{figure}
-\bigbreak \noindent 
-Now we create two more NFA's, one for $aa$, and one for $bb$
-\bigbreak \noindent 
-\begin{figure}[ht]
-    \centering
-    \incfig{machine15}
-    \label{fig:machine15}
-\end{figure}
-\pagebreak \bigbreak \noindent 
-Now, we combine them all using the logic of concatenation. The final product is then
-\bigbreak \noindent 
-\begin{figure}[ht]
-    \centering
-    \incfig{machine17}
-    \label{fig:machine17}
-\end{figure}
-\bigbreak \noindent 
-Notice we added the extra epsilon transition (pink), this is to bypass the kleene star if the choice of zero occurences is executed.
-
+%     \item \textbf{Convert RE to NFA}: Before we begin, recall order of operations (From highest to lowest )
+%         \begin{enumerate}
+%             \item Parenthesis  
+%             \item Kleene star
+%             \item Concatenation
+%             \item Union (+ or \|)
+%         \end{enumerate}
+%         Let's consider the regular expression $aa(a+b)^{*}bb$
+%         \begin{enumerate}
+%             \item We start by defining simple NFA's for each symbol ($a$ and $b$)
+%         \end{enumerate}
+%         \begin{figure}[ht]
+%             \centering
+%             \incfig{machine12}
+%             \label{fig:machine12}
+%         \end{figure}
+%         \bigbreak \noindent 
+%         Then, by precedence, we design an NFA for inside the parenthesis, and then for the kleene star of the parenthesis. To make the NFA for $a + b$, we follow the rules for the union of two NFAs
+%         \bigbreak \noindent 
+%     \begin{figure}[ht]
+%         \centering
+%         \incfig{machine13}
+%         \label{fig:machine13}
+%     \end{figure}
+%     \bigbreak \noindent 
+%     In order to take the kleen star of this machine, we need to allow for zero or more repetitions. Thus,
+%     \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine14}
+%     \label{fig:machine14}
+% \end{figure}
+% \bigbreak \noindent 
+% Now we create two more NFA's, one for $aa$, and one for $bb$
+% \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine15}
+%     \label{fig:machine15}
+% \end{figure}
+% \pagebreak \bigbreak \noindent 
+% Now, we combine them all using the logic of concatenation. The final product is then
+% \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine17}
+%     \label{fig:machine17}
+% \end{figure}
+% \bigbreak \noindent 
+% Notice we added the extra epsilon transition (pink), this is to bypass the kleene star if the choice of zero occurences is executed.
+%
 
 
     \pagebreak 
@@ -1128,6 +1323,484 @@ Notice we added the extra epsilon transition (pink), this is to bypass the kleen
     
    \pagebreak 
    \subsubsection{The STL}
+   \bigbreak \noindent 
+   The STL is a generic library that manages collections of data with efficient algorithms. It has template classes, functions, parameters. The idea is to have the same/single implementation works for many data types
+   \bigbreak \noindent 
+   \textbf{Components:}
+   \begin{enumerate}
+       \item \textbf{Containers}: manage collections of data
+           \begin{itemize}
+               \item \textbf{sequence containers e.g. vector, list, deque}: Sequence containers store elements in a linear sequence, where the order of elements is strictly maintained. They allow for sequential access to elements
+               \item \textbf{associative containers e.g. set, map}: Associative containers store elements in a way that allows for fast retrieval based on keys. They automatically order elements based on their keys or some criterion.
+                   \bigbreak \noindent 
+                   \textbf{Note:} Sets in C++ are considered associative containers because they store elements in a way that allows for efficient retrieval based on the value of the elements themselves. This differs fundamentally from sequence containers, which maintain elements in a specific order based on the sequence of insertion.
+           \end{itemize}
+       \item \textbf{Iterators}: Step through elements in an container
+       \item \textbf{Algorithms}: Procedures that process the elements of collections
+   \end{enumerate}
+   \bigbreak \noindent 
+   \textbf{Global algorithms for all containers in the <algorithm> header}:
+   \begin{itemize}
+       \item \textbf{copy}: Copies elements from one range to another.
+       \item \textbf{transform}: Applies a function to each element in a range and stores the result in another range.
+       \item \textbf{find}: Searches for the first occurrence of a value in a range.
+       \item \textbf{search}: Searches for a subsequence within a range.
+       \item \textbf{mismatch}: Finds the first position where two ranges differ.
+       \item \textbf{fill}: Assigns a value to each element in a range.
+       \item \textbf{replace}: Replaces occurrences of a value in a range with another value.
+       \item \textbf{sort}: Sorts elements in a range.
+   \end{itemize}
+   \pagebreak \bigbreak \noindent 
+   \textbf{Signatures}:
+   \begin{cppcode}
+       template <class InputIterator, class OutputIterator>
+       OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result);
+
+       template <class InputIterator, class OutputIterator, class UnaryOperation>
+       OutputIterator transform(InputIterator first, InputIterator last, OutputIterator result, UnaryOperation op);
+
+       template <class InputIterator, class T>
+       InputIterator find(InputIterator first, InputIterator last, const T& value);
+
+       template <class ForwardIterator1, class ForwardIterator2>
+       ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1, ForwardIterator2 first2, ForwardIterator2 last2);
+
+
+       template <class InputIterator1, class InputIterator2>
+       std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2);
+   \end{cppcode}
+
+   \pagebreak 
+   \begin{cppcode}
+       template <class ForwardIterator, class T>
+       void fill(ForwardIterator first, ForwardIterator last, const T& value);
+
+       template <class ForwardIterator, class T>
+       void replace(ForwardIterator first, ForwardIterator last, const T& old_value, const T& new_value);
+
+       template <class RandomAccessIterator>
+       void sort(RandomAccessIterator first, RandomAccessIterator last);
+   \end{cppcode}
+   \bigbreak \noindent 
+   \textbf{Note:} This is not an exhaustive list of signatures for these procedures
+   \bigbreak \noindent 
+   \textbf{Vectors}: One of the sequence containers
+   \begin{itemize}
+    \item \textbf{Properties of vectors}:
+        \begin{enumerate}
+            \item The order of elements in the container depends on the time/space of the insertion(s) of the elements. This means that the elements in a std::vector are stored in the order in which they are inserted.
+            \item dynamic array
+            \item random access
+            \item adding/removing elements at the end is fast
+            \item inserting/removing in the middle/beginning is slow 
+        \end{enumerate}
+    \item \textbf{Vector constructors}
+        \begin{enumerate}
+            \item default constructor
+            \item copy constructor
+            \item constructor with given range from another (type of) container, with an array, from standard input, type may be even different provided automatic conversion
+        \end{enumerate}
+    \item \textbf{Vector destructor}: When dealing with vectors, destructors automatically call the destructor of each element stored in the vector in reverse order of their insertion. After destroying each element, the vector's destructor releases the internal memory used by the vector itself.
+    \item \textbf{Vector methods}:
+        \begin{enumerate}
+            \item size - the actual number of elements in the vector
+            \item empty - whether the vector is empty or not
+            \item max\_size - the maximum number of elements a container may contain. - a constraint from the system or library implementation. this is different from capacity().
+            \item capacity - the number of elements a vector could contain in its actual memory.
+            \item resize - resize the vector. in case of larger size, fill the rest with a certain value. - different from reserve().
+            \item reserve - change the capacity of the vector. exception is thrown if not successful.
+        \end{enumerate}
+    \item \textbf{Element access methods}:
+        \begin{enumerate}
+            \item operator[ ] - access the element at a certain position. it does not check the valid range.
+            \item at() – similar to [ ]. it checks range, and throws exception.
+            \item front() – returns a reference to the first element
+            \item back() – returns a reference to the last element
+        \end{enumerate}
+    \item \textbf{assignments and assignment methods}
+        \begin{enumerate}
+            \item operator= - copy from another vector containing the same type
+            \item assign() - assigns new content to the current vector. overloaded.
+            \item swap() - exchange two vectors.
+        \end{enumerate}
+    \item \textbf{Insertion methods}
+        \begin{enumerate}
+            \item insert() - insert new element in front of a specified position
+            \item push\_back() - append a new element to the end of the vector
+            \item emplace\_back() - construct a new element in-place at the end, used if inserting objects that need to be constructed
+        \end{enumerate}
+    \item \textbf{Removal methods}
+        \begin{enumerate}
+            \item erase - remove an element or a range of elements
+            \item pop\_back - remove the last element
+            \item resize - change the number of elements
+            \item clear - remove all elements from the vector
+        \end{enumerate}
+    \item \textbf{what operations may cause reallocation of the internal array?}:
+        \begin{enumerate}
+            \item reserve
+            \item push\_back, emplace\_back
+            \item insert, emplace
+        \end{enumerate}
+        \bigbreak \noindent 
+        \textbf{Note:} Note that pop\_back, erase, clear do not cause reallocation
+        \bigbreak \noindent 
+        When reallocation happens, all references, pointers, and iterators referring to elements of the original vector become invalidated.
+    \item \textbf{what if do want to reduce memory size for unused positions?}
+        \begin{enumerate}
+            \item shrink\_to\_fit() - reduce memory usage by freeing unused memory
+        \end{enumerate}
+    \item \textbf{Time complexity of the operations}:
+        \begin{enumerate}
+            \item \textbf{Linear time O(n):} clear, insert, erase, assign, resize, destructor, operator=, copy constructor, constructor with a given rang
+                \bigbreak \noindent 
+                \textbf{Note:} push\_back and emplace\_back are O(n) because in the worst case, the vector needs to be resized in order to fit the new elements.
+            \item \textbf{linear time o(n):} clear, insert, erase, assign, resize, destructor, operator=, copy constructor, constructor with a given rang
+        \end{enumerate}
+
+   \end{itemize}
+
+   \pagebreak 
+   \bigbreak \noindent 
+   \textbf{Deque (Double ended queue)}: Another sequence container <deque>. Involves dynamic arrays, similar to vectors, but involves multiple ararys. Random access to its elements but a little slower than vectors, because of the multiple arrays.
+   \bigbreak \noindent 
+     almost the same interface as vector
+   \begin{itemize}
+       \item \textbf{different from vector:} deque has two open ends
+        \item fast for adding/removing at both ends
+        \item \textbf{Capacity stuff}: 
+            \begin{enumerate}
+                \item capacity() and reserve() are not available for deque
+                \item capacity and allocation are completely automatically managed for deque, no user suppor
+            \end{enumerate}
+        \item \textbf{Extra modifiers}: In deques, we have 
+            \begin{enumerate}
+                \item \textbf{push\_front()}
+                \item \textbf{pop\_front()}
+                \item \textbf{emplace\_front()}
+            \end{enumerate}
+            Along with the back stuff that vectors have.
+        \item \textbf{Internal memory}: internal memory is not contiguous (split into multiple arrays). Although we can use random access is if it were. element access and iterator movement involves more calculation comparing to vector
+            \bigbreak \noindent 
+            Iterators may need to jump between different memory blocks. max\_size may be larger because a deque may occupy multiple blocks of memory
+        \item \textbf{Adding at front or end}:  All iterators are invalidated; references are not invalidated
+            \bigbreak \noindent 
+        \item \textbf{Removing from front or end}: Iterators and references of other positions are not invalidated. end() is invalidated
+        \item \textbf{adding or removing anywhere other than two ends}: All iterators and references are invalidated
+        \item \textbf{Advantages of deques}:
+            \begin{enumerate}
+                \item fast adding/removing at both ends (though still slow inadding/removing in the middle)
+                \item possiblely larger max\_size
+                \item massive reallocations are avoided
+            \end{enumerate}
+   \end{itemize}
+
+   \pagebreak \bigbreak \noindent 
+   \textbf{List}: (doubly linked list) Another sequence container <list>
+   \begin{itemize}
+       \item \textbf{Properties}:
+           \begin{enumerate}
+               \item Doubly-linked list
+                \item No random access of elements
+                \item Adding or removing \textbf{anywhere} is fast, as long as you have reference to the location where you want to add/remove, otherwise you need to traverse the list to reach the location
+                \item adding/removing does not invalidate pointers, references, and iterators to other elements
+                \item there is no reallocation
+           \end{enumerate}
+        \item \textbf{Capacity stuff}: Capacity and reserve are not available for lists, each element of the list has its own memory. Elements occupy non-contiguous memory.
+        \item \textbf{Element access}: No [], no at().
+        \item \textbf{Operations on lists}:
+            \begin{enumerate}
+                \item remove( ): remove all elements with a certain value
+                \item remove\_if( ): remove all elements that satisfy certain criterion.
+                \item erase( ): remove an element with a specified iterator (note that erase here returns an iterator for next pos.)
+                \item unique( ): remove duplicates of consecutive elements
+                \item splice( ): move elements from one list to another
+                \item sort( ): sort all elements with $<$ or defined comparison
+                \item merge( ): merge two sorted lists
+                \item reverse( ): reverse the order of all elements
+                \item many above methods are overloaded
+            \end{enumerate}
+        \item \textbf{Splicing (splice method)}: We pass iterator for position of insertion, list object to take elements from, begin, end range of source list
+   \end{itemize}
+
+   \pagebreak 
+   \bigbreak \noindent 
+   \textbf{forward\_list}: Another sequence container <forward\_list>. Internally implemented by singly linked list. No random access of elements
+   \bigbreak \noindent 
+   Adding/removing does not invalidate pointers, references, and iterators to other elements. there is no reallocation
+   \begin{itemize}
+       \item Only support forward iterators. (no -- operation), only forward traversal
+        \item forward lists are more memory efficient than lists in some cases
+        \item \textbf{Adding / removing properties}
+            \begin{enumerate}
+                \ite madding/removing at begin of a list is fast
+                \item adding/removing at the next position of a given element is fast
+        \item adding/removing anywhere requires traversal from head
+            \end{enumerate}
+   \end{itemize}
+
+   \pagebreak \bigbreak \noindent 
+   \textbf{Associative containers}
+   \begin{itemize}
+       \item \textbf{Sorted}: Elements (or keys) are sorted. Internally height balanced binary search tree. 
+           \bigbreak \noindent 
+           orted according to a certain sorting criterion, by default its the < operator. You can provide you own criteria
+           \bigbreak \noindent 
+           Order of insertion does not matter
+           \begin{enumerate}
+               \item \textbf{Set:} Elements are sorted according to their own values. Each element only occurs once
+               \item \textbf{multiset}: Set that allows duplicates
+               \item \textbf{map}: each element is a key/value pair. Key is used for sorting elements. Each key occurs only once
+               \item \textbf{multimap}: similar to map, except that it allows duplicates 
+           \end{enumerate}
+        \item \textbf{Unsorted}: Not sorted, internally organized as hash table
+            \begin{enumerate}
+                \item unordered set
+                \item unordered multiset
+                \item unordered map
+                \item unordered multimap
+            \end{enumerate}
+   \end{itemize}
+
+   \bigbreak \noindent 
+   \textbf{Set and multiset}: When an element is added to a set, it’s automatically placed in a position to maintain the sorting status.
+   \bigbreak \noindent 
+   One cannot change an element value directly Otherwise the new value may break the correct order
+   \begin{itemize}
+       \item No direct element access
+       \item Elements referenced by iterators are constants
+   \end{itemize}
+   \bigbreak \noindent 
+   In order to change value, one needs to remove the element with the old value, add the new element with the new value
+   \bigbreak \noindent 
+   Sets and multisets are efficient for searching.
+   \bigbreak \noindent 
+   \textbf{Special search operations}
+   \begin{itemize}
+       \item \textbf{count(elem)} : the number of elements with the value elem
+       \item \textbf{find(elem)} : the position of the first element with value elem Note that it’s different from find() in <algorithm>
+       \item \textbf{lower\_bound(elem)} : the position of first element $>=$ elem
+       \item \textbf{upper\_bound(elem)} : the position of first element $>$ elem
+       \item \textbf{equal\_range(elem)} : the range of elements == elem. The return value is a pair<iterator, iterator>
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Inserting and removing elements}
+   \begin{itemize}
+       \item \textbf{insert( elem )}: Returns pair<iterator, bool>. The second field indicates the insertion is successful or not (since an element may already exists)
+        \item \textbf{insert( pos, elem)}:
+        \item \textbf{insert(begin, end)}:
+        \item \textbf{erase(element)}:
+        \item \textbf{erase(pos)}:
+        \item \textbf{erase(begin, end)}
+        \item \textbf{clear()}
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{size related operations}:
+   \begin{itemize}
+       \item \textbf{size()}
+        \item \textbf{empty()}
+        \item \textbf{max\_size()}
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Assignments}
+   \begin{itemize}
+       \item \textbf{operator=}
+        \item \textbf{swap()}
+   \end{itemize}
+
+   \pagebreak 
+   \bigbreak \noindent 
+   \textbf{map \& multimap}: Manage key/value pairs as elements
+   \bigbreak \noindent 
+   Multimap allows duplicate, while map does not. Elements are automatically sorted based on keys according to a certain sorting criterion
+   \bigbreak \noindent 
+   \textbf{Properties}
+   \begin{itemize}
+       \item \textbf{Automatic sorting}: When a key/value pair is added to a map, it’s automatically placed in a position to maintain the sorting status based on the key
+       \item \textbf{One cannot change the key of an element directly}: Otherwise the new value may break the correct order based on keys The keys of elements referenced by iterators are constants
+        \item \textbf{In order to change a key, one needs to}: Remove the element with the old key, add the new element with the new key.
+        \item \textbf{Efficient for searching based on keys}: Not efficient for searching based on values of elements
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Note:} One can still modify the value of an element directly
+   \bigbreak \noindent 
+   \textbf{Search operations}: 
+   \begin{itemize}
+       \item \textbf{count(key)} : the number of elements with the key
+       \item  \textbf{find(key)} : the position of the first element with the key
+       \item \textbf{lower\_bound(key)} : the position of first element whose key $>=$ key
+       \item \textbf{upper\_bound(key)} : the position of first element whose key $>$ key
+       \item \textbf{equal\_range(key)} : the range of elements whose key == key. The return value is a pair
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Inserting and removing elements}
+   \begin{itemize}
+       \item \textbf{insert( elem )}: The return type for map is pair<iterator, bool> The second field indicates the insertion is successful or not (since an element may already exists)
+       \item \textbf{insert( pos, elem)}:
+       \item \textbf{insert( beg, end )}:
+       \item \textbf{erase(elem )}:
+       \item \textbf{erase( pos )}: Note that in sequence containers, erase returns the position after the removed element, but in associative containers, erase does not return such position because it needs to traverse to find successor.
+       \item \textbf{erase( beg, end )}:
+       \item \textbf{clear()}:
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Size related operations}
+   \begin{itemize}
+       \item \textbf{size()}:
+        \item \textbf{empty()}:
+        \item \textbf{max\_size()}:
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Assignments}
+   \begin{itemize}
+       \item \textbf{operator=}:
+        \item \textbf{sawp}:
+   \end{itemize}
+   \bigbreak \noindent 
+   \textbf{Return of [] operator}
+   \begin{itemize}
+       \item \textbf{m[k]}: Returns a reference to the value of the element with key k. Inserts an element with k if it does not yet exist
+   \end{itemize}
+
+
+
+
+
+
+   \pagebreak \bigbreak \noindent 
+   \textbf{Iterators}: An object that iterates/navigates over elements in the container. They are essentially an abstraction of pointer
+   \begin{itemize}
+       \item \textbf{Some notes about iterators}: 
+           \begin{enumerate}
+               \item each container provides its own iterator
+               \item interfaces of iterators of different containers are largely the same
+               \item internal behaviors depend on the data structure of the container
+           \end{enumerate}
+       \item \textbf{Operations}: 
+            \begin{enumerate}
+                \item operator * returns the element of the current positions
+                \item operator -> access a member of the element
+                \item operator ++ step forward
+                \item operator -- step backward
+                \item operator == and != whether two iterators represent the same position
+                \item operator = assign an iterator
+            \end{enumerate}
+        \item \textbf{Important iterators}:
+            \begin{enumerate}
+                \item begin() gets you the beginning of a container
+                \item end() gets you just past the end
+            \end{enumerate}
+        \item \textbf{Iterator types}
+            \begin{itemize}
+                \item \textbf{iterator}
+                \item \textbf{reverse\_iterator}
+                \item \textbf{const\_iterator}
+                \item \textbf{const\_reverse\_iterator}
+            \end{itemize}
+        \item \textbf{Iterator categories}
+            \begin{enumerate}
+                \item \textbf{Input Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read-only access to elements in a single-pass manner.
+                        \item \textbf{Operations:} Can be incremented (++), compared for equality (==), and dereferenced (*) to access elements.
+                    \end{itemize}
+                \item \textbf{Output Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Write-only access to elements in a single-pass manner.
+                        \item \textbf{Operations:} Can be incremented (++) and dereferenced (*) to assign values.
+                    \end{itemize}
+                \item \textbf{Forward Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read and write access to elements; can traverse the container in a single direction.
+                        \item \textbf{Operations:} Can be incremented (++), compared for equality (==), and dereferenced (*).
+                    \end{itemize}
+                \item \textbf{Bidirectional iterator}:
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read and write access to elements; can traverse the container in both directions.
+                        \item \textbf{Operations:} Supports both increment (++) and decrement (--) operations.
+                    \end{itemize}
+                    \pagebreak 
+                \item \textbf{Random Access Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose}: Read and write access with the ability to jump to any element in constant time.
+                        \item \textbf{Operations:} Supports all operations of bidirectional iterators plus direct arithmetic operations like addition (+), subtraction (-), and subscript ([]).
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{Containers and their iterators}:
+            \begin{enumerate}
+                \item \textbf{Vector}: Random access iterator
+                \item \textbf{Deque}: Random access iterator
+                \item \textbf{List}: Bidirectional iterator
+                \item \textbf{Forward\_list}: Forward iterator
+                \item \textbf{Set}: Bidirectional iterator
+                \item \textbf{Multiset}: Bidirectional iterator
+                \item \textbf{Map}: Bidirectional iterator
+                \item \textbf{Multimap}: Bidirectional iterator
+                \item \textbf{Unordered\_map}: Forward iterator
+            \end{enumerate}
+        \item \textbf{Insert iterators}: Insert iterators in C++ are special types of iterators that allow you to insert elements into a container at specific positions rather than overwriting existing elements. There are three primary types of insert iterators provided by the C++ Standard Library:
+            \bigbreak \noindent 
+            if a container has an insert method, you can and often should use it directly when inserting elements, especially if you want to insert a single element or a specific range of elements into the container.
+            \bigbreak \noindent 
+            Containers that have an insert method are: vector, deque, list, forward list, set, multiset, unordered set, unordered multiset,map, multimap, unordered map, unordered multi map.
+            \bigbreak \noindent 
+            Insert iterators (std::back\_inserter, std::front\_inserter, and std::inserter) should be used when working with algorithms or situations where automatic insertion logic simplifies your code.
+            \bigbreak \noindent 
+            Some things in <algorithm> require these inserters
+            \begin{enumerate}
+                \item \textbf{std::front\_inserter}: Inserts elements at the front of a container. Calls the container's push\_front method to add elements to the front. Used with containers that support push\_front 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <list>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::list<int> lst = {1, 2, 3};
+                            std::list<int> to_add = {4, 5, 6};
+
+                            // Insert elements at the front of lst
+                            std::copy(to_add.begin(), to_add.end(), std::front_inserter(lst));
+
+                            // lst now contains: 6, 5, 4, 1, 2, 3
+                        }
+                    \end{cppcode}
+                \item \textbf{std::back\_inserter}: Inserts elements at the end of a container. Inserts elements at the end of a container. Used with containers that support push\_back 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <vector>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::vector<int> vec = {1, 2, 3};
+                            std::vector<int> to_add = {4, 5, 6};
+
+                            // Insert elements at the end of vec
+                            std::copy(to_add.begin(), to_add.end(), std::back_inserter(vec));
+
+                            // vec now contains: 1, 2, 3, 4, 5, 6
+                        }
+                    \end{cppcode}
+                \item \textbf{std::inserter}: Inserts elements at a specific position in a container.  Takes an iterator indicating the insertion position and calls the container's insert method. Used with containers that support insertion at arbitrary positions
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <vector>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::vector<int> vec = {1, 2, 3};
+                            std::vector<int> to_add = {4, 5, 6};
+
+                            // Insert elements starting at the second position (before 2)
+                            std::copy(to_add.begin(), to_add.end(), std::inserter(vec, vec.begin() + 1));
+
+                            // vec now contains: 1, 4, 5, 6, 2, 3
+                        }
+                    \end{cppcode}
+            \end{enumerate} 
+   \end{itemize}
 
 
 
@@ -1454,6 +2127,8 @@ double-edged rectangle, shown below.
 Notice that the City entity is now drawn as a weak entity, with a double border. The relationship between the weak
 entity and the strong entity is also drawn with a double border. The relationship is not weak, per se, but it is used to
 indicate which strong entity the weak entity depends upon.
+    \item \textbf{Discriminant (partial key)}:  The discriminant, also known as the partial key, is an attribute (or a set of attributes) within the weak entity that can uniquely identify the weak entity, but only in combination with the primary key of the strong entity it is associated with. In other words, the discriminant helps to distinguish instances of the weak entity when they are tied to a particular instance of the strong entity.
+    \item \textbf{Schema}: In databases, a schema is the structural definition of how data is organized in a database. It outlines the way data is stored
 
     \end{itemize}
 
@@ -1757,8 +2432,8 @@ indicate which strong entity the weak entity depends upon.
             The attributes on the RHS of the FD are removed from the original relation and placed into a newly created relation that has the FD’s LHS as its primary key. A foreign key links the attribute from the LHS in the original table (the LHS is not removed) to the corresponding tuple in the new table, where it is the primary key.
             \bigbreak \noindent 
             \begin{align*}
-                &\text{\textbf{EmpProj}(EmpID, Project, Case)}
-                &\text{\textbf{Employee}} (EmpID, Supv, Dept)
+                &\text{\textbf{EmpProj}(EmpID, Project, Case)} \\
+                &\text{\textbf{Employee}(EmpID, Supv, Dept)}
             .\end{align*}
             \bigbreak \noindent 
             \textbf{Instance of 2NF Version}:
@@ -1857,6 +2532,238 @@ indicate which strong entity the weak entity depends upon.
 
 
 
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{ERD to Relations (Conceptual to logical)}
+    \begin{itemize}
+        \item \textbf{The basic outline (steps)}
+            \begin{enumerate}
+                \item Handle all of the entities
+                \item Handle all of the relationships
+            \end{enumerate}
+        \item \textbf{Entity handling}: We will start with entities, because they can stand on their own, unlike relationships or attributes. In general, each entity will get its own relation. The attributes of the entity will become attributes in the schema of the relation created. There are some special cases to take into account, which will be handled from most independent to least, so:
+            \begin{enumerate}[label=\alph*.]
+                \item Strong (non-weak) entities that are not subtypes
+                \item Strong.(non-weak) entities that are subtypes
+                \item Weak entities
+            \end{enumerate}
+        \item \textbf{Entities like date}: there is no reason to make a relation for a “Date” entity or similar. The single value for the date is enough to determine it, and any other data associated with it is generally happening through a relationship anyway. Think about what data would go into such a table and how little use there would be for storing it separately.
+        \item \textbf{Handling strong, non subtype entities}: Make a new relation, whose name will be the same as the name of the entity ▶ The primary key of the relation will be all of the identifier attributes, taken together ▶ All attributes of the entity become attributes of the relation ▶ Every instance of the entity gets the relevant values put into a new tuple in the relation
+            \bigbreak \noindent 
+            \textbf{Example:} Suppose we had an entity $A$ with attributes $\underline{ID}$, and other:
+            \bigbreak \noindent 
+            Then, we would make a relation $A(\underline{ID}, other)$
+        \item \textbf{Handling strong, subtype entities}: Suppose
+            \bigbreak \noindent 
+            \fig{.5}{./figures/42.png}
+            \bigbreak \noindent 
+            \textbf{Employee} is a supertype (not subtype) so it gets handled in the previous step
+            \begin{center}
+                \textbf{Employee}(\underline{EmpId}, name)
+            \end{center}
+            \bigbreak \noindent 
+            \textbf{Hourly} and \textbf{Salaried} are each strong, but they are subtypes (each is a type of Employee), so they are handled here
+            \bigbreak \noindent 
+            This type of inheritance means that the subtypes are types of the supertype, so they are identified by \textbf{Employee’s} EmpID
+            \bigbreak \noindent 
+            There are two methods of handling these.
+            \begin{enumerate}
+                \item \textbf{Big table}: The first method involves putting the attributes of the subtypes into the relation made for the supertype. So, the original relation:
+                    \begin{center}
+                        \textbf{Employee}(\underline{EmpID}, Name)
+                    \end{center}
+                    Would become something like:
+                    \begin{center}
+                        \textbf{Employee}(\underline{EmpID}, Name,Wage, Salary)
+                    \end{center}
+                    but it would need to be modified to indicate which subtypes a given employee belongs to. Let’s examine that on the next page.
+                    \bigbreak \noindent 
+                    The big table method needs a way to know which of the subtypes the current instance of the supertype belongs to, which is handled differently depending on the IS-A’s configuration.
+                    \bigbreak \noindent 
+                    For \textbf{disjoint subtypes}, where an instance of the supertype can only be one of the subtypes at a timei, we can add an attribute, EmpType that has a value indicating which type this employee is.:
+                    \begin{center}
+                        \textbf{Employee}(\underline{EmpID}, Name, EmpType,Wage, Salary)
+                    \end{center}
+                    \bigbreak \noindent 
+                    For generalization, EmpType would not allow NULL. For specialization, it would be allowed.
+                    \bigbreak \noindent 
+                    For \textbf{overlapping subtypes}, it is possible to be more than one at a time, so we need an individual true/false answer for each type:
+                    \bigbreak \noindent 
+                    \begin{center}
+                        \textbf{Employee}(\underline{EmpID}, Name, IsHourly,Wage, IsSalaried, Salary)
+                    \end{center}
+                    \bigbreak \noindent 
+                    In this case, nothing about the schema would indicate generalization vs. specialization
+                \item \textbf{New relation}: Method 2 involves creating a new relation for the subtype entity
+                    The name of new relation would be the same as the name of the entity.
+                    \bigbreak \noindent 
+                    The primary key of the new relation would be the same as the primary key for the supertype’s relation.
+                    \bigbreak \noindent 
+                    The primary key is also a foreign key to the existing table.
+                    \bigbreak \noindent 
+                    An instance of the supertype entity will only have a tuple in the subtype relation if it is a member of that subtype, so we will not need any extra attributes like we did in method 1.
+                    \bigbreak \noindent 
+                    The foreign key can be used to look up any of the attributes that are being inherited from the supertype
+                    \bigbreak \noindent 
+                    Thus, we would have 
+                    \begin{align*}
+                        &\text{\textbf{Employee}(\underline{EmpID}, Name} \\
+                        &\text{\textbf{Hourly}(\underline{EmpID\dag},Wage)} \\
+                        &\text{\textbf{Salaried}(\underline{EmpID\dag}, Salary)}
+                    .\end{align*}
+                    \bigbreak \noindent 
+                    \textbf{Note:} The (\dag) (dagger symbol) will be used in these slides to indicate that the attribute is part of a foreign key (and, in this example, the whole thing).
+            \end{enumerate}
+        \item \textbf{Handling weak entities}:  Suppose
+            \bigbreak \noindent 
+            \fig{.5}{./figures/43.png}
+            \bigbreak \noindent 
+            The strong entity would already have a relation. 
+            \begin{center}
+                \textbf{Strong}(\underline{id}, x)
+            \end{center}
+            \bigbreak \noindent 
+            The weak entity gets its own relation. The primary key will be the concatenation of the weak entity’s discriminator with the strong entity’s identifier. The other attributes of the entity are brought in as non-prime attributes.
+            \begin{center}
+                \textbf{Weak}(\underline{id}\dag, \underline{disc}, y)
+            \end{center}
+            \bigbreak \noindent 
+            The \underline{id} portion is a foreign key to the Strong relation
+        \item \textbf{Entities: Functional Dependencies}: The only functional dependencies introduced by the entities of an ER diagram are the ones introduced when the identifiers become primary keys. Remember that a primary key has to functionally determine all of the other attributes in a relation
+        \item \textbf{Handle relationships}: The relationships will be handled in order from lowest degree to highest degree, and within that, from simplest cardinality (one-to-one) to more complicated cardinalities (many-to-many, etc.).
+            \bigbreak \noindent 
+            The purpose of a relationship is to form connections between entities. We know that we are using relations to represent our entities, so we will need to use a tool that can link those relations to each other.
+            \bigbreak \noindent 
+            The tool best suited to linking tuples from relations together is the foreign key.
+            \bigbreak \noindent 
+            Every relationship we model in the relational model will have one or more foreign key involved. Where we put these foreign keys will depend on the cardinality, and the decisions are motivated by the normal forms we discussed.
+            \begin{enumerate}
+                \item \textbf{Binary one-to-one Relationships}: In a binary relationship, we will already have made a relation for each of the entities involved.
+                    \bigbreak \noindent 
+                    \fig{.5}{./figures/44.png}
+                    \begin{center}
+                        \textbf{A}(\underline{a},p) $\quad$ \textit{and} $\quad$ \textbf{B}(\underline{b}, q)
+                    \end{center}
+                    \bigbreak \noindent 
+                    Since each instance of B will have one of A, and each instance of A will have one of B through C, we can represent this one-to-one relationship by putting a new foreign key into the entity for either side. Choose either:
+                    \begin{center}
+                        \textbf{A}(\underline{a},p,b\dag) $\quad$ \textit{or} $\quad$ \textbf{B}(\underline{b}, q, a\dag)
+                    \end{center}
+                    \bigbreak \noindent 
+                    The relationship implies the functional dependencies:
+                    \begin{align*}
+                        a \to b \\
+                        b \to a
+                    .\end{align*}
+                \item \textbf{Binary one-to-many Relationships}: In a binary relationship, we will already have made a relation for each of the entities involved.
+                    \begin{center}
+                        \textbf{A}(\underline{a},p) $\quad$ \textit{and} $\quad$ \textbf{B}(\underline{b}, q)
+                    \end{center}
+                    \bigbreak \noindent 
+                    For this one-to-many relationship, there can be many instances of B for each of A, so we can’t have the foreign key in the A table (wouldn’t be atomic, so 1NF would be violated). We still do have the option of putting a foreign key in the B table pointing to the corresponding A, so our only option is: \begin{center}
+                        \textbf{B}(\underline{b},q,a\dag)
+                    \end{center}
+                    \bigbreak \noindent 
+                    The only FD is 
+                    \begin{align*}
+                        b \to a 
+                    .\end{align*}
+                    \bigbreak \noindent 
+                \item \textbf{Binary many-to-many Relationships}: In a binary relationship, we will already have made a relation for each of the entities involved.
+                    \begin{center}
+                        \textbf{A}(\underline{a},p) $\quad$ \textit{and} $\quad$ \textbf{B}(\underline{b}, q)
+                    \end{center}
+                    \bigbreak \noindent 
+                    There are no new functional dependencies introduced by the relationship, and putting a foreign key into either relation would not be atomic (1NF violation). The many-to-many relationship requires a new relation. Its foreign key will be the concatenation of the primary keys of each of the entity relations, which will be used as foreign keys to the corresponding tables. Any intersection data is put into this new relation as a non-prime attribute.
+                    \bigbreak \noindent 
+                    \begin{center}
+                        \textbf{C}(\underline{a}\dag, \underline{b}\dag, x)
+                    \end{center}
+                \item \textbf{Relationships Greater than Binary: one-to-one-to-one}:
+                    \bigbreak \noindent 
+                    \fig{.7}{./figures/45.png}
+                    \bigbreak \noindent 
+                    So we have 
+                    \begin{center}
+                        \textbf{A}(\underline{a}, p) and \textbf{B}(\underline{b}, q) and \textbf{C}(\underline{c},r
+                    \end{center}
+                    \bigbreak \noindent 
+                    Each of the “one legs” represents a functional dependency, and each of them gives us a potential relation to choose from for our relation.
+                    \bigbreak \noindent 
+                    \begin{table}[h!]
+                        \centering
+                        \begin{tabular}{ll}
+                            \toprule
+                            \textbf{Functional Dependency} & \textbf{Potential Relation for \textbf{D}} \\ 
+                            \midrule
+                            $a, b \rightarrow c$ & $\mathbf{D} \left( a^\dagger, b^\dagger, c^\dagger, x \right)$ \\[8pt]
+                            $b, c \rightarrow a$ & $\mathbf{D} \left( a^\dagger, b, c^\dagger, x \right)$ \\[8pt]
+                            $a, c \rightarrow b$ & $\mathbf{D} \left( a^\dagger, b, c^\dagger, x \right)$ \\ 
+                            \bottomrule
+                        \end{tabular}
+                    \end{table}
+                    \textbf{Note:} If we have say only two ones, like a one to one to many relationship, we would just have less functional dependencies and therefore less options to choose from (see table above)
+                \item \textbf{Greater than Binary without any “ones”}:
+                    No functional dependencies are implied by this relationship. To stay in 3NF, the relation we must use is:
+                    \begin{center}
+                        \textbf{D}(\underline{a}\dag, \underline{b}\dag, \underline{c}\dag, x)
+                    \end{center}
+                \item \textbf{Date entities (and similar)}: For relationships that have a “Date” entity (or the equivalent), recall that we did not make a relation for that entity. The only change necessary for your relationship involving that entity is that the date value is used instead of a foreign key, and that attribute will not be a foreign key, because the home relation would not exist
+                    \bigbreak \noindent 
+                    As an example, if the C entity in the ternary relationship with no “ones” ER diagram were a Date entity, we would not create the C relation for it, and the relation to represent the relationship would be modified. Notice that the 𝑐 attribute is still part of the primary key, but no longer a foreign key.
+                    \begin{align*}
+                        &\text{From: \textbf{D}(\underline{a}\dag, \underline{b}\dag, \underline{c}\dag, x)} \\
+                        &\text{To: \textbf{D}(\underline{a}\dag, \underline{b}\dag, \underline{c}, x)} \\
+                   .\end{align*}
+                \item \textbf{Recursive Relationships: one-to-many}: Recursive relationships will be handled as if they were normal relationships of the same degree and cardinality. The practical difference is that the entity that is linked multiple times will still only have one relation, so multiple foreign keys might go to the same table.
+                    \bigbreak \noindent 
+                    Suppose: 
+                    \bigbreak \noindent 
+                    \fig{.7}{./figures/46.png}
+                    \bigbreak \noindent 
+                    There should obviously only be one relation for the entity Department, because it is only a single entity.
+                    \begin{center}
+                        \textbf{Department}(\underline{DeptNo}, Name)
+                    \end{center}
+                    \bigbreak \noindent 
+                    With a non-recursive one-to-many binary relationship, we would have put a foreign key to the relation for the one
+                    side into the relation on the one side. In this version, we only have one table, so the decision is easy. We will need
+                    to come up with another name for the foreign key, as we cannot have two attributes with the same name inside the
+                    same relation. Thus, we grow Department into the following:
+                    \begin{center}
+                        \textbf{Department}(\underline{DeptNo}, Name, ReportsToDept\dag)
+                    \end{center}
+                    \bigbreak \noindent 
+                    Where the home relation for the new attribute, ReportsToDept, is that same relation, Department. The tuple of
+                    the department that the current department reports to will be have a DeptNo that equals the ReportsToDept in
+                    the current tuple. Alternatively, ReportsToDept can be NULL if the department does not report to another.
+                \item \textbf{Recursive Relationships, many-to-many}: Suppose 
+                    \bigbreak \noindent 
+                    \fig{.87}{./figures/47.png}
+                    \bigbreak \noindent 
+                    Like non-recursive many-to-many relationships, we will need to create a new relation. Unlike the non-recursive
+                    version, we only have one home relation for our two foreign keys. As in the one-to-many version, we will need to
+                    choose a new name for at least one copy of the foreign key, since they can’t share the same name. The relation for
+                    our Person entity would be \textbf{Person}(\underline{ID}, Name)
+                    \bigbreak \noindent 
+                    The new relation created to represent the relationship would be in the following form:
+                    \begin{center}
+                        \textbf{Friends}(\underline{activeFriend}\dag, \underline{passiveFriend}\dag)
+                    \end{center}
+                    \bigbreak \noindent 
+                    ActiveFriend and PassiveFriend are foreign keys to the tuple in Person with data for the person that is taking part in
+                    the relationship. This can be done in a directed or undirected way, and you probably want to put a comment
+                    somewhere about which way you intend to use it.
+                    \bigbreak \noindent 
+                    directed: (Person1, Person2) would not imply (Person2, Person1)
+                    \bigbreak \noindent 
+                    undirected: (Person1, Person2) does imply (Person2, Person1)
+                    \bigbreak \noindent 
+                    \fig{.6}{./figures/48.png}
+
+            \end{enumerate}
 
     \end{itemize}
 

@@ -1,0 +1,274 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={}
+}
+
+\begin{document}
+    % \maketitle
+    %     \begin{titlepage}
+    %    \begin{center}
+    %        \vspace*{1cm}
+    % 
+    %        \textbf{}
+    % 
+    %        \vspace{0.5cm}
+    %         
+    %             
+    %        \vspace{1.5cm}
+    % 
+    %        \textbf{Nathan Warner}
+    % 
+    %        \vfill
+    %             
+    %             
+    %        \vspace{0.8cm}
+    %      
+    %        \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+    %             
+    %        Computer Science \\
+    %        Northern Illinois University\\
+    %        United States\\
+    %        
+    %             
+    %    \end{center}
+    % \end{titlepage}
+    % \tableofcontents
+    \pagebreak \bigbreak \noindent
+    Nate Warner \ \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad  CS 466 \quad  \quad \quad \quad \quad \quad \quad \quad \quad \ \ \quad \quad Fall 2024
+    \begin{center}
+        \textbf{Pset 3 - Due: Wednesday, September 25}
+    \end{center}
+    \bigbreak \noindent 
+    For each of the below, part b refers to the results of part a, and part c refers to the results of part b. Any changes made during the previous steps should be considered in the steps that follow
+    \bigbreak \noindent 
+    \begin{mdframed}
+        1.  R(A, B, C, D, E, F, G, H) \\
+        \hspace{.2in} Functional Dependencies:
+        \begin{align*}
+            A &\to D,E \\
+            C &\to G \\
+            A,C &\to H,F
+        .\end{align*}
+        \begin{enumerate}[label=(\alph*)]
+            \item Is this relation in 1NF? If not, explain why not, then make the necessary changes to fix it.
+            \item Is this relation in 2NF? If not, explain why not, then make the necessary changes to fix it.
+            \item Is this relation in 3NF? If not, explain why not, then make the necessary changes to fix it.
+        \end{enumerate}
+        \bigbreak \noindent 
+    \end{mdframed}
+    \bigbreak \noindent 
+    \begin{remark}[normal forms] 
+       A relation is in 1NF iff 
+       \begin{enumerate}
+           \item All values are atomic
+       \end{enumerate}
+       This signals that the current primary key is sufficient in uniquely identifying each tuple.
+       \bigbreak \noindent 
+       A relation is in 2NF iff
+       \begin{enumerate}
+           \item It is already in 1NF
+            \item No non-prime members are functionally dependent on a subset of the primary key.
+       \end{enumerate}
+       \bigbreak \noindent 
+       A relation is in 3NF iff
+       \begin{enumerate}
+           \item It is already in 2NF
+            \item No transitive dependencies in the same relation
+       \end{enumerate}
+    \end{remark}
+    \bigbreak \noindent 
+    \begin{remark}[Patterns to achive normality] If a relation is not in 1NF, we must identify a new primary key that uniquely identifies each tuple and allows values to be atomic.
+        \bigbreak \noindent 
+        If a relation is not in 2NF, we follow a decomposition pattern.
+        \begin{enumerate}
+            \item Start with the original relation, and the FD that causes the violation.
+            \item The attributes on the RHS of the FD are removed from the original relation and placed into a newly created relation that has the FD’s LHS as its primary key. A foreign key links the attribute from the LHS in the original table (the LHS is not removed) to the corresponding tuple in the new table, where it is the primary key.
+        \end{enumerate}
+        \bigbreak \noindent 
+        If a relation is not in 3NF, we follow the same decomposition pattern as with 2NF
+        \begin{enumerate}
+             \item Start with the original relation, and the FD that causes the violation.
+            \item The attributes on the RHS of the FD are removed from the original relation and placed into a newly created relation that has the FD’s LHS as its primary key. A foreign key links the attribute from the LHS in the original table (the LHS is not removed) to the corresponding tuple in the new table, where it is the primary key.
+        \end{enumerate}
+    \end{remark}
+    
+    
+    \bigbreak \noindent 
+    a.) This relation is in 1NF because all the values are atomic, no changes here
+    \bigbreak \noindent 
+    b.) To check if this relation is in 2NF, we must first identify the primary key. We see from the functional dependencies, $A$, $B$, and $C$ together determine all the attributes in the relation. Thus, the primary key is $\{A, B, C\}$. Since $G$ is functionally dependent on a subset of the primary key $C \to G,\ \text{where } \{C\} \subset \{A,B,C\} $. And $\{D,E\}$ is functional dependent on $A$, $A \to D,E$, with $\{A\} \subset \{A,B,C\}$. Lastly, $\{H,F\}$ are functional dependent on $A,C$, where $\{A,C\} \subset \{A,B,C\}$ This relation is not in second normal form.
+    \bigbreak \noindent 
+    To address these issues, we create three new relations, will will now have four relations.
+    \begin{align*}
+        &\text{R(\underline{A}, \underline{B}, \underline{C})} \\
+        &\text{R$_{\alpha}$(\underline{C}, G)} \\
+        &\text{R$_{\beta}$(\underline{A}, D,E)}  \\
+        &\text{R$_{\gamma}$(\underline{A}, \underline{C}, H, F)}
+    .\end{align*}
+    \bigbreak \noindent 
+    c.) Since there are no transitive dependencies, these four new relations are all in third normal form
+
+    \pagebreak 
+    \begin{mdframed}
+        2. Property(id, county, lotNum, lotArea, price, taxRate, (datePaid, amount)) \\
+        Functional Dependencies:
+        \begin{align*}
+            \text{id} &\to \text{county, lotNum, lotArea, price, taxRate} \\
+            \text{lotArea} &\to \text{price} \\
+            \text{county} &\to \text{taxRate} \\
+            \text{id, datePaid} &\to \text{amount}
+        .\end{align*}
+    \end{mdframed}
+    \bigbreak \noindent 
+    a.) This relation is not in 1NF because (datePaid, amount) signifies non-atomic values. Thus, we need to determine a primary key to address this. Looking at the functional dependencies  we see id and datePaid together deterimine all the other attributes, so we select $\{\text{id, datePaid}\} $ as the new primary key. The relation is then
+    \begin{center}
+        Property(\underline{id}, county, lotNum, lotArea, price, taxRate, \underline{datePaid}, amount) 
+    \end{center}
+    \bigbreak \noindent 
+    This relation is now in 1NF
+    \bigbreak \noindent 
+    b.) This relation is not in 2NF, we see that county, lotNum, lotArea, price, and taxRate all depend on a subset of the primary key. Following the decomp pattern described above, we get the new relations
+    \begin{align*}
+       &\text{Property(\underline{id}, \underline{datePaid}, amount) } \\
+       &\text{Info(\underline{id}, county, lotNum, lotArea, price, taxRate)}
+    .\end{align*}
+    \bigbreak \noindent 
+    c.) The second relation is not in third normal form because we have transitive dependencies
+    \begin{align*}
+        \text{lotArea} &\to \text{Price} \\
+        \text{county} &\to \text{taxRate} 
+    .\end{align*}
+    Thus, we create two new relations. We will now have four relations
+    \begin{align*}
+       &\text{Property(\underline{id}, \underline{datePaid}, amount) } \\
+       &\text{Info(\underline{id}, county, lotNum, lotArea)} \\
+       &\text{PriceInfo(\underline{lotArea}, price)} \\
+       &\text{CountyTax(\underline{conty}, taxRate)}
+   .\end{align*}
+
+   \pagebreak 
+   \begin{mdframed}
+       3. Pharmacy(patient\_id, patient\_name, address, (Rx\_num, trademark\_name,  \\
+       generic\_name, (filldate, num\_refills\_left), num\_refills)) 
+       \bigbreak \noindent 
+       Functional Dependencies:
+       \begin{align*}
+           \text{patient\_id} &\to \text{patient\_name, address} \\
+           \text{patient\_id, Rx\_num} &\to \text{trademark\_name, generic\_name} \\
+           \text{Rx\_num} &\to \text{num\_refills} \\
+           \text{Rx\_num, filldate} &\to \text{num\_refills\_left}
+       .\end{align*}
+   \end{mdframed}
+   \bigbreak \noindent 
+   a.) This relation is not in 1Nf,  (Rx\_num, trademark\_name, generic\_name, (filldate, num\_refills\_left), num\_refills) signifies non-atomic values. Thus, we must choose a primary key to uniquely identify each tuple and get rid of the non-atomic value. Looking at the FDs, we see that patient\_id, Rx\_num, and filldate together determine all attributes. Thus, the primary key is $\{\text{patient\_id, Rx\_num, filldate}\}$, and the relation is
+   \begin{align*}
+              \text{Pharmacy(\underline{patient\_id}, patient\_name, address, \underline{Rx\_num}, trademark\_name,}  \\ 
+              \text{generic\_name, \underline{filldate}, num\_refills\_left, num\_refills)}
+   .\end{align*}
+   \bigbreak \noindent 
+   b.) This relation is not in 2NF because there are nonprime attributes functional dependent on a subset of the primary key, to fix this we follow the decomposition pattern
+   \begin{align*}
+       &\text{Pharmacy(\underline{patient\_id}, \underline{Rx\_num}, \underline{filldate})} \\
+       &\text{PatientInfo(\underline{patient\_id}, patient\_name, address)} \\
+       &\text{ScriptInfo(\underline{patient\_id}, \underline{Rx\_num}, trademark\_name, generic\_name)} \\
+       &\text{RefillAllowed(\underline{Rx\_num}, num\_refills)} \\
+       &\text{RefillLeft(\underline{Rx\_num}, \underline{filldate}, num\_refills\_left)}
+   .\end{align*}
+   \bigbreak \noindent 
+   c.) These relations are in 3NF because there are no transitive dependencies
+
+   \pagebreak 
+   \begin{mdframed}
+       4. Company(EmpID, EmpName, EmpAddr, (ProjID, ProjName, MgrID, MgrName, \smallbreak
+       \ \ \ \ \ \ \ \ HoursWorked)) 
+       \bigbreak \noindent 
+    Functional Dependencies:
+    \begin{align*}
+        \text{EmpID} &\to \text{EmpName, EmpAddr} \\
+        \text{ProjID} &\to \text{ProjName, MgrID, MgrName} \\
+        \text{EmpID, ProjID} &\to \text{HoursWorked} \\
+        \text{MgrID} &\to \text{MgrName}
+    .\end{align*}
+   \end{mdframed}
+   \bigbreak \noindent 
+   a.) This relation is not in 1NF because  (ProjID, ProjName, MgrID, MgrName, HoursWorked) signafies non-atomic values. Looking at the FDs, we see that EmpID, and ProjID together get all all eight attributes. Thus, the primary key is $\{\text{EmpID, ProjId}\}$, and the relation becomes
+   \begin{align*}
+       &\text{Company(\underline{EmpID}, EmpName, EmpAddr, \underline{ProjID}, ProjName, MgrID, MgrName, }\\
+       &\text{HoursWorked)}
+   .\end{align*}
+   \bigbreak \noindent 
+   b.) This relation is not in 2NF because some nonprime attributes are functionally dependent on a subset of the primary key. After decomposition, we get the relations
+   \begin{align*}
+       &\text{Company(\underline{EmpID}, \underline{ProjID}, HoursWorked)} \\
+       &\text{ProjMan(\underline{ProjID}, ProjName, MgrID, MgrName)} \\
+       % &\text{Manager(\underline{MgrID}, MgrName)} \\
+       &\text{Emp(\underline{EmpID}, EmpName, EmpAddr)}
+   .\end{align*}
+   \bigbreak \noindent 
+   c.) The second relation is not in 3NF because there is a transitive dependency $\text{MgrID} \to \text{MgrName} $. Thus, we decompose. The final relations are
+   \begin{align*}
+      &\text{Company(\underline{EmpID}, \underline{ProjID}, HoursWorked)} \\
+       &\text{ProjMan(\underline{ProjID}, ProjName,)} \\
+       &\text{Manager(\underline{MgrID}, MgrName)} \\
+       &\text{Emp(\underline{EmpID}, EmpName, EmpAddr)}
+   .\end{align*}
+
+   \pagebreak 
+   \begin{mdframed}
+       5. StockExchange(Company, Symbol, HQ, Date, ClosePrice) \\
+        Functional Dependencies:
+        \begin{align*}
+            \text{Symbol, Date} &\to \text{Company, HQ, ClosePrice} \\
+            \text{Symbol} &\to \text{Company, HQ} \\
+            \text{Symbol} &\to \text{HQ}
+        .\end{align*}
+   \end{mdframed}
+   \bigbreak \noindent 
+   a.) This relation is already in 1NF
+   \bigbreak \noindent 
+   b.) This relation is not in 2NF. First, let's identify the primary key. We see that Symbol and Date together determine all attributes. Thus, $\{\text{Symbol, Date}\} $ is the primary key for this relation.
+   \begin{align*}
+       \text{StockExchange(Company, \underline{Symbol}, HQ, \underline{Date}, ClosePrice)}
+   .\end{align*}
+   \bigbreak \noindent 
+   Now that we have the primary key, we see that company and HQ depend on a subset of the primary key, so we decompose.
+   \begin{align*}
+       &\text{StockExchange(\underline{Symbol}, \underline{Date}, ClosePrice)} \\
+       &\text{SymbolInfo(\underline{Symbol},Company)} \\
+       &\text{CompanyLoc(\underline{Symbol}, HQ)}
+   .\end{align*}
+   \bigbreak \noindent 
+   c.) These relations are already in 3NF, no transitive dependecies. 
+
+    
+
+
+
+
+
+    
+\end{document}
