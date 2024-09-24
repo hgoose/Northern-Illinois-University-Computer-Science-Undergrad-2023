@@ -1,6 +1,6 @@
 //***************************************************************************
 //
-//  nfa.cc 
+//  nfa_e.cc 
 //  CSCI 401 Assignment 3
 //  Nondeterministic Finite Automata
 //
