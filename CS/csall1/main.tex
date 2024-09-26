@@ -370,7 +370,484 @@
                 
     \end{itemize}
 
+
     \pagebreak 
+    \subsubsection{nondeterministic Finite automata (NFA)}
+    \begin{itemize}
+        \item \textbf{NFA definition}:
+            \begin{itemize}
+                \item If an automaton gets to a state where there is more than one possible transition corresponding to the symbol read from the tape, the automaton may  choose any of those paths. (nondeterminism) We say it \textbf{branches}
+                \item if an automaton gets to a state where there is no transition for the symbol read from the tape, then that path of the automaton halts and rejects the string. We say it \textbf{dies}
+                \item the automaton accepts the input string if and only if there exists a choice of transitions that ends in an accept state.
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Example}: Consider this nondeterministic FA (NFA) over $\Sigma = \{0, 1\}$
+            \bigbreak \noindent 
+            \fig{.5}{./figures/32.png}
+        \item \textbf{DFA or NFA?}:
+            Consider the language $L$ over $\Sigma = \{a, b\}$ which is defined by
+            \begin{align*}
+                L = (a^{*}) + (ab)^{*}
+            .\end{align*}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/33.png}
+        \item \textbf{NFA Formal definition}: We define an NFA $M(Q, \Sigma, q_{0}, T, \delta) $
+            \begin{itemize}
+                \item $Q$ is a finite set of states
+                \item $\Sigma$ is an alphabet of input symbols
+                \item $q_0 \in Q$ is the start state
+                \item $T \subseteq Q$ is the set of accepting states
+                \item $\delta$ is the transition function $\delta: Q \times \Sigma \to P(Q)$
+            \end{itemize}
+        \item \textbf{Transition function, DFA vs NFA}:
+            \bigbreak \noindent 
+            \fig{.5}{./figures/34.png}
+        \item \textbf{NFA with $\epsilon$-transitions}: $\epsilon$-transitions allow the automaton to change state without
+            consuming an input symbol
+            \bigbreak \noindent 
+            Changing states without consuming input symbols can go on arbitrarily long as there are $\epsilon$-transitions to traverse.
+        \item \textbf{DFA or NFA with $\epsilon$-moves?}: Consider the language L over $\Sigma = \{a, b\}$ which is
+            \begin{align*}
+                L = (b^{*}a) + (a^{*}b)
+            .\end{align*}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/35.png}
+        \item \textbf{NFA with $\epsilon$-transitions formal definition}: Everything is the same except for the transition function, we now have
+            \begin{align*}
+                \delta:\ Q \times (\Sigma \cup \{\epsilon\}) \to \mathcal{P}(Q)
+            .\end{align*}
+            \pagebreak \bigbreak \noindent 
+        \item \textbf{$\delta$ – DFA, NFA, and NFA with $\epsilon$-moves}:
+            \bigbreak \noindent 
+            \fig{.35}{./figures/36.png}
+        \item \textbf{DFA, NFA, or NFA with $\epsilon$ moves, who can define the most languages?}: We begin by noting, by definition, every DFA is an NFA. This means that any language you can define with a DFA can also be defined by an NFA. Thus,
+            \begin{align*}
+                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA}
+            .\end{align*}
+            Also, by definition, every DFA is an NFA with $\epsilon$-moves, an NFA is an NFA with $\epsilon$ moves, even if it doesnt have any. Thus,
+            \begin{align*}
+                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
+            .\end{align*}
+            \bigbreak \noindent 
+            But, by definition, every NFA is an NFA with $\epsilon$-moves. Thus,
+            \begin{align*}
+                \text{Languages defined by NFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
+            .\end{align*}
+            \bigbreak \noindent 
+            This tells us that
+            \begin{itemize}
+                
+                \item NFAs are at least as powerful in defining languages as DFAs
+                \item NFAs with $\epsilon$-moves are at least as powerful in defining languages as DFAs and NFAs.
+            \end{itemize}
+            \bigbreak \noindent 
+            It turns out that these three are \textbf{equally} as powerful. We assert
+            \begin{align*}
+                &\text{Languages defined by DFA's} \\
+                &=\text{Languages defined by NFA's} \\
+                &=\text{Languages defined by NFA's with $\epsilon$-moves}
+            .\end{align*}
+            We prove this by showing an algorithm that converts any NFA with $\epsilon$-moves (or any NFA) to a DFA that accepts the exact same language
+            \bigbreak \noindent 
+            This means that there does not exist a language that can be defined by an NFA with $\epsilon$-moves (or NFA) that cannot also be defined by a DFA.
+        \item \textbf{$\epsilon$-closure}: Before we can look at the algorithm we must first define the $\epsilon$-closure of a set of states 
+            \bigbreak \noindent 
+            Given:
+            \begin{itemize}
+                \item an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $
+                \item Some set of states $S \subseteq Q$
+            \end{itemize}
+            \bigbreak \noindent 
+            \text{We define the } \varepsilon\text{-closure}(S) \text{ as the set of states that are reachable from the set of states } S \text{ using only zero or more } \varepsilon\text{-moves in } \delta.
+            \bigbreak \noindent 
+            \text{Note: it is always the case that } S \subseteq \varepsilon\text{-closure}(S)
+            \bigbreak \noindent 
+            The formal definition is
+            \begin{align*}
+                \epsilon-\text{closure}(q) = \{q\} \cup \{p:\ q \xrightarrow{\epsilon} p\}
+            .\end{align*}
+        \item \textbf{$\epsilon$-closure alternate notation}. 
+            \begin{align*}
+                \epsilon\text{-closure}(\{A\}) = \epsilon(\{A\}) = E(\{A\})
+            .\end{align*}
+        \item \textbf{$\epsilon$-closure of the empty set $\varnothing$}: The epsilon closure of the empty set is $\epsilon(\varnothing)  = \varnothing$
+        \item \textbf{Algorithm: Converting NFA with $\epsilon$-moves to DFA}: The algorithm constructs a new DFA $M^{\prime}(Q^{\prime}, \Sigma, q_{0}^{\prime}, T^{\prime}, \delta^{\prime}) $ From an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $. $\Sigma$ will remain the same
+            \bigbreak \noindent 
+            Things to note about the conversion:
+            \begin{itemize}
+                \item Same alphabet $\Sigma $
+                \item Lose column $\epsilon$
+                \item Lose all nondeterminism
+                \item Lose all empty sets
+                \item Cell values change from sets of states to states
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Example}:
+            \textbf{Consider the following NFA with $\varepsilon$-moves M(Q, $\Sigma$, $q_0$, T, $\delta$) over $\Sigma = \{0, 1\}$ and its associated transition table $\delta$: Q $\times$ ($\Sigma \cup \{\varepsilon\}$) $\rightarrow$ P(Q)}
+            \bigbreak \noindent 
+            \[
+                \begin{array}{|c|c|c|c|}
+                    \hline
+                     & 0 & 1 & \varepsilon \\
+                    \hline
+                    X & \{Y\} & \{Y\} & \emptyset \\
+                    \hline
+                    Y & \{X, Z\} & \{Z\} & \{Z\} \\
+                    \hline
+                    Z & \emptyset & \{Y\} & \emptyset \\
+                    \hline
+                \end{array}
+            \]
+            \bigbreak \noindent 
+            Start by computing the $\epsilon$-closure of the start state in $\delta$.
+            \bigbreak \noindent 
+            \fig{.4}{./figures/37.png}
+            \bigbreak \noindent 
+            There is a subtle - but very important - point to be made here …
+            \bigbreak \noindent 
+            we cannot simply take the $\epsilon$-closure (a set) and use it to create a row in $\delta^{\prime}$ (which needs to be a state). What we do is create a label for the new state in $\delta^{\prime}$ that represents the set of states from $\delta$ and then add that new state to $\delta^{\prime}$
+            \bigbreak \noindent 
+            In this instance we represented the set of states $\{X\}$ by a single state whose label is $X^{\prime}$
+            \bigbreak \noindent 
+            We continue by filling the columns of the start state for each symbol $\Sigma = \{0, 1\}$
+            \bigbreak \noindent 
+            Processing $\delta'$ state $X'$ which represents the set of states $\{X\}$ in $M$:
+            \begin{itemize}
+                \item Processing input symbol 0 (process each state in $\{X\}$ using $\delta$):
+                    \begin{itemize}
+                        \item Process $X$
+                            \[
+                                \delta(X, 0) = \{Y\}
+                            \]
+                            \[
+                                \varepsilon\text{-closure}(\{Y\}) = \{Y, Z\}
+                            \]
+                    \end{itemize}
+            \end{itemize}
+    Since there are no more states in $\{X\}$ to process, we have finished processing the symbol 0 and have produced the set of states $\{Y, Z\}$.
+    \bigbreak \noindent 
+    We create a new state with label $Y'Z'$ (or $Z'Y'$, order does not matter) for $\delta'$ that represents $\{Y, Z\}$ in $M$ and define:
+    \[
+    \delta'(X', 0) = Y'Z'
+    \]
+    We note that $Y'Z'$ is a new state in $\delta'$ and so we create a new row for it in $\delta'$.
+    \bigbreak \noindent 
+    We continue this until we reach 
+    \bigbreak \noindent 
+    \fig{.8}{./figures/38.png}
+    \bigbreak \noindent 
+    Processing $\delta'$ state $Y'Z'$ which represents the set of states $\{Y, Z\}$ in $M$:
+    \begin{itemize}
+        \item Processing 0:
+            \begin{itemize}
+                \item Process $Y$
+                    \[
+                        \delta(Y, 0) = \{X, Z\}, \quad \varepsilon\text{-closure}(\{X, Z\}) = \{X, Z\}
+                    \]
+                \item Process $Z$
+                    \[
+                        \delta(Z, 0) = \emptyset, \quad \varepsilon\text{-closure}(\emptyset) = \emptyset
+                    \]
+            \end{itemize}
+    \end{itemize}
+    Here is our first instance of processing a state and symbol where the state in $\delta'$ represents multiple states in NFA $M$. When this happens, the set of states in NFA $M$ is computed by \textit{taking the union of the $\varepsilon$-closures}: $\{X, Z\} \cup \emptyset = \{X, Z\}$.
+    \bigbreak \noindent 
+    This produces a new label $X'Z'$ which we use to define:
+    \[
+        \delta'(X'Y', 0) = X'Z'
+    \]
+    and since $X'Z'$ is a new state, we add it to $\delta'$.
+    \bigbreak \noindent 
+    We continue this until we reach 
+    \bigbreak \noindent 
+    \fig{.8}{./figures/39.png}
+    \bigbreak \noindent 
+    A state in $M^{\prime}$ is an accepting state iff at least one of the states that it represents in $M$ is an accepting state … in this case $T^{\prime}= \{Y^{\prime}Z^{\prime}\}$.
+    \bigbreak \noindent 
+    We can now draw the new DFA 
+    \bigbreak \noindent 
+    \fig{.7}{./figures/40.png}
+    \bigbreak \noindent 
+    \textbf{Note:} If the closure or union of closures is the empty set, we do this
+    \bigbreak \noindent 
+    \fig{.7}{./figures/41.png}
+    \bigbreak \noindent 
+    This "emtpy" is a state and represents a garbage state, what goes does not leave.
+\item \textbf{Kleene's theorem revisited}: The following are equivalent for a language $L$
+    \begin{enumerate}
+        \item There is a DFA for $L$
+        \item There is an NFA for $L$
+        \item There is an RE for $L$
+    \end{enumerate}
+    \item \textbf{Union of two DFA's (cartesian product construction)}:
+        The process of finding the union of two deterministic finite automata (DFAs) involves creating a new DFA that accepts the union of the languages accepted by the original DFAs. This is done using a product construction (also called the Cartesian product construction), where you combine the states of both DFAs in a systematic way to ensure the resulting DFA accepts strings from either of the original DFAs.
+        \bigbreak \noindent 
+        Let’s say we have two DFAs:
+        \[
+            D_1 = (Q_1, \Sigma, \delta_1, q_1^{\text{start}}, F_1)
+        \]
+        that recognizes language \( L_1 \).
+        \[
+            D_2 = (Q_2, \Sigma, \delta_2, q_2^{\text{start}}, F_2)
+        \]
+        that recognizes language \( L_2 \).
+        \bigbreak \noindent 
+        \textbf{Create a New DFA State Set}:
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item The states of the new DFA are pairs of states, one from each of the original DFAs. The new state set will be the Cartesian product \(Q_1 \times Q_2\), meaning every possible combination of a state from \(D_1\) and a state from \(D_2\).
+            \item If \(D_1\) has \(n\) states and \(D_2\) has \(m\) states, the new DFA will have \(n \times m\) states.
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Define the New Start State}:
+        \begin{itemize}
+            \item The new start state is \((q_1^{\text{start}}, q_2^{\text{start}})\), where \(q_1^{\text{start}}\) is the start state of \(D_1\) and \(q_2^{\text{start}}\) is the start state of \(D_2\).
+        \end{itemize}
+        \textbf{Define the New Transition Function:}
+        \begin{itemize}
+            \item The transition function \(\delta\) for the new DFA operates by taking an input symbol and applying the transition functions of both original DFAs in parallel.
+            \item For each input symbol \(a \in \Sigma\), the new DFA transitions from state \((q_1, q_2)\) to state \((\delta_1(q_1, a), \delta_2(q_2, a))\).
+            \item In other words, if \(q_1\) moves to \(q_1'\) on input \(a\) in \(D_1\), and \(q_2\) moves to \(q_2'\) on input \(a\) in \(D_2\), the new DFA will move from \((q_1, q_2)\) to \((q_1', q_2')\).
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Define the New Set of Accepting (Final) States}:
+        The new DFA will accept a string if either of the original DFAs would accept it. Therefore, the set of final states \( F \) in the new DFA is defined as:
+        \[
+            F = \{ (q_1, q_2) \mid q_1 \in F_1 \ \text{or} \ q_2 \in F_2 \}
+        \]
+        This means that if either \( q_1 \) is a final state in \( D_1 \), or \( q_2 \) is a final state in \( D_2 \), the pair \( (q_1, q_2) \) is a final state in the new DFA.
+        \bigbreak \noindent 
+        \textbf{Note:} It is possible in the new DFA (constructed as the union of two DFAs) to have states that are unreachable—meaning there are states in the DFA that cannot be reached from the start state. This typically happens because, in the product construction, we generate all possible pairs of states from the two original DFAs, but not all of these pairs are necessarily reachable.
+        \bigbreak \noindent 
+        The union of two finite automata (FAs) is useful for constructing a new automaton that recognizes any string accepted by either of the two original automata. This has several practical applications in theoretical computer science and programming:
+    \item \textbf{Finding the intersection of two DFA's}: The process is basically the same as finding the union, but it differs in how we define the accepting states in the new machine, the accepting states will be
+        \begin{align*}
+            T = \{(q_{1},q_{2}):\ q_{1} \in T_{1} \text{ and } q_{2} \in T_{2}\}
+        .\end{align*}
+        \bigbreak \noindent 
+        \textbf{Note:} The intersection of two DFAs is useful in various practical applications where you need to accept only the strings that satisfy the conditions or rules of both automata
+    \item \textbf{Concatenation of two DFA's}: The process is simple
+        \bigbreak \noindent 
+        For two machines $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1})$, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2})$ 
+        \begin{enumerate}
+            \item Connect the final states of the first machine to the start state of the second machine (With $\epsilon$-transitions)
+            \item Clear $T_{1}$, There are no more final states in the first machine
+            \item Convert $\epsilon$-NFA to DFA
+        \end{enumerate}
+        \textbf{Note:} The concatenation of two DFAs has practical uses in many scenarios where the language of interest is the concatenation of two sublanguages. Concatenating two DFAs allows you to recognize strings that can be divided into two parts, where the first part is recognized by one DFA and the second part is recognized by the other.
+    \item \textbf{Finding the union of two NFA's}:
+        taking the union of two nondeterministic finite automata (NFAs) involves constructing a new NFA that accepts any string that is accepted by either of the original NFAs. This process can be done by creating a new NFA that combines the two original NFAs. 
+        \bigbreak \noindent 
+        Given $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1}) $, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2}) $
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item \textbf{New start state}: Start by defining a new start state $q^{\prime}_{0}$, this state will have $\epsilon$ transitions to the start states of both machines.
+            \item \textbf{Define $Q^{\prime}$, the new set of states}: The new set of states will be the set of all states in $M_1$, and it will include all the states in $M_2$, along with the new start state. Thus,
+                \begin{align*}
+                    Q^{\prime} = Q_{1} \cup Q_{2} \cup \{q^{\prime}_{0}\}
+                .\end{align*}
+            \item \textbf{Define the transition function}: The transition function $\delta^{\prime}$ of the new NFA will include:
+                \begin{itemize}
+                    \item All the transitions of $M_{1}$ and $M_{2}$
+                    \item Two $\epsilon$ transitions from the new start state to the start states of the two original machines $q_{0_{1}}$ and $q_{0_{2}}$. Thus,
+                        \begin{align*}
+                            \delta^{\prime}(q_{0}^{\prime}, \epsilon) = \{q_{0_{1}}, q_{0_{2}}\}
+                        .\end{align*}
+                \end{itemize}
+            \item \textbf{Define the set of accepting states}: The set of accepting states will be
+                \begin{align*}
+                    T^{\prime} = T_{1} \cup T_{2}
+                .\end{align*}
+        \end{enumerate}
+        \pagebreak \bigbreak \noindent 
+        \textbf{Example:}
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine10}
+            \label{fig:machine10}
+        \end{figure}
+        \bigbreak \noindent 
+        $M_1 \cup M_2$ is then
+        \begin{figure}[ht]
+            \centering
+            \incfig{machine11}
+            \label{fig:machine11}
+        \end{figure}
+        \pagebreak \bigbreak \noindent 
+    \item \textbf{Finding the intersection of two NFA's}: 
+        For NFAs, intersection is more complex because NFAs are nondeterministic and don’t handle intersection naturally. Typically, you convert the NFAs to DFAs and then apply the DFA product construction
+    \item \textbf{Concatenation of two NFA's}: The process is the same as with two DFA's (see above), but you don't need to convert to a DFA at the end.
+    % \item \textbf{Convert DFA into RE}: To convert a DFA (Deterministic Finite Automaton) into a Regular Expression (RE), you can use the state elimination method or generalized transition automaton method. This process works by gradually reducing the DFA's states and transitions until only a regular expression representing the entire language remains.
+    %     \bigbreak \noindent 
+    %     Given a DFA $M(Q, \Sigma, \delta, q_{0}, F)$, the goal is to find a regular expression that represents the language recognized by this DFA.
+    %     \bigbreak \noindent 
+    %     \textbf{Process:}
+    %     \begin{enumerate}
+    %         \item \textbf{Add a new Start and accept state}:
+    %             \begin{itemize}
+    %                 \item Add a new start state \( q_s \) with an \(\epsilon\)-transition (empty string) to the original start state \( q_0 \). 
+    %                     \bigbreak \noindent 
+    %                     \textbf{Note:} Once you add the new start state \( q_s \) with an \(\epsilon\)-transition to the original start state \( q_0 \), \( q_0 \) is no longer considered the start state. Instead, \( q_0 \) becomes just another intermediate state in the automaton. The new start state is \( q_s \), and it immediately transitions to \( q_0 \) without consuming any input (via the \(\epsilon\)-transition).
+    %                 \item Add a new accept state \( q_f \) and add \(\epsilon\)-transitions from each of the original accept states to this new accept state \( q_f \).
+    %                     \bigbreak \noindent 
+    %                     \textbf{Note:} Similarly, when you add the new accept state \( q_f \) and connect it via \(\epsilon\)-transitions from the original final states in \( F \), the original final states are no longer considered final states in the sense of marking the end of a string's acceptance. Now, the new final state \( q_f \) serves as the sole final state, and the automaton reaches \( q_f \) via \(\epsilon\)-transitions from the original final states.
+    %             \end{itemize}
+    %             These new states simplify the process because now there's exactly one start state and one accept state.
+    %         \item \textbf{Eliminate States One by One}:
+    %             \begin{itemize}
+    %                 \item The idea is to progressively eliminate states from the DFA while updating the transitions between the remaining states with regular expressions.
+    %                 \item Every time you eliminate a state $r$, you need to update the regular expressions on the transitions between the remaining states to account for the paths that go through $r$.
+    %             \end{itemize}
+    %             For any three states \( p \), \( r \), and \( q \), if there is a path from \( p \) to \( q \) that goes through \( r \), the new transition after eliminating \( r \) will include the regular expression:
+    %             \[
+    %                 R(p \rightarrow q) = R(p \rightarrow q) + R(p \rightarrow r) R(r \rightarrow r)^* R(r \rightarrow q)
+    %             \]
+    %             \pagebreak \bigbreak \noindent 
+    %             Where:
+    %             \begin{itemize}
+    %                 \item \( R(p \rightarrow q) \) is the regular expression for the direct transition from \( p \) to \( q \).
+    %                 \item \( R(p \rightarrow r) \) is the regular expression for the transition from \( p \) to \( r \).
+    %                 \item \( R(r \rightarrow r) \) is the regular expression for the loop on state \( r \).
+    %                 \item \( R(r \rightarrow q) \) is the regular expression for the transition from \( r \) to \( q \).
+    %                 \item \( + \) represents union, and \( * \) represents the Kleene star (zero or more repetitions).
+    %             \end{itemize}
+    %             \bigbreak \noindent 
+    %             After updating the transitions, remove the state \( r \).
+    %             \bigbreak \noindent 
+    %         \item \textbf{Repeat the Elimination Until Only Two States Remain}:
+    %             Continue eliminating states and updating the transitions until only two states remain: the start state \( q_s \) and the new accept state \( q_f \).
+    %             \bigbreak \noindent 
+    %             At this point, the regular expression on the transition from \( q_s \) to \( q_f \) represents the language of the DFA.
+    %     \end{enumerate}
+    %     \bigbreak \noindent 
+    %     \textbf{Example}: For the alphabet $\Sigma = \{0,1\}$, let's take the machine that accepts the strings with any number of ones, but the total number of zero's must be odd, and convert it to a RE.
+    %     \begin{figure}[ht]
+    %         \centering
+    %         \incfig{machine1}
+    %         \label{fig:machine1}
+    %     \end{figure}
+    %     \bigbreak \noindent 
+    %     Let's start by making the new start and end states
+    %     \pagebreak \bigbreak \noindent 
+    %     \begin{figure}[ht]
+    %         \centering
+    %         \incfig{machine4}
+    %         \label{fig:machine4}
+    %     \end{figure}
+    %     \bigbreak \noindent 
+    %     Now we start eliminating states, note that it does not matter in which order we eliminate the states, but for this example we will begin by eliminating state $A$. To get from the start state $q_{0}$ to state $B$, we need to pass through $A$, to get from $A$ to $B$, we can have any number of $1's$ followed by a zero which takes us to be. Thus, the transition from $q_{0}$ to $B$ is the regular expression $1^{*}0$
+    %     \bigbreak \noindent 
+    %     We also have to consider the original transition from $B$ to $A$, and then back to $B$, for this we have the RE $01^{*}0$. Thus the machine becomes
+    %     \bigbreak \noindent 
+    %     \begin{figure}[ht]
+    %         \centering
+    %         \incfig{machine9}
+    %         \label{fig:machine9}
+    %     \end{figure}
+    %     \bigbreak \noindent 
+    %     To eliminate $B$, we need to consider the transitions through $B$ ie from $q_{0}$ to $q_{f}$. We know to get from $q_{0}$ to $B$ we have the RE $1^{*}0$, then from $B$ to $q_{f}$ we have $(1 + 01^{*}0)^{*} $. Thus, the transition for $q_{0}$ to $q_{f}$ is $1^{*}0(1 + 1^{*}01^{*}0)^{*} $. And the final machine with only one regular expression is 
+    %     \begin{figure}[ht]
+    %         \centering
+    %         \incfig{machine8}
+    %         \label{fig:machine8}
+    %     \end{figure}
+    %     \pagebreak 
+%     \item \textbf{Convert RE to NFA}: Before we begin, recall order of operations (From highest to lowest )
+%         \begin{enumerate}
+%             \item Parenthesis  
+%             \item Kleene star
+%             \item Concatenation
+%             \item Union (+ or \|)
+%         \end{enumerate}
+%         Let's consider the regular expression $aa(a+b)^{*}bb$
+%         \begin{enumerate}
+%             \item We start by defining simple NFA's for each symbol ($a$ and $b$)
+%         \end{enumerate}
+%         \begin{figure}[ht]
+%             \centering
+%             \incfig{machine12}
+%             \label{fig:machine12}
+%         \end{figure}
+%         \bigbreak \noindent 
+%         Then, by precedence, we design an NFA for inside the parenthesis, and then for the kleene star of the parenthesis. To make the NFA for $a + b$, we follow the rules for the union of two NFAs
+%         \bigbreak \noindent 
+%     \begin{figure}[ht]
+%         \centering
+%         \incfig{machine13}
+%         \label{fig:machine13}
+%     \end{figure}
+%     \bigbreak \noindent 
+%     In order to take the kleen star of this machine, we need to allow for zero or more repetitions. Thus,
+%     \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine14}
+%     \label{fig:machine14}
+% \end{figure}
+% \bigbreak \noindent 
+% Now we create two more NFA's, one for $aa$, and one for $bb$
+% \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine15}
+%     \label{fig:machine15}
+% \end{figure}
+% \pagebreak \bigbreak \noindent 
+% Now, we combine them all using the logic of concatenation. The final product is then
+% \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{machine17}
+%     \label{fig:machine17}
+% \end{figure}
+% \bigbreak \noindent 
+% Notice we added the extra epsilon transition (pink), this is to bypass the kleene star if the choice of zero occurences is executed.
+%
+
+
+    \pagebreak 
+    \item \textbf{Properties of union, intersect, and concatenation for two FA's}: the properties of union, intersection, and concatenation for finite automata (FAs) are directly tied to the properties of regular languages.
+        \bigbreak \noindent 
+        \textbf{Union of two FA}
+        \begin{itemize}
+            \item \textbf{Closure}: The class of regular languages (those recognized by FA) is closed under union. This means the union of two regular languages is also regular, and there exists an FA that recognizes the union of the languages.
+            \item \textbf{Commutative:} Union is commutative for FA, meaning the order of combining automata does not matter.
+            \item \textbf{Associative:} Union is associative, so it doesn't matter how automata are grouped when performing multiple unions.
+            \item \textbf{Distributive over Intersection} Union distributes over intersection for regular languages, just as with sets.
+        \end{itemize}
+        \textbf{Intersection of two FA}
+        \begin{itemize}
+            \item \textbf{Closure:} The class of regular languages is also closed under intersection, meaning there is always an FA (typically constructed as a DFA) that recognizes the intersection of two regular languages.
+            \item \textbf{Commutative:} Intersection is commutative, meaning the order of combining automata doesn't matter.
+            \item \textbf{Associative:} Intersection is associative, so the grouping doesn't matter.
+            \item \textbf{Distributive over Union:} Intersection distributes over union for regular languages, just as with sets.
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Concatenation}
+        \begin{itemize}
+            \item \textbf{Closure:} Regular languages are closed under concatenation.
+            \item \textbf{Associativity:} Concatenation is associative. This means that the way in which you group the automata when performing concatenation doesn't matter. 
+            \item \textbf{Identity Element:} The identity element for concatenation is the language that contains only the empty string,
+                \begin{align*}
+                    L(A)  \cdot \{\epsilon\} = L(A)
+                .\end{align*}
+            \item \textbf{Distributivity Over Union:} Concatenation distributes over union. This means:
+                \begin{align*}
+                    L(A) \cdot (L(B) \cup (L(C)) = L(A) \cdot L(B)) \cup (L(A) \cdot L(C))
+                .\end{align*}
+            \item \textbf{Concatenation with the Empty Set:} Concatenating any language with the empty set results in the empty set. This is because there are no strings to concatenate if one of the languages is empty:
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Not commutative}
+
+
+
+
+
+
+    \end{itemize}
+
+        \pagebreak 
     \subsubsection{Regular expressions}
     \begin{itemize}
         \item \textbf{RE}: A RE corresponds to a set of strings; that is, a RE describes a language
@@ -691,7 +1168,7 @@ We use $M_{1}$ to construct new NFA with $\epsilon$-move $M$ that accepts $r^{*}
     \item Change $M_{1}$'s accepting state to a non accepting state.
 \end{enumerate}
 
-    \item \textbf{RE to NFA conversion: Special cases}: Recall the special case with regular expressions, the empty language $\Phi$ – and how it behaved with the three regular expression operators;
+\item \textbf{RE to NFA conversion: Special cases}: Recall the special case with regular expressions, the empty language $\Phi$ – and how it behaved with the three regular expression operators;
     \begin{enumerate}
         \item $\Phi L  = L\Phi = \Phi\Phi = \Phi$\ $\forall L$
         \item $L + \Phi = \Phi + L = L $
@@ -702,11 +1179,11 @@ We use $M_{1}$ to construct new NFA with $\epsilon$-move $M$ that accepts $r^{*}
     \pagebreak \bigbreak \noindent 
     We can now check these operations using the algorithm with $\Phi $. First, we define the base case NFA's
     \bigbreak \noindent 
-\begin{figure}[ht]
-    \centering
-    \incfig{base}
-    \label{fig:base}
-\end{figure}
+    \begin{figure}[ht]
+        \centering
+        \incfig{base}
+        \label{fig:base}
+    \end{figure}
     \bigbreak \noindent 
     \begin{enumerate}
         \item Confirming $L+\Phi = \Phi+L= L$ and $\Phi+\Phi = \Phi$:
@@ -719,501 +1196,122 @@ We use $M_{1}$ to construct new NFA with $\epsilon$-move $M$ that accepts $r^{*}
             \pagebreak 
         \item Confirming $\Phi L = L\Phi = \Phi\Phi = \Phi$
             \bigbreak \noindent 
-\begin{figure}[ht]
-    \centering
-    \incfig{base6}
-    \label{fig:base6}
-\end{figure}
+            \begin{figure}[ht]
+                \centering
+                \incfig{base6}
+                \label{fig:base6}
+            \end{figure}
         \item Confirming $\Phi^{*} = \{\epsilon\}$
             \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{base7}
+                \label{fig:base7}
+            \end{figure}
+    \end{enumerate}
+
+    \item \textbf{Convert NFA-$\epsilon$ to RE}:
+        If necessary, first modify the NFA with $\epsilon$-moves to satisfy these two conditions (i.e., conditions of this algorithm, not requirements of all NFA’s with $\epsilon$-moves);
+        \begin{enumerate}[label=\alph*)]
+            \item No transition may enter the start state – not even a loop. 
+            \item  If there exists even one accepting state, then there can be only one accepting state and no transition may leave that accepting state.
+        \end{enumerate}
+        \bigbreak \noindent 
+        \textbf{Note:} If there was no accepting state then do not create one, stop the algorithm, and output the regular expression $\varnothing$ to denote the empty language $\Phi$.
+        \bigbreak \noindent 
+        Then we start the algorithm. We need to convert the label on each transition to a regular expression until there is only two states, a start state and an accepting state, and all transitions between these two states are regular expressions. The final regular expression will be the union of all transitions.
+        \begin{enumerate}
+            \item  While there are more “middle” states (i.e., states that are neither the start state or accepting state)
+                \begin{enumerate}[label=(\roman*)]
+                    \item Select one of the remaining middle states.
+                    \item Bypass the middle state creating new transitions as necessary annotating each new transition with a regular expression.
+                    \item Remove the bypassed middle state.
+                \end{enumerate}
+            \item If there are any transitions between the start and accepting state, then the regular expression that accepts the same language as the original FA is the the union (i.e., “+”) of the regular expressions of all the transitions. 
+                \bigbreak \noindent 
+                If there are no transitions between the start and accepting state, then output the regular expression $\varnothing$ to denote the empty language $\Phi$.
+        \end{enumerate}
+        \bigbreak \noindent 
+        Recall the following from the definition of regular expressions;
+        \begin{enumerate}[label=(\roman*)]
+            \item \relax [base case]: $L$ is a regular expression and denotes the set $\{L\}$
+            \item  \relax [base case]: For each symbol $x\in\Sigma$, $x$ is a regular expression and denotes the set $\{x\}$
+            \item  \relax [recursive case]: $r+s$ is a regular expression denoting the set $R + S$, (i.e,. union of languages).                       
+        \end{enumerate}
+        \bigbreak \noindent 
+        We use those to covert every $\epsilon$ to a $\Lambda$, every symbol $x\in\Sigma$ to a regular expression of the same symbol, and every case comma-separated transition label to a regular expression with “+”.
+        \bigbreak \noindent 
+        After ensuring the FA abides by the start and end state conditions, and we convert every transition to the simple regular expressions, we begin eliminating states.
+        \bigbreak \noindent 
+        \textbf{Some notes:}
+        \begin{enumerate}[label=(\alph*)]
+            \item Regarding the middle states (states that are neither the start nor accepting state), it doesn't matter in which order we choose to eliminate them.
+            \item For each state we are eliminating, we count the number of incoming and outgoing transitions (loops don't add to the count but we still need to take care of them with the regular expressions), there will be a new regular expression transition for all combinations of outgoing and incoming transitions. Ie pick a state to eliminate, then
+                \begin{align*}
+                    \text{New RE transitions} = N(\text{outgoing}) \times N(\text{incoming}) 
+                .\end{align*}
+                Not including the loops
+        \end{enumerate}
+        \pagebreak \bigbreak \noindent 
+        \textbf{Example:} Consider the NFA-$\epsilon$
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{re1}
+            \label{fig:re1}
+        \end{figure}
+        \bigbreak \noindent 
+        Before we begin eliminating states, we see that this FA does not obey the two constraints described above. So, we create a new accepting state such that there is only one accepting state. Each old accepting state has $\epsilon$ transitions to this new accepting state. This FA has no incoming transitions to the start state so nothing to fix there.
+        \bigbreak \noindent 
+        \begin{figure}[ht]
+            \centering
+            \incfig{re2}
+            \label{fig:re2}
+        \end{figure}
+        \bigbreak \noindent 
+        Now, we start eliminating states one at a time. We recall that it does not matter the order in which we eliminate them.
+        \bigbreak \noindent 
+        We start by eliminating state $X$. There is one incoming transition and one outgoing transition. Thus, there is $1\times 1 = 1$ new transition. To get from the start state, through $X$, to the accepting state, the regular expression is $aa^{*}\Lambda = aa^{*}$. Thus,
+        \bigbreak \noindent 
 \begin{figure}[ht]
     \centering
-    \incfig{base7}
-    \label{fig:base7}
+    \incfig{re3}
+    \label{fig:re3}
 \end{figure}
-    \end{enumerate}
-
-
-
-
-
-    \end{itemize}
-
-    \pagebreak 
-    \subsubsection{nondeterministic Finite automata (NFA)}
-    \begin{itemize}
-        \item \textbf{NFA definition}:
-            \begin{itemize}
-                \item If an automaton gets to a state where there is more than one possible transition corresponding to the symbol read from the tape, the automaton may  choose any of those paths. (nondeterminism) We say it \textbf{branches}
-                \item if an automaton gets to a state where there is no transition for the symbol read from the tape, then that path of the automaton halts and rejects the string. We say it \textbf{dies}
-                \item the automaton accepts the input string if and only if there exists a choice of transitions that ends in an accept state.
-            \end{itemize}
-            \bigbreak \noindent 
-            \textbf{Example}: Consider this nondeterministic FA (NFA) over $\Sigma = \{0, 1\}$
-            \bigbreak \noindent 
-            \fig{.5}{./figures/32.png}
-        \item \textbf{DFA or NFA?}:
-            Consider the language $L$ over $\Sigma = \{a, b\}$ which is defined by
-            \begin{align*}
-                L = (a^{*}) + (ab)^{*}
-            .\end{align*}
-            \bigbreak \noindent 
-            \fig{.5}{./figures/33.png}
-        \item \textbf{NFA Formal definition}: We define an NFA $M(Q, \Sigma, q_{0}, T, \delta) $
-            \begin{itemize}
-                \item $Q$ is a finite set of states
-                \item $\Sigma$ is an alphabet of input symbols
-                \item $q_0 \in Q$ is the start state
-                \item $T \subseteq Q$ is the set of accepting states
-                \item $\delta$ is the transition function $\delta: Q \times \Sigma \to P(Q)$
-            \end{itemize}
-        \item \textbf{Transition function, DFA vs NFA}:
-            \bigbreak \noindent 
-            \fig{.5}{./figures/34.png}
-        \item \textbf{NFA with $\epsilon$-transitions}: $\epsilon$-transitions allow the automaton to change state without
-            consuming an input symbol
-            \bigbreak \noindent 
-            Changing states without consuming input symbols can go on arbitrarily long as there are $\epsilon$-transitions to traverse.
-        \item \textbf{DFA or NFA with $\epsilon$-moves?}: Consider the language L over $\Sigma = \{a, b\}$ which is
-            \begin{align*}
-                L = (b^{*}a) + (a^{*}b)
-            .\end{align*}
-            \bigbreak \noindent 
-            \fig{.5}{./figures/35.png}
-        \item \textbf{NFA with $\epsilon$-transitions formal definition}: Everything is the same except for the transition function, we now have
-            \begin{align*}
-                \delta:\ Q \times (\Sigma \cup \{\epsilon\}) \to \mathcal{P}(Q)
-            .\end{align*}
-            \pagebreak \bigbreak \noindent 
-        \item \textbf{$\delta$ – DFA, NFA, and NFA with $\epsilon$-moves}:
-            \bigbreak \noindent 
-            \fig{.35}{./figures/36.png}
-        \item \textbf{DFA, NFA, or NFA with $\epsilon$ moves, who can define the most languages?}: We begin by noting, by definition, every DFA is an NFA. This means that any language you can define with a DFA can also be defined by an NFA. Thus,
-            \begin{align*}
-                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA}
-            .\end{align*}
-            Also, by definition, every DFA is an NFA with $\epsilon$-moves, an NFA is an NFA with $\epsilon$ moves, even if it doesnt have any. Thus,
-            \begin{align*}
-                \text{Languages defined by DFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
-            .\end{align*}
-            \bigbreak \noindent 
-            But, by definition, every NFA is an NFA with $\epsilon$-moves. Thus,
-            \begin{align*}
-                \text{Languages defined by NFA} \subseteq \text{ Languages defined by NFA with $\epsilon$-moves}
-            .\end{align*}
-            \bigbreak \noindent 
-            This tells us that
-            \begin{itemize}
-                
-                \item NFAs are at least as powerful in defining languages as DFAs
-                \item NFAs with $\epsilon$-moves are at least as powerful in defining languages as DFAs and NFAs.
-            \end{itemize}
-            \bigbreak \noindent 
-            It turns out that these three are \textbf{equally} as powerful. We assert
-            \begin{align*}
-                &\text{Languages defined by DFA's} \\
-                &=\text{Languages defined by NFA's} \\
-                &=\text{Languages defined by NFA's with $\epsilon$-moves}
-            .\end{align*}
-            We prove this by showing an algorithm that converts any NFA with $\epsilon$-moves (or any NFA) to a DFA that accepts the exact same language
-            \bigbreak \noindent 
-            This means that there does not exist a language that can be defined by an NFA with $\epsilon$-moves (or NFA) that cannot also be defined by a DFA.
-        \item \textbf{$\epsilon$-closure}: Before we can look at the algorithm we must first define the $\epsilon$-closure of a set of states 
-            \bigbreak \noindent 
-            Given:
-            \begin{itemize}
-                \item an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $
-                \item Some set of states $S \subseteq Q$
-            \end{itemize}
-            \bigbreak \noindent 
-            \text{We define the } \varepsilon\text{-closure}(S) \text{ as the set of states that are reachable from the set of states } S \text{ using only zero or more } \varepsilon\text{-moves in } \delta.
-            \bigbreak \noindent 
-            \text{Note: it is always the case that } S \subseteq \varepsilon\text{-closure}(S)
-            \bigbreak \noindent 
-            The formal definition is
-            \begin{align*}
-                \epsilon-\text{closure}(q) = \{q\} \cup \{p:\ q \xrightarrow{\epsilon} p\}
-            .\end{align*}
-        \item \textbf{$\epsilon$-closure alternate notation}. 
-            \begin{align*}
-                \epsilon\text{-closure}(\{A\}) = \epsilon(\{A\}) = E(\{A\})
-            .\end{align*}
-        \item \textbf{$\epsilon$-closure of the empty set $\varnothing$}: The epsilon closure of the empty set is $\epsilon(\varnothing)  = \varnothing$
-        \item \textbf{Algorithm: Converting NFA with $\epsilon$-moves to DFA}: The algorithm constructs a new DFA $M^{\prime}(Q^{\prime}, \Sigma, q_{0}^{\prime}, T^{\prime}, \delta^{\prime}) $ From an NFA with $\epsilon$-moves $M(Q, \Sigma, q_{0}, T, \delta) $. $\Sigma$ will remain the same
-            \bigbreak \noindent 
-            Things to note about the conversion:
-            \begin{itemize}
-                \item Same alphabet $\Sigma $
-                \item Lose column $\epsilon$
-                \item Lose all nondeterminism
-                \item Lose all empty sets
-                \item Cell values change from sets of states to states
-            \end{itemize}
-            \bigbreak \noindent 
-            \textbf{Example}:
-            \textbf{Consider the following NFA with $\varepsilon$-moves M(Q, $\Sigma$, $q_0$, T, $\delta$) over $\Sigma = \{0, 1\}$ and its associated transition table $\delta$: Q $\times$ ($\Sigma \cup \{\varepsilon\}$) $\rightarrow$ P(Q)}
-            \bigbreak \noindent 
-            \[
-                \begin{array}{|c|c|c|c|}
-                    \hline
-                     & 0 & 1 & \varepsilon \\
-                    \hline
-                    X & \{Y\} & \{Y\} & \emptyset \\
-                    \hline
-                    Y & \{X, Z\} & \{Z\} & \{Z\} \\
-                    \hline
-                    Z & \emptyset & \{Y\} & \emptyset \\
-                    \hline
-                \end{array}
-            \]
-            \bigbreak \noindent 
-            Start by computing the $\epsilon$-closure of the start state in $\delta$.
-            \bigbreak \noindent 
-            \fig{.4}{./figures/37.png}
-            \bigbreak \noindent 
-            There is a subtle - but very important - point to be made here …
-            \bigbreak \noindent 
-            we cannot simply take the $\epsilon$-closure (a set) and use it to create a row in $\delta^{\prime}$ (which needs to be a state). What we do is create a label for the new state in $\delta^{\prime}$ that represents the set of states from $\delta$ and then add that new state to $\delta^{\prime}$
-            \bigbreak \noindent 
-            In this instance we represented the set of states $\{X\}$ by a single state whose label is $X^{\prime}$
-            \bigbreak \noindent 
-            We continue by filling the columns of the start state for each symbol $\Sigma = \{0, 1\}$
-            \bigbreak \noindent 
-            Processing $\delta'$ state $X'$ which represents the set of states $\{X\}$ in $M$:
-            \begin{itemize}
-                \item Processing input symbol 0 (process each state in $\{X\}$ using $\delta$):
-                    \begin{itemize}
-                        \item Process $X$
-                            \[
-                                \delta(X, 0) = \{Y\}
-                            \]
-                            \[
-                                \varepsilon\text{-closure}(\{Y\}) = \{Y, Z\}
-                            \]
-                    \end{itemize}
-            \end{itemize}
-    Since there are no more states in $\{X\}$ to process, we have finished processing the symbol 0 and have produced the set of states $\{Y, Z\}$.
-    \bigbreak \noindent 
-    We create a new state with label $Y'Z'$ (or $Z'Y'$, order does not matter) for $\delta'$ that represents $\{Y, Z\}$ in $M$ and define:
-    \[
-    \delta'(X', 0) = Y'Z'
-    \]
-    We note that $Y'Z'$ is a new state in $\delta'$ and so we create a new row for it in $\delta'$.
-    \bigbreak \noindent 
-    We continue this until we reach 
-    \bigbreak \noindent 
-    \fig{.8}{./figures/38.png}
-    \bigbreak \noindent 
-    Processing $\delta'$ state $Y'Z'$ which represents the set of states $\{Y, Z\}$ in $M$:
-    \begin{itemize}
-        \item Processing 0:
-            \begin{itemize}
-                \item Process $Y$
-                    \[
-                        \delta(Y, 0) = \{X, Z\}, \quad \varepsilon\text{-closure}(\{X, Z\}) = \{X, Z\}
-                    \]
-                \item Process $Z$
-                    \[
-                        \delta(Z, 0) = \emptyset, \quad \varepsilon\text{-closure}(\emptyset) = \emptyset
-                    \]
-            \end{itemize}
-    \end{itemize}
-    Here is our first instance of processing a state and symbol where the state in $\delta'$ represents multiple states in NFA $M$. When this happens, the set of states in NFA $M$ is computed by \textit{taking the union of the $\varepsilon$-closures}: $\{X, Z\} \cup \emptyset = \{X, Z\}$.
-    \bigbreak \noindent 
-    This produces a new label $X'Z'$ which we use to define:
-    \[
-        \delta'(X'Y', 0) = X'Z'
-    \]
-    and since $X'Z'$ is a new state, we add it to $\delta'$.
-    \bigbreak \noindent 
-    We continue this until we reach 
-    \bigbreak \noindent 
-    \fig{.8}{./figures/39.png}
-    \bigbreak \noindent 
-    A state in $M^{\prime}$ is an accepting state iff at least one of the states that it represents in $M$ is an accepting state … in this case $T^{\prime}= \{Y^{\prime}Z^{\prime}\}$.
-    \bigbreak \noindent 
-    We can now draw the new DFA 
-    \bigbreak \noindent 
-    \fig{.7}{./figures/40.png}
-    \bigbreak \noindent 
-    \textbf{Note:} If the closure or union of closures is the empty set, we do this
-    \bigbreak \noindent 
-    \fig{.7}{./figures/41.png}
-    \bigbreak \noindent 
-    This "emtpy" is a state and represents a garbage state, what goes does not leave.
-\item \textbf{Kleene's theorem revisited}: The following are equivalent for a language $L$
-    \begin{enumerate}
-        \item There is a DFA for $L$
-        \item There is an NFA for $L$
-        \item There is an RE for $L$
-    \end{enumerate}
-    \item \textbf{Union of two DFA's (cartesian product construction)}:
-        The process of finding the union of two deterministic finite automata (DFAs) involves creating a new DFA that accepts the union of the languages accepted by the original DFAs. This is done using a product construction (also called the Cartesian product construction), where you combine the states of both DFAs in a systematic way to ensure the resulting DFA accepts strings from either of the original DFAs.
-        \bigbreak \noindent 
-        Let’s say we have two DFAs:
-        \[
-            D_1 = (Q_1, \Sigma, \delta_1, q_1^{\text{start}}, F_1)
-        \]
-        that recognizes language \( L_1 \).
-        \[
-            D_2 = (Q_2, \Sigma, \delta_2, q_2^{\text{start}}, F_2)
-        \]
-        that recognizes language \( L_2 \).
-        \bigbreak \noindent 
-        \textbf{Create a New DFA State Set}:
-        \bigbreak \noindent 
-        \begin{itemize}
-            \item The states of the new DFA are pairs of states, one from each of the original DFAs. The new state set will be the Cartesian product \(Q_1 \times Q_2\), meaning every possible combination of a state from \(D_1\) and a state from \(D_2\).
-            \item If \(D_1\) has \(n\) states and \(D_2\) has \(m\) states, the new DFA will have \(n \times m\) states.
-        \end{itemize}
-        \bigbreak \noindent 
-        \textbf{Define the New Start State}:
-        \begin{itemize}
-            \item The new start state is \((q_1^{\text{start}}, q_2^{\text{start}})\), where \(q_1^{\text{start}}\) is the start state of \(D_1\) and \(q_2^{\text{start}}\) is the start state of \(D_2\).
-        \end{itemize}
-        \textbf{Define the New Transition Function:}
-        \begin{itemize}
-            \item The transition function \(\delta\) for the new DFA operates by taking an input symbol and applying the transition functions of both original DFAs in parallel.
-            \item For each input symbol \(a \in \Sigma\), the new DFA transitions from state \((q_1, q_2)\) to state \((\delta_1(q_1, a), \delta_2(q_2, a))\).
-            \item In other words, if \(q_1\) moves to \(q_1'\) on input \(a\) in \(D_1\), and \(q_2\) moves to \(q_2'\) on input \(a\) in \(D_2\), the new DFA will move from \((q_1, q_2)\) to \((q_1', q_2')\).
-        \end{itemize}
-        \bigbreak \noindent 
-        \textbf{Define the New Set of Accepting (Final) States}:
-        The new DFA will accept a string if either of the original DFAs would accept it. Therefore, the set of final states \( F \) in the new DFA is defined as:
-        \[
-            F = \{ (q_1, q_2) \mid q_1 \in F_1 \ \text{or} \ q_2 \in F_2 \}
-        \]
-        This means that if either \( q_1 \) is a final state in \( D_1 \), or \( q_2 \) is a final state in \( D_2 \), the pair \( (q_1, q_2) \) is a final state in the new DFA.
-        \bigbreak \noindent 
-        \textbf{Note:} It is possible in the new DFA (constructed as the union of two DFAs) to have states that are unreachable—meaning there are states in the DFA that cannot be reached from the start state. This typically happens because, in the product construction, we generate all possible pairs of states from the two original DFAs, but not all of these pairs are necessarily reachable.
-        \bigbreak \noindent 
-        The union of two finite automata (FAs) is useful for constructing a new automaton that recognizes any string accepted by either of the two original automata. This has several practical applications in theoretical computer science and programming:
-    \item \textbf{Finding the intersection of two DFA's}: The process is basically the same as finding the union, but it differs in how we define the accepting states in the new machine, the accepting states will be
-        \begin{align*}
-            T = \{(q_{1},q_{2}):\ q_{1} \in T_{1} \text{ and } q_{2} \in T_{2}\}
-        .\end{align*}
-        \bigbreak \noindent 
-        \textbf{Note:} The intersection of two DFAs is useful in various practical applications where you need to accept only the strings that satisfy the conditions or rules of both automata
-    \item \textbf{Concatenation of two DFA's}: The process is simple
-        \bigbreak \noindent 
-        For two machines $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1})$, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2})$ 
-        \begin{enumerate}
-            \item Connect the final states of the first machine to the start state of the second machine (With $\epsilon$-transitions)
-            \item Clear $T_{1}$, There are no more final states in the first machine
-            \item Convert $\epsilon$-NFA to DFA
-        \end{enumerate}
-        \textbf{Note:} The concatenation of two DFAs has practical uses in many scenarios where the language of interest is the concatenation of two sublanguages. Concatenating two DFAs allows you to recognize strings that can be divided into two parts, where the first part is recognized by one DFA and the second part is recognized by the other.
-    \item \textbf{Finding the union of two NFA's}:
-        taking the union of two nondeterministic finite automata (NFAs) involves constructing a new NFA that accepts any string that is accepted by either of the original NFAs. This process can be done by creating a new NFA that combines the two original NFAs. 
-        \bigbreak \noindent 
-        Given $M_{1}(Q_{1}, \Sigma, q_{0_{1}}, T_{1}, \delta_{1}) $, and $M_{2}(Q_{2}, \Sigma, q_{0_{2}}, T_{2}, \delta_{2}) $
-        \bigbreak \noindent 
-        \begin{enumerate}
-            \item \textbf{New start state}: Start by defining a new start state $q^{\prime}_{0}$, this state will have $\epsilon$ transitions to the start states of both machines.
-            \item \textbf{Define $Q^{\prime}$, the new set of states}: The new set of states will be the set of all states in $M_1$, and it will include all the states in $M_2$, along with the new start state. Thus,
-                \begin{align*}
-                    Q^{\prime} = Q_{1} \cup Q_{2} \cup \{q^{\prime}_{0}\}
-                .\end{align*}
-            \item \textbf{Define the transition function}: The transition function $\delta^{\prime}$ of the new NFA will include:
-                \begin{itemize}
-                    \item All the transitions of $M_{1}$ and $M_{2}$
-                    \item Two $\epsilon$ transitions from the new start state to the start states of the two original machines $q_{0_{1}}$ and $q_{0_{2}}$. Thus,
-                        \begin{align*}
-                            \delta^{\prime}(q_{0}^{\prime}, \epsilon) = \{q_{0_{1}}, q_{0_{2}}\}
-                        .\end{align*}
-                \end{itemize}
-            \item \textbf{Define the set of accepting states}: The set of accepting states will be
-                \begin{align*}
-                    T^{\prime} = T_{1} \cup T_{2}
-                .\end{align*}
-        \end{enumerate}
-        \pagebreak \bigbreak \noindent 
-        \textbf{Example:}
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine10}
-            \label{fig:machine10}
-        \end{figure}
-        \bigbreak \noindent 
-        $M_1 \cup M_2$ is then
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine11}
-            \label{fig:machine11}
-        \end{figure}
-        \pagebreak \bigbreak \noindent 
-    \item \textbf{Finding the intersection of two NFA's}: 
-        For NFAs, intersection is more complex because NFAs are nondeterministic and don’t handle intersection naturally. Typically, you convert the NFAs to DFAs and then apply the DFA product construction
-    \item \textbf{Concatenation of two NFA's}: The process is the same as with two DFA's (see above), but you don't need to convert to a DFA at the end.
-    \item \textbf{Convert DFA into RE}: To convert a DFA (Deterministic Finite Automaton) into a Regular Expression (RE), you can use the state elimination method or generalized transition automaton method. This process works by gradually reducing the DFA's states and transitions until only a regular expression representing the entire language remains.
-        \bigbreak \noindent 
-        Given a DFA $M(Q, \Sigma, \delta, q_{0}, F)$, the goal is to find a regular expression that represents the language recognized by this DFA.
-        \bigbreak \noindent 
-        \textbf{Process:}
-        \begin{enumerate}
-            \item \textbf{Add a new Start and accept state}:
-                \begin{itemize}
-                    \item Add a new start state \( q_s \) with an \(\epsilon\)-transition (empty string) to the original start state \( q_0 \). 
-                        \bigbreak \noindent 
-                        \textbf{Note:} Once you add the new start state \( q_s \) with an \(\epsilon\)-transition to the original start state \( q_0 \), \( q_0 \) is no longer considered the start state. Instead, \( q_0 \) becomes just another intermediate state in the automaton. The new start state is \( q_s \), and it immediately transitions to \( q_0 \) without consuming any input (via the \(\epsilon\)-transition).
-                    \item Add a new accept state \( q_f \) and add \(\epsilon\)-transitions from each of the original accept states to this new accept state \( q_f \).
-                        \bigbreak \noindent 
-                        \textbf{Note:} Similarly, when you add the new accept state \( q_f \) and connect it via \(\epsilon\)-transitions from the original final states in \( F \), the original final states are no longer considered final states in the sense of marking the end of a string's acceptance. Now, the new final state \( q_f \) serves as the sole final state, and the automaton reaches \( q_f \) via \(\epsilon\)-transitions from the original final states.
-                \end{itemize}
-                These new states simplify the process because now there's exactly one start state and one accept state.
-            \item \textbf{Eliminate States One by One}:
-                \begin{itemize}
-                    \item The idea is to progressively eliminate states from the DFA while updating the transitions between the remaining states with regular expressions.
-                    \item Every time you eliminate a state $r$, you need to update the regular expressions on the transitions between the remaining states to account for the paths that go through $r$.
-                \end{itemize}
-                For any three states \( p \), \( r \), and \( q \), if there is a path from \( p \) to \( q \) that goes through \( r \), the new transition after eliminating \( r \) will include the regular expression:
-                \[
-                    R(p \rightarrow q) = R(p \rightarrow q) + R(p \rightarrow r) R(r \rightarrow r)^* R(r \rightarrow q)
-                \]
-                \pagebreak \bigbreak \noindent 
-                Where:
-                \begin{itemize}
-                    \item \( R(p \rightarrow q) \) is the regular expression for the direct transition from \( p \) to \( q \).
-                    \item \( R(p \rightarrow r) \) is the regular expression for the transition from \( p \) to \( r \).
-                    \item \( R(r \rightarrow r) \) is the regular expression for the loop on state \( r \).
-                    \item \( R(r \rightarrow q) \) is the regular expression for the transition from \( r \) to \( q \).
-                    \item \( + \) represents union, and \( * \) represents the Kleene star (zero or more repetitions).
-                \end{itemize}
-                \bigbreak \noindent 
-                After updating the transitions, remove the state \( r \).
-                \bigbreak \noindent 
-            \item \textbf{Repeat the Elimination Until Only Two States Remain}:
-                Continue eliminating states and updating the transitions until only two states remain: the start state \( q_s \) and the new accept state \( q_f \).
-                \bigbreak \noindent 
-                At this point, the regular expression on the transition from \( q_s \) to \( q_f \) represents the language of the DFA.
-        \end{enumerate}
-        \bigbreak \noindent 
-        \textbf{Example}: For the alphabet $\Sigma = \{0,1\}$, let's take the machine that accepts the strings with any number of ones, but the total number of zero's must be odd, and convert it to a RE.
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine1}
-            \label{fig:machine1}
-        \end{figure}
-        \bigbreak \noindent 
-        Let's start by making the new start and end states
-        \pagebreak \bigbreak \noindent 
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine4}
-            \label{fig:machine4}
-        \end{figure}
-        \bigbreak \noindent 
-        Now we start eliminating states, note that it does not matter in which order we eliminate the states, but for this example we will begin by eliminating state $A$. To get from the start state $q_{0}$ to state $B$, we need to pass through $A$, to get from $A$ to $B$, we can have any number of $1's$ followed by a zero which takes us to be. Thus, the transition from $q_{0}$ to $B$ is the regular expression $1^{*}0$
-        \bigbreak \noindent 
-        We also have to consider the original transition from $B$ to $A$, and then back to $B$, for this we have the RE $01^{*}0$. Thus the machine becomes
-        \bigbreak \noindent 
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine9}
-            \label{fig:machine9}
-        \end{figure}
-        \bigbreak \noindent 
-        To eliminate $B$, we need to consider the transitions through $B$ ie from $q_{0}$ to $q_{f}$. We know to get from $q_{0}$ to $B$ we have the RE $1^{*}0$, then from $B$ to $q_{f}$ we have $(1 + 01^{*}0)^{*} $. Thus, the transition for $q_{0}$ to $q_{f}$ is $1^{*}0(1 + 1^{*}01^{*}0)^{*} $. And the final machine with only one regular expression is 
-        \begin{figure}[ht]
-            \centering
-            \incfig{machine8}
-            \label{fig:machine8}
-        \end{figure}
-        \pagebreak 
-%     \item \textbf{Convert RE to NFA}: Before we begin, recall order of operations (From highest to lowest )
-%         \begin{enumerate}
-%             \item Parenthesis  
-%             \item Kleene star
-%             \item Concatenation
-%             \item Union (+ or \|)
-%         \end{enumerate}
-%         Let's consider the regular expression $aa(a+b)^{*}bb$
-%         \begin{enumerate}
-%             \item We start by defining simple NFA's for each symbol ($a$ and $b$)
-%         \end{enumerate}
-%         \begin{figure}[ht]
-%             \centering
-%             \incfig{machine12}
-%             \label{fig:machine12}
-%         \end{figure}
-%         \bigbreak \noindent 
-%         Then, by precedence, we design an NFA for inside the parenthesis, and then for the kleene star of the parenthesis. To make the NFA for $a + b$, we follow the rules for the union of two NFAs
-%         \bigbreak \noindent 
-%     \begin{figure}[ht]
-%         \centering
-%         \incfig{machine13}
-%         \label{fig:machine13}
-%     \end{figure}
-%     \bigbreak \noindent 
-%     In order to take the kleen star of this machine, we need to allow for zero or more repetitions. Thus,
-%     \bigbreak \noindent 
-% \begin{figure}[ht]
-%     \centering
-%     \incfig{machine14}
-%     \label{fig:machine14}
-% \end{figure}
-% \bigbreak \noindent 
-% Now we create two more NFA's, one for $aa$, and one for $bb$
-% \bigbreak \noindent 
-% \begin{figure}[ht]
-%     \centering
-%     \incfig{machine15}
-%     \label{fig:machine15}
-% \end{figure}
-% \pagebreak \bigbreak \noindent 
-% Now, we combine them all using the logic of concatenation. The final product is then
-% \bigbreak \noindent 
-% \begin{figure}[ht]
-%     \centering
-%     \incfig{machine17}
-%     \label{fig:machine17}
-% \end{figure}
-% \bigbreak \noindent 
-% Notice we added the extra epsilon transition (pink), this is to bypass the kleene star if the choice of zero occurences is executed.
-%
-
-
-    \pagebreak 
-    \item \textbf{Properties of union, intersect, and concatenation for two FA's}: the properties of union, intersection, and concatenation for finite automata (FAs) are directly tied to the properties of regular languages.
-        \bigbreak \noindent 
-        \textbf{Union of two FA}
-        \begin{itemize}
-            \item \textbf{Closure}: The class of regular languages (those recognized by FA) is closed under union. This means the union of two regular languages is also regular, and there exists an FA that recognizes the union of the languages.
-            \item \textbf{Commutative:} Union is commutative for FA, meaning the order of combining automata does not matter.
-            \item \textbf{Associative:} Union is associative, so it doesn't matter how automata are grouped when performing multiple unions.
-            \item \textbf{Distributive over Intersection} Union distributes over intersection for regular languages, just as with sets.
-        \end{itemize}
-        \textbf{Intersection of two FA}
-        \begin{itemize}
-            \item \textbf{Closure:} The class of regular languages is also closed under intersection, meaning there is always an FA (typically constructed as a DFA) that recognizes the intersection of two regular languages.
-            \item \textbf{Commutative:} Intersection is commutative, meaning the order of combining automata doesn't matter.
-            \item \textbf{Associative:} Intersection is associative, so the grouping doesn't matter.
-            \item \textbf{Distributive over Union:} Intersection distributes over union for regular languages, just as with sets.
-        \end{itemize}
-        \bigbreak \noindent 
-        \textbf{Concatenation}
-        \begin{itemize}
-            \item \textbf{Closure:} Regular languages are closed under concatenation.
-            \item \textbf{Associativity:} Concatenation is associative. This means that the way in which you group the automata when performing concatenation doesn't matter. 
-            \item \textbf{Identity Element:} The identity element for concatenation is the language that contains only the empty string,
-                \begin{align*}
-                    L(A)  \cdot \{\epsilon\} = L(A)
-                .\end{align*}
-            \item \textbf{Distributivity Over Union:} Concatenation distributes over union. This means:
-                \begin{align*}
-                    L(A) \cdot (L(B) \cup (L(C)) = L(A) \cdot L(B)) \cup (L(A) \cdot L(C))
-                .\end{align*}
-            \item \textbf{Concatenation with the Empty Set:} Concatenating any language with the empty set results in the empty set. This is because there are no strings to concatenate if one of the languages is empty:
-        \end{itemize}
-        \bigbreak \noindent 
-        \textbf{Not commutative}
+\bigbreak \noindent 
+Next, we choose to eliminate state $Z$. We have one incoming and two outgoing transitionss. Thus, we have $1\times 2  = 2$ new regular expression transitions. To get from $Y$ through $Z$ to the accepting state, the RE is $b\epsilon =  b$. To go from $Y$ through $Z$ back to $Y$, we have $ba$. Thus
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{re4}
+    \label{fig:re4}
+\end{figure}
+\bigbreak \noindent 
+Finally, we eliminate $Y$. To get from the start state, through $Y$, to the accepting state, the regular expression is $a(ba)^{*}b$. Thus, 
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{re5}
+    \label{fig:re5}
+\end{figure}
+\bigbreak \noindent 
+The final regular expression is then 
+\begin{align*}
+    aa^{*} + \epsilon + a(ba)^{*}b
+.\end{align*}
+\blacksquare
 
 
 
 
 
 
-    \end{itemize}
+
+
+
+
+\end{itemize}
+
 
 
     \pagebreak 
@@ -2735,10 +2833,52 @@ values to zero
    %
    % \pagebreak \bigbreak \noindent 
 
+   \pagebreak 
+   \subsubsection{STL Function Objects}
+   \bigbreak \noindent 
+   Functional arguments for algorithms don’t have to be functions. As seen with lambdas, functional arguments can be objects that behave like functions. Such an object is called a function object, or functor. Instead of using a lambda, you can define a function object as an object of a class that provides a function call operator
+   \bigbreak \noindent 
+   Function objects are another example of the power of generic programming and the concept of pure
+   abstraction. You could say that anything that behaves like a function is a function. So, if you define
+   an object that behaves as a function, it can be used like a function.
+   \bigbreak \noindent 
+   So, what is the behavior of a function? A functional behavior is something that you can call by
+   using parentheses and passing arguments
+   \bigbreak \noindent 
+   All you have to do is define operator () with the appropriate parameter types:
+   \bigbreak \noindent 
+   \begin{cppcode}
+       class c {
+           public:
+           void operator() (int x) {
+               cout << "The value is: " << x << endl;
+           }
+       };
+
+       c c1;
+       c1(2); // Call the object as a function
+
+       vector<int> v({1,2,3});
+       std::for_each(b(v), e(v), c()); // Use function object for algorithms
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \paragraph{Why?}
+   \bigbreak \noindent \bigbreak \noindent 
+   You may be wondering what all this is good for. You might even think that function objects look
+strange, nasty, or nonsensical. It is true that they do complicate code. However, function objects are
+more than functions, and they have some advantages:
+\begin{enumerate}
+    \item Function objects are “functions with state.” Objects that behave like pointers are smart pointers. This is similarly true for objects that behave like functions: They can be “smart functions” because they may have abilities beyond operator (). Function objects may have other member functions and attributes. This means that function objects have a state. In fact, the same functionality, represented by two different function objects of the same type, may have different states at the same time. This is not possible for ordinary functions. Another advantage of function objects is that you can initialize them at runtime before you use/call them.
+    \item Each function object has its own type. Ordinary functions have different types only when their signatures differ. However, function objects can have different types even when their signatures are the same. In fact, each functional behavior defined by a function object has its own type. This is a significant improvement for generic programming using templates because you can pass functional behavior as a template parameter. Doing so enables containers of different types to use the same kind of function object as a sorting criterion, ensuring that you don’t assign, combine, or compare collections that have different sorting criteria. You can even design hierarchies of function objects so that you can, for example, have different, special kinds of one general criterion.
+\item Function objects are usually faster than ordinary functions. The concept of templates usually allows better optimization because more details are defined at compile time. Thus, passing function objects instead of ordinary functions often results in better performance.
+\end{enumerate}
+
 
 
     \pagebreak 
     \unsect{Databases}
+
     \bigbreak \noindent 
     \subsection{Introduction to databases (db concepts)}
     \bigbreak \noindent 
@@ -3700,6 +3840,205 @@ indicate which strong entity the weak entity depends upon.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsection{MariaDB, SQL}
+    \begin{itemize}
+        \item \textbf{DDL}:
+            \begin{itemize}
+                \item CREATE TABLE
+                \item ALTER TABLE
+                \item DROP TABLE
+            \end{itemize}
+        \item \textbf{DML}:
+            \begin{itemize}
+                \item INSERT 
+                \item UPDATE
+                \item DELETE
+            \end{itemize}
+        \item \textbf{MariaDB navigation}:
+            \begin{itemize}
+                \item \textbf{USE <x>}: select the database <x>
+                \item \textbf{SHOW TABLES} list all of the tables in the current database
+                \item \textbf{DESCRIBE <x>} show the properties of each column of table <x>
+                \item \textbf{SHOW CREATE TABLE} <x> show a CREATE TABLE statement that can be used to reconstruct table <x>
+            \end{itemize}
+        \item \textbf{Creating a new table with CREATE TABLE}: The basic format of a CREATE TABLE statement. []’s and <>’s are not to be typed. [] indicates that the contents are optional, and the <>’s indicate placeholders:
+            \bigbreak \noindent 
+            \begin{sqlcode}
+                CREATE TABLE <table_name> (
+                    <attribute> <type> [NOT NULL] [UNIQUE] [PRIMARY KEY], [ ... ]
+                    [PRIMARY KEY(<pkattrs>),]
+                    [FOREIGN KEY(<attr_here>) REFERENCES <home_table>(<attr_home>)]
+                );
+            \end{sqlcode}
+            \begin{itemize}
+                \item <table\_name> name of the table
+                \item <attribute> name of the current attribute
+                \item <type> data type of the current attribute
+                \item <pkattrs> comma-separated list of the attributes makeing up the table’s primary key
+                \item <attr\_here> comma-separated list of attributes in the current table forming a foreign key
+                \item <home\_table> name of the home table
+                \item <attr\_home> comma-separated list of attributes in the home table, matching the attributes in <attr\_here>
+            \end{itemize}
+        \item \textbf{Table / Column names}: When choosing a name for a table or a column, we can use the following characters:
+            \begin{itemize}
+                \item any of the normal upper or lower case letters (regexp: [A-Za-z]
+                \item an underscore – _
+                \item a dollar sign – \$
+                \item digits, but only after the first character
+            \end{itemize}
+            \bigbreak \noindent 
+            The following limits are in place:
+            \begin{itemize}
+                \item Table names must be unique within the database. They share the same namespace with views.
+                \item Attribute/column names must be unique with each table.
+                \item Unless quoted properly with backticks, reserved keywords cannot be used as identifier
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Note:} These identifiers may or may not be case sensitive, depending on the locale setting of the server.
+            \bigbreak \noindent 
+            Generally, the maximum length of an identifier is 64 characters.
+        \item \textbf{Data types}
+            \begin{itemize}
+                \item \textbf{INT/INTEGER}: integer values
+                \item \textbf{FLOAT}: single precision floating point numbers
+                \item \textbf{DOUBLE/REAL}: double precision floating point numbers
+                \item \textbf{DECIMAL(i,j)}: decimal numbers, i digits total, j after the decimal point .
+                \item \textbf{CHAR(n)}: character string exactly n characters long
+                \item \textbf{VARCHAR(n)}: variable-length character string up to n characters long
+                \item \textbf{DATE}: date in 'YYYY-MM-DD' format
+                \item \textbf{TIME}: time in 'HH:MM:SS' format
+                \item \textbf{DATETIME}: date/time in 'YYYY-MM-DD HH:MM:SS' format, no timezone conversion
+                \item \textbf{TIMESTAMP}: date/time in 'YYYY-MM-DD HH:MM:SS' format, timezone conversion
+            \end{itemize}
+        \item \textbf{Column Options}: Here are some common options that can be applied to a column/attribute. They are written right after the type when defining a new column in a CREATE TABLE statement
+            \begin{itemize}
+                \item \textbf{NULL}: allows NULL to be stored as the value for this attribute (default)
+                \item \textbf{NOT NULL}: prevents NULL from being stored as the value for this attribute
+                \item \textbf{UNIQUE}: ensures that no two tuples have the same value for this attribute
+                \item \textbf{PRIMARY KEY}: declares this attribute to be the entire primary key
+                \item \textbf{AUTO\_INCREMENT}: next-available value auto-assigned for this attribute when not provided
+                \item \textbf{DEFAULT <x>}: sets the default value of the attribute to <x> when not supplied
+            \end{itemize}
+        \item \textbf{Setting the Primary Key}: There are two ways to set the primary key:
+            \begin{enumerate}
+                \item For single-attribute primary keys, you can use the PRIMARY KEY column option. The option may only be used once, and proclaims that the single attribute is the entirety of the primary key.
+                \item If you have multiple attributes in the primary key, the only way is to add the separate constraint:
+                    \begin{center}
+                        \texttt{PRIMARY KEY(<x>,<y>,<z>,<etc>)}
+                    \end{center}
+                    \bigbreak \noindent 
+                    This can also be used for single attribute primary keys.
+                    \bigbreak \noindent 
+                    \textbf{Note:} It should be obvious that only one primary key can be set.
+            \end{enumerate}
+        \item \textbf{Comments}: MariaDB supports the following comment syntax
+            \begin{enumerate}
+                \item \textbf{Pound (#)}:
+                \item \textbf{Double hypen (\texttt{--})}: This is the standard style
+                \item \textbf{C-style multiline comments (\textbackslash * ... *\textbackslash)}
+            \end{enumerate}
+        \item \textbf{Quotes}: There are two types of quotes that you may encounter in SQL.
+            \begin{enumerate}
+                \item \textbf{Quotes for values – single quotes 'value'}: not necessary for numeric values, but can be used without breaking them, always required for string values. If it is ambiguous whether something is a value or an identifier, use these quotes
+                \item \textbf{Quotes for identifiers – backticks `identifier}: not necessary for identifiers that follow the rules from above, but can be used anyway, can allow identifier names to contain characters not otherwise allowed.  Can allow identifiers to use names that would normally be reserved keywords
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{Note:} Notice that identifier in the SQL context is a different thing than an identifier in an ER diagram. Here, identifier will mean the name of some table, column, variable, etc.
+        \item \textbf{An example of CREATE TABLE}: Let’s go ahead and make the SQL CREATE TABLE statement to create a table for the relation:
+            \begin{center}
+                \textbf{Person}(\underline{SSN}, FNAME, LNAME, PHONE)
+            \end{center}
+            \bigbreak \noindent 
+            \begin{sqlcode}
+                CREATE TABLE Person(
+                    SSN CHAR(9) PRIMARY KEY, # SSN BAD IDEA, PK on same line (1)
+                    FNAME CHAR(20) NOT NULL, # First name
+                    LNAME CHAR(20) NOT NULL, # Last name
+                    PHONE CHAR(10) # Phone number
+                ); 
+            \end{sqlcode}
+            \bigbreak \noindent 
+            The relational schema we started with does not have information on data types or column options other than PRIMARY KEY, so we choose them while creating the table.
+        \item \textbf{Setting up a foreign key}: A foreign key links the current table to another table, which we call the home relation.
+            \begin{enumerate}
+                \item The foreign key must contain all of the attributes of the primary key of the home relation.
+                \item They may have different names in each of the tables, but there needs to be a match for each.
+                \item Each of these attributes must have the exact same data type as its counterpart in the home table.
+            \end{enumerate}
+            \bigbreak \noindent 
+            If a table is to contain a foreign key, we include a constraint in our CREATE TABLE statement like the following:
+            \begin{sqlcode}
+                FOREIGN KEY (<localnames>) REFERENCES <home_table>(<homenames>)
+            \end{sqlcode}
+            This can be done for multiple foreign keys, filling in the placeholders <localnames>, <home\_table>, and <homenames> appropriately for each.
+    \item \textbf{Table with foreign key example}: Let’s make a table for a subtype of Person, Student:
+        \begin{center}
+            \textbf{Student}(\underline{SSN}\dag, CLSYEAR, GPA, TOTALHRS)
+        \end{center}
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            CREATE TABLE Student (
+                SSN CHAR(9) NOT NULL, -- SSN is BAD IDEA
+                CLSYEAR CHAR(9), -- fresh/soph/junior/senior
+                GPA DECIMAL(4.3), -- 4.000, we hope
+                TOTALHRS INT,
+
+                PRIMARY KEY (SSN), -- set up the primary key separately (2)
+                FOREIGN KEY (SSN) REFERENCES Person(SSN) -- a Student is a Person
+            );
+        \end{sqlcode}
+        \bigbreak \noindent 
+        \textbf{Note:} We need to use SHOW CREATE TABLE to show the get information of the foreign keys of a table.
+    \item \textbf{Change existing table schema: ALTER TABLE}: An ALTER TABLE statement will allow you to have the DBMS make changes to the schema of a table that has already been created. It works with various subcommands. The three we will cover are:
+        \begin{enumerate}
+            \item ALTER TABLE ADD
+            \item ALTER TABLE MODIFY
+            \item ALTER TABLE DROP
+        \end{enumerate}
+    \item \textbf{ALTER TABLE ADD}: The ALTER TABLE ADD command can be used to add a new column or new columns to the schema of an existing table.
+        \bigbreak \noindent 
+        To add a single column/attribute
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            ALTER TABLE <table_name> ADD <attribute> <type>; 
+        \end{sqlcode}
+        \bigbreak \noindent 
+        To add multiple columns/attributes:
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            ALTER TABLE <table_name> ADD (<attribute> <type>, ...);
+        \end{sqlcode}
+    \item \textbf{ALTER TABLE MODIFY}: The ALTER TABLE MODIFY command can be used to change properties of a column/attribute (including type, length, and other column options) in a table that already exists.
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            ALTER TABLE <table_name> MODIFY <col_name> <new_options>;
+        \end{sqlcode}
+    \item \textbf{ALTER TABLE DROP}: The ALTER TABLE DROP command can be used to remove a column/attribute from the schema of a table.
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            ALTER TABLE <table_name> DROP <col_name>;
+        \end{sqlcode}
+    \item \textbf{SHOW TABLES}: In MariaDB/MySQL, if you want to see a list of the tables present in the current database, you can use the command:
+        \bigbreak \noindent 
+        \begin{sqlcode}
+            SHOW TABLES;
+        \end{sqlcode}
+    \item \textbf{DROP TABLE}: To remove a table from the database, we can use the DROP TABLE command.
+        \bigbreak \noindent 
+        \begin{sqlcode}
+        DROP TABLE <table_name>;
+        \end{sqlcode}
+    \item \textbf{Termination of commands (;)}: Notice in all sql code examples we have a semi colon after the command / line, this is needed to execute the command.
+
+
+
+
+
+
+
+
+    \end{itemize}
 
 
 
