@@ -58,6 +58,1703 @@
        \end{center}
     \end{titlepage}
     \tableofcontents
+   \pagebreak 
+   \unsect{The STL}
+   \subsection{STL Vectors}
+   \bigbreak \noindent 
+   \subsubsection{Implementation}
+   \bigbreak \noindent 
+   A vector models a dynamic array. Thus, a vector is an abstraction that manages its elements with a dynamic C-style arra
+   \bigbreak \noindent 
+   A vector copies its elements into its internal dynamic array. The elements always have a certain order. Thus, a vector is a kind of ordered collection. A vector provides random access. Thus, you can access every element directly in constant time, provided that you know its position. The iterators are random-access iterators, so you can use any algorithm of the STL.
+
+   \bigbreak \noindent 
+   \subsubsection{Performance in operations on the end}
+   \bigbreak \noindent 
+   Vectors provide good performance if you append or delete elements at the end. If you insert or
+   delete in the middle or at the beginning, performance gets worse. This is because every element
+   behind has to be moved to another position. In fact, the assignment operator would be called for
+   every following element.
+
+   \bigbreak \noindent 
+   \subsubsection{Size and capacity}
+   \bigbreak \noindent 
+   Part of the way in which vectors give good performance is by allocating more memory than they
+   need to contain all their elements. To use vectors effectively and correctly, you should understand
+   how size and capacity cooperate in a vector.
+   \bigbreak \noindent 
+   Vectors provide the usual size operations size(), empty(), and max\_size(). An additional “size” operation is the capacity() function, which returns the number of
+   elements a vector could contain in its actual memory. If you exceed the capacity(), the vector has
+   to reallocate its internal memory.
+   \bigbreak \noindent 
+   The capacity of a vector is important for two reasons:
+   \begin{enumerate}
+       \item Reallocation invalidates all references, pointers, and iterators for elements of the vector
+       \item Reallocation takes time.
+   \end{enumerate}
+   Thus, if a program manages pointers, references, or iterators into a vector, or if speed is a goal, it is
+   important to take the capacity into account
+   \bigbreak \noindent 
+   To avoid reallocation, you can use reserve() to ensure a certain capacity before you really need
+it. In this way, you can ensure that references remain valid as long as the capacity is not exceeded:
+\bigbreak \noindent 
+Another way to avoid reallocation is to initialize a vector with enough elements by passing additional
+arguments to the constructor. For example, if you pass a numeric value as parameter, it is taken as
+the starting size of the vector:
+\bigbreak \noindent 
+\begin{cppcode}
+    std::vector<T> v(5);
+\end{cppcode}
+\bigbreak \noindent 
+\textbf{Note:} If the only reason for initialization is to reserve memory, you should use reserve()
+\bigbreak \noindent 
+Unlike for strings, it is not possible to call reserve() for vectors to shrink the capacity. Calling reserve() with an argument that is less than the current capacity is a no-op
+\bigbreak \noindent 
+Because the capacity of vectors never shrinks, it is guaranteed that references, pointers, and
+iterators remain valid even when elements are deleted, provided that they refer to a position before
+the manipulated elements. However, insertions invalidate all references, pointers, and iterators when
+the capacity gets exceeded
+
+\bigbreak \noindent 
+\subsubsection{Constructors}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{vector<Elem> c} \\
+          Default constructor; creates an empty vector without any elements.
+          
+    \item \texttt{vector<Elem> c(c2)} \\
+          Copy constructor; creates a new vector as a copy of \texttt{c2} (all elements are copied).
+          
+    \item \texttt{vector<Elem> c = c2} \\
+          Copy constructor; creates a new vector as a copy of \texttt{c2} (all elements are copied).
+          
+    \item \texttt{vector<Elem> c(rv)} \\
+          Move constructor; creates a new vector, taking the contents of the rvalue \texttt{rv} (since C++11).
+          
+    \item \texttt{vector<Elem> c = rv} \\
+          Move constructor; creates a new vector, taking the contents of the rvalue \texttt{rv} (since C++11).
+          
+    \item \texttt{vector<Elem> c(n)} \\
+          Creates a vector with \texttt{n} elements created by the default constructor.
+          
+    \item \texttt{vector<Elem> c(n, elem)} \\
+          Creates a vector initialized with \texttt{n} copies of element \texttt{elem}.
+          
+    \item \texttt{vector<Elem> c(beg, end)} \\
+          Creates a vector initialized with the elements of the range [\texttt{beg}, \texttt{end}].
+          
+    \item \texttt{vector<Elem> c\{initlist\}} \\
+          Creates a vector initialized with the elements of the initializer list \texttt{initlist} (since C++11).
+          
+    \item \texttt{vector<Elem> c = \{initlist\}} \\
+        Creates a vector initialized with the elements of the initializer list \texttt{initlist} (since C++11).
+
+    \item \texttt{c.~vector()} \\
+        Destroys all elements and frees the memory.
+\end{itemize}
+
+\subsubsection{Note about at()}
+\bigbreak \noindent 
+Out of all the element access operators and methods: [], at(), front(), back(), only at() performs range checking. If the index is out of range, at() throws an out\_of\_range
+\bigbreak \noindent 
+All other functions do not check. A range error results in
+undefined behavior. Calling operator [ ], front(), and back() for an empty container always
+results in undefined behavior:
+
+\bigbreak \noindent 
+\subsubsection{Iterator methods}
+\bigbreak \noindent 
+We have
+\begin{itemize}
+    \item begin()
+    \item end()
+    \item rbegin()
+    \item cbegin()
+    \item cend()
+    \item crbegin()
+    \item crend()
+\end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Using vectors as 2d arrays}
+    \bigbreak \noindent 
+    There is an issue that comes up when trying to use 2D arrays, when the size of the matrix is not known at compile time.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int nrows, int ncols) {
+            int arr[nrows][ncols]
+        }
+
+        int main() {
+            f(5,6);
+            return 0;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The problem with this code is that the array arr inside the function f is declared with dimensions nrows and ncols, which are non-constant variables. In C++, standard arrays require their sizes to be constant at compile time, but in your code, the array dimensions are determined by function parameters, which are only known at runtime.
+    \bigbreak \noindent 
+    This means int arr[nrows][ncols] is not valid because the array size is determined at runtime, not compile time.
+    \pagebreak \bigbreak \noindent 
+    The most common and modern way to handle dynamic arrays in C++ is by using std::vector.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int r, int c) {
+            vector<vector<int>> m;
+            m.resize(r);
+
+            for (int i=0; i<c; ++i) {
+                m[i].resize(c);
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Or simply
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int nrows, int ncols) {
+            // Create a vector of vectors (2D array)
+            std::vector<std::vector<int>> arr(nrows, std::vector<int>(ncols));
+
+            // Access elements like arr[i][j]
+            for (int i = 0; i < nrows; ++i) {
+                for (int j = 0; j < ncols; ++j) {
+                    arr[i][j] = i * ncols + j;  // Example of initializing elements
+                }
+            }
+        }
+
+        int main() {
+            f(5, 6);
+            return 0;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    the constructor of std::vector is designed to accept an element initializer. In this case, the std::vector<int>(ncols) argument is used to initialize each element of the outer std::vector<std::vector<int>>. The constructor in question is 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        vector(size_type count, const T& value);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Where size\_type in this context is a typedef for size\_t.
+
+    \pagebreak 
+    \subsubsection{For those interested}
+    \bigbreak \noindent 
+    There are some other ways to solve this issue.
+    \bigbreak \noindent 
+    \paragraph{Manual Dynamic Memory Allocation (Using new)}
+    \bigbreak \noindent \bigbreak \noindent 
+    If for some reason you cannot use std::vector and need to manually allocate dynamic memory, you can use new to create a 2D array. This approach gives you control over memory allocation, but you must manually free the memory to avoid memory leaks.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int r, int c) {
+            int** arr = new int*[r];
+
+            for (int i=0; i<r; ++i) {
+                arr[i] = new int[c];
+            }
+
+            // Access elements like arr[i][j]
+            int count=0;
+            for (int i = 0; i < r; ++i) {
+                for (int j = 0; j < c; ++j) {
+                    arr[i][j] = count++;
+                    cout << arr[i][j] << endl;
+                }
+            }
+
+            // Free the memory when done
+            for (int i = 0; i < r; ++i) {
+                delete[] arr[i];  // Free each row
+            }
+            delete[] arr;  // Free the array of pointers
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \nt{heap allocation using new in C++ happens at runtime.}
+
+    \bigbreak \noindent 
+    \paragraph{Using unique pointer}
+    \bigbreak \noindent \bigbreak \noindent 
+    If you need more control over memory allocation but want to avoid the risk of memory leaks, you can use std::unique\_ptr to automatically manage memory
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int nrows, int ncols) {
+            // Allocate memory for a 2D array using std::unique_ptr
+            std::unique_ptr<std::unique_ptr<int[]>[]> arr = std::make_unique<std::unique_ptr<int[]>[]>(nrows);
+            for (int i = 0; i < nrows; ++i) {
+                arr[i] = std::make_unique<int[]>(ncols);  // Allocate each row
+            }
+
+            // Access elements like arr[i][j]
+            for (int i = 0; i < nrows; ++i) {
+                for (int j = 0; j < ncols; ++j) {
+                    arr[i][j] = i * ncols + j;  // Example of initializing elements
+                }
+            }
+            // No need to manually free memory; std::unique_ptr handles it automatically
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{How it works:}
+    \begin{enumerate}
+        \item \textbf{std::unique\_ptr<std::unique\_ptr<int[]>[]>}: is a unique pointer to an array of unique pointers, where each unique pointer in the array manages a dynamically allocated array of integers.
+        \item \textbf{std::make\_unique<std::unique\_ptr<int[]>[]>(r)}: allocates an array of r unique pointers, each of which will eventually point to a row of integers.
+    \end{enumerate}
+
+    \bigbreak \noindent 
+    \paragraph{Recall: Unique pointer for dynamic arry}
+    \bigbreak \noindent 
+    \bigbreak \noindent 
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <memory>
+    using std::unique_ptr;
+    using std::make_unique;
+    int main() {
+        unique_ptr<int[]> arr = make_unique<int[]>(size) // Which is the same as int* arr = new int[size]
+
+        return 0;
+}
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \paragraph{If sizes are truly known at compile time}
+    \bigbreak \noindent \bigbreak \noindent 
+    If the dimensions are truly known at compile time, you can pass them as template arguments:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <int r, int c>
+        void f() {
+            int arr[r][c];  // Valid because r and c are compile-time constants
+            // Initialize and print the array (for demonstration)
+            for (int i = 0; i < r; ++i) {
+                for (int j = 0; j < c; ++j) {
+                    arr[i][j] = i * c + j;
+                    std::cout << arr[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
+
+        int main() {
+            constexpr int r = 5;
+            constexpr int c = 6;
+            f<r, c>();  // Call function with compile-time constant dimensions
+            return 0;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The reason your code works when using template parameters is that the template parameters r and c are compile-time constants. In C++, when you use template parameters like this, the values of r and c are determined at compile time, allowing the array sizes to be known by the compiler ahead of time
+
+
+
+
+
+
+
+
+
+    \pagebreak 
+    \subsection{STL Deque}
+    \bigbreak \noindent 
+    \subsubsection{Implementation}
+    \bigbreak \noindent 
+    A deque (pronounced “deck”) is very similar to a vector. It manages its elements with a dynamic
+    array, provides random access, and has almost the same interface as a vector. The difference is
+    that with a deque, the dynamic array is open at both ends. Thus, a deque is fast for insertions and
+    deletions at both the end and the beginning
+    \bigbreak \noindent 
+    To provide this ability, the deque is typically implemented as a bunch of individual blocks, with the
+    first block growing in one direction and the last block growing in the opposite direction
+
+    \subsubsection{Abilities, performance, uses}
+    \bigbreak \noindent 
+    The abilities of deques differ from those of vectors as follows:
+    \begin{itemize}
+        \item Inserting and removing elements is fast at both the beginning and the end (for vectors, it is fast only at the end). These operations are done in amortized constant time.
+        \item The internal structure has one more indirection to access the elements, so with deques, element access and iterator movement are usually a bit slower.
+        \item Iterators must be smart pointers of a special type rather than ordinary pointers because they must jump between different blocks.
+        \item In systems that have size limitations for blocks of memory (for example, some PC systems), a deque might contain more elements because it uses more than one block of memory. Thus, max\_size() might be larger for deques.
+        \item Deques provide no support to control the capacity and the moment of reallocation. In particular, any insertion or deletion of elements other than at the beginning or end invalidates all pointers, references, and iterators that refer to elements of the deque. However, reallocation may perform better than for vectors because according to their typical internal structure, deques don’t have to copy all elements on reallocation.
+        \item Blocks of memory might get freed when they are no longer used, so the memory size of a deque might shrink (however, whether and how this happens is implementation specific).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{When to use deques}
+    \begin{itemize}
+        \item You insert and remove elements at both ends (this is the classic case for a queue).
+        \item You don’t refer to elements of the container.
+        \item It is important that the container frees memory when it is no longer used (however, the standard does not guarantee that this happens).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Constructors}
+    \begin{itemize}
+    \item \texttt{deque<Elem> c} \\
+        Default constructor; creates an empty deque without any elements.
+    \item \texttt{deque<Elem> c(c2)} \\
+        Copy constructor; creates a new deque as a copy of \texttt{c2} (all elements are copied).
+    \item \texttt{deque<Elem> c = c2} \\
+        Copy assignment operator; creates a new deque as a copy of \texttt{c2} (all elements are copied).
+    \item \texttt{deque<Elem> c(rv)} \\
+        Move constructor; creates a new deque, taking the contents of the rvalue \texttt{rv} (since C++11).
+    \item \texttt{deque<Elem> c = rv} \\
+        Move assignment operator; creates a new deque, taking the contents of the rvalue \texttt{rv} (since C++11).
+    \item \texttt{deque<Elem> c(n)} \\
+        Creates a deque with \texttt{n} elements created by the default constructor.
+    \item \texttt{deque<Elem> c(n, elem)} \\
+        Creates a deque initialized with \texttt{n} copies of element \texttt{elem}.
+    \item \texttt{deque<Elem> c(beg, end)} \\
+        Creates a deque initialized with the elements of the range \texttt{[beg, end]}.
+    \item \texttt{deque<Elem> c \{inilist\}} \\
+        Creates a deque initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    \item \texttt{deque<Elem> c = \{inilist\}} \\
+        Creates a deque initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    \item \texttt{c.\textasciitilde deque()} \\
+        Destroys all elements and frees the memory.
+\end{itemize}
+\bigbreak \noindent 
+Deque operations differ from vector operations in only two ways:
+\begin{enumerate}
+    \item Deques do not provide the functions for capacity (capacity() and reserve()).
+    \item Deques do provide direct functions to insert and to delete the first element (push\_front() and pop\_front()).
+\end{enumerate}
+
+
+
+
+   \pagebreak 
+   \subsection{STL Lists}
+   \bigbreak \noindent 
+   \subsubsection{Implementation}
+   \bigbreak \noindent 
+   Manages its elements as a doubly linked list. As usual, the C++ standard library does not specify the kind of the implementation, but it follows from the list’s name, constraints, and specifications.
+   \bigbreak \noindent 
+   \subsubsection{Abilities}
+   \bigbreak \noindent 
+   The internal structure of a list is totally different from that of an array, a vector, or a deque. The list
+object itself provides two pointers, the so-called anchors, which refer to the first and last elements.
+Each element has pointers to the previous and next elements (or back to the anchor). To insert a new
+element, you just manipulate the corresponding pointers
+\bigbreak \noindent 
+Thus, a list differs in several major ways from arrays, vectors, and deques:
+\begin{itemize}
+    \item A list does not provide random access. For example, to access the fifth element, you must navigate the first four elements, following the chain of links. Thus, accessing an arbitrary element using a list is slow. However, you can navigate through the list from both end. So accessing both the first and the last elements is fast.
+    \item Inserting and removing elements is fast at each position (provided you are there), and not only at one or both ends. You can always insert and delete an element in constant time, because no other elements have to be moved. Internally, only some pointer values are manipulated.
+    \item Inserting and deleting elements does not invalidate pointers, references, and iterators to other elements.
+    \item A list supports exception handling in such a way that almost every operation succeeds or is a no-op. Thus, you can’t get into an intermediate state in which only half of the operation is complete.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Differencs in the methods}
+\bigbreak \noindent 
+The member functions provided for lists reflect these differences from arrays, vectors, and deques as follows:
+\begin{itemize}
+    \item Lists provide front(), push\_front(), and pop\_front(), as well as back(), push\_back(), and pop\_back().
+    \item Lists provide neither a subscript operator nor at(), because no random access is provided.
+\item Lists don’t provide operations for capacity or reallocation, because neither is needed. Each element has its own memory that stays valid until the element is deleted.
+\item Lists provide many special member functions for moving and removing elements. These member functions are faster versions of general algorithms that have the same names. They are faster because they only redirect pointers rather than copy and move the values.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Constructors}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{list<Elem> c} \\
+        Default constructor; creates an empty list without any elements.
+    \item \texttt{list<Elem> c(c2)} \\
+        Copy constructor; creates a new list as a copy of \texttt{c2} (all elements are copied).
+    \item \texttt{list<Elem> c = c2} \\
+        Copy assignment operator; creates a new list as a copy of \texttt{c2} (all elements are copied).
+    \item \texttt{list<Elem> c(rv)} \\
+        Move constructor; creates a new list, taking the contents of the rvalue \texttt{rv} (since C++11).
+    \item \texttt{list<Elem> c = rv} \\
+        Move assignment operator; creates a new list, taking the contents of the rvalue \texttt{rv} (since C++11).
+    \item \texttt{list<Elem> c(n)} \\
+        Creates a list with \texttt{n} elements created by the default constructor.
+    \item \texttt{list<Elem> c(n, elem)} \\
+        Creates a list initialized with \texttt{n} copies of element \texttt{elem}.
+    \item \texttt{list<Elem> c(beg, end)} \\
+        Creates a list initialized with the elements of the range \texttt{[beg, end]}.
+    \item \texttt{list<Elem> c\{inilist\}} \\
+        Creates a list initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    \item \texttt{list<Elem> c = \{inilist\}} \\
+        Creates a list initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    \item \texttt{c.\~list()} \\
+        Destroys all elements and frees the memory.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Element access}
+\bigbreak \noindent 
+With lists, we only have front and back methods. However, these methods do not check for existence. Calling these methods on empty containers results in undefined behavior
+\bigbreak \noindent 
+Thus, the caller must ensure that the container contains at least one element
+
+\bigbreak \noindent 
+\subsubsection{Iterator functions}
+\bigbreak \noindent 
+To access all elements of a list, you must use iterators. Lists provide the usual iterator functions. However, because a list has no random access, these iterators are only bidirectional.
+Thus, you can’t call algorithms that require random-access iterators. All algorithms that manipulate
+the order of elements a lot, especially sorting algorithms, are in this category. However, for sorting
+the elements, lists provide the special member function sort()
+
+\bigbreak \noindent 
+\subsubsection{Splice Functions and Functions to Change the Order of Elements}
+\bigbreak \noindent 
+Linked lists have the advantage that you can remove and insert elements at any position in constant
+time. If you move elements from one container to another, this advantage doubles in that you need
+only redirect some internal pointers
+\bigbreak \noindent 
+To support this ability, lists provide not only remove() but also additional modifying member
+functions to change the order of and relink elements and ranges.
+
+
+
+
+   \pagebreak 
+   \subsection{STL Forward lists}
+   \bigbreak \noindent 
+   \subsubsection{Implementation}
+   \bigbreak \noindent 
+   \bigbreak \noindent 
+   A forward list (an instance of the container class forward\_list<>), which was introduced with C++11, manages its elements as a singly linked list
+   \bigbreak \noindent 
+   Conceptionally, a forward list is a list (object of class list<>) restricted such that it is not able to iterate backward. It provides no functionality that is not also provided by lists. As benefits, it uses less memory and provides slightly better runtime behavior. The standard states: “It is intended that forward\_list have zero space or time overhead relative to a hand-written C-style singly linked list. Features that would conflict with that goal have been omitted.
+
+   \bigbreak \noindent 
+   \subsubsection{Abilities, limitations}
+   \bigbreak \noindent \bigbreak \noindent 
+   Forward lists have the following limitations compared to lists:
+   \begin{itemize}
+       \item A forward list provides only forward iterators, not bidirectional iterators. As a consequence, no reverse iterator support is provided, which means that types, such as reverse\_iterator, and member functions, such as rbegin(), rend(), crbegin(), and crend(), are not provided.
+       \item A forward list does not provide a size() member function. This is a consequence of omitting features that create time or space overhead relative to a handwritten singly linked list.
+       \item The anchor of a forward list has no pointer to the last element. For this reason, a forward list does not provide the special member functions to deal with the last element, back(), push\_back(), and pop\_back().
+       \item For all member functions that modify forward lists in a way that elements are inserted or deleted at a specific position, special versions for forward lists are provided. The reason is that you have to pass the position of the element before the first element that gets manipulated, because there you have to assign a new successor element. Because you can’t navigate backwards (at least not in constant time), for all these member functions you have to pass the position of the preceding element. Because of this difference, these member functions have a \_after suffix in their name. For example, instead of insert(), insert\_after() is provided, which inserts new elements after the element passed as first argument; that is, it appends an element at that position.
+       \item For this reason, forward lists provide before\_begin() and cbefore\_begin(), which yield the position of a virtual element before the first element (technically speaking, the anchor of the linked list), which can be used to let built-in algorithms ending with _after exchange even the first element.
+   \end{itemize}
+
+   \bigbreak \noindent 
+   \subsubsection{No size()?}
+   \bigbreak \noindent \bigbreak \noindent 
+   The decision not to provide size() might be especially surprising because size() is one of the operations required for all STL containers. Here, you can see the consequences of the design goal to have “zero space or time overhead relative to a hand-written Cstyle singly linked list.” The alternative would have been either to compute the size each time size() is called, which would have linear complexity, or to provide an additional field in the forward\_list object for the size, which is updated with each and every operation that changes the number of elements. As the design paper for the forward list, “It’s a cost that all users would have to pay for, whether they need this feature or not.” So, if you need the size, either track it outside the forward\_list or use a list instead.
+   \bigbreak \noindent 
+   If you have to compute the number of elements, you can use distance()
+   \bigbreak \noindent 
+   \begin{cppcode}
+   #include <forward_list>
+   #include <iterator>
+
+   std::forward_list<int> l;
+   std::cout << "Size: " << std::distance(l.begin(), l.end()) << std::endl;
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \subsubsection{Similarities to list}
+   \bigbreak \noindent \bigbreak \noindent 
+   \begin{itemize}
+       \item A forward list does not provide random access. For example, to access the fifth element, you
+       \item must navigate the first four elements, following the chain of links. Thus, using a forward list to access an arbitrary element is slow.
+       \item Inserting and removing elements is fast at each position, if you are there. You can always insert and delete an element in constant time, because no other elements have to be moved. Internally, only some pointer values are manipulated.
+       \item Inserting and deleting elements does not invalidate iterators, references, and pointers to other elements.
+       \item A forward list supports exception handling in such a way that almost every operation succeeds or is a no-op. Thus, you can’t get into an intermediate state in which only half of the operation is complete.
+       \item Forward lists provide many special member functions for moving and removing elements. These member functions are faster versions of general algorithms, because they only redirect pointers rather than copy and move the values. However, when element positions are involved, you have to pass the preceding position, and the member function has the suffix \_after in its name.
+   \end{itemize}
+
+   \bigbreak \noindent 
+   \subsubsection{Constructors}
+   \bigbreak \noindent 
+   \bigbreak \noindent 
+   \begin{itemize}
+    \item \texttt{forward\_list<Elem> c} \\
+    Default constructor; creates an empty forward list without any elements.
+    
+    \item \texttt{forward\_list<Elem> c(c2)} \\
+    Copy constructor; creates a new forward list as a copy of \texttt{c2} (all elements are copied).
+    
+    \item \texttt{forward\_list<Elem> c = c2} \\
+    Copy assignment operator; creates a new forward list as a copy of \texttt{c2} (all elements are copied).
+    
+    \item \texttt{forward\_list<Elem> c(rv)} \\
+    Move constructor; creates a new forward list, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{forward\_list<Elem> c = rv} \\
+    Move assignment operator; creates a new forward list, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{forward\_list<Elem> c(n)} \\
+    Creates a forward list with \texttt{n} elements created by the default constructor.
+    
+    \item \texttt{forward\_list<Elem> c(n, elem)} \\
+    Creates a forward list initialized with \texttt{n} copies of element \texttt{elem}.
+    
+    \item \texttt{forward\_list<Elem> c(beg, end)} \\
+    Creates a forward list initialized with the elements of the range \texttt{[beg, end]}.
+    
+    \item \texttt{forward\_list<Elem> c\{inilist\}} \\
+    Creates a forward list initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{forward\_list<Elem> c = \{inilist\}} \\
+    Creates a forward list initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{c.\~forward\_list()} \\
+    Destroys all elements and frees the memory.
+\end{itemize}
+
+
+
+
+   \pagebreak 
+   \subsection{STL Sets and multisets}
+   \bigbreak \noindent 
+   \subsubsection{Implementation}
+   \bigbreak \noindent \bigbreak \noindent 
+   Sets and multisets are implemented as height balanced binary search trees. (red-black trees)
+   \bigbreak \noindent 
+   Set and multiset containers sort their elements automatically according to a certain sorting criterion. The difference between the two types of containers is that multisets allow duplicates, whereas sets do not
+   \bigbreak \noindent 
+   The elements of a set or a multiset may have any type T that is comparable according to the sorting criterion. The optional second template argument defines the sorting criterion. If a special sorting criterion is not passed, the default criterion less is used. The function object less sorts the elements by comparing them with operator $<$
+   \bigbreak \noindent 
+   The optional third template parameter defines the memory model. The default memory model is the model allocator, which is provided by the C++ standard library.
+   \bigbreak \noindent 
+   \subsubsection{Strict weak ordering}
+   \bigbreak \noindent \bigbreak \noindent 
+   The sorting criterion must define strict weak ordering, which is defined by the following four properties:
+   \begin{enumerate}
+       \item It has to be \textbf{antisymmetric}.
+           \begin{itemize}
+               \item This means that for operator \texttt{<}: If $x < y$ is true, then $y < x$ is false.
+               \item This means that for a predicate \texttt{op()}: If \texttt{op(x, y)} is true, then \texttt{op(y, x)} is false.
+           \end{itemize}
+
+       \item It has to be \textbf{transitive}.
+           \begin{itemize}
+               \item This means that for operator \texttt{<}: If $x < y$ is true and $y < z$ is true, then $x < z$ is true.
+               \item This means that for a predicate \texttt{op()}: If \texttt{op(x, y)} is true and \texttt{op(y, z)} is true, then \texttt{op(x, z)} is true.
+           \end{itemize}
+
+       \item It has to be \textbf{irreflexive}.
+           \begin{itemize}
+               \item This means that for operator \texttt{<}: $x < x$ is always false.
+               \item This means that for a predicate \texttt{op()}: \texttt{op(x, x)} is always false.
+           \end{itemize}
+
+       \item It has to have \textbf{transitivity of equivalence}, which means roughly: If $a$ is equivalent to $b$ and $b$ is equivalent to $c$, then $a$ is equivalent to $c$.
+           \begin{itemize}
+               \item This means that for operator \texttt{<}: If !$(a < b)$ \&\& !$(b < a)$ is true and !$(b < c)$ \&\& !$(c < b)$ is true, then !$(a < c)$ \&\& !$(c < a)$ is true.
+               \item This means that for a predicate \texttt{op()}: If \texttt{op(a, b)}, \texttt{op(b, a)}, \texttt{op(b, c)}, and \texttt{op(c, b)} all yield false, then \texttt{op(a, c)} and \texttt{op(c, a)} yield false.
+           \end{itemize}
+   \end{enumerate}
+   \bigbreak \noindent 
+   \textbf{Note}: Note that this means that you have to distinguish between less and equal. A criterion such as operator \texttt{<=} does not fulfill this requirement.
+   \bigbreak \noindent 
+   Based on these properties, the sorting criterion is also used to check equivalence. That is, two elements are considered to be duplicates if neither is less than the other (or if both \texttt{op(x, y)} and \texttt{op(y, x)} are false).
+   \bigbreak \noindent 
+   For multisets, the order of equivalent elements is random but stable. Thus, insertions and erasures preserve the relative ordering of equivalent elements (guaranteed since C++11).
+   \bigbreak \noindent 
+   \subsubsection{Abilities}
+   \bigbreak \noindent \bigbreak \noindent 
+   Like all standardized associative container classes, sets and multisets are usually implemented as balanced binary trees
+   \bigbreak \noindent 
+   The major advantage of automatic sorting is that a binary tree performs well when elements with
+a certain value are searched. In fact, search functions have logarithmic complexity. For example, to
+search for an element in a set or a multiset of 1,000 elements, a tree search performed by a member
+function needs, on average, one-fiftieth of the comparisons of a linear search
+
+\bigbreak \noindent 
+\subsubsection{Changing elements directly, no direct element access}
+\bigbreak \noindent 
+Automatic sorting also imposes an important constraint on sets and multisets: You may
+not change the value of an element directly
+\bigbreak \noindent 
+Therefore, to modify the value of an element, you must remove the element having the old value and
+insert a new element that has the new value. The interface reflects this behavior:
+\begin{itemize}
+    \item Sets and multisets don’t provide operations for direct element access.
+    \item Indirect access via iterators has the constraint that, from the iterator’s point of view, the element value is constant.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Constructors}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{set c} \\
+    Default constructor; creates an empty set/multiset without any elements.
+    
+    \item \texttt{set c(op)} \\
+    Creates an empty set/multiset that uses \texttt{op} as the sorting criterion.
+    
+    \item \texttt{set c(c2)} \\
+    Copy constructor; creates a copy of another set/multiset of the same type (all elements are copied).
+    
+    \item \texttt{set c = c2} \\
+    Copy assignment operator; creates a copy of another set/multiset of the same type (all elements are copied).
+    
+    \item \texttt{set c(rv)} \\
+    Move constructor; creates a new set/multiset of the same type, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{set c = rv} \\
+    Move assignment operator; creates a new set/multiset of the same type, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{set c(beg, end)} \\
+    Creates a set/multiset initialized by the elements of the range \texttt{[beg, end]}.
+    
+    \item \texttt{set c(beg, end, op)} \\
+    Creates a set/multiset with the sorting criterion \texttt{op} initialized by the elements of the range \texttt{[beg, end]}.
+    
+    \item \texttt{set c\{inilist\}} \\
+    Creates a set/multiset initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{set c = \{inilist\}} \\
+    Creates a set/multiset initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{c.\~set()} \\
+    Destroys all elements and frees the memory.
+\end{itemize}
+
+
+\bigbreak \noindent 
+\subsubsection{Types}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{set<Elem>} \\
+    A set that by default sorts with \texttt{less<>} (operator \texttt{<}).
+    
+    \item \texttt{set<Elem, Op>} \\
+    A set that by default sorts with \texttt{Op}.
+    
+    \item \texttt{multiset<Elem>} \\
+    A multiset that by default sorts with \texttt{less<>} (operator \texttt{<}).
+    
+    \item \texttt{multiset<Elem, Op>} \\
+    A multiset that by default sorts with \texttt{Op}.
+\end{itemize}
+
+
+
+
+
+
+   \pagebreak 
+   \subsection{STL Maps and multimaps}
+   \bigbreak \noindent 
+   Maps and multimaps are containers that manage key/value pairs as elements. These containers sort
+   their elements automatically, according to a certain sorting criterion that is used for the key. The
+   difference between the two is that multimaps allow duplicates, whereas maps do not
+   \bigbreak \noindent 
+   \subsubsection{Implementation}
+   \bigbreak \noindent \bigbreak \noindent 
+   Maps and multimaps are implemented the same as sets and multisets, height balanced binary search trees (red-black trees).
+
+   \bigbreak \noindent 
+   \subsubsection{Template parameters}
+   \bigbreak \noindent \bigbreak \noindent 
+   The first template parameter is the type of the element’s key, and the second template parameter is
+the type of the element’s associated value. The elements of a map or a multimap may have any types
+Key and T that meet the following two requirements:
+\begin{enumerate}
+    \item Both key and value must be copyable or movable.
+    \item The key must be comparable with the sorting criterion.
+\end{enumerate}
+\bigbreak \noindent 
+The optional third template parameter defines the sorting criterion. As for sets, this sorting criterion must define a “strict weak ordering” The elements are sorted according to their keys, so the value doesn’t matter for the order of the elements. The sorting criterion is also used to check for equivalence; that is, two elements are equal if neither key is less than the other.
+\bigbreak \noindent 
+If a special sorting criterion is not passed, the default criterion less<> is used. The function object
+less<> sorts the elements by comparing them with operator <
+\bigbreak \noindent 
+\subsubsection{Abilities}
+\bigbreak \noindent \bigbreak \noindent 
+Sets, multisets, maps, and multimaps
+typically use the same internal data type. So, you could consider sets and multisets as special maps
+and multimaps, respectively, for which the value and the key of the elements are the same objects.
+Thus, maps and multimaps have all the abilities and operations of sets and multisets. Some minor
+differences exist, however. First, their elements are key/value pairs. In addition, maps can be used
+as associative arrays.
+\bigbreak \noindent 
+Maps and multimaps sort their elements automatically, according to the element’s keys, and so have
+good performance when searching for elements that have a certain key. Searching for elements that
+have a certain value promotes bad performance. Automatic sorting imposes an important constraint
+on maps and multimaps: You may not change the key of an element directly, because doing so might
+compromise the correct order. To modify the key of an element, you must remove the element that
+has the old key and insert a new element that has the new key and the old value. As a consequence, from the iterator’s point of view, the element’s key is
+constant. However, a direct modification of the value of the element is still possible, provided that
+the type of the value is not constant.
+
+\bigbreak \noindent 
+\subsubsection{Constructors and types}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{map c} \\
+    Default constructor; creates an empty map/multimap without any elements.
+    
+    \item \texttt{map c(op)} \\
+    Creates an empty map/multimap that uses \texttt{op} as the sorting criterion.
+    
+    \item \texttt{map c(c2)} \\
+    Copy constructor; creates a copy of another map/multimap of the same type (all elements are copied).
+    
+    \item \texttt{map c = c2} \\
+    Copy assignment operator; creates a copy of another map/multimap of the same type (all elements are copied).
+    
+    \item \texttt{map c(rv)} \\
+    Move constructor; creates a new map/multimap of the same type, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{map c = rv} \\
+    Move assignment operator; creates a new map/multimap of the same type, taking the contents of the rvalue \texttt{rv} (since C++11).
+    
+    \item \texttt{map c(beg, end)} \\
+    Creates a map/multimap initialized by the elements of the range \texttt{[beg, end]}.
+    
+    \item \texttt{map c(beg, end, op)} \\
+    Creates a map/multimap with the sorting criterion \texttt{op} initialized by the elements of the range \texttt{[beg, end]}.
+    
+    \item \texttt{map c\{inilist\}} \\
+    Creates a map/multimap initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{map c = \{inilist\}} \\
+    Creates a map/multimap initialized with the elements of initializer list \texttt{inilist} (since C++11).
+    
+    \item \texttt{c.\~map()} \\
+    Destroys all elements and frees the memory.
+\end{itemize}
+\textbf{Here, map may be one of the following types:}
+\begin{itemize}
+    \item \texttt{map<Key, Val>} \\
+    A map that by default sorts keys with \texttt{less<>} (operator \texttt{<}).
+    
+    \item \texttt{map<Key, Val, Op>} \\
+    A map that by default sorts keys with \texttt{Op}.
+    
+    \item \texttt{multimap<Key, Val>} \\
+    A multimap that by default sorts keys with \texttt{less<>} (operator \texttt{<}).
+    
+    \item \texttt{multimap<Key, Val, Op>} \\
+    A multimap that by default sorts keys with \texttt{Op}.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Using maps as associative arrays}
+\bigbreak \noindent 
+Associative containers don’t typically provide abilities for direct element access. Instead, you must
+use iterators. For maps, as well as for unordered maps, however, there is an exception to this rule. Nonconstant maps provide a subscript operator for direct element access. In addition, since C++11, a corresponding member function at() is provided for constant and
+nonconstant maps 
+\bigbreak \noindent 
+at() yields the value of the element with the passed key and throws an exception object of type
+out\_of\_range if no such element is present
+\bigbreak \noindent 
+For operator [ ], the index also is the key that is used to identify the element. This means that
+for operator [ ], the index may have any type rather than only an integral type. Such an interface is
+the interface of a so-called associative array.
+\bigbreak \noindent 
+For operator [ ], the type of the index is not the only difference from ordinary arrays. In addition,
+you can’t have a wrong index. If you use a key as the index for which no element yet exists, a new
+element gets inserted into the map automatically. The value of the new element is initialized by the
+default constructor of its type. Thus, to use this feature, you can’t use a value type that has no default
+constructor. Note that the fundamental data types provide a default constructor that initializes their
+values to zero
+
+
+
+
+
+   \pagebreak 
+   \subsection{STL Unordered containers}
+   \bigbreak \noindent 
+   Strictly speaking, the C++ standard library calls unordered containers “unordered associative
+containers.” However, I will just use “unordered containers” when I refer to them. With “associative
+containers,” I still refer to the “old” associative containers, which are provided since C++98 and
+implemented as binary trees (set, multiset, map, and multimap).
+\bigbreak \noindent 
+Conceptionally, unordered containers contain all the elements you insert in an arbitrary order . That is, you can consider the container to be a bag: you can put in elements,
+but when you open the bag to do something with all the elements, you access them in a random
+order. So, in contrast with (multi)sets and (multi)maps, there is no sorting criterion; in contrast with
+sequence containers, you have no semantics to put an element into a specific position.
+\bigbreak \noindent 
+\subsubsection{Implementation}
+\bigbreak \noindent 
+All standardized unordered container classes are implemented as hash tables, which nonetheless still have a variety of implementation options.
+\bigbreak \noindent 
+\subsubsection{Abilities}
+\bigbreak \noindent 
+\begin{enumerate}
+    \item The hash tables use the “chaining” approach, whereby a hash code is associated with a linked list. (This technique, also called “open hashing” or “closed addressing,” should not be confused with “open addressing” or “closed hashing.”)
+    \item Whether these linked lists are singly or doubly linked is open to the implementers. For this reason, the standard guarantees only that the iterators are “at least” forward iterators.
+    \item Various implementation strategies are possible for rehashing:
+        \begin{itemize}
+            \item With the traditional approach, a complete reorganization of the internal data happens from time to time as a result of a single insert or erase operation.
+            \item With incremental hashing, a resizing of the number of bucket or slots is performed gradually, which is especially useful in real-time environments, where the price of enlarging a hash table all at once can be too high.
+        \end{itemize}
+    \item Unordered containers allow both strategies and give no guarantee that conflicts with either of them.
+
+\end{enumerate}
+\bigbreak \noindent 
+y. For each value to store, the hash function maps it to a
+bucket (slot) in the hash table. Each bucket manages a singly linked list containing all the elements
+for which the hash function yields the same value.
+\bigbreak \noindent 
+The major advantage of using a hash table internally is its incredible running-time behavior.
+Assuming that the hashing strategy is well chosen and well implemented, you can guarantee amortized constant time for insertions, deletions, and element search (“amortized” because the occasional
+rehashing happens that occurs can be a large operation with a linear complexity).
+\bigbreak \noindent 
+The expected behavior of nearly all the operations on unordered containers, including copy construction and assignment, element insertion and lookup, and equivalence comparison, depends on
+the quality of the hash function. If the hash function generates equal values for different elements, which also happens if an unordered container that allows duplicates is populated with equivalent
+values or keys, any hash table operation results in poor runtime performance. This is a fault not so
+much of the data structure itself but rather of its use by unenlightened clients
+
+\bigbreak \noindent 
+\subsubsection{Disadvantages}
+
+   \pagebreak 
+    \subsection{STL Containers: Implementations}
+\begin{itemize}
+    \item \textbf{std::vector}
+    \begin{itemize}
+        \item Implemented as a dynamically resizable array with contiguous memory.
+    \end{itemize}
+
+    \item \textbf{std::deque}
+    \begin{itemize}
+        \item Implemented as a sequence of dynamically allocated arrays (blocks) for efficient insertion/removal at both ends.
+    \end{itemize}
+
+    \item \textbf{std::list}
+    \begin{itemize}
+        \item Implemented as a doubly linked list, where each node contains pointers to the previous and next nodes.
+    \end{itemize}
+
+    \item \textbf{std::forward\_list}
+    \begin{itemize}
+        \item Implemented as a singly linked list, where each node contains a pointer to the next node.
+    \end{itemize}
+
+    \item \textbf{std::set} / \textbf{std::multiset}
+    \begin{itemize}
+        \item Implemented as a self-balancing binary search tree (typically Red-Black Tree).
+    \end{itemize}
+
+    \item \textbf{std::unordered\_set} / \textbf{std::unordered\_multiset}
+    \begin{itemize}
+        \item Implemented as a hash table with separate chaining or open addressing for collision resolution.
+    \end{itemize}
+
+    \item \textbf{std::map} / \textbf{std::multimap}
+    \begin{itemize}
+        \item Implemented as a self-balancing binary search tree (typically Red-Black Tree) for sorted key-value pairs.
+    \end{itemize}
+
+    \item \textbf{std::unordered\_map} / \textbf{std::unordered\_multimap}
+    \begin{itemize}
+        \item Implemented as a hash table with separate chaining or open addressing for key-value pairs.
+    \end{itemize}
+\end{itemize}
+
+
+\pagebreak 
+\subsection{STL Containers: Iterator Functions}
+\begin{itemize}
+    \item \textbf{Containers with all the iterator functions (begin(), end(), cbegin(), cend(), rbegin(), rend(), crbegin(), crend())}: 
+        \begin{enumerate}
+            \item Vector
+            \item Deque
+            \item List
+            \item Set 
+            \item Muliset
+            \item Map
+            \item Mulimap
+            \item Unordered set
+            \item unordered multiset
+            \item unordered map
+            \item unordered multimap
+        \end{enumerate}
+    \item \textbf{Containers with limited iterator support:}
+        \begin{enumerate}
+            \item \textbf{Forward\_list}: Only supports forward iterators (begin(), end(), cbegin(), cend()).
+        \end{enumerate}
+\end{itemize}
+
+
+   \pagebreak 
+   \subsection{STL containers: Main concepts, differences, uses}
+   \begin{itemize}
+       \item \textbf{Vectors}: 
+           \begin{itemize}
+               \item Dynamic array, automatic resizing. 
+               \item We have access to capacity and reserve methods. 
+               \item Fast at end operations. 
+               \item Contiguous memory, random access. 
+               \item at() method to index with error checking.
+           \end{itemize}
+
+        \item \textbf{Deque}: 
+            \begin{itemize}
+                \item Multiple blocks / Dynamic arrays to give access to both ends. 
+                \item Fast at both ends. 
+                \item Front and back operations. 
+                \item Slower iterator access compared to vectors. 
+                \item Iterators are smart pointers. 
+                \item No capacity access
+            \end{itemize}
+        \item \textbf{List:}
+            \begin{itemize}
+                \item Doubly-linked list
+                \item Insertion and removing is fast
+                \item Access at any element thats not the first or last is slow.
+                \item NO random access
+                \item Member method to sort
+                \item Splice
+                \item Unique
+                \item Merge
+            \end{itemize}
+        \item \textbf{Forward\_list}
+            \begin{itemize}
+                \item Singly linked list
+                \item No size method
+                \item No reverse iterators
+                \item No pointer to last element, no back(), push\_back(), or pop\_back() methods
+                \item For all member functions that modify forward lists in a way that elements are inserted or deleted at a specific position, special versions for forward lists are provided. The reason is that you have to pass the position of the element before the first element that gets manipulated, because there you have to assign a new successor element. Because you can’t navigate backwards (at least not in constant time), for all these member functions you have to pass the position of the preceding element. Because of this difference, these member functions have a after suffix in their name. For example, instead of insert(), insert\_after() is provided, which inserts new elements after the element passed as first argument; that is, it appends an element at that position.
+                    \bigbreak \noindent 
+                    For this reason, forward lists provide before\_begin() and cbefore\_begin(), which yield the position of a virtual element before the first element (technically speaking, the anchor of the linked list), which can be used to let built-in algorithms ending with after exchange even the first element
+            \end{itemize}
+        \item \textbf{Sets and multisets}
+            \begin{itemize}
+                \item Height balanced bst
+                \item No duplicates in set, can have duplicates in multiset
+                \item logarithmic searching
+                \item logarithmic insertion and deletion
+                \item Automatic sorting
+                \item Can't change elements directly
+                \item No direct element access
+                \item Constant iterators
+            \end{itemize}
+   \end{itemize}
+   
+
+   \pagebreak 
+   \subsection{STL Containers: Iterator invalidation}
+   \begin{itemize}
+       \item \textbf{Vectors:} 
+           \begin{itemize}
+               \item \textbf{Insertion:} All iterators are invalidated if a reallocation occurs; otherwise, only iterators at or after the point of insertion are invalidated.
+               \item \textbf{Deletion:} Iterators at or after the point of deletion are invalidated.
+           \end{itemize}
+        \item \textbf{Deque}: 
+            \begin{itemize}
+                \item \textbf{Insertion/Deletion:} At beginning or end, no invalidation unless reallocation occurs. Inserting or deleting in the middle invalidates all iterators.
+            \end{itemize}
+        \item \textbf{List}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+            \end{itemize}
+        \item \textbf{Forward list}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+            \end{itemize}
+        \item \textbf{Set/multiset}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+            \end{itemize}
+        \item \textbf{unordered set/unordered multiset}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation unless rehashing occurs.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+                \item \textbf{Rehashing:} All iterators are invalidated.
+            \end{itemize}
+        \item \textbf{Map/Multimap}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+            \end{itemize}
+        \item \textbf{Unordered map/unordered multimap}:
+            \begin{itemize}
+                \item \textbf{Insertion:} No invalidation unless rehashing occurs.
+                \item \textbf{Deletion:} Only the iterator to the erased element is invalidated.
+                \item \textbf{Rehashing:} All iterators are invalidated.
+            \end{itemize}
+   \end{itemize}
+
+   \pagebreak 
+   \subsection{STL Containers: Reallocation}
+   \begin{itemize}
+       \item \textbf{Vectors}: Reallocation occurs when inserting elements exceeds the current capacity.
+       \item \textbf{Deque}: Reallocation occurs when inserting elements requires more blocks (typically at both ends, but can happen internally).
+        \item \textbf{List, forward list}: No reallocation occurs, as they allocate nodes dynamically and do not store elements contiguously.
+        \item \textbf{set, multiset, map, multimap}: No reallocation occurs, as they use balanced trees, and elements are not stored contiguously.
+        \item \textbf{unordered set, unordered multiset, unordered map, unordered multimap}:  Reallocation occurs when the load factor exceeds a threshold, triggering a rehash to a larger bucket array.
+   \end{itemize}
+
+   \pagebreak 
+   \subsection{STL Containers: Element access}
+\begin{itemize}
+    \item \textbf{std::vector}
+    \begin{itemize}
+        \item Direct access via index: \texttt{v[i]}, \texttt{v.at(i)}
+        \item Front element: \texttt{v.front()}
+        \item Back element: \texttt{v.back()}
+    \end{itemize}
+    
+    \item \textbf{std::deque}
+    \begin{itemize}
+        \item Direct access via index: \texttt{d[i]}, \texttt{d.at(i)}
+        \item Front element: \texttt{d.front()}
+        \item Back element: \texttt{d.back()}
+    \end{itemize}
+    
+    \item \textbf{std::list}
+    \begin{itemize}
+        \item No direct access via index.
+        \item Front element: \texttt{l.front()}
+        \item Back element: \texttt{l.back()}
+    \end{itemize}
+    
+    \item \textbf{std::forward\_list}
+    \begin{itemize}
+        \item No direct access via index.
+        \item Front element: \texttt{fl.front()}
+    \end{itemize}
+    
+    \item \textbf{std::set} / \textbf{std::multiset}
+    \begin{itemize}
+        \item No direct access via index.
+        \item Access via iterator or functions like \texttt{find()}, \texttt{lower\_bound()}, \texttt{upper\_bound()}.
+    \end{itemize}
+    
+    \item \textbf{std::unordered\_set} / \textbf{std::unordered\_multiset}
+    \begin{itemize}
+        \item No direct access via index.
+        \item Access via iterator or \texttt{find()}.
+    \end{itemize}
+    
+    \item \textbf{std::map} / \textbf{std::multimap}
+    \begin{itemize}
+        \item Access by key: \texttt{m[key]} (for \texttt{std::map} only, not \texttt{std::multimap}).
+        \item Access via iterator or functions like \texttt{find()}, \texttt{lower\_bound()}, \texttt{upper\_bound()}.
+    \end{itemize}
+    
+    \item \textbf{std::unordered\_map} / \textbf{std::unordered\_multimap}
+    \begin{itemize}
+        \item Access by key: \texttt{um[key]} (for \texttt{std::unordered\_map} only, not \texttt{std::unordered\_multimap}).
+        \item Access via iterator or \texttt{find()}.
+    \end{itemize}
+\end{itemize}
+
+
+
+   \pagebreak 
+   \subsection{STL Containers: Uses and advantages}
+   \begin{itemize}
+    \item \textbf{std::vector}
+    \begin{itemize}
+        \item Advantages: Fast random access, contiguous memory, efficient for dynamic arrays.
+        \item Uses: When frequent random access and dynamic resizing are needed.
+    \end{itemize}
+    
+    \item \textbf{std::deque}
+    \begin{itemize}
+        \item Advantages: Fast insertion/removal at both ends, efficient dynamic array.
+        \item Uses: Double-ended queue operations, efficient at both front and back.
+    \end{itemize}
+    
+    \item \textbf{std::list}
+    \begin{itemize}
+        \item Advantages: Constant time insertion/removal anywhere, no reallocation.
+        \item Uses: When frequent insertions/removals in the middle are needed.
+    \end{itemize}
+    
+    \item \textbf{std::forward\_list}
+    \begin{itemize}
+        \item Advantages: Singly linked list, smaller memory overhead, constant time insertion/removal.
+        \item Uses: Memory-constrained environments, where only forward traversal is needed.
+    \end{itemize}
+    
+    \item \textbf{std::set} / \textbf{std::multiset}
+    \begin{itemize}
+        \item Advantages: Sorted elements, fast lookup (logarithmic time).
+        \item Uses: When you need a sorted collection with unique or non-unique elements.
+    \end{itemize}
+    
+    \item \textbf{std::unordered\_set} / \textbf{std::unordered\_multiset}
+    \begin{itemize}
+        \item Advantages: Fast average-time lookup (constant time), no sorting.
+        \item Uses: When fast lookup is needed without element ordering.
+    \end{itemize}
+    
+    \item \textbf{std::map} / \textbf{std::multimap}
+    \begin{itemize}
+        \item Advantages: Sorted key-value pairs, fast lookup (logarithmic time).
+        \item Uses: Key-value pairs where keys must remain sorted.
+    \end{itemize}
+    
+    \item \textbf{std::unordered\_map} / \textbf{std::unordered\_multimap}
+    \begin{itemize}
+        \item Advantages: Fast average-time lookup (constant time), no sorting.
+        \item Uses: Key-value pairs where fast lookup is needed without ordering.
+    \end{itemize}
+\end{itemize}
+
+
+
+
+
+
+   \pagebreak 
+   \subsection{STL Iterators}
+    An object that iterates/navigates over elements in the container. They are essentially an abstraction of pointer
+   \begin{itemize}
+       \item \textbf{Some notes about iterators}: 
+           \begin{enumerate}
+               \item each container provides its own iterator
+               \item interfaces of iterators of different containers are largely the same
+               \item internal behaviors depend on the data structure of the container
+           \end{enumerate}
+       \item \textbf{Operations}: 
+            \begin{enumerate}
+                \item operator * returns the element of the current positions
+                \item operator -> access a member of the element
+                \item operator ++ step forward
+                \item operator -- step backward
+                \item operator == and != whether two iterators represent the same position
+                \item operator = assign an iterator
+            \end{enumerate}
+        \item \textbf{Important iterators}:
+            \begin{enumerate}
+                \item begin() gets you the beginning of a container
+                \item end() gets you just past the end
+            \end{enumerate}
+        \item \textbf{Iterator types}
+            \begin{itemize}
+                \item \textbf{iterator}
+                \item \textbf{reverse\_iterator}
+                \item \textbf{const\_iterator}
+                \item \textbf{const\_reverse\_iterator}
+            \end{itemize}
+        \item \textbf{Iterator categories}
+            \begin{enumerate}
+                \item \textbf{Input Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read-only access to elements in a single-pass manner.
+                        \item \textbf{Operations:} Can be incremented (++), compared for equality (==), and dereferenced (*) to access elements.
+                    \end{itemize}
+                \item \textbf{Output Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Write-only access to elements in a single-pass manner.
+                        \item \textbf{Operations:} Can be incremented (++) and dereferenced (*) to assign values.
+                    \end{itemize}
+                \item \textbf{Forward Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read and write access to elements; can traverse the container in a single direction.
+                        \item \textbf{Operations:} Can be incremented (++), compared for equality (==), and dereferenced (*).
+                    \end{itemize}
+                \item \textbf{Bidirectional iterator}:
+                    \begin{itemize}
+                        \item \textbf{Purpose:} Read and write access to elements; can traverse the container in both directions.
+                        \item \textbf{Operations:} Supports both increment (++) and decrement (--) operations.
+                    \end{itemize}
+                    \pagebreak 
+                \item \textbf{Random Access Iterator:}
+                    \begin{itemize}
+                        \item \textbf{Purpose}: Read and write access with the ability to jump to any element in constant time.
+                        \item \textbf{Operations:} Supports all operations of bidirectional iterators plus direct arithmetic operations like addition (+), subtraction (-), and subscript ([]).
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{Containers and their iterators}:
+            \begin{enumerate}
+                \item \textbf{Vector}: Random access iterator
+                \item \textbf{Deque}: Random access iterator
+                \item \textbf{List}: Bidirectional iterator
+                \item \textbf{Forward\_list}: Forward iterator
+                \item \textbf{Set}: Bidirectional iterator
+                \item \textbf{Multiset}: Bidirectional iterator
+                \item \textbf{Map}: Bidirectional iterator
+                \item \textbf{Multimap}: Bidirectional iterator
+                \item \textbf{Unordered\_map}: Forward iterator
+            \end{enumerate}
+        \item \textbf{Insert iterators}: Insert iterators in C++ are special types of iterators that allow you to insert elements into a container at specific positions rather than overwriting existing elements. There are three primary types of insert iterators provided by the C++ Standard Library:
+            \bigbreak \noindent 
+            if a container has an insert method, you can and often should use it directly when inserting elements, especially if you want to insert a single element or a specific range of elements into the container.
+            \bigbreak \noindent 
+            Containers that have an insert method are: vector, deque, list, forward list, set, multiset, unordered set, unordered multiset,map, multimap, unordered map, unordered multi map.
+            \bigbreak \noindent 
+            Insert iterators (std::back\_inserter, std::front\_inserter, and std::inserter) should be used when working with algorithms or situations where automatic insertion logic simplifies your code.
+            \bigbreak \noindent 
+            Some things in <algorithm> require these inserters
+            \begin{enumerate}
+                \item \textbf{std::front\_inserter}: Inserts elements at the front of a container. Calls the container's push\_front method to add elements to the front. Used with containers that support push\_front 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <list>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::list<int> lst = {1, 2, 3};
+                            std::list<int> to_add = {4, 5, 6};
+
+                            // Insert elements at the front of lst
+                            std::copy(to_add.begin(), to_add.end(), std::front_inserter(lst));
+
+                            // lst now contains: 6, 5, 4, 1, 2, 3
+                        }
+                    \end{cppcode}
+                \item \textbf{std::back\_inserter}: Inserts elements at the end of a container. Inserts elements at the end of a container. Used with containers that support push\_back 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <vector>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::vector<int> vec = {1, 2, 3};
+                            std::vector<int> to_add = {4, 5, 6};
+
+                            // Insert elements at the end of vec
+                            std::copy(to_add.begin(), to_add.end(), std::back_inserter(vec));
+
+                            // vec now contains: 1, 2, 3, 4, 5, 6
+                        }
+                    \end{cppcode}
+                \item \textbf{std::inserter}: Inserts elements at a specific position in a container.  Takes an iterator indicating the insertion position and calls the container's insert method. Used with containers that support insertion at arbitrary positions
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        #include <vector>
+                        #include <algorithm>
+                        #include <iterator>
+
+                        int main() {
+                            std::vector<int> vec = {1, 2, 3};
+                            std::vector<int> to_add = {4, 5, 6};
+
+                            // Insert elements starting at the second position (before 2)
+                            std::copy(to_add.begin(), to_add.end(), std::inserter(vec, vec.begin() + 1));
+
+                            // vec now contains: 1, 4, 5, 6, 2, 3
+                        }
+                    \end{cppcode}
+            \end{enumerate} 
+   \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+   % \subsection{The Basics of STL containers}
+   % \bigbreak \noindent 
+   % The STL is a generic library that manages collections of data with efficient algorithms. It has template classes, functions, parameters. The idea is to have the same/single implementation works for many data types
+   % \bigbreak \noindent 
+   % \textbf{Components:}
+   % \begin{enumerate}
+   %     \item \textbf{Containers}: manage collections of data
+   %         \begin{itemize}
+   %             \item \textbf{sequence containers e.g. vector, list, deque}: Sequence containers store elements in a linear sequence, where the order of elements is strictly maintained. They allow for sequential access to elements
+   %             \item \textbf{associative containers e.g. set, map}: Associative containers store elements in a way that allows for fast retrieval based on keys. They automatically order elements based on their keys or some criterion.
+   %                 \bigbreak \noindent 
+   %                 \textbf{Note:} Sets in C++ are considered associative containers because they store elements in a way that allows for efficient retrieval based on the value of the elements themselves. This differs fundamentally from sequence containers, which maintain elements in a specific order based on the sequence of insertion.
+   %         \end{itemize}
+   %     \item \textbf{Iterators}: Step through elements in an container
+   %     \item \textbf{Algorithms}: Procedures that process the elements of collections
+   % \end{enumerate}
+   % \bigbreak \noindent 
+   % \textbf{Global algorithms for all containers in the <algorithm> header}:
+   % \begin{itemize}
+   %     \item \textbf{copy}: Copies elements from one range to another.
+   %     \item \textbf{transform}: Applies a function to each element in a range and stores the result in another range.
+   %     \item \textbf{find}: Searches for the first occurrence of a value in a range.
+   %     \item \textbf{search}: Searches for a subsequence within a range.
+   %     \item \textbf{mismatch}: Finds the first position where two ranges differ.
+   %     \item \textbf{fill}: Assigns a value to each element in a range.
+   %     \item \textbf{replace}: Replaces occurrences of a value in a range with another value.
+   %     \item \textbf{sort}: Sorts elements in a range.
+   % \end{itemize}
+   % \pagebreak \bigbreak \noindent 
+   % \textbf{Signatures}:
+   % \begin{cppcode}
+   %     template <class InputIterator, class OutputIterator>
+   %     OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result);
+   %
+   %     template <class InputIterator, class OutputIterator, class UnaryOperation>
+   %     OutputIterator transform(InputIterator first, InputIterator last, OutputIterator result, UnaryOperation op);
+   %
+   %     template <class InputIterator, class T>
+   %     InputIterator find(InputIterator first, InputIterator last, const T& value);
+   %
+   %     template <class ForwardIterator1, class ForwardIterator2>
+   %     ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1, ForwardIterator2 first2, ForwardIterator2 last2);
+   %
+   %
+   %     template <class InputIterator1, class InputIterator2>
+   %     std::pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2);
+   % \end{cppcode}
+   %
+   % \pagebreak 
+   % \begin{cppcode}
+   %     template <class ForwardIterator, class T>
+   %     void fill(ForwardIterator first, ForwardIterator last, const T& value);
+   %
+   %     template <class ForwardIterator, class T>
+   %     void replace(ForwardIterator first, ForwardIterator last, const T& old_value, const T& new_value);
+   %
+   %     template <class RandomAccessIterator>
+   %     void sort(RandomAccessIterator first, RandomAccessIterator last);
+   % \end{cppcode}
+   % \bigbreak \noindent 
+   % \textbf{Note:} This is not an exhaustive list of signatures for these procedures
+   % \bigbreak \noindent 
+   % \textbf{Vectors}: One of the sequence containers
+   % \begin{itemize}
+   %  \item \textbf{Properties of vectors}:
+   %      \begin{enumerate}
+   %          \item The order of elements in the container depends on the time/space of the insertion(s) of the elements. This means that the elements in a std::vector are stored in the order in which they are inserted.
+   %          \item dynamic array
+   %          \item random access
+   %          \item adding/removing elements at the end is fast
+   %          \item inserting/removing in the middle/beginning is slow 
+   %      \end{enumerate}
+   %  \item \textbf{Vector constructors}
+   %      \begin{enumerate}
+   %          \item default constructor
+   %          \item copy constructor
+   %          \item constructor with given range from another (type of) container, with an array, from standard input, type may be even different provided automatic conversion
+   %      \end{enumerate}
+   %  \item \textbf{Vector destructor}: When dealing with vectors, destructors automatically call the destructor of each element stored in the vector in reverse order of their insertion. After destroying each element, the vector's destructor releases the internal memory used by the vector itself.
+   %  \item \textbf{Vector methods}:
+   %      \begin{enumerate}
+   %          \item size - the actual number of elements in the vector
+   %          \item empty - whether the vector is empty or not
+   %          \item max\_size - the maximum number of elements a container may contain. - a constraint from the system or library implementation. this is different from capacity().
+   %          \item capacity - the number of elements a vector could contain in its actual memory.
+   %          \item resize - resize the vector. in case of larger size, fill the rest with a certain value. - different from reserve().
+   %          \item reserve - change the capacity of the vector. exception is thrown if not successful.
+   %      \end{enumerate}
+   %  \item \textbf{Element access methods}:
+   %      \begin{enumerate}
+   %          \item operator[ ] - access the element at a certain position. it does not check the valid range.
+   %          \item at() – similar to [ ]. it checks range, and throws exception.
+   %          \item front() – returns a reference to the first element
+   %          \item back() – returns a reference to the last element
+   %      \end{enumerate}
+   %  \item \textbf{assignments and assignment methods}
+   %      \begin{enumerate}
+   %          \item operator= - copy from another vector containing the same type
+   %          \item assign() - assigns new content to the current vector. overloaded.
+   %          \item swap() - exchange two vectors.
+   %      \end{enumerate}
+   %  \item \textbf{Insertion methods}
+   %      \begin{enumerate}
+   %          \item insert() - insert new element in front of a specified position
+   %          \item push\_back() - append a new element to the end of the vector
+   %          \item emplace\_back() - construct a new element in-place at the end, used if inserting objects that need to be constructed
+   %      \end{enumerate}
+   %  \item \textbf{Removal methods}
+   %      \begin{enumerate}
+   %          \item erase - remove an element or a range of elements
+   %          \item pop\_back - remove the last element
+   %          \item resize - change the number of elements
+   %          \item clear - remove all elements from the vector
+   %      \end{enumerate}
+   %  \item \textbf{what operations may cause reallocation of the internal array?}:
+   %      \begin{enumerate}
+   %          \item reserve
+   %          \item push\_back, emplace\_back
+   %          \item insert, emplace
+   %      \end{enumerate}
+   %      \bigbreak \noindent 
+   %      \textbf{Note:} Note that pop\_back, erase, clear do not cause reallocation
+   %      \bigbreak \noindent 
+   %      When reallocation happens, all references, pointers, and iterators referring to elements of the original vector become invalidated.
+   %  \item \textbf{what if do want to reduce memory size for unused positions?}
+   %      \begin{enumerate}
+   %          \item shrink\_to\_fit() - reduce memory usage by freeing unused memory
+   %      \end{enumerate}
+   %  \item \textbf{Time complexity of the operations}:
+   %      \begin{enumerate}
+   %          \item \textbf{Linear time O(n):} clear, insert, erase, assign, resize, destructor, operator=, copy constructor, constructor with a given rang
+   %              \bigbreak \noindent 
+   %              \textbf{Note:} push\_back and emplace\_back are O(n) because in the worst case, the vector needs to be resized in order to fit the new elements.
+   %          \item \textbf{linear time o(n):} clear, insert, erase, assign, resize, destructor, operator=, copy constructor, constructor with a given rang
+   %      \end{enumerate}
+   %
+   % \end{itemize}
+   %
+   % \pagebreak 
+   % \bigbreak \noindent 
+   % \textbf{Deque (Double ended queue)}: Another sequence container <deque>. Involves dynamic arrays, similar to vectors, but involves multiple ararys. Random access to its elements but a little slower than vectors, because of the multiple arrays.
+   % \bigbreak \noindent 
+   %   almost the same interface as vector
+   % \begin{itemize}
+   %     \item \textbf{different from vector:} deque has two open ends
+   %      \item fast for adding/removing at both ends
+   %      \item \textbf{Capacity stuff}: 
+   %          \begin{enumerate}
+   %              \item capacity() and reserve() are not available for deque
+   %              \item capacity and allocation are completely automatically managed for deque, no user suppor
+   %          \end{enumerate}
+   %      \item \textbf{Extra modifiers}: In deques, we have 
+   %          \begin{enumerate}
+   %              \item \textbf{push\_front()}
+   %              \item \textbf{pop\_front()}
+   %              \item \textbf{emplace\_front()}
+   %          \end{enumerate}
+   %          Along with the back stuff that vectors have.
+   %      \item \textbf{Internal memory}: internal memory is not contiguous (split into multiple arrays). Although we can use random access is if it were. element access and iterator movement involves more calculation comparing to vector
+   %          \bigbreak \noindent 
+   %          Iterators may need to jump between different memory blocks. max\_size may be larger because a deque may occupy multiple blocks of memory
+   %      \item \textbf{Adding at front or end}:  All iterators are invalidated; references are not invalidated
+   %          \bigbreak \noindent 
+   %      \item \textbf{Removing from front or end}: Iterators and references of other positions are not invalidated. end() is invalidated
+   %      \item \textbf{adding or removing anywhere other than two ends}: All iterators and references are invalidated
+   %      \item \textbf{Advantages of deques}:
+   %          \begin{enumerate}
+   %              \item fast adding/removing at both ends (though still slow inadding/removing in the middle)
+   %              \item possiblely larger max\_size
+   %              \item massive reallocations are avoided
+   %          \end{enumerate}
+   % \end{itemize}
+   %
+   % \pagebreak \bigbreak \noindent 
+   % \textbf{List}: (doubly linked list) Another sequence container <list>
+   % \begin{itemize}
+   %     \item \textbf{Properties}:
+   %         \begin{enumerate}
+   %             \item Doubly-linked list
+   %              \item No random access of elements
+   %              \item Adding or removing \textbf{anywhere} is fast, as long as you have reference to the location where you want to add/remove, otherwise you need to traverse the list to reach the location
+   %              \item adding/removing does not invalidate pointers, references, and iterators to other elements
+   %              \item there is no reallocation
+   %         \end{enumerate}
+   %      \item \textbf{Capacity stuff}: Capacity and reserve are not available for lists, each element of the list has its own memory. Elements occupy non-contiguous memory.
+   %      \item \textbf{Element access}: No [], no at().
+   %      \item \textbf{Operations on lists}:
+   %          \begin{enumerate}
+   %              \item remove( ): remove all elements with a certain value
+   %              \item remove\_if( ): remove all elements that satisfy certain criterion.
+   %              \item erase( ): remove an element with a specified iterator (note that erase here returns an iterator for next pos.)
+   %              \item unique( ): remove duplicates of consecutive elements
+   %              \item splice( ): move elements from one list to another
+   %              \item sort( ): sort all elements with $<$ or defined comparison
+   %              \item merge( ): merge two sorted lists
+   %              \item reverse( ): reverse the order of all elements
+   %              \item many above methods are overloaded
+   %          \end{enumerate}
+   %      \item \textbf{Splicing (splice method)}: We pass iterator for position of insertion, list object to take elements from, begin, end range of source list
+   % \end{itemize}
+   %
+   % \pagebreak 
+   % \bigbreak \noindent 
+   % \textbf{forward\_list}: Another sequence container <forward\_list>. Internally implemented by singly linked list. No random access of elements
+   % \bigbreak \noindent 
+   % Adding/removing does not invalidate pointers, references, and iterators to other elements. there is no reallocation
+   % \begin{itemize}
+   %     \item Only support forward iterators. (no -- operation), only forward traversal
+   %      \item forward lists are more memory efficient than lists in some cases
+   %      \item \textbf{Adding / removing properties}
+   %          \begin{enumerate}
+   %              \ite madding/removing at begin of a list is fast
+   %              \item adding/removing at the next position of a given element is fast
+   %      \item adding/removing anywhere requires traversal from head
+   %          \end{enumerate}
+   % \end{itemize}
+   %
+   % \pagebreak \bigbreak \noindent 
+   % \textbf{Associative containers}
+   % \begin{itemize}
+   %     \item \textbf{Sorted}: Elements (or keys) are sorted. Internally height balanced binary search tree. 
+   %         \bigbreak \noindent 
+   %         orted according to a certain sorting criterion, by default its the < operator. You can provide you own criteria
+   %         \bigbreak \noindent 
+   %         Order of insertion does not matter
+   %         \begin{enumerate}
+   %             \item \textbf{Set:} Elements are sorted according to their own values. Each element only occurs once
+   %             \item \textbf{multiset}: Set that allows duplicates
+   %             \item \textbf{map}: each element is a key/value pair. Key is used for sorting elements. Each key occurs only once
+   %             \item \textbf{multimap}: similar to map, except that it allows duplicates 
+   %         \end{enumerate}
+   %      \item \textbf{Unsorted}: Not sorted, internally organized as hash table
+   %          \begin{enumerate}
+   %              \item unordered set
+   %              \item unordered multiset
+   %              \item unordered map
+   %              \item unordered multimap
+   %          \end{enumerate}
+   % \end{itemize}
+   %
+   % \bigbreak \noindent 
+   % \textbf{Set and multiset}: When an element is added to a set, it’s automatically placed in a position to maintain the sorting status.
+   % \bigbreak \noindent 
+   % One cannot change an element value directly Otherwise the new value may break the correct order
+   % \begin{itemize}
+   %     \item No direct element access
+   %     \item Elements referenced by iterators are constants
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % In order to change value, one needs to remove the element with the old value, add the new element with the new value
+   % \bigbreak \noindent 
+   % Sets and multisets are efficient for searching.
+   % \bigbreak \noindent 
+   % \textbf{Special search operations}
+   % \begin{itemize}
+   %     \item \textbf{count(elem)} : the number of elements with the value elem
+   %     \item \textbf{find(elem)} : the position of the first element with value elem Note that it’s different from find() in <algorithm>
+   %     \item \textbf{lower\_bound(elem)} : the position of first element $>=$ elem
+   %     \item \textbf{upper\_bound(elem)} : the position of first element $>$ elem
+   %     \item \textbf{equal\_range(elem)} : the range of elements == elem. The return value is a pair<iterator, iterator>
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Inserting and removing elements}
+   % \begin{itemize}
+   %     \item \textbf{insert( elem )}: Returns pair<iterator, bool>. The second field indicates the insertion is successful or not (since an element may already exists)
+   %      \item \textbf{insert( pos, elem)}:
+   %      \item \textbf{insert(begin, end)}:
+   %      \item \textbf{erase(element)}:
+   %      \item \textbf{erase(pos)}:
+   %      \item \textbf{erase(begin, end)}
+   %      \item \textbf{clear()}
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{size related operations}:
+   % \begin{itemize}
+   %     \item \textbf{size()}
+   %      \item \textbf{empty()}
+   %      \item \textbf{max\_size()}
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Assignments}
+   % \begin{itemize}
+   %     \item \textbf{operator=}
+   %      \item \textbf{swap()}
+   % \end{itemize}
+   %
+   % \pagebreak 
+   % \bigbreak \noindent 
+   % \textbf{map \& multimap}: Manage key/value pairs as elements
+   % \bigbreak \noindent 
+   % Multimap allows duplicate, while map does not. Elements are automatically sorted based on keys according to a certain sorting criterion
+   % \bigbreak \noindent 
+   % \textbf{Properties}
+   % \begin{itemize}
+   %     \item \textbf{Automatic sorting}: When a key/value pair is added to a map, it’s automatically placed in a position to maintain the sorting status based on the key
+   %     \item \textbf{One cannot change the key of an element directly}: Otherwise the new value may break the correct order based on keys The keys of elements referenced by iterators are constants
+   %      \item \textbf{In order to change a key, one needs to}: Remove the element with the old key, add the new element with the new key.
+   %      \item \textbf{Efficient for searching based on keys}: Not efficient for searching based on values of elements
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Note:} One can still modify the value of an element directly
+   % \bigbreak \noindent 
+   % \textbf{Search operations}: 
+   % \begin{itemize}
+   %     \item \textbf{count(key)} : the number of elements with the key
+   %     \item  \textbf{find(key)} : the position of the first element with the key
+   %     \item \textbf{lower\_bound(key)} : the position of first element whose key $>=$ key
+   %     \item \textbf{upper\_bound(key)} : the position of first element whose key $>$ key
+   %     \item \textbf{equal\_range(key)} : the range of elements whose key == key. The return value is a pair
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Inserting and removing elements}
+   % \begin{itemize}
+   %     \item \textbf{insert( elem )}: The return type for map is pair<iterator, bool> The second field indicates the insertion is successful or not (since an element may already exists)
+   %     \item \textbf{insert( pos, elem)}:
+   %     \item \textbf{insert( beg, end )}:
+   %     \item \textbf{erase(elem )}:
+   %     \item \textbf{erase( pos )}: Note that in sequence containers, erase returns the position after the removed element, but in associative containers, erase does not return such position because it needs to traverse to find successor.
+   %     \item \textbf{erase( beg, end )}:
+   %     \item \textbf{clear()}:
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Size related operations}
+   % \begin{itemize}
+   %     \item \textbf{size()}:
+   %      \item \textbf{empty()}:
+   %      \item \textbf{max\_size()}:
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Assignments}
+   % \begin{itemize}
+   %     \item \textbf{operator=}:
+   %      \item \textbf{sawp}:
+   % \end{itemize}
+   % \bigbreak \noindent 
+   % \textbf{Return of [] operator}
+   % \begin{itemize}
+   %     \item \textbf{m[k]}: Returns a reference to the value of the element with key k. Inserts an element with k if it does not yet exist
+   % \end{itemize}
+   %
+   %
+   %
+   %
+   %
+   %
+   % \pagebreak \bigbreak \noindent 
+
+   \pagebreak 
+   \subsection{STL Function Objects}
+   \bigbreak \noindent 
+   Functional arguments for algorithms don’t have to be functions. As seen with lambdas, functional arguments can be objects that behave like functions. Such an object is called a function object, or functor. Instead of using a lambda, you can define a function object as an object of a class that provides a function call operator
+   \bigbreak \noindent 
+   Function objects are another example of the power of generic programming and the concept of pure
+   abstraction. You could say that anything that behaves like a function is a function. So, if you define
+   an object that behaves as a function, it can be used like a function.
+   \bigbreak \noindent 
+   So, what is the behavior of a function? A functional behavior is something that you can call by
+   using parentheses and passing arguments
+   \bigbreak \noindent 
+   All you have to do is define operator () with the appropriate parameter types:
+   \bigbreak \noindent 
+   \begin{cppcode}
+       class c {
+           public:
+           void operator() (int x) {
+               cout << "The value is: " << x << endl;
+           }
+       };
+
+       c c1;
+       c1(2); // Call the object as a function
+
+       vector<int> v({1,2,3});
+       std::for_each(b(v), e(v), c()); // Use function object for algorithms
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \paragraph{Why?}
+   \bigbreak \noindent \bigbreak \noindent 
+   You may be wondering what all this is good for. You might even think that function objects look
+   strange, nasty, or nonsensical. It is true that they do complicate code. However, function objects are
+   more than functions, and they have some advantages:
+   \begin{enumerate}
+       \item Function objects are “functions with state.” Objects that behave like pointers are smart pointers. This is similarly true for objects that behave like functions: They can be “smart functions” because they may have abilities beyond operator (). Function objects may have other member functions and attributes. This means that function objects have a state. In fact, the same functionality, represented by two different function objects of the same type, may have different states at the same time. This is not possible for ordinary functions. Another advantage of function objects is that you can initialize them at runtime before you use/call them.
+       \item Each function object has its own type. Ordinary functions have different types only when their signatures differ. However, function objects can have different types even when their signatures are the same. In fact, each functional behavior defined by a function object has its own type. This is a significant improvement for generic programming using templates because you can pass functional behavior as a template parameter. Doing so enables containers of different types to use the same kind of function object as a sorting criterion, ensuring that you don’t assign, combine, or compare collections that have different sorting criteria. You can even design hierarchies of function objects so that you can, for example, have different, special kinds of one general criterion.
+       \item Function objects are usually faster than ordinary functions. The concept of templates usually allows better optimization because more details are defined at compile time. Thus, passing function objects instead of ordinary functions often results in better performance.
+   \end{enumerate}
+
+   \bigbreak \noindent 
+   \paragraph{Predefined function objects}
+   \bigbreak \noindent \bigbreak \noindent 
+   \begin{itemize}
+       \item LESS<T>
+       \item GREATER<T>
+    \end{itemize}
+   We can use these for example, in constructor of set:
+   \bigbreak \noindent 
+   \begin{cppcode}
+       set<ELEM> C // A SET THAT SORTS WITH LESS<>
+        set<ELEM, OPERATION> C // A SET THAT SORTS WITH OP
+   \end{cppcode}
+   \bigbreak \noindent 
+     Examples:
+   \begin{itemize}
+       \item SET<INT> S1; // INTEGERS ARE SORTED BY <
+       \item SET<INT, GREATER<INT> > S2; // INTEGERS ARE SORTED BY >
+   \end{itemize}
+
+
+
     \pagebreak 
     \unsect{Templates}
     \bigbreak \noindent 
