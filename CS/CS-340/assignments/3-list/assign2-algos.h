@@ -34,8 +34,8 @@ using std::setw;
 template <typename ITERATOR, typename T>
 token_info<ITERATOR> get_next_token_strict(ITERATOR begin, ITERATOR end, T delim) {
   token_info<ITERATOR> just_stop;
-  just_stop.t_begin = begin;
   just_stop.t_end = end;
+  just_stop.t_begin = begin;
   just_stop.t_next = end;
 
   // Find delim

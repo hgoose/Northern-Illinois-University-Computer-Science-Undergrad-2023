@@ -59,7 +59,7 @@
     \end{titlepage}
     \tableofcontents
    \pagebreak 
-   \unsect{The STL}
+   \unsect{STL Containers}
    \subsection{STL Vectors}
    \bigbreak \noindent 
    \subsubsection{Implementation}
@@ -532,7 +532,7 @@ functions to change the order of and relink elements and ranges.
        \item A forward list does not provide a size() member function. This is a consequence of omitting features that create time or space overhead relative to a handwritten singly linked list.
        \item The anchor of a forward list has no pointer to the last element. For this reason, a forward list does not provide the special member functions to deal with the last element, back(), push\_back(), and pop\_back().
        \item For all member functions that modify forward lists in a way that elements are inserted or deleted at a specific position, special versions for forward lists are provided. The reason is that you have to pass the position of the element before the first element that gets manipulated, because there you have to assign a new successor element. Because you can’t navigate backwards (at least not in constant time), for all these member functions you have to pass the position of the preceding element. Because of this difference, these member functions have a \_after suffix in their name. For example, instead of insert(), insert\_after() is provided, which inserts new elements after the element passed as first argument; that is, it appends an element at that position.
-       \item For this reason, forward lists provide before\_begin() and cbefore\_begin(), which yield the position of a virtual element before the first element (technically speaking, the anchor of the linked list), which can be used to let built-in algorithms ending with _after exchange even the first element.
+       \item For this reason, forward lists provide before\_begin() and cbefore\_begin(), which yield the position of a virtual element before the first element (technically speaking, the anchor of the linked list), which can be used to let built-in algorithms ending with \_after exchange even the first element.
    \end{itemize}
 
    \bigbreak \noindent 
@@ -729,6 +729,31 @@ insert a new element that has the new value. The interface reflects this behavio
     \item \texttt{multiset<Elem, Op>} \\
     A multiset that by default sorts with \texttt{Op}.
 \end{itemize}
+\pagebreak 
+\subsubsection{Constructors}
+\begin{itemize}
+    \item \texttt{set c} Default constructor; creates an empty set/multiset without any elements
+    \item \texttt{set c(op)} Creates an empty set/multiset that uses \texttt{op} as the sorting criterion
+    \item \texttt{set c(c2)} Copy constructor; creates a copy of another set/multiset of the same type (all elements are copied)
+    \item \texttt{set c = c2} Copy constructor; creates a copy of another set/multiset of the same type (all elements are copied)
+    \item \texttt{set c(rv)} Move constructor; creates a new set/multiset of the same type, taking the contents of the rvalue \texttt{rv} (since C++11)
+    \item \texttt{set c = rv} Move constructor; creates a new set/multiset of the same type, taking the contents of the rvalue \texttt{rv} (since C++11)
+    \item \texttt{set c(beg,end)} Creates a set/multiset initialized by the elements of the range \texttt{[beg,end)}
+    \item \texttt{set c(beg,end,op)} Creates a set/multiset with the sorting criterion \texttt{op}, initialized by the elements of the range \texttt{[beg,end)}
+    \item \texttt{set c(initlist)} Creates a set/multiset initialized with the elements of initializer list \texttt{initlist} (since C++11)
+    \item \texttt{set c = initlist} Creates a set/multiset initialized with the elements of initializer list \texttt{initlist} (since C++11)
+    \item \texttt{c.\~{}set()} Destroys all elements and frees the memory
+\end{itemize}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \texttt{set<Elem>} A set that by default sorts with \texttt{less<>} (\texttt{operator <})
+    \item \texttt{set<Elem,Op>} A set that by default sorts with \texttt{Op}
+    \item \texttt{multiset<Elem>} A multiset that by default sorts with \texttt{less<>} (\texttt{operator <})
+    \item \texttt{multiset<Elem,Op>} A multiset that by default sorts with \texttt{Op}
+\end{itemize}
+
+
+
 
 
 
@@ -853,6 +878,35 @@ default constructor of its type. Thus, to use this feature, you can’t use a va
 constructor. Note that the fundamental data types provide a default constructor that initializes their
 values to zero
 
+\bigbreak \noindent 
+\subsubsection{Constructors}
+\begin{itemize}
+    \item \texttt{map c} Default constructor; creates an empty map/multimap without any elements
+    \item \texttt{map c(op)} Creates an empty map/multimap that uses \texttt{op} as the sorting criterion
+    \item \texttt{map c(c2)} Copy constructor; creates a copy of another map/multimap of the same type (all elements are copied)
+    \item \texttt{map c = c2} Copy constructor; creates a copy of another map/multimap of the same type (all elements are copied)
+    \item \texttt{map c(rv)} Move constructor; creates a new map/multimap of the same type, taking the contents of the rvalue \texttt{rv} (since C++11)
+    \item \texttt{map c = rv} Move constructor; creates a new map/multimap of the same type, taking the contents of the rvalue \texttt{rv} (since C++11)
+    \item \texttt{map c(beg,end)} Creates a map/multimap initialized by the elements of the range \texttt{[beg,end)}
+    \item \texttt{map c(beg,end,op)} Creates a map/multimap with the sorting criterion \texttt{op}, initialized by the elements of the range \texttt{[beg,end)}
+    \item \texttt{map c(initlist)} Creates a map/multimap initialized with the elements of initializer list \texttt{initlist} (since C++11)
+    \item \texttt{map c = initlist} Creates a map/multimap initialized with the elements of initializer list \texttt{initlist} (since C++11)
+    \item \texttt{c.\~{}map()} Destroys all elements and frees the memory
+\end{itemize}
+\bigbreak \noindent
+\begin{itemize}
+    \item \texttt{map<Key,Val>} A map that by default sorts keys with \texttt{less<>} (\texttt{operator <})
+    \item \texttt{map<Key,Val,Op>} A map that by default sorts keys with \texttt{Op}
+    \item \texttt{multimap<Key,Val>} A multimap that by default sorts keys with \texttt{less<>} (\texttt{operator <})
+    \item \texttt{multimap<Key,Val,Op>} A multimap that by default sorts keys with \texttt{Op}
+\end{itemize}
+
+\pagebreak 
+\subsection{Example of bounds and equal range}
+
+
+
+
 
 
 
@@ -903,6 +957,21 @@ much of the data structure itself but rather of its use by unenlightened clients
 
 \bigbreak \noindent 
 \subsubsection{Disadvantages}
+\begin{itemize}
+    \item Unordered containers don’t provide operators $<$, $>$, $<=$, and $>=$ to order multiple instances of these containers. However, == and != are provided (since C++11).
+    \item lower\_bound() and upper\_bound() are not provided.
+    \item Because the iterators are guaranteed only to be forward iterators, reverse iterators, including rbegin(), rend(), crbegin(), and crend(), are not supported, and you can’t use algorithms that require bidirectional iterators, or at least this is not portable
+\end{itemize}
+\bigbreak \noindent 
+Because the (key) value of an element specifies its position — in this case, its bucket entry — you
+are not allowed to modify the (key) value of an element directly. Therefore, much as with associative
+containers, to modify the value of an element, you must remove the element that has the old value
+and insert a new element that has the new value
+\bigbreak \noindent 
+\begin{itemize}
+    \item Unordered containers don’t provide operations for direct element access.
+    \item Indirect access via iterators has the constraint that, from the iterator’s point of view, the element’s (key) value is constant.
+\end{itemize}
 
    \pagebreak 
     \subsection{STL Containers: Implementations}
@@ -1333,7 +1402,30 @@ much of the data structure itself but rather of its use by unenlightened clients
                         }
                     \end{cppcode}
             \end{enumerate} 
-   \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Complexity of container operations}
+    \begin{center}
+        \begin{tabular}{|>{\raggedright}m{4cm}|>{\centering}m{2.5cm}|>{\centering}m{2.5cm}|>{\centering}m{3cm}|>{\centering\arraybackslash}m{3cm}|}
+            \hline
+            \textbf{Container} & \textbf{Access} & \textbf{Search} & \textbf{Insertion} & \textbf{Deletion} \\ \hline
+            \texttt{vector} & O(1) & O(n) & O(n) (amortized O(1) at end) & O(n) \\ \hline
+            \texttt{deque} & O(1) & O(n) & O(n) (amortized O(1) at ends) & O(n) \\ \hline
+            \texttt{list} & O(n) & O(n) & O(1) (if position known), O(n) (worst case) & O(1) (if position known), O(n) (worst case) \\ \hline
+            \texttt{forward\_list} & O(n) & O(n) & O(1) (if position known), O(n) (worst case) & O(1) (if position known), O(n) (worst case) \\ \hline
+            \texttt{set} & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\ \hline
+            \texttt{multiset} & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\ \hline
+            \texttt{map} & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\ \hline
+            \texttt{multimap} & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ \\ \hline
+            \texttt{unordered\_set} & O(n) & O(n) & O(n) & O(n) \\ \hline
+            \texttt{unordered\_multiset} & O(n) & O(n) & O(n) & O(n) \\ \hline
+            \texttt{unordered\_map} & O(n) & O(n) & O(n) & O(n) \\ \hline
+            \texttt{unordered\_multimap} & O(n) & O(n) & O(n) & O(n) \\ \hline
+        \end{tabular}
+   \end{center}
+   \bigbreak \noindent 
+   Unordered container operations are for the most part constant time operations, but worst case they are linear.
 
 
 
@@ -1693,7 +1785,149 @@ much of the data structure itself but rather of its use by unenlightened clients
    % \pagebreak \bigbreak \noindent 
 
    \pagebreak 
-   \subsection{STL Function Objects}
+   \unsect{STL Algorithms}
+   \subsection{<algorithm>}
+
+   \pagebreak 
+   \subsection{<numeric>}
+   \bigbreak \noindent 
+   \subsubsection{transform\_reduce}
+   \bigbreak \noindent
+   std::transform\_reduce is a function introduced in C++17 as part of the <numeric> header. It combines the functionality of both std::transform and std::reduce (also known as std::accumulate in earlier C++ standards). This algorithm applies a transformation to elements from one or two ranges and then reduces (aggregates) the results of that transformation using a specified binary operation.
+   \bigbreak \noindent 
+   The signature of std::transform\_reduce has several overloads, but it can be summarized in two forms:
+   \bigbreak \noindent 
+   \paragraph{Unary transform and reduce}
+   \bigbreak \noindent \bigbreak \noindent 
+   \begin{cppcode}
+    template <typename InputIt, typename T, typename BinaryOp1, typename UnaryOp>
+    T transform_reduce(InputIt first, InputIt last, T init, BinaryOp1 binary_op, UnaryOp unary_op);
+   \end{cppcode}
+   \bigbreak \noindent 
+   \begin{itemize}
+       \item \textbf{first, last:} Input range [first, last).
+       \item \textbf{init:} Initial value for the reduction.
+       \item \textbf{binary\_op:} Binary operation to reduce the transformed values (e.g., std::plus<>() for summation).
+       \item \textbf{unary\_op:} Unary operation to transform each element before reducing
+   \end{itemize}
+   \bigbreak \noindent 
+   This version is for a single input range, where each element is transformed and then the transformed results are reduced.
+   \bigbreak \noindent 
+   Example
+   \bigbreak \noindent 
+   \begin{cppcode}
+       #include <numeric>
+       #include <vector>
+       #include <iostream>
+
+       int main() {
+           std::vector<int> v = {1, 2, 3, 4, 5};
+           int result = std::transform_reduce(v.begin(), v.end(), 0, std::plus<>(), [](int x) { return x * x; });
+           std::cout << "Sum of squares: " << result << std::endl;
+       }
+
+   \end{cppcode}
+   \begin{itemize}
+       \item The unary\_op is the lambda function, which squares each element.
+       \item The binary\_op is std::plus<>, which adds the squares together.
+       \item The result will be $1^{2} + 2^{2} + 3^{2} + 4^{2} + 5^{2} = 55$.
+   \end{itemize}
+
+   \bigbreak \noindent 
+   \paragraph{Binary transform and reduce}
+   \bigbreak \noindent \bigbreak \noindent 
+   \begin{cppcode}
+    template <typename InputIt1, typename InputIt2, typename T, typename BinaryOp1, typename BinaryOp2>
+    T transform_reduce(InputIt1 first1, InputIt1 last1, InputIt2 first2, T init, BinaryOp1 binary_op, BinaryOp2 binary_transform_op);
+   \end{cppcode}
+   \begin{itemize}
+       \item \textbf{first1, last1:} First input range [first1, last1).
+       \item \textbf{first2}: Second input range, assumed to have at least the same length as the first.
+       \item \textbf{init:} Initial value for the reduction.
+       \item \textbf{binary\_op:} Binary operation to reduce the transformed values.
+       \item \textbf{binary\_transform\_op:} Binary operation to transform elements from both ranges before reducing.
+   \end{itemize}
+   \bigbreak \noindent 
+   This version is for two input ranges, where pairs of elements from both ranges are transformed and then the transformed results are reduced.
+
+   \bigbreak \noindent 
+   Example
+   \bigbreak \noindent 
+   \begin{cppcode}
+       #include <numeric>
+       #include <vector>
+       #include <iostream>
+
+       int main() {
+           std::vector<int> v1 = {1, 2, 3};
+           std::vector<int> v2 = {4, 5, 6};
+           int result = std::transform_reduce(v1.begin(), v1.end(), v2.begin(), 0, std::plus<>(), std::multiplies<>());
+           std::cout << "Dot product: " << result << std::endl;
+       }
+   \end{cppcode}
+
+   \pagebreak \bigbreak \noindent 
+   \paragraph{std::plus<> and std::multiplies<>}
+   \bigbreak \noindent \bigbreak \noindent 
+   std::plus<> and std::multiplies<> are implemented as function objects
+   \bigbreak \noindent 
+   \begin{cppcode}
+   template<typename T=void>
+   struct plus {
+       constexpr operator()(const T& lhs, const T& rhs) const {
+           return lhs + rhs;
+       }
+   };
+
+   template<typename T=void>
+   struct multiplies {
+       constexpr operator()(const T& lhs, const T& rhs) const {
+           return lhs * rhs;
+       }
+   };
+   \end{cppcode}
+   \bigbreak \noindent 
+   The \texttt{T = void} in function objects like std::plus and std::multiplies allows for more flexibility and generic usage.
+   \bigbreak \noindent 
+   The T = void part enables a more generic specialization for void, which allows the function object to work with mixed types (as long as the types support the required operation) or automatically deduce the argument types
+   \bigbreak \noindent 
+   By specializing for void, the compiler can automatically deduce the types of lhs and rhs. This means that you don’t have to explicitly specify a type when you use std::multiplies<>. For example, you can apply std::multiplies<> to two arguments of different types (e.g., int and float), and it will work as long as the multiplication operator (*) is defined for them.
+
+   \bigbreak \noindent 
+   \paragraph{Other key function objects}
+   \bigbreak \noindent  \bigbreak \noindent 
+   \begin{itemize}
+       \item \texttt{std::plus}
+       \item \texttt{std::minus}
+       \item \texttt{std::multiplies}
+       \item \texttt{std::divides}
+       \item \texttt{std::modulus}
+       \item \texttt{std::negate}
+       \item \texttt{std::equal\_to}
+       \item \texttt{std::not\_equal\_to}
+       \item \texttt{std::greater}
+       \item \texttt{std::less}
+       \item \texttt{std::greater\_equal}
+       \item \texttt{std::less\_equal}
+       \item \texttt{std::logical\_and}
+       \item \texttt{std::logical\_or}
+       \item \texttt{std::logical\_not}
+   \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \pagebreak 
+   \unsect{Function Objects}
    \bigbreak \noindent 
    Functional arguments for algorithms don’t have to be functions. As seen with lambdas, functional arguments can be objects that behave like functions. Such an object is called a function object, or functor. Instead of using a lambda, you can define a function object as an object of a class that provides a function call operator
    \bigbreak \noindent 
@@ -2746,9 +2980,9 @@ int main() {
         \item \textbf{REG\_NOSUB:} Disables the reporting of the position of matches. This flag is useful when you only need to know if a match occurred but not where it occurred. It can lead to performance improvements because the regex engine does not need to track and store the match positions.
         \item \textbf{REG\_NEWLINE:} Alters the handling of newline characters in the text. Specifically, it:
             \begin{itemize}
-                \item Prevents the match from spanning multiple lines. The ^ and $ metacharacters will match the start and end of the input string but not the start or end of a line within the string.
+                \item Prevents the match from spanning multiple lines. The $\land$ and \$ metacharacters will match the start and end of the input string but not the start or end of a line within the string.
                 \item Causes the dot . metacharacter to stop matching at a newline, which it normally would match.
-                \item Treats newline characters in the input as a boundary that cannot be crossed by the quantifiers *, +, ?, and {n} unless explicitly included in a character class.
+                \item Treats newline characters in the input as a boundary that cannot be crossed by the quantifiers $*$, $+$, ?, and $\{n\}$ unless explicitly included in a character class.
             \end{itemize}
         \item \textbf{REG\_NOTBOL and REG\_NOTEOL:}
             \begin{itemize}
@@ -2804,7 +3038,7 @@ int main() {
     \bigbreak \noindent 
     \subsubsection{Return value}
     \bigbreak \noindent 
-    Upon successful completion, the regerror() function shall return the number of bytes needed to hold the entire generated string, including the null termination. If the return value is greater than errbuf_size, the string returned in the buffer pointed to by errbuf has been truncated.
+    Upon successful completion, the regerror() function shall return the number of bytes needed to hold the entire generated string, including the null termination. If the return value is greater than errbuf\_size, the string returned in the buffer pointed to by errbuf has been truncated.
 
     \bigbreak \noindent 
     \subsection{Regfree}
@@ -2816,7 +3050,7 @@ int main() {
     \subsubsection{Signature}
     \bigbreak \noindent 
     \begin{cppcode}
-        void regfree(regex\_t *preg)
+        void regfree(regex_t *preg)
     \end{cppcode}
     \begin{itemize}
         \item \textbf{preg:} The compiled regular expression to free.
@@ -2826,7 +3060,7 @@ int main() {
     \pagebreak 
     \subsection{regmatch\_t and pmatch}
     \bigbreak \noindent 
-    \subsubsection{regmatch\_t}
+    \subsubsection{regmatch_t}
     \bigbreak \noindent 
     regmatch\_t is a structure used to describe a single match (or submatch) found by regexec(). It contains at least the following two fields:
     \begin{itemize}
