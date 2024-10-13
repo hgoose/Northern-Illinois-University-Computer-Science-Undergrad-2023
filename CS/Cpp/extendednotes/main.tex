@@ -345,7 +345,7 @@ We have
         }
     \end{cppcode}
     \bigbreak \noindent 
-    The reason your code works when using template parameters is that the template parameters r and c are compile-time constants. In C++, when you use template parameters like this, the values of r and c are determined at compile time, allowing the array sizes to be known by the compiler ahead of time
+    The reason this code works when using template parameters is that the template parameters r and c are compile-time constants. In C++, when you use template parameters like this, the values of r and c are determined at compile time, allowing the array sizes to be known by the compiler ahead of time
 
 
 
@@ -1915,16 +1915,57 @@ and insert a new element that has the new value
    \end{itemize}
 
 
+   \pagebreak 
+   \unsect{Type traits}
+   \bigbreak \noindent 
+   Type traits are a collection of template-based utilities that allow you to perform compile-time introspection and manipulation of types. They are part of the Standard Template Library (STL) and are available through the header <type\_traits>. These utilities help you gather information about types (e.g., whether a type is an integer or floating-point, whether it is const-qualified, etc.) and perform transformations on them (e.g., remove const, add reference, etc.).
+   \begin{itemize}
+       \item \textbf{Type Properties:} These allow you to query certain properties of a type
+       \item \textbf{Type Modifications}: These traits allow you to modify types, like adding or removing qualifiers
+        \item \textbf{Conditional Typing:} These help you select types conditionally:
+        \item \textbf{Transformation Traits:} These are useful when you need to change a type in a generic way:
+   \end{itemize}
+
+   \bigbreak \noindent 
+   \subsection{Nonstandard type of types}
+   \bigbreak \noindent 
+   \begin{itemize}
+       \item \textbf{Fundamental:} Includes basic types like int, float, char, void, and nullptr\_t. They are built-in types in the language.
+       \item \textbf{Arithmetic:} Includes all integral types (like int, char) and floating-point types (like float, double).
+       \item \textbf{Scalar:} Includes arithmetic types, pointers, and nullptr\_t. Essentially, types that hold a single value.
+       \item \textbf{Object:} Any type that can hold data in memory, including scalar types, arrays, and classes/structs.
+       \item \textbf{Compound:} Any type built from other types, such as arrays, pointers, references, classes, or unions.
+       \item \textbf{Trivial:} A type that has a trivial constructor, destructor, and copy/move operations. It means they can be easily copied or constructed without any custom behavior.
+       \item \textbf{Trivially copyable:} A type that can be copied using simple memory operations, such as memcpy, without needing any special handling.
+       \item \textbf{Polymorphic:} A class type that contains at least one virtual function, enabling runtime polymorphism through inheritance.
+       \item \textbf{Abstract:} A class type with at least one pure virtual function, making it impossible to instantiate directly.
+       \item \textbf{Final:} A class or virtual function marked as final cannot be derived from or overridden further.
+       \item \textbf{Aggregate:} A simple class or struct with no private or protected members, no constructors, and no virtual functions, allowing it to be initialized with a brace-enclosed initializer list.
+   \end{itemize}
 
 
+   \bigbreak \noindent 
+   \subsection{::value, ::type, and ::value\_type}
+   \bigbreak \noindent 
+   ::value, ::type, and ::value\_type are commonly seen in template metaprogramming, especially with traits and type manipulation.
+   \begin{itemize}
+       \item \textbf{::value}: Used in type traits to access a constant value. Typically, this is a static constexpr or enum that holds an integral value. 
+           \bigbreak \noindent 
+           \begin{cppcode}
+           std::is_integral<int>::value  // true (1)
+           \end{cppcode}
+        \item \textbf{::type}: Refers to a type alias or typedef within a template. It is commonly used in type traits to represent the result of a type transformation or query.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            std::remove_const<const int>::type  // int (removes const qualifier)
+            \end{cppcode}
+        \item \textbf{::value\_type}: A member type that typically represents the type of elements stored in a container. Found in STL containers like std::vector or custom types.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            std::vector<int>::value_type  // int
+            \end{cppcode}
 
-
-
-
-
-
-
-
+   \end{itemize}
 
    \pagebreak 
    \unsect{Function Objects}
@@ -1986,6 +2027,286 @@ and insert a new element that has the new value
        \item SET<INT> S1; // INTEGERS ARE SORTED BY <
        \item SET<INT, GREATER<INT> > S2; // INTEGERS ARE SORTED BY >
    \end{itemize}
+
+   \bigbreak \noindent 
+   \unsect{Decltype}
+   \bigbreak \noindent 
+   \begin{concept}
+       \textbf{decltype} is a keyword in C++ introduced in C++11, which stands for "declared type". It is used to query the type of an expression without actually evaluating that expression. This can be particularly useful in template programming and type deduction, where the type of an expression might not be known until compile time.
+   \end{concept}
+   \bigbreak \noindent 
+   \subsection{Syntax}
+   \bigbreak \noindent 
+   \begin{cppcode}
+       decltype(expression) variable_name;
+   \end{cppcode}
+   \bigbreak \noindent 
+   Here, \textbf{variable\_name} will have the same type as the type of \textbf{expression}. It's important to note that \textbf{expression} is not evaluated; \textbf{decltype} only deduces its type.
+   \bigbreak \noindent 
+   \subsection{Example}
+   \bigbreak \noindent 
+   \begin{cppcode}
+       int a = 5;
+       decltype(a) b = 5;
+
+       cout << typeid(b).name() << endl; // Output: i
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \subsection{Things to pair with decltype}
+   \begin{itemize}
+       \item \textbf{std::decay\_t} is commonly used with decltype to remove references and qualifiers from a type. It transforms types to their "decayed" forms, similar to what happens when passing an argument to a function.
+           \bigbreak \noindent 
+           \begin{cppcode}
+               auto var = someFunction();
+               using DecayedType = std::decay_t<decltype(var)>;
+           \end{cppcode}
+        \item \textbf{std::remove\_reference / std::remove\_const / std::remove\_cv:}: These traits can be used to strip references, const, and volatile qualifiers from the type deduced by decltype.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            using NonConstType = std::remove_const_t<decltype(someVar)>;
+            \end{cppcode}
+        \item \textbf{std::is\_same}: Useful when you want to compare the type deduced by decltype with some other type to perform type-checking in templates.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            static_assert(std::is_same_v<decltype(var), int>, "Type must be int");
+            \end{cppcode}
+        \item \textbf{std::common\_type:} It computes the common type between two or more types, which is useful when you want to get a type that can hold the result of an expression involving multiple types deduced by decltype.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            using CommonType = std::common_type_t<decltype(a), decltype(b)>;
+            \end{cppcode}
+        \item \textbf{std::conditional}: This allows for conditional type selection based on a compile-time boolean value, often paired with decltype to determine types based on some logic.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            using ConditionalType = std::conditional_t<some_condition, decltype(a), decltype(b)>;
+            \end{cppcode}
+            \bigbreak \noindent 
+            $a$ if true, $b$ if false. A compile-time boolean value is a value that is determined during the compilation phase, rather than at runtime. You typically get these compile-time boolean values from type traits or constexpr values
+   \end{itemize}
+
+   Where $\_t$ is shorthand for $::type$ and $\_v$ is shorthand for $::value$
+
+   \pagebreak 
+   \unsect{Constexpr}
+   \bigbreak \noindent 
+   In C++, constexpr is a keyword that allows you to declare that a variable or function can be evaluated at compile time if its inputs are known during compilation. It is used to define constant expressions, which are expressions that can be computed at compile time, leading to potential performance improvements and safer code by ensuring certain values are computed early.
+   \bigbreak \noindent 
+   \subsection{Variables}
+   \bigbreak \noindent 
+   A constexpr variable is guaranteed to have a constant value, and that value is computed at compile time. This is useful for things like array sizes or any situation where you need a compile-time constant.
+   \bigbreak \noindent 
+   \begin{cppcode}
+       constexpr int size = 10;  // size is computed at compile time
+       int arr[size];            // Valid because size is constant
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \subsection{Functions}
+   \bigbreak \noindent 
+   A constexpr function can be evaluated at compile time if its arguments are known at compile time. If the arguments are not known until runtime, it will behave like a regular function and be evaluated at runtime.
+   \bigbreak \noindent 
+   constexpr functions must have a single return statement, or all branches must return a value.
+   \bigbreak \noindent 
+   \begin{cppcode}
+       constexpr int square(int x) {
+           return x * x;
+       }
+
+       constexpr int result = square(5);  // This will be computed at compile time
+   \end{cppcode}
+
+   \pagebreak 
+   \subsection{Object Constructors}
+   \bigbreak \noindent 
+   You can also mark constructors as constexpr, meaning you can create objects that are initialized at compile time
+   \bigbreak \noindent 
+   \begin{cppcode}
+       struct Point {
+           constexpr Point(int x, int y) : x(x), y(y) {}
+           int x, y;
+       };
+
+       constexpr Point p(3, 4);  // Object created at compile time
+   \end{cppcode}
+
+   \bigbreak \noindent 
+   \subsection{constexpr vs const}
+   \bigbreak \noindent 
+   const variables are constant at runtime but not necessarily at compile time. You can initialize const with runtime values.
+   \bigbreak \noindent 
+    constexpr implies const but guarantees that the value or function result is computed at compile time if possible.
+
+
+    \pagebreak 
+    \unsect{Function pointers and callable parametrs}
+    \bigbreak \noindent 
+    \subsection{Function pointers}
+    \bigbreak \noindent 
+    Function pointers are variables that store the address of a function. They can be passed as parameters to other functions, allowing the called function to invoke the pointed-to function.
+    \bigbreak \noindent 
+    \subsubsection{As types}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void fn(unsigned short a) {
+            cout << "Arg is: " << a << '\n';
+        }
+
+        void (*f)(unsigned short) = &fn;
+        void (*f)(unsigned short) = fn;
+        f(20);
+    \end{cppcode}
+    Here $f$ is a pointer to function that takes an unsigned short and returns void. You may notice that we can omit the address of operator. In C++, function names can implicitly convert to pointers to those functions. This behavior is similar to how array names decay to pointers to their first elements.
+    \bigbreak \noindent 
+    \bigbreak \noindent 
+    \subsubsection{As function paramater}
+    \begin{cppcode}
+        void fn(unsigned short a) {
+            cout << "Arg is: " << a << '\n';
+        }
+
+        void fun(void (*f)(unsigned short), int n) {
+            f(n);
+        }
+
+        void (*f)(unsigned short) = &fn;
+        fun(f, 12);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here, fun is a function that has two parameters, a pointer a function that takes an unsigned short and returns void, and an integer n.
+    \pagebreak \bigbreak \noindent 
+    We can also pass lambdas.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void fun(void (*f)(unsigned short), unsigned short x) {
+            f(x);
+        }
+
+        auto lambda = [] (unsigned short n) -> void {
+            cout << n << endl;
+        };
+
+        fun(lambda, 12);
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Function pointers to member functions}
+    \bigbreak \noindent 
+    Function pointers to member functions in C++ are a way to refer to non-static member functions of a class. They differ from regular function pointers because member functions implicitly take a this pointer to operate on a specific instance of the class.
+    \bigbreak \noindent 
+    To declare a pointer to a member function of a class ClassName with a signature ReturnType(ClassName::*)(Arguments)
+    \bigbreak \noindent 
+    \begin{cppcode}
+        ReturnType (ClassName::*pointerName)(Arguments);
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct foo {
+            void print() {
+                cout << "Hello world" << endl;
+            }
+        };
+
+        void (foo::*f)() = &foo::print;
+        foo f1;
+        (f1.*f)();
+
+        foo* fptr = &f1; // Through a ptr
+        (fptr->*f)();
+    \end{cppcode}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Using std::function}
+    \bigbreak \noindent 
+    We can also define function types with std::function.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void fn(unsigned short a) {
+            cout << "Arg is: " << a << '\n';
+        }
+
+        void fun(std::function<void(unsigned short)> f, int x) {
+            f(x);
+        }
+
+        fun(fn, 12);
+
+        std::function<void(unsigned short)> f = [] (unsigned short a) -> void {
+            cout << a << endl;
+        };
+
+        fun(f, 13);
+    \end{cppcode}
+    
+    \pagebreak 
+    \unsect{std::bind}
+    \bigbreak \noindent 
+    \subsection{std::placeholders}
+    \bigbreak \noindent 
+    Before we get into std::bind, we must discuss std::placeholders
+    \bigbreak \noindent 
+    std::placeholders is a namespace in C++ that provides placeholder objects like std::placeholders::\_1, std::placeholders::\_2, and so on, which are used in conjunction with std::bind. These placeholders represent arguments that will be supplied when the resulting callable object (created by std::bind) is invoked.
+    \bigbreak \noindent 
+    Each placeholder corresponds to a positional argument that the function object will expect at the time of calling. For example:
+    \begin{itemize}
+        \item std::placeholders::\_1 represents the first argument.
+        \item std::placeholders::\_2 represents the second argument, and so on.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    std::bind in C++ is used to create a function object (or a callable) by binding specific arguments to a function or member function, essentially "fixing" some of its arguments ahead of time. This allows the resulting function object to be called later with fewer arguments, as some are already provided.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int add(int a, int b) {
+            return a + b;
+        }
+
+        auto addtwo = std::bind(add, 2, std::placeholders::_1);
+        cout << addtwo(4) << '\n'; // 6
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here, std::bind(add, 2, std::placeholders::\_1) binds 2 as the first argument of add, leaving the second argument to be provided later. The placeholder \_1 indicates where future arguments should be inserted.
+
+    \pagebreak 
+    \subsection{Using std::ref with bind}
+    \bigbreak \noindent 
+    std::ref is a utility in C++ that allows you to create reference wrappers for objects. It's commonly used when you need to pass objects by reference to functions that usually take arguments by value, such as when using function objects or lambdas with standard algorithms (like std::for\_each or std::thread).
+    \bigbreak \noindent 
+    It provides a way to pass a reference to an object where an argument would otherwise be copied.
+    \bigbreak \noindent 
+    It’s especially useful when the function you're working with doesn’t explicitly accept references but you want to pass one anyway.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void add(int& a) {
+            ++a;
+        }
+
+        int local = 0;
+
+        auto f = std::bind(add, local);
+        f();
+        f();
+        cout << local << endl; // Outputs zero
+
+        auto f = std::bind(add, std::ref(local)); // Outputs two
+        f();
+        f();
+        cout << local << endl;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \textbf{Note:} std::ref makes a std::reference\_wrapper<Type>...
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int local = 0;
+        std::reference_wrapper<int> rlocal = local; 
+
+        auto f = std::bind(add, rlocal); // Outputs two
+    \end{cppcode}
+
+
+
+
 
 
 
@@ -2207,31 +2528,6 @@ void foo(myclass<T>& obj) {
     \end{cppcode}
 
     \bigbreak \noindent 
-    \subsection{decltype}
-
-    \bigbreak \noindent 
-    \begin{concept}
-        \textbf{decltype} is a keyword in C++ introduced in C++11, which stands for "declared type". It is used to query the type of an expression without actually evaluating that expression. This can be particularly useful in template programming and type deduction, where the type of an expression might not be known until compile time.
-    \end{concept}
-    \bigbreak \noindent 
-    \subsubsection{Syntax}
-    \bigbreak \noindent 
-    \begin{cppcode}
-        decltype(expression) variable_name;
-    \end{cppcode}
-    \bigbreak \noindent 
-    Here, \textbf{variable\_name} will have the same type as the type of \textbf{expression}. It's important to note that \textbf{expression} is not evaluated; \textbf{decltype} only deduces its type.
-    \bigbreak \noindent 
-    \subsubsection{Example}
-    \bigbreak \noindent 
-    \begin{cppcode}
-    int a = 5;
-    decltype(a) b = 5;
-
-    cout << typeid(b).name() << endl; // Output: i
-    \end{cppcode}
-
-    \bigbreak \noindent 
     \subsection{Template functions with mixed types (Trailing return type)}
     \bigbreak \noindent 
     \begin{concept}
@@ -2393,13 +2689,481 @@ void foo(myclass<T>& obj) {
      \bigbreak \noindent 
      Where size\_type is a type alias defined inside the class or container type T. In this context, size\_type typically represents an unsigned integer type used to express sizes and counts of elements in the container.
 
+     \bigbreak \noindent 
+     \subsection{Variadic templates with functions}
+     \bigbreak \noindent 
+     Variadic templates in C++ allow you to write functions or classes that can take an arbitrary number of template arguments
+     \bigbreak \noindent 
+     A variadic template is defined by using an ellipsis (...) both in the template parameter list and in the function arguments. 
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template<typename... Args>
+         void print(Args... args) {
+             // function body
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{typename...} Args declares a parameter pack named Args, which can hold zero or more template arguments.
+         \item \textbf{Args...} args is another parameter pack that holds the function parameters of arbitrary types and numbers.
+     \end{itemize}
+     \bigbreak \noindent 
+     A parameter pack in C++ is a feature of variadic templates that represents zero or more template parameters or function arguments. It allows functions or classes to handle an arbitrary number of arguments.
+     \bigbreak \noindent 
+     To process the elements of the parameter pack, you can use a technique called pack expansion. A common way to do this is by recursively calling the variadic function. 
+     \bigbreak \noindent 
+     \begin{cppcode}
+         #include <iostream>
+
+         void print() {
+             std::cout << std::endl;
+         }
+
+         template<typename T, typename... Args>
+         void print(T first, Args... args) {
+             std::cout << first << " ";
+             print(args...);  // recursive call with remaining arguments
+         }
+
+         int main() {
+             print(1, 2.5, "Hello", 'A');
+             return 0;
+        }
+     \end{cppcode}
+     \bigbreak \noindent 
+     In C++17, fold expressions simplify handling variadic templates by eliminating the need for recursion. You can apply an operation over the entire parameter pack in a single expression
+     \bigbreak \noindent 
+     \begin{cppcode}
+         #include <iostream>
+
+         template<typename... Args>
+         void print(Args... a) {
+             ((std::cout << a << std::endl) , ...); // Right fold
+              (..., (std::cout << a << endl)); // Left fold
+              // Both folds output the same, more on this later
+         }
+
+         int main() {
+             print(1, 2.5, "Hello", 'A');
+             return 0;
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     The ellipsis ... is part of the fold expression syntax, and here it’s applied to the entire operation inside the parentheses: (cout << a << endl). This means the expression cout << a << endl will be expanded for each argument a in the parameter pack.
+     \bigbreak \noindent 
+     The comma operator (operator,) allows multiple expressions to be evaluated in sequence. It guarantees that for each a, the expression cout << a << endl will be executed. This effectively prints each argument followed by a newline.
+     \bigbreak \noindent 
+     \bigbreak \noindent 
+     The expanded form of ((cout << a << endl), ...) would look something like:
+     \bigbreak \noindent 
+     \begin{cppcode}
+         (cout << arg1 << endl, cout << arg2 << endl, cout << arg3 << endl, ...);
+     \end{cppcode}
+     \bigbreak \noindent 
+     To exapand upon this...
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename ... args>
+         void fn(args ... a) {
+             ((std::cout << a << endl) , ...);
+         }
+
+         void f(int a, int b, int c) {
+             cout << a << endl, cout << b << endl, cout << c << endl;
+         }
+
+         fn(1,2,3);
+         cout << endl;
+         f(1,2,3);
+     \end{cppcode}
+     \bigbreak \noindent 
+     Both functions have the same output.
+     \bigbreak \noindent 
+     In the example above we are using the comma operator, but it could be any operator
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template<typename T, typename... Args>
+         T fn(Args ... a) {
+             int sum = 0;
+             sum = (sum + ... + a); // Expand: sum = (0 + a_1 + a_2 + ... + a_n);
+             (sum += ... += a); // Expand: sum += a_1 += a_2 += a_3 += ... += a_n
+             sum += (... + a); // Expand: sum += (a-1 + ... + a_n)
+             return sum;
+         }
+     \end{cppcode}
+     \bigbreak \noindent
+     Recall, assignment operators in c++ are right to left
+
+     \pagebreak \bigbreak \noindent 
+     \subsection{Left vs right folds}
+     \bigbreak \noindent 
+     A left fold applies the operator from left to right.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         (... op pack)
+     \end{cppcode}
+     \bigbreak \noindent 
+     The operator op is applied between the leftmost elements first, and then successively to the rest of the elements.
+     \bigbreak \noindent 
+     A right fold applies the operator from right to left.
+     \bigbreak \noindent 
+     \begin{cppcode}
+     pack op ...
+     \end{cppcode}
+     \bigbreak \noindent 
+     The operator op is applied between the rightmost elements first, and then successively to the remaining elements.
+
+     \pagebreak \bigbreak \noindent 
+     \subsection{Parentheses in fold expressions}
+     \bigbreak \noindent 
+     The parentheses in fold expressions in C++ are used to ensure correct grouping and to determine how the fold expression expands over the parameter pack. They help dictate the precedence and associativity of the operation being applied to the elements of the parameter pack, ensuring the operator is applied in the desired order.
+     \bigbreak \noindent 
+     Parentheses are necessary to group the fold expression correctly, especially when using operators like +, -, +=, etc., which need to be explicitly applied across the elements of a parameter pack.
+     \bigbreak \noindent 
+     The parentheses ensure that the fold applies the operator across the entire parameter pack and handles the result correctly.
+     \bigbreak \noindent 
+     \begin{cppcode}
+     (sum += ... + args);
+     \end{cppcode}
+     \bigbreak \noindent 
+     Here, the parentheses ensure that the += is applied between sum and the result of the left fold ... + args.
+     \bigbreak \noindent 
+     Without parentheses, operator precedence could cause the fold expression to be parsed incorrectly by the compiler, leading to syntax errors or unintended behavior.
+
+     \bigbreak \noindent 
+     \subsection{Pack size}
+     \bigbreak \noindent 
+     sizeof...(Args) (also called "pack size") is a compile-time operator that gives you the number of template arguments in the parameter pack Args.... It works for both types and non-type template parameter packs. This can be helpful in function calls, especially when you're dealing with variadic templates and need to know the size of the pack for controlling logic or iteration.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         // Function template using sizeof... to count the number of arguments
+         template<typename... Args>
+         void countArguments(Args... args) {
+             std::cout << "Number of arguments: " << sizeof...(Args) << std::endl;
+         }
+     \end{cppcode}
+
      \pagebreak 
-     \unsect{Lambdas}
+     \subsection{Function calls in fold expressions}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template<typename T>
+         void print(T t) {
+             cout << t << endl;
+         }
+
+         template<typename... args>
+         void f(args...a) {
+             (print(a),...);
+             (..., print(a)); // Does the same
+         }
+
+     \end{cppcode}
+
+     
+
+
+     \pagebreak \bigbreak \noindent 
+     \subsection{Variadic templates with classes}
+     \bigbreak \noindent 
+     A variadic class template is defined in much the same way as a variadic function template, but it applies to classes. You use typename... (or class...) to declare a parameter pack in the class definition, which allows the class to accept multiple template arguments.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template<typename... Args>
+         class MyClass {
+             // Use Args... in the class definition
+         };
+     \end{cppcode}
+     \bigbreak \noindent 
+     In this example, Args... is a parameter pack that can hold any number of types.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         // Variadic class template
+         template<typename... Args>
+         class MyClass {};
+
+         // Specialization for one type argument
+         template<typename T>
+         class MyClass<T> {
+             public:
+             void display() {
+                 std::cout << "One template argument: " << typeid(T).name() << std::endl;
+             }
+         };
+
+         // Specialization for two type arguments
+         template<typename T1, typename T2>
+         class MyClass<T1, T2> {
+             public:
+             void display() {
+                 std::cout << "Two template arguments: "
+                 << typeid(T1).name() << " and " << typeid(T2).name() << std::endl;
+             }
+         };
+
+         // Specialization for more than two arguments
+         template<typename T, typename... Rest>
+         class MyClass<T, Rest...> {
+             public:
+             void display() {
+                 std::cout << "First argument: " << typeid(T).name() << std::endl;
+                 std::cout << "Number of remaining arguments: " << sizeof...(Rest) << std::endl;
+             }
+         };
+     \end{cppcode}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template<typename...Args>
+         struct foo {
+
+             void printargs(Args...args) {
+                 ((cout << args << endl), ...);
+             }
+         };
+
+         foo<int,string,double> a;
+         a.printargs(1,"foo",3.14f);
+     \end{cppcode}
+
+
+     \pagebreak 
+     \subsection{std::forward}
+     \bigbreak \noindent 
+     std::forward is a utility function in C++ that is used primarily in template functions to enable perfect forwarding. It is part of the C++ Standard Library and is typically used to forward arguments while preserving their value category (whether they are lvalues or rvalues).
+     \bigbreak \noindent 
+     In generic template code, when you want to pass arguments to another function or callable, you need to preserve whether those arguments were passed as lvalues (references to existing objects) or rvalues (temporary objects). std::forward allows you to forward arguments while ensuring that their value category is preserved.
+     \bigbreak \noindent 
+     Without std::forward, arguments passed to template functions would often lose their original value category, especially when working with rvalues
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template< class T >
+         T&& forward( typename std::remove_reference<T>::type\& arg ) noexcept;
+     \end{cppcode}
+     \bigbreak \noindent 
+     If the argument is an rvalue std::forward will cast it to an rvalue (i.e., T\&\&), allowing the function to move the argument if appropriate (typically used in move semantics).
+     \bigbreak \noindent 
+     If the argument is an lvalue std::forward will cast it to an lvalue reference (T\&), ensuring that the original object is used and not moved or copied unnecessarily.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template <typename T>
+         void wrapper(T&& arg) {
+             func(std::forward<T>(arg));  // Perfectly forward arg, preserving its value category
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     Now, std::forward<T>(arg) ensures that if arg was originally passed as an rvalue, it remains an rvalue when forwarded to func, enabling func to take advantage of move semantics. Similarly, if arg was an lvalue, it is passed as an lvalue.
+     \bigbreak \noindent 
+     \subsubsection{Key Differences Between std::forward and std::move}
+     \bigbreak \noindent 
+     std::move Unconditionally casts the argument to an rvalue, suggesting that it can be "moved from" (even if it was originally an lvalue). It doesn't preserve the original value category but rather forces the argument to be treated as an rvalue.
+     \bigbreak \noindent 
+     std::forward Conditionally casts the argument, preserving its value category. It is only used in template code and requires knowledge of whether the argument was an lvalue or rvalue (via the type deduction)
+
+     \pagebreak \bigbreak \noindent 
+     \begin{cppcode}
+         #include <iostream>
+         #include <utility>
+
+         void process(const std::string& s) {
+             std::cout << "Lvalue: " << s << '\n';
+         }
+
+         void process(std::string&& s) {
+             std::cout << "Rvalue: " << s << '\n';
+         }
+
+         template <typename T>
+         void wrapper(T&& arg) {
+             process(std::forward<T>(arg));  // Forward arg to process
+         }
+
+         int main() {
+             std::string str = "Hello";
+
+             wrapper(str);            // Lvalue is forwarded, calls process(const std::string&)
+             wrapper(std::move(str)); // Rvalue is forwarded, calls process(std::string&&)
+         }
+
+     \end{cppcode}
+
+     \pagebreak 
+     \subsection{Universal reference (forwarding reference)}
+     \bigbreak \noindent 
+     Universal references (also called forwarding references) in C++ are template parameters declared as T\&\& that can bind to both lvalues and rvalues. The behavior of a universal reference depends on the type of the argument passed:
+     \bigbreak \noindent 
+     If an lvalue is passed, T\&\& becomes an lvalue reference (T\&).
+    If an rvalue is passed, T\&\& remains an rvalue reference (T\&\&).
+    \bigbreak \noindent 
+    Universal references are typically used with perfect forwarding, allowing you to forward arguments to other functions while preserving their value category (lvalue or rvalue).
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T>
+    void bar(T&& x) {
+        cout << x << '\n';
+    }
+
+    template<typename T>
+    void foo(T&& x) {
+        bar(std::forward<T>(x));
+    }
+
+    template<typename T>
+    void fn(T&& x) {
+        cout << x << endl;
+    }
+
+    int x = 20;
+    decltype(x)& y = x;
+    fn(std::forward<decltype(y)>(y));
+    \end{cppcode}
+
+
+
+
+
+
+
+
+
+
+     \pagebreak 
+     \unsect{More on the comma operator}
+     \bigbreak \noindent 
+     The comma acts as both a separator and an operator, depending on the context.
+     \bigbreak \noindent 
+     As a separator, The comma separates elements in lists, such as function arguments, initializer lists, or variables in declarations. This much is trivial
+     \bigbreak \noindent 
+     As an Operator, the comma operator (when used in expressions) evaluates two or more expressions from left to right, and the result of the entire comma expression is the result of the right-most expression.
+     \bigbreak \noindent 
+     \begin{cppcode}
+     int a = (1, 2);  // a gets the value of 2
+     \end{cppcode}
+     \bigbreak \noindent 
+     In this case, 1 is evaluated first, then 2 is evaluated, and the result of the entire expression is 2.
+     \bigbreak \noindent 
+     In loops, 
+     \bigbreak \noindent 
+     \begin{cppcode}
+         for (int i = 0, j = 10; i < j; ++i, --j) {
+             // Do something
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     Here, the comma separates the initialization of $i$ and $j$ as well as the increment and decrement operations in the loop.
+
+
+
+
+
+
+
+
+
+     \pagebreak 
+     \unsect{More on Lambdas}
      \bigbreak \noindent 
      \subsection{Auto in lambda args}
      \bigbreak \noindent 
+     In C++, the auto keyword is used in lambda expressions to infer the type of the parameters or the return type. It helps make lambda functions more flexible and convenient to use without explicitly specifying types, especially when types are complex or unknown at compile time.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct foo {
+             int x = 0, y = 0;
+
+             foo() = default;
+             foo(int a, int b) : x(a), y(b) {}
+
+             friend std::ostream& operator<<(std::ostream& os, foo f);
+         };
+
+         std::ostream& operator<<(std::ostream& os, foo f) {
+             os << "x: " << f.x << endl << "y: " << f.y << endl;
+             return os;
+         }
+
+         foo f1(1,2), f2(3,4);
+
+         auto fn = [] (const auto& a, const auto& b) -> auto {
+             cout << a << endl << b;
+         };
+
+         fn(f1,f2);
+     \end{cppcode}
+     \bigbreak \noindent 
+     It should be noted that you cannot do this with regular functions
+     \bigbreak \noindent 
+     \begin{cppcode}
+         // Not allowed!
+         void fn(const auto& a, const auto& b) { 
+             cout << a << endl << b;
+         }
+     \end{cppcode}
+
+
      \subsection{Template lambdas}
+     \bigbreak \noindent 
+     Since C++20, we can make template lambdas.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         auto fn = []<typename T>(const T& a, const T& b) -> auto{
+             cout << a << endl << b;
+         };
+         fn(f1,f2); // No need for <> notation, auto deduced
+     \end{cppcode}
      
+
+     \pagebreak 
+     \unsect{std::invoke}
+     \bigbreak \noindent 
+     std::invoke is a utility function in C++ (introduced in C++17) that allows you to invoke a callable object in a uniform way, regardless of whether the callable is a regular function, a member function, or a function object (like a lambda or std::function). The main benefit of std::invoke is that it simplifies calling different types of callable objects without needing to worry about the specific calling syntax.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template< class F, class... Args >
+         decltype(auto) invoke(F&& f, Args&&... args);
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsection{Calling a regular function}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int add(int a, int b) {
+             return a + b;
+         }
+
+         int result = std::invoke(add, 2, 3);  // Calls add(2, 3)
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsection{Calling a member function}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct MyClass {
+             int multiply(int x) { return x * 2; }
+         };
+
+         MyClass obj;
+         int result = std::invoke(&MyClass::multiply, obj, 5);  // Calls obj.multiply(5)
+     \end{cppcode}
+     \pagebreak \bigbreak \noindent 
+     \subsection{Accessing a member variable}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct MyClass {
+             int value;
+         };
+
+         MyClass obj{42};
+         int value = std::invoke(&MyClass::value, obj);  // Accesses obj.value
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsection{Calling a lambda}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         auto lambda = [](int a, int b) { return a + b; };
+         int result = std::invoke(lambda, 2, 3);  // Calls lambda(2, 3)
+     \end{cppcode}
+
 
 
 
@@ -3066,7 +3830,7 @@ int main() {
     \pagebreak 
     \subsection{regmatch\_t and pmatch}
     \bigbreak \noindent 
-    \subsubsection{regmatch_t}
+    \subsubsection{regmatch\_t}
     \bigbreak \noindent 
     regmatch\_t is a structure used to describe a single match (or submatch) found by regexec(). It contains at least the following two fields:
     \begin{itemize}
@@ -3158,11 +3922,207 @@ int main() {
     \end{cppcode}
 
 
+    \pagebreak 
+    \unsect{Structured bindings}
+    \bigbreak \noindent 
+    Structured bindings in C++ (introduced in C++17) allow you to unpack or "decompose" tuples, pairs, or other structured objects into separate variables in a concise way. This makes it easier to work with multiple return values or complex data structures.
+    \bigbreak \noindent 
+    \subsection{As unpacks}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int arr[3] = {1,2,3};
+        auto [x,y,z] = arr;
 
+        cout << x << '\n' << y << '\n' << z;
+        // 1
+        // 2 
+        // 3
+    \end{cppcode}
+    \bigbreak \noindent 
+    This works for a number of containers
+    \begin{itemize}
+        \item std::Tuple
+        \item std::Pairs
+        \item Fixed-sized arrays
+        \item std::Array
+        \item Structs/Classes
+    \end{itemize}
 
+    \bigbreak \noindent 
+    \subsection{With returning}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::pair<int,int> foo() {
+            std::pair<int,int> p = {1,2};
+            return p;
+        }
 
+        auto [a,b] = foo();
+        cout << a << endl << b << endl;
+        // 1
+        // 2
+    \end{cppcode}
 
+    \pagebreak \bigbreak \noindent 
+    \subsection{With structs and classes}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct foo {
+            int x;
+            int y;
+            int z;
+        };
 
+        foo f1{1,2,3};
+
+        auto [a,b,c] = f1;
+
+        cout << a << endl << b << endl << c << endl;
+        // 1
+        // 2
+        // 3
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{With maps}
+    \bigbreak \noindent 
+    Since we can unpack std::pairs, we can use structured bindings in map range-based loops
+    \bigbreak \noindent 
+    \begin{cppcode}
+        map<int, int> a = {{0,1}, {1,2}};
+
+        for (const auto& [key,value] : a) {
+            cout << key << " " << value << endl;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Attributes in c++}
+    \bigbreak \noindent 
+    In C++, attributes are a way to provide additional information or hints to the compiler without affecting the actual logic of the program. They can be used to optimize the program, check for potential issues, or control specific aspects of how the compiler processes the code. Attributes are written inside double square brackets ([[ ... ]]) and can be attached to various elements of the code, such as functions, variables, types, and control structures
+    \bigbreak \noindent 
+    \begin{cppcode}
+        [[attribute-name]]
+        [[attribute-name(arg1, arg2, ...)]]
+    \end{cppcode}
+    \bigbreak \noindent 
+    Attributes can be placed in various locations:
+    \begin{itemize}
+        \item Before a function or variable declaration
+        \item Before a class or struct declaration
+        \item In the middle of a function, such as on a statement in a switch case
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{General Attributes}
+    \bigbreak \noindent 
+    These attributes are part of the standard C++ specification and are supported across most modern compilers.
+    \begin{itemize}
+        \item \textbf{[[nodiscard]]:} Ensures that the return value of a function is not ignored.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                [[nodiscard]] int calculate() { return 42; }
+                int main() {
+                    calculate(); // Compiler warning: return value ignored
+                }
+            \end{cppcode}
+        \item \textbf{[[deprecated]]:} Marks code elements like functions or variables as deprecated. Using them will generate a warning, helping to phase out old or unsafe functionality.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                [[deprecated("Use newFunction() instead")]]
+                void oldFunction() {}
+            \end{cppcode}
+        \item \textbf{[[maybe\_unused]]:} Suppresses compiler warnings for unused variables or parameters, often useful in code that will vary between different builds (e.g., debug vs release builds)
+            \begin{cppcode}
+                void fn([[maybe\_unused]] int a);
+                [[maybe\_unused]] int x = 5;
+            \end{cppcode}
+        \item \textbf{[[fallthrough]]}: Used in switch statements to indicate that a case is intentionally falling through to the next one, preventing warnings from the compiler in such cases.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                switch (value) {
+                    case 1:
+                        // Some code
+                        [[fallthrough]];  // Intentional fallthrough to the next case
+                    case 2:
+                        // More code
+                        break;
+                }
+            \end{cppcode}
+        \item \textbf{[[likely]] and [[unlikely]]}: (since C++20): Provide hints to the compiler about the likelihood of branches in if or switch statements. These hints allow the compiler to optimize for the most likely or unlikely branches.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if ([[likely]] condition) {
+                    // Optimized assuming this is more likely
+                }
+            \end{cppcode}
+        \item \textbf{[[alignas(n)]]:} Specifies the memory alignment for a variable or type. It ensures that the object is aligned on a boundary of n bytes.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                alignas(16) int alignedInt;  // Ensures the integer is aligned on a 16-byte boundary
+            \end{cppcode}
+        \item \textbf{[[no\_unique\_address]]}: (since C++20): Allows the compiler to optimize the memory layout of a class or struct by not requiring a unique address for certain members (e.g., empty classes).
+            \bigbreak \noindent 
+            \begin{cppcode}
+                struct Empty {};
+                struct S {
+                    [[no_unique_address]] Empty e;
+                    int x;
+                };
+            \end{cppcode}
+        \item \textbf{[[noreturn]]:} Marks a function as one that will never return to the caller (e.g., functions that throw exceptions or terminate the program).
+            \bigbreak \noindent 
+            \begin{cppcode}
+            [[noreturn]] void fatalError() {
+                throw std::runtime_error("Critical error!");
+            }
+        \end{cppcode}
+    \item \textbf{[[gnu::always\_inline]]:} Forces the compiler to inline the function, even when optimizations are disabled. This attribute is specific to certain compilers like GCC or Clang.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            [[gnu::always_inline]] void inlineFunction() {
+                // The function will always be inlined
+            }
+
+            \end{cppcode}
+        \item \textbf{[[gnu::pure]]:} Marks a function as "pure," meaning its return value depends only on its parameters and has no side effects, allowing the compiler to perform certain optimizations.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                [[gnu::pure]] int square(int x) {
+                    return x * x;
+                }
+
+            \end{cppcode}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Inline functions}
+    \bigbreak \noindent 
+    In C++, an inline function is a function where the compiler attempts to replace the function call with the actual function code itself (i.e., inline expansion) rather than generating a normal function call. The goal of inlining is to reduce the overhead of function calls, especially for small functions, and potentially improve performance.
+    \bigbreak \noindent 
+    However, inline is a request or hint to the compiler, not a command. The compiler may ignore the request to inline the function, particularly if the function is too complex or if it would increase the code size too much.
+    \bigbreak \noindent 
+    To declare a function as inline, you use the inline keyword in its declaration or definition:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        inline int add(int a, int b) {
+            return a + b;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Consider the following example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        inline int square(int x) {
+            return x * x;
+        }
+
+        int main() {
+            int result = square(5);
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Without inline, the function call square(5) would generate assembly code that jumps to the function definition, executes it, and returns the result. With inline, the compiler might replace the square(5) call directly with 5 * 5 in the code, eliminating the need for a function call.
 
 
 

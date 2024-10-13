@@ -1,34 +1,31 @@
 #include <vector>
+#include <algorithm>
 #include <iostream>
 #include <utility>
 using std::vector;
 using std::cout;
 using std::endl;
 using std::pair;
+using std::sort;
+
 
 // Made by nate warner z2004109 and ralph helm 1610706
+//
+// Variant of the first solution with better sorting
 
 void sortVP(vector<pair<int,int>>& v) {
-    bool swapped = true;
-    while (swapped) {
-        swapped = false;
-        for (int i=0; i<(int)v.size()-1; ++i) {
-            if (v[i].first > v[i+1].first) {
-                pair<int,int> tmp = v[i];
-                v[i] = v[i+1];
-                v[i+1] = tmp;
-                swapped = true;
+    sort(v.begin(), v.end(), [] (const pair<int,int>& a, const pair<int,int>& b) -> bool {
+            if (a.first == b.first) {
+                return a.second > b.second;
             }
+            return a.first > b.first;
         }
-    }
+    );
 }
-
 
 void buildHanoiTower(const vector<pair<int, int>> &v, int & height, int & index ) {
 
-    unsigned long vsize = v.size();
-
-    if (vsize == 1) {
+    if (v.size() == 1) {
         height = v[0].second;
         index = 0;
         return;
@@ -45,18 +42,13 @@ void buildHanoiTower(const vector<pair<int, int>> &v, int & height, int & index 
         if (vcopy[i].first < paircopy.first && vcopy[i].second < paircopy.second) {
             height+=vcopy[i].second;
             paircopy = vcopy[i];
-            vcopy.pop_back();
-        } else if (vcopy[i].second > paircopy.second) {
-            height-=paircopy.second;
-            vcopy.pop_back();
-            paircopy = vcopy[i];
-            height+=paircopy.second;
-        }
+        } 
     }
 
     for (int i=0; i<(int)v.size(); ++i) {
         if (v[i] == paircopy) {
             index = i;
+            break;
         }
     }
 }

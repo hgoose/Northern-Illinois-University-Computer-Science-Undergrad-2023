@@ -1,0 +1,398 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Formal DSA in C++}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Formal DSA in C++}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Recursion}
+    \bigbreak \noindent 
+    \subsection{Elementary recursion}
+    \bigbreak \noindent 
+    A recursive definition consists of two parts. In the first part, called the anchor or
+    the ground case, the basic elements that are the building blocks of all other elements
+    of the set are listed. In the second part, rules are given that allow for the construction
+    of new objects out of basic elements or objects that have already been constructed.
+    These rules are applied again and again to generate new objects. For example, to construct the set of natural numbers, one basic element, 0, is singled out, and the operation of incrementing by 1 is given as:
+    \begin{enumerate}
+        \item $0 \in \mathbb{N}$
+        \item If $n\in \mathbb{N},\ then (n+1) \in \mathbb{N}$
+        \item There are no other objects in the set $\mathbb{N}$
+    \end{enumerate}
+    It is more convenient to use the following definition, which encompasses the whole range of Arabic numeric heritage:
+    \begin{enumerate}
+        \item $0, 1,2,3,4,5,6,7,8,9 \in \mathbb{N} $
+        \item If $n\in \mathbb{N}$, then $n0, n1,n2,n3,n4,n5,n6,n7,n8,n9 \in \mathbb{N}$
+        \item These are the only natural numbers
+    \end{enumerate}
+    \bigbreak \noindent 
+    Recursive definitions serve two purposes: generating new elements, as already
+    indicated, and testing whether an element belongs to a set. In the case of testing, the
+    problem is solved by reducing it to a simpler problem, and if the simpler problem is
+    still too complex it is reduced to an even simpler problem, and so on, until it is reduced to a problem indicated in the anchor
+
+    \bigbreak \noindent 
+    \subsubsection{Factorials}
+    \bigbreak \noindent 
+    \begin{align*}
+        n! = 
+        \begin{cases}
+            1 & \text{if } n = 0 \\
+            n(n-1)! & \text{if } n \ne 0
+        \end{cases}
+    .\end{align*}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int factorial(int n) {
+            if (n == 0) return 1;
+            return n * factorial(n-1);
+
+            // Expands to 
+            // n * n-1 * n-2 * ... * 1
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Powers}
+    \bigbreak \noindent 
+    Consider the recursive definition for a power of $x$
+    \bigbreak \noindent 
+    \begin{align*}
+        x^{n} = 
+        \begin{cases}
+            1 & \text{if } n=0 \\\
+            x\cdot x^{n-1} &\text{if } n>0
+        \end{cases}
+    .\end{align*}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        constexpr int power(int x, int n) {
+            if (n == 0) return 1;
+            return x * power(x,n-1);
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \bigbreak \noindent 
+    The function power() can be implemented differently, without using any recursion, as in the following loop:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int power2(int x, int n) {
+            int res = 1;
+
+            for (res = x; n > 1; --n) {
+                res*=x;
+            }
+            return res;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Do we gain anything by using recursion instead of a loop? The recursive version
+seems to be more intuitive because it is similar to the original definition of the power
+function. The definition is simply expressed in C++ without losing the original structure of the definition. The recursive version increases program readability, improves
+self-documentation, and simplifies coding. In our example, the code of the nonrecursive
+version is not substantially larger than in the recursive version, but for most recursive
+implementations, the code is shorter than it is in the nonrecursive implementations
+
+    \pagebreak 
+    \subsection{Tail recursion}
+    \bigbreak \noindent 
+    Tail recursion is a type of recursion where the recursive call is the last thing the function does before returning a result. This means there are no more computations or operations to perform after the recursive call.
+    \bigbreak \noindent 
+    Because of this, tail recursion can be optimized by some compilers or interpreters to avoid adding new frames to the call stack, making it more memory-efficient than regular recursion.
+    \bigbreak \noindent 
+    In simple terms, if a recursive function calls itself, and after that call there’s nothing left to do, it's tail recursion. This allows the function to reuse the same memory space, preventing stack overflow in cases with deep recursion.
+    \bigbreak \noindent 
+    the recursive call is not only the last statement but there are no earlier recursive calls, direct or indirect. For example, the function tail() defined as
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void tail(int i) {
+            if (i > 0) {
+                cout << i << '';
+                tail(i-1);
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Is an example of a function with tail recursion, whereas the function nonTail() defined as
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void nonTail(int i) {
+            if (i > 0) {
+                nonTail(i-1);
+                cout << i << '';
+                nonTail(i-1);
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Is not. Tail recursion is simply a glorified loop and can be easily replaced by one. In this example, it is replaced by substituting a loop for the if statement and decrementing the variable i in accordance with the level of recursive call. In this way, tail() can be expressed by an iterative function:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void iterativeEquivalentOfTail(int i) {
+            for ( ; i > 0; i--)
+            cout << i << '';
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Is there any advantage in using tail recursion over iteration? For languages such as C++, there may be no compelling advantage, but in a language such as Prolog, which has no explicit loop construct (loops are simulated by recursion), tail recursion acquires a much greater weight. In languages endowed with a loop or its equivalents, such as an if statement combined with a goto statement, tail recursion should not be used.
+    \bigbreak \noindent 
+    Another problem that can be implemented in recursion is printing an input line in reverse order. Here is a simple recursive implementation:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void reverse() {
+            char ch;
+            cin.get(ch);
+            if (ch != '\n') {
+                reverse();
+                cout.put(ch); 
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Compare the recursive implementation with a nonrecursive version of the same function:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void simpleIterativeReverse() {
+            char stack[80];
+            int top = 0;
+            cin.getline(stack,80);
+            for (top = strlen(stack) - 1; top >= 0; cout.put(stack[top--]));
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    functions like strlen() and
+    getline() from the standard C++ library can be used. If we are not supplied with
+    such functions, then our iterative function has to be implemented differently:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void iterativeReverse() {
+            char stack[80];
+
+            register int top = 0;
+            cin.get(stack[top]);
+
+            while(stack[top]!='\n') {
+                cin.get(stack[++top]);
+            }
+            for (top -= 2; top >= 0; cout.put(stack[top--]));
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Indirect Recursion}
+    \bigbreak \noindent 
+    The preceding sections discussed only direct recursion, where a function $f()$ called itself. However, $f()$ can call itself indirectly via a chain of other calls. For example, $f()$ can call $g()$, and $g()$ can call $f()$. This is the simplest case of indirect recursion. The chain of intermediate calls can be of an arbitrary length, as in:
+    \begin{align*}
+        f() \to f_{1}() \to f_{2}() \to ... \to f_{n}() \to f()
+    .\end{align*}
+    \bigbreak \noindent 
+    There is also the situation when $f()$ can call itself indirectly through different chains. Thus, in addition to the chain just given, another chain might also be possible. For instance
+    \begin{align*}
+        f() \to g_{1}() \to g_{2}() \to ... \to g_{m}() \to f()
+    .\end{align*}
+    \bigbreak \noindent 
+    This situation can be exemplified by three functions used for decoding information. receive() stores the incoming information in a buffer, decode() converts it into legible form, and store() stores it in a file. receive() fills the buffer and calls decode(), which in turn, after finishing its job, submits the buffer with decoded information to store(). After store() accomplishes its tasks, it calls receive() to intercept more encoded information using the same buffer. Therefore, we have the chain of calls
+    \begin{align*}
+        \text{recieve}() \to \text{decode}() \to \text{store}() \to \text{recieve}() \to \text{decode}() \to ...
+    .\end{align*}
+    \bigbreak \noindent 
+    \pagebreak 
+    \subsection{Nested Recursion}
+    \bigbreak \noindent 
+    A more complicated case of recursion is found in definitions in which a function is
+    not only defined in terms of itself, but also is used as one of the parameters. The following definition is an example of such a nesting
+    \begin{align*}
+        h(n) = 
+        \begin{cases}
+            0 & \text{if } n = 0 \\
+            n & \text{if } n > 4 \\
+            h(2 + h(n)) & \text{if } n \leq 4
+        \end{cases}
+    .\end{align*}
+    \bigbreak \noindent 
+    \subsection{Excessive Recursion}
+    \bigbreak \noindent 
+    Logical simplicity and readability are used as an argument supporting the use of recursion. The price for using recursion is slowing down execution time and storing on
+    the run-time stack more things than required in a nonrecursive approach. If recursion is too deep (for example, computing $5.6^{100,000}$), then we can run out of space on
+the stack and our program crashes. But usually, the number of recursive calls is much
+smaller than 100,000, so the danger of overflowing the stack may not be imminent
+\bigbreak \noindent 
+However, if some recursive function repeats the computations for some parameters, the run time can be prohibitively long even for very simple cases
+\bigbreak \noindent 
+Consider Fibonacci numbers. A sequence of Fibonacci numbers is defined as follows:
+\begin{align*}
+    \text{Fib}(n) =
+    \begin{cases}
+        n & \text{if } n < 2  \\
+        \text{Fib}(n-2) + \text{Fib}(n-1) & \text{otherwise}
+    \end{cases}
+.\end{align*}
+\bigbreak \noindent 
+The definition states that if the first two numbers are 0 and 1, then any number in the
+sequence is the sum of its two predecessors. But these predecessors are in turn sums
+of their predecessors, and so on, to the beginning of the sequence. 
+\bigbreak \noindent 
+How can this definition be implemented in C++? It takes almost term-by-term
+translation to have a recursive version, which is
+\bigbreak \noindent 
+\begin{cppcode}
+constexpr unsigned long fib(int n) {
+    if (n < 2) return n;
+    return fib(n-2) + fib(n-1);
+}
+\end{cppcode}
+\bigbreak \noindent 
+The function is simple and easy to understand but extremely inefficient. To see
+it, compute Fib(6), the seventh number of the sequence, which is 8. Based on the
+definition, the computation runs as follows:
+\begin{align*}
+    Fib(6)	&= Fib(4) + Fib(5) \\
+            &= Fib(2) 	+ 	Fib(3) 	+ Fib(5) \\
+            &= Fib(0)+Fib(1) 	+ 	Fib(3) 	+ Fib(5) \\
+            &= 0 + 1 	+ 	Fib(3) 	+ Fib(5) \\
+            &= 1 	+ Fib(1)+ Fib(2) 	+ Fib(5) \\
+            &= 1 	+ Fib(1)+Fib(0)+Fib(1)	+ Fib(5)   
+.\end{align*}
+Etc... The source of
+this inefficiency is the repetition of the same calculations because the system forgets
+what has already been calculated. For example, Fib() is called eight times with parameter n = 1 to decide that 1 can be returned. For each number of the sequence, the
+function computes all its predecessors without taking into account that it suffices to do
+this only once.
+\bigbreak \noindent 
+It takes almost a quarter of a million calls to find the twenty-sixth Fibonacci
+number, and nearly 3 million calls to determine the thirty-first! This is too heavy a
+price for the simplicity of the recursive algorithm. As the number of calls and the run
+time grow exponentially with n, the algorithm has to be abandoned except for very
+small numbers
+\bigbreak \noindent 
+An iterative algorithm may be produced rather easily as follows:
+\bigbreak \noindent 
+\begin{cppcode}
+    unsigned long iterativeFib(unsigned long n) {
+        if (n < 2)
+        return n;
+        else {
+            register long i = 2, tmp, current = 1, last = 0;
+            for ( ; i <= n; ++i) {
+                tmp = current;
+                current += last;
+                last = tmp;
+            }
+            return current;
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+However, there is another, numerical method for computing Fib(n), using a formula discovered by Abraham de Moivre:
+\begin{align*}
+    \text{Fib}(n) =  \frac{\phi^{n} - \hat{\phi}^{n}}{\sqrt{5}}
+.\end{align*}
+Where $\phi = \frac{1}{2}(1+\sqrt{5})$, and $\hat{\phi} = 1-\phi = \frac{1}{2}(1-\sqrt{5}) $. $\hat{\phi}$ becomes very small when $n$ grows, thus it can be omitted. 
+\begin{align*}
+    \text{Fib}(n) =\frac{\phi^{n}}{\sqrt{5}}
+.\end{align*}
+Approximated to the nearest integer
+\bigbreak \noindent 
+\begin{cppcode}
+    unsigned long deMoivreFib(unsigned long n) {
+        return ceil(exp(n*log(1.6180339897) - log(2.2360679775)) - .5);
+    }
+\end{cppcode}
+\pagebreak 
+\subsection{Backtracking}
+\bigbreak \noindent 
+In solving some problems, a situation arises where there are different ways leading
+from a given position, none of them known to lead to a solution. After trying one path
+unsuccessfully, we return to this crossroads and try to find a solution using another
+path. However, we must ensure that such a return is possible and that all paths can
+be tried. This technique is called backtracking, and it allows us to systematically try
+all available avenues from a certain point after some of them lead to nowhere. Using
+backtracking, we can always return to a position that offers other possibilities for successfully solving the problem. This technique is used in artificial intelligence, and one
+of the problems in which backtracking is very useful is the eight queens problem.
+\bigbreak \noindent 
+The eight queens problem attempts to place eight queens on a chessboard in
+such a way that no queen is attacking any other To solve this problem, we try to put the first
+queen on the board, then the second so that it cannot take the first, then the third so
+that it is not in conflict with the two already placed, and so on, until all of the queens
+are placed. What happens if, for instance, the sixth queen cannot be placed in a nonconflicting position? We choose another position for the fifth queen and try again
+with the sixth. If this does not work, the fifth queen is moved again. If all the possible
+positions for the fifth queen have been tried, the fourth queen is moved and then the process restarts. This process requires a great deal of effort, most of which is spent
+backtracking to the first crossroads offering some untried avenues. In terms of code,
+however, the process is rather simple due to the power of recursion, which is a natural implementation of backtracking
+\bigbreak \noindent 
+\begin{cppcode}
+    putQueen(row)
+        for every position col on the same row
+            if position col is available
+                place the next queen in position col;
+                if (row < 8)
+                    putQueen(row+1);
+                else success;
+                remove the queen from position col;
+\end{cppcode}
+\bigbreak \noindent 
+This algorithm finds all possible solutions without regard to the fact that some of
+them are symmetrical.
+
+
+
+
+
+
+
+
+
+\end{document}
