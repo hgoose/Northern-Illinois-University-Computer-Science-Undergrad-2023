@@ -1463,6 +1463,39 @@ The final regular expression is then
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{Applications of finite automata}
+    \begin{itemize}
+        \item \textbf{FA with output}:
+            Thus far we have only considered finite automata as language acceptors (i.e., defining some regular language).
+            \bigbreak \noindent 
+            Finite automata can also serve another purpose. They can be used to process an input string to produce some output.
+            \bigbreak \noindent 
+            When used in this way, the finite automata do not define a language. In fact, they do not have any accepting states.
+            \bigbreak \noindent 
+            Their sole purpose is to process input to generate output
+        \item \textbf{Moore machine}: A Moore machine is a deterministic finite automaton and is
+            defined by a 6-tuple $(Q, \Sigma, q_{0}, \delta, \Gamma, O)$, where
+            \begin{itemize}
+                \item $\Gamma$ is an alphabet of output symbols.
+                \item $O$ is the output function: $O:\ Q \to \Gamma$
+            \end{itemize}
+            \bigbreak \noindent 
+            Each state is annotated with an output symbol. Output ”printed” upon entering state
+            \bigbreak \noindent 
+            \textbf{Note:} start state’s output symbol always “printed”, even on empty string $\epsilon$
+        \item \textbf{Mealy Machine}: A Mealy machine is a deterministic finite automaton and is defined by a 5-tuple $(Q, \Sigma, q_{0}, \delta, \Gamma)$, where 
+            \begin{itemize}
+                \item $\Gamma$ is an alphabet of output symbols
+            \end{itemize}
+            \bigbreak \noindent 
+            Each transition is annotated with an output symbol Output ”printed” when traversing edge
+            \bigbreak \noindent 
+            \textbf{Note:} The number of input and output symbols are always identical.
+            \bigbreak \noindent 
+
+    \end{itemize}
+
+    \pagebreak 
     \subsection{Nonregular languages}
     \begin{itemize}
     \item \textbf{Intro to nonregular languages}: Suppose we have some alphabet $\Sigma$, we can then find $\Sigma^{*}$, which is the language consisting of all possible strings (including the empty string $\epsilon$) using the symbols from $\Sigma$. The we can take the power set of $\Sigma^{*}$ to get the set of all possible subsets of $\Sigma^{*}$. The alphabet $\Sigma$ is always finite, if $\Sigma$ is nonempty, then $\Sigma^{*}$ is always infinite. (If $\Sigma = \varnothing$, $\Sigma^{*} = \{\epsilon\} $). Since $\Sigma^{*}$ is infinite, $\mathcal{P}(\Sigma^{*})$ is also infinite. If $\Sigma = \varnothing \implies \Sigma^{*} = \{\epsilon\} \rightarrow \mathcal{P}(\Sigma^{*}) = \{\{\epsilon\}, \varnothing\}$. Note that for any set $S$, $\varnothing \subset S$.
@@ -1553,7 +1586,7 @@ The final regular expression is then
     \end{itemize}
 
     \pagebreak 
-    \subsection{Pumping lemma examples}
+    \subsubsection{Pumping lemma examples}
     \begin{itemize}
  \item \textbf{Pumping lemma example}: Use the pumping lemma to show that the language $L = a^{k}b^{k}\ \forall\ k > 0$ over $\Sigma = \{a,b\}$ is nonregular
     \bigbreak \noindent
@@ -1613,6 +1646,12 @@ The final regular expression is then
     Assume the language is regular defined by a FA with $n$ states. Choose $w=a^{\ell},\ \ell \in \mathbb{P},\ \ell \geq n$. Then, $y$ must be $a^{r},\ r>0$. From this, $w = xyz = a^{r}a^{\ell - r}$, and $w^{\prime} = xy^{i}z \in L \ \forall \ i > 0$. Thus, $w^{\prime} = a^{ir}a^{\ell - r} \in L \ \forall \ i > 0$. If we can show that some selection of $i$ yields a $w^{\prime} \not\in L$, then we have a contradiction and the language must be nonregular.
     \bigbreak \noindent 
     Choose $i = \ell  + 1$, which implies $w^{\prime} = a^{(\ell + 1)r}a^{\ell -r} = a^{\ell -r  + \ell r + r }  = a^{\ell + \ell r} = a^{\ell (1 + r)}$. Since $\ell \in \mathbb{P}$, and $r>0$, $\ell (1 + r)$ cannot be prime. Thus, we have a contradiction and the assumption does not hold for $L = a^{t},\ t\in \mathbb{P}$.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Context free grammers}
+    \begin{itemize}
+        
     \end{itemize}
 
 
@@ -3395,6 +3434,13 @@ indicate which strong entity the weak entity depends upon.
     \item \textbf{Aliases and the dot operator}: When we select certain relations, we can give aliases to them and then reference their attributes with a dot (similar to how you access C++ member functions)
         \bigbreak \noindent 
         This is important because if we take the cartesian product of the same relations, we need to give them aliases (they would otherwise have the same name)
+    \item \textbf{Aliases with AS}: We can also use AS to assign aliases
+        \bigbreak \noindent 
+        \begin{sqlcode}
+        SELECT col AS c1
+            FROM relation1 AS r1
+            ...
+        \end{sqlcode}
     \item \textbf{Using the dot in general}: In general, even without aliases, we can use the dot to refer to relations attributes, this is crucial if we select on two relations with matching attribute names.
     \item \textbf{Cartesian Product Example}: S has 5 rows of 4 columns. The Cartesian product, SELECT * FROM S T1, S T2; returns 25 rows, each with 2 sets of the columns in S, for a total of 8 columns. They don’t all fit on the page here.
         \bigbreak \noindent 
@@ -3712,6 +3758,19 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             Any characters not in this list will only match themselves.
             \bigbreak \noindent 
+        \item \textbf{LIKE: Character classes and union (or)}: You can specify a list or range of characters with square brackets.
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT ...
+                WHERE ... LIKE "_[abc]%"
+                WHERE ... LIKE "_[a-z]%"
+            \end{sqlcode}
+        \item \textbf{Negating character classes:} To invert a character class, we can use !
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT ...
+                WHERE ... LIKE "_[!abc]%"
+            \end{sqlcode}
         \item \textbf{List suppliers whose name starts with the letter 'S'}:
             \bigbreak \noindent 
             \begin{sqlcode}
@@ -3772,6 +3831,41 @@ indicate which strong entity the weak entity depends upon.
             \end{sqlcode}
             \bigbreak \noindent 
             LEFT means the table on the left-hand side of the JOIN keyword is the strong one. RIGHT would mean the RHS is strong. In some dialects of SQL, you can use FULL to make both strong, but this does not work in MariaDB. You can accomplish something similar with a UNION if needed.
+        \item \textbf{The LIMIT Clause}: the LIMIT clause is used to restrict the number of rows returned by a query. When you specify LIMIT 50, it tells the database to return only the first 50 rows of the result set.
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT * from sometable LIMIT 50; // Queries the first 50 rows
+            \end{sqlcode}
+            \bigbreak \noindent 
+            \textbf{Note:} Redundant if the number of rows in the relation is less than the limit restriction
+        \item \textbf{IS NULL and IS NOT NULL}: A field with a NULL value is a field with no value.
+            \bigbreak \noindent 
+            If a field in a table is optional, it is possible to insert a new record or update a record without adding a value to this field. Then, the field will be saved with a NULL value.
+            \bigbreak \noindent 
+            It is not possible to test for NULL values with comparison operators, We will have to use the IS NULL and IS NOT NULL operators instead.
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT ...
+                WHERE ... IS NULL;
+
+            SELECT ...
+                WHERE ... IS NOT NULL;
+            \end{sqlcode}
+        \item \textbf{BETWEEN operator}: the BETWEEN operator is used to filter the result set within a specified range. It works for numbers, dates, and text values.
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT ...
+                WHERE ... BETWEEN val1 AND val2;
+            \end{sqlcode}
+            \bigbreak \noindent 
+            We can of course negate this with NOT
+            \bigbreak \noindent 
+            \begin{sqlcode}
+            SELECT ...
+                WHERE ... NOT BETWEEN val1 AND val2;
+            \end{sqlcode}
+
+
 
 
 

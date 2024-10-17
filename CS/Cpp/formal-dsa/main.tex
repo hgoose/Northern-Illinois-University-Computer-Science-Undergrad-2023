@@ -58,6 +58,332 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+    \unsect{Linked lists}
+    \bigbreak \noindent 
+    \subsection{Singly-linked lists}
+    \bigbreak \noindent 
+    If a node contains a data member that is a pointer to another node, then many nodes
+    can be strung together using only one variable to access the entire sequence of nodes.
+    Such a sequence of nodes is the most frequently used implementation of a linked list,
+    which is a data structure composed of nodes, each node holding some information
+    and a pointer to another node in the list. If a node has a link only to its successor in
+    this sequence, the list is called a singly linked list
+    \bigbreak \noindent 
+    Each node resides on the heap
+    \bigbreak \noindent 
+    Linked lists can easily grow and shrink in size without reallocating memory or moving elements. Adding or removing nodes (especially at the beginning or middle) is more efficient compared to arrays, as no shifting of elements is required. Memory is allocated as needed, avoiding wasted space typical in arrays with fixed sizes.
+    \bigbreak \noindent 
+    However, each node requires extra memory for the pointer to the next node. Accessing elements requires traversal from the head, making lookups slower (O(n)) compared to arrays, which offer O(1) access via indexing.  Nodes are scattered in memory, leading to poor cache performance compared to arrays, which have contiguous memory locations.
+
+
+
+    \bigbreak \noindent 
+    \subsubsection{Structure of the node}
+    \bigbreak \noindent 
+    The node structure is typically implemented in the following way
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct node {
+            node* next = nullptr;
+            T data = 0; 
+
+            node() = default;
+            node(data) : data(data) {}
+            node(next, data) : next(next), data(data) {}
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    A node includes two data members: info and next. The info member is used
+    to store information, and this member is important to the user. The next member is
+    used to link nodes to form a linked list. It is an auxiliary data member used to maintain the linked list. It is indispensable for implementation of the linked list, but less
+    important (if at all) from the user’s perspective. Note that node is defined
+    in terms of itself because one data member, next, is a pointer to a node of the same
+    type that is just being defined. Objects that include such a data member are called
+    self-referential objects.
+
+    \bigbreak \noindent 
+    \subsubsection{The list class/struct}
+    \bigbreak \noindent 
+    We also implement the list structure as a class or struct.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class single_list {
+            node* head = nullptr;
+        public:
+            ...
+        };
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsubsection{Interface of a singly linked list stack}
+    \bigbreak \noindent 
+    The interface typically includes the following operations:
+    \begin{enumerate}
+        \item \textbf{Insert:} Add a node at the beginning, end, or a specific position in the list.
+        \item \textbf{Delete:} Remove a node from the beginning, end, or a specific position.
+        \item \textbf{Search:} Find a node with a given value.
+        \item \textbf{Traverse:} Iterate through the list to access or print each node's data.
+        \item \textbf{IsEmpty:} Check if the list is empty.
+        \item \textbf{Size:} Return the number of nodes in the list. The first node is called the head, and the last node points to nullptr (indicating the end of the list).
+    \end{enumerate}
+
+    \pagebreak 
+    \subsubsection{Traversing}
+    \bigbreak \noindent 
+    Traversing a list is simple.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    node* curr = head;
+
+    while (curr) {
+        curr = curr->next;
+        ...
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Printing}
+    \bigbreak \noindent 
+    Now that we can traverse, we can print each node
+    \bigbreak \noindent 
+    \begin{cppcode}
+    node* curr = head;
+    while (curr) {
+        cout << curr->data;
+        curr=curr->next;
+    }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Printing in reverse}
+    \bigbreak \noindent 
+    Printing in reverse requires creating a stack.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    if (!head) return; // noop, dont even bother creating a vector.
+
+    vector<node*> stack;
+    node* curr = head;
+
+    while (curr) {
+        stack.push_back(curr);
+        curr=curr->next;
+    }
+
+    for (int i=(int)stack.size()-1; i>=0; --i) {
+        cout << stack[i]->data << " ";
+    }
+    cout << endl;
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Getting the length}
+    \bigbreak \noindent 
+    While we traverse, just increment a counter.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        size_t len() {
+            size_t len = 0;
+            for (node* curr = head; curr; curr=curr->next, ++len);
+            return len;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Clearing}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void clear() {
+            node* curr=head, *prev=nullptr;
+
+            while (curr) {
+                prev=curr;
+                curr=curr->next;
+                delete prev;
+            }
+            head = nullptr;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Reversing}
+    \bigbreak \noindent 
+    Reversing is pretty straight forward
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void reverse() {
+            node* prev=nullptr, *curr=head, *next=nullptr;
+
+            while(curr) {
+                next=curr->next;
+                curr->next = prev;
+                prev = curr;
+                curr=next;
+            }
+
+            head = prev;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    In each iteration, next temporarily holds the next node so you don’t lose track of it when reversing the link.
+    \bigbreak \noindent 
+    The curr->next pointer is set to prev, effectively reversing the link.
+    \bigbreak \noindent 
+    Prev is then updated to curr, and curr is updated to next to continue the process.
+
+
+    \pagebreak 
+    \subsubsection{Pushing}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void push(int element) {
+            if (!head) {
+                head = new node(element);
+                return;
+            }
+
+            node* curr = head;
+            while (curr->next) {
+                curr=curr->next;
+            }
+            curr->next = new node(element);
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Inserting}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void insert(int pos, int element) {
+            if (!head || pos == 0) {
+                node* new_node = new node(element);
+                new_node->next = head;
+                head = new_node;
+                return;
+            }
+            node* curr = head;
+
+            int count=0;
+            while (count != pos-1 && curr->next) {
+                curr=curr->next;
+                ++count;
+            }
+            node* new_node = new node(element);
+
+            new_node->next = curr->next;
+            curr->next = new_node;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item \textbf{Check if the list is empty or inserting at the head (position 0):}
+            \begin{itemize}
+                \item If head is nullptr (meaning the list is empty) or pos == 0 (you want to insert at the beginning), a new node is created with the given element.
+                \item The new node's next pointer is set to the current head (which could be nullptr if the list is empty), and then head is updated to point to this new node.
+                \item This handles the case where the new node becomes the first node in the list.
+            \end{itemize}
+        \item \textbf{Traverse to the correct position:}
+            \begin{itemize}
+                \item If you are inserting somewhere other than the head, the function uses a loop to find the node just before the desired position (pos - 1).
+                \item It starts at the head and moves along the list until it reaches the node right before where the new node will be inserted.
+            \end{itemize}
+        \item \textbf{Insert the new node:}
+            \begin{itemize}
+                \item Once the loop finds the right place (curr points to the node before the insertion position), a new node is created.
+                \item The new node’s next pointer is set to curr->next (the node currently in the target position).
+                \item Then, curr->next is updated to point to the new node, effectively inserting the new node into the list.
+            \end{itemize}
+
+    \end{enumerate}
+
+
+    \pagebreak 
+    \subsubsection{Popping}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void pop() {
+            if (!head) return;
+            if (!head->next) {
+                delete head;
+                head=nullptr;
+                return;
+            }
+
+            node* prev=nullptr, *curr = head;
+            while (curr->next) {
+                prev=curr;
+                curr=curr->next;
+            }
+            delete curr;
+            prev->next=nullptr;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item \textbf{Empty List Check:} If the list is empty (head == nullptr), it does nothing.
+        \item \textbf{Single Node Case:} If the list has only one node, it deletes the head and sets head to nullptr.
+        \item \textbf{Multiple Nodes:} It traverses to the last node using two pointers (prev and curr), deletes the last node (curr), and sets the second-to-last node's next pointer (prev->next) to nullptr to mark the new end of the list.
+    \end{enumerate}
+
+    \pagebreak 
+    \subsubsection{Erasing}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void erase(int element) {
+            if (!head) return;
+
+            while (head->data == element) {
+                if (head->next && head->data == element) {
+                    node* tmp = head;
+                    head = head->next;
+                    delete tmp;
+                }
+            }
+
+            node* prev=nullptr, *curr=head;
+
+            while (curr) {
+                if (curr->data == element) {
+                    node* tmp = curr;
+                    prev->next = curr->next;
+                    curr=curr->next;
+                    delete tmp;
+                } else {
+                    prev=curr;
+                    curr=curr->next;
+                }
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This erase function removes all nodes with a specific value (element) from the list:
+    \begin{itemize}
+        \item \textbf{Empty List Check:} If the list is empty (head == nullptr), it returns immediately.
+        \item \textbf{Head Node Deletion:} If the head contains the target value, it deletes the head and updates it to the next node. We keep doing this until the head node no longer contains the data we want to remove
+        \item \textbf{Traverse and Delete:} It iterates through the list, and for each node with the target value, it removes the node by adjusting the next pointer of the previous node and deleting the current node.
+    \end{itemize}
+
+
+    \pagebreak 
+    \subsubsection{Searching}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        node* search(int element) {
+            node* curr = head;
+            while (curr) {
+                if (curr->data == element) {
+                    return curr;
+                }
+            }
+            return nullptr;
+        }
+    \end{cppcode}
+
+
+
+
+    \pagebreak 
     \unsect{Recursion}
     \bigbreak \noindent 
     \subsection{Elementary recursion}
@@ -83,6 +409,17 @@
     indicated, and testing whether an element belongs to a set. In the case of testing, the
     problem is solved by reducing it to a simpler problem, and if the simpler problem is
     still too complex it is reduced to an even simpler problem, and so on, until it is reduced to a problem indicated in the anchor
+
+    \bigbreak \noindent 
+    \subsection{Base cases}
+    \bigbreak \noindent 
+    In recursion, a base case is a condition that stops further recursive calls and provides a direct answer without further recursion
+    \bigbreak \noindent 
+    If there were no base case, there would be nothing to stop the recursion. Thus, it would go on until the program crashes. For this reason, all recursive functions must have at least one base case.
+    \bigbreak \noindent 
+    If a base case in a recursive function returns a value, then every recursive call leading up to that base case should also return a value. This is necessary to ensure that the result of the recursion is propagated back up the call stack.
+    \bigbreak \noindent 
+    In a recursive function, the base case stops the recursion, and if the base case returns something (e.g., a node pointer, integer, etc.), the recursive calls that occur before reaching the base case need to return that result so it can propagate back to the original caller.
 
     \bigbreak \noindent 
     \subsubsection{Factorials}
@@ -386,6 +723,283 @@ however, the process is rather simple due to the power of recursion, which is a 
 \bigbreak \noindent 
 This algorithm finds all possible solutions without regard to the fact that some of
 them are symmetrical.
+
+\pagebreak 
+\subsection{Recursion in singly linked lists}
+\bigbreak \noindent 
+\subsubsection{Traversing}
+\bigbreak \noindent 
+To traverse a linked list using recursion, you need to define a recursive function that processes the current node and then calls itself with the next node until the list is fully traversed (i.e., until the current node is nullptr).
+\bigbreak \noindent 
+\begin{cppcode}
+    void TraverseList(node* head) {
+        if (!head) {
+            return;
+        }
+        TraverseList(head->next);
+
+        // ...
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Printing}
+\bigbreak \noindent \bigbreak \noindent 
+We can use this, for example, to print each nodes data member
+\bigbreak \noindent 
+\begin{cppcode}
+    void PrintList(node* head) {
+        if (!head) return;
+
+        cout << head->data << " ";
+        PrintList(head->next);
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Printing in reverse}
+\bigbreak \noindent \bigbreak \noindent 
+We a slight alter in the print example, we can reverse print the list. 
+\bigbreak \noindent 
+\begin{cppcode}
+    void PrintListReverse(node* head) {
+        if (!head) return;
+
+        PrintListReverse(head->next);
+        cout << head->data << " ";
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Getting the length}
+\bigbreak \noindent 
+
+
+\bigbreak \noindent 
+\subsubsection{Clearing}
+\bigbreak \noindent \bigbreak \noindent 
+We can also use this to clear the list
+\bigbreak \noindent 
+\begin{cppcode}
+    void clear() {
+        std::function<void(node*)> r_clear = [&] (node* p) = {
+            if (!head) return;
+
+            r_clear(head->next);
+            delete head;
+        } 
+        r_clear(head);
+        head=nullptr;
+        size=0;
+    }
+\end{cppcode}
+
+
+\pagebreak 
+\subsubsection{Reversing}
+\bigbreak \noindent 
+Let's first take a look at the reverse code
+\bigbreak \noindent 
+\begin{cppcode}
+    void reverse() {
+        std::function<void(node*)> r_reverse = [&] (node* p) -> void {
+            if (!p->next) {
+                head = p;
+                return;
+            }
+
+            r_reverse(p->next);
+            node* q = p->next;
+            q->next = p;
+            p->next = nullptr;
+
+        };
+        r_reverse(head);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The base case is that we are at the end, in this case we set head to this position. Head is now at the end of the list.
+\bigbreak \noindent 
+Once the base case is triggered and the head is set to the last node in the list, we will be sent back to the n-1 node call.
+\bigbreak \noindent 
+To get the intuition for linked list logic, we must examine a diagram of the list.
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{diag}
+    \label{fig:diag}
+\end{figure}
+\bigbreak \noindent 
+This figure shows the three operations done after each recursive call. In the figure above, we are at the node after the call that set the end to head. We
+\begin{enumerate}
+    \item Get a pointer to the node ahead of the current $(q)$. 
+    \item This allows us to severe its old next pointer and reverse its direction.
+    \item Then, set $p$ next to nullptr (set up for next return).
+\end{enumerate}
+When the callstack returns to the first call, and does its operations, the list will be reversed
+
+\bigbreak \noindent 
+It is also a good idea to examine the iterative method.
+\bigbreak \noindent 
+\begin{cppcode}
+    void Itreverse() {
+        node* prev=nullptr, *curr=head, *next=nullptr;
+
+        while (curr) {
+            next=curr->next; // Move next to the next node
+            curr->next=prev; // Change the direction of current nodes next pointer
+
+            prev=curr; // Advance prev
+            curr=next; // Advance curr
+        }
+        head=prev; // Prev is last node, set head to end
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Pushing}
+\bigbreak \noindent 
+\begin{cppcode}
+    void push(int data) {
+        if (!head) {
+            head = new node(nullptr, data);
+            return;
+        }
+        std::function<void(node*, int)> r_push = [&] (node* curr, int data) -> void {
+
+            if (!curr->next) {
+                curr->next = new node(nullptr, data);
+                ++size;
+                return;
+            }
+            r_push(curr->next, data);
+        };
+        r_push(head, data);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Base case:
+\begin{enumerate}
+    \item \textbf{Empty list}: No recursion, make head the new node
+\end{enumerate}
+\bigbreak \noindent 
+Otherwise, recurse from the head until we get to the last node, simply set last nodes next pointer to new node and return
+
+\pagebreak 
+\subsubsection{Inserting}
+\bigbreak \noindent 
+\begin{cppcode}
+    void insert(unsigned pos, int element) {
+        std::function<void(node*&, unsigned)> r_insert = [&] (node*& p, unsigned curr_pos) {
+            if (curr_pos == 0) {
+                node* new_node = new node(nullptr, element);
+                new_node->next = p;
+                p = new_node;
+                return;
+            }
+            r_insert(p->next,  curr_pos-1);
+        };
+        r_insert(head, pos);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Base case
+\begin{enumerate}
+    \item \textbf{Recursed the same number of times as the \texttt{pos} arg}: In this case, make a new node, set next to current node in the recursive traversal, set current node to new node.
+\end{enumerate}
+\bigbreak \noindent 
+Otherwise, keep recursing, subtracting one from the curr\_pos.
+
+\pagebreak 
+\subsubsection{Popping}
+\bigbreak \noindent 
+\begin{cppcode}
+    void pop() {
+        if (!head) return;
+
+        if (!head->next) {
+            delete head;
+            head=nullptr;
+            return;
+        }
+
+        std::function<void(node*)> r_pop = [&] (node* p) -> void {
+            if (!p->next->next) {
+                delete p->next;
+                p->next = nullptr;
+                --size;
+                return;
+            }
+            r_pop(p->next);
+        };
+        r_pop(head);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Base cases:
+\begin{enumerate}
+    \item \textbf{Empty list}: Noop
+    \item \textbf{One node (head)}: Delete then reset head
+\end{enumerate}
+Otherwise, recurse until we are at the second to last node. Then, delete the second to last nodes next node, which is the last node. Set second to last nodes next pointer to nullptr.
+
+\pagebreak 
+\subsubsection{Erasing}
+\bigbreak \noindent 
+\begin{cppcode}
+    void erase(int element) {
+        std::function<void(node*&)> r_erase = [&] (node*& p) -> void {
+            if (p == nullptr) {
+                return;
+            }
+
+            r_erase(p->next);
+
+            if (p->data == element) {
+                node* tmp = p;
+                p = p->next;
+                delete tmp;
+            }
+        };
+        r_erase(head);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Base case:
+\begin{enumerate}
+    \item \textbf{Reached the end}: Return, start unwinding
+\end{enumerate}
+\bigbreak \noindent 
+We traverse to the end of the list recursively, once we reach the end the recursion stops and we start unwinding the call stack, going backwards in the list.
+\bigbreak \noindent 
+For each node, we check if its data is equal to the element, if it is we set this node equal to its next node, then delete.
+
+\pagebreak 
+\subsubsection{Searching}
+\bigbreak \noindent 
+\begin{cppcode}
+    node* search(int element) {
+        std::function<node*(node*)> r_search = [&] (node* p) -> node* {
+            if (p == nullptr)  {
+                return nullptr;
+            }
+            if (p->data == element) {
+                return p;
+            }
+            return r_search(p->next);
+        };
+        return r_search(head);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Base cases:
+\begin{enumerate}
+    \item \textbf{Reached the end of the list}: Element is not in list, return nullptr
+    \item \textbf{Found the first node with the element}: Return the node
+\end{enumerate}
+\bigbreak \noindent 
+Otherwise, recurse through the nodes until we hit one of the base cases.
+
+
 
 
 

@@ -2237,73 +2237,21 @@ and insert a new element that has the new value
 
         fun(f, 13);
     \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{With forwarding references}
+    \bigbreak \noindent 
+    F\&\& in a template context allows you to accept any callable (function, lambda, functor) while preserving its lvalue/rvalue nature. This is a common pattern for writing generic functions that can accept various types of arguments and forward them to other functions without losing efficiency.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename F>
+    void fn(F&& fun) {
+        std::invoke(std::forward<F>(fun));
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    We used std::forward<F>(fun) instead of just fun. This ensures that if fun is an rvalue, it gets forwarded correctly as an rvalue; if it's an lvalue, it stays an lvalue. This is part of perfect forwarding.
     
-    \pagebreak 
-    \unsect{std::bind}
-    \bigbreak \noindent 
-    \subsection{std::placeholders}
-    \bigbreak \noindent 
-    Before we get into std::bind, we must discuss std::placeholders
-    \bigbreak \noindent 
-    std::placeholders is a namespace in C++ that provides placeholder objects like std::placeholders::\_1, std::placeholders::\_2, and so on, which are used in conjunction with std::bind. These placeholders represent arguments that will be supplied when the resulting callable object (created by std::bind) is invoked.
-    \bigbreak \noindent 
-    Each placeholder corresponds to a positional argument that the function object will expect at the time of calling. For example:
-    \begin{itemize}
-        \item std::placeholders::\_1 represents the first argument.
-        \item std::placeholders::\_2 represents the second argument, and so on.
-    \end{itemize}
-
-    \bigbreak \noindent 
-    std::bind in C++ is used to create a function object (or a callable) by binding specific arguments to a function or member function, essentially "fixing" some of its arguments ahead of time. This allows the resulting function object to be called later with fewer arguments, as some are already provided.
-    \bigbreak \noindent 
-    \begin{cppcode}
-        int add(int a, int b) {
-            return a + b;
-        }
-
-        auto addtwo = std::bind(add, 2, std::placeholders::_1);
-        cout << addtwo(4) << '\n'; // 6
-    \end{cppcode}
-    \bigbreak \noindent 
-    Here, std::bind(add, 2, std::placeholders::\_1) binds 2 as the first argument of add, leaving the second argument to be provided later. The placeholder \_1 indicates where future arguments should be inserted.
-
-    \pagebreak 
-    \subsection{Using std::ref with bind}
-    \bigbreak \noindent 
-    std::ref is a utility in C++ that allows you to create reference wrappers for objects. It's commonly used when you need to pass objects by reference to functions that usually take arguments by value, such as when using function objects or lambdas with standard algorithms (like std::for\_each or std::thread).
-    \bigbreak \noindent 
-    It provides a way to pass a reference to an object where an argument would otherwise be copied.
-    \bigbreak \noindent 
-    It’s especially useful when the function you're working with doesn’t explicitly accept references but you want to pass one anyway.
-    \bigbreak \noindent 
-    \begin{cppcode}
-        void add(int& a) {
-            ++a;
-        }
-
-        int local = 0;
-
-        auto f = std::bind(add, local);
-        f();
-        f();
-        cout << local << endl; // Outputs zero
-
-        auto f = std::bind(add, std::ref(local)); // Outputs two
-        f();
-        f();
-        cout << local << endl;
-    \end{cppcode}
-
-    \bigbreak \noindent 
-    \textbf{Note:} std::ref makes a std::reference\_wrapper<Type>...
-    \bigbreak \noindent 
-    \begin{cppcode}
-        int local = 0;
-        std::reference_wrapper<int> rlocal = local; 
-
-        auto f = std::bind(add, rlocal); // Outputs two
-    \end{cppcode}
-
 
 
 
@@ -3113,55 +3061,30 @@ void foo(myclass<T>& obj) {
      
 
      \pagebreak 
-     \unsect{std::invoke}
+     \subsection{Recursive lambdas}
      \bigbreak \noindent 
-     std::invoke is a utility function in C++ (introduced in C++17) that allows you to invoke a callable object in a uniform way, regardless of whether the callable is a regular function, a member function, or a function object (like a lambda or std::function). The main benefit of std::invoke is that it simplifies calling different types of callable objects without needing to worry about the specific calling syntax.
+     In C++, you cannot use auto to declare a recursive lambda directly because lambdas do not have a name. Since they are anonymous, you can't directly reference the lambda within its own body. For recursion, a function needs to call itself, but without a name, the lambda cannot do that.
+     \bigbreak \noindent 
+     As a side note, we also must capture the lambda by reference.
      \bigbreak \noindent 
      \begin{cppcode}
-         template< class F, class... Args >
-         decltype(auto) invoke(F&& f, Args&&... args);
+         auto lambda = [&lambda](int x, int n) { // ERROR 
+             if (n == 0) return 1;
+
+             return x * lambda(x,n-1);
+        };
      \end{cppcode}
-
      \bigbreak \noindent 
-     \subsection{Calling a regular function}
+     This code gives the error "Variable 'lambda' declared with deduced type 'auto' cannot appear in its own initializer".
      \bigbreak \noindent 
-     \begin{cppcode}
-         int add(int a, int b) {
-             return a + b;
-         }
-
-         int result = std::invoke(add, 2, 3);  // Calls add(2, 3)
-     \end{cppcode}
-
-     \bigbreak \noindent 
-     \subsection{Calling a member function}
+     We can use std::function to explicitly define the type of the lambda. This works because std::function provides a way to store callable objects with a known signature.
      \bigbreak \noindent 
      \begin{cppcode}
-         struct MyClass {
-             int multiply(int x) { return x * 2; }
+         std::function<int(int,int)> lambda = [&lambda](int x, int n) { // Works
+             if (n == 0) return 1;
+
+             return x * lambda(x,n-1);
          };
-
-         MyClass obj;
-         int result = std::invoke(&MyClass::multiply, obj, 5);  // Calls obj.multiply(5)
-     \end{cppcode}
-     \pagebreak \bigbreak \noindent 
-     \subsection{Accessing a member variable}
-     \bigbreak \noindent 
-     \begin{cppcode}
-         struct MyClass {
-             int value;
-         };
-
-         MyClass obj{42};
-         int value = std::invoke(&MyClass::value, obj);  // Accesses obj.value
-     \end{cppcode}
-
-     \bigbreak \noindent 
-     \subsection{Calling a lambda}
-     \bigbreak \noindent 
-     \begin{cppcode}
-         auto lambda = [](int a, int b) { return a + b; };
-         int result = std::invoke(lambda, 2, 3);  // Calls lambda(2, 3)
      \end{cppcode}
 
 
@@ -4123,6 +4046,179 @@ int main() {
     \end{cppcode}
     \bigbreak \noindent 
     Without inline, the function call square(5) would generate assembly code that jumps to the function definition, executes it, and returns the result. With inline, the compiler might replace the square(5) call directly with 5 * 5 in the code, eliminating the need for a function call.
+
+    \pagebreak 
+    \unsect{Standard namespace}
+    \bigbreak \noindent 
+    \subsection{std::bind}
+    \bigbreak \noindent 
+    \subsubsection{std::placeholders}
+    \bigbreak \noindent 
+    Before we get into std::bind, we must discuss std::placeholders
+    \bigbreak \noindent 
+    std::placeholders is a namespace in C++ that provides placeholder objects like std::placeholders::\_1, std::placeholders::\_2, and so on, which are used in conjunction with std::bind. These placeholders represent arguments that will be supplied when the resulting callable object (created by std::bind) is invoked.
+    \bigbreak \noindent 
+    Each placeholder corresponds to a positional argument that the function object will expect at the time of calling. For example:
+    \begin{itemize}
+        \item std::placeholders::\_1 represents the first argument.
+        \item std::placeholders::\_2 represents the second argument, and so on.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    std::bind in C++ is used to create a function object (or a callable) by binding specific arguments to a function or member function, essentially "fixing" some of its arguments ahead of time. This allows the resulting function object to be called later with fewer arguments, as some are already provided.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int add(int a, int b) {
+            return a + b;
+        }
+
+        auto addtwo = std::bind(add, 2, std::placeholders::_1);
+        cout << addtwo(4) << '\n'; // 6
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here, std::bind(add, 2, std::placeholders::\_1) binds 2 as the first argument of add, leaving the second argument to be provided later. The placeholder \_1 indicates where future arguments should be inserted.
+
+    \pagebreak 
+    \subsubsection{Using std::ref with bind}
+    \bigbreak \noindent 
+    std::ref is a utility in C++ that allows you to create reference wrappers for objects. It's commonly used when you need to pass objects by reference to functions that usually take arguments by value, such as when using function objects or lambdas with standard algorithms (like std::for\_each or std::thread).
+    \bigbreak \noindent 
+    It provides a way to pass a reference to an object where an argument would otherwise be copied.
+    \bigbreak \noindent 
+    It’s especially useful when the function you're working with doesn’t explicitly accept references but you want to pass one anyway.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void add(int& a) {
+            ++a;
+        }
+
+        int local = 0;
+
+        auto f = std::bind(add, local);
+        f();
+        f();
+        cout << local << endl; // Outputs zero
+
+        auto f = std::bind(add, std::ref(local)); // Outputs two
+        f();
+        f();
+        cout << local << endl;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \textbf{Note:} std::ref makes a std::reference\_wrapper<Type>...
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int local = 0;
+        std::reference_wrapper<int> rlocal = local; 
+
+        auto f = std::bind(add, rlocal); // Outputs two
+    \end{cppcode}
+
+     \pagebreak 
+     \subsection{std::invoke}
+     \bigbreak \noindent 
+     std::invoke is a utility function in C++ (introduced in C++17) that allows you to invoke a callable object in a uniform way, regardless of whether the callable is a regular function, a member function, or a function object (like a lambda or std::function). The main benefit of std::invoke is that it simplifies calling different types of callable objects without needing to worry about the specific calling syntax.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template< class F, class... Args >
+         decltype(auto) invoke(F&& f, Args&&... args);
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Calling a regular function}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int add(int a, int b) {
+             return a + b;
+         }
+
+         int result = std::invoke(add, 2, 3);  // Calls add(2, 3)
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Calling a member function}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct MyClass {
+             int multiply(int x) { return x * 2; }
+         };
+
+         MyClass obj;
+         int result = std::invoke(&MyClass::multiply, obj, 5);  // Calls obj.multiply(5)
+     \end{cppcode}
+     \pagebreak \bigbreak \noindent 
+     \subsubsection{Accessing a member variable}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct MyClass {
+             int value;
+         };
+
+         MyClass obj{42};
+         int value = std::invoke(&MyClass::value, obj);  // Accesses obj.value
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Calling a lambda}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         auto lambda = [](int a, int b) { return a + b; };
+         int result = std::invoke(lambda, 2, 3);  // Calls lambda(2, 3)
+     \end{cppcode}
+
+     \pagebreak 
+     \subsection{std::exchange}
+     \bigbreak \noindent 
+     std::exchange is a utility function in the C++ Standard Library that is used to replace the value of an object with a new value and return the old value. This can be very handy for implementing things like move operations, resetting variables, or swapping values efficiently.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template< class T, class U = T >
+         T exchange( T& obj, U&& new_value );
+     \end{cppcode}
+     \bigbreak \noindent 
+     It takes a reference to an object obj and replaces it with a new value new\_value. It returns the original value of the object before the replacement.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int a = 5;
+        int b = std::exchange(a, 10); // a becomes 10, b takes the old value of a, which was 5
+     \end{cppcode}
+
+     \pagebreak 
+     \subsection{std::swap}
+     \bigbreak \noindent 
+     Swap exchanges the values of two objects
+     \bigbreak \noindent 
+     \begin{cppcode}
+         template< class T >
+         void swap( T& a, T& b );
+     \end{cppcode}
+     \bigbreak \noindent 
+     \begin{cppcode}
+     int x=5, y=10;
+     std::swap(x,y);
+
+     // Swaps the values of x and y
+     \end{cppcode}
+
+     \pagebreak 
+     \subsection{std::get}
+     \bigbreak \noindent 
+     Allows access to elements from containers like std::tuple, std::pair, std::array, and std::variant either by index or type.
+     \bigbreak \noindent 
+     Tuple has no .at() method or subscript operator, so this utility function can be very useful to retrieve things from tuples.
+
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::tuple<int, string> v{1, "abc"};
+
+         cout << std::get<string>(v); // "abc"
+         cout << std::get<1>(v); // "abc"
+         cout << std::get<int>(v); // 1
+         cout << std::get<0>(v); // 1
+     \end{cppcode}
+
+
 
 
 
