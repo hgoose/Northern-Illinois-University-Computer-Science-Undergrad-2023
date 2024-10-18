@@ -1,12 +1,48 @@
-    node* search(int element) {
-        std::function<node*(node*)> r_search = [&] (node* p) -> node* {
-            if (p == nullptr)  {
-                return nullptr;
+    void remove(int element) {
+        if (!root) return; // Noop for empty tree
+
+        std::function<void(node*&, node*&)> r_remove = [&] (node*& p, node*& last) -> void {
+            if (!p) return; // Not found in tree
+
+            if (element < p->data) {
+                r_remove(p->left, p);
+            } else if (element > p->data) {
+                r_remove(p->right, p);
+            } else { // Found
+                // Case I: Node has zero children
+                if (!p->left && !p->right) {
+                    node* tmp = p;
+                    p=nullptr;
+                    delete tmp;
+                    // Case II: Node has one child
+                } else if (!p->left || !p->right) {
+                    node* tmp = p;
+                    p = (p->left ? p->left : p->right);
+                    delete tmp;
+                    // Case III: Two children
+                } else {
+                    node* successor = p->right;
+                    node* successorParent = p;
+
+                    // Find the in-order successor
+                    while (successor->left) {
+                        successorParent = successor;
+                        successor = successor->left;
+                    }
+
+                    // Replace nodes value with successor value
+                    p->data = successor->data;
+
+                    // Now we need to delete the successor node
+                    // The successor is a leaf or has a right child
+                    if (successorParent->left == successor) {
+                        successorParent->left = successor->right;
+                    } else {
+                        successorParent->right = successor->right;
+                    }
+                    delete successor;
+                }
             }
-            if (p->data == element) {
-                return p;
-            }
-            return r_search(p->next);
         };
-        return r_search(head);
+        r_remove(root,root);
     }

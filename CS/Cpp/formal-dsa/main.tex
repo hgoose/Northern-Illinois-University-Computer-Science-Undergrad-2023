@@ -386,6 +386,13 @@
     \pagebreak 
     \unsect{Recursion}
     \bigbreak \noindent 
+    \subsection{Recursion vs iteration}
+    \bigbreak \noindent 
+    In theory, any problem that can be solved recursively can be solved iteratively. This also means that any problem that can be solved iteratively can also be solved recursively.
+    \bigbreak \noindent 
+    The question is, for any problem that can be solved, which method can be used such that the problem is easier to solve.
+
+    \pagebreak \bigbreak \noindent 
     \subsection{Elementary recursion}
     \bigbreak \noindent 
     A recursive definition consists of two parts. In the first part, called the anchor or
@@ -998,6 +1005,656 @@ Base cases:
 \end{enumerate}
 \bigbreak \noindent 
 Otherwise, recurse through the nodes until we hit one of the base cases.
+
+
+\pagebreak 
+\unsect{Binary trees}
+\bigbreak \noindent 
+\subsection{Terminology}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Node:} The basic unit of a binary tree, containing data and references to left and right children.
+    \item \textbf{Root:} The topmost node in a tree.
+    \item \textbf{Child:} A node directly connected to another node when moving away from the root.
+    \item \textbf{Descendants}: The descendants of a node are all nodes that come after a given node.
+    \item \textbf{Parent:} The node directly above a child node.
+    \item \textbf{Grandparents}: The grandparents of a node is all nodes above the parent up to the root.
+    \item \textbf{Ancestors}: The ancestors of a node are all the nodes above a node up to the root
+    \item \textbf{Leaf:} A node with no children.
+    \item \textbf{Branch node}: A non-leaf node is called a branch node
+    \item \textbf{Internal Node:} A branch node, a node with at least one child.
+    \item \textbf{Subtree:} A tree consisting of a node and its descendants.
+    \item \textbf{Height of a node:} The number of edges on the longest path from a node to a leaf.
+    \item \textbf{Height of a tree:} The height of the tree is the height of the root
+    \item \textbf{Depth:} The number of edges from the root to a node.
+    \item \textbf{Depth of a tree}: The depth of a tree is the depth of the deepest node
+    \item \textbf{Degree of a node}: The number of subtrees of a node is called the degree of the node. In a binary tree, all nodes have degree 0, 1, or 2.
+    \item \textbf{Degree of a binary tree}:   The degree of a tree is the maximum degree of a node in the tree. A binary tree is degree 2.
+\end{itemize}
+
+\pagebreak 
+\subsection{Type of binary trees}
+\begin{itemize}
+    \item \textbf{Full Binary Tree:} Every internal node has two children, all leaf nodes have zero children. Thus, all nodes are either zero or two, never one. 
+    \item \textbf{Complete Binary Tree:} All levels, except possibly the last, are fully filled, and all nodes are as far left as possible.
+    \item \textbf{Perfect Binary Tree:} A binary tree where all internal nodes have exactly 2 children, and all leaf nodes are at the same level.
+    \item \textbf{Balanced Binary Tree:} A binary tree where the height of the left and right subtrees of every node differs by at most one.
+    \item \textbf{Degenerate (or pathological) Tree:} A tree where each parent node has only one child, essentially forming a linked list.
+    \item \textbf{Skewed Tree:} A special case of a degenerate tree, where all nodes are skewed to the left or right, forming a linear structure.
+\end{itemize}
+
+\pagebreak 
+\subsection{Maximum height of a binary tree}
+\bigbreak \noindent 
+The maximum height of a binary tree with $n$ nodes can be as large as $n−1$ (in the case of a degenerate or skewed tree where each node has only one child). This is true for any binary tree:
+\begin{align*}
+    h_{\text{max}} = n - 1
+.\end{align*}
+\bigbreak \noindent 
+Which occurs for degenerate trees.
+
+\bigbreak \noindent 
+\subsubsection{Minimum height of a binary tree}
+\bigbreak \noindent 
+The minimum height (best case) for a binary tree with $n$ nodes is achieved when the tree is perfectly balanced:
+\begin{align*}
+    h_{\text{min}} = \lfloor\log_{2}(n)\rfloor
+.\end{align*}
+\bigbreak \noindent 
+This is because the tree would need to spread nodes evenly across levels
+
+\bigbreak \noindent 
+\subsubsection{Number of Leaves in a Binary Tree}
+\bigbreak \noindent 
+For any binary tree with $n$ nodes, the number of leaves $l$ satisfies the following relationship:
+\begin{align*}
+    l \leq \frac{n+1}{2}
+.\end{align*}
+\bigbreak \noindent 
+This formula gives the maximum number of leaves, assuming that the tree is full (every internal node has 2 children).
+
+\bigbreak \noindent 
+\subsubsection{Relationship Between Internal Nodes and Leaves:}
+\bigbreak \noindent 
+In any binary tree, the number of internal nodes $i$ (nodes with at least one child) and the number of leaves $l$ are related as follows:
+\begin{align*}
+    i \leq l-1
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Maximum Number of Nodes at Height h}
+\bigbreak \noindent 
+The maximum number of nodes possible at a given height $h$ (where the height is counted from the root as level 0) in a binary tree is:
+\begin{align*}
+    \text{Max nodes at height $h$} = 2^{h}
+.\end{align*}
+
+\pagebreak 
+\subsubsection{Number of Edges in a Binary Tree:}
+\bigbreak \noindent 
+For any binary tree with $n$ nodes, the number of edges $e$ is always
+\begin{align*}
+    e = n-1
+.\end{align*}
+\bigbreak \noindent 
+This holds because every node (except the root) is connected to exactly one parent, so there are $n−1$ edges in the tree.
+
+\pagebreak 
+\subsection{Full trees}
+\bigbreak \noindent 
+A full tree is a tree where all internal nodes are degree two, and all leaf nodes are degree zero. Observe
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{fulltree1}
+    \label{fig:fulltree1}
+\end{figure}
+\bigbreak \noindent 
+The next three subsections refer to the \textit{full binary tree theorem}, which states for a nonempty, full tree $T$ 
+\bigbreak \noindent 
+\subsubsection{Number of leaves}
+\bigbreak \noindent 
+If $T$ has $I$ internal nodes, the number of leaves is given by
+\begin{align*}
+   L = I + 1 
+.\end{align*}
+\bigbreak \noindent 
+If $T$ has a total of $N$ nodes, the number of leaves is 
+\begin{align*}
+    L = \frac{N+1}{2}
+.\end{align*}
+\pagebreak 
+\subsubsection{Number of nodes}
+\bigbreak \noindent 
+If $T$ has $I$ internal nodes, the total number of nodes is 
+\begin{align*}
+    N = 2I + 1
+.\end{align*}
+\bigbreak \noindent 
+If $T$ has $L$ leaves, the total number of nodes is 
+\begin{align*}
+    N = 2L - 1
+.\end{align*}
+\bigbreak \noindent 
+\subsubsection{Number of internal nodes}
+\bigbreak \noindent 
+If $T$ has a total of $N$ nodes, the number of internal nodes is 
+\begin{align*}
+    I = \frac{N-1}{2}
+.\end{align*}
+\bigbreak \noindent 
+If $T$ has $L$ leaves, the number of internal nodes is 
+\begin{align*}
+    I = L - 1
+.\end{align*}
+
+\pagebreak 
+\subsection{Complete Binary Tree}
+\bigbreak \noindent 
+A complete binary tree has a specific structure defined by how the nodes are filled level by level.
+\begin{enumerate}
+    \item \textbf{All levels, except possibly the last, are fully filled:}
+        \begin{itemize}
+            In a complete binary tree, every level up to the second-to-last (penultimate) level must be completely filled with nodes.
+            This means that if the tree has height $h$, levels $0$ through $h - 1$ (from the root to the second-to-last level) will have the maximum possible number of nodes for that level.
+        \end{itemize}
+        \item \textbf{All nodes are as far left as possible:}
+            \begin{itemize}
+                \item On the last level, the nodes don't need to completely fill the level, but the nodes must be positioned as far to the left as possible.
+                \item For example, if some nodes are missing from the last level, they will always be missing from the right side, not from the left.
+            \end{itemize}
+\end{enumerate}
+\bigbreak \noindent 
+\textbf{Notes:} The tree is balanced in terms of node distribution, with all the levels except possibly the last fully filled.
+\bigbreak \noindent 
+Nodes on the last level are always added from the leftmost position first.
+
+\bigbreak \noindent 
+\subsubsection{Number of nodes}
+\bigbreak \noindent 
+The height $h$ of a complete binary tree is defined as the number of edges on the longest path from the root to a leaf node.
+\bigbreak \noindent 
+The total number of nodes in a complete binary tree is given by
+\begin{align*}
+    n = 2^{h+1} - 1
+.\end{align*}
+\bigbreak \noindent 
+\subsubsection{Height}
+\bigbreak \noindent 
+The height $h$ of a complete binary tree with $n$ nodes can be derived as:
+\begin{align*}
+   h = \lfloor \log_{2}(n) \rfloor
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Number of Leaf Nodes (L) in a Complete Binary Tree}
+\bigbreak \noindent 
+The number of leaf nodes in a complete binary tree can be calculated based on the number of internal nodes or the height of the tree
+\begin{align*}
+    L = \lceil \frac{n}{2} \rceil
+.\end{align*}
+\bigbreak \noindent 
+\subsubsection{Number of internal nodes}
+\bigbreak \noindent 
+The number of internal nodes (non-leaf nodes) in a complete binary tree can be calculated as:
+\begin{align*}
+    I &= N - L \\
+    I &= \lfloor \frac{n}{2} \rfloor
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Parent and Child Relationships in a Complete Binary Tree}
+\bigbreak \noindent 
+Parent of node at index $i$ (1-based index):
+\[
+\text{Parent}(i) = \left\lfloor \frac{i}{2} \right\rfloor
+\]
+Left child of node at index $i$:
+\[
+\text{Left child}(i) = 2i
+\]
+Right child of node at index $i$:
+\[
+\text{Right child}(i) = 2i + 1
+\]
+These relationships assume a 1-based indexing system for the nodes in the tree (common in heaps or array-based representations).
+
+\pagebreak 
+\subsection{Perfect binary tree}
+\bigbreak \noindent 
+\subsubsection{Number of Nodes}
+\bigbreak \noindent 
+\begin{align*}
+    N = 2^{h+1} - 1
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Number of Leaf Nodes}
+\bigbreak \noindent 
+\begin{align*}
+ L = 2^h
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Height of the Tree}
+\bigbreak \noindent 
+\begin{align*}
+    h = \log_2(N+1) - 1
+.\end{align*}
+
+
+\bigbreak \noindent 
+\subsubsection{Number of Internal Nodes}
+\bigbreak \noindent 
+\begin{align*}
+    I = N - L = 2^h - 1
+.\end{align*}
+
+\bigbreak \noindent 
+\subsubsection{Depth}
+\bigbreak \noindent 
+\begin{align*}
+    d = h
+.\end{align*}
+
+\pagebreak 
+\unsect{Applications of binary trees}
+\bigbreak \noindent 
+\subsection{Binary search trees}
+\bigbreak \noindent 
+A binary search tree (BST) is a binary tree in which each node has at most two children and follows these properties:
+\begin{itemize}
+    \item \textbf{Left Subtree Property:} The value of each node in the left subtree is less than the value of the node itself.
+    \item \textbf{Right Subtree Property:} The value of each node in the right subtree is greater than the value of the node itself.
+    \item Both left and right subtrees must also be binary search trees.
+\end{itemize}
+\bigbreak \noindent 
+\subsubsection{Interface}
+\bigbreak \noindent 
+The interface of a Binary Search Tree (BST) typically includes a set of operations for managing and accessing the tree’s nodes.
+\begin{itemize}
+    \item \textbf{Insert(value):} Inserts a new value into the BST while maintaining its properties.
+    \item \textbf{Remove(value):} Removes a value from the BST, adjusting the structure to maintain its properties.
+    \item \textbf{Predecessor(node)}: Finds the predecessor of a node
+    \item \textbf{Succesor(node)}: Finds the successor of a node
+    \item \textbf{Find(value):} Searches for a value in the BST and returns the node containing it or null if not found.
+    \item \textbf{FindMin():} Returns the node with the smallest value in the BST.
+    \item \textbf{FindMax():} Returns the node with the largest value in the BST.
+    \item \textbf{IsEmpty():} Checks if the BST is empty.
+    \item \textbf{Traverse(order):} Traverses the tree in a specific order (e.g., in-order, pre-order, post-order).
+    \item \textbf{Height():} Returns the height of the BST.
+    \item \textbf{Clear():} Removes all nodes from the tree, making it empty
+\end{itemize}
+
+\pagebreak 
+\subsubsection{Traversals}
+\bigbreak \noindent 
+We can traverse BST's in one of four ways
+\begin{itemize}
+    \item Level order
+    \item Preorder
+    \item Inorder
+    \item Postorder
+\end{itemize}
+\bigbreak \noindent 
+\paragraph{Level order}
+\bigbreak \noindent \bigbreak \noindent 
+Level-order traversal is a way of visiting all the nodes in a binary tree by levels, from top to bottom. It starts at the root and visits nodes level by level, left to right, for each level.
+\begin{itemize}
+    \item Start with the root node (the topmost node).
+    \item Visit all the nodes on the next level (children of the root) from left to right.
+    \item Then, visit all nodes on the level below that (grandchildren of the root) from left to right, and so on.
+\end{itemize}
+A queue is often used to implement level-order traversal, as it helps keep track of nodes to visit in the correct order.
+\bigbreak \noindent 
+\begin{cppcode}
+    void levelorderPrint() {
+        if (!root) return; // noop for empty tree
+
+        queue<node*> q;
+        q.push(root);
+
+        while (!q.empty()) {
+            node* curr = q.front();
+            q.pop();
+
+            cout << curr->data << endl;
+            if (curr->left) {
+                q.push(curr->left);
+            }
+            if (curr->right) {
+                q.push(curr->right);
+            }
+        }
+    }
+\end{cppcode}
+\begin{enumerate}
+    \item If the list is nonempty, construct a queue and push the root node.
+    \item While the queue is nonempty, grab the front, process the front, pop the front.
+    \item Push left and right nodes to queue, if they exist.
+\end{enumerate}
+
+\bigbreak \noindent 
+\pagebreak \bigbreak \noindent 
+\paragraph{Preorder}
+\bigbreak \noindent \bigbreak \noindent 
+Pre-order traversal is a way of visiting nodes in a binary tree where you:
+\begin{enumerate}
+    \item Visit the root node first.
+    \item Recursively visit the left subtree.
+    \item Recursively visit the right subtree.
+\end{enumerate}
+To explain simply:
+\begin{enumerate}
+    \item Start with the root node.
+    \item Go as far left as possible, visiting each node along the way.
+    \item Once you've reached the end of the left subtree, backtrack and visit the right subtree.
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    void preorderPrint() {
+        std::function<void(node*)> r_preorderPrint = [&] (node* p) {
+            if (p == nullptr) return;
+
+            cout << p->data << endl;
+            r_preorderPrint(p->left);
+            r_preorderPrint(p->right);
+        };
+        r_preorderPrint(root);
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\paragraph{Inorder}
+\bigbreak \noindent\bigbreak \noindent  
+in-order traversal is a way of visiting nodes in a binary tree where you:
+\begin{enumerate}
+    \item Recursively visit the left subtree first.
+    \item Visit the root node.
+    \item Recursively visit the right subtree.
+\end{enumerate}
+To explain simply:
+\begin{enumerate}
+    \item Start by going all the way to the left, visiting nodes along the way.
+    \item Once you reach the leftmost node, visit it, then move up to its parent (the root).
+    \item After visiting the root, visit the right subtree.
+\end{enumerate}
+\bigbreak \noindent 
+For a BST, printing the tree with an inorder traversal yields a sorted sequence.
+\bigbreak \noindent 
+\begin{cppcode}
+    void inorderPrint() {
+        std::function<void(node*)> r_inorderPrint = [&] (node* p) -> void {
+            if (!p) return;
+
+            r_inorderPrint(p->left);
+            cout << p->data << endl;
+            r_inorderPrint(p->right);
+        };
+        r_inorderPrint(root);
+    }
+\end{cppcode}
+
+\pagebreak 
+\paragraph{Postorder}
+\bigbreak \noindent \bigbreak \noindent 
+Post-order traversal is a way of visiting nodes in a binary tree where you:
+\begin{enumerate}
+    \item Recursively visit the left subtree first.
+    \item Recursively visit the right subtree.
+    \item Finally, visit the root node.
+\end{enumerate}
+To explain simply:
+\begin{enumerate}
+    \item Start by going to the leftmost node, but don't visit it yet.
+    \item Then, go to the right subtree and process it.
+    \item After both subtrees have been visited, visit the root.
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    void postorderPrint() {
+        std::function<void(node*)> r_postorderPrint = [&] (node* p) -> void {
+            if (!p) return;
+
+            r_postorderPrint(p->left);
+            r_postorderPrint(p->right);
+            cout << p->data << endl;
+        };
+        r_postorderPrint(root);
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Successor of a node}
+\bigbreak \noindent 
+The successor of a node is defined mathematically as
+\begin{align*}
+    \text{succ}(X) = \text{min}\{A:\ A > X\}
+.\end{align*}
+\bigbreak \noindent 
+thus, we find the set of all nodes that have values greater than that of $X$, then find the minimum in that set.
+\bigbreak \noindent 
+By properties of binary search trees we find the successor of a node $X$ by 
+\begin{enumerate}
+    \item \textbf{If $X$ has a right child:} The successor is the leftmost node in the right subtree of $X$ (the smallest node in the right subtree).
+    \item \textbf{If $X$ has no right child}:
+        \begin{itemize}
+            \item If the node is the left child of its parent, then the parent is its successor.
+            \item If the node is the right child of its parent, you move upward until you find a node that is the left child of its parent, and that parent is the successor.
+        \end{itemize}
+\end{enumerate}
+
+\pagebreak 
+\subsubsection{Predecessor}
+\bigbreak \noindent 
+The predecessor of a node $X$ is defined as
+\begin{align*}
+    \text{pred}(X) = \text{max}\{A:\ A < X\}
+.\end{align*}
+\bigbreak \noindent 
+In other words it is the largest node that is less than $X$. To find the predecessor:
+\begin{enumerate}
+    \item \textbf{If $X$ has a left child}: The predecssor is the rightmost node in the left subtree
+    \item \textbf{If $X$ has no left child}: The predecessor is the nearest ancestor for which the node is in the right subtree.
+\end{enumerate}
+
+\bigbreak \noindent 
+\subsubsection{The node}
+\bigbreak \noindent 
+The node is similar to a linked list node, but instead of a single next pointer, it has two. A left pointer and a right pointer.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct node{
+        node* left = nullptr;
+        node* right = nullptr;
+        int data = 0;
+
+        node() = default;
+        node(int data) : data(data) {}
+        node(node* left, node* right, int data) : left(left), right(right), data(data) {}
+    };
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{The class}
+\bigbreak \noindent 
+For simplicity, we often define the Binary Search Tree (BST) as a class. This allows each instance of the class to hold its own root node, along with other data members such as the size of the tree, that we may need. \bigbreak \noindent If it were not a class, then each function would need to take the root node as an argument and return the (potentially modified) root node to maintain the structure."
+\bigbreak \noindent 
+If it were not a class, than each function would have to take as an argument a root node, and return the root node to maintain the structure
+\bigbreak \noindent 
+\begin{cppcode}
+    class BST {
+    private:
+        node* root;
+        ...
+    public:
+        ...
+    };
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Recursive Insertion}
+\bigbreak \noindent 
+Because of the nature of  BSt's, we often use recursion to define the needed operations.
+\bigbreak \noindent 
+\begin{cppcode}
+    void insert(int element)  {
+        // If the tree is empty, insert new element as root
+        if (!root) {
+            root = new node(element);
+            return;
+        }
+
+        std::function<void(node*)> r_insert = [&](node* p) -> void {
+
+            // If the element is less than current node, and p->left exists, go left
+            if (element < p->data && p->left) {
+                r_insert(p->left);
+
+                // If the element is greater than current node, and p->right exists, go right
+            } else if (element > p->data && p->right) {
+                r_insert(p->right);
+            }
+
+            // If the element is less than current node, and p->left doesn't exist, insert node as current nodes left child
+            if (element < p->data && !p->left) {
+                p->left = new node(element);
+                return;
+
+                // If the element is greater than current node, and p->right doesn't exist, insert node as current nodes right child
+            } else if (element > p->data && !p->right) {
+                p->right = new node(element);
+                return;
+            }
+        };
+        // Start recursion from the root
+        r_insert(root);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+If the tree is empty, it creates a new root node with the given element.
+\bigbreak \noindent 
+Otherwise, it uses a recursive lambda function (r\_insert) to:
+\begin{itemize}
+    \item Traverse the tree: going left if the element is smaller, or right if the element is larger.
+    \item Once it finds an appropriate spot (where a left or right child doesn't exist), it inserts the new node as a left or right child accordingly.
+\end{itemize}
+The process starts from the root and recursively finds the right place to insert the new element.
+
+\pagebreak 
+\subsubsection{Iterative insert}
+\bigbreak \noindent 
+\begin{cppcode}
+    void insertB(int element) {
+        if (!root) {
+            root = new node(element);
+            return;
+        }
+
+        node* p = root, *trail = nullptr;
+        bool left;
+
+        while (p) {
+            trail = p;
+            if (element < p->data) {
+                p=p->left;
+                left=true;
+            } else if (element > p->data) {
+                p=p->right;
+                left=false;
+            } else {
+                return; // noop if already exists
+            }
+        }
+        if (left) {
+            trail->left = new node(element);
+        } else {
+            trail->right = new node(element);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+If the tree is empty, it creates a new root node with the element.
+\bigbreak \noindent 
+It then iteratively traverses the tree starting from the root:
+\begin{itemize}
+    \item Moves left if the element is smaller than the current node's data.
+    \item Moves right if the element is larger.
+    \item If the element already exists, it does nothing and returns.
+\end{itemize}
+Once it finds an empty spot (either left or right child is nullptr), it inserts the new node as the left or right child of the parent node (trail), depending on the comparison.
+
+\pagebreak 
+\subsubsection{Recursive removing}
+\bigbreak \noindent 
+To remove a node with a given value from a BST, there are three cases
+\begin{enumerate}
+    \item Node has no children
+    \item Node has one child
+    \item Noe has two children
+\end{enumerate}
+For case I, we can simply set the nodes parent to nullptr, and then delete the node.
+\bigbreak \noindent 
+For case II, we must divert the connection from the nodes parent to the nodes child, and then free the node.
+\bigbreak \noindent 
+Case III is more involved, we first must find the successor of the node. Once we find the successor, we replace the nodes data value with its successor. Then, instead of deleting the node, we delete its successor. Since to be in this case the node must have exactly two children, the successor is found in the simple way.
+\begin{enumerate}
+    \item Go right once
+    \item Go as far left as possible.
+\end{enumerate}
+Once we have the successor node, it will either have no children, or exactly one child (a right child), if it were to have a left child, it would not be the true successor because we would have not gone as far left as possible.
+\pagebreak \bigbreak \noindent 
+\begin{cppcode}
+    void remove(int element) {
+        if (!root) return; // Noop for empty tree
+
+        std::function<void(node*&, node*&)> r_remove = [&] (node*& p, node*& last) -> void {
+            if (!p) return; // Not found in tree
+
+            if (element < p->data) {
+                r_remove(p->left, p);
+            } else if (element > p->data) {
+                r_remove(p->right, p);
+            } else { // Found
+                // Case I: Node has zero children 
+                if (!p->left && !p->right) {
+                    node* tmp = p;
+                    p=nullptr;
+                    delete tmp;
+                    // Case II: Node has one child
+                } else if (!p->left || !p->right) {
+                    node* tmp = p;
+                    p = (p->left ? p->left : p->right);
+                    delete tmp;
+                    // Case III: Two children
+                } else {    
+                    node* successor = p->right;
+                    node* successorParent = p;
+
+                    // Find the in-order successor 
+                    while (successor->left) {
+                        successorParent = successor;
+                        successor = successor->left;
+                    }
+
+                    // Replace nodes value with successor value
+                    p->data = successor->data;
+
+                    // Now we need to delete the successor node
+                    // The successor is a leaf or has a right child
+                    if (successorParent->left == successor) {
+                        successorParent->left = successor->right; 
+                    } else {
+                        successorParent->right = successor->right; 
+                    }
+                    delete successor;
+                }
+            }
+        };
+        r_remove(root,root);
+    }
+\end{cppcode}
+
 
 
 
