@@ -58,6 +58,289 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+    \unsect{Elementary complexity theory}
+       \pagebreak 
+   \subsection{Elementary complexity theory}
+   \begin{itemize}
+       \item \textbf{Idea}: The same problem can frequently be solved with algorithms that differ in efficiency. The differences between the algorithms may be immaterial for processing a small number of data items, but these differences grow with the amount of data. To compare the efficiency of algorithms, a measure of the degree of difficulty of an algorithm called computational complexity was developed by Juris Hartmanis and Richard E. Stearns
+           \bigbreak \noindent 
+           Computational complexity indicates how much effort is needed to apply an algorithm or how costly it is. This cost can be measured in a variety of ways, and the particular context determines its meaning. This book concerns itself with the two efficiency criteria: time and space. The factor of time is usually more important than that of space, so efficiency considerations usually focus on the amount of time elapsed when processing data. However, the most inefficient algorithm run on a Cray computer can execute much faster than the most efficient algorithm run on a PC, so run time is always system-dependent. For example, to compare 100 algorithms, all of them would have to be run on the same machine. Furthermore, the results of run-time tests depend on the language in which a given algorithm is written, even if the tests are performed on the same machine. If programs are compiled, they execute much faster than when they are interpreted. A program written in C or Ada may be 20 times faster than the same program encoded in BASIC or LISP.
+        \item \textbf{Units}: To evaluate an algorithm’s efficiency, real-time units such as microseconds and nanoseconds should not be used. Rather, logical units that express a relationship between the size $n$ of a file or an array and the amount of time $t$ required to process the data should be used
+            \bigbreak \noindent 
+            If there is a linear relationship between the size $n$ and time $t$, that is, $t_{1} = cn_{1}$, then an increase of data by a factor of 5 results in the increase of the execution time by the same factor. If $n_{2} = 5n_{1}$, then $t_{2}= 5t_{1} $
+            \bigbreak \noindent 
+            Similarly, if $t_1 = \log_2 n$, then doubling $n$ increases $t$ by only one unit of time. Therefore, if $t_2 = \log_2(2n)$, then $t_2 = t_1 + 1$.
+        \item \textbf{Eliminating insignificant terms}: A function expressing the relationship between $n$ and $t$ is usually much more complex, and calculating such a function is important only in regard to large bodies of data; any terms that do not substantially change the function’s magnitude should  be eliminated from the function. The resulting function gives only an approximate measure of efficiency of the original function. However, this approximation is sufficiently close to the original, especially for a function that processes large quantities of data.
+        \item \textbf{Asymptotic complexity}:  This measure of efficiency is called asymptotic complexity and is used when disregarding certain terms of a function to express the efficiency of an algorithm or when calculating a function is difficult or impossible and only approximations can be found
+        \item \textbf{Big-O Notation}: The most commonly used notation for specifying asymptotic complexity—that is, for estimating the rate of function growth—is the big-O notation introduced in 1894 by Paul Bachmann.
+            \bigbreak \noindent 
+             Given two positive-valued functions $f$ and $g$, consider the following definition:
+             \bigbreak \noindent 
+             $f(n)$ is $O(g(n))$ if there exist positive numbers $c$ and $N$ such that $f(n) \leq c \cdot g(n)$ for all $n \geq N$.
+             \begin{align*}
+                 f(n) \text{ is } O(g(n)) \iff \exists\ c,N \in \mathbb{Z}^{+} \mid f(n) \le cg(n)\ \forall\ n \ge N
+             .\end{align*}
+             \bigbreak \noindent 
+             Big-O notation says that for large enough $n$, the function $f(n)$ does not grow faster than a constant multiple of $g(n)$. So, $g(n)$ provides an upper bound on how fast $f(n)$ can grow as $n$ increases.
+             \bigbreak \noindent 
+             In other words, $f$ is big-O of $g$ if there is a positive number $c$ such that $f$ is not larger than $c \cdot g$ for sufficiently large $n$s; that is, for all $n$s larger than some number $N$. The relationship between $f$ and $g$ can be expressed by stating either that $g(n)$ is an upper bound on the value of $f(n)$ or that, in the long run, $f$ grows at most as fast as $g$.
+             \bigbreak \noindent 
+             The problem with this definition is that, first, it states only that there must exist
+             certain $c$ and $N$, but it does not give any hint of how to calculate these constants. Second, it does not put any restrictions on these values and gives little guidance in situations when there are many candidates. In fact, there are usually infinitely many pairs
+             of $c$'s and $N$'s that can be given for the same pair of functions $f$ and $g$.
+             \bigbreak \noindent 
+             For example, suppose 
+             \begin{align*}
+                 f(n) = 2n^{2} + 3n + 1 = O(n^{2})
+             .\end{align*}
+             Where $g(n) = n^{2}$. Candidate values for $c$ and $N$ are
+
+             \[
+                 \begin{array}{c|cccccccc}
+                     c & \geq 6 & \geq 3^{\frac{3}{4}} & \geq 3^{\frac{1}{9}} & \geq 2^{\frac{13}{16}} & \geq 2^{\frac{16}{25}} & \cdots & \rightarrow & 2 \\
+                     \hline
+                     N & 1 & 2 & 3 & 4 & 5 & \cdots & \rightarrow & \infty \\
+                 \end{array}
+             \]
+             \bigbreak \noindent 
+             We obtain these values by solving the inequality:
+             \begin{align*}
+                 2n^{2}  + 3n  + 1 \leq cn^{2}
+             .\end{align*}
+             Or equivalently
+             \begin{align*}
+                 2 + \frac{3}{n}  + \frac{1}{n^{2}} \leq c
+             .\end{align*}
+             For different $n$'s
+             \bigbreak \noindent 
+             For large $n$, the terms $\frac{3}{n}$ and $\frac{1}{n^2}$ get smaller. Let's find $N$ such that for all $n \geq N$, the right-hand side stays bounded.
+             \bigbreak \noindent 
+             As $n$ gets larger, $\frac{3}{n}$ and $\frac{1}{n^2}$ approach zero. To simplify the analysis, choose $N=1$ initially and check how small $\frac{3}{n}$ and $\frac{1}{n^2}$ are:
+             \[
+                 2 + \frac{3}{1} + \frac{1}{1^2} = 2 + 3 + 1 = 6.
+             \]
+             From the inequality, at $N=1$, we have $6 \leq c$. Therefore, we can choose $c=6$. This ensures that for all $n \geq 1$, the inequality holds:
+             \[
+                 2 + \frac{3}{n} + \frac{1}{n^2} \leq 6.
+             \]
+             Thus, you can choose $c=6$ and $N=1$.
+             \bigbreak \noindent 
+             different pairs of constants $c$ and $N$ for the same function $g(= n^{2})$ can be determined.
+         \item \textbf{Choosing the best $c$, $N$}: To choose the best $c$ and $N$, it should be determined for which N a certain term in $f$ becomes the largest and stays the largest.
+             \bigbreak \noindent 
+             In the example above, The only candidates for the largest term are \(2n^2\) and \(3n\);
+             these terms can be compared using the inequality \(2n^2 > 3n\) that holds for \(n > 1.5\).
+             Thus, \(N = 2\) and \(c \geq \frac{15}{4} = 3.75\).
+         \item \textbf{Significance}: What is the practical significance of the pairs of constants just listed? All of them
+             are related to the same function \(g(n) = n^2\) and to the same \(f(n)\). For a fixed \(g\), an infinite
+             number of pairs of \(c\)'s and \(N\)'s can be identified. The point is that \(f\) and \(g\) grow at the same
+             rate. The definition states, however, that \(g\) is almost always greater than or equal to \(f\) if it
+             is multiplied by a constant \(c\). "Almost always" means for all \(n\)'s not less than a constant \(N\).
+             The crux of the matter is that the value of \(c\) depends on which \(N\) is chosen, and vice
+             versa.
+         \item \textbf{Inherent imprecision: Choosing best $g(n)$}: The inherent imprecision of the big-O notation goes even further, because there 
+             can be infinitely many functions \(g\) for a given function \(f\). For example, the \(f\) from 
+             Equation 2.2 is big-O not only of \(n^2\), but also of \(n^3\), \(n^4\), \dots, \(n^k\), \dots for any \(k \geq 2\). 
+             To avoid this embarrassment of riches, the smallest function \(g\) is chosen, \(n^2\) in this case.
+        \item \textbf{Big-o as approximating terms}:  The approximation of function f can be refined using big-O notation only for
+            the part of the equation suppressing irrelevant information. For example, in the equation below, the contribution of the third and last terms to the value of the function can
+            be omitted
+            \bigbreak \noindent 
+            \begin{align*}
+                f(n) &=n^{2} + 100n + \log(n) + 1000 \\
+                \implies  f(n) &= n^{2} + 100n + O(\log(n))
+            .\end{align*}
+            \bigbreak \noindent 
+            Similarly, 
+            \begin{align*}
+                f(n) &= 2n^{2} + 3n + 1 \\
+                \implies f(n) &= 2n^{2} + O(n)
+            .\end{align*}
+            \bigbreak \noindent 
+            This equation says that for large values of \(n\), the expression \(2n^2 + 3n + 1\) behaves like \(2n^2\) plus some terms that grow linearly or slower (captured by \(O(n)\)). The exact contributions of \(3n\) and \(1\) are not important for asymptotic analysis; what matters is that their growth is slower compared to \(2n^2\).
+        
+
+
+
+
+    \item \textbf{Algorithm analysis: Most common time complexities}: Ranked slowest to fastest growth
+        \begin{itemize}
+            \item \textbf{$O(1)$:} Constant time 
+            \item \textbf{$O(\log(\log(n)))$}: Logarithmic time
+            \item \textbf{$O(\log(n))$}: Logarthmic time
+            \item \textbf{$O(n)$}: Linear time
+            \item \textbf{$O(n\log(n))$}: Log-linear time
+            \item \textbf{$O(n^{k}),\ k>1$}: Polynomial time
+            \item \textbf{$O(a^{n}),\ a>1$}: Exponential time
+            \item \textbf{$O(n!)$}: Factorial time
+        \end{itemize}
+    \item \textbf{Ranking complexities from slowest to fastest: Process}: Given 
+        \begin{enumerate}[label=(\alph*)]
+            \item $O(25) $
+            \item $O(n^{\frac{1}{2}} + \log^{2}(n)) $
+            \item $O(\log^{200}(n)) $
+            \item $O(n^{3}\log^{4}(n)) $
+            \item $O(n^{200} + 3^{n}) $
+            \item $O(n\log^{40}(n)) $
+            \item $O(4^{n}\log(n)) $
+            \item $O(n^{3}\log(\log(n))) $
+        \end{enumerate}
+        How can we go about sorting these slowest to fastest. Well, to start, in the expressions with plus or minus, we can throw out the slower terms. Thus,
+        \begin{enumerate}[label=(\alph*)]
+            \item $O(n^{\frac{1}{2}}) $
+            \item $O(25) $
+            \item $O(\log^{200}(n)) $
+            \item $O(n^{3}\log^{4}(n)) $
+            \item $O(3^{n}) $
+            \item $O(n\log^{40}(n)) $
+            \item $O(4^{n}\log(n)) $
+            \item $O(n^{3}\log(\log(n))) $
+        \end{enumerate}
+        In product terms, we disregard the slower term unless there are complexites with the same dominant term. For example, $O(n^{3}\log(\log(n)))$ grows slower than $O(n^{3}\log^{4}(n))$ because although they have the same dominant term $n^{3}$, $\log(\log(n))$ grows slower than $\log^{4}(n)$. Thus, the correct sequence is 
+        \begin{enumerate}[label=(\alph*)]
+            \item [(b)] $O(25)$
+            \item [(c)] $O(\log^{200}(n)) $
+            \item [(a)] $O(n^{\frac{1}{2}} + \log^{2}(n)) $
+            \item [(f)] $O(n\log^{40}(n)) $
+            \item [(h)] $O(n^{3}\log(\log(n))) $
+            \item [(d)] $O(n^{3}\log^{4}(n)) $
+            \item [(e)] $O(n^{200} + 3^{n})$
+            \item [(g)] $O(4^{n}\log(n))$
+        \end{enumerate}
+    \item \textbf{Properties of Big-O notation}
+        \begin{enumerate}
+            \item \textbf{Transitivity}: $\text{ If } f(n) \text{ is } O(g(n)) \text{ and } g(n) \text{ is } O(h(n)), \text{ then } f(n) \text{ is } O(h(n)).$ \\
+            \bigbreak \noindent 
+            \textbf{Proof:} According to the definition, $f(n)$ is $O(g(n))$ if there exist positive numbers $c_1$ and $N_1$ such that $f(n) \leq c_1 g(n)$ for all $n \geq N_1$, and $g(n)$ is $O(h(n))$ if there exist positive numbers $c_2$ and $N_2$ such that $g(n) \leq c_2 h(n)$ for all $n \geq N_2$. Hence, $c_1 g(n) \leq c_1 c_2 h(n)$ for $n \geq N$ where $N$ is the larger of $N_1$ and $N_2$. If we take $c = c_1 c_2$, then $f(n) \leq ch(n)$ for $n \geq N$, which means that $f$ is $O(h(n))$.
+        \item \textbf{Addition}: If $f(n)$ is $O(h(n))$ and $g(n)$ is $O(h(n))$, then $f(n) + g(n)$ is $O(h(n))$.
+            \bigbreak \noindent 
+            \textbf{Proof}: If $f(n) \leq c_{1}h(n)$, and $g(n) \leq c_{2}h(n)$, then $f(n) + g(n) \leq c_{1}h(n) + c_{2}h(n) \leq (c_1 + c_2) h(n)$. $\ell$et $c = c_1 + c_2$, then $f(n) + g(n) \leq ch(n)$ and $f(n) + g(n)$ is $O(h(n)) $
+        \item \textbf{Polynomial bounds}: The function $an^{k}$ is $O(n^{k})$
+            \bigbreak \noindent 
+            \textbf{Proof}: $an^{k} \leq cn^{k}$ for $c \geq a$. Since we can always find some constant $c \geq a$, $an^{k}$ is $O(n^{k})$
+            \bigbreak \noindent 
+            \textbf{Observation}: For $an^{k} \leq cn^{k}$ to hold, $c \geq a$ is necessary
+        \item \textbf{Domination of higher-degree polynomials}: $n^{k}$ is $O(n^{k+j}) \ \forall \ j > 0 $
+            \bigbreak \noindent 
+            This statement holds if $c = N = 1$
+            \bigbreak \noindent 
+            It follows from all these facts that every polynomial is big-O of $n$ raised to the largest power, or
+            \begin{align*}
+                f(n) = a_k n^k + a_{k-1} n^{k-1} + \cdots + a_1 n + a_0 \text{ is } O(n^k)
+            .\end{align*}
+        \item \textbf{Logs}: The function $\log_a n$ is $O(\log_b n)$ for any positive numbers $a$ and $b \neq 1$.
+            \bigbreak \noindent 
+            This correspondence holds between logarithmic functions. The fact above states that regardless of their bases, logarithmic functions are big-O of each other; that is, all these functions have the same rate of growth.
+            \bigbreak \noindent 
+            \textbf{Proof}: Let $\log_{a}(n) = x$, and $\log_{b}(n) = y $, then $a^{x} = n,\ b^{y} =n$. Take the natural log of both sides
+            \begin{align*}
+                \ln{(a^{x})} = \ln{(n)} &\quad \ln{(b^{y})} = \ln{(n)} \\
+                \implies x\ln{(a)} = \ln{(n)} &\quad y\ln{(b)} = \ln{(n)} \\
+                \implies x\ln{(a)} &= y\ln{(b)}
+            .\end{align*}
+            Since $x = \log_{a}{(n)}$, and $y=\log_{b}{(n)}$, then we have
+            \begin{align*}
+                \ln{(a)}\log_{a}{(n)} &= \ln{(b)}\log_{b}{n} \\
+                \log_{a}{(n)} &= \frac{\ln{(b)}}{\ln{(a)}} \log_{b}{(n)}
+            .\end{align*}
+            $\ell$et $c=\frac{\ln{(b)}}{\ln{(a)}}$, then $\log_{a}{(n)} = c\log_{b}{(n)}$, which proves that $\log_{a}(n)$ and $\log_{b}{(n)}$ are multiples of each other. Thus, $\log_{a}{(n)}$ is $O(\log_{b}{n})$
+            \bigbreak \noindent 
+            \textbf{Note:} Because the base of the logarithm is irrelevant in the context of big-O notation, we can always use just one base.
+            \bigbreak \noindent 
+            \begin{align*}
+               \therefore \log_{a}{(n)} \text{ is } O(\text{lg}n)
+            .\end{align*}
+            For any positive $a\ne 1$, where $\text{lg}(n)$ is $\log_{2}{(n)}$
+    \end{enumerate}
+\item \textbf{Big-$\Omega$}. The function $f(n)$ is $\Omega(g(n))$ iff $\exists\ c,N \in \mathbb{R}^{+}\ \mid \ f(n) \geq cg(n) \ \forall \ n \geq N$.
+    \bigbreak \noindent 
+    In other words, $cg(n)$ is a lower bound on the size of $f(n)$, or, in the long run, $f$ grows at least at the rate of $g$
+    \bigbreak \noindent 
+    There is an interconnection between these two notations expressed by the equivalence
+    \begin{align*}
+        f(n) \text{ is } \Omega(g(n)) \text{ iff } g(n) is O(f(n))
+    .\end{align*}
+    \bigbreak \noindent 
+    There are an infinite number of possible lower bounds for the function $f$; that is, there is an infinite set of $g$s such that $f(n)$ is $\Omega(g(n))$ as well as an unbounded number of possible upper bounds of $f$. This may be somewhat disquieting, so we restrict our attention to the smallest upper bounds and the largest lower bounds. Note that there is a common ground for big-O and $\Omega$ notations indicated by the equalities in the definitions of these notations: Big-O is defined in terms of ``$\leq$'' and $\Omega$ in terms of ``$\geq$''; ``$=$'' is included in both inequalities. This suggests a way of restricting the sets of possible lower and upper bounds. 
+\item \textbf{Big-$\Theta$}: $f(n)$ is $\Theta(g(n))$ iff $\exists\ c_{1}, c_{2}, N \in \mathbb{R}^{+} \ \mid \ c_{1}g(n) \leq f(n) \leq c_{2}g(n) \ \forall \ n \geq N$
+    \bigbreak \noindent 
+    We see that $f(n)$ is $\Theta(g(n))$ if $f(n)$ is $O(g(n))$ and $f(n)$ is $\Omega(g(n))$.
+    \bigbreak \noindent 
+    When applying any of these notations, do not forget that they are approximations that hide some detail that in many cases may be considered important.
+\item \textbf{Double $O$ notation}: $f$ is $OO(g(n))$ if it is $O(g(n))$ and the constant $c$ is too large to have practical significance. Thus, $10^{8}n$ is $OO(n)$. However, the definition of “too large” depends on the particular application.
+\item \textbf{Using asymptotic complexity to estimate time}:
+    If an algorithm is $O(n^2)$, the time to process $n$ elements is proportional to $n^2$. 
+    \bigbreak \noindent 
+    Let $T(n)$ represent the time, so $T(n) = k \cdot n^2$ where $k$ is a constant.
+    \bigbreak \noindent 
+    To find the time for 1 million elements ($n = 10^6$):
+    \[
+        T(10^6) = k \cdot (10^6)^2 = k \cdot 10^{12}
+    \]
+    For example, if processing $1000$ elements takes $1$ second, then:
+    \bigbreak \noindent 
+    \[
+        T(1000) = k \cdot 1000^2 = k \cdot 10^6 \implies k = \frac{1}{10^6}
+    \]
+    Now, for $n = 10^6$:
+    \[
+        T(10^6) = \frac{1}{10^6} \cdot (10^6)^2 = 10^6 \text{ seconds} = 1,000,000 \text{ seconds} \approx 11.57 \text{ days}.
+    \]
+\item \textbf{Finding asymptotic complexites}: Asymptotic bounds are used to estimate the efficiency of algorithms by assessing the
+amount of time and memory needed to accomplish the task for which the algorithms
+were designed. This section illustrates how this complexity can be determined.
+In most cases, we are interested in time complexity, which usually measures the
+number of assignments and comparisons performed during the execution of a program. For now let's focus on assignments
+\bigbreak \noindent 
+Consider a simple loop to calculate the sum of numbers in an array
+\bigbreak \noindent 
+\begin{cppcode}
+    for (i = sum = 0; i < n; i++)
+        sum += a[i];
+\end{cppcode}
+\bigbreak \noindent 
+First, two variables are initialized, then the for loop iterates $n$ times, and during each iteration, it executes two assignments, one of which updates sum and the other of which updates $i$. Thus, there are $2 + 2n$ assignments for the complete run of this for loop; its asymptotic complexity is $O(n)$.
+\bigbreak \noindent 
+Complexity usually grows if nested loops are used, as in the following code, which outputs the sums of all the subarrays that begin with position 0:
+\bigbreak \noindent 
+\begin{cppcode}
+    for (i = 0; i < n; i++) {
+        for (j = 1, sum = a[0]; j <= i; j++)
+            sum += a[j];
+        cout<<"sum for subarray 0 through "<< i <<" is "<<sum<<endl;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Before the loops start, $i$ is initialized. The outer loop is performed $n$ times, executing in each iteration an inner \texttt{for} loop, print statement, and assignment statements for $i$, $j$, and \texttt{sum}. The inner loop is executed $i$ times for each $i \in \{1, \ldots, n-1\}$ with two assignments in each iteration: one for \texttt{sum} and one for $j$. Therefore, there are
+\[
+1 + 3n + \sum_{i=1}^{n-1} 2i = 1 + 3n + 2(1 + 2 + \cdots + n - 1) = 1 + 3n + n(n - 1)
+\]
+$= O(n) + O(n^2) = O(n^2)$ assignments executed before the program is completed.
+\item \textbf{Amortized complexity}: amortized analysis can be used
+to find the average complexity of a worst case sequence of operations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   \end{itemize}
+    
+
+
+
+
+
+    \pagebreak 
     \unsect{Linked lists}
     \bigbreak \noindent 
     \subsection{Singly-linked lists}
@@ -1652,6 +1935,67 @@ Once we have the successor node, it will either have no children, or exactly one
             }
         };
         r_remove(root,root);
+    }
+    \end{cppcode}
+    \pagebreak 
+    \subsubsection{Clearing}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void clear() {
+            if (!root) return;
+
+            std::function<void(node*)> r_clear = [&](node* p) -> void {
+                if (!p) return;
+                if (!p->left && !p->right) {
+                    delete p;
+                    p->left = nullptr, p->right = nullptr;
+                    return;
+                }
+                r_clear(p->left);
+                r_clear(p->right);
+            };
+            r_clear(root);
+            root = nullptr;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This C++ code defines a clear() function for a binary tree, which deletes all nodes recursively starting from the root. It uses a lambda function r\_clear to traverse the tree. If a node has no children, it deletes the node and sets its left and right pointers to nullptr. After clearing the entire tree, it sets root to nullptr.
+
+    \pagebreak 
+    \subsubsection{Counting the height}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        size_t height() {
+            std::function<size_t(node*)> r_height = [&](node* p) -> size_t {
+                // Base case height of a nullptr is zero
+                if (!p) return 0;
+                return 1+std::max(r_height(p->left), r_height(p->right));
+            };
+            // Height is counting edges, so its number nodes in longest path from root to leaf - 1
+            return r_height(root) -1; 
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This code defines a height() function that calculates the height of a binary tree by counting the edges. It uses a recursive lambda function r\_height to traverse the tree. For each node, it returns 1 + max(left subtree height, right subtree height) to find the longest path from the root to any leaf. Since r\_height counts nodes, the function subtracts 1 at the end to convert the node count to edge count, which is the definition of height.
+
+
+\pagebreak 
+\unsect{Math algorithms}
+\bigbreak \noindent 
+\subsubsection{Euclidean GCD Algorithm}
+\bigbreak \noindent 
+The GCD of two integers $a$ and $b$ (with $a \leq b$) is the largest integer that divides both $a$ and $b$. The Euclidean algorithm is based on the principle that
+\begin{align*}
+    \text{gcd}(a,b) = \text{gcd}(b, a \text{mod } b)
+.\end{align*}
+\bigbreak \noindent 
+This means that the GCD of two numbers doesn't change if the larger number is replaced by its remainder when divided by the smaller number. You keep repeating this until the remainder is 0, and the GCD will be the last non-zero remainder
+\bigbreak \noindent 
+\begin{cppcode}
+    int gcd(int a, int b)  {
+        if (!b) return a;
+
+        return gcd(b, a%b);
     }
 \end{cppcode}
 

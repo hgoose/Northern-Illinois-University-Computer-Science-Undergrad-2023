@@ -187,7 +187,35 @@ struct bst {
             }
         }
     }
+    void clear() {
+        if (!root) return;
 
+        std::function<void(node*)> r_clear = [&](node* p) -> void {
+            if (!p) return;
+            if (!p->left && !p->right) {
+                delete p;
+                p->left = nullptr, p->right = nullptr;
+                return;
+            }
+            r_clear(p->left);
+            r_clear(p->right);
+        };
+        r_clear(root);
+        root = nullptr;
+    }
+
+    size_t height() {
+        std::function<size_t(node*)> r_height = [&](node* p) -> size_t {
+            if (!p) return 0;
+            return 1+std::max(r_height(p->left), r_height(p->right));
+        };
+        // Height is counting edges, so its number nodes in longest path from root to leaf - 1
+        return r_height(root) -1; 
+    }
+
+    ~bst(){
+        clear();
+    }
 };
 
 int main(int argc, char** argv) {
@@ -195,14 +223,13 @@ int main(int argc, char** argv) {
     bst t1;
     t1.insertB(40);
     t1.insertB(30);
-    t1.insertB(20);
     t1.insertB(50);
     t1.insertB(60);
-    t1.insertB(55);
     t1.insertB(45);
 
-    t1.remove(50);
     t1.levelorderPrint();
+
+    cout << "height: " << t1.height() << '\n';
 
 
     return 0;

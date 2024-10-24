@@ -161,6 +161,7 @@ struct single_list {
         return r_len(head);
     }
 
+
     ~single_list() {
         clear();
     }
