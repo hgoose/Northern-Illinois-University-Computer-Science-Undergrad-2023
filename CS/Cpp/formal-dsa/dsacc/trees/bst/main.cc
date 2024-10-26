@@ -192,13 +192,11 @@ struct bst {
 
         std::function<void(node*)> r_clear = [&](node* p) -> void {
             if (!p) return;
-            if (!p->left && !p->right) {
-                delete p;
-                p->left = nullptr, p->right = nullptr;
-                return;
-            }
+
             r_clear(p->left);
             r_clear(p->right);
+
+            delete p;
         };
         r_clear(root);
         root = nullptr;
@@ -228,8 +226,19 @@ int main(int argc, char** argv) {
     t1.insertB(45);
 
     t1.levelorderPrint();
+    cout << endl;
 
-    cout << "height: " << t1.height() << '\n';
+    t1.clear();
+
+    t1.levelorderPrint();
+
+    t1.insertB(40);
+    t1.levelorderPrint();
+
+    t1.clear();
+    t1.levelorderPrint();
+
+
 
 
     return 0;

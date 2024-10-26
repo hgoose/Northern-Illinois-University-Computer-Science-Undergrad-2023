@@ -4056,6 +4056,178 @@ int main() {
     \bigbreak \noindent 
     When you reverse iterate through a container (like a std::string or std::vector), the reverse iterator rbegin() points to the last element in the container, and as you increment it, it moves backward through the container. When you reach an element using the reverse iterator and want to switch back to normal (forward) iteration, you use the base() method. It returns a forward iterator that points just past the element that the reverse iterator refers to.
 
+    \pagebreak 
+    \unsect{Regular expressions in c++}
+    \bigbreak \noindent 
+    To use regex expressions, we include <regex>
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <regex>
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Basic components}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{std::regex:} Represents the regular expression pattern.
+        \item \textbf{std::smatch:} Used for storing results of a match against a std::string.
+        \item \textbf{std::regex\_match:} Tests whether an entire string matches the regex.
+        \item \textbf{std::regex\_search:} Searches a string for any sequence matching the regex.
+        \item \textbf{std::regex\_replace:} Replaces parts of a string that match the regex pattern.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{The regex object}
+    \bigbreak \noindent 
+    The regex object is used to store a pattern.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::regex pattern("^\\w+$");
+        std::regex pattern(R"(^\w+$)"); // With raw strings
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{The smatch array}
+    \bigbreak \noindent 
+    We can store captures in the smatch array
+    \bigbreak \noindent 
+    \begin{cppcode}
+        string s = "     hello     ";
+        regex pattern1(R"(\s*((\w)+)\s*)");
+        regex pattern2(R"(\s*(\w+)\s*)"); // Does the same as pattern one
+        smatch capture_space;
+
+        // Strips leading and trailing spaces
+        if (regex_match(s, capture_space, pattern1)) {
+            cout << capture_space[1] << endl;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    capture\_space[0] is the entire string, capture\_space[1-n] are the captures 1-n. In the example above capture\_space[1] holds the trimmed string. We index with one because it is the first (and only) capture.
+
+    \pagebreak 
+    \subsubsection{regex\_match}
+    \bigbreak \noindent 
+    We can use the std::regex\_match function to match entire strings against a defined pattern, like we did in the example above. Returns true if the string was matched, false otherwise.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool regex_match(const string& s, smatch& capture_space, const regex& pattern);
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{regex\_search}
+    \bigbreak \noindent 
+    Searches a string for any match of a regular expression pattern. Unlike regex\_match, it doesn't require the entire string to match the pattern, just a part of it.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool regex_search(const string& s, smatch& capture_space, const regex& pattern);
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::string s = "abc123";
+        std::regex pattern("\\d+");
+        std::smatch match;
+
+        if (std::regex_search(s, match, pattern)) {
+            std::cout << "Found match: " << match.str() << '\n';
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Note that we can always use regex\_match in places where regex\_search is required. Consider the pattern from the example above
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::string s = "abc123";
+        std::regex pattern("\\d+"); // Suitable  for regex_search
+        std::regex pattern(".*\\d+.*"); // Suitable  for regex_match
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{regex\_replace}
+    \bigbreak \noindent 
+    Replaces occurrences of a pattern in a string with a specified replacement string.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::string regex_replace(const string& s, const regex& pattern, const string& replacement) 
+    \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{Note:} This function will not modify the original string, it always returns a new string. 
+
+    \bigbreak \noindent 
+    \subsection{match\_results}
+    \bigbreak \noindent 
+    std::match\_results is a template class in C++ that holds the results of a regular expression match operation, such as those produced by std::regex\_search or std::regex\_match. It is typically used with std::smatch (for std::string matches) or std::cmatch (for C-style string matches).
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{std::smatch:} A typedef for \texttt{std::match\_results<std::string::const\_iterator>}.
+        \item \textbf{std::cmatch:} A typedef for \texttt{std::match\_results<const char*>}.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Methods}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{str():} Returns the matched string or a submatch as a \texttt{std::string}.
+        \item \textbf{size():} Returns the number of matches (main match + submatches).
+        \item \textbf{position():} Returns the position in the input string where the match begins.
+        \item \textbf{length():} Returns the length of the match.
+        \item \textbf{operator[]:} Access individual submatches via index.
+        \item \textbf{prefix():} Returns the part of the input string that precedes the match as a \texttt{sub\_match} object.
+        \item \textbf{suffix():} Returns the part of the input string that follows the match as a \texttt{sub\_match} object.
+        \item \textbf{empty():} Checks if the match was successful (returns \texttt{true} if no match was found).
+        \item \textbf{ready():} Checks if the \texttt{match\_results} object is ready and valid for use after a regex search.
+        \item \textbf{format():} Returns the formatted string based on the matched results using a specified format string.
+        \item \textbf{begin():} Returns an iterator to the first submatch (constant iterator).
+        \item \textbf{end():} Returns an iterator past the last submatch (constant iterator).
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{sub\_match}
+    \bigbreak \noindent 
+    \texttt{std::sub\_match} is a class template that represents a single match or submatch from a regular expression search. It typically stores a reference to the portion of the input string that matched a particular capture group.
+    \bigbreak \noindent 
+    It behaves like a \texttt{std::pair<BidirectionalIterator, BidirectionalIterator>}, storing the start and end iterators of the matched range.
+    \bigbreak \noindent 
+    You can access the matched string using the str() method.
+    \bigbreak \noindent 
+    It supports comparison operators (==, !=) and conversion to std::string.
+    \bigbreak \noindent 
+    It is often used with \texttt{std::match\_results} to represent the main match or submatches (captured groups).
+    \bigbreak \noindent 
+    \begin{cppcode}
+        / Input string and regex pattern with a capture group
+        std::string text = "The price is $100";
+        std::regex pattern(R"(\$(\d+))");  // Captures the dollar amount
+
+        std::smatch match_results;  // Type alias for std::match_results<std::string::const_iterator>
+
+        // Perform regex search
+        if (std::regex_search(text, match_results, pattern)) {
+            std::cout << "Full match: " << match_results[0].str() << '\n';  // Full match ($100)
+
+            // Using std::sub_match to get the first capture group (digits after the $)
+            std::sub_match<std::string::const_iterator> submatch = match_results[1];
+            std::cout << "Captured digits: " << submatch.str() << '\n';     // Submatch (100)
+        } else {
+            std::cout << "No match found.\n";
+        }   
+    \end{cppcode}
+
+    \pagebreak 
+    \subsection{Passing string iterators}
+    \bigbreak \noindent 
+    We can also pass iterators to the regex functions.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::string s = "hello 123 world";
+        std::smatch capture_space;
+        std::regex pattern(R"(.*(\d+).*)");  // Missing semicolon added
+
+        if (std::regex_match(s, capture_space, pattern)) {
+            std::cout << "Captured number: " << capture_space[1] << std::endl;
+        } else {
+            std::cout << "No match found" << std::endl;
+        }
+    \end{cppcode}
+
+
+
+
 
 
     \pagebreak 
@@ -4228,6 +4400,72 @@ int main() {
          cout << std::get<int>(v); // 1
          cout << std::get<0>(v); // 1
      \end{cppcode}
+
+     \pagebreak 
+     \subsection{std::tuple}
+     \bigbreak \noindent 
+     In C++, a tuple is a fixed-size collection of elements that can hold objects of different types. Tuples are part of the <tuple> header and can store an arbitrary number of values of varying types in a single object.
+     \bigbreak \noindent 
+     \subsubsection{std::tuple and std::make\_tuple}
+     \bigbreak \noindent 
+     You can create a tuple using std::tuple and std::make\_tuple
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::tuple<int, float, string> t = std::make_tuple(1,1.0f, "hello");
+     \end{cppcode}
+     \bigbreak \noindent 
+     As we saw above, we can retrieve elements in a tuple with std::get
+     \bigbreak \noindent 
+     \subsubsection{Modifying elements}
+     \bigbreak \noindent 
+     You can modify elements directly if the tuple is non-const
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::tuple<int, float, string> t = std::make_tuple(1,1.0f, "hello");
+         std::get<0> t = 12;
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{std::tuple\_size}
+     \bigbreak \noindent 
+     Use std::tuple\_size to get the number of elements
+     \bigbreak \noindent 
+     \begin{cppcode}
+        std::tuple<int, float, string> t = std::make_tuple(1,1.0f, "hello");
+
+        constexpr size_t tsize = std::tuple_size<tuple<int, float,string>>::value;
+        constexpr size_t tsize2 = std::tuple_size<decltype(t)>::value;
+     \end{cppcode}
+
+     \pagebreak 
+     \subsubsection{Unpacking with std::tie}
+     \bigbreak \noindent 
+     We can unpack tuple elements into variables using std::tie:
+     \bigbreak \noindent 
+     \begin{cppcode}
+        std::tuple<int, float, string> t = std::make_tuple(1,1.0f, "hello");
+
+        int x; float y; string z;
+        std::tie(x,y,z) = t;
+     \end{cppcode}
+     \bigbreak \noindent 
+     \textbf{Note:} std::tie requires existing variables to tie to the elements of the tuple. std::tie doesn't create new variables; it binds existing ones to the values in the tuple.
+
+     \bigbreak \noindent 
+     \subsubsection{std::tie with std::ignore}
+     \bigbreak \noindent 
+     If you don’t need all the values from the tuple or pair, you can use std::ignore to ignore specific elements.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::tuple<int, float, string> t = std::make_tuple(1,1.0f, "hello");
+
+         int x; [[maybe_unused]] float y; string z;
+         std::tie(x,std::ignore,z) = t;
+     \end{cppcode}
+
+
+
+
 
 
 

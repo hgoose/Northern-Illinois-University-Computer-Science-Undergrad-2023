@@ -1839,6 +1839,180 @@ The final regular expression is then
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Chomsky Normal Form}
+    \begin{itemize}
+        \item \textbf{Intro}: Noam Chomsky showed that it is possible to convert any CFG (i.e., all productions of the form $A\to v$ to another CFG that accepts the same language where all the productions are either
+            \begin{align*}
+                &A\to \text{ exactly two variables} \\
+                &\text{or} \\
+                &A\to \text{ one terminal (the terminal cannot be $\epsilon$)} 
+            .\end{align*}
+            Which converts the CFG into Chomsky Normal Form (CNF)
+            \bigbreak \noindent 
+            The conversion is done in four steps which must be in this sequence:
+            \begin{enumerate}
+                \item Eliminate null productions
+                \item Eliminate unit productions
+                \item Almost CNF
+                \item CNF
+            \end{enumerate}
+        \item \textbf{Eliminate Null Productions}: A null production is of the form $A\to \epsilon$.
+            \bigbreak \noindent 
+            We start our conversion to Chomksy Normal Form (CNF) by first eliminating all null productions and replacing each eliminated null production with other new production(s).
+            \bigbreak \noindent 
+            The basic idea is that the new production(s) we are adding to replace a null production $N\to \epsilon$ come from other productions where N appears on the right.
+            \bigbreak \noindent 
+            If such a production exists, then we add new productions that have all possible subsets of \(N\) deleted, for example:
+            \[
+                X \rightarrow aNb \quad \text{adds one production:} \quad X \rightarrow ab
+            \]
+            \[
+                X \rightarrow aNbNc \quad \text{adds three productions:} \quad X \rightarrow abNc \ \mid\ aNbc \ \mid\ abc
+            \]
+            If \(N\) appears \(k\) times in a production then add \(2^k - 1\) new productions (i.e., every possible combination to remove \(N\)).
+            \bigbreak \noindent 
+            How do we remove all null productions from a grammar? One possible strategy is to remove each one at a time ... but that can be problematic. 
+        \item \textbf{Nullable variable}: The solution is to eliminate all the null productions at the same time, but that requires a new definition.
+            \bigbreak \noindent 
+            Given a context free grammar and a variable $N$ in that grammar,
+            we call $N$ a nullable variable iff:
+            \begin{enumerate}
+                \item There is a production $N\to \epsilon$ or
+                \item There is a derivation that starts with $N$ and leads to $\epsilon$
+            \end{enumerate}
+        \item \textbf{Identify all nullable variables}: How do we identify all of the nullable variables in a context free grammar? By essentially taking a transitive closure.
+            \begin{enumerate}
+                \item For every null production, "paint" the variable that appears on the left side of the production \textcolor{red}{"red"}. These are all nullable variables.
+                \item "Paint" every occurrence of every nullable variable \textcolor{red}{"red"} throughout the entire grammar, including occurrences that appear on the right side of productions.
+                \item "Paint" any variable that appears on the left side of a production \textcolor{red}{"red"} if the right side of the production is all \textcolor{red}{"red"}. These are nullable variables.
+                \item Repeat steps 2 and 3 until you have painted nothing else \textcolor{red}{"red"}.
+            \end{enumerate}
+        \item \textbf{Eliminate the null productions}: How do we eliminate all null productions from a grammar?
+            \begin{enumerate}
+                \item Identify all the nullable variables.
+                \item Remove all the null productions.
+                \item For every production that has a nullable variable in its right side, add new productions all with the same left side and new right sides with every possible subset of the nullable removed, but do not allow a new null production to be produced, even if the only symbol on the right side of the production is a nullable variable (i.e., do not add $Y\to \epsilon$ even if there is production $Y\to A$ and $A$ was found to be nullable).
+            \end{enumerate}
+        \item \textbf{Eliminating null productions example}: Consider the following grammar
+            \begin{align*}
+                &S \to XY \\
+                &X \to Zb \\
+                &Y \to bW \\
+                &W \to Z \\
+                &Z \to AB \\
+                &A \to aA | bA | \epsilon \\
+                &B \to Ba | Bb | \epsilon
+            .\end{align*}
+            The nullables are $W,Z,A,B$ and the two null productions are $A\to \epsilon$ and $B\to \epsilon$
+            \bigbreak \noindent 
+            We have identified the nullables. Now, we remove the null products $A\to \epsilon$, $B\to \epsilon$
+            \begin{align*}
+                &S \to XY \\
+                &X \to Zb \\
+                &Y \to bW \\
+                &W \to Z \\
+                &Z \to AB \\
+                &A \to aA | bA \\
+                &B \to Ba | Bb 
+            .\end{align*}
+            \bigbreak \noindent 
+            Finally, for every production that has a nullable variable in its right side, add new productions to the left side with every possible subset of the nullable removed.
+            \begin{align*}
+                 &S \to XY \\
+                &X \to Zb \ \mid \ b \\
+                &Y \to bW \\
+                &W \to Z \\
+                &Z \to AB \ \mid \ A \ \ \mid \ B\\
+                &A \to aA \ \mid \ bA \ \mid \ a \ \mid \ b \\
+                &B \to Ba \ \mid \ Bb \ \mid \ a \ \mid b
+            .\end{align*}
+        \item \textbf{Eliminate unit productions}: A production of the form \textit{one variable} $\to$ \textit{one variable} is called a unit production.
+            \bigbreak \noindent 
+            Given a context free grammar with no null productions, it is possible to create a new context free grammar that accepts the same language and that has no unit productions.
+            \bigbreak \noindent 
+            For every pair of variables \(A\) and \(B\), if the CFG has a unit production \(A \rightarrow B\) or if there is a derivation from \(A\) to \(B\),
+            \[
+                A \Rightarrow X_1 \Rightarrow \dots \Rightarrow X_n \Rightarrow B
+            \]
+            where each \(X_i\) is a single variable, then we introduce the following productions according to the following rule:
+            \[
+                \text{If all the non-unit productions from } B \text{ are}
+            \]
+            \[
+                B \rightarrow S_1 \mid S_2 \mid \dots \mid S_m
+            \]
+            then add the productions
+            \[
+                A \rightarrow S_1 \mid S_2 \mid \dots \mid S_m
+            \]
+            Conclude by removing all unit productions from the CFG.
+            \bigbreak \noindent 
+            Consider the following grammar
+            \begin{align*}
+                &S\to A
+                &A\to a \ \mid \ B \ \mid \ b \ \mid \ C
+                &B\to b \ \mid \ C \ \mid \ AAa
+                &C\to A
+            .\end{align*}
+            Split the grammar into unit productions and non-unit productions as follows:
+            \begin{align*}
+                &S \to A \\
+                &A\to B \ \mid \ C \quad \quad A\to a \ \mid \ b \\
+                &B\to C \quad \quad \quad \quad  B\to b \ \mid \ AAa \\
+                &C\to A
+            .\end{align*}
+            \bigbreak \noindent 
+            We must consider each unit production, one at a time, and make longer and longer derivation chains that end in a single variable without introducing any cycles (e.g., do not allow $A \Rightarrow B \Rightarrow... \Rightarrow B)$
+            \bigbreak \noindent 
+            New grammar with unit productions removed and new productions added
+            \begin{align*}
+                &S \to a | b | AAa \\
+                &A \to a | b | AAa \\
+                &B \to a | b | AAa \\
+                &C \to a | b | AAa
+            .\end{align*}
+        \item \textbf{Almost CNF}: If $L$ is a language generated by some CFG then there is another CFG that generates all the non null words in $L$ all of whose productions are of one of two basic forms:
+            \begin{center}
+                \textit{Variable} $\to$ \textit{string of only variables} or \textit{Variable} $\to$ \textit{one terminal}
+            \end{center}
+            Start with a CFG having variables \(S, X_1, \dots, X_n\).
+            \bigbreak \noindent 
+            For each terminal (e.g., \(a, b, c\)) add a new production by introducing a new variable:
+            \[
+                A' \rightarrow a, \quad B' \rightarrow b, \quad C' \rightarrow c
+            \]
+            In all of the \textit{original} productions (i.e., only those that started with \(S, X_1, \dots, X_n\)) replace the terminals \textit{(not necessarily every terminal)} with the newly created associated variable.
+        \item \textbf{Chomsky Normal Form}: Going from Almost CNF to CNF is easy
+            \bigbreak \noindent 
+            For every production of the form \(A \rightarrow X_1 X_2 \dots X_n\) where \(n > 2\):
+            \begin{itemize}
+                \item Introduce a new variable \(R\)
+                \item Add new production \(R \rightarrow X_2 \dots X_n\)
+                    \begin{itemize}
+                        \item The new production has \(n-1\) variables on the right side.
+                        \item Because the original production had \(n \geq 2\) variables, this new production will have \(n \geq 2\) variables (i.e., cannot introduce unit productions) on the right side.
+                    \end{itemize}
+                \item Re-write the original production \(A \rightarrow X_1 X_2 \dots X_n\) as \(A \rightarrow X_1 R\)
+            \end{itemize}
+            Repeat Step 1 as necessary, including applying it to any new productions that were generated by Step 1.
+            \bigbreak \noindent 
+            \textbf{Example}: 
+            \begin{align*}
+                A \to BCDE 
+            .\end{align*}
+            Becomes
+            \begin{align*}
+                &A \to BR_{1} \\
+                &R_{1} \to CR_{2} \\
+                &R_{2}\to DE
+            .\end{align*}
+        \item \textbf{Note about CNF}: A CFG converted to CNF will accept the exact same language \textit{except} the empty string $\epsilon$. If the original grammer accepted the empty string, the CNF grammer will not. If the original grammer did not accept the empty string, then the grammer in CNF will accept the exact same language.
+
+
+
+    \end{itemize}
+
 
 
 
@@ -3888,9 +4062,176 @@ indicate which strong entity the weak entity depends upon.
             SELECT ...
                 WHERE ... NOT BETWEEN val1 AND val2;
             \end{sqlcode}
+    \end{itemize}
 
-
-
+    \pagebreak 
+    \subsection{Frontend: Html}
+    \begin{itemize}
+        \item \textbf{Why HTML for databases?}: HTML is a relatively easy way to provide a graphical user interface to a user. This interface can solicit from the user the data that is needed to perform operations on the database, as well as present to the user the data that is returned in a structured way
+        \item \textbf{HTML vs. XHTML}: As a web browser goes through evaluating all of the HTML code it encounters, it has several possible modes of operation.
+            \begin{itemize}
+                \item The HTML-only parser mode is very loose. If you make a mistake, it will try to guess what you meant and continue anyway. This can cause weird behavior with no warning that anything was wrong.
+                \item The XHTML parser performs more checks, which can help you locate and fix your problem areas more quickly.
+            \end{itemize}
+        \item \textbf{Tree-Like Structure}: A well-formed HTML document should have a structure based upon the data structure known as a tree. This tree is formed by the elements present in the document, which can be used as containers of one or more other elements.
+        \item \textbf{Elements}: There are three basic types of elements that you will see in HTML.
+            \begin{enumerate}
+                \item \textbf{Plain Text}: This is just normal text, in whatever encoding (ASCII, EBCDIC, Unicode) the document is using. Note that HTML-specific characters will need to be properly escaped.
+                \item \textbf{Comments}: These start with $<$!\texttt{--} and end with \texttt{--}$>$
+                \item  \textbf{HTML tags}: These are special keywords, surrounded by angle brackets ( $<$ and $>$). For each tag element, there will be a start tag and an end tag
+                    \bigbreak \noindent 
+                    The start, or open tag is, in its most simple form, just the keyword in angle brackets, eg. $<$tag$>$.
+                    \bigbreak \noindent 
+                    The end, or close tag, when written separately, has a forward slash / after the first angle bracket, eg. $<$/tag$>$.
+            \end{enumerate}
+        \item \textbf{Plain Text}: Plain text elements will be displayed (or not displayed) in a manner appropriate to where they occur in the document.
+        \item \textbf{A Note on Comments}: Comments are nice, and should still be used when they would be helpful. However, since the comments are sent to the user from the server every time the page is loaded, it might be beneficial, from a performance standpoint, to keep them to a minimum.
+        \item \textbf{HTML Tags}: They can be written separately, usually when they are surrounding something, such as <div>Text Here</div> - note the / at the beginning of the end tag.
+            \bigbreak \noindent 
+             If there is nothing between the start and end tag, there is a shorthand, <meta/> – the / at the end of the tag means that the end tag is included with the opening tag, so it is equivalent to <meta></meta>, with nothing inside.
+             \bigbreak \noindent 
+             If the element is generally expected to have content, you should not use this shortcut.
+            \item \textbf{Attributes}: It is possible to specify attributes of an HTML tag. These get written as part of the start, or opening tag, and they can either be name=value pairs (attrname1 or attrname2 below), or just the name of an attribute if it is boolean if it is desired to set it to true (boolattr below).
+                \bigbreak \noindent 
+                \begin{htmlcode}
+                <tag attrname1="attr1value" attrname2="attr2value" boolattr>
+                \end{htmlcode}
+                \bigbreak \noindent 
+                Each type of tag will have a different set of applicable attributes. The values specified for these attributes will control the behavior of the element.
+    \item \textbf{Basic HTML Document}:
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <html>
+                <head>
+                    <title>Page Title Here</title>
+                    <meta charset="UTF-8"/>
+                </head>
+                <body>
+                    <h1>Big Heading Here</h1>
+                    <p>A paragraph here.</p>
+                </body>
+            </html>
+        \end{htmlcode}
+    \item \textbf{<html> Element}: The <html> element should be the one of the first elements to appear, and will contain all of the other elements in your document.
+        \bigbreak \noindent 
+        There should be only one per document.
+    \item \textbf{<head> Element}: The <head> element is meant to contain header information. Among other things, this can include:
+        \begin{itemize}
+            \item <title> The title that will be displayed for this document in either a tab button or the window caption. The title is the text between the start and the end tag, not an attribute.
+            \item <meta> Various information about the document that you would like to make available to search engines, etc.
+        \end{itemize}
+        Notice that any text you put in the <head> tag will not show up when the document is rendered.
+    \item \textbf{<body> Element}: The <body> element will contain the body of your document. Any text that you would like to display to the user should be contained by this element
+    \item \textbf{Working with Text}: Before we start working with text, there are a few things we should address.
+        \begin{enumerate}
+            \item whitespace (spaces, tabs) is mostly ignored after the first space
+            \item newline character in the source do not get shown as newlines when the document is displayed
+            \item characters that could be interpreted as part of the HTML markup may need to be escaped to show up as text-only
+        \end{enumerate}
+    \item \textbf{Special Characters and Escape Codes}:
+        \begin{itemize}
+            \item \texttt{\&gt;} greater than symbol (because used to identify tags)
+            \item \texttt{\&lt;} less than symbol (because used to identify tags)
+            \item \texttt{\&amp;} ampersand symbol (because used for these codes)
+            \item \texttt{\&nbsp;} non-breaking space (this is a space that will not be ignored)
+            \item \texttt{\&copy;} copyright symbol, \textcopyright\ (not a part of ASCII alphabet)
+            \item \texttt{\&\#9999;} Unicode character with decimal value 9999
+            \item \texttt{\&\#xffff;} Unicode character with hexadecimal value ffff
+        \end{itemize}
+    \item \textbf{Headings – <h1> to <h6>}: The tags, <h1> through <h6>, provide various levels of headings. <h1> is the first heading, and will have the largest text, with the others getting progressively smaller in importance.
+    \item \textbf{Paragraphs – <p>}: The <p> element is used to indicate that the text it contains is meant to be a paragraph. In general, this means that
+        it will be printed as a single block of text, wrapping automatically as its text reaches the end of the line.
+        \bigbreak \noindent 
+        What if we wanted to format an address, with the name on one line, the street address on another, and the city/state/zipcode below that?
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <p>Northern Illinois University</p>
+            <p>1425 West Lincoln Highway</p>
+            <p>DeKalb, IL 60115</p>
+        \end{htmlcode}
+    \item \textbf{Line breaks}: There is a special tag, <br />, the line break, that can help in this situation.
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <p>Northern Illinois University<br />
+                1425 West Lincoln Highway<br />
+                DeKalb, IL 60115</p>
+        \end{htmlcode}
+        \bigbreak \noindent 
+        \textbf{Note:} Some purists will argue that the <br /> tag should not be used, because it’s purely visual, and the purpose of HTML is to denote structure. They are not entirely wrong, but it’s more work to do it other ways, so it will work in a pinch.
+    \item \textbf{Unordered Lists – <ul>}: It is possible to create unordered (bulleted) lists with <ul> and <li> elements.
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <ul>
+                <li>No</li>
+                <li>Particular</li>
+                <li>Order</li>
+            </ul>
+        \end{htmlcode}
+    \item \textbf{Ordered Lists – <ol>}: It is possible to create ordered (numbered) lists with <ol> and <li> elements.
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <ol>
+                <li>First</li>
+                <li>Second</li>
+                <li>Third</li>
+            </ol>
+        \end{htmlcode}
+        \bigbreak \noindent 
+        The type of numeral used for ordered lists can be controlled by CSS, or via the type attribute of the <ol> tag. Its possible values are (1, A, a, I, and i).
+    \item \textbf{Images – <img>}: It is possible to embed images into your HTML documents. This is done with the <img> tag. On its own, the <img>
+        element cannot do much, because it needs more information. It will be necessary to supply the path to the file
+        containing the image to display as the src attribute.
+        \bigbreak \noindent 
+        In HTML, paths can be specified in any of three ways:
+        \begin{itemize}
+            \item \textbf{relative paths} – these are paths starting from the directory the current HTML document is being loaded from. These will never begin with a forward slash, \texttt{/}.
+            \item \textbf{absolute paths (local)} – these are paths starting from the root of the webserver that is serving the current document, these will always begin with a forward slash, \texttt{/}.
+            \item \textbf{absolute paths (remote)} – these are paths that are on other servers. They will begin with the protocol specifier of the server. (\texttt{http://}, \texttt{https://}, \texttt{ftp://}, etc.)
+        \end{itemize}
+        With all three of these types of paths, the steps along the path will be separated by a forward slash, \texttt{/}.
+    \item \textbf{Images - Useful Attributes}: Some useful attributes for the \texttt{<img>} element:
+        \begin{itemize}
+            \item \textbf{height} – height of image (in pixels) or as a percentage of screen (with a \texttt{\%} at the end)
+            \item \textbf{width} – width of image (in pixels) or as a percentage of screen (with a \texttt{\%} at the end)
+            \item \textbf{alt} – alternate text, which will show when hovering, or may be read aloud for accessibility purposes
+        \end{itemize}
+        The \texttt{height} and \texttt{width} attributes can be used to scale the image, but the same image file is downloaded either way. It is best to make the image exactly the size you intend to display it using some image editing tool, rather than resizing it on the page. The best use for \texttt{height} and \texttt{width} is to allow the browser to know the size of the image before downloading it, so the page doesn’t have to resize as it loads.
+    \item \textbf{Links}: One of the features that originally made HTML popular was the idea of the hyperlink. Now we just call them links.
+        \bigbreak \noindent 
+        They are portions of the document that can be clicked to navigate to somewhere else.
+        \bigbreak \noindent 
+        They are added to the HTML using the anchor tag, <a>. The path for the destination of the link is specified with the href attribute, and the text that forms the link will be whatever is contained by the anchor element.
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <a href="other.html">Relative Path Link</a>
+            <a href="/some.html">Absolute Path Link</a>
+            <a href="http://www.niu.edu"> Link on another server</a>
+        \end{htmlcode}
+    \item \textbf{Tables}: Something that comes up very often when dealing with relational databases is the table. There is support for drawing them in HTML. This is done with a set of four elements that work together:
+        \begin{itemize}
+            \item \texttt{<table>} – This element starts a table, the others should only occur inside one of these.
+            \item \texttt{<tr> (table row)} – This element is a row within a table. It will contain one or more of either of the following two.
+            \item \texttt{<th> (table heading)} – This element is a table heading cell. The text to display as a column label should go inside.
+            \item \texttt{<td> (table data)} – This element is a table data cell. The text inside should be the data to be shown in the cell.
+        \end{itemize}
+        Tables in HTML are always specified in row-major order. The cells go from left to right inside of rows. There is not a way to specify it columnwise.
+        \bigbreak \noindent 
+        \begin{htmlcode}
+            <table>
+                <tr>
+                    <th>Topping</th>
+                    <th>Price</th>
+                </tr>
+                <tr>
+                    <td>Sausage</td>
+                    <td>$0.90</td>
+                </tr>
+                <tr>
+                    <td>Pepperoni</td>
+                    <td>$1.00</td>
+                </tr>
+            </table>
+        \end{htmlcode}
 
 
 

@@ -1946,20 +1946,20 @@ Once we have the successor node, it will either have no children, or exactly one
 
             std::function<void(node*)> r_clear = [&](node* p) -> void {
                 if (!p) return;
-                if (!p->left && !p->right) {
-                    delete p;
-                    p->left = nullptr, p->right = nullptr;
-                    return;
-                }
+
                 r_clear(p->left);
                 r_clear(p->right);
+
+                delete p;
             };
             r_clear(root);
             root = nullptr;
         }
     \end{cppcode}
     \bigbreak \noindent 
-    This C++ code defines a clear() function for a binary tree, which deletes all nodes recursively starting from the root. It uses a lambda function r\_clear to traverse the tree. If a node has no children, it deletes the node and sets its left and right pointers to nullptr. After clearing the entire tree, it sets root to nullptr.
+    This function deletes all nodes in a binary search tree. It recursively traverses the tree, deleting each node after its children have been deleted, and finally sets the root to nullptr, effectively clearing the entire tree
+
+
 
     \pagebreak 
     \subsubsection{Counting the height}
@@ -1977,6 +1977,225 @@ Once we have the successor node, it will either have no children, or exactly one
     \end{cppcode}
     \bigbreak \noindent 
     This code defines a height() function that calculates the height of a binary tree by counting the edges. It uses a recursive lambda function r\_height to traverse the tree. For each node, it returns 1 + max(left subtree height, right subtree height) to find the longest path from the root to any leaf. Since r\_height counts nodes, the function subtracts 1 at the end to convert the node count to edge count, which is the definition of height.
+
+    \pagebreak 
+    \subsubsection{Getting the depth of the node}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int nodeDepth(node* p) {
+            if (p == root) return 1;
+            return r_nodeDepth(root, p, 1);
+        }
+
+        int r_nodeDepth(node* curr, node* p, int depth) {
+            if (curr == nullptr) {
+                return -1;  // Node not found
+            }
+            if (p == curr) {
+                return depth;  // Node found, return the depth
+            }
+
+            // Recursively search in the left subtree if p's data is smaller
+            if (p->data < curr->data) {
+                return r_nodeDepth(curr->left, p, depth + 1);
+            }
+            // Recursively search in the right subtree if p's data is greater
+            if (p->data > curr->data) {
+                return r_nodeDepth(curr->right, p, depth + 1);
+            }
+
+            return -1;  // This should never be reached if the tree is valid
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This code defines two functions that work together to calculate the depth of a given node p in a binary search tree (BST):
+    \bigbreak \noindent 
+    \textbf{nodeDepth:}
+    This function is the entry point to calculate the depth of the node $p$.
+    \bigbreak \noindent 
+    It first checks if $p$ is the root node. If so, it returns 1 since the root node is considered to have a depth of 1.
+    \bigbreak \noindent 
+    If $p$ is not the root, it calls the helper function r\_nodeDepth to recursively search for the node, starting from the root with an initial depth of 1.
+    \bigbreak \noindent 
+    \textbf{r\_nodeDepth:}
+    This is a recursive helper function that searches for the node $p$ in the tree, while tracking the current depth.
+    \bigbreak \noindent 
+    It first checks if curr (the current node in the search) is nullptr, which indicates that the node $p$ is not in the tree. In that case, it returns -1.
+    \bigbreak \noindent 
+    If curr matches $p$, it returns the current depth.
+    \bigbreak \noindent 
+    Otherwise, it recursively searches in the left or right subtree, depending on whether $p$'s data is less than or greater than the current node's data, and increments the depth by 1 at each recursive step.
+
+
+    \pagebreak 
+    \subsubsection{Degenerate Binary Search trees}
+    \bigbreak \noindent 
+    A degenerate binary search tree is a tree where each parent node has only one child, causing the tree to resemble a linked list
+    \bigbreak \noindent 
+    Consider building a binary search tree, taking values from a sorted array from left to right. Since all subsequent entries will be greater than the previous, the insertions will only go in one direction, right. Thus, the final tree will resemble a linked list and thus we will not be able to use the $\text{lg}(n)$ property of binary trees.
+
+    \pagebreak 
+    \subsubsection{Complexities}
+    \bigbreak \noindent 
+    Because BST have no guarantee of being well formed, (ie degenerate trees), the complexity of many operations in the worst case is $O(n)$.
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            \textbf{Operation} & \textbf{Best Case} & \textbf{Average Case} & \textbf{Worst Case} \\ \hline
+            Insertion & \( O(\log n) \) & \( O(\log n) \) & \( O(n) \) \\ \hline
+            Search & \( O(1) \) & \( O(\log n) \) & \( O(n) \) \\ \hline
+            Removal & \( O(\log n) \) & \( O(\log n) \) & \( O(n) \) \\ \hline
+            Height & \( O(\log n) \) & --- & \( O(n) \) \\ \hline
+            Traversal & \( O(n) \) & \( O(n) \) & \( O(n) \) \\ \hline
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    \textbf{Note:} $\Omega(\text{lg}(n)$ for BST operations like search, insert, and delete (best case).
+    \bigbreak \noindent 
+    $\Omega(\text{lg}(n))$ for operations that require visiting all nodes, like traversals.
+
+
+
+
+
+
+
+
+    \pagebreak 
+    \subsection{Adelson-Velsky and Landis Trees (AVL trees)}
+    \bigbreak \noindent 
+    When dealing with binary search trees, insertions and removals occur continually, with no predictable order. In some of these applications, it is important to optimize search times by keeping the tree very nearly balanced at all times. The method in this section for achieving this goal was described in 1962 by two Russian mathematicians, G. M. ADEL’SON-VEL’SKI˘I and E. M. LANDIS, and the resulting binary search trees are called AVL trees in their honor.
+    \bigbreak \noindent 
+    AVL trees achieve the goal that searches, insertions, and removals in a tree
+with n nodes can all be achieved in time that is $O(\log n)$, even in the worst case.
+The height of an AVL tree with n nodes, as we shall establish, can never exceed
+lg $n$, and thus even in the worst case, the behavior of an AVL tree could not
+be much below that of a random binary search tree. In almost all cases, however,
+the actual length of a search is very nearly lg $n$, and thus the behavior of AVL trees
+closely approximates that of the ideal, completely balanced binary search tree.
+\bigbreak \noindent 
+\subsubsection{Definition}
+\bigbreak \noindent 
+An AVL tree is a binary search tree in which the heights of the left and right
+subtrees of the root differ by at most 1 and in which the left and right subtrees
+are again AVL trees.
+\bigbreak \noindent 
+With each node of an AVL tree is associated a \textit{balance factor} that is \texttt{lefthigher}, \texttt{equal-height}, or \texttt{right-higher} according, respectively, as the left subtree
+has height greater than, equal to, or less than that of the right subtree.
+\bigbreak \noindent 
+\fig{.5}{./figures/1.png}
+\bigbreak \noindent 
+In drawing diagrams, we shall show a left-higher node by ‘/,’ a node whose balance 358
+\bigbreak \noindent 
+factor is equal by ‘−,’ and a right-higher node by ‘\.’. The figure above shows several
+small AVL trees, as well as some binary trees that fail to satisfy the definition.
+Note that the definition does not require that all leaves be on the same or
+adjacent levels. 
+\bigbreak \noindent 
+\fig{.5}{./figures/2.png}
+\bigbreak \noindent 
+The figure above shows several AVL trees that are quite skewed, with right subtrees having greater height than left subtrees.
+
+\pagebreak 
+\subsubsection{Defining balance factors in C++}
+\bigbreak \noindent 
+We employ an enumerated data type to record balance factors
+\bigbreak \noindent 
+\begin{cppcode}
+    enum Balance_factor { left_higher, equal_height, right_higher };
+\end{cppcode}
+\bigbreak \noindent 
+Balance factors must be included in all the nodes of an AVL tree, and we must adapt our former node specification accordingly.
+
+\bigbreak \noindent 
+\subsubsection{AVL Nodes}
+\bigbreak \noindent 
+A typical node for an AVL tree is as follows
+\bigbreak \noindent 
+\begin{cppcode}
+    enum balance {
+        eh, rh, lh
+    };
+
+    struct node {
+        node* left{nullptr}, *right{nullptr};
+        int data{0};
+        balance b{eh};
+        int height{0};
+
+        // Constructors
+            ... 
+    };
+\end{cppcode}
+\bigbreak \noindent 
+In AVL trees, it is common for the node structure to include a height member. This height field is essential for efficiently maintaining the balance of the tree, as the balance factor of a node (the difference in height between its left and right subtrees) is used to determine whether the tree needs rebalancing after insertions or deletions.
+\bigbreak \noindent 
+Without the height member, recalculating the height of each node during every operation would require traversing the entire subtree, significantly increasing the time complexity. By storing the height in each node, you can retrieve it in constant time, allowing rotations and rebalancing operations to remain efficient.
+
+\pagebreak 
+\subsubsection{Interface}
+\bigbreak \noindent 
+The interface of a Binary Search Tree (BST) and an AVL Tree is generally the same. Both are types of binary trees, and they share similar operations such as:
+\begin{itemize}
+    \item \textbf{Insert:} Insert a new element into the tree.
+    \item \textbf{Remove/Delete:} Remove an element from the tree.
+    \item \textbf{Search:} Find whether a particular element exists in the tree.
+    \item \textbf{Traversal:} In-order, pre-order, post-order, and level-order traversals.
+\end{itemize}
+However, behind the scenes, the AVL tree performs additional work to maintain its balance property, but this doesn't typically change the public interface
+
+\bigbreak \noindent 
+\subsubsection{Balancing an AVL tree}
+\bigbreak \noindent 
+As we insert or remove nodes from the tree, it may happen that the resulting tree fails to satisfy the conditions imposed by AVL trees. To \textit{rebalance} the tree, we have a set of operations, called rotations. We have
+\bigbreak \noindent 
+\begin{enumerate}
+    \item \textbf{Right Rotation (RR):} Applied when a left subtree is too deep. The subtree is rotated to the right, reducing the height of the left side.
+    \item \textbf{Left Rotation (LL):} Applied when a right subtree is too deep. The subtree is rotated to the left, reducing the height of the right side.
+    \item \textbf{Left-Right Rotation (LR):} Occurs when a left subtree has a deep right subtree. First, a left rotation is performed on the left subtree, followed by a right rotation.
+    \item \textbf{Right-Left Rotation (RL):} Occurs when a right subtree has a deep left subtree. First, a right rotation is performed on the right subtree, followed by a left rotation.
+\end{enumerate}
+These rotations are applied based on the balance factor, ensuring the tree remains balanced with a height difference of at most 1 between subtrees.
+\bigbreak \noindent 
+\textbf{Note:} Left-right and Right-left rotations are also called double right and double left respectively.
+\bigbreak \noindent 
+When writing our rotation algorithms, we only need to define two. A left rotation algorithm and a right rotation algorithm
+
+\pagebreak 
+\subsubsection{Insertion of a Node}
+\bigbreak \noindent 
+We can insert a new node into an AVL tree by first following the usual binary tree
+insertion algorithm: comparing the key of the new node with that in the root, and
+inserting the new node into the left or right subtree as appropriate. It often turns
+out that the new node can be inserted without changing the height of the subtree,
+in which case neither the height nor the balance of the root will be changed. Even
+when the height of a subtree does increase, it may be the shorter subtree that has
+grown, so only the balance factor of the root will change. The only case that can
+cause difficulty occurs when the new node is added to a subtree of the root that is
+strictly taller than the other subtree, and the height is increased. This would cause
+one subtree to have height 2 more than the other, whereas the AVL condition is
+that the height difference is never more than 1
+\bigbreak \noindent 
+The basic structure of our algorithm will thus be the same as the ordinary recursive binary tree insertion algorithm, but with significant additions to accommodate the processing of balance factors and other structure of AVL trees
+\bigbreak \noindent 
+We must keep track of whether an insertion (after recursion) has increased the tree height or not, so that the balance factors can be changed appropriately. This we do by including an additional calling parameter taller of type bool in the auxiliary recursive function called by the insertion method. The task of restoring balance when required will be done in the subsidiary functions left\_balance and right\_balance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \pagebreak 
