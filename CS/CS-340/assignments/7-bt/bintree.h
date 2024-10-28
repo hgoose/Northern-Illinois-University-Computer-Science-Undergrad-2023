@@ -2,6 +2,7 @@
 #define NIU_CSCI330_BINTREE_IMPL_H
 
 #include <vector>
+#include <iostream>
 #include <queue>
 #include "bintree.decl.h"
 
@@ -38,8 +39,8 @@ void inorder(BINTREENODE *root, FN fn) {
 template <typename BINTREENODE, typename FN>
 void r_postorder(BINTREENODE* p, FN f) {
     if (!p) return;
-    r_inorder(p->left, f);
-    r_inorder(p->right, f);
+    r_postorder(p->left, f);
+    r_postorder(p->right, f);
     f(p);
 
 }
@@ -95,7 +96,10 @@ std::vector <BINTREENODE *> tilted_get_children(BINTREENODE * node) {
 // this function requires that BINTREENODE have the parent member
 template <typename BINTREENODE>
 BINTREENODE* tilted_find_parent(BINTREENODE *node) {
-    if (node->parent->left == node) {
+
+    if (!node->parent || !node) {
+        return nullptr;
+    } else if (node->parent->left == node) {
         return node->parent;
     }
 

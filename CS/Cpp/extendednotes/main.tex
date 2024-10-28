@@ -4137,6 +4137,25 @@ int main() {
         std::regex pattern("\\d+"); // Suitable  for regex_search
         std::regex pattern(".*\\d+.*"); // Suitable  for regex_match
     \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{Note:} Note that regex\_search will put only the first matching part in the smatch array. For example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        string s = "key1=value1 key2=value2 key3=value3";
+        smatch capture_space;
+
+        if (regex_search(s, capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            for (const auto& item : capture_space) {
+                cout << item << endl;
+            }
+        }
+        /* Outputs: 
+            key1=value1 
+            key1
+            value1
+        */
+    \end{cppcode}
+    
 
     \pagebreak 
     \subsubsection{regex\_replace}
@@ -4190,22 +4209,19 @@ int main() {
     It is often used with \texttt{std::match\_results} to represent the main match or submatches (captured groups).
     \bigbreak \noindent 
     \begin{cppcode}
-        / Input string and regex pattern with a capture group
-        std::string text = "The price is $100";
-        std::regex pattern(R"(\$(\d+))");  // Captures the dollar amount
+        string s = "key1=value1 key2=value2 key3=value3";
 
-        std::smatch match_results;  // Type alias for std::match_results<std::string::const_iterator>
+        smatch capture_space;
+        string::const_iterator curr = s.begin();
 
-        // Perform regex search
-        if (std::regex_search(text, match_results, pattern)) {
-            std::cout << "Full match: " << match_results[0].str() << '\n';  // Full match ($100)
+        if (regex_search(curr, s.cend(), capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            cout << capture_space[1] << endl; // key1
 
-            // Using std::sub_match to get the first capture group (digits after the $)
-            std::sub_match<std::string::const_iterator> submatch = match_results[1];
-            std::cout << "Captured digits: " << submatch.str() << '\n';     // Submatch (100)
-        } else {
-            std::cout << "No match found.\n";
-        }   
+            std::sub_match<string::const_iterator> sm = capture_space[1];
+            cout << *sm.first << endl << *sm.second << endl; 
+            // k
+            // =
+        }
     \end{cppcode}
 
     \pagebreak 
@@ -4214,15 +4230,131 @@ int main() {
     We can also pass iterators to the regex functions.
     \bigbreak \noindent 
     \begin{cppcode}
-        std::string s = "hello 123 world";
-        std::smatch capture_space;
-        std::regex pattern(R"(.*(\d+).*)");  // Missing semicolon added
+        string s = "key1=value1 key2=value2 key3=value3";
+        smatch capture_space;
+        string::const_iterator curr = s.begin();
 
-        if (std::regex_match(s, capture_space, pattern)) {
-            std::cout << "Captured number: " << capture_space[1] << std::endl;
-        } else {
-            std::cout << "No match found" << std::endl;
+        if (regex_search(s, capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            for (const auto& item : capture_space) {
+                cout << item << endl;
+            }
         }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{Note:} The string iterators passed must be constant.
+    \bigbreak \noindent 
+    \subsubsection{Getting all matches}
+    \bigbreak \noindent 
+    To get all matches, we can search in a loop, updating our start iterator after each match. For example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        string s = "key1=value1 key2=value2 key3=value3";
+
+        smatch capture_space;
+        string::const_iterator curr = s.begin();
+        while (regex_search(curr, s.cend(), capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            cout << "key: " << capture_space[1] << '\n' << "value: " << capture_space[2] << '\n';
+
+            sub_match<string::const_iterator> sm = capture_space[2];
+            curr = sm.second;
+
+            */ 
+                key: key1
+                value: value1
+                key: key2
+                value: value2
+                key: key3
+                value: value3
+            */
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The sub match object we created captures the second match group (the value) into a std::sub\_match object. The std::sub\_match object provides the iterators (.first and .second) that point to the start and end of the matched portion of the string.
+    \bigbreak \noindent 
+    The iterator \texttt{sm.second} points to the first character after the matched value. By setting \texttt{curr = sm.second}, we move the search position forward, skipping over the current match so that the next iteration of regex\_search starts searching after the last key=value pair.
+
+    \pagebreak 
+    \subsection{smatch prefix and suffix}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        string s = "key1=value1 key2=value2 key3=value3";
+
+        smatch capture_space;
+        string::const_iterator curr = s.begin();
+        if (regex_search(curr, s.cend(), capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            for (const auto& item : capture_space) {
+                cout << "capture space item : " << item << endl;
+            }
+
+            cout << "prefix first: " << *capture_space.prefix().first << endl;
+            cout << "prefix second: " << *capture_space.prefix().second << endl;
+
+            cout << "Suffix first: " << *capture_space.suffix().first << endl;
+            cout << "Suffix second: " << *(capture_space.suffix().second - 1) << endl;
+
+            /*
+                capture space item : key1=value1 
+                capture space item : key1
+                capture space item : value1
+                prefix first: k
+                prefix second: k
+                Suffix first: k
+                Suffix second:
+            */
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The prefix() and suffix() methods in std::smatch provide access to the parts of the string outside of the matched portion:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{prefix():} Returns a std::sub\_match object that represents the part of the string before the match.
+        \item \textbf{suffix():} Returns a std::sub\_match object that represents the part of the string after the match.
+    \end{itemize}
+    \bigbreak \noindent 
+    In the code above:
+    \begin{itemize}
+        \item \textbf{prefix().first:} Points to the first character before the match (which is the first character of the string, 'k'), since the match starts at the beginning of the string.
+        \item \textbf{prefix().second:} Points to the same location as .first, which is the beginning of the string. This is why both prefix first and prefix second are printing 'k'.
+    \end{itemize}
+    Because there is no actual prefix in this case, both prefix().first and prefix().second are equal to the first character of the string.
+    \begin{itemize}
+        \item \textbf{suffix()} refers to the part of the string after the match. In this case, the match is "key1=value1", so the suffix is everything after that: " key2=value2 key3=value3".
+        \item \textbf{suffix().first:} Points to the first character after the match, which is the space between "key1=value1" and "key2=value2". The character it points to is ' ' (a space), but since spaces are sometimes not visible in output, it is displaying the next visible character, which is 'k', from "key2=value2".
+        \item \textbf{suffix().second:} Points to the end of the string, so dereferencing it is undefined behavior. In this case, the output doesn't display a value for suffix().second because it points to the end of the string, and dereferencing an iterator at the end is unsafe.
+    \end{itemize}
+    \bigbreak \noindent 
+    Let's consider the code example above, where we used a while loop and sub\_match objects to get all matches in a string. Instead of using
+    \bigbreak \noindent 
+    \begin{cppcode}
+    sub_match<string::const_iterator> sm = capture_space[2];
+    curr = sm.second;
+    \end{cppcode}
+    \bigbreak \noindent 
+    To update the curr iterator, let's use suffix.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        string s = "key1=value1 key2=value2 key3=value3";
+
+        smatch capture_space;
+        string::const_iterator curr = s.begin();
+        while (regex_search(curr, s.cend(), capture_space, regex(R"(\s*(\w+)=(\w+)\s*)"))) {
+            cout << "key: " << capture_space[1] << '\n' << "value: " << capture_space[2] << '\n';
+
+            curr = capture_space.suffix().first;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Generates the same output
+    \bigbreak \noindent 
+    \begin{cppcode}
+        key: key1
+        value: value1
+        key: key2
+        value: value2
+        key: key3
+        value: value3
     \end{cppcode}
 
 
