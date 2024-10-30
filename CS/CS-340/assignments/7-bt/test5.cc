@@ -51,7 +51,7 @@ void test_load_and_search(std::istream &input, const char * label, bool verbose)
 	int i = 0;
 	for(auto it = tags.begin(); it != tags.end(); ++it) {
           cout << "  Result " << setw(3) << ++i << ") "; 
-	  xml_print_subtree(*it, cout);
+          xml_print_subtree(*it, cout);
 	  cout << "\n";
 	}
       }

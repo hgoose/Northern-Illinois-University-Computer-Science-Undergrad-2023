@@ -70,7 +70,7 @@ SELECT AuthorLast FROM Author
             SELECT BookCode FROM Book 
             WHERE Book.PublisherCode = (SELECT Publisher.PublisherCode FROM Publisher WHERE PublisherName = "Simon and Schuster")
         )
-    );
+);
 
 -- Show a list with all the types of books and how many books there are for each of them.
 SELECT Type, COUNT(Title) FROM Book GROUP BY Type;

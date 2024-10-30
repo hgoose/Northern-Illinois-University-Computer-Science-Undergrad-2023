@@ -2161,6 +2161,83 @@ These rotations are applied based on the balance factor, ensuring the tree remai
 \textbf{Note:} Left-right and Right-left rotations are also called double right and double left respectively.
 \bigbreak \noindent 
 When writing our rotation algorithms, we only need to define two. A left rotation algorithm and a right rotation algorithm
+\bigbreak \noindent 
+\textbf{Note}: Performing a rotation when the height difference is only 1 would be unnecessary and could actually disrupt the balancing of the tree. The tree is still balanced in this case because a height difference of 1 between subtrees is allowed in AVL trees.
+
+\pagebreak 
+\subsubsection{Rotations: Right tree}
+\bigbreak \noindent 
+Let us now consider the case when a new node has been inserted into the taller subtree of a root node and its height has increased, so that now one subtree has height 2 more than the other, and the tree no longer satisfies the AVL requirements. We must now rebuild part of the tree to restore its balance. To be definite, let us assume that we have inserted the new node into the right subtree, its height has increased, and the original tree was right higher. That is, we wish to consider the case covered by the function right\_balance. Let root denote the root of the tree and right\_tree the root of its right subtree.
+\bigbreak \noindent 
+There are three cases to consider, depending on the balance factor of right\_tree.
+\bigbreak \noindent 
+\paragraph{Case 1: Right higher}
+\bigbreak \noindent 
+The first case, when right\_tree is right higher. The action needed in this case is called a left rotation.
+We have rotated the node right\_tree
+upward to the root, dropping root down into the left subtree of right\_tree; the subtree T2 of nodes with keys between those of root and right\_tree now becomes the
+right subtree of root rather than the left subtree of right\_tree. A left rotation is
+succinctly described in the following C++ function. Note especially that, when
+done in the appropriate order, the steps constitute a rotation of the values in three
+pointer variables. Note also that, after the rotation, the height of the rotated tree
+has decreased by 1; it had previously increased because of the insertion; hence the
+height finishes where it began.
+\bigbreak \noindent 
+\fig{.6}{./figures/3.png}
+\bigbreak \noindent 
+Thus, we come to the following implementation of a left rotation.
+\bigbreak \noindent 
+\begin{cppcode}
+    void left_rotate(node* root) {
+        if (!root || !root->right) return;
+        
+        right_subtree = root->right;
+        root->left = right_subtree->left;
+        right_subtree->left = root;
+        right_subtree=root;
+    }
+\end{cppcode}
+\pagebreak \bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{tr2}
+    \label{fig:tr2}
+\end{figure}
+\bigbreak \noindent 
+\begin{enumerate}
+    \item \textbf{Step 1 (green)}: Attach right\_subtrees left subtree to the right of root
+    \item \textbf{Step 2 (blue)}: Attach root to the left of right\_subtree
+    \item \textbf{Step 3}: Make r\_subtree the new root.
+\end{enumerate}
+Yields the rotated tree
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{tr4}
+    \label{fig:tr4}
+\end{figure}
+\bigbreak \noindent 
+Note that we perform a left rotation when the roots right subtree has an insertion into its right subtree. Notice that the balance symbols point in the same direction. The only balance factors that change are the balance factors of root and right\_subtree, they become even (balanced).
+
+\pagebreak 
+\paragraph{Case 2: Left higher}
+\bigbreak \noindent \bigbreak \noindent 
+The second case, when the balance factor of right\_tree is left higher, is slightly more complicated. It is necessary to move two levels, to the node sub\_tree that roots the left subtree of right\_tree, to find the new root. This process is shown in Figure 10.20 and is called a double rotation, because the transformation can be obtained in two steps by first rotating the subtree with root right\_tree to the right (so that sub\_tree becomes its root), and then rotating the tree pointed to by root to the left (moving sub\_tree up to become the new root).
+\bigbreak \noindent 
+\fig{.6}{./figures/4.png}
+\bigbreak \noindent 
+We see from the figure that we first perform a right rotation on right\_tree, and right\_trees left subtree, this shifts the subtree unbalance in right\_subtree such that it becomes unbalanced on the right instead of on the left. This enables us to perform a left rotation on root and right\_tree. Note that after the right rotation, the balance symbols point in the same direction. A right rotation is of the form
+
+% \bigbreak \noindent 
+% \begin{figure}[ht]
+%     \centering
+%     \incfig{t1}
+%     \label{fig:t1}
+% \end{figure}
+% \bigbreak \noindent 
+% During single rotations, there are always two nodes and three subtrees to consider. In this case we name them $A, B$, and subtrees $s_{1}, s_{2}$, and $s_{3}$. $s_{1}$ is the left subtree of the $A$ (the root of the subtree we are rotating), and $s_{2}, s_{3}$ are the children of $B$. After the single left rotation is performed, the only subtree that gets moved is $s_{2}$. Since this case was a right subtree, right higher, left rotation, $s_{2}$ gets attached as the right child of $A$.
+% \bigbreak \noindent 
+% After the rotation, the height of the rotated subtree will decrease by one. We must then adjust the balance factors. 
 
 \pagebreak 
 \subsubsection{Insertion of a Node}

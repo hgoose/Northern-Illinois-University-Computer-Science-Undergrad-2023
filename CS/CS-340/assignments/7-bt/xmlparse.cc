@@ -53,6 +53,7 @@ int parse_xml(std::istream &ist, xml_tree_state &state, bool verbose) {
     else if (intag && c == '>') { // in tag (opening or closing) that is now done
       curstr.push_back(c); // put the > char into the string
       xml_handle_tag(curstr, state, verbose);
+
       intag = false; // no longer in tag declaration
       curstr.clear();
     }
