@@ -2192,7 +2192,7 @@ Thus, we come to the following implementation of a left rotation.
         if (!root || !root->right) return;
         
         right_subtree = root->right;
-        root->left = right_subtree->left;
+        root->right = right_subtree->left;
         right_subtree->left = root;
         right_subtree=root;
     }
@@ -2224,9 +2224,37 @@ Note that we perform a left rotation when the roots right subtree has an inserti
 \bigbreak \noindent \bigbreak \noindent 
 The second case, when the balance factor of right\_tree is left higher, is slightly more complicated. It is necessary to move two levels, to the node sub\_tree that roots the left subtree of right\_tree, to find the new root. This process is shown in Figure 10.20 and is called a double rotation, because the transformation can be obtained in two steps by first rotating the subtree with root right\_tree to the right (so that sub\_tree becomes its root), and then rotating the tree pointed to by root to the left (moving sub\_tree up to become the new root).
 \bigbreak \noindent 
-\fig{.6}{./figures/4.png}
+\fig{.5}{./figures/4.png}
 \bigbreak \noindent 
 We see from the figure that we first perform a right rotation on right\_tree, and right\_trees left subtree, this shifts the subtree unbalance in right\_subtree such that it becomes unbalanced on the right instead of on the left. This enables us to perform a left rotation on root and right\_tree. Note that after the right rotation, the balance symbols point in the same direction. A right rotation is of the form
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{t4}
+    \label{fig:t4}
+\end{figure}
+\pagebreak \bigbreak \noindent 
+Which becomes
+\begin{figure}[ht]
+    \centering
+    \incfig{t5}
+    \label{fig:t5}
+\end{figure}
+\bigbreak \noindent 
+Thus, we see that like the left rotation, the only subtree that moves is $s_{2}$. In the left rotation, the left subtree of $B$ becomes the right subtree of $A$. In the right rotation, the right subtree of $B$ becomes the left subtree of $A$. A right rotation occurs when a tree becomes unbalanced on the left. Whereas a left rotation occurs when a tree becomes unbalanced on the right.
+\bigbreak \noindent 
+Thus, we come to the following implementation of a left rotation.
+\bigbreak \noindent 
+\begin{cppcode}
+    void right_rotate(node* root) {
+        if (!root || !root->right) return;
+        
+        left_subtree = root->left;
+        root->left = left_subtree->right;
+        left_subtree->right = root;
+        left_subtree=root;
+    }
+\end{cppcode}
 
 % \bigbreak \noindent 
 % \begin{figure}[ht]
@@ -2257,6 +2285,263 @@ that the height difference is never more than 1
 The basic structure of our algorithm will thus be the same as the ordinary recursive binary tree insertion algorithm, but with significant additions to accommodate the processing of balance factors and other structure of AVL trees
 \bigbreak \noindent 
 We must keep track of whether an insertion (after recursion) has increased the tree height or not, so that the balance factors can be changed appropriately. This we do by including an additional calling parameter taller of type bool in the auxiliary recursive function called by the insertion method. The task of restoring balance when required will be done in the subsidiary functions left\_balance and right\_balance.
+
+
+\pagebreak 
+\unsect{Heaps and Priority Queues (Zero based)}
+\bigbreak \noindent 
+The \textit{(binary) heap} data structure is an array object that we can view as a nearly complete binary tree (see Section B.5.3), as shown in Figure 6.1. Each node of the tree corresponds to an element of the array. The tree is completely filled on all levels except possibly the lowest, which is filled from the left up to a point. An array $A[0 : n-1]$ that represents a heap is an object with an attribute $A.\text{heap-size}$, which represents how many elements in the heap are stored within array $A$. That is, although $A[0 : n-1]$ may contain numbers, only the elements in $A[0 : A.\text{heap-size}-1]$, where $0 \leq A.\text{heap-size} \leq n$, are valid elements of the heap. If $A.\text{heap-size} = 0$, then the heap is empty. The root of the tree is $A[0]$, and given the index $i$ of a node,
+\bigbreak \noindent 
+The \textit{(binary) heap} data structure is an array object that we can view as a nearly complete binary tree (see Section B.5.3), as shown in Figure 6.1. Each node of the tree corresponds to an element of the array. The tree is completely filled on all levels except possibly the lowest, which is filled from the left up to a point. An array $A[1 : n]$ that represents a heap is an object with an attribute $A.\text{heap-size}$, which represents how many elements in the heap are stored within array $A$. That is, although $A[1 : n]$ may contain numbers, only the elements in $A[1 : A.\text{heap-size}]$, where $0 \leq A.\text{heap-size} \leq n$, are valid elements of the heap. If $A.\text{heap-size} = 0$, then the heap is empty. The root of the tree is $A[1]$, and given the index $i$ of a node,
+\bigbreak \noindent 
+\fig{.6}{./figures/5.png}
+\bigbreak \noindent 
+there’s a simple way to compute the indices of its parent, left child, and right child with the one-line procedures PARENT, LEFT, and RIGHT.
+\bigbreak \noindent 
+\begin{cppcode}
+    int parent(i) {
+        return (i+1)/2 // Floor division
+    }
+
+    int left(i) {
+        return 2i + 1
+    }
+
+    int right(i) {
+        return 2i + 2:
+    }
+\end{cppcode}
+\bigbreak \noindent 
+For one based indexing, we would have $\frac{i}{2}$, $2i$, and $2i+1$
+\bigbreak \noindent 
+On most computers, the \texttt{LEFT} procedure can compute $2i$ in one instruction by simply shifting the binary representation of $i$ left by one bit position. Similarly, the \texttt{RIGHT} procedure can quickly compute $2i + 1$ by shifting the binary representation of $i$ left by one bit position and then adding $1$. The \texttt{PARENT} procedure can compute $\left\lfloor \frac{i}{2} \right\rfloor$ by shifting $i$ right one bit position. Good implementations of heapsort often implement these procedures as macros or inline procedures.
+\pagebreak 
+\subsection{Max and Min heaps}
+\bigbreak \noindent 
+There are two kinds of binary heaps: max-heaps and min-heaps. In both kinds, the values in the nodes satisfy a \textcolor{cyan}{heap property}, the specifics of which depend on the kind of heap. In a \textcolor{cyan}{max-heap}, the \textcolor{cyan}{max-heap property} is that for every node $i$ other than the root,
+\bigbreak \noindent 
+\begin{align*}
+    A[\text{parent}(i)] \geq A[i]
+.\end{align*}
+\bigbreak \noindent 
+That is, the value of a node is at most the value of its parent. Thus, the largest
+element in a max-heap is stored at the root, and the subtree rooted at a node contains
+values no larger than that contained at the node itself. A \textcolor{min-heap} is organized in
+the opposite way: the \textcolor{cyan}{min-heap property} is that for every node $i$ other than the
+root,
+\bigbreak \noindent 
+\begin{align*}
+    A[\text{parent}(i)] \leq A[i]
+.\end{align*}
+\bigbreak \noindent 
+The smallest element in a min-heap is at the root.
+\bigbreak \noindent 
+\subsection{Heapify an array}
+\bigbreak \noindent 
+Heapify is a process used to maintain the heap property in a binary heap, either a max-heap or a min-heap. The heap property ensures that for every node in the heap:
+\begin{itemize}
+    \item In a max-heap, the value of each node is greater than or equal to the values of its children.
+    \item In a min-heap, the value of each node is less than or equal to the values of its children.
+\end{itemize}
+\bigbreak \noindent 
+Heapify is typically used when you have an unsorted array and you want to turn it into a valid heap, or after inserting or deleting an element in a heap to restore the heap property.
+\bigbreak \noindent 
+The bottom-up approach to turning an array into a heap is also called the heapify process. This method is efficient for building a heap from an unordered array and runs in $O(n)$ time, which is faster than building the heap using successive insertions ( $O(nlg \ n)$)
+\bigbreak \noindent 
+We start from the first non-leaf node, which is at position $\frac{n-1}{2}$, where $n$ is the size of the array.
+\bigbreak \noindent 
+Traverse all non-leaf nodes from the last one to the root (from right to left in the array
+\bigbreak \noindent 
+For each non-leaf node, apply the sift down operation (also called percolate down), which ensures that the subtree rooted at this node satisfies the heap property.
+\bigbreak \noindent 
+\textbf{Percolate Down Operation:}
+\begin{enumerate}
+    \item Compare the node with its children.
+    \item If the heap property is violated (for example, in a max-heap, the node is smaller than one of its children), swap the node with the largest child (for max-heap) or smallest child (for min-heap).
+    \item Repeat this process down the subtree until the heap property is restored or the node becomes a leaf.
+\end{enumerate}
+
+\pagebreak 
+\subsection{Min-heap in c++}
+\bigbreak \noindent 
+\begin{cppcode}
+void min_heapify(int arr[], int n, int i) {
+    int smallest = i;    // Initialize smallest as root
+    int left = 2 * i + 1;   // Left child index
+    int right = 2 * i + 2;  // Right child index
+
+    // If left child is smaller than the root
+    if (left < n && arr[left] < arr[smallest])
+        smallest = left;
+
+    // If right child is smaller than the smallest so far
+    if (right < n && arr[right] < arr[smallest])
+        smallest = right;
+
+    // If the smallest is not the root
+    if (smallest != i) {
+        std::swap(arr[i], arr[smallest]);
+
+        // Recursively heapify the affected subtree
+        min_heapify(arr, n, smallest);
+    }
+}
+
+void build_heap(int arr[], int n) {
+    // Start from the last non-leaf node and heapify each node
+    for (int i = (n - 1) / 2; i >= 0; --i) {
+        min_heapify(arr, n, i);
+    }
+}
+\end{cppcode}
+\bigbreak \noindent 
+The min\_heapify function is designed to maintain the min-heap property for a subtree rooted at a given index $i$. The process begins by identifying the left and right children of the node at index $i$. The function then compares the current node with its children to find the smallest value. If one of the children is smaller than the current node, a swap occurs between the node and the smallest child. After the swap, the function is recursively called on the affected child to ensure that the min-heap property is maintained further down the subtree.
+
+\pagebreak 
+\subsection{Max-heap in c++}
+\bigbreak \noindent 
+\begin{cppcode}
+    void heapify(int arr[], int n, int i) {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        if (left < n && arr[left] > arr[largest]) {
+            largest = left;
+        }
+
+        if (right < n && arr[right] > arr[largest]) {
+            largest = right;
+        }
+
+        if (largest != i) {
+            std::swap(arr[i], arr[largest]);
+            heapify(arr, n, largest);
+        }
+    }
+
+
+    void build_heap(int arr[], int n) {
+        for (int i=n-1/2; i>=0; --i) {
+            heapify(arr, n, i);
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Inserting into a heap}
+\bigbreak \noindent 
+In a top-down approach to inserting into a min-heap, you maintain the heap property while inserting a new element. Specifically, you start by placing the new element at the bottom of the heap (in the next available position), and then you "bubble up" (also known as "heapify up" or "percolate up") to restore the heap property.
+\begin{itemize}
+    \item \textbf{Insert the new element at the bottom:} Add the new element in the first available position (the next available spot in the array representation, which maintains a complete binary tree structure)
+    \item \textbf{Bubble up (heapify up):} Compare the newly inserted element with its parent.
+        \bigbreak \noindent 
+        If the new element is smaller than its parent (which violates the min-heap property), swap the two.
+        \bigbreak \noindent 
+        Continue this process (i.e., compare with the next parent) until:
+        \begin{itemize}
+            \item The new element is larger than or equal to its parent, or
+            \item The element reaches the root of the heap.
+        \end{itemize}
+    \item The process terminates when the new element is in a position where it is larger than its parent or becomes the root.
+\end{itemize}
+\bigbreak \noindent 
+The code for a min-heap insert is as follows
+\bigbreak \noindent 
+\begin{cppcode}
+    void percUp(vector<int>& v, int i) {
+        int parent = (i-1)/2;
+
+        while (i>0 && v[i] < v[parent]) {
+            std::swap(v[i], v[parent]);
+
+            parent = i-1/2;
+        }
+    }
+
+    void heapInsert(vector<int>& v, int element) {
+        v.push_back(element);
+        int index = v.size() - 1;
+        percUp(v, index);
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Removing the root}
+\bigbreak \noindent 
+Removing an element from a min-heap (typically the root, i.e., the minimum element) involves maintaining the min-heap property after removal. The most common removal operation is to delete the root (the smallest element in a min-heap). The process of removal involves the following steps:
+\bigbreak \noindent 
+\begin{enumerate}
+    \item \textbf{Replace the root with the last element:} The root (at index 0) is the element to be removed, so we replace it with the last element in the heap (this ensures the complete binary tree property is maintained). 
+    \item \textbf{Remove the last element:} After swapping, the last element is removed from the heap (usually by reducing the heap's size).
+    \item \textbf{Heapify down (percolate down):} Starting from the root, compare the new root element with its children.
+        \bigbreak \noindent 
+        If the root is larger than any of its children, swap it with the smaller child (to maintain the min-heap property).
+        \bigbreak \noindent 
+        Continue this process until the heap property is restored (i.e., the element is smaller than both children or it reaches a leaf node).
+\end{enumerate}
+
+\bigbreak \noindent 
+\begin{cppcode}
+    void removeRoot(vector<int>& v) {
+        std::swap(v[0], v[v.size()-1]);
+        v.pop_back();
+        min_heapify(v,v.size(), 0);
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Removing an arbitary node}
+\bigbreak \noindent 
+To remove an arbitrary node from a min-heap (not just the root), the process is slightly more complex than simply removing the root
+\bigbreak \noindent 
+\begin{enumerate}
+    \item \textbf{Replace the node to be deleted with the last element:} Swap the node to be deleted with the last element in the heap. This ensures that the complete binary tree property is maintained.
+    \item \textbf{Remove the last element:} After the swap, the last element (now at the position of the deleted node) is removed from the heap.
+    \item \textbf{Restore the heap property:} After the swap, the heap property might be violated both upwards and downwards. So, depending on the value of the swapped element, either heapify up or heapify down from the position where the node was deleted.
+        \begin{itemize}
+            \item Heapify up if the swapped element is smaller than its parent.
+            \item Heapify down if the swapped element is larger than its children
+        \end{itemize}
+\end{enumerate}
+\bigbreak \noindent 
+We continue this process until there are no more nodes that match the passed element. The c++ code for a min-heap erase function is as follows.
+\bigbreak \noindent 
+\begin{cppcode}
+    void erase(vector<int>& v, int element) {
+        bool found = false;
+        while (!found) {
+            found = false;
+            int i=0;
+            for (;i<(int)v.size(); ++i) {
+                if (v[i] == element) {
+                    found = true;
+                    std::swap(v[i], v[v.size()-1]);
+                    v.pop_back();
+
+                    if (v[i] > v[(i-1)/2]) {
+                        min_heapify(v, v.size(), i);
+                    } else {
+                        percUp(v, i);
+                    }
+                }
+            }
+            if (i == v.size()) break;
+        }
+    }
+\end{cppcode}
+
+
+
+
+
+
+
+
+\pagebreak 
+\subsection{Priority queues}
+\bigbreak \noindent 
+Heaps are used to implement priority queues because they efficiently maintain the highest (or lowest) priority element at the root. In a max-heap, the largest element is always at the top, while in a min-heap, the smallest element is. This allows for quick access to the highest priority element in $O(1)$ time. Insertion and removal (reordering) of elements take $O(lg\ n)$ time, making heaps an optimal choice for priority queues where these operations need to be fast and frequent.
 
 
 
