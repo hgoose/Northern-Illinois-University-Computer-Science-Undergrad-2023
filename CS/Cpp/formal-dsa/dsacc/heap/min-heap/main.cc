@@ -4,7 +4,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-void min_heapify(vector<int>& arr, int n, int i) {
+void percDown(vector<int>& arr, int n, int i) {
     int smallest = i;    // Initialize smallest as root
     int left = 2 * i + 1;   // Left child index
     int right = 2 * i + 2;  // Right child index
@@ -22,14 +22,7 @@ void min_heapify(vector<int>& arr, int n, int i) {
         std::swap(arr[i], arr[smallest]);
 
         // Recursively heapify the affected subtree
-        min_heapify(arr, n, smallest);
-    }
-}
-
-void build_heap(vector<int>& v, int n) {
-    // Start from the last non-leaf node and heapify each node
-    for (int i = (n - 1) / 2; i >= 0; --i) {
-        min_heapify(v, n, i);
+        percDown(arr, n, smallest);
     }
 }
 
@@ -39,7 +32,14 @@ void percUp(vector<int>& v, int i) {
     while (i>0 && v[i] < v[parent]) {
         std::swap(v[i], v[parent]);
 
-        parent = i-1/2;
+        i=parent;
+    }
+}
+
+void heapify(vector<int>& v, int n) {
+    // Start from the last non-leaf node and heapify each node
+    for (int i = (n - 1) / 2; i >= 0; --i) {
+        percDown(v, n, i);
     }
 }
 
@@ -52,7 +52,7 @@ void heapInsert(vector<int>& v, int element) {
 void removeRoot(vector<int>& v) {
     std::swap(v[0], v[v.size()-1]);
     v.pop_back();
-    min_heapify(v,v.size(), 0);
+    percDown(v,v.size(), 0);
 }
 
 void erase(vector<int>& v, int element) {
@@ -67,7 +67,7 @@ void erase(vector<int>& v, int element) {
                 v.pop_back();
 
                 if (v[i] > v[(i-1)/2]) {
-                    min_heapify(v, v.size(), i);
+                    percDown(v, v.size(), i);
                 } else {
                     percUp(v, i);
                 }
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     vector<int> v = {10, 40, 28, 35, 8, 2};
     int n = v.size();
 
-    build_heap(v, n);
+    heapify(v, n);
 
     for (const auto& item : v) {
         cout << item << endl;

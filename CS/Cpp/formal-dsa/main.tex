@@ -1825,6 +1825,33 @@ Otherwise, it uses a recursive lambda function (r\_insert) to:
 The process starts from the root and recursively finds the right place to insert the new element.
 
 \pagebreak 
+\subsubsection{A better recursive insert}
+\bigbreak \noindent 
+\begin{cppcode}
+    node* r_insertC(node* p, int element) {
+        if (!p) return new node(element);
+
+        if (element < p->data) {
+            p->left =  r_insertC(p->left,element);
+        } else if (element > p->data) {
+            p->right =  r_insertC(p->right, element);
+        }
+        return p;
+    }
+
+    void insertC(int element) {
+        if (!root) root = new node(element);
+        r_insertC(root,element);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The main insertion function, insertC, initiates the process. If the tree’s root is null, meaning the tree is empty, it creates a new root node with the given element. Otherwise, it calls the recursive helper function r\_insertC on the root to handle the insertion process.
+\bigbreak \noindent 
+The r\_insertC function operates recursively to find the correct location for the new element within the tree. Starting from the given node p, it checks whether p is null; if so, it creates and returns a new node with the specified element, making this node the new leaf of the tree at this position. If p is not null, the function compares the element to p->data. If the element is smaller, the function recursively calls r\_insertC on p->left to continue searching in the left subtree, and if the element is larger, it calls r\_insertC on p->right to search in the right subtree. After setting the appropriate child link, it returns the current node p, maintaining the correct structure of the tree at each level of recursion. This ensures the BST properties are preserved, with each node’s left subtree containing values less than the node’s data and the right subtree containing values greater.
+\bigbreak \noindent 
+Left as an exercise to the reader to see why we must return $p$ to maintain the tree pointer chain.
+
+\pagebreak 
 \subsubsection{Iterative insert}
 \bigbreak \noindent 
 \begin{cppcode}
@@ -1962,7 +1989,7 @@ Once we have the successor node, it will either have no children, or exactly one
 
 
     \pagebreak 
-    \subsubsection{Counting the height}
+    \subsubsection{Counting the height of the tree (root)}
     \bigbreak \noindent 
     \begin{cppcode}
         size_t height() {
@@ -1977,6 +2004,19 @@ Once we have the successor node, it will either have no children, or exactly one
     \end{cppcode}
     \bigbreak \noindent 
     This code defines a height() function that calculates the height of a binary tree by counting the edges. It uses a recursive lambda function r\_height to traverse the tree. For each node, it returns 1 + max(left subtree height, right subtree height) to find the longest path from the root to any leaf. Since r\_height counts nodes, the function subtracts 1 at the end to convert the node count to edge count, which is the definition of height.
+
+    \bigbreak \noindent 
+    \subsubsection{Counting the height of a node}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int getHeight(node* p) {
+        if (!p) return -1;
+        return 1 + std::max(getHeight(p->left), getHeight(p->right));
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    If height counts edges, then a nullptr nodes must return -1. If height counts vertices, then nullptr nodes must return 0.
+
 
     \pagebreak 
     \subsubsection{Getting the depth of the node}
@@ -2097,8 +2137,35 @@ adjacent levels.
 \bigbreak \noindent 
 The figure above shows several AVL trees that are quite skewed, with right subtrees having greater height than left subtrees.
 
+
+\bigbreak \noindent 
+\subsubsection{AVL Nodes}
+\bigbreak \noindent 
+A typical node for an AVL tree is as follows
+\bigbreak \noindent 
+\begin{cppcode}
+    struct node {
+        node* left{nullptr}, *right{nullptr};
+        int data{0};
+        int height{0};
+        balance b{0};
+
+        // Constructors
+            ... 
+    };
+\end{cppcode}
+\bigbreak \noindent 
+In AVL trees, it is common for the node structure to include a height member. This height field is essential for efficiently maintaining the balance of the tree, as the balance factor of a node (the difference in height between its left and right subtrees) is used to determine whether the tree needs rebalancing after insertions or deletions.
+\bigbreak \noindent 
+Without the height member, recalculating the height of each node during every operation would require traversing the entire subtree, significantly increasing the time complexity. By storing the height in each node, you can retrieve it in constant time, allowing rotations and rebalancing operations to remain efficient.
+
+\bigbreak \noindent 
+\subsubsection{Storing the height}
+\bigbreak \noindent 
+In AVL trees, we should store the height of a node as a data member, updating on insertions or removals into the tree. 
+
 \pagebreak 
-\subsubsection{Defining balance factors in C++}
+\subsubsection{Defining balance factors in C++ with enums}
 \bigbreak \noindent 
 We employ an enumerated data type to record balance factors
 \bigbreak \noindent 
@@ -2109,29 +2176,17 @@ We employ an enumerated data type to record balance factors
 Balance factors must be included in all the nodes of an AVL tree, and we must adapt our former node specification accordingly.
 
 \bigbreak \noindent 
-\subsubsection{AVL Nodes}
+\subsubsection{Defining balance factors with a height calculation}
 \bigbreak \noindent 
-A typical node for an AVL tree is as follows
+Instead, we can define the balance factor of a node as $\text{height}(left) - \text{height}(right)$. A negative balance implies a subtree is heavy on the right, a positive balance implies a subtree is heavy on the right. A balance of zero implies equal height subtrees. A balance factor ranges from -2 to 2. If $\abs{\text{balance}} = 2$, we must rotate the tree to restore balance.
 \bigbreak \noindent 
 \begin{cppcode}
-    enum balance {
-        eh, rh, lh
-    };
-
-    struct node {
-        node* left{nullptr}, *right{nullptr};
-        int data{0};
-        balance b{eh};
-        int height{0};
-
-        // Constructors
-            ... 
-    };
+    int getBalance(node* p) {
+        if (!p) return -1;
+        return (p->left ? p->left->height : -1) - (p->right ? p->right->height : -1);
+    }
 \end{cppcode}
-\bigbreak \noindent 
-In AVL trees, it is common for the node structure to include a height member. This height field is essential for efficiently maintaining the balance of the tree, as the balance factor of a node (the difference in height between its left and right subtrees) is used to determine whether the tree needs rebalancing after insertions or deletions.
-\bigbreak \noindent 
-Without the height member, recalculating the height of each node during every operation would require traversing the entire subtree, significantly increasing the time complexity. By storing the height in each node, you can retrieve it in constant time, allowing rotations and rebalancing operations to remain efficient.
+
 
 \pagebreak 
 \subsubsection{Interface}
@@ -2268,23 +2323,170 @@ Thus, we come to the following implementation of a left rotation.
 % After the rotation, the height of the rotated subtree will decrease by one. We must then adjust the balance factors. 
 
 \pagebreak 
-\subsubsection{Insertion of a Node}
+\subsubsection{C++ Rotations}
 \bigbreak \noindent 
-We can insert a new node into an AVL tree by first following the usual binary tree
-insertion algorithm: comparing the key of the new node with that in the root, and
-inserting the new node into the left or right subtree as appropriate. It often turns
-out that the new node can be inserted without changing the height of the subtree,
-in which case neither the height nor the balance of the root will be changed. Even
-when the height of a subtree does increase, it may be the shorter subtree that has
-grown, so only the balance factor of the root will change. The only case that can
-cause difficulty occurs when the new node is added to a subtree of the root that is
-strictly taller than the other subtree, and the height is increased. This would cause
-one subtree to have height 2 more than the other, whereas the AVL condition is
-that the height difference is never more than 1
+\begin{cppcode}
+    node* leftRotate(node* p) {
+        node* subp = p->right;
+        p->right = subp->left;
+        subp->left = p;
+
+        p->height = 1 + 
+            std::max(p->left ? p->left->height : -1, 
+                    p->right ? p->right->height : -1);
+
+        subp->height = 1 + 
+            std::max(subp->left ? subp->left->height : -1, 
+                    subp->right ? subp->right->height : -1);
+
+        p->balance = getBalance(p);
+        subp->balance = getBalance(subp);
+        return subp;
+    }
+
+    node* rightRotate(node* p) {
+        node* subp = p->left;
+        p->left = subp->right;
+        subp->right = p;
+
+        p->height = 1 + 
+            std::max(p->left ? p->left->height : -1, 
+                    p->right ? p->right->height : -1);
+
+        subp->height = 1 + 
+            std::max(subp->left ? subp->left->height : -1, 
+                    subp->right ? subp->right->height : -1);
+
+        p->balance = getBalance(p);
+        subp->balance = getBalance(subp);
+        return subp;
+    }
+\end{cppcode}
 \bigbreak \noindent 
-The basic structure of our algorithm will thus be the same as the ordinary recursive binary tree insertion algorithm, but with significant additions to accommodate the processing of balance factors and other structure of AVL trees
+In leftRotate, the function takes a node pointer p (the root of a subtree that is right-heavy) and performs a left rotation to reduce the height of its right subtree. First, it saves the right child of p (denoted as subp). Then, it adjusts the pointers so that the left child of subp becomes the new right child of p, and subp becomes the new root of this subtree with p as its left child. After adjusting the structure, it recalculates the height and balance of both p and subp, where the height of each node is determined by adding 1 to the maximum height of its left and right children. The function then returns subp as the new root of the subtree.
 \bigbreak \noindent 
-We must keep track of whether an insertion (after recursion) has increased the tree height or not, so that the balance factors can be changed appropriately. This we do by including an additional calling parameter taller of type bool in the auxiliary recursive function called by the insertion method. The task of restoring balance when required will be done in the subsidiary functions left\_balance and right\_balance.
+Similarly, rightRotate takes a node p (the root of a left-heavy subtree) and performs a right rotation to rebalance it. It stores the left child of p as subp, then updates pointers so that the right child of subp becomes the new left child of p, and subp becomes the new root with p as its right child. Heights and balances for p and subp are recalculated using the heights of their children, and subp is returned as the new root of this subtree. These rotations are essential for keeping the AVL tree balanced after insertions and deletions.
+\bigbreak \noindent 
+\textbf{Note:} To understand the return values of the rotateMethods, it is necessary to understand the insertion method below.
+
+
+\pagebreak 
+\subsubsection{Balancing}
+\bigbreak \noindent 
+\begin{cppcode}
+    node* balance(node* p) {
+        if (p->balance > 1) {  // Left heavy
+            if (p->left && p->left->balance < 0) {
+                leftRotate(p->left);  // Left-Right case
+            }
+            return rightRotate(p);  // Left-Left case
+        }
+        if (p->balance < -1) {  // Right heavy
+            if (p->right && p->right->balance > 0) {
+                rightRotate(p->right);  // Right-Left case
+            }
+            return leftRotate(p);  // Right-Right case
+        }
+        return p;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+This function takes a pointer p to a node and checks its balance factor (the difference in height between its left and right subtrees) to determine if the node is unbalanced. If the balance factor is greater than 1, the tree is left-heavy, meaning the left subtree is taller than the right subtree. In this case, the function first checks if a "Left-Right" rotation is needed—this would happen if the left child of p is itself right-heavy, indicated by a negative balance factor. If so, a left rotation is applied to the left child of p to balance it before proceeding. Then, a right rotation is applied to p to correct the "Left-Left" imbalance.
+\bigbreak \noindent 
+Conversely, if the balance factor is less than -1, the node is right-heavy, indicating the right subtree is taller. For a "Right-Left" case, where the right child of p is left-heavy, a right rotation is applied to the right child of p first. This corrects the imbalance locally and prepares it for the final step: a left rotation applied to p to balance the "Right-Right" case. If p is already balanced, the function simply returns p without modification.
+
+\pagebreak 
+\subsubsection{Insertions}
+\bigbreak \noindent 
+\begin{cppcode}
+    node* r_insert(node* p, int data) {
+        if (!p) return new node(data);
+
+        if (data < p->data) {
+            p->left = r_insert(p->left, data);
+        } else if (data > p->data) {
+            p->right = r_insert(p->right, data);
+        }
+
+        p->height = 1 + std::max(p->left ? p->left->height : -1, p->right ? p->right->height : -1);
+        p->balance = getBalance(p);
+
+        return balance(p);
+    }
+
+    void insert(int data) {
+        root = r_insert(root, data);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The r\_insert function takes two parameters: p, a pointer to the current node in the tree, and data, the integer value to be inserted. If p is nullptr (indicating an empty spot in the tree), a new node with the given data is created and returned, establishing the base case for recursion.
+\bigbreak \noindent 
+If the node already exists, r\_insert decides where to place the new value by comparing data with p->data. If data is less than p->data, it recursively calls r\_insert on the left child (p->left). Otherwise, if data is greater, it calls r\_insert on the right child (p->right). This ensures that the AVL tree retains its binary search property.
+\bigbreak \noindent 
+After the recursive insertion, r\_insert updates the height of the current node p by setting it to 1 plus the maximum height of its left and right children. It then calculates the node’s balance factor using getBalance(p), which is essential for determining if the subtree rooted at p has become unbalanced. Finally, balance(p) is called to apply any necessary rotations to maintain the AVL tree's balance, and the function returns the (possibly new) root of the subtree.
+\bigbreak \noindent 
+The insert function is a wrapper that starts the insertion process at the root node of the tree, calling r\_insert with root and the specified data value. This encapsulates the recursive insertion logic and initiates it from the top of the tree.
+\bigbreak \noindent 
+\textbf{Note:} Worry about ancestory heights (and therefore balance factors) after rotations is not necessary, height and balance calculations occurs only when the insert method returns to that node in the recursion, and thus only after a rotation will an ancestory height and balance calculation be made.
+
+\pagebreak 
+\subsubsection{Removing nodes}
+\bigbreak \noindent 
+To implement removal from an AVL tree, you need to perform a few key steps: find and remove the node, balance the tree afterward, and adjust heights and balance factors as necessary
+\bigbreak \noindent 
+Start by locating the node with the target value. If found, delete it using standard BST deletion rules
+\bigbreak \noindent 
+After removing a node, retrace your steps back to the root, updating the height and balance factor of each ancestor. If a node is unbalanced, apply rotations to restore balance.
+\bigbreak \noindent 
+As with insertion, use recursive balancing and height adjustments after deletion.
+\bigbreak \noindent 
+\begin{cppcode}
+    node* succ(node* p) {
+        while (p->left) p = p->left;
+        return p;
+    }
+    node* r_remove(node* p, int data) {
+        if (!p) return nullptr;  // Node not found
+        // Traverse the tree to find the node to delete
+        if (data < p->data) {
+            p->left = r_remove(p->left, data);
+        } else if (data > p->data) {
+            p->right = r_remove(p->right, data);
+        } else {  // Node to delete is found
+            if (!p->left) {
+                node* temp = p->right;
+                delete p;
+                return temp;
+            } else if (!p->right) {
+                node* temp = p->left;
+                delete p;
+                return temp;
+            } else {  // Node has two children
+                node* temp = succ(p->right);
+                p->data = temp->data;  // Replace data
+                p->right = r_remove(p->right, temp->data); 
+            }
+        }
+        // Update height and balance
+        p->height = 1 + std::max(p->left ? p->left->height : -1, p->right ? p->right->height : -1);
+        p->balance = getBalance(p);
+
+        // Balance the node if necessary
+        return balance(p);
+    }
+    void remove(int data) {
+        root = r_remove(root, data);
+    }
+\end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+r\_remove, performs a recursive search for the node to delete based on the value data. If data is less than p->data, it recurses into the left subtree; if data is greater, it recurses into the right subtree. When the node to delete is found, three cases are handled based on the structure of p:
+\begin{enumerate}
+    \item If p has no left child, p is replaced by its right child, effectively bypassing it in the tree.
+    \item If p has no right child, p is replaced by its left child.
+    \item If p has two children, the in-order successor (smallest node in p->right) is found using succ. The data in p is replaced with this successor’s data, and the successor node is then removed from p->right to avoid duplication.
+\end{enumerate}
+After deletion, the function updates the height and balance of p, recalculating the height as one plus the maximum height of its children. The balance factor, which measures the difference in height between the left and right subtrees, is also recalculated. Finally, the function calls balance(p) to ensure that any imbalance introduced by the deletion is corrected. The remove function wraps this entire process, starting the deletion at the root. This ensures the AVL tree remains balanced after a node is removed.
 
 
 \pagebreak 
@@ -2429,6 +2631,66 @@ The min\_heapify function is designed to maintain the min-heap property for a su
 \end{cppcode}
 
 \pagebreak 
+\subsection{Percolating}
+\bigbreak \noindent 
+Percolating in heaps refers to adjusting a node’s position to maintain the heap property, which can occur in two directions: percolate up or percolate down.
+\bigbreak \noindent 
+Note that the percolate direction refers to the direction in which we move a node to get its correct locating in the heap.
+\bigbreak \noindent 
+If we are comparing a given node to its children, its percolate down. If we compare with its parent, its percolate up.
+
+\bigbreak \noindent 
+\subsubsection{Percolate up}
+\bigbreak \noindent 
+Used when adding a new element to the heap (usually at the end). The new element is moved up the heap by comparing it with its parent node. If it violates the heap property (e.g., it’s smaller than its parent in a min-heap), it swaps with the parent. This continues until the node is correctly positioned.
+\bigbreak \noindent 
+\begin{cppcode}
+void percUp(vector<int>& v, int i) {
+    while (i>0) {
+        int parent = (i-1)/2;
+        if (v[i] > v[parent]) {
+            swap(v[i], v[parent]);
+            i = parent;
+        } else break; // In the correct place
+    }
+}
+\end{cppcode}
+
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{Percolate down}
+\bigbreak \noindent 
+Used when removing the root element (like in a heap deletion). The last element is moved to the root and then "percolates down" by swapping with the smaller child (in a min-heap) if it violates the heap property. This process repeats until the node is correctly placed.
+\bigbreak \noindent 
+\begin{cppcode}
+    void percDown(vector<int>& v, int n, int i) {
+        // Assume the largest is the current node
+        int largest = i;
+        // Get index of both children
+        int left = 2*i+1;
+        int right = 2*i+2;
+
+        // If the left child exists, and is larger, update largest
+        if (left < n && v[left] > v[largest]) {
+            largest = left;
+        }
+        // If the right child exists, and is larger, update largest
+        if (right < n && v[right] > v[largest]) {
+            largest = right;
+        }
+
+        // If the largest was changed, swap. Then call percUp on the node that had the largest value.
+        if (largest != i) {
+            swap(v[i], v[largest]);
+            percUp(v,n,largest);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Because this function takes a node and compares it with its children, the value in the node moves down. Hence, percolate down.
+
+
+\pagebreak 
 \subsection{Inserting into a heap}
 \bigbreak \noindent 
 In a top-down approach to inserting into a min-heap, you maintain the heap property while inserting a new element. Specifically, you start by placing the new element at the bottom of the heap (in the next available position), and then you "bubble up" (also known as "heapify up" or "percolate up") to restore the heap property.
@@ -2455,7 +2717,7 @@ The code for a min-heap insert is as follows
         while (i>0 && v[i] < v[parent]) {
             std::swap(v[i], v[parent]);
 
-            parent = i-1/2;
+            i = parent;
         }
     }
 
@@ -2542,8 +2804,357 @@ We continue this process until there are no more nodes that match the passed ele
 \subsection{Priority queues}
 \bigbreak \noindent 
 Heaps are used to implement priority queues because they efficiently maintain the highest (or lowest) priority element at the root. In a max-heap, the largest element is always at the top, while in a min-heap, the smallest element is. This allows for quick access to the highest priority element in $O(1)$ time. Insertion and removal (reordering) of elements take $O(lg\ n)$ time, making heaps an optimal choice for priority queues where these operations need to be fast and frequent.
+\bigbreak \noindent 
+\subsubsection{Interface}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Insert (or Enqueue):} Adds an element to the priority queue based on its priority.
+    \item \textbf{Pop}: Retrieve and remove the item with the highest priority (root of the heap)
+    \item \textbf{Top}: Retrieve the item with the highest priority
+    \item \textbf{Size:} Get the number of items in the queue
+    \item \textbf{Empty:} Checks if the priority queue has any elements.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+    class priority_queue {
+        vector<int> heap; // or any random access container
+
+        void percDown(int n, int index);
+        void PercUp(int index)
+
+    public:
+        void insert(int element);
+        int pop();
+        int top();
+        size_t size();
+        bool empty();
+    };
+\end{cppcode}
+\bigbreak \noindent 
+Percolate down, up, insert, and pop can be found in the heap examples above.
+
+\pagebreak 
+\subsubsection{Insert, pop, and top}
+\bigbreak \noindent 
+These are simple methods to implement.
+\bigbreak \noindent 
+\begin{cppcode}
+    // Insert into the heap
+    void insert(int element) {
+        heap.push_back(element);
+        int index = heap.size() - 1;
+        percUp(index);
+    }
+
+    // Retrieve and remove the root
+    int pop() {
+        if (heap.empty()) return -1;
+
+        int ret = heap[0];
+        std::swap(heap[0], heap[heap.size()-1]);
+        heap.pop_back();
+        percDown((int)heap.size(), 0);
+        return ret;
+    }
+
+    // Retrieve the root
+    int top() {
+        return heap[0];
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Size and Empty}
+\bigbreak \noindent 
+\begin{cppcode}
+    size_t size() {
+        return (size_t)heap.size();
+    }
+
+    bool empty() {
+        return heap.empty();
+    }
+\end{cppcode}
+
+\pagebreak 
+\unsect{Sorting}
+\bigbreak \noindent 
+Sorting is a fundamental concept in data structures and algorithms where elements in a collection are arranged in a specific order, typically ascending or descending. Sorting enables efficient data access, searching, and data organization in applications. There are various sorting algorithms, each with different characteristics and efficiency, such as time and space complexity.
+\bigbreak \noindent 
+\subsection{Bubble, selection, insertion}
+\bigbreak \noindent 
+The three simplest sorting algorithms are bubble sort, selection sort, and insertion sort. They are all $O(n^{2})$ comparison based sorting algorithms.
+\bigbreak \noindent 
+\subsubsection{Bubble sort}
+\bigbreak \noindent 
+Bubble Sort repeatedly compares adjacent elements and swaps them if they are in the wrong order, "bubbling" the largest unsorted element to the end of the list on each pass.
+\bigbreak \noindent 
+\begin{cppcode}
+    void bubbleSort(vector<int>& v, int n) {
+        bool swapped = true;
+        while (swapped) {
+            swapped = false;
+            for (int i=0; i<n-1; ++i) {
+                if (v[i+1] < v[i]) {
+                    swap(v[i], v[i+1]);
+                    swapped=true;
+                }
+            }
+            --n;
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+By decrementing \( n \) after each complete pass, you avoid unnecessary comparisons in already sorted parts of the vector, making the algorithm slightly more efficient without affecting the \( O(n^2) \) time complexity.
+\begin{itemize}
+    \item \textbf{Outer Loop}: The \texttt{while} loop continues as long as swaps are happening, so it terminates early if the list becomes sorted before completing all \( n \) passes.
+    \item \textbf{Inner Loop}: The \texttt{for} loop compares adjacent elements and swaps them if they’re out of order. After each pass, the largest unsorted element "bubbles up" to the correct position, so the next pass can ignore the last element.
+\end{itemize}
+\pagebreak \bigbreak \noindent 
+\paragraph{Complexity}
+\bigbreak \noindent \bigbreak \noindent 
+\textbf{Worst Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+In the worst case (a reverse-sorted list), Bubble Sort requires \( n \) passes, and each pass involves up to \( n - 1 \) comparisons.
+
+\bigbreak \noindent 
+\textbf{Average Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+On average, Bubble Sort still performs \( O(n^2) \) comparisons due to repeated passes through the entire array.
+
+\bigbreak \noindent 
+\textbf{Best Case}: \( O(n) \) \\
+\bigbreak \noindent 
+If the list is already sorted, Bubble Sort can stop early if no swaps occur during a pass (often implemented with a flag to detect this). In this case, it only takes one pass to confirm that the list is sorted.
+
+\pagebreak 
+\subsubsection{Selection sort}
+\bigbreak \noindent 
+Selection Sort sorts an array by repeatedly finding the minimum element from the unsorted part and moving it to the beginning.
+\begin{enumerate}
+    \item Start at the beginning of the array.
+    \item For each position $i$, find the smallest element in the unsorted portion (from $i$ to the end).
+    \item Swap this minimum element with the element at position $i$
+    \item Move to the next position and repeat until the array is sorted.
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    void selectionSort(vector<int>& v, int n) {
+        for (int i=0; i<n-1; ++i) {
+            int min = i;
+            for (int j=i+1; j<n; ++j) {
+                if (v[j] < v[min]) {
+                    min = j;
+                }
+            }
+            std::swap(v[min], v[i]);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\paragraph{Complexity}
+\bigbreak \noindent \bigbreak \noindent 
+\textbf{Worst Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+Selection Sort always performs \( n \) passes, each requiring a search through the unsorted portion to find the minimum element, resulting in \( O(n^2) \) comparisons.
+
+\bigbreak \noindent 
+\textbf{Average Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+Selection Sort performs the same number of comparisons regardless of the initial order of elements, as it always looks for the minimum in the unsorted portion.
+
+\bigbreak \noindent 
+\textbf{Best Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+Even if the array is already sorted, Selection Sort will still go through \( n \) passes and \( O(n^2) \) comparisons, making it inefficient for nearly sorted data.
 
 
+\pagebreak 
+\subsubsection{Insertion sort}
+\bigbreak \noindent 
+Insertion Sort sorts an array by building a sorted portion one element at a time
+\bigbreak \noindent 
+\begin{enumerate}
+    \item Start with the second element, assuming the first element is trivially sorted.
+    \item For each element, compare it with the elements in the sorted portion to its left.
+    \item Shift larger elements one position right until you find the correct spot for the current element.
+    \item Insert the current element in its correct position.
+    \item Repeat until all elements are sorted.
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    void insertionSort(vector<int>& v, int n) {
+        for (int i=1; i<n; ++i) {
+            int key=v[i];
+            int j=i-1;
+
+        while (j>=0 && v[j] > key) {
+            v[j+1] = v[j];
+            --j;
+        }
+        v[j+1] = key;
+    }
+}
+\end{cppcode}
+\bigbreak \noindent 
+Imagine sorting a hand of playing cards:
+\begin{itemize}
+    \item You pick up cards one by one.
+    \item For each new card, you compare it with the cards in your hand from right to left, sliding them over if they’re larger than the new card, until you find the correct spot to insert it.
+    \item Each card you add to your hand stays sorted with the previous ones, just like key gets inserted in the sorted sub-array.
+\end{itemize}
+This method is efficient when the list is nearly sorted since fewer shifts are needed, but it becomes less efficient for randomly ordered arrays due to repeated comparisons and shifts.
+
+\pagebreak 
+\paragraph{Complexity}
+\bigbreak \noindent \bigbreak \noindent 
+\textbf{Worst Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+In the worst case (reverse-sorted list), each element is compared with all previous elements, resulting in \( O(n^2) \) comparisons and shifts.
+
+\bigbreak \noindent 
+\textbf{Average Case}: \( O(n^2) \) \\
+\bigbreak \noindent 
+Insertion Sort generally performs \( O(n^2) \) operations in the average case due to repeated comparisons and shifts.
+
+\bigbreak \noindent 
+\textbf{Best Case}: \( O(n) \) \\
+\bigbreak \noindent 
+If the array is already sorted, Insertion Sort only needs to confirm each element is in place, requiring just \( O(n) \) comparisons and no shifts. This makes it very efficient for nearly sorted arrays.
+
+
+
+
+
+
+
+\pagebreak \bigbreak \noindent 
+\subsection{Heap sort}
+\bigbreak \noindent 
+Heap Sort is a comparison-based sorting algorithm that uses a binary heap data structure, specifically a max-heap, to sort elements in ascending order (or a min-heap for descending order).
+\bigbreak \noindent 
+\begin{enumerate}
+    \item \textbf{Build a Max-Heap:} Convert the array into a max-heap, where each parent node is greater than its children. This ensures the largest element is at the root.
+    \item \textbf{Extract Maximum and Swap:} Swap the root (largest element) with the last element in the heap. This moves the largest element to its correct position in the sorted array.
+    \item \textbf{Heapify:} After the swap, the heap may no longer satisfy the heap property. Restore the max-heap by performing a "heapify" operation on the root to maintain the max-heap structure.
+    \item \textbf{Repeat:} Continue extracting the maximum element, swapping, and heapifying, reducing the heap size each time. This process sorts the array in-place.
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    void heapSort(vector<int>& v, int n) {
+        heapify(v, n);
+        int last = n-1;
+        while (last > 0) {
+            swap(v[0], v[last--]);
+            percDown(v, last, 0);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The functions \textit{heapify} and \textit{percDown} can be found in the \textit{max-heap in c++} section above, where they are called \textit{build-heap} and \textit{heapify} respectively.
+\bigbreak \noindent 
+\subsubsection{Complexity}
+\bigbreak \noindent 
+Heap Sort has a time complexity of $O(n\text{lg}n)$ in the best, worst, and average cases, making it more efficient than  $O(n^{2})$ sorting algorithms for larger datasets
+\bigbreak \noindent 
+Bulding the max-heap from an arbitary container takes $O(n)$ time. Re-heapify the remaining elements (restore the max-heap property) by "sifting down" the new root takes $O(\text{lg} n)$ time. Since we do this sift operation $n$ times, the  complexity of \textit{heapSort} is therefore $O(n\text{lg}n)$, which makes the entire algorithm $O(n) + O(n\text{lg}n) = O(n \text{lg}n$.
+
+\pagebreak 
+\subsection{BST Sort}
+\bigbreak \noindent 
+BST Sort is a sorting algorithm that leverages a Binary Search Tree (BST) to sort elements. It works by inserting all elements into a BST and then performing an in-order traversal of the tree to retrieve the elements in sorted order.
+\bigbreak \noindent 
+\subsubsection{Insert}
+\bigbreak \noindent 
+The insert for bst follows the standard bst insert method described in a previous section.
+\bigbreak \noindent 
+\begin{cppcode}
+    node* insert(node* p, int data) {
+        if (!p) return new node(data);
+
+        if (data < p->data) {
+            p->left = insert(p->left, data);
+        } else {
+            p->right = insert(p->right, data);
+        }
+
+        return p;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{The inorder traversal}
+\bigbreak \noindent 
+The inorder follows the same logic as before, but when processing each node, we insert the data member into a passed vector.
+\bigbreak \noindent 
+\begin{cppcode}
+    void inorder(node* p, vector<int>& v) {
+        if (!p) return;
+        inorder(p->left, v);
+        v.push_back(p->data);
+        inorder(p->right, v);
+    }
+\end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{The BST sort function}
+\bigbreak \noindent 
+\begin{cppcode}
+    void bstsort(vector<int>& v) {
+        vector<int> sorted;
+        node* root = nullptr;
+
+        for (const auto& item : v) {
+            root = insert(root, item);
+        }
+        inorder(root, sorted);
+        clear(root);
+
+        v = sorted;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The bstsort function sorts a vector of integers using a Binary Search Tree (BST) approach. It starts by creating an empty vector, sorted, which will eventually hold the sorted elements, and initializes root as nullptr, representing an initially empty BST.
+\bigbreak \noindent 
+For each item in the input vector v, the function calls insert to add the item to the BST, progressively building the tree in a way that respects the BST property (left child nodes are less than the parent node, and right child nodes are greater). After constructing the BST, the function performs an in-order traversal using inorder, which appends each node’s data to the sorted vector in ascending order.
+\bigbreak \noindent 
+Finally, clear is called to delete all nodes from the BST, freeing up dynamically allocated memory. The function then assigns sorted back to the input vector v, so v now contains the elements in sorted order.
+\bigbreak \noindent 
+BST Sort is more of a conceptual exercise in data structures than a practical sorting method because balanced tree structures (e.g., AVL trees, red-black trees) are required to ensure $O(nlg\ n)$ performance consistently.
+
+\pagebreak 
+\subsubsection{Inplace sorting}
+\bigbreak \noindent 
+To perform the sort "in-place" in bstsort, we can eliminate the extra sorted vector by writing the sorted values directly back into the input vector v during the in-order traversal. This approach leverages an index to keep track of the position in v where each next sorted value should be placed
+\bigbreak \noindent 
+\begin{cppcode}
+    void inorder2(node* p, vector<int>& v, int& index) {
+        if (!p) return;
+        inorder2(p->left, v, index);
+        v[index++] = p->data;
+        inorder2(p->right, v, index);
+    }
+
+    void bstsort(vector<int>& v) {
+        node* root = nullptr;
+
+        for (const auto& item : v) {
+            root = insert(root, item);
+        }
+        int index = 0;
+        inorder2(root, v, index);
+        clear(root);
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Complexity}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Average Case:} $O(n\text{lg}\ n)$, where $n$ is the number of elements. This is because inserting each element in a balanced BST takes $O(\text{lg}\ n)$ time
+    \item \textbf{Worst Case:} $O(n^{2})$, if the tree becomes unbalanced, like when inserting elements in sorted order into a simple BST, resulting in a degenerate tree (like a linked list).
+    \item \textbf{Space Complexity:} $O(n)$, for storing the BST nodes.
+\end{itemize}
 
 
 

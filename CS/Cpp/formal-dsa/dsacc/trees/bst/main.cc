@@ -20,6 +20,22 @@ struct node{
 struct bst {
     node* root = nullptr;
 
+    node* r_insertC(node* p, int element) {
+        if (!p) return new node(element);
+
+        if (element < p->data) {
+            p->left =  r_insertC(p->left,element);
+        } else if (element > p->data) {
+            p->right =  r_insertC(p->right, element);
+        }
+        return p;
+    }
+
+    void insertC(int element) {
+        if (!root) root = new node(element);
+        r_insertC(root,element);
+    }
+
     void insertA(int element)  {
         // If the tree is empty, insert new element as root
         if (!root) {
@@ -219,24 +235,15 @@ struct bst {
 int main(int argc, char** argv) {
 
     bst t1;
-    t1.insertB(40);
-    t1.insertB(30);
-    t1.insertB(50);
-    t1.insertB(60);
-    t1.insertB(45);
+    t1.insertC(40);
+    t1.insertC(30);
+    t1.insertC(50);
+    t1.insertC(60);
+    t1.insertC(45);
 
     t1.levelorderPrint();
     cout << endl;
 
-    t1.clear();
-
-    t1.levelorderPrint();
-
-    t1.insertB(40);
-    t1.levelorderPrint();
-
-    t1.clear();
-    t1.levelorderPrint();
 
 
 
