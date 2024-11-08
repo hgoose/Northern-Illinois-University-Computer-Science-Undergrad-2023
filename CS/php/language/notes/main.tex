@@ -1,0 +1,334 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={php}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Dynamic webpages with php}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Setting up apache on arch linux}
+    \bigbreak \noindent 
+    In order to view code written in .php files, we must set up a web server. On arch linux, we can setup apache. First, install the required packages
+    \bigbreak \noindent 
+    \begin{bashcode}
+    pacman -Sy apache php php-apache
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Configure PHP with Apache}
+    \bigbreak \noindent 
+    To make Apache process PHP files, you need to edit the Apache configuration.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo vi /etc/httpd/conf/httpd.conf
+    \end{bashcode}
+    \bigbreak \noindent 
+    Add the following lines to the end of the file to load the PHP module and configure PHP handling:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        # Load PHP module
+        LoadModule php_module modules/libphp.so
+        AddHandler php-script .php
+        Include conf/extra/php_module.conf
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Enable PHP in Apache}
+    \bigbreak \noindent 
+    The file php\_module.conf should have been installed with the php-apache package. If it's missing, you may need to create it manually at /etc/httpd/conf/extra/php\_module.conf.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    /etc/httpd/conf/extra/php\_module.conf
+    \end{bashcode}
+    \bigbreak \noindent 
+    \begin{bashcode}
+    DirectoryIndex index.php index.html
+    \end{bashcode}
+    \bigbreak \noindent 
+    This line ensures that Apache will serve index.php as the default file if it’s available.
+    \bigbreak \noindent 
+    \subsection{Start and Enable Apache}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo systemctl start httpd
+        sudo systemctl enable httpd
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Test the PHP Configuration}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        echo "<?php phpinfo(); ?>" | sudo tee /srv/http/index.php
+    \end{bashcode}
+    \bigbreak \noindent 
+    Open your web browser and go to http://localhost/index.php. You should see the PHP info page, indicating that PHP is correctly configured.
+    \bigbreak \noindent 
+    \subsection{Adjust Permissions}
+    \bigbreak \noindent 
+    If you plan to edit files in /srv/http frequently, you might want to adjust the permissions:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo chown -R $USER:http /srv/http
+        sudo chmod -R 755 /srv/http
+    \end{bashcode}
+    \bigbreak \noindent 
+    \subsection{Allow http traffic}
+    \bigbreak \noindent 
+    If you have a firewall enabled, allow HTTP traffic:
+    \bigbreak \noindent 
+    \begin{bashcode}
+       sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+    \end{bashcode}
+    \bigbreak \noindent 
+    Or with ufw,
+    \begin{bashcode}
+    sudo ufw allow http
+    \end{bashcode}
+    \bigbreak \noindent 
+    Once you’ve set up Apache and PHP as described, you can view .php files by placing them in the web root directory and accessing them via a web browser. 
+    \bigbreak \noindent 
+    \subsection{Test apache config}
+    \bigbreak \noindent 
+    Sometimes, a small syntax error in the Apache configuration file can cause the server to fail to start. Run the following command to check the configuration:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo apachectl configtest
+    \end{bashcode}
+    \bigbreak \noindent 
+    If there’s an error, this command will display a message that can help pinpoint the issue.
+
+    \bigbreak \noindent 
+    \subsection{Pages not loading, change default php module}
+    \bigbreak \noindent 
+    switch to the mpm\_prefork module, which works well with the default PHP module on Arch Linux.
+    \bigbreak \noindent 
+    Edit the Apache configuration file /etc/httpd/conf/httpd.conf and comment out or remove the line loading the mpm\_event module:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    # LoadModule mpm_event_module modules/mod_mpm_event.so      # Comemnt
+    LoadModule mpm_prefork_module modules/mod_mpm_prefork.so    # add
+    \end{bashcode}
+    \bigbreak \noindent 
+    Then restart apache
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo systemctl restart httpd
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsection{Apache document root}
+    \bigbreak \noindent 
+    If you’d prefer to store your PHP files outside of /srv/http, you can change the Apache DocumentRoot to point to a different directory.
+    \bigbreak \noindent 
+    First, make the directory you want as root
+    \bigbreak \noindent 
+    \begin{bashcode}
+    mkdir -p ~/mywebsite
+    \end{bashcode}
+    \bigbreak \noindent 
+    Open the Apache configuration file:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo vi /etc/httpd/conf/httpd.conf
+    \end{bashcode}
+    \bigbreak \noindent 
+    Locate the DocumentRoot directive, which should look like this:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    DocumentRoot "/srv/http"
+    \end{bashcode}
+    \bigbreak \noindent 
+    Change this to the path of your new directory, such as:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    DocumentRoot "/home/yourusername/mywebsite"
+    \end{bashcode}
+    \bigbreak \noindent 
+    Also, update the <Directory> block for /srv/http to match your new directory:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        <Directory "/home/yourusername/mywebsite">
+            Options Indexes FollowSymLinks
+            AllowOverride None
+            Require all granted
+        </Directory>
+    \end{bashcode}
+    \bigbreak \noindent 
+    Ensure that Apache has permission to read files in your chosen directory:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo chown -R $USER:http ~/mywebsite
+        sudo chmod -R 755 ~/mywebsite
+    \end{bashcode}
+    \bigbreak \noindent 
+    After making these changes, restart Apache to apply the new configuration:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo systemctl restart httpd
+    \end{bashcode}
+    \bigbreak \noindent 
+    Place your PHP files in the new directory (~/mywebsite). You can then access them in your browser as before:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    http://localhost/test.php
+    \end{bashcode}
+    \bigbreak \noindent 
+    This way, you can keep your PHP files in a custom directory without needing to store everything in /srv/http.
+
+    \bigbreak \noindent 
+    \subsection{Permission error: 403}
+    \bigbreak \noindent 
+    For Apache to access files in this directory, it needs execute (x) permissions on each parent directory in the path.
+    \bigbreak \noindent 
+    Ensure that each directory in the path (/home and /home/\textit{username}) has the appropriate execute permissions for Apache to access subdirectories. This doesn't mean Apache will have access to all files, but it will allow it to "traverse" the directories.
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo chmod o+x /home
+        sudo chmod o+x /home/username
+    \end{bashcode}
+    \bigbreak \noindent 
+    This will allow "other" users (including the Apache user) to traverse the /home and /home/\textit{username} directories.
+    \bigbreak \noindent 
+    You should also change permissions on the documentroot directory, and possible the parent directories. Then restart httpd
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo chown -R $USER:http ~/documentroot
+    sudo chmod -R 755 ~/documentroot
+    sudo systemctl restart httpd
+    \end{bashcode}
+    \begin{itemize}
+        \item \textbf{\$USER:} This is an environment variable that represents the currently logged-in user's username. By using \$USER, you’re setting yourself as the owner of the directory and its contents, allowing you to manage the files easily.
+        \item \textbf{http:} This is the group associated with the Apache server on many Linux distributions (including Arch Linux). Assigning the http group to the directory allows Apache to access the files and directories within, provided the group has the necessary permissions.
+    \end{itemize}
+
+
+
+    \pagebreak 
+    \unsect{php in .php}
+    \bigbreak \noindent 
+    php code should be contained with php blocks
+    \bigbreak \noindent 
+    \begin{phpcode}
+    example.php
+
+    <?php #no space between ? and php
+        ... php code
+    ?>
+    \end{phpcode}
+    \bigbreak \noindent 
+    We can have as many blocks as we want, or have everything in one block. Anything not in these blocks are sent to the server as plaintext (or html if its html code).
+
+
+
+
+
+
+
+
+
+    \pagebreak 
+    \unsect{Lexical structure}
+    \bigbreak \noindent 
+    \subsection{Case Sensitivity}
+    \bigbreak \noindent 
+    The names of user-defined classes and functions, as well as built-in constructs and keywords such as echo, while, class, etc., are case-insensitive.
+    \bigbreak \noindent 
+    Variables are case sensitive.
+    \bigbreak \noindent 
+    \subsection{Statements and Semicolons}
+    \bigbreak \noindent 
+    Use semicolons to separate statements, lines must end with a semicolon.
+    \bigbreak \noindent 
+    \subsection{Whitespace and Line Breaks}
+    \bigbreak \noindent 
+    In general, whitespace doesn’t matter in a PHP program. You can spread a statement across any number of lines, or lump a bunch of statements together on a single line. For example, this statement:
+    \bigbreak \noindent 
+    \begin{phpcode}
+    raisePrices($inventory, $inflation, $costOfLiving, $greed);
+    \end{phpcode}
+    \bigbreak \noindent 
+    Could just as well be written with more whitespace
+    \bigbreak \noindent 
+    \begin{phpcode}
+        raisePrices (
+            $inventory ,
+            $inflation ,
+            $costOfLiving ,
+            $greed
+        );
+    \end{phpcode}
+    \bigbreak \noindent 
+    \subsection{Comments}
+    \bigbreak \noindent 
+    Comments can be made with \#, // or \* */.
+
+    \pagebreak 
+    \subsection{Variables}
+    \bigbreak \noindent 
+    Variable names always begin with a dollar sign (\$) and are case-sensitive
+
+    \bigbreak \noindent 
+    \subsection{Constants}
+    \bigbreak \noindent 
+    A constant is an identifier for a simple value; only scalar values—Boolean, integer, double, and string—can be constants. Once set, the value of a constant cannot change. Constants are referred to by their identifiers and are set using the define() function:
+    \bigbreak \noindent 
+    \begin{phpcode}
+    define('PUBLISHER', "O'Reilly & Associates");
+    echo PUBLISHER;
+    \end{phpcode}
+
+
+
+
+    
+\end{document}

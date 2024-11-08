@@ -218,13 +218,49 @@ struct bst {
         root = nullptr;
     }
 
-    size_t height() {
-        std::function<size_t(node*)> r_height = [&](node* p) -> size_t {
-            if (!p) return 0;
-            return 1+std::max(r_height(p->left), r_height(p->right));
-        };
-        // Height is counting edges, so its number nodes in longest path from root to leaf - 1
-        return r_height(root) -1; 
+    std::vector<int> getWidths() {
+        std::vector<int> w(height());
+        std::queue<node*> q;
+        w[0] =1;
+        q.push(root);
+        q.push(nullptr);
+
+        int level = 1, width=0;
+        while (!q.empty()) {
+            node* curr = q.front();
+            q.pop();
+
+            if (curr == nullptr) {
+                w[level++] = width;
+                width = 0;
+                q.push(nullptr);
+                continue;
+            }
+            if (level == height()) {
+                break;
+            }
+
+            if (curr->left) {
+                q.push(curr->left);
+                ++width;
+            }
+            if (curr->right) {
+                q.push(curr->right);
+                ++width;
+            }
+        }
+        return w;
+    }
+
+    int r_height(node* p) {
+        if (!p) return 0;
+
+        return 1 + std::max(r_height(p->left), r_height(p->right));
+    }
+
+    int height() {
+        if (!root) return 0;
+        return r_height(root); 
     }
 
     ~bst(){
@@ -241,8 +277,15 @@ int main(int argc, char** argv) {
     t1.insertC(60);
     t1.insertC(45);
 
-    t1.levelorderPrint();
-    cout << endl;
+    // t1.levelorderPrint();
+    // cout << endl;
+
+    std::vector<int> widths = t1.getWidths();
+    //
+    for (const auto& item : widths) {
+        cout << item << " " << endl;
+    }
+
 
 
 
