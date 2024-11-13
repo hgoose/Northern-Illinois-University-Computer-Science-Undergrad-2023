@@ -2,6 +2,7 @@
 #include <iostream>
 #include <functional>
 #include <queue>
+#include <limits>
 using std::cout;
 using std::endl;
 using std::function;
@@ -115,7 +116,7 @@ struct bst {
                     p=nullptr;
                     delete tmp;
                 // Case II: Node has one child
-                } else if (!p->left || !p->right) {
+                } else if (!p->left ^ !p->right) {
                     node* tmp = p;
                     p = (p->left ? p->left : p->right);
                     delete tmp;
@@ -146,6 +147,19 @@ struct bst {
             }
         };
         r_remove(root,root);
+    }
+
+    bool r_is_bst(node* p, int min, int max) {
+        if (!p) return true;
+
+        if (p->data < min || p->data > max) return false;
+
+        return r_is_bst(p->left, min, p->data) && r_is_bst(p->right, p->data, max);
+    }
+
+    bool is_bst() {
+        if (!root) return true;
+        return r_is_bst(root, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     }
 
                 

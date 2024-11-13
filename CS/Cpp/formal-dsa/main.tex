@@ -58,9 +58,23 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+    \unsect{Preface}
+    \bigbreak \noindent 
+    \subsection{Universe}
+    \bigbreak \noindent 
+    In the context of data structures and algorithms, the term universe refers to the complete set of all possible elements or values that could be involved in a particular problem or data structure. It defines the range or domain from which data can be selected. We denote the universe with a capital $U$
+
+    \bigbreak \noindent 
+    \subsection{Dynamic and static sets}
+    \bigbreak \noindent 
+    A dynamic set is a data structure that supports not only membership queries but also allows the insertion, deletion, and sometimes modification of elements over time. Unlike static sets, which are fixed once defined, dynamic sets can change as elements are added or removed
+
+
+
+
+    \pagebreak 
     \unsect{Elementary complexity theory}
-       \pagebreak 
-   \subsection{Elementary complexity theory}
+    \bigbreak \noindent 
    \begin{itemize}
        \item \textbf{Idea}: The same problem can frequently be solved with algorithms that differ in efficiency. The differences between the algorithms may be immaterial for processing a small number of data items, but these differences grow with the amount of data. To compare the efficiency of algorithms, a measure of the degree of difficulty of an algorithm called computational complexity was developed by Juris Hartmanis and Richard E. Stearns
            \bigbreak \noindent 
@@ -1931,8 +1945,8 @@ Once we have the successor node, it will either have no children, or exactly one
                     node* tmp = p;
                     p=nullptr;
                     delete tmp;
-                    // Case II: Node has one child
-                } else if (!p->left || !p->right) {
+                    // Case II: Node has one child (note the use of xor)
+                } else if (!p->left ^ !p->right) {
                     node* tmp = p;
                     p = (p->left ? p->left : p->right);
                     delete tmp;
@@ -2066,6 +2080,133 @@ Once we have the successor node, it will either have no children, or exactly one
     \bigbreak \noindent 
     Otherwise, it recursively searches in the left or right subtree, depending on whether $p$'s data is less than or greater than the current node's data, and increments the depth by 1 at each recursive step.
 
+    \pagebreak 
+    \subsubsection{Counting the number of nodes}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename NODE>
+        int count(NODE * root) {
+            if (!root) return 0;
+
+            return 1 + count(root->left) + count(root->right);
+        }
+
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Comparison traversals}
+    \bigbreak \noindent 
+    In this section we show a typical recursive algorithm to compare two binary search trees via an inorder traversal.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // Node compare
+        bool nc(node* p, node* q) {
+            return p->data == q->data;
+        }
+
+        bool r_inorderComp(node* p, node* q) {
+            if (!p && !q) return true;
+            if (!p || !q) return false;
+
+            if (!r_inorderComp(p->left, q->left)) return false;
+            if (!nc(p,q)) return false;
+            if (!r_inorderComp(p->right, q->right)) return false;
+
+            return true;
+
+        }
+
+        bool inorderComp(tree& t1, tree& t2) {
+
+            if (!t1.root && !t2.root) return true;
+            if (!t1.root || !t2.root) return false;
+
+            return r_inorderComp(t1.root, t2.root);
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The core of the comparison is performed by two functions, nc and r\_inorderComp, which are used to check if each corresponding node in the two trees holds the same data value and is structured identically.
+    \bigbreak \noindent 
+    The nc function is a helper that takes two nodes as parameters and simply compares their data values, returning true if the values are equal and false otherwise.
+    \bigbreak \noindent 
+    The function r\_inorderComp performs a recursive, in-order traversal of two nodes, p and q. If both nodes are nullptr, it means that this position in both trees is empty, so they match and the function returns true. If one node is nullptr and the other is not, it indicates a structural mismatch, so the function returns false. The recursion first compares the left child nodes, then the current nodes themselves using nc, and finally the right child nodes. If any comparison fails, the function returns false; otherwise, it completes successfully, confirming that the structures and values match in this part of the trees.
+    \bigbreak \noindent 
+    The inorderComp function is the main entry point for the comparison. It takes two tree objects, t1 and t2, and checks if both trees are empty, returning true if they are. If one tree is empty while the other is not, it returns false due to a structural difference. If both trees have a root node, inorderComp then calls r\_inorderComp on the root nodes of t1 and t2, performing the recursive in-order comparison on the entire structures.
+
+    \pagebreak 
+    \subsubsection{Finding the smallest and largest values}
+    \bigbreak \noindent 
+    By properties of BST's, to find the smallest value in a tree, we start from the root and go as far left as possible. To find the largest, we go as far right as possible
+    \bigbreak \noindent 
+    \begin{cppcode}
+        node* r_min(node* p) {
+            if (!p->left) return p;
+            return r_min(p->left);
+        }
+        node* min() {
+            if (!root) return nullptr;
+            return r_min(root);
+        }
+
+        node* r_max(node* p) {
+            if (!p->right) return p;
+            return r_max(p->right);
+        }
+        node* max() {
+            if (!root) return nullptr;
+            return r_max(root);
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \subsubsection{Getting the widths of a bst}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::vector<int> getWidths() {
+            if (!root) return;
+
+            std::vector<int> w(height());
+            std::queue<node*> q;
+            w[0] =1;
+            q.push(root);
+            q.push(nullptr);
+
+            int level = 1, width=0;
+            while (!q.empty()) {
+                node* curr = q.front();
+                q.pop();
+
+                if (curr == nullptr) {
+                    w[level++] = width;
+                    width = 0;
+                    q.push(nullptr);
+                    continue;
+                }
+                if (level == height()) {
+                    break;
+                }
+
+                if (curr->left) {
+                    q.push(curr->left);
+                    ++width;
+                }
+                if (curr->right) {
+                    q.push(curr->right);
+                    ++width;
+                }
+            }
+            return w;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This C++ code defines a getWidths function that calculates and returns a vector of integers representing the width of each level in a binary tree. The width of a level is defined as the number of nodes at that level.
+    \bigbreak \noindent 
+    The function first creates a vector w with a size equal to the height of the tree (obtained from a hypothetical height() function) and initializes the first element, w[0], to 1, assuming the root level has one node. It also sets up a queue q to facilitate level-order traversal (breadth-first traversal) of the tree, starting by pushing the root node and a nullptr marker, which denotes the end of each level.
+    \bigbreak \noindent 
+    The main loop continues as long as the queue is not empty. It dequeues the front node in each iteration, checking if it’s nullptr. When a nullptr is encountered, it means the current level has ended, so the function records the width for that level in the w vector, resets the width counter, and pushes another nullptr if there are more nodes to process at deeper levels. The loop then proceeds to the next level.
+    \bigbreak \noindent 
+    If the dequeued node is not nullptr, it examines its left and right children. If they exist, they are added to the queue, and the width counter is incremented for each child node. This process continues until all levels are processed or the traversal reaches the specified tree height, returning the vector w with each level’s width at the end.
+
 
     \pagebreak 
     \subsubsection{Degenerate Binary Search trees}
@@ -2073,6 +2214,33 @@ Once we have the successor node, it will either have no children, or exactly one
     A degenerate binary search tree is a tree where each parent node has only one child, causing the tree to resemble a linked list
     \bigbreak \noindent 
     Consider building a binary search tree, taking values from a sorted array from left to right. Since all subsequent entries will be greater than the previous, the insertions will only go in one direction, right. Thus, the final tree will resemble a linked list and thus we will not be able to use the $\text{lg}(n)$ property of binary trees.
+
+    \bigbreak \noindent 
+    \subsubsection{Verifying a binary search tree}
+    \bigbreak \noindent 
+    To verify a binary search tree, we need to check that for a given node, all nodes to the left have values less than the node, and all nodes to the right have values greater than the node. his can be achieved using recursion and passing down minimum and maximum value constraints for each subtree.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool r_is_bst(node* p, int min, int max) {
+            if (!p) return true;
+
+            if (p->data < min || p->data > max) return false;
+
+            return r_is_bst(p->left, min, p->data) && r_is_bst(p->right, p->data, max);
+        }
+
+        bool is_bst() {
+            if (!root) return true;
+            return r_is_bst(root, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item We start with the root node, which has the range of INT\_MIN to INT\_MAX.
+        \item For the left child, we update the maximum allowed value to the parent’s value.
+        \item For the right child, we update the minimum allowed value to the parent’s value.
+    \end{itemize}
+
 
     \pagebreak 
     \subsubsection{Complexities}
@@ -3156,6 +3324,173 @@ To perform the sort "in-place" in bstsort, we can eliminate the extra sorted vec
     \item \textbf{Space Complexity:} $O(n)$, for storing the BST nodes.
 \end{itemize}
 
+\bigbreak \noindent 
+\subsection{Getting characters from a string}
+\bigbreak \noindent 
+We can index strings as if they were arrays
+\bigbreak \noindent 
+\begin{phpcode}
+$s = "this string has alot of characters";
+echo $s[0]; // t
+\end{phpcode}
+\bigbreak \noindent 
+
+\pagebreak 
+\unsect{Multi-way (m-way) search trees}
+\bigbreak \noindent 
+A multiway search tree is a type of search tree where each node can have more than two children, unlike binary search trees, which are limited to two children per node. Multiway search trees generalize binary search trees by allowing nodes to hold multiple keys and have multiple pointers to child nodes, making them well-suited for managing large amounts of data in a balanced structure.
+\bigbreak \noindent 
+An $m$-Way tree of order $m$, each node contains a maximum of $m - 1$ elements and $m$ children.
+\bigbreak \noindent 
+The goal of an $m$-Way search tree of height $h$ is to achieve $O(h)$ accesses for an insert, delete, or retrieval operation. Therefore, it ensures that the height $h$ is close to $\log_m(n + 1)$.
+\bigbreak \noindent 
+Each internal node of a multi-way search tree $T$:
+\begin{enumerate}
+    \item Has at least two children
+    \item stores a collection of items of the form $(k, x)$, where $k$ is a key and $x$ is an element
+    \item contains $d - 1$ items, where $d$ is the number of children
+\end{enumerate}
+\bigbreak \noindent 
+Children of each internal node are "between" items. All keys in the subtree rooted at the child fall between keys of those items
+\bigbreak \noindent 
+\fig{.5}{./figures/6.png}
+\bigbreak \noindent 
+\subsection{Multi-way Searching}
+\bigbreak \noindent 
+Similar to binary searching, where if $s < k_{1}$, search the leftmost child. If $s>k_{d-1}$ , search the rightmost child. But what if $d>2$? Simply Find two keys $k_{i-1}$ and $k_{i}$ between which $s$ falls, and search the child $v_{i}$ .
+
+\pagebreak 
+\subsection{2-4 (2-3-4) Trees}
+\bigbreak \noindent 
+A 2-4 tree, also known as a 2-3-4 tree, is a multi-way search tree the following properties
+\begin{enumerate}
+    \item Nodes may contain 1, 2 or 3 items
+    \item A node with $k$ items has $k + 1$ children, except for leaf nodes. Such a node is called $(k+1)$-node
+    \item All leaves are on the same level
+\end{enumerate}
+\bigbreak \noindent 
+\fig{.5}{./figures/7.png}
+\bigbreak \noindent 
+\subsubsection{Insertion}
+\bigbreak \noindent 
+To insert into a 2-4 tree, first, find the appropriate leaf. If there is room, just add the element to the leaf. If there is no room, move the middle item to parent and split remaining items among two children.
+\bigbreak \noindent 
+\fig{.5}{./figures/8.png}
+\bigbreak \noindent 
+\fig{.5}{./figures/9.png}
+
+\bigbreak \noindent 
+\subsubsection{Removal}
+\bigbreak \noindent 
+First, we find the key with a simple multi-way search. There are two cases
+\begin{enumerate}
+    \item \textbf{Case 1:} It may be on the leave
+    \item \textbf{Case 2:} It may be in internal node
+\end{enumerate}
+\bigbreak \noindent 
+If the item to delete is in internal node, we can reduce to case 1 by first finding its immediate predecessor, swapping them, and then removing the item.
+\bigbreak \noindent 
+\fig{.5}{./figures/10.png}
+\bigbreak \noindent 
+But what if there are not enough items in the node after removal? this is known as an \textit{underflow}. In this case, pull an item from the parent, replace it with an item from a sibling - transfer 
+\bigbreak \noindent 
+\fig{.5}{./figures/11.png}
+\bigbreak \noindent 
+But what happens if the the siblings are 2-nodes (one element), we will not be able to steal from them. In this case, we preform \textit{node merging}.
+\bigbreak \noindent 
+\fig{.5}{./figures/12.png}
+\bigbreak \noindent 
+\fig{.5}{./figures/13.png}
+
+\bigbreak \noindent 
+\subsubsection{Properties}
+\bigbreak \noindent 
+\begin{itemize}
+    \item 2-4 trees are easy to maintain
+    \item Insertion and deletion take O(log n)
+    \item Balanced trees
+\end{itemize}
+
+\pagebreak 
+\subsection{B-trees}
+\bigbreak \noindent 
+Up to now, all data that has been stored in the tree has been in memory. If data gets too big for main memory, what do we do? If we keep a pointer to the tree in main memory, we could bring in just the nodes that we need.
+\bigbreak \noindent 
+For instance, to do an insert with a BST, if we need the left child, we do a disk access and retrieve the left child. If the left child is NIL, then we can do the insert, and store the child node on the disk
+\bigbreak \noindent 
+But storing the data requires disk accesses, which is expensive, compared to execution of machine instructions. If we can reduce the number of disk accesses, then the procedures run faster
+\bigbreak \noindent 
+The only way to reduce the number of disk accesses is to increase the number of keys in a node, wee see the problem in using this technique with binary search trees... The BST allows only one key per leaf/node.
+\bigbreak \noindent 
+If we increase the number of keys in the nodes, how will we do any tree operations effectively?
+\bigbreak \noindent 
+A B-tree is a self-balancing search tree data structure that maintains sorted data and allows searches, insertions, deletions, and sequential access in logarithmic time. B-trees are especially useful for managing large blocks of data in systems like databases and file systems, where data is stored on disk or other slow-access storage and needs to be accessed efficiently.
+\bigbreak \noindent 
+Unlike binary trees, where each node has at most two children, B-trees are multi-way trees where each node can have multiple children. The number of children a node can have is determined by the order of the tree.
+\bigbreak \noindent 
+ B-trees maintain balance by ensuring that every path from the root to a leaf node has the same length, which guarantees logarithmic height and thus efficient operations.
+ \bigbreak \noindent 
+ Each node can contain a range of keys (from a minimum to a maximum number). This enables efficient storage and retrieval by storing more keys in fewer nodes, which minimizes the number of disk reads needed to access data.
+ \bigbreak \noindent 
+ The order $m$ of a B-tree defines the maximum number of children each node can have. An order-$m$ B-tree node can have up to $m-1$ keys and $m$ children.
+ \bigbreak \noindent 
+ The minimum degree $t$ (often used instead of order) specifies the minimum number of children a non-root node must have, which is $t$ or more.
+ \begin{itemize}
+     \item \textbf{Insertion:} When adding a key, nodes split if they reach their maximum capacity, ensuring the B-tree remains balanced.
+     \item \textbf{Deletion:} When deleting a key, nodes may need to merge with their siblings if they go below their minimum capacity.
+ \end{itemize}
+ \bigbreak \noindent 
+  Because each node contains multiple keys, B-trees have a low height relative to the number of keys they store. This makes B-trees very efficient for disk-based storage, as it minimizes the number of disk accesses needed.
+  \bigbreak \noindent 
+  B-trees are widely used in database indexing, file systems, and other applications that involve managing large volumes of data that cannot fit into main memory.
+
+  \pagebreak 
+  \unsect{Hashing (hash tables)}
+  \bigbreak \noindent 
+  Many applications require a dynamic set that supports only the dictionary operations INSERT, SEARCH, and DELETE. For example, a compiler that translates a
+programming language maintains a symbol table, in which the keys of elements
+are arbitrary character strings corresponding to identifers in the language. A hash
+table is an effective data structure for implementing dictionaries. Although searching for an element in a hash table can take as long as searching for an element in a
+linked list - $\Theta(n)$ time in the worst case. In practice, hashing performs extremely
+well. Under reasonable assumptions, the average time to search for an element in
+a hash table is $O(1)$
+\bigbreak \noindent 
+A hash table generalizes the simpler notion of an ordinary array. Directly addressing into an ordinary array takes advantage of the $O(1)$ access time for any array element.
+\bigbreak \noindent 
+To use direct addressing, you must be able to allocate an array that contains a position for every possible key
+\bigbreak \noindent 
+When the number of keys actually stored is small relative to the total number of possible keys, hash tables become an effective alternative to directly addressing an array, since a hash table typically uses an array of size proportional to the number of keys actually stored. Instead of using the key as an array index directly, we compute the array index from the key.
+
+\bigbreak \noindent 
+\subsection{Direct-address table}
+\bigbreak \noindent 
+Direct addressing is a simple technique that works well when the universe U of
+keys is reasonably small. Suppose that an application needs a dynamic set in which
+each element has a distinct key drawn from the universe $U = \{0,1,..,m-1\} $, where $m$ is not too large.
+\bigbreak \noindent 
+To represent the dynamic set, you can use an array, or \textit{direct-address table}, denoted by \( T[0 : m - 1] \), in which each position, or \textit{slot}, corresponds to a key in the universe \( U \). Figure 11.1 illustrates this approach. Slot \( k \) points to an element in the set with key \( k \). If the set contains no element with key \( k \), then \( T[k] = \text{NIL} \).
+\bigbreak \noindent 
+The dictionary operations \textsc{Direct-Address-Search}, \textsc{Direct-Address-Insert}, and \textsc{Direct-Address-Delete} on the following page are trivial to implement. Each takes only \( O(1) \) time.
+\bigbreak \noindent 
+The dictionary operations DIRECT-ADDRESS-SEARCH, DIRECT-ADDRESS INSERT, and DIRECT-ADDRESS-DELETE on the following page are trivial to implement. Each takes only $O(1)$ time
+\bigbreak \noindent 
+For some applications, the direct-address table itself can hold the elements in the dynamic set. That is, rather than storing an element’s key and satellite data in an object external to the direct-address table, with a pointer from a slot in the table to the object, save space by storing the object directly in the slot. To indicate an empty slot, use a special key. Then again, why store the key of the object at all? The index of the object is its key! Of course, then you’d need some way to tell whether slots are empty
+\bigbreak \noindent 
+\fig{.5}{./figures/14.png}
+\bigbreak \noindent 
+\begin{cppcode}
+direct-address-search(T,k) 
+    return T[k]
+direct-address-insert(T,x)
+    T[x.key] = x
+direct-address-delete(T,x)
+    T[x.key] = nil
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Hash tables}
+\bigbreak \noindent 
+
 
 
 
@@ -3178,7 +3513,7 @@ To perform the sort "in-place" in bstsort, we can eliminate the extra sorted vec
 \bigbreak \noindent 
 The GCD of two integers $a$ and $b$ (with $a \leq b$) is the largest integer that divides both $a$ and $b$. The Euclidean algorithm is based on the principle that
 \begin{align*}
-    \text{gcd}(a,b) = \text{gcd}(b, a \text{mod } b)
+    \text{gcd}(a,b) = \text{gcd}(b, a\ \text{mod } b)
 .\end{align*}
 \bigbreak \noindent 
 This means that the GCD of two numbers doesn't change if the larger number is replaced by its remainder when divided by the smaller number. You keep repeating this until the remainder is 0, and the GCD will be the last non-zero remainder
