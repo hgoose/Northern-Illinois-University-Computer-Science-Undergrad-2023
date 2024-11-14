@@ -1,5 +1,4 @@
-<!-- https://students.cs.niu.edu/~z2004109/assign8.php -->
-<!-- Created by Nate Warner z2004109 -->
+<!-- https://students.cs.niu.edu/~z2004109/ -->
 
 <?php 
     // Error messages
@@ -102,6 +101,13 @@
         }
         return false;
     }
+    function validateCount($str) {
+        if (preg_match("/^\s*((\d+),?(\d+))+\s*$/", $str)) {
+          return true;
+        }
+        return false;
+    }
+
 ?>
 
 <?php
@@ -128,7 +134,7 @@
             } 
 
             // Check if the count is valid
-            if ($_POST["count"] < 0 ) {
+            if (!validateCount($_POST["count"])) {
                 echo "Invalid count";
                 return;
             }
@@ -150,10 +156,7 @@
             }
 
             // Check if items are missing
-            if (!array_key_exists("startnumber", $_POST) || 
-                !array_key_exists("numbersteps", $_POST) || 
-                !array_key_exists("numnumbers", $_POST)) {
-
+            if ($_POST["startnumber"] == 0 || $_POST["numbersteps"] == 0 || $_POST["numnumbers"] == 0) {
                 _DE_MNNR(); // Display error
                 return;
             // Generate table
@@ -161,18 +164,19 @@
                 echo "<table>";
                 echo "<tr>";
                 // Column headings
-                for ($k=$_POST["startnumber"]; $k<=$_POST["numnumbers"]; $k+=$_POST["numbersteps"]) {
+                echo "<th></th>";
+                for ($k=$_POST["startnumber"]; $k<=$_POST["startnumber"] * $_POST["numnumbers"]; $k+=$_POST["numbersteps"]) {
                     echo "<th>" . $k . "</th>";
                 }
                 echo "</tr>";
 
                 // Table data
-                for ($i=$_POST["startnumber"]; $i<=$_POST["numnumbers"]; $i+=$_POST["numbersteps"]) {
+                for ($i=$_POST["startnumber"]; $i<=$_POST["startnumber"] * $_POST["numnumbers"]; $i+=$_POST["numbersteps"]) {
                     echo "<tr>";
                     // Row heading
-                    echo "<td><b>" . $i . "</td></b>";
+                    echo "<th><b>" . $i . "</th></b>";
                     // Data
-                    for ($j=$_POST["startnumber"]+$_POST["numbersteps"]; $j<=$_POST["numnumbers"]; $j+=$_POST["numbersteps"]) {
+                    for ($j=$_POST["startnumber"]; $j<=$_POST["startnumber"] * $_POST["numnumbers"]; $j+=$_POST["numbersteps"]) {
                         echo "<td>" . $i * $j . "</td>";
                     }
                     echo "</tr>";
