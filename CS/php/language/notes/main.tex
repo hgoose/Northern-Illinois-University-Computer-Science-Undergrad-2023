@@ -291,6 +291,72 @@
     \end{itemize}
 
     \pagebreak 
+    \unsect{Setting up mariadb on arch linux}
+    \bigbreak \noindent 
+    First, update your package database and install MariaDB:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo pacman -Syu
+        sudo pacman -S mariadb
+    \end{bashcode}
+    \bigbreak \noindent 
+    Before starting MariaDB, initialize the database. This will set up the system databases and files.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    \end{bashcode}
+    \bigbreak \noindent 
+    Once initialized, start the MariaDB service and enable it to start on boot:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo systemctl start mariadb
+        sudo systemctl enable mariadb
+    \end{bashcode}
+    \bigbreak \noindent 
+    Run the secure installation script to set up security options, such as the root password and disabling remote root login:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo mysql_secure_installation
+    \end{bashcode}
+    \bigbreak \noindent 
+    To verify that the setup works, you can log into MariaDB as the root user:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo mysql -u root -p
+    \end{bashcode}
+    \bigbreak \noindent 
+    Configuration files for MariaDB are in /etc/my.cnf.d/ and /etc/mysql/my.cnf. You can adjust settings here based on your requirements.
+    \bigbreak \noindent 
+    To confirm that MariaDB is running correctly, use:
+    \begin{bashcode}
+        systemctl status mariadb
+    \end{bashcode}
+    \bigbreak \noindent 
+    In the MariaDB prompt, create a new user with the following syntax:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';
+    \end{bashcode}
+    \bigbreak \noindent 
+    You can assign specific privileges to the new user. For example, to give full access to a particular database, use:
+    \begin{bashcode}
+    GRANT ALL PRIVILEGES ON database_name.* TO 'username'@'localhost';
+
+    FLUSH PRIVILEGES;
+    \end{bashcode}
+    \bigbreak \noindent 
+    Then that user can login with
+    \bigbreak \noindent 
+    \begin{bashcode}
+    mysql -u username -p
+    \end{bashcode}
+
+
+
+
+
+
+    \pagebreak 
     \unsect{php.ini}
     \bigbreak \noindent 
     php.ini is the main configuration file for PHP. It controls PHP's behavior, settings, and options on the server where PHP is installed. The file allows you to customize PHP's performance, security, error handling, file handling, and much more, making it essential for PHP's runtime environment.
@@ -308,6 +374,7 @@
     \begin{phpcode}
         error_reporting = E_ALL
         display_errors = On
+        display_startup_errors = On;
         log_errors = On
         error_log = "/path/to/php-error.log"
     \end{phpcode}
@@ -364,6 +431,18 @@
     \begin{phpcode}
     date.timezone = "America/New_York"
     \end{phpcode}
+
+    \pagebreak 
+    \unsect{Showing errors}
+    \bigbreak \noindent 
+    If you don't want to enable errors in php.ini, you can set them for a specific php file. Simply add the following at the very top of a php file
+    \bigbreak \noindent 
+    \begin{phpcode}
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+    \end{phpcode}
+
 
 
 
@@ -3877,6 +3956,435 @@ You can also use other characters like \#, $\sim$, or \% as delimiters. This is 
      preg_match($pattern, $string, $matches);
      print_r($matches);
  \end{phpcode}
+
+ \pagebreak 
+ \unsect{PDO: Working with sql databases}
+ \bigbreak \noindent 
+     \begin{itemize}
+        \item \textbf{Why SQL via PHP?}: Can provide an interface for the user that does not require them to worry about database design specifics.
+            \bigbreak \noindent 
+            Although there are other ways to provide this interface, the web-based interface is very common, and PHP is a common and relatively easy way of making it work.
+        \item \textbf{Application Programming Interface (API)}: In order for our PHP application to interface with our DBMS, we will need to use an appropriate API (Application Programming Interface) An API is the set of function calls and other resources that are provided to allow you to interface with a given application via your program code.
+        \item \textbf{Which API?}: Even for a given DBMS, there can be many API’s present. PHP has been around for a while, so many things have evolved and died out. Many of the API’s still work. Some work but are considered deprecated, and others are no longer supported at all. In this class, we will be working with the PDO library.
+        \item \textbf{PDO Library}: The PHP Data Objects (PDO) library is an object oriented API to connect PHP to SQL servers. It allows you to use a common interface to interact with many different DBMS programs.
+            \bigbreak \noindent 
+            It supports most of the popular relational DBMSes, including MySQL, Postgresql, and SQLite, in a fairly transparent way, so it is more portable than using the other, DBMS specific API’s.
+            \textbf{Note:} Because PDO is object oriented, it requires at least version 5 of PHP. If you need to use a lower version, you’ll need to look into the other API’s available.
+        \item \textbf{PHP Data Objects}: The PDO library is object oriented. That means that our interactions with the database will be done using objects and their members. There are three basic objects that we will be concerned with:
+            \begin{itemize}
+                \item \textbf{PDO}: this object handles the connection to the database
+                \item \textbf{PDOStatement}: this object handles prepared statements, and is used to work with result sets
+                \item \textbf{PDOException}: this object is used to store information on errors that have occurred
+            \end{itemize}
+        \item \textbf{Specifying a Database with a DSN}:  Although, once properly initialized, PDO should function the same for any DBMS, you need to properly initialize it by telling it which type of server you are connecting to. To do this, you need to make a DSN string.
+            \begin{center}
+                \begin{tabular}{c|c}
+                    DBMS &DSN Format \\
+                    \hline
+                    MySQL& mysql:host=HOSTNAME;dbname=DBNAME \\
+                    Postgresql &pgsql:host=HOSTNAME;dbname=DBNAME \\
+                    SQLite 3 &sqlite:PATHTODB \\
+                    SQLite 2 &sqlite2:PATHTODB
+                \end{tabular}
+            \end{center}
+            \bigbreak \noindent 
+            MariaDB will use the MySQL interface.
+        \item \textbf{Initializing PDO}: Once you’ve chosen the DBMS you’ll be using and you’ve chosen an appropriate DSN string, you can use that DSN to construct an instance of the PDO class. This object represents a connection to the database specified by the DSN
+            \bigbreak \noindent 
+            \begin{bashcode}
+                try { // if something goes wrong, an exception is thrown
+                    $dsn = "mysql:host=courses;dbname=z123456";
+                    $pdo = new PDO($dsn, $username, $password);
+                }
+                catch(PDOexception $e) { // handle that exception
+                    echo "Connection to database failed: " . $e->getMessage();
+                }
+            \end{bashcode}
+        \item \textbf{Using PDO to Talk to DBMS}: The PDO library provides three basic ways of running queries for a database, once connected:
+            \begin{itemize}
+                \item the PDO::exec() function is used to execute an SQL query that does not return a result (INSERT, UPDATE, etc.)
+                \item the PDO::query() function is used to execute an SQL query that will return a result (SELECT)
+                \item the PDO::prepare() function should be used when constructing a query from user input.
+            \end{itemize}
+        \item \textbf{Using PDO::exec()}: PDO::exec() is used to run a query that does not return any results. Instead of returning a result set, it will tell you how many rows were affected by your query.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                // Three examples follow.
+                $n = $pdo->exec("INSERT INTO Students (FName) VALUES ('Victor');");
+                $n = $pdo->exec("UPDATE Students SET LName='Husky' WHERE FName='Victor';");
+                $n = $pdo->exec("DELETE FROM OldJunk;");
+            \end{bashcode}
+        \item \textbf{Using PDO::query()}: PDO::query() is used to run a query that does return a result. The result set is returned as a PDOStatement object.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                # Defining $sql as the query you'd like to run; here's one from classicmodels
+                $sql = "SELECT phone FROM Customer;";
+
+                # Run the query - the results are stored into the $result object on success
+                $result = $pdo->query($sql);
+            \end{bashcode}
+        \item \textbf{Using PDO::prepare()}: The third option is to use the PDO::prepare() command. This is useful for situations where the same query is run multiple times in the same script, and can also help you to avoid some SQL Injection issues. Once prepare() succeeds, you run the query with the execute() method of the PDOStatement returned by prepare()
+            \bigbreak \noindent 
+            You can use a colon before a value name in your query to denote where the execute statement will insert the value of the given name:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                <?php
+                    # Notice that we use :color below in our SQL template
+                    $sql = 'SELECT name, color, calories
+                    FROM fruit
+                    WHERE calories < :calories AND color = :color';
+
+                    $prepared = $pdo->prepare($sql, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                    # The value associated with the :color key will be used when executing
+
+                    $success = $prepared->execute(array(':calories' => 150, ':color' => 'red'));
+                    # if($success==true) then $prepared will be ready to be used as a result set
+                    # with fetch() or fetchAll() -- just like the object returned by query()
+                ?>
+            \end{bashcode}
+            \bigbreak \noindent 
+            It is also possible to use a ? in your query as a positional parameter.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                <?php
+                    # Execute a prepared statement by passing an array of values
+                    $prepared = $pdo->prepare('SELECT name, color, calories
+                                            FROM fruit
+                                            WHERE calories < ? AND color = ?');
+
+                    # Here we execute the query twice with different parameters.
+                    # The ?'s will be replaced with the values in the array specified,
+                    # in the order they are specified.
+                    $prepared->execute(array(150, 'red'));
+                    $red = $prepared->fetchAll();
+                    $prepared->execute(array(175, 'yellow'));
+                    $yellow = $prepared->fetchAll();
+                ?>
+            \end{bashcode}
+        \item \textbf{Named placeholders}: In PDO (PHP Data Objects), named placeholders are a way to represent dynamic values in SQL statements using identifiable names instead of anonymous ? placeholders. Named placeholders make SQL statements easier to read and maintain, especially when there are multiple variables or parameters.
+            \bigbreak \noindent 
+            A named placeholder is written as :name in an SQL query, where name is an identifier you choose. When you prepare the SQL statement, you can bind actual values to these placeholders by their names, allowing you to execute the query with specific data values.
+        \item \textbf{anonymous placeholders}: In PDO (PHP Data Objects), anonymous placeholders (also called positional or unnamed placeholders) are represented by question marks ? in SQL statements. These placeholders are used to represent values that will be dynamically bound to the SQL query at execution time.
+            \bigbreak \noindent 
+            When using anonymous placeholders, each placeholder corresponds to a specific value based on its position in the SQL query. When you prepare and execute the query, you provide an array of values that will replace each ? in the order they appear.
+        \item \textbf{Execute}: In PHP's PDO (PHP Data Objects) extension, the execute() method is used to run a prepared SQL statement with specific values for placeholders. It’s part of the PDOStatement class and is essential for safely executing queries that include dynamic data, protecting against SQL injection attacks.
+            \bigbreak \noindent 
+            After preparing a statement with PDO::prepare(), you call execute() to supply any values for placeholders (either named or anonymous) and run the query.
+        \item \textbf{Dealing with result sets}: Once you have a result set (stored in a PDOStatement from query() you can use its PDOStatement::fetch() or PDOStatement::fetchAll() methods to get the data returned.
+            \bigbreak \noindent 
+            If you would like to work on one row at a time, as if using the mysql\_fetch\_array() function from the original MySQL API, use fetch().
+            \bigbreak \noindent 
+            To grab all of the rows at the same time, use fetchAll().
+            \bigbreak \noindent 
+            \begin{bashcode}
+                <?php
+                    # FETCH_BOTH means that you will get both position indices and the column names
+                    # as keys in the array returned
+                    $row = $result->fetch(PDO::FETCH_BOTH);
+
+                    # this returns all of the rows at once in a two-dimensional array
+                    $allrows = $result->fetchAll();
+                ?>
+            \end{bashcode}
+        \item \textbf{Handling Errors}: As of the time of this writing, there are three modes PDO can use to handle errors.
+            \begin{itemize}
+                \item \textbf{PDO::ERRMODE\_SILENT}: the default mode. PDO will set the error code for you to inspect using the errorCode and errorInfo methods on your PDO and PDOStatement objects
+                \item \textbf{PDO::ERRMODE\_WARNING}: in addition to setting the error code, emits a traditional E\_WARNING message. Use for debugging/testing when you just want to see what problems occurred without interrupting the flow of the application.
+                \item \textbf{PDO::ERRMODE\_EXCEPTION}: in addition to setting the error code, also throw PDOException when an error occurs.
+            \end{itemize}
+            \bigbreak \noindent 
+            You can set which one you’d like PDO to use with the setAttribute method of the PDO object you’re using, as below:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            \end{bashcode}
+        \item \textbf{Members of the PDO object}
+            \bigbreak \noindent 
+            \begin{phpcode}
+                PDO {
+                    // constructor has a bunch of optional parameters, check reference if needed
+                    public __construct ( string $dsn [, string $username [, string $password [,
+                    array $options ]]] )
+                    public bool beginTransaction ( void )
+                    public bool commit ( void )
+                    public mixed errorCode ( void )
+                    public array errorInfo ( void )
+                    public int exec ( string $statement )
+                    public mixed getAttribute ( int $attribute )
+                    public static array getAvailableDrivers ( void )
+                    public bool inTransaction ( void )
+                    public string lastInsertId ([ string $name = NULL ] )
+                    public PDOStatement prepare ( string $statement [, array $driver_options ] )
+                    public PDOStatement query ( string $statement )
+                    public string quote ( string $string [, int $parameter_type = PDO::PARAM_STR ] )
+                    public bool rollBack ( void )
+                    public bool setAttribute ( int $attribute , mixed $value )
+                }
+            \end{phpcode}
+        \item \textbf{Members of the PDOStatement object}: 
+            \bigbreak \noindent 
+            \begin{phpcode}
+            PDOStatement implements Traversable {
+                /* Properties */
+                readonly string $queryString;
+                /* Methods */
+                public bool bindColumn ( mixed $column , mixed &$param [, int $type [, int $maxlen [, mixed $driverdata ]]] )
+                public bool bindParam ( mixed $parameter , mixed &$variable [,
+                int $data_type = PDO::PARAM_STR [, int $length [, mixed $driver_options ]]] )
+                public bool bindValue ( mixed $parameter , mixed $value [, int $data_type = PDO::PARAM_STR ] )
+                public bool closeCursor ( void )
+                public int columnCount ( void )
+                public void debugDumpParams ( void )
+                public string errorCode ( void )
+                public array errorInfo ( void )
+                public bool execute ([ array $input_parameters ] )
+                public mixed fetch ([ int $fetch_style [, int $cursor_orientation = PDO::FETCH_ORI_NEXT [,
+                int $cursor_offset = 0 ]]] )
+                public array fetchAll ([ int $fetch_style [, mixed $fetch_argument [, array $ctor_args = array() ]]] )
+                public mixed fetchColumn ([ int $column_number = 0 ] )
+                public mixed fetchObject ([ string $class_name = "stdClass" [, array $ctor_args ]] )
+                public mixed getAttribute ( int $attribute )
+                public array getColumnMeta ( int $column )
+                public bool nextRowset ( void )
+                public int rowCount ( void )
+                public bool setAttribute ( int $attribute , mixed $value )
+                public bool setFetchMode ( int $mode )
+            }
+            \end{phpcode}
+        \item \textbf{Members of the PDOException object}
+            \bigbreak \noindent 
+            \begin{phpcode}
+                PDOException extends RuntimeException {
+                    /* Properties */
+                    public array $errorInfo ;
+                    protected string $code ;
+                    /* Inherited properties */
+                    protected string $message ;
+                    protected int $code ;
+                    protected string $file ;
+                    protected int $line ;
+                    /* Inherited methods */
+                    final public string Exception::getMessage ( void )
+                    final public Throwable Exception::getPrevious ( void )
+                    final public mixed Exception::getCode ( void )
+                    final public string Exception::getFile ( void )
+                    final public int Exception::getLine ( void )
+                    final public array Exception::getTrace ( void )
+                    final public string Exception::getTraceAsString ( void )
+                    public string Exception::__toString ( void )
+                    final private void Exception::__clone ( void )
+                }
+            \end{phpcode}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{PDO: Could not find driver}
+    \bigbreak \noindent 
+    The "could not find driver" error indicates that the MySQL PDO driver is missing on your system. Here’s how to resolve it on Arch Linux:
+    \bigbreak \noindent 
+    On Arch Linux, enabling PDO MySQL support requires modifying the PHP configuration file:
+    \bigbreak \noindent 
+    Open the PHP INI file for editing:
+    \bigbreak \noindent 
+    \begin{bashcode}
+        sudo nano /etc/php/php.ini
+    \end{bashcode}
+    \bigbreak \noindent 
+    Uncomment the pdo\_mysql Extension:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    ;extension=pdo_mysql
+    \end{bashcode}
+    \bigbreak \noindent 
+    Remove the ; at the beginning to uncomment it, so it looks like this:
+
+
+
+    If you’re using Apache, restart it to apply the changes:
+    \bigbreak \noindent 
+    \begin{bashcode}
+    sudo systemctl restart httpd
+    \end{bashcode}
+
+
+
+    \pagebreak 
+    \subsection{Example}
+    \bigbreak \noindent 
+    Consider the following mariadb relation under the database \textit{test}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        USE test;
+
+        CREATE TABLE users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(50) NOT NULL,
+            email VARCHAR(100) NOT NULL UNIQUE
+        );
+
+        INSERT INTO users (name, email) VALUES
+        ('Alice', 'alice@example.com'),
+        ('Bob', 'bob@example.com'),
+        ('Charlie', 'charlie@example.com');
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    Then with php, we can connect to the database
+    \bigbreak \noindent 
+    \begin{phpcode}
+        try {
+            $host = "localhost";
+            $db = "test";
+            $dsn = "mysql:host=$host;dbname=$db";
+            $pdo = new PDO($dsn, $username, $password);
+        } catch (PDOException $e) {
+            echo "Connection failed";
+            echo $e->getMessage();
+        }
+    \end{phpcode}
+    \bigbreak \noindent 
+    \subsubsection{pdo->exec()}
+    \bigbreak \noindent 
+    We can use exec() to interact with the DDL, for operations on the database that dont return rows. For example, suppose we wanted to add a new column \textit{lastname}
+    \bigbreak \noindent 
+    \begin{phpcode}
+        try {
+            $affectedRows = $pdo->exec("ALTER TABLE users ADD lastname VARCHAR(50);");
+        } catch (PDOException $e) {
+            echo $e->getMessage() . "<br/>";
+        }
+    \end{phpcode}
+    \bigbreak \noindent 
+    If this column were to already exist in the relation, exec would throw an error, so we catch it.
+
+
+    \bigbreak \noindent 
+    \subsubsection{pdo->query()}
+    \bigbreak \noindent 
+    We can start by selecting all columns from the users relation
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $s1 = "SELECT * from users";
+        $result = $pdo->query($s1);
+
+        foreach ($result as $item) {
+            echo $item["id"] . "\t" . $item["name"] . "\t" . $item["email"] . "<br/>";
+        }
+    \end{phpcode}
+    \bigbreak \noindent 
+    The result of the query is stored in the multidimensional array \$result. Then, we can loop over the arrays in \$result, where each array is a tuple from the returned query. The keys in the tuple array are the names of the columns.
+
+    \bigbreak \noindent 
+    \subsubsection{pdo->prepare() with execute and fetch}
+    \bigbreak \noindent 
+    Instead, we can use prepare
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $s1 = "SELECT * from users";
+        // Builds prepared object
+        $prepared = $pdo->prepare($s1);
+        // Executes query, storing in prepared
+        $success = $prepared->execute();
+        if ($success) {
+            $result = $prepared->fetchAll();
+        }
+
+        foreach ($result as $item) {
+            echo $item["id"] . "\t" . $item["name"] . "\t" . $item["email"] . "<br/>";
+        }
+    \end{phpcode}
+    \bigbreak \noindent 
+    Calling fetchAll() on the prepared object after execute gives us the same multidimensional arary that query() did.
+    \bigbreak \noindent 
+    Instead, we could use fetch() to grab single rows
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $s1 = "SELECT * from users";
+        // Builds prepared object
+        $prepared = $pdo->prepare($s1);
+        // Executes query, storing in prepared
+        $success = $prepared->execute();
+
+        // Get the first and second tuple with fetch()
+        $row1 = $prepared->fetch();
+        $row2 = $prepared->fetch();
+    \end{phpcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Arguments to fetch and fetchAll}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{PDO:}:FETCH\_COLUMN: Fetches only a single column from the next row in the result set. This is useful if you’re interested in just one column.
+        \item \textbf{PDO:}:FETCH\_KEY\_PAIR: Fetches the result set as an associative array where the first column is the key and the second column is the value. This is useful for creating key-value pairs from the result set.
+        \item \textbf{PDO:}:FETCH\_UNIQUE: Fetches the result set as an associative array where the first column is a unique key. Each row's other columns form an associative array.
+        \item \textbf{PDO:}:FETCH\_GROUP: Fetches the result set as a multidimensional array grouped by the values of the first column.
+        \item \textbf{PDO:}:FETCH\_CLASS: Maps each row to an instance of a specified class. The class properties are populated by column names.
+        \item \textbf{PDO:}:FETCH\_INTO: Fetches data into an existing object, rather than creating a new instance each time.
+        \item \textbf{PDO:}:FETCH\_FUNC: Calls a specified function for each row of data fetched, passing the column values as arguments.
+    \end{itemize}
+
+
+
+    \pagebreak 
+    \subsubsection{Placeholders with prepare}
+    \bigbreak \noindent 
+    Using placeholders with prepare in PHP’s PDO (PHP Data Objects) helps prevent SQL injection and makes your queries cleaner and easier to read. Here’s how to use placeholders with prepare
+    \begin{itemize}
+        \item Positional Placeholders (?)
+        \item Named Placeholders (:name)
+    \end{itemize}
+    \bigbreak \noindent 
+    Using positional placeholders is straightforward when you don’t need to name each placeholder individually.
+    \bigbreak \noindent 
+    Placeholders in prepared statements cannot be used for identifiers like column names, table names, or other SQL syntax elements. Placeholders can only be used for values (e.g., in WHERE clauses or INSERT values).
+    \bigbreak \noindent 
+    Placeholders cannot be used with exec, we must use prepare with execute
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $statement = "UPDATE users SET lastname=? WHERE id=?";
+        try {
+            $p = $pdo->prepare($statement);
+            $s = $p->execute(array("l3", 3));
+        } catch (PDOException $e) { echo "noop"; }
+    \end{phpcode}
+
+    \bigbreak \noindent 
+    Named placeholders are useful for readability and when there are many parameters.
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $statement = "UPDATE users SET lastname=:name WHERE id=:id";
+        try {
+            $p = $pdo->prepare($statement);
+            $s = $p->execute(array(":name" => "Smith", ":id" => 1));
+        } catch (PDOException $e) { echo "noop"; }
+    \end{phpcode}
+    \bigbreak \noindent 
+    The same rules that we discussed for positional placeholders apply for named placeholder
+    \bigbreak \noindent 
+    Alternately, we can use bindParam() and bindValue()
+    \begin{itemize}
+        \item \textbf{bindParam():} Binds a variable by reference, which means it allows the variable’s value to change before execute() is called.
+        \item \textbf{bindValue():} Binds a specific value directly to the placeholder.
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $statement = "UPDATE users SET lastname=:name WHERE id=:id";
+        try {
+            $p = $pdo->prepare($statement);
+
+            $p->bindValue(':name', "Appleseed");
+            $p->bindValue(':id', "2");
+
+            $s = $p->execute();
+        } catch (PDOException $e) { echo "noop"; }
+    \end{phpcode}
+
+
+
+
+
 
 
 

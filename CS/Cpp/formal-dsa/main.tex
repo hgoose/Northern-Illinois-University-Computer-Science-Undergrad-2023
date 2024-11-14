@@ -3490,6 +3490,84 @@ direct-address-delete(T,x)
 \bigbreak \noindent 
 \subsection{Hash tables}
 \bigbreak \noindent 
+The downside of direct addressing is apparent: if the universe \( U \) is large or infinite, storing a table \( T \) of size \( |U| \) may be impractical, or even impossible, given the memory available on a typical computer. Furthermore, the set \( K \) of keys actually stored may be so small relative to \( U \) that most of the space allocated for \( T \) would be wasted.
+\bigbreak \noindent 
+When the set \( K \) of keys stored in a dictionary is much smaller than the universe \( U \) of all possible keys, a hash table requires much less storage than a direct-address table. Specifically, the storage requirement reduces to \( \Theta(|K|) \) while maintaining the benefit that searching for an element in the hash table still requires only \( O(1) \) time. The catch is that this bound is for the \textit{average-case time}\(^1\), whereas for direct addressing it holds for the \textit{worst-case time}.
+\bigbreak \noindent 
+With direct addressing, an element with key \( k \) is stored in slot \( k \), but with hashing, we use a \textit{hash function} \( h \) to compute the slot number from the key \( k \), so that the element goes into slot \( h(k) \). The hash function \( h \) maps the universe \( U \) of keys into the slots of a \textit{hash table} \( T[0 : m - 1] \):
+\bigbreak \noindent 
+\begin{align*}
+    h : U \rightarrow \{0, 1, \dots, m - 1\}
+.\end{align*}
+\bigbreak \noindent 
+where the size \( m \) of the hash table is typically much less than \( |U| \). We say that an element with key \( k \) \textit{hashes to} slot \( h(k) \), and we also say that \( h(k) \) is the \textit{hash value} of key \( k \). The hash function reduces the range of array indices and hence the size of the array. Instead of a size of $\abs{U}$, the array can have size $m$
+\bigbreak \noindent 
+An example of a simple, but not particularly good, hash function is $h(k) = k\ \text{mod} \ m $
+\bigbreak \noindent 
+There is one hitch, namely that two keys may hash to the same slot. We call this situation a collision. Fortunately, there are effective techniques for resolving the conflict created by collisions.
+\bigbreak \noindent 
+Of course, the ideal solution is to avoid collisions altogether. We might try to
+achieve this goal by choosing a suitable hash function h. One idea is to make h appear to be <random,= thus avoiding collisions or at least minimizing their number.
+
+\bigbreak \noindent 
+\fig{.5}{./figures/15.png}
+\bigbreak \noindent 
+although a well-designed, random looking hash function can reduce the number of collisions, we still need a method for resolving the collisions that do occur
+\bigbreak \noindent 
+\subsection{Independent uniform hashing}
+\bigbreak \noindent 
+An "ideal" hashing function \( h \) would have, for each possible input \( k \) in the domain \( U \), an output \( h(k) \) that is an element randomly and independently chosen uniformly from the range \( \{0, 1, \dots, m - 1\} \). Once a value \( h(k) \) is randomly chosen, each subsequent call to \( h \) with the same input \( k \) yields the same output \( h(k) \).
+\bigbreak \noindent 
+We call such an ideal hash function an independent uniform hash function. Such a function is also often called a random oracle
+\bigbreak \noindent 
+When hash tables are implemented with an independent uniform hash function, we say we are using independent uniform hashing
+\bigbreak \noindent 
+Independent uniform hashing is an ideal theoretical abstraction, but it is not something that can reasonably be implemented in practice.
+\bigbreak \noindent 
+\subsection{Collision resolution by chaining}
+\bigbreak \noindent 
+At a high level, you can think of hashing with chaining as a nonrecursive form
+of divide-and-conquer: the input set of $n$ elements is divided randomly into $m$
+subsets, each of approximate size $\frac{n}{m}$. A hash function determines which subset
+an element belongs to. Each subset is managed independently as a list.
+\bigbreak \noindent 
+each nonempty slot points to a linked list, and all the elements that hash to the same slot go into that slot’s linked list. Slot $j$ contains a pointer to the head of the list of all stored elements with hash value $j$.
+If there are no such elements, then slot $j$ contains NIL
+\bigbreak \noindent 
+The worst-case running time for insertion is $O(1)$ 
+The insertion procedure is fast in part because it assumes that the element $x$ being inserted is not already present in the table. To enforce this assumption, you
+can search (at additional cost) for an element whose key is $x$.key before inserting
+\bigbreak \noindent 
+For searching, the worst-case running time is proportional to the length of the list
+\bigbreak \noindent 
+Deletion takes $O(1)$ time if the lists are doubly linked. If the hash table supports deletion, then its linked lists should be doubly linked in order to delete an item quickly.
+
+\bigbreak \noindent 
+\subsection{Analysis of hashing with chaining}
+\bigbreak \noindent 
+Given a hash table \( T \) with \( m \) slots that stores \( n \) elements, we define the load factor \( \alpha \) for \( T \) as \( \alpha = \frac{n}{m} \), that is, the average number of elements stored in a chain. Our analysis will be in terms of \( \alpha \), which can be less than, equal to, or greater than 1.
+\bigbreak \noindent 
+The worst-case behavior of hashing with chaining is terrible: all \( n \) keys hash to the same slot, creating a list of length \( n \). The worst-case time for searching is thus \( \Theta(n) \) plus the time to compute the hash function—no better than using one linked list for all the elements. We clearly don’t use hash tables for their worst-case performance.
+\bigbreak \noindent 
+The average-case performance of hashing depends on how well the hash function $h$ distributes the set of keys to be stored among the $m$ slots, on the average
+\bigbreak \noindent 
+for now we assume that any given element is equally likely to hash into any of the $m$ slots. That is, the hash function is uniform. We further assume that where a given element hashes to is independent of where any other elements hash to. In other words, we assume that we are using independent uniform hashing
+\bigbreak \noindent 
+Because hashes of distinct keys are assumed to be independent, independent uniform hashing is universal: the chance that any two distinct keys $k_{1}$ and $k_{2}$ collide is at most $\frac{1}{m}$.
+
+\bigbreak \noindent 
+\subsection{Hash functions}
+\bigbreak \noindent 
+For hashing to work well, it needs a good hash function. Along with being efficiently computable, what properties does a good hash function have? How do you design good hash functions?
+\bigbreak \noindent 
+This section first attempts to answer these questions based on two ad hoc approaches for creating hash functions: hashing by division and hashing by multiplication.
+\bigbreak \noindent 
+Although these methods work well for some sets of input keys, they are limited because they try to provide a single fixed hash function that works well on any data, an approach called static hashing.
+\bigbreak \noindent 
+We then see that provably good average-case performance for any data can be obtained by designing a suitable family of hash functions and choosing a hash function at random from this family at runtime, independent of the data to be hashed. The approach we examine is called random hashing
+
+
+
 
 
 

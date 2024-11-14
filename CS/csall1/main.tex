@@ -2306,6 +2306,127 @@ The final regular expression is then
 
     \pagebreak 
     \subsection{Turing machines}
+    \begin{itemize}
+        \item \textbf{Intro}: In 1930’s Alan Turing presented an abstract machine called the Turing Machine which serves to this day as the model for all computation (i.e., algorithms) and computing (i.e., computers)
+        \item \textbf{TM General Description}: Turing Machines (TM) are similar to deterministic finite automata (DFA) in that a TM has:
+            \begin{itemize}
+                \item a tape that is infinite in one direction and a tape head
+                \item a finite number of states with exactly one that is designated as the start state, and
+                \item A set of transitions (i.e., directed edges) that deterministically take the TM from one state to the next based on what the tape head reads from the tap
+                \item Zero or more HALT state(s) that stops the TM and accepts the input string,
+                \item no requirement that every state must have an outgoing edge for every symbol (i.e., requirement of DFAs), with the same understanding that if the TM is in a state from which there is no edge for the symbol pointed at by the tape head, then the TM crashes and rejects the input string, and
+                \item no requirement that the entire input string must be read before accepting or rejecting the string.
+            \end{itemize}
+            \bigbreak \noindent 
+            Turing Machines (TM) differ from FA and PDA in that a TM does the following ordered sequence on each transition:
+            \begin{enumerate}
+                \item Read the symbol from the tape (same as FA and PDA).
+                \item Write a symbol to the tape at the same location (may be the same symbol that was read).
+                \item Move the tape head one slot either left or right with the understanding that an attempt to move left from the leftmost part of the tape crashes the TM (i.e., halts execution and rejects the input string).
+            \end{enumerate}
+            \bigbreak \noindent 
+            Accordingly, each transition in a TM is annotated with the three above
+        \item \textbf{Turing machine example}:
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{t1}
+                \label{fig:t1}
+            \end{figure}
+            \bigbreak \noindent 
+            In this example the TM
+            \begin{itemize}
+                \item always wrote the same symbol that it read
+                \item always moved the tape head to the right
+            \end{itemize}
+            That is not always the the case with a TM.
+        \item \textbf{Another TM example}: Consider the language $L = a^{n}b^{n} \ \forall \ n> 0$. We know that $L$ is not a regular language and that it is a context free language, so there exists a pushdown automaton (PDA) that accepts $L$.
+            \bigbreak \noindent 
+            A TM has no stack, but it has a tape head that can write and can move in either direction. What, then, is the strategy in designing a TM that accepts $L$?
+            \bigbreak \noindent 
+            As you read each $a$
+            \begin{itemize}
+                \item Cross the a off as an “already read” a (e.g., replace it with an X).
+                \item Move the tape head to the right until we encounter our first $b $.
+                \item Cross that $b$ off as an “already read” $b$ (e.g., replace it with a $Y$).
+                \item Move the tape head back to the left until we encounter the $X$ we
+                \item had just written, then move the tape head one space to the right
+            \end{itemize}
+            At this point the tape head should point either to the next $a$ or to the first $Y$ that we wrote.
+            \begin{itemize}
+                \item If the tape head points to the next $a$, then simply process the steps above again.
+                \item If the tape head points to the first $Y$, then move the tape head to the right making sure that it passes only over $Y$’s until it reaches a blank $\Delta$ (to assure there were not more $b$’s than $a$’s).
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{t2}
+                \label{fig:t2}
+            \end{figure}
+            \pagebreak 
+        \item \textbf{Palindrome}: We know that Palindrome is not a regular language and that it is a context free language, so there is a PDA that accepts it. The basic strategy in designing a PDA that accepts Palindrome relies on the PDA’s non- determinism.
+            \begin{itemize}
+                \item In the first portion of the PDA; read and push the first half of the string onto the stack.
+                \item Non-deterministically transition to the second portion of the PDA by either;
+                    \begin{itemize}
+                        \item reading a single symbol off the tape without pushing it onto the stack (for odd-length palindromes) or
+                        \item make a $\epsilon$-move (for even-length palindromes).
+                    \end{itemize}
+                \item In the second portion of the PDA; read the second half of the string and pop the stack for each symbol read to make sure that the two symbols (read and popped) match.
+                \item When you reach the end of the tape make sure that there are no more symbols in the stack.
+            \end{itemize}
+            \bigbreak \noindent 
+            A TM has no stack and it is deterministic. What, then, is your strategy in designing a TM that accepts Palindrome ?
+            \begin{itemize}
+                \item Process the string by reading and erasing characters from the ends taking care to make sure that the characters at each end of the string always match.
+                \item Take care to account for both even- and odd-length palindromes.
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/51.png}
+        \item \textbf{Turing machine example}: Consider the language $L = a^{n}b^{n}a^{n} \ \forall \ n \geq 0$. We know $L$ is not context free
+            \begin{itemize}
+                \item Start by marking the first a as read with a *
+                \item Move tape head to $ba$ transition and backup to $b$
+                \item Replace that $b$ with an $a$ as read with a *
+                \item  Move tape head to end of input and backup to $a$
+                \item Replace last two $a$’s with blanks as read with $a$ * 
+                \item Back tape head to * and advance to $a$
+                \item Repeat
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/52.png}
+        \item \textbf{Formal Definition TM}: Formally, a Turing Machine (TM) is denoted
+            \begin{align*}
+                M = (Q, \Sigma, \Gamma, \delta, q_{0}, \Delta, F)
+            .\end{align*}
+            Where
+            \begin{itemize}
+                \item $Q$ is a finite set of states
+                \item $\Gamma$ is a finite set of tape symbols
+                \item $\Delta \in \Gamma$ is the blank
+                \item $\Sigma \subset \Gamma$ such that $\delta \not\in \Sigma$, is a set of input symbols
+                \item $q_{0} \in Q$ is the start state
+                \item $\delta$ is the transition function that maps 
+                    \begin{itemize}
+                        \item a state in $Q$ and a (read) tape symbol in $\Gamma$ to
+                        \item some (written) tape symbol in $\Gamma$, and a tape head move direction (L or R), and some state in $Q$
+                        \item $\delta: Q \times \Gamma\to \Gamma \times \{L,R\} \times Q $
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    \textbf{Note:} $\delta$ is a partial function in that it may be undefined for some values in $Q \times \Gamma$
+                \item $F \subseteq Q$ is the (possibly empty) set of HALT state(s)
+
+            \end{itemize}
+        \item \textbf{Prepend \#}: With a tape that is infinite in only one direction it is sometimes helpful to be able to shift the entire input string to the right one cell and then place in the leftmost cell of the tape a special symbol (e.g., \#) with the understanding that the special symbol will never appear anywhere else on the tape
+            \bigbreak \noindent 
+            In this way the rest of the TM can safely move the tape head left always taking care to not move left from \#.
+            \bigbreak \noindent 
+            There is a TM that can be used at the beginning of any TM – it shifts the entire input string, prepends \#, and positions the tape head at the first symbol of the original input string.
+            \bigbreak \noindent 
+            This TM is written for the input alphabet $\Sigma = \{a,b\}$ but it can be easily modified to work with any input alphabet.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/53.png}
+    \end{itemize}
 
 
 
