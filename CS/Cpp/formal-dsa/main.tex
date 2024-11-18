@@ -677,8 +677,134 @@ to find the average complexity of a worst case sequence of operations
         }
     \end{cppcode}
 
+    \pagebreak 
+    \subsection{Doubly-linked list}
+    \bigbreak \noindent 
+    A doubly linked list is a data structure consisting of nodes where each node contains three components:
+    \begin{enumerate}
+        \item \textbf{Data:} The value or information the node holds.
+        \item \textbf{Next pointer:} A reference to the next node in the list.
+        \item \textbf{Previous pointer:} A reference to the previous node in the list.
+    \end{enumerate}
+    \bigbreak \noindent 
+    Each node links to both its predecessor and successor. Traversal is possible in both forward and backward directions. It requires more memory than a singly linked list due to the extra pointer.
+    \bigbreak \noindent 
+    \subsubsection{Node structure}
+    \bigbreak \noindent 
+    Instead of just a next pointer, a doubly linked list also has a prev pointer
+    \bigbreak \noindent 
+    \begin{cppcode}
+    struct node {
+        int data = 0;
+        node* next = nullptr, *prev = nullptr;
 
+        node(int data) : data(data) {}
+    };
+    \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsubsection{The list class}
+    \bigbreak \noindent 
+    The list class implements the interface
+    \bigbreak \noindent 
+    \begin{cppcode}
+class list {
+    node* head=nullptr, *tail=nullptr;
+    size_t n = 0;
+
+public:
+    void push_back(int element);
+    void push_front(int element);
+    void pop_back();
+    void pop_front();
+    bool find();
+    size_t size();
+    bool empty();
+    void print();
+    void clear();
+};
+    \end{cppcode}
+    \bigbreak \noindent 
+    Size, empty, print and clear are trivial, so their implementation will not be discussed
+    \pagebreak 
+    \subsubsection{push\_back and push\_front}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void push_back(int element) {
+            if (!head) {
+                head = new node(element);
+                tail = head;
+                ++n;
+                return;
+            }
+            tail->next = new node(element);
+            tail->next->prev = tail;
+            tail = tail->next;
+            ++n;
+        }
+
+        void push_front(int element) {
+            if (!head) {
+                head = new node(element);
+                tail = head;
+                ++n;
+                return;
+            }
+            head->prev = new node(element);
+            head->prev->next = head;
+            head=head->prev;
+            ++n;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The push\_back function adds a new element to the end of the doubly linked list. If the list is empty (indicated by a null head), it creates a new node as both the head and tail of the list and increments the size counter n. Otherwise, it creates a new node, links it as the next node of the current tail, sets the previous pointer of the new node to the old tail, updates the tail to the new node, and increments n.
+    \bigbreak \noindent 
+    The push\_front function inserts a new element at the beginning of the doubly linked list. If the list is empty, it operates similarly to push\_back by creating a new node as both the head and tail. For non-empty lists, it creates a new node, links it as the previous node of the current head, sets the next pointer of the new node to the old head, updates the head to the new node, and increments n. Both functions maintain the integrity of the doubly linked list by appropriately updating the pointers.
+
+    \pagebreak 
+    \subsubsection{pop\_back and pop\_frot}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void pop_back() {
+            node* save = tail->prev;
+            save->next = nullptr;
+            delete tail;
+            tail = save;
+            --n;
+        }
+
+        void pop_front() {
+            node* save = head->next;
+            save->prev = nullptr;
+            delete head;
+            head = save;
+            --n;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The pop\_back function removes the last element from the doubly linked list. It starts by saving the previous node of the current tail into a temporary pointer (save). Then, it disconnects the tail by setting the next pointer of the saved node to nullptr. Afterward, it deletes the current tail node, updates the tail pointer to the saved node, and decrements the size counter n.
+    \bigbreak \noindent 
+    The pop\_front function removes the first element from the doubly linked list. It saves the next node of the current head into a temporary pointer (save). It then disconnects the head by setting the prev pointer of the saved node to nullptr. The current head is deleted, the head pointer is updated to the saved node, and n is decremented. Both functions ensure proper memory management and maintain the structural integrity of the list.
+
+    \pagebreak 
+    \subsubsection{Searching}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Start from the head:} Traverse the list from the beginning since it is more straightforward and avoids redundant checks.
+        \item \textbf{Compare each node's data with the target value:} If a match is found, return a pointer to the node.
+        \item \textbf{Continue until the end:} If no match is found by the time you reach the end of the list (when current becomes nullptr), return nullptr to indicate the value is not in the list.
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool find(int element) {
+            node* curr = head;
+            while (curr) {
+                if (curr->data == element) return true;
+                curr=curr->next;
+            }
+            return false;
+        }
+    \end{cppcode}
 
     \pagebreak 
     \unsect{Recursion}
@@ -1029,6 +1155,251 @@ This algorithm finds all possible solutions without regard to the fact that some
 them are symmetrical.
 
 \pagebreak 
+Backtracking is a systematic approach to exploring all possible solutions to a problem using recursion. It involves:
+\begin{itemize}
+    \item \textbf{Recursive Exploration:} A recursive function is used to explore all potential solutions.
+    \item \textbf{Pruning:} When a partial solution cannot lead to a valid answer, the algorithm "backtracks" by undoing the last decision and tries a different path.
+    \item \textbf{State Restoration:} The state of the problem is restored before exploring a new path, ensuring no side effects from previous choices affect future decisions.
+\end{itemize}
+\bigbreak \noindent 
+Backtracking often involves a loop because it systematically explores multiple options at each recursive step. The loop allows the algorithm to iterate over all possible choices available at a particular point. Without the loop, you would only be able to handle a single choice at each step, which would limit the ability to explore multiple branches of the problem space.
+\bigbreak \noindent 
+The loop ensures that each choice is explored one by one before moving to the next recursive call. After each recursive call, the algorithm backtracks and tries the next option.
+\bigbreak \noindent 
+Backtracking is essentially a tree traversal algorithm. The loop represents branching into different nodes of the tree. Without a loop, you'd only traverse a linear path, which isn't sufficient for exploring all solutions.
+\bigbreak \noindent 
+\subsubsection{N-Queens}
+\bigbreak \noindent 
+Assume we have already have an $8\times 8$ array to represent the chess board. At each spot in the board, a zero will indicate no queen, and a one will indicate a queen. We also assume we have a function to check if a position is safe. The only function left to implement is a \textit{place\_queen} function.
+\bigbreak \noindent 
+\begin{cppcode}
+    bool place_queens(bool arr[][COLS], int row_n) { 
+        // Base case: Placed a queen on all rows
+        if (row_n >= ROWS)
+        return true;
+
+        // For each column in a row
+        for (int j=0; j<=7; ++j) {
+            // If the spot is safe
+            if (safe(arr, row_n, j)) {
+                // Place the queen
+                arr[row_n][j] = true;
+                // Check the row beneath
+                if (place_queens(arr, row_n+1)) {
+                    return true;
+                }
+                // If the row beneath cannot place a queen at any column, backtrack one row, place that queen in a different column
+                arr[row_n][j] = false;
+            }
+        }
+        // Queen could not be placed at any column
+        return false;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Greedy backtracking: Traveling salesman problem (TSP)}
+\bigbreak \noindent 
+Greedy backtracking is a variation of backtracking that incorporates greedy principles, attempting to make the "best" or "most promising" choice at each step rather than systematically exploring all possible choices. It combines the greedy approach (making locally optimal choices) with backtracking to handle situations where the greedy choice might fail.
+\begin{itemize}
+    \item \textbf{Greedy Choice:} At each step, a heuristic \footnote{proceeding to a solution by trial and error or by rules that are only loosely defined.} is used to choose the most promising option that seems likely to lead to a solution.
+    \item \textbf{Backtracking for Correction:} If the greedy choice leads to a dead end, the algorithm backtracks and tries the next best option.
+    \item \textbf{Efficiency:} By attempting the most promising options first, it often reduces the search space compared to regular backtracking.
+\end{itemize}
+\bigbreak \noindent 
+\textbf{TSP}: The goal is to find the shortest path that visits all cities exactly once and returns to the starting city.
+\begin{itemize}
+    \item \textbf{Greedy Step:} At each step, visit the nearest unvisited city.
+    \item \textbf{Backtracking:} If the current path does not lead to a valid solution, backtrack and try the next nearest city.
+\end{itemize}
+\bigbreak \noindent 
+Assume we have a distance matrix
+\bigbreak \noindent 
+\begin{cppcode}
+    vector<vector<double>> distances = {
+        {0, 10, 15, 20},
+        {10, 0, 35, 25},
+        {15, 35, 0, 30},
+        {20, 25, 30, 0}
+    };
+\end{cppcode}
+\bigbreak \noindent 
+The vector<vector<double>> distances represents a distance matrix for a graph where the nodes represent cities (or points of interest), and the entries in the matrix represent the distances between pairs of cities.
+\bigbreak \noindent 
+In the context of the Traveling Salesman Problem (TSP), this matrix provides the distances between any two cities in the graph.
+\begin{itemize}
+    \item \textbf{distances[i][j]:} Represents the distance between city $i$ and city $j$
+    \item \textbf{Diagonal entries (distances[i][i]):} These are typically 0, because the distance from a city to itself is 0
+\end{itemize}
+\bigbreak \noindent 
+Assume we also have a visited array, to mark the cities visited.
+\bigbreak \noindent 
+\begin{cppcode}
+    vector<bool> visited(distances.size(), false);
+\end{cppcode}
+\bigbreak \noindent 
+The solution function signature will be 
+\bigbreak \noindent 
+\begin{cppcode}
+double tspGreedyBacktracking(vector<vector<double>>& distances, vector<bool>& visited, int currentCity, int citiesVisited, double currentCost, double& bestCost);
+\end{cppcode}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{vector<vector<double>>\& distances:} Represents the distance matrix for the graph. Each entry distances[i][j] gives the distance from city $i$ to city $j$.
+        \bigbreak \noindent 
+        Passed by reference to avoid copying the matrix for each function call, which would be computationally expensive.
+\item \textbf{vector<bool>\& visited:} A boolean vector where visited[i] indicates whether city $i$ has been visited. Ensures that each city is visited exactly once. Passed by reference to track visited cities across recursive calls.
+\item \textbf{int currentCity:} The city the algorithm is currently processing. Determines the row in the distance matrix to explore potential next cities. Helps calculate the distance for traveling to other unvisited cities.
+\item \textbf{int citiesVisited:} Tracks the number of cities visited so far in the current path. Used as a stopping condition: when citiesVisited == distances.size(), all cities have been visited.
+\item \textbf{double currentCost:} The cumulative cost (distance) of the path taken so far. This is updated at each recursive step to include the distance of the last move.
+\item \textbf{double\& bestCost:} Tracks the minimum cost (shortest path) found so far across all recursive paths. Passed by reference so that all recursive calls update the same variable. Used to prune paths: If the currentCost exceeds bestCost, the algorithm skips further exploration of that path.
+\end{itemize}
+
+\pagebreak 
+\begin{cppcode}
+    double tspGreedyBacktracking(vector<vector<double>>& distances, vector<bool>& visited, int currentCity, int citiesVisited, double currentCost, double& bestCost) {
+        if (citiesVisited == visited.size()) {
+            // Add the cost to return to the starting city
+            return currentCost + distances[currentCity][0];
+        }
+
+        for (int nextCity = 0; nextCity < distances.size(); ++nextCity) {
+            if (!visited[nextCity]) {
+                visited[nextCity] = true;
+
+                // Calculate the cost for this path
+                double nextCost = currentCost + distances[currentCity][nextCity];
+                if (nextCost < bestCost) { // Only proceed if this path is promising
+                    bestCost = min(bestCost, tspGreedyBacktracking(distances, visited, nextCity, citiesVisited + 1, nextCost, bestCost));
+                }
+
+                visited[nextCity] = false; // Backtrack
+            }
+        }
+        return bestCost;
+    }
+    int main() {
+        vector<vector<double>> distances = {
+            {0, 10, 15, 20},
+            {10, 0, 35, 25},
+            {15, 35, 0, 30},
+            {20, 25, 30, 0}
+        };
+        vector<bool> visited(distances.size(), false);
+        visited[0] = true;
+
+        double bestCost = DBL_MAX;
+        tspGreedyBacktracking(distances, visited, 0, 1, 0, bestCost);
+
+        cout << "Minimum cost: " << bestCost << endl;
+        return 0;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+This function implements a backtracking approach to solve the Traveling Salesman Problem (TSP) with an optimization that leverages a greedy principle to prune unnecessary paths. The algorithm starts from a given city (currentCity) and recursively explores all possible paths to visit every other city exactly once. It maintains a visited array to track which cities have already been visited, ensuring that no city is revisited during the current path.
+\bigbreak \noindent 
+The function uses a loop to evaluate each unvisited city as the next possible destination. For each potential move, it calculates the cumulative cost of the current path (currentCost) and compares it with the best cost (bestCost) found so far. If the current path exceeds bestCost, it abandons further exploration of that branch. Otherwise, it marks the city as visited, proceeds recursively to explore the next cities, and updates the bestCost if a better solution is found. After processing, the function backtracks by unmarking the city, restoring the state for the next iteration.
+\bigbreak \noindent 
+When all cities have been visited (citiesVisited == visited.size()), the function completes the path by adding the cost to return to the starting city. This final cost is returned and compared with bestCost, ensuring that the shortest valid path is recorded. The combination of backtracking for completeness and greedy pruning for efficiency helps the algorithm systematically explore the search space while avoiding unnecessary computations.
+\bigbreak \noindent 
+It will begin by starting from the first city, then going $1 \to 2,\ 2 \to 3,\ 3 \to 4$. At this point, it will have a best cost for path one (65 in this case). It will then begin backtracking back to city one, enabling us to explore other paths. For example, $1 \to 3,\ 3 \to 2, ...$, only taking the path if it is promising (currentcost less than best cost). Once we have explored all options starting from city one, we return the best cost.
+
+\pagebreak 
+\subsubsection{Combinations}
+\bigbreak \noindent 
+To perform combinations using backtracking in C++, you can recursively explore subsets of elements. Here’s an example of how to generate all combinations of size $k$ from a given array or vector
+\bigbreak \noindent 
+\begin{cppcode}
+    void generateCombinations(const std::vector<int>& nums, int k, int start, std::vector<int>& current, std::vector<std::vector<int>>& result) {
+        if (current.size() == k) {
+            result.push_back(current);
+            return;
+        }
+
+        for (int i=start; i<nums.size(); ++i) {
+            current.push_back(nums[i]);
+            generateCombinations(nums, k, i+1, current, result);
+            current.pop_back();
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The backtracking logic in this function generates combinations by systematically exploring subsets of the input array. The key idea is to build each combination step-by-step, adding elements to the current subset (current) until its size reaches the desired length $k$. At that point, the subset is complete and added to the result.
+\bigbreak \noindent 
+The function iterates through the array starting from the given index start. For each element, it adds the element to the current combination and recursively calls itself with the next index (i+1) to explore subsequent elements. This ensures that no element is reused and combinations are formed in a non-repeating manner.
+\bigbreak \noindent 
+Once the recursive call completes, the function removes the last element added (backtracking) to explore other possible combinations. This backtracking step is crucial, as it resets the state of current to allow the exploration of different subsets without interference from previous paths. This approach ensures all unique combinations of size $k$ are generated.
+
+\pagebreak 
+\bigbreak \noindent 
+\subsubsection{Combinations that sum to $m$}
+\bigbreak \noindent 
+Expanding on the code above, we can add a simple check before we push the combination to the result vector, the check to see if the sum of the combination fits a requested sum.
+\bigbreak \noindent 
+\begin{cppcode}
+    void generateCombinations(const std::vector<int>& nums, int k, int start, std::vector<int>& current, std::vector<std::vector<int>>& result, const int& sum, int& currentSum) {
+        if (current.size() == k) {
+            if (currentSum == sum)  {
+                result.push_back(current);
+            }
+            return;
+        }
+
+        for (int i=start; i<nums.size(); ++i) {
+            current.push_back(nums[i]);
+            // Update the current sum
+            currentSum += nums[i];
+
+            generateCombinations(nums, k, i+1, current, result, sum, currentSum);
+
+            // Decrease the current sum
+            currentSum-=nums[i];
+            current.pop_back();
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Permutations}
+\bigbreak \noindent 
+To generate permutations, the key idea is to explore all possible arrangements of elements where the order matters. The typical approach involves swapping elements to produce different orders and backtracking to restore the original state before exploring further.
+\bigbreak \noindent 
+\begin{cppcode}
+    void generatePermutations(std::vector<int>& nums, int start, std::vector<std::vector<int>>& result) {
+        // Base case: if the starting index is at the end, we've formed a permutation
+        if (start == nums.size()) {
+            result.push_back(nums);
+            return;
+        }
+
+        // Loop through the array to swap the current index with all subsequent indices
+        for (int i = start; i < nums.size(); ++i) {
+            // Swap the current element with the one at index `i`
+            std::swap(nums[start], nums[i]);
+
+            // Recur to generate permutations for the next index
+            generatePermutations(nums, start + 1, result);
+
+            // Backtrack: restore the original order
+            std::swap(nums[start], nums[i]);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\begin{itemize}
+    \item The function starts with a start index, which determines the position being fixed for the current permutation.
+    \item For every index from start to the end of the array, it swaps the element at start with the element at the current index (i) to create a new arrangement.
+    \item It recursively generates permutations for the remaining portion of the array (start + 1 onward).
+    \item After the recursive call, it swaps back to restore the original array (backtracking), ensuring other permutations can be explored without interference.
+\end{itemize}
+
+
+
+
+
+
+
+\pagebreak 
 \subsection{Recursion in singly linked lists}
 \bigbreak \noindent 
 \subsubsection{Traversing}
@@ -1303,6 +1674,112 @@ Base cases:
 \bigbreak \noindent 
 Otherwise, recurse through the nodes until we hit one of the base cases.
 
+\pagebreak 
+\unsect{Dynamic programming}
+\bigbreak \noindent 
+Dynamic Programming is a problem-solving paradigm used to solve optimization and combinatorial problems efficiently by breaking them into overlapping subproblems, solving each subproblem once, and storing its result for reuse. This avoids redundant calculations, making DP particularly effective for problems with overlapping subproblems and optimal substructure
+\subsection{Key Concepts of DP}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Overlapping Subproblems:} Problems that can be broken down into smaller, overlapping subproblems. For example, the Fibonacci sequence involves repeatedly calculating the same terms, like $F(2)$, $F(3)$, etc., in a naive recursive approach.
+    \item \textbf{Optimal Substructure:} A problem exhibits optimal substructure if the optimal solution of the problem can be composed from the optimal solutions of its subproblems. For example, in the shortest path problem, the shortest path from $A$ to $C$ passing through $B$ is the sum of the shortest path from $A$ to $B$ and $B$ to $C$.
+\end{itemize}
+\bigbreak \noindent 
+\subsection{Bottom-up DP}
+\bigbreak \noindent 
+Bottom-up dynamic programming is a technique used to solve problems efficiently by breaking them into smaller subproblems, solving those subproblems iteratively (starting with the simplest cases), and building up solutions to the larger problems. It avoids the overhead of recursion by explicitly organizing computation in a tabular form, thereby reducing redundant calculations.
+\bigbreak \noindent 
+\subsubsection{Key Characteristics}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Iterative Approach:} Unlike top-down dynamic programming (which uses recursion with memoization), bottom-up DP explicitly fills a table iteratively.
+    \item \textbf{Tabulation:} A table (usually an array or a matrix) is used to store solutions to subproblems, so they can be reused when solving larger problems.
+    \item \textbf{Base Cases First:} The base cases are explicitly calculated and stored in the table before computing other values.
+    \item \textbf{No Recursion:} Since it avoids recursion, it typically has better space efficiency because it does not use a call stack.
+\end{itemize}
+\bigbreak \noindent 
+\subsubsection{Steps for Bottom-Up DP}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Define the State:} Determine what your subproblem represents. For example, $dp[i]$ might represent the solution to the problem for the first $i$ elements.
+    \item \textbf{Base Case Initialization:} Set the initial values in your DP table based on the simplest cases of the problem.
+    \item \textbf{Transition Relation:} Determine how to compute the value of a subproblem (e.g., $dp[i]$) based on previously computed subproblems (e.g., $dp[j]$ where $j<i$).
+    \item \textbf{Fill the Table:} Use loops to iteratively compute all the entries in the DP table up to the desired solution.
+    \item \textbf{Extract the Solution:} The final entry in the table often represents the solution to the overall problem.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Bottom-up DP: Fibonacci}
+\bigbreak \noindent 
+The Fibonacci sequence is a classic example where DP can be applied. The sequence is defined as
+\begin{align*}
+    F(n) = F(n-1) + F(n-2), \quad F(0) = 0,\ F(1) = 1
+.\end{align*}
+\bigbreak \noindent 
+\begin{cppcode}
+    int fib(int n) {
+        if (n == 0) return 0;
+        if (n == 1) return 1;
+
+        int dp[n+1];
+        dp[0] = 0;
+        dp[1] = 1;
+
+        for (int i=2; i<=n; ++i) {
+            dp[i] = dp[i-1] + dp[i-2];
+        }
+        return dp[n];
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Memoization (top down DP)}
+\bigbreak \noindent 
+Top-Down Dynamic Programming, also known as memoization, is a technique where a problem is solved recursively, but results of subproblems are stored (memoized) to avoid redundant calculations. This is particularly effective for problems with overlapping subproblems.
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Recursive Approach:} The problem is solved recursively by breaking it down into smaller subproblems.
+        \bigbreak \noindent 
+        The recursive function calls itself for these subproblems.
+    \item \textbf{Memoization:} Subproblem solutions are stored in a data structure (e.g., an array, map, or dictionary).
+        \bigbreak \noindent 
+        If a subproblem has already been solved, its stored solution is reused, skipping further computation.
+    \item \textbf{Base Cases:} Base cases are defined to stop recursion and provide known values.
+    \item \textbf{Optimal Substructure:} The solution to a problem is built from solutions to its subproblems.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Top-down DP: Fibonacci}
+\bigbreak \noindent 
+The Fibonacci sequence is defined as:
+\begin{align*}
+    F(n) = \begin{cases}
+        0 & \text{if } n = 0 \\    
+        1 & \text{if } n = 1    \\ 
+        F(n-1) + F(n-2) &\text{if } n > 1
+    \end{cases}
+.\end{align*}
+\bigbreak \noindent 
+A simple recursive solution calculates $F(n)$ but does so inefficiently due to repeated calculations:
+\bigbreak \noindent 
+With memoization, we store already-computed Fibonacci values to avoid redundant work
+\bigbreak \noindent 
+\begin{cppcode}
+    int fibonacci(int n, int memo[]) {
+        // Base cases
+        if (n <= 1) return n;
+
+        // Check if the result is already computed
+        if (memo[n] != -1) return memo[n];
+
+        // Compute and store the result
+        memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo);
+        return memo[n];
+    }
+\end{cppcode}
+
+
+
 
 \pagebreak 
 \unsect{Binary trees}
@@ -1452,8 +1929,8 @@ A complete binary tree has a specific structure defined by how the nodes are fil
 \begin{enumerate}
     \item \textbf{All levels, except possibly the last, are fully filled:}
         \begin{itemize}
-            In a complete binary tree, every level up to the second-to-last (penultimate) level must be completely filled with nodes.
-            This means that if the tree has height $h$, levels $0$ through $h - 1$ (from the root to the second-to-last level) will have the maximum possible number of nodes for that level.
+            \item In a complete binary tree, every level up to the second-to-last (penultimate) level must be completely filled with nodes.
+            \item This means that if the tree has height $h$, levels $0$ through $h - 1$ (from the root to the second-to-last level) will have the maximum possible number of nodes for that level.
         \end{itemize}
         \item \textbf{All nodes are as far left as possible:}
             \begin{itemize}
@@ -2656,6 +3133,540 @@ r\_remove, performs a recursive search for the node to delete based on the value
 \end{enumerate}
 After deletion, the function updates the height and balance of p, recalculating the height as one plus the maximum height of its children. The balance factor, which measures the difference in height between the left and right subtrees, is also recalculated. Finally, the function calls balance(p) to ensure that any imbalance introduced by the deletion is corrected. The remove function wraps this entire process, starting the deletion at the root. This ensures the AVL tree remains balanced after a node is removed.
 
+\pagebreak 
+\subsection{Red-black trees}
+\bigbreak \noindent 
+A red-black tree is a binary search tree with one extra bit of storage per node: its
+color, which can be either \textcolor{red}{RED} or \textbf{BLACK}. By constraining the node colors on
+any simple path from the root to a leaf, red-black trees ensure that no such path is
+more than twice as long as any other, so that the tree is approximately balanced.
+\bigbreak \noindent 
+as we’re about to see, the height of a red-black tree with $n$ keys is at most $2 \text{lg}(n+1) $, which is $O(\text{lg}\ n ) $
+\bigbreak \noindent 
+Each node of the tree now contains the attributes color, key, left, right, and $p$. If
+a child or the parent of a node does not exist, the corresponding pointer attribute of
+the node contains the value NIL. Think of these NILs as pointers to leaves (external
+nodes) of the binary search tree and the normal, key-bearing nodes as internal nodes
+of the tree. 
+\bigbreak \noindent 
+A red-black tree is a binary search tree that satisfies the following red-black properties:
+\begin{enumerate}
+    \item Every node is either red or black.
+    \item The root is black.
+    \item Every leaf (NIL) is black.
+    \item If a node is red, then both its children are black. (no double red)
+    \item For each node, all simple paths from the node to descendant leaves contain the same number of black nodes.
+\end{enumerate}
+\bigbreak \noindent 
+As a matter of convenience in dealing with boundary conditions in red-black
+tree code, we use a single sentinel to represent NIL
+For a red-black
+tree $T$, the sentinel $T$.nil is an object with the same attributes as an ordinary node
+in the tree. Its color attribute is BLACK, and its other attributes $p$, left , right ,
+and key can take on arbitrary values
+\bigbreak \noindent 
+Why use the sentinel? The sentinel makes it possible to treat a NIL child of a
+node $x$ as an ordinary node whose parent is $x$. An alternative design would use a
+distinct sentinel node for each NIL in the tree, so that the parent of each NIL is well
+deûned. That approach needlessly wastes space, however. Instead, just the one
+sentinel $T$.nil represents all the NILs, all leaves and the root’s parent. The values
+of the attributes $p$, left, right , and key of the sentinel are immaterial. The red-black
+tree procedures can place whatever values in the sentinel that yield simpler code
+\bigbreak \noindent 
+We call the number of black nodes on any simple path from, but not including, a node $x$ down to a leaf the black-height of the node, denoted $bh(x)$.
+\bigbreak \noindent 
+By property 5, the notion of black-height is well defined, since all descending simple paths from the node have the same number of black nodes. The black-height of a red-black tree is the black-height of its root.
+\bigbreak \noindent 
+\fig{.5}{./figures/18.png}
+\bigbreak \noindent 
+We generally confine our interest to the internal nodes of a red-black tree, since they hold the key values. The remainder of this chapter omits the leaves in drawings of red-black trees, as shown in Figure 13.1(c).
+\bigbreak \noindent 
+\textbf{Lemma}. A red-black tree with $n$ internal nodes has height at most $2\text{lg}(n+1) $
+\bigbreak \noindent 
+\textbf{Proof}. 
+We start by showing that the subtree rooted at any node \(x\) contains at least \(2^{bh(x)} - 1\) internal nodes. We prove this claim by induction on the height of \(x\). 
+\bigbreak \noindent 
+If the height of \(x\) is 0, then \(x\) must be a leaf (\(T.\text{nil}\)), and the subtree rooted at \(x\) indeed contains at least 
+\[
+2^{bh(x)} - 1 = 2^0 - 1 = 0
+\] 
+internal nodes.
+\bigbreak \noindent 
+For the inductive step, consider a node \(x\) that has positive height and is an internal node. Then node \(x\) has two children, either or both of which may be a leaf. If a child is black, then it contributes 1 to \(x\)'s black-height but not to its own. If a child is red, then it contributes to neither \(x\)'s black-height nor its own. 
+\bigbreak \noindent 
+Therefore, each child has a black-height of either \(bh(x) - 1\) (if it’s black) or \(bh(x)\) (if it’s red). Since the height of a child of \(x\) is less than the height of \(x\) itself, we can apply the inductive 
+hypothesis to conclude that each child has at least \(2^{bh(x)-1} - 1\) internal nodes. Thus, the subtree rooted at \(x\) contains at least
+\[
+    (2^{bh(x)-1} - 1) + (2^{bh(x)-1} - 1) + 1 = 2^{bh(x)} - 1
+\]
+internal nodes, which proves the claim.
+\bigbreak \noindent 
+To complete the proof of the lemma, let \(h\) be the height of the tree. According to property 4, at least half the nodes on any simple path from the root to a leaf, not including the root, must be black. Consequently, the black-height of the root must be at least \(h/2\), and thus,
+\[
+    n \geq 2^{h/2} - 1.
+\]
+Moving the \(1\) to the left-hand side and taking logarithms on both sides yields
+\[
+    \lg(n + 1) \geq h/2, \text{ or } h \leq 2\lg(n + 1).
+\]
+\qed
+\bigbreak \noindent 
+As an immediate consequence of this lemma, each of the dynamic-set operations SEARCH, MINIMUM, MAXIMUM, SUCCESSOR, and PREDECESSOR runs in $O(\text{lg}\ n) $ time on a red-black tree, since each can run in $O(h)$ time on a binary search tree of height $h$ 
+ and any red-black tree on $n$ nodes is a binary search tree with height $O(\text{lg}\ n)$.
+ \bigbreak \noindent 
+ \fig{.5}{./figures/1}
+
+ \bigbreak \noindent 
+ \subsubsection{Rotations}
+ \bigbreak \noindent 
+ red-black trees (RB trees) and AVL trees use the same basic rotation logic to maintain balance: left rotation and right rotation. However, they differ significantly in why and when they apply these rotations
+ \bigbreak \noindent 
+ The search-tree operations TREE-INSERT and TREE-DELETE, when run on a redblack tree with n keys, take O.lg n/ time. Because they modify the tree, the result may violate the red-black properties. To restore these properties, colors and pointers within nodes need to change.
+ \bigbreak \noindent 
+ The pointer structure changes through \textit{rotation}, which is a local operation in a search tree that preserves the binary-search-tree property. Figure 13.2 shows the two kinds of rotations: left rotations and right rotations. Let’s look at a left rotation on a node $x$, which transforms the structure on the right side of the figure to the structure on the left. Node $x$ has a right child $y$, which must not be $T.nil$. The left rotation changes the subtree originally rooted at $x$ by “twisting” the link between $x$ and $y$ to the left. The new root of the subtree is node $y$, with $x$ as $y$’s left child and $y$’s original left child (the subtree represented by $\beta$ in the figure) as $x$’s right child.
+ \bigbreak \noindent 
+ Both LEFT-ROTATE and RIGHT-ROTATE run in $O(1)$ time. Only pointers are changed by a rotation, and all other attributes in a node remain the same.
+ \bigbreak \noindent 
+ \begin{cppcode}
+    left-rotate(T, x) {
+        y = x.right
+        // Start by attaching y's left to x's right
+        x.right = y.left
+
+        // If y's left existed, adjust its parent
+        if (y.left != nil)
+            y.left.p = x
+
+        y.p = x.p
+
+        // If x was the root, set y to the new root
+        if (x.p == nil) 
+            root = y
+        // If x was not the root, check what x was to its parent (left or right), change to y
+        else if (x.p.left == x) 
+            x.p.left = y
+        else 
+            x.p.right = y
+
+        // Finish up
+        y.left = x
+        x.p = y
+    }
+ \end{cppcode}
+ \bigbreak \noindent 
+ A right rotate is symmetrical to left rotate
+ \bigbreak \noindent 
+ \begin{cppcode}
+     right-rotate(T, x) {
+        y = x.left
+        x.left = y.right
+
+        if (y.right != nil) 
+            y.right.p = x
+
+        y.p = x.p
+        if (x.p == nil)
+            root = y
+        else if (x.p.left == x)
+            x.p.left = y
+        else 
+            x.p.right = y
+
+        y.right = x
+        x.p = y
+     }
+ \end{cppcode}
+
+ \pagebreak 
+ \subsubsection{Inserting}
+ \bigbreak \noindent 
+ The procedure RB-INSERT starts by inserting node $z$ into the tree $T$ as if it were an ordinary binary search tree, and then it colors $z$ red.
+ \bigbreak \noindent 
+ Coloring $z$ red ensures that:
+ \begin{enumerate}
+     \item The black-height of the tree remains unchanged.
+     \item No violations of the Red-Black Tree properties occur.
+ \end{enumerate}
+ \bigbreak \noindent 
+To guarantee that the red-black properties are preserved, an auxiliary procedure RB-INSERT-FIXUP on the facing page recolors nodes and performs rotations.
+\bigbreak \noindent 
+The call insert($T,z$) inserts node $z$, whose key is assumed to have
+already been filled in, into the red-black tree $T$.
+\bigbreak \noindent 
+\begin{cppcode}
+    insert(T,z) {
+        x=T.root
+        y=T.nil
+
+        while (x != T.nil) {
+            y = x;
+
+            if (z.key < x.key) {
+                x = x.left
+            } else x = x.right
+        }
+        z.p = y
+
+        // Tree was empty
+        if (y == T.nil) {
+            T.root = z
+        } else if (z.key < y.key) {
+            y.left = z
+        } else y.right = z
+        
+        z.left = T.nil
+        z.right = T.nil
+        z.color = RED
+        insert-fixup(T,z)
+            
+    }
+\end{cppcode}
+
+\pagebreak 
+\bigbreak \noindent 
+\begin{cppcode}
+    insert-fixup(T, z) {
+        while (z.p.color == red) {
+            if  (z.p == z.p.p.left) { // Is z's parent a left child? 
+                y = z.p.p.right // y is z's uncle
+                if (y.color == red) { // are z's parent and uncle both red?
+                    /* Case 1 */
+                    z.p.color = black
+                    y.color = black
+                    z.p.p.color = red
+                    z = z.p.p
+                    /* ------ */
+                    
+                } else {
+                    if (z== z.p.right) {
+                        /* case 2 */
+                        z = z.p
+                        left-rotate(T,z)
+                        /* ------ */
+                    }
+                    /* case 3 */
+                    z.p.color = black
+                    z.p.p.color = red
+                    right-rotate(T,z.p.p)
+                    /* ------ */
+                }
+            // Right and left exchanged
+            } else {
+                y = z.p.p.left 
+                if (y.color == red) { 
+                    z.p.color = black
+                    y.color = black
+                    z.p.p.color = red
+                    z = z.p.p
+                } else {
+                    if (z== z.p.left) {
+                        z = z.p
+                        right-rotate(T,z)
+                    }
+                    z.p.color = black
+                    z.p.p.color = red
+                    left-rotate(T,z.p.p)
+            }
+        }
+    }
+    T.root.color = black
+\end{cppcode}
+\bigbreak \noindent 
+To understand how RB-INSERT-FIXUP works, let’s examine the code in three
+major steps. First, we’ll determine which violations of the red-black properties
+might arise in RB-INSERT upon inserting node $z$ and coloring it red. Second, we’ll
+consider the overall goal of the while loop in lines 1329. Finally, we’ll explore each
+of the three cases within the while loop’s body (case 2 falls through into case 3, so
+these two cases are not mutually exclusive) and see how they accomplish the goal.
+\bigbreak \noindent 
+In describing the structure of a red-black tree, we’ll often need to refer to the sibling of a node’s parent. We use the term uncle for such a node.
+\bigbreak \noindent 
+\fig{.5}{./figures/21.png}
+\bigbreak \noindent 
+What violations of the red-black properties might occur upon the call to \texttt{RB-INSERT-FIXUP}? Property 1 certainly continues to hold (every node is either red or black), as does property 3 (every leaf is black), since both children of the newly inserted red node are the sentinel \(T.\text{nil}\). Property 5, which says that the number of black nodes is the same on every simple path from a given node, is satisfied as well, because node \(z\) replaces the (black) sentinel, and node \(z\) is red with sentinel children. 
+\bigbreak \noindent 
+Thus, the only properties that might be violated are property 2, which requires the root to be black, and property 4, which says that a red node cannot have a red child. Both possible violations may arise because \(z\) is colored red. Property 2 is violated if \(z\) is the root, and property 4 is violated if \(z\)'s parent is red.
+\bigbreak \noindent 
+The \texttt{while} loop of lines 13–29 has two symmetric possibilities: lines 33–15 deal with the situation in which node \(z\)'s parent \(z.p\) is a left child of \(z\)'s grandparent \(z.p.p\), and lines 17–29 apply when \(z\)'s parent is a right child. Our proof will focus only on lines 33–15, relying on the symmetry in lines 17–29.
+
+\bigbreak \noindent 
+We’ll show that the while loop maintains the following three-part invariant at the start of each iteration of the loop
+\begin{enumerate}
+    \item Node \(z\) is red.
+    \item If \(z.p\) is the root, then \(z.p\) is black.
+    \item If the tree violates any of the red-black properties, then it violates at most one of them, and the violation is of either property 2 or property 4, but not both. If the tree violates property 2, it is because \(z\) is the root and is red. If the tree violates property 4, it is because both \(z\) and \(z.p\) are red.
+\end{enumerate}
+\bigbreak \noindent 
+Part (c), which deals with violations of red-black properties, is more central to showing that \texttt{RB-INSERT-FIXUP} restores the red-black properties than parts (a) and (b), which we’ll use along the way to understand situations in the code. 
+\bigbreak \noindent 
+Because we’ll be focusing on node \(z\) and nodes near it in the tree, it helps to know from part (a) that \(z\) is red. Part (b) will help show that \(z\)’s grandparent \(z.p.p\) exists when it’s referenced in lines 2, 3, 7, 8, 14, and 15 (recall that we’re focusing only on lines 3–15).
+\bigbreak \noindent 
+To use a loop invariant, we need to show that the invariant is true upon entering the first iteration of the loop, that each iteration maintains it, that the loop terminates, and that the loop invariant gives us a useful property at loop termination. We’ll see that each iteration of the loop has two possible outcomes: either the pointer $z$ moves up the tree, or some rotations occur and then the loop terminates.
+\bigbreak \noindent 
+Before RB-INSERT is called, the red-black tree has no violations. RB-INSERT adds a red node $z$ and calls RB-INSERT-FIXUP. We’ll show that each part of the invariant holds at the time RB-INSERT-FIXUP is called:
+\begin{enumerate}
+    \item[a.] When \texttt{RB-INSERT-FIXUP} is called, $z$ is the red node that was added.
+    \item[b.] If $z.p$ is the root, then $z.p$ started out black and did not change before the call of \texttt{RB-INSERT-FIXUP}.
+    \item[c.] We have already seen that properties 1, 3, and 5 hold when \texttt{RB-INSERT-FIXUP} is called.
+        \bigbreak \noindent 
+        If the tree violates property 2 (the root must be black), then the red root must be the newly added node $z$, which is the only internal node in the tree. Because the parent and both children of $z$ are the sentinel, which is black, the tree does not also violate property 4 (both children of a red node are black). Thus this violation of property 2 is the only violation of red-black properties in the entire tree.
+        \bigbreak \noindent 
+        If the tree violates property 4, then, because the children of node $z$ are black sentinels and the tree had no other violations prior to $z$ being added, the violation must be because both $z$ and $z.p$ are red. Moreover, the tree violates no other red-black properties.
+\end{enumerate}
+\bigbreak \noindent 
+\textbf{Maintenance:} There are six cases within the \texttt{while} loop, but we’ll examine only the three cases in lines 3–15, when node $z$’s parent $z.p$ is a left child of $z$’s grandparent $z.p.p$. The proof for lines 17–29 is symmetric. The node $z.p.p$ exists, since by part (b) of the loop invariant, if $z.p$ is the root, then $z.p$ is black. Since \texttt{RB-INSERT-FIXUP} enters a loop iteration only if $z.p$ is red, we know that $z.p$ cannot be the root. Hence, $z.p.p$ exists.
+\bigbreak \noindent 
+Case 1 differs from cases 2 and 3 by the color of $z$’s uncle $y$. Line 3 makes $y$ point to $z$’s uncle $z.p.p.\texttt{right}$, and line 4 tests $y$’s color. If $y$ is red, then case 1 executes. Otherwise, control passes to cases 2 and 3. In all three cases, $z$’s grandparent $z.p.p$ is black, since its parent $z.p$ is red, and property 4 is violated only between $z$ and $z.p$.
+\bigbreak \noindent 
+\textbf{Case 1: $z$'s uncle $y$ is red}
+\bigbreak \noindent 
+The figure below shows the situation for case 1 (lines 5–8), which occurs when both $z.p$ and $y$ are red. Because $z$’s grandparent $z.p.p$ is black, its blackness can transfer down one level to both $z.p$ and $y$, thereby fixing the problem of $z$ and $z.p$ both being red. Having had its blackness transferred down one level, $z$’s grandparent becomes red, thereby maintaining property 5. The \texttt{while} loop repeats with $z.p.p$ as the new node $z$, so that the pointer $z$ moves up two levels in the tree.
+\bigbreak \noindent 
+\fig{.5}{./figures/23.png}
+
+\bigbreak \noindent 
+\textbf{Case 2: $z$'s uncle $y$ is black and $z$ is a right child}
+\bigbreak \noindent 
+\textbf{Case 3: $z$'s uncle $y$ is black and $z$ is a left child}
+\bigbreak \noindent 
+In cases 2 and 3, the color of $z$’s uncle $y$ is black. We distinguish the two cases, which assume that $z$’s parent $z.p$ is red and a left child, according to whether $z$ is a right or left child of $z.p$. Lines 11–12 constitute case 2, which is shown in Figure 13.6 together with case 3. In case 2, node $z$ is a right child of its parent. A left rotation immediately transforms the situation into case 3 (lines 13–15), in which node $z$ is a left child. Because both $z$ and $z.p$ are red, the rotation affects neither the black-heights of nodes nor property 5. Whether case 3 executes directly or through case 2, $z$’s uncle $y$ is black, since otherwise case 1 would have run. Additionally, the node $z.p.p$ exists, since we have argued that this Node existed at the time that lines 2 and 3 were executed, and after moving $z$ up one level in line 11 and then down one level in line 12, the identity of $z.p.p$ remains unchanged. Case 3 performs some color changes and a right rotation, which preserve property 5. At this point, there are no longer two red nodes in a row. The \texttt{while} loop terminates upon the next test in line 1, since $z.p$ is now black.
+\bigbreak \noindent 
+\fig{.5}{./figures/24.png}
+
+\pagebreak 
+\subsubsection{Deletion}
+\bigbreak \noindent 
+Like the other basic operations on an $n$-node red-black tree, deletion of a node takes $O(\text{lg}\ n)$ time. Deleting a node from a red-black tree is more complicated than inserting a node.
+\bigbreak \noindent 
+First, we discuss the \textit{transplant} procedure. Red-Black Trees need a transplant function as part of their removal operation because it simplifies the process of replacing one subtree with another. This is particularly important for maintaining the binary search tree (BST) property and handling parent-child relationships efficiently during node deletion.
+\bigbreak \noindent 
+In a Red-Black Tree (and in a general BST), node removal often requires replacing the node being removed (u) with one of its subtrees (v). For example:
+\begin{itemize}
+    \item If the node being removed has one child, that child replaces the node.
+    \item If the node being removed has two children, its successor (or predecessor) replaces the node.
+\end{itemize}
+The transplant function encapsulates this replacement logic, making the process cleaner and more modular.
+\bigbreak \noindent 
+When replacing a node, the parent pointers of the replacement node and the replaced node's parent need to be updated. Manually handling these pointers can become error-prone, especially in a tree with many cases like a Red-Black Tree. The transplant function handles this pointer management consistently.
+\bigbreak \noindent 
+\begin{cppcode}
+    transplant(T,u,v) {
+        if (u.p == T.nil)
+            T.root = v
+        else if (u == u.p.left)
+            u.p.left = v
+        else u.p.right = v
+
+        v.p = u.p
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The procedure \textbf{RB-DELETE} on the next page is like the \textbf{TREE-DELETE} procedure, but with additional lines of pseudocode. The additional lines deal with nodes \(x\) and \(y\) that may be involved in violations of the red-black properties. When the node \(z\) being deleted has at most one child, then \(y\) will be \(z\). When \(z\) has two children, then, as in \textbf{TREE-DELETE}, \(y\) will be \(z\)'s successor, which has no left child and moves into \(z\)'s position in the tree. Additionally, \(y\) takes on \(z\)'s color. In either case, node \(y\) has at most one child: node \(x\), which takes \(y\)'s place in the tree. (Node \(x\) will be the sentinel \(T.nil\) if \(y\) has no children.) Since node \(y\) will be either removed from the tree or moved within the tree, the procedure needs to keep track of \(y\)'s original color. If the red-black properties might be violated after deleting node \(z\), \textbf{RB-DELETE} calls the auxiliary procedure \textbf{RB-DELETE-FIXUP}, which changes colors and performs rotations to restore the red-black properties.
+
+\pagebreak 
+\bigbreak \noindent 
+\begin{cppcode}
+    RB-DELETE(T,z) {
+        y = z 
+        y-original-color = y.color
+        if (z.left == T.nil)
+            x = z.right
+            RB-TRANSPLANT(T,z,z.right) // replace z by its right child
+        else if (z.right == T.nil)
+            x = z.left
+            RB-TRANSPLANT(T,z,z.left) // replace z by its left child 
+        else 
+            y = MINIMUM(z.right) // y is z's successor
+            y-original-color = y.color
+            x = y.right
+            if (y != z.right) // is y farther down the tree?
+                RB-TRANSPLANT(T,y,y.right)  // replace y by its right child 
+                y.right = z.right // z's right child becomes
+                y.right.p = y // y’s right child
+            else x.p = y // in case x is T.nil
+            RB-TRANSPLANT(T,z,y) // replace z by its successor y
+            y.left = z.left // and give z's left child to y, 
+            y.left.p = y // which had no left child
+            y.color = z.color
+        if (y-original-color == BLACK) // if any red-black violations occurred,
+            RB-DELETE-FIXUP(T,x) // Correct them
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Because node \(y\)'s color might change, the variable \(y\text{-}original\text{-}color\) stores \(y\)'s color before any changes occur. Lines 2 and 10 set this variable immediately after assignments to \(y\). When node \(z\) has two children, then nodes \(y\) and \(z\) are
+Distinct. In this case, line 17 moves \(y\) into \(z\)'s original position in the tree (that is, \(z\)'s location in the tree at the time \textbf{RB-DELETE} was called), and line 20 gives \(y\) the same color as \(z\). When node \(y\) was originally black, removing or moving it could cause violations of the red-black properties, which are corrected by the call of \textbf{RB-DELETE-FIXUP} in line 22.
+\bigbreak \noindent 
+As discussed, the procedure keeps track of the node \(x\) that moves into node \(y\)'s original position at the time of call. The assignments in lines 4, 7, and 11 set \(x\) to point to either \(y\)'s only child or, if \(y\) has no children, the sentinel \(T.nil\).
+\bigbreak \noindent 
+Since node \(x\) moves into node \(y\)'s original position, the attribute \(x.p\) must be set correctly. If node \(z\) has two children and \(y\) is \(z\)'s right child, then \(y\) just moves into \(z\)'s position, with \(x\) remaining a child of \(y\). Line 12 checks for this case. Although you might think that setting \(x.p\) to \(y\) in line 16 is unnecessary since \(x\) is a child of \(y\), the call of \textbf{RB-DELETE-FIXUP} relies on \(x.p\) being \(y\) even if \(x\) is \(T.nil\). Thus, when \(z\) has two children and \(y\) is \(z\)'s right child, executing line 16 is necessary if $y$’s right child is T.nil, and otherwise it does not change anything.
+\bigbreak \noindent 
+Finally, if node $y$ was black, one or more violations of the red-black properties
+might arise. The call of RB-DELETE-FIXUP in line 22 restores the red-black
+properties. If $y$ was red, the red-black properties still hold when $y$ is removed
+or moved, for the following reasons:
+\begin{enumerate}
+    \item No black-heights in the tree have changed
+    \item No red nodes have been made adjacent. If \(z\) has at most one child, then \(y\) and \(z\) are the same node. That node is removed, with a child taking its place. If the removed node was red, then neither its parent nor its children can also be red, so moving a child to take its place cannot cause two red nodes to become adjacent. If, on the other hand, \(z\) has two children, then \(y\) takes \(z\)'s place in the tree, along with \(z\)'s color, so there cannot be two adjacent red nodes at \(y\)'s new position in the tree. In addition, if \(y\) was not \(z\)'s right child, then \(y\)'s original right child \(x\) replaces \(y\) in the tree. Since \(y\) is red, \(x\) must be black, and so replacing \(y\) by \(x\) cannot cause two red nodes to become adjacent.
+    \item Because \(y\) could not have been the root if it was red, the root remains black.
+\end{enumerate}
+
+
+
+
+
+\pagebreak
+\subsubsection{C++ implementation}
+\bigbreak \noindent 
+\paragraph{The node structure}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{cppcode}
+    struct node {
+        enum color {BLACK, RED};
+
+        int data=0;
+        bool color;
+        node* left, *right, *parent;
+
+        node() = default;
+        node(int data) : data(data) {}
+    };
+\end{cppcode}
+\bigbreak \noindent 
+A red-black bst node in this example has three pointers, left, right, and parent. It also has a color  and a data field. The color enum defines the colors. Black is zero, red is one.
+\bigbreak \noindent 
+\paragraph{The tree class and defining nil}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{cppcode}
+    class tree {
+        node* root;
+        node* nil;
+
+        tree() {
+            nil = new node();
+            nil->color = node::BLACK;
+            nil->left = nil;
+            nil->right = nil;
+            nil->parent = nil;
+            root = nil;
+        }
+    };
+\end{cppcode}
+\bigbreak \noindent 
+We create two nodes, a root node and the nil node. In the constructor, we create the nil node, and set its attributes. An empty tree is one whos root is nil. Note that all nodes that would be nullptrs in a standard binary search tree now become the nil node in the red-black tree
+
+\pagebreak 
+\paragraph{Rotation methods}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{cppcode}
+    void left_rotate(node* x) {
+        node* y = x->right;
+        x->right = y->left;
+
+        if (y->left != nil) {
+            y->left->parent = x;
+        }
+
+        y->parent = x->parent;
+        if (x->parent == nil) {
+            root = y;
+        } else if (x == x->parent->left) {
+            x->parent->left = y;
+        } else {
+            x->parent->right = y;
+        }
+        y->left = x;
+        x->parent = y;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\texttt{right\_rotate} is achieved by replacing left with right, and right with left in \textt{left\_rotate}.
+
+\pagebreak 
+\paragraph{Insert}
+\bigbreak \noindent \bigbreak \noindent 
+\begin{cppcode}
+    void insert(int element) {
+        node* z = new node(element);
+        z->left = nil;
+        z->right = nil;
+        z->color = node::RED;
+
+        node* x = root;
+        node* y = nil;
+
+        while (x != nil) {
+            y = x;
+            if (z->data < x->data) {
+                x = x->left;
+            } else {
+                x = x->right;
+            }
+        }
+
+        z->parent = y;
+        if (y == nil) {
+            root = z;
+        } else if (z->data < y->data) {
+            y->left = z;
+        } else {
+            y->right = z;
+        }
+
+        insert_fixup(z);
+    }
+\end{cppcode}
+
+
+\pagebreak 
+\paragraph{Insert fixup}
+\bigbreak \noindent 
+\begin{cppcode}
+    void insert_fixup(node* z) {
+        while (z->parent->color == node::RED) {
+            if (z->parent == z->parent->parent->left) {
+                node* y = z->parent->parent->right;
+                if (y->color == node::RED) {
+                    z->parent->color = node::BLACK;
+                    y->color = node::BLACK;
+                    z->parent->parent->color = node::RED;
+                    z = z->parent->parent;
+                } else {
+                    if (z == z->parent->right) {
+                        z = z->parent;
+                        left_rotate(z);
+                    }
+                    z->parent->color = node::BLACK;
+                    z->parent->parent->color = node::RED;
+                    right_rotate(z->parent->parent);
+                }
+            } else {
+                node* y = z->parent->parent->left;
+                if (y->color == node::RED) {
+                    z->parent->color = node::BLACK;
+                    y->color = node::BLACK;
+                    z->parent->parent->color = node::RED;
+                    z = z->parent->parent;
+                } else {
+                    if (z == z->parent->left) {
+                        z = z->parent;
+                        right_rotate(z);
+                    }
+                    z->parent->color = node::BLACK;
+                    z->parent->parent->color = node::RED;
+                    left_rotate(z->parent->parent);
+                }
+            }
+        }
+        root->color = node::BLACK;
+    }
+\end{cppcode}
+
+
+
+
+
+
+
 
 \pagebreak 
 \unsect{Heaps and Priority Queues (Zero based)}
@@ -2696,7 +3707,7 @@ There are two kinds of binary heaps: max-heaps and min-heaps. In both kinds, the
 \bigbreak \noindent 
 That is, the value of a node is at most the value of its parent. Thus, the largest
 element in a max-heap is stored at the root, and the subtree rooted at a node contains
-values no larger than that contained at the node itself. A \textcolor{min-heap} is organized in
+values no larger than that contained at the node itself. A \textcolor{cyan}{min-heap} is organized in
 the opposite way: the \textcolor{cyan}{min-heap property} is that for every node $i$ other than the
 root,
 \bigbreak \noindent 
@@ -3324,16 +4335,182 @@ To perform the sort "in-place" in bstsort, we can eliminate the extra sorted vec
     \item \textbf{Space Complexity:} $O(n)$, for storing the BST nodes.
 \end{itemize}
 
+\pagebreak 
+\subsection{Quick sort}
 \bigbreak \noindent 
-\subsection{Getting characters from a string}
+Quicksort, like merge sort, applies the divide-and-conquer method
 \bigbreak \noindent 
-We can index strings as if they were arrays
+\begin{itemize}
+    \item \textbf{Divide} by partitioning (rearranging) the array \( A[p : r] \) into two (possibly empty) subarrays \( A[p : q - 1] \) (\textit{the low side}) and \( A[q + 1 : r] \) (\textit{the high side}) such that each element in the low side of the partition is less than or equal to the \textit{pivot} \( A[q] \), which is, in turn, less than or equal to each element in the high side. Compute the index \( q \) of the pivot as part of this partitioning procedure.
+    \item \textbf{Conquer} by calling quicksort recursively to sort each of the subarrays \( A[p : q - 1] \) and \( A[q + 1 : r] \).
+    \item \textbf{Combine} by doing nothing: because the two subarrays are already sorted, no work is needed to combine them. All elements in \( A[p : q - 1] \) are sorted and less than or equal to \( A[q] \), and all elements in \( A[q + 1 : r] \) are sorted and greater than or equal to the pivot \( A[q] \). The entire subarray \( A[p : r] \) cannot help but be sorted!
+\end{itemize}
+The \textsc{Quicksort} procedure implements quicksort. To sort an entire \( n \)-element array \( A[1 : n] \), the initial call is \textsc{Quicksort}(\( A, 1, n \)).
 \bigbreak \noindent 
-\begin{phpcode}
-$s = "this string has alot of characters";
-echo $s[0]; // t
-\end{phpcode}
+\subsubsection{Partitioning}
 \bigbreak \noindent 
+The key to the algorithm is the PARTITION procedure, which rearranges the subarray $A[p:r]$ in place, returning the index of the dividing point between the two sides of the partition
+\bigbreak \noindent 
+PARTITION always selects the element $A[r]$ (last element) as the pivot.
+\bigbreak \noindent 
+\begin{cppcode}
+PARTITION(A, p,r)
+    x = A[r]                // the pivot
+    i = p-1                 // highest index into the low side
+    for j = p to r - 1      // process each element other than the pivot
+        if A[j] <= x        // does this element belong on the low side?
+            ++i                 // index of a new slot in the low side 
+            swap(A[i], A[j])    // put this element there 
+    swap(A[i+1], A[r])      // pivot goes just to the right of the low side 
+    return i + 1            // new index of the pivot 
+\end{cppcode}
+\bigbreak \noindent 
+At the beginning of each iteration of the loop of lines 3–6, for any array index \( k \), the following conditions hold:
+\begin{enumerate}
+    \item if \( p \leq k \leq i \), then \( A[k] \leq x \) (the tan region of Figure 7.2);
+    \item if \( i + 1 \leq k \leq j - 1 \), then \( A[k] > x \) (the blue region);
+    \item if \( k = r \), then \( A[k] = x \) (the yellow region).
+\end{enumerate}
+\bigbreak \noindent 
+\textbf{Note: } an invariant is a property or condition that remains true throughout the execution of a program, particularly during specific phases or loops. In other words, an invariant is something that holds steady or stays consistent at key points in an algorithm, typically at the beginning or end of each loop iteration
+\bigbreak \noindent 
+\fig{.8}{./figures/16.png}
+
+\bigbreak \noindent 
+\begin{cppcode}
+int partition(vector<int>& v, int p, int r) {
+    int x = v[r];
+    int i=p-1;
+
+    for (int j=p; j<r; ++j) {
+        if (v[j] <= x) {
+            ++i;
+            swap(v[j], v[i]);
+        }
+    }
+    swap(v[i+1], v[r]);
+    return i+1;
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{The quick sort procedure}
+\bigbreak \noindent 
+\begin{cppcode}
+void qsort(vector<int>& v, int start, int end) {
+    if (start < end) {
+        int pivot = partition(v, start, end);
+        qsort(v, start, pivot-1);
+        qsort(v, pivot+1, end);
+    }
+}
+\end{cppcode}
+\bigbreak \noindent 
+In each recursive call to qsort, the function first checks if the start index is less than the end index. This condition serves as the base case for the recursion, ensuring that the function will terminate when the segment of the array being processed is either empty or has only one element (both of which are already sorted by default). If start is not less than end, the function simply returns without making further recursive calls, signaling that this segment is already sorted.
+\bigbreak \noindent 
+When start is less than end, the function calls partition, passing in the vector and the current segment boundaries (start and end). The partition function typically selects a pivot element, rearranges elements in the segment so that all elements less than or equal to the pivot appear on the left side, and all elements greater than the pivot appear on the right side. partition then returns the index of the pivot element after rearranging. This index is crucial because it marks the point in the array where the pivot element is correctly positioned in the sorted order.
+\bigbreak \noindent 
+After the array is partitioned around the pivot, the qsort function calls itself recursively on the two subarrays divided by the pivot. The first recursive call processes the left subarray, from start to pivot - 1, containing elements less than or equal to the pivot. The second recursive call processes the right subarray, from pivot + 1 to end, containing elements greater than the pivot. Each of these recursive calls will, in turn, partition their respective subarrays and further divide and sort them, following the same logic.
+\bigbreak \noindent 
+Through this recursive process, each segment of the array is progressively divided and sorted around pivot elements, until every element is in its correct position. This "divide and conquer" approach ensures that, by the end of the process, the entire array is sorted in ascending order. The function achieves efficiency by reducing the problem size with each recursive call, ultimately sorting the array in an average time complexity of $O(n\text{lg}\ n)$, making QuickSort one of the fastest sorting algorithms in practice.
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{A better partition}
+\bigbreak \noindent 
+In the example above, we always selected the last element as the pivot. We could instead select the middle element.
+\bigbreak \noindent 
+\begin{cppcode}
+    int partition2(std::vector<int>& v, int p, int r) {
+        int middle = p + (r - p) / 2; // Calculate the middle index
+        std::swap(v[middle], v[r]);   // Move the middle element to the end temporarily
+
+        int x = v[r];                 // Use the last element (original middle) as pivot
+        int i = p - 1;
+
+        for (int j = p; j < r; ++j) {
+            if (v[j] <= x) {
+                ++i;
+                std::swap(v[j], v[i]);
+            }
+        }
+        std::swap(v[i + 1], v[r]);    // Place the pivot in its correct position
+        return i + 1;                 // Return the pivot index
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Median of three partition}
+\bigbreak \noindent 
+To use the median-of-three approach for selecting the pivot in QuickSort, we need to compare three elements in the array — typically the first, middle, and last elements of the current subarray — and select the median (the middle value of these three) as the pivot. This approach helps improve the performance of QuickSort by reducing the chances of poor pivot choices in partially sorted or skewed data.
+\begin{itemize}
+    \item \textbf{Identify the Three Elements:} We find the indices of the first element, the middle element, and the last element of the current subarray.
+    \item \textbf{Calculate the Median of Three:} We choose the median value among these three elements and use it as the pivot.
+    \item \textbf{Swap the Pivot to the End:} To keep the partition logic the same, we swap the median-of-three pivot element with the last element, so we can proceed with the same partitioning logic as before.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+    int partition3(std::vector<int>& v, int p, int r) {
+        int middle = p + (r-p) / 2;
+
+        // Determine the median of v[p], v[middle], and v[r]
+        if ((v[p] > v[middle]) != (v[p] > v[r])) {
+            std::swap(v[p], v[r]); // Median is at v[p]
+        } else if ((v[middle] > v[p]) != (v[middle] > v[r])) {
+            std::swap(v[middle], v[r]); // Median is at v[middle]
+        } 
+        // If v[r] is the median, no swap is needed since we want it as the pivot
+
+        int x = v[r]; // The pivot is now the median of the three values
+        int i = p - 1;
+
+        // Standard partition logic
+        for (int j = p; j < r; ++j) {
+            if (v[j] <= x) {
+                ++i;
+                std::swap(v[j], v[i]);
+            }
+        }
+        std::swap(v[i + 1], v[r]); // Place the pivot in its correct position
+        return i + 1; // Return the pivot index
+    }
+\end{cppcode}
+
+\pagebreak 
+\bigbreak \noindent 
+\subsubsection{Quicksort with iterators}
+\bigbreak \noindent 
+\begin{cppcode}
+    template<typename ForwardIt>
+    ForwardIt partition4(ForwardIt p, ForwardIt r) {
+        auto middle = p + std::distance(p, r) / 2; // Calculate the middle iterator
+        std::iter_swap(middle, r - 1);   // Move the middle element to the end temporarily
+
+        auto pivot = *(r - 1); // Use the last element (original middle) as pivot
+        auto i = p; // Boundary for elements less than or equal to the pivot
+
+        for (auto j = p; j != r - 1; ++j) { // Iterate up to the pivot position
+            if (*j <= pivot) {
+                std::iter_swap(j, i);
+                ++i;
+            }
+        }
+        std::iter_swap(i, r - 1); // Place the pivot in its correct position
+        return i; // Return the pivot iterator
+    }
+
+    template <typename ForwardIt>
+    void qsort2(ForwardIt start, ForwardIt end) {
+        if (std::distance(start, end) > 1) { // Correct base case: at least two elements
+            auto pivot = partition4(start, end);
+            qsort2(start, pivot); // Sort elements before the pivot
+            qsort2(pivot + 1, end); // Sort elements after the pivot
+        }
+    }
+\end{cppcode}
+
+
+
+
 
 \pagebreak 
 \unsect{Multi-way (m-way) search trees}
@@ -3410,7 +4587,7 @@ But what happens if the the siblings are 2-nodes (one element), we will not be a
     \item Insertion and deletion take O(log n)
     \item Balanced trees
 \end{itemize}
-
+%
 \pagebreak 
 \subsection{B-trees}
 \bigbreak \noindent 
@@ -3565,6 +4742,174 @@ This section first attempts to answer these questions based on two ad hoc approa
 Although these methods work well for some sets of input keys, they are limited because they try to provide a single fixed hash function that works well on any data, an approach called static hashing.
 \bigbreak \noindent 
 We then see that provably good average-case performance for any data can be obtained by designing a suitable family of hash functions and choosing a hash function at random from this family at runtime, independent of the data to be hashed. The approach we examine is called random hashing
+\bigbreak \noindent 
+A good hash function satisûes (approximately) the assumption of independent uniform hashing: each key is equally likely to hash to any of the m slots, independently of where any other keys have hashed to. What does "equally likely" mean here? If the hash function is fixed, any probabilities would have to be based on the probability distribution of the input keys
+\bigbreak \noindent 
+Unfortunately, you typically have no way to check this condition, unless you happen to know the probability distribution from which the keys are drawn. Moreover, the keys might not be drawn independently
+\bigbreak \noindent 
+Occasionally you might know the distribution. For example, if you know that
+the keys are random real numbers $k$ independently and uniformly distributed in the
+range $0 < k < 1$, then the hash function
+\begin{align*}
+    h(k) = \lfloor km \rfloor
+.\end{align*}
+\bigbreak \noindent 
+satisfies the condition of independent uniform hashing.
+\bigbreak \noindent 
+A good static hashing approach derives the hash value in a way that you expect to be independent of any patterns that might exist in the data. For example, the "division method" computes the hash value as the remainder when the key is divided by a speciûed prime number. This method may give good results, if you (somehow) choose a prime number that is unrelated to any patterns in the distribution of keys.
+\bigbreak \noindent 
+Random hashing picks the hash function to be used at random from a suitable family of hashing functions. This approach removes any need to know anything about the probability distribution of the input keys, as the randomization necessary for good average-case behavior then comes from the (known) random process used to pick the hash function from the family of hash functions, rather than from the (unknown) process used to create the input keys. We recommend that you use random hashing. 
+\bigbreak \noindent 
+In practice, a hash function is designed to handle keys that are one of the following two types:
+\begin{itemize}
+    \item A short nonnegative integer that fits in a $w$-bit machine word. Typical values for $w$ would be 32 or 64.
+    \item A short vector of nonnegative integers, each of bounded size. For example, each element might be an 8-bit byte, in which case the vector is often called a (byte) string. The vector might be of variable length. 
+\end{itemize}
+\bigbreak \noindent 
+To begin, we assume that keys are short nonnegative integers.
+\bigbreak \noindent 
+\subsubsection{Static hashing}
+\bigbreak \noindent 
+Static hashing uses a single, fixed hash function. The only randomization available is through the (usually unknown) distribution of input keys. This section discusses two standard approaches for static hashing: the division method and the multiplication method. Although static hashing is no longer recommended, the multiplication method also provides a good foundation for "nonstatic hashing", better known as random hashing, where the hash function is chosen at random from a suitable family of hash functions.
+\bigbreak \noindent 
+\subsubsection{The division method}
+\bigbreak \noindent 
+The division method for creating hash functions maps a key k into one of $m$ slots
+by taking the remainder of $k$ divided by $m$. That is, the hash function is
+\begin{align*}
+    h(k) = k \ \text{mod} \ m
+.\end{align*}
+\bigbreak \noindent 
+For example, if the hash table has size $m=12 $ and the key is $k=100$, then $h(k) = 4$. Since it requires only a single division operation, hashing by division is quite fast
+\bigbreak \noindent 
+The division method may work well when $m$ is a prime not too close to an exact power of 2. There is no guarantee that this method provides good average-case performance, however, and it may complicate applications since it constrains the size of the hash tables to be prime.
+\bigbreak \noindent 
+\subsubsection{The multiplication method}
+\bigbreak \noindent 
+The general multiplication method for creating hash functions operates in two steps. First, multiply the key \( k \) by a constant \( A \) in the range \( 0 < A < 1 \) and extract the fractional part of \( kA \). Then, multiply this value by \( m \) and take the floor of the result. That is, the hash function is
+\begin{align*}
+    h(k) = \lfloor m (kA \ \text{mod} \ 1) \rfloor
+.\end{align*}
+\bigbreak \noindent 
+where "$kA \ \text{mod} \ 1$" means the fractional part of $kA$, that is, $kA - \lfloor kA \rfloor $
+\bigbreak \noindent 
+The general multiplication method has the advantage that the value of $m$ is not critical and you can choose it independently of how you choose the multiplicative constant $A$
+
+\bigbreak \noindent 
+\subsection{Open addressing}
+\bigbreak \noindent 
+Open addressing hashing is a collision resolution technique used in hash tables. When a hash collision occurs (i.e., two keys are hashed to the same index), open addressing searches for the next available slot in the array to store the colliding key. This eliminates the need for linked lists or separate chaining.
+\bigbreak \noindent 
+The two methods of open addressing we will discuss are
+\begin{enumerate}
+    \item linear probing
+    \item quadratic probing
+\end{enumerate}
+
+
+
+
+\bigbreak \noindent 
+\subsubsection{Linear probing}
+\bigbreak \noindent 
+Linear probing is a simple and commonly used method for handling collisions in hash tables. Collisions occur when two different keys hash to the same index in the table. Linear probing resolves these collisions by searching sequentially through the table to find the next available slot.
+\bigbreak \noindent 
+The formula for linear probing is
+\[
+    h'(k, i) = (h(k) + i) \mod m
+\]
+\begin{itemize}
+    \item \(h(k)\): Original hash function.
+    \item \(i\): Probe sequence (0, 1, 2, ...).
+    \item \(m\): Table size.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Quadratic probing}
+\bigbreak \noindent 
+Quadratic probing is a collision resolution technique used in hash tables as part of open addressing. When a collision occurs, instead of probing linearly (as in linear probing), quadratic probing uses a quadratic function to calculate the next index to probe. This helps reduce clustering and improves performanc
+\bigbreak \noindent 
+The formula for quadratic probing is
+\[
+h'(k, i) = \left(h(k) + c_1 i + c_2 i^2\right) \mod m
+\]
+Where:
+\begin{itemize}
+    \item \(h(k)\): Original hash function.
+    \item \(i\): Probe number (starting from 0).
+    \item \(c_1, c_2\): Constants to control the probing step size.
+    \item \(m\): Size of the hash table (typically a prime number).
+\end{itemize}
+\bigbreak \noindent 
+Simple quadratic probing is when $c_{1} = 0,\ c_{2} = 1$
+
+\bigbreak \noindent 
+\subsubsection{Deletion problem in open addressing}
+\bigbreak \noindent 
+In open addressing, when an element is removed from a hash table, simply marking the corresponding slot as unoccupied (occupied[index] = false) can break the probe sequence. This makes it impossible to find keys that were inserted after the deleted element, even though they still exist in the table.
+\begin{itemize}
+    \item Insert 10,20,30 into a hash table with linear probing.
+    \item Suppose 10 and 20 are hashed to the same index due to collisions.
+    \item Remove 10 by marking its slot as unoccupied.
+    \item Now, if you search for 20, the probe sequence will terminate prematurely because it will encounter the unoccupied slot where 10 was stored.
+\end{itemize}
+\bigbreak \noindent 
+The next few sections introduce solutions to this problem.
+
+
+\bigbreak \noindent 
+\subsubsection{Tombstoning}
+\bigbreak \noindent 
+One way to address the deletion problem in open addressing is tombstoning. This technique introduces a new boolean array called \textit{tombstone}. When we remove an item, we mark its slot unoccupied, but we also mark the spot with a tombstone. This way, when we probe for an element, we can continue searching if we encounter a hole, as long as there is a tombstone. We will see this method more in depth in the upcoming c++ example.
+
+\bigbreak \noindent 
+\subsubsection{Lazy deletion}
+\bigbreak \noindent 
+Instead of marking a slot as a tombstone, simply leave the slot as occupied but ignore its value in future insertions.
+\bigbreak \noindent 
+Mark the slot as "deleted" logically but do not clear the occupied flag.
+\bigbreak \noindent 
+Searches and insertions treat these "deleted" slots as valid for probing but ignore their values.
+
+\bigbreak \noindent 
+\subsubsection{Rehashing}
+\bigbreak \noindent 
+Instead of handling deletions within the existing table structure, rebuild the entire hash table when a deletion occurs
+\bigbreak \noindent 
+When a key is deleted, construct a new hash table and reinsert all active keys from the old table into the new one.
+\bigbreak \noindent 
+This eliminates any empty or deleted slots and ensures clean probe sequences.
+\bigbreak \noindent 
+This simplifies search, insertion, and deletion logic (no need for tombstones or special flags).
+\bigbreak \noindent 
+It also avoids performance degradation from tombstones or empty clusters.
+\bigbreak \noindent 
+However, this method is expensive in terms of time complexity for frequent deletions, as rehashing involves reinserting all active keys.
+\bigbreak \noindent 
+\begin{cppcode}
+    void rehashTable() {
+        hashtable<TABLE_SIZE> newTable;
+        for (int i=0; i<TABLE_SIZE; ++i) {
+            if (occupied[i]) {
+                newTable.insert(table[i]);
+            }
+        }
+        *this = newTable;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Then we we remove an element, we mark its spot unoccupied, then rehash the table.
+\bigbreak \noindent 
+\begin{cppcode}
+    while (occupied[index]) {
+        if (table[index] == key) {
+            // Key found, mark as removed
+            occupied[index] = false;
+            rehashTable();
+            return true;
+        }
+        ...
+\end{cppcode}
 
 
 
@@ -3575,19 +4920,413 @@ We then see that provably good average-case performance for any data can be obta
 
 
 
+\bigbreak \noindent 
+\subsection{Load factor}
+\bigbreak \noindent 
+The load factor of a hash table is a measure of how full the table is, expressed as a ratio of the number of elements in the table to its total capacity. It helps determine when a hash table might need to be resized to maintain efficient performance.
+\bigbreak \noindent 
+The load factor $\alpha$ is calculated as:
+\begin{align*}
+\alpha = \frac{\text{number of elements in the table}}{\text{total number of slots in the table}}
+.\end{align*}
 
 
 
+\bigbreak \noindent 
+\subsection{Static hashing}
+\bigbreak \noindent 
+When a hash table uses a fixed-size array as its storage, the approach is generally called static hashing. In static hashing, the table’s size is determined at the time of its creation and does not change as elements are added or removed. This is in contrast to dynamic hashing, where the table can grow or shrink based on the number of entries.
+\bigbreak \noindent 
+\subsection{Static linear hashing}
+\bigbreak \noindent 
+Static linear hashing is a hashing technique that combines aspects of static hashing (fixed-size table) with linear probing for collision resolution. In this approach:
+\begin{itemize}
+    \item \textbf{Fixed-Size Table:} The hash table is created with a fixed number of slots, meaning its size does not grow or shrink based on the number of elements. This fixed size makes it suitable for scenarios where the maximum number of entries is known in advance or memory is constrained.
+    \item \textbf{Hash Function:} A hash function maps each key to a specific index within the table. Since the table is of fixed size, the hash function ensures that the resulting index is within the range of available slots, typically using a modulus operation, such as
+        \[
+            \text{hash(key)} \mod \text{table size}.
+        \]
+    \item \textbf{Linear Probing for Collision Resolution:} When two keys hash to the same index (a collision), linear probing is used to find the next available slot. This means that if a collision occurs at index \( i \), the algorithm checks \( i + 1 \), \( i + 2 \), and so on, wrapping around to the start of the table if necessary, until an empty slot is found.
+    \item \textbf{Load Factor Constraints:} Because the table size is static, as the number of entries increases, so does the load factor. Higher load factors increase the likelihood of collisions, which can slow down insertion and search operations. Generally, static linear hashing performs best when the load factor is kept below a certain threshold (often around 0.7 to 0.8).
+\end{itemize}
 
+\pagebreak 
+\subsection{Static hashing with linear probe implementation}
+\bigbreak \noindent 
+\subsubsection{Interface}
+\bigbreak \noindent 
+We support three operations
+\begin{enumerate}
+    \item Inserting
+    \item Searching
+    \item Removing
+\end{enumerate}
+\bigbreak \noindent 
+\subsubsection{The basics}
+\bigbreak \noindent 
+\begin{cppcode}
+template<size_t TABLE_SIZE>
+class hashtable {
+    int table[TABLE_SIZE];
+    bool occupied[TABLE_SIZE]; 
+public:
+    hashtable() {
+        fill(std::begin(occupied), std::end(occupied), 0);
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+By including template<size\_t TABLE\_SIZE> at the start, the class becomes a template, which means the table size is set by the user when they create an instance of the class. size\_t is used as the type for the TABLE\_SIZE parameter because it's ideal for holding non-negative values and represents sizes and counts. With this approach, users can create hash tables of varying sizes without needing dynamic memory allocation.
+\bigbreak \noindent 
+Within the class definition, there’s an array named table that has a size of TABLE\_SIZE. Since TABLE\_SIZE is defined as a template parameter, it’s treated as a compile-time constant, allowing the table array to be statically allocated. This fixed-size array avoids the need for dynamic memory management, which is often desirable in systems where memory usage needs to be predictable.
+\bigbreak \noindent 
+We also create a boolean array of the same size to track the spots in the hash table that have been filled. In the constructor, we fill the occupied array with 0 to mark all spots empty.
+\bigbreak \noindent 
+\subsubsection{The hash function}
+\bigbreak \noindent 
+For this example, we will use a simple hashing function
+\begin{align*}
+    h(x) = x \ \text{mod} \ n
+.\end{align*}
+Where $n$ is the size of the table.
+\bigbreak \noindent 
+\begin{cppcode}
+    int hash(int element) {
+        return element % TABLE_SIZE;
+    }
+\end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{Inserts}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool insert(int key) {
+        int index = hash(key);
+        int originalIndex = index;
+
+        // Linear probing to find an open slot
+        while (occupied[index]) {
+            if (table[index] == key) {
+                // Key already exists, insertion fails to avoid duplicates
+                return false;
+            }
+            // Increment index, looping around if necessary
+            index = (index + 1) % TABLE_SIZE;
+            if (index == originalIndex) {
+                // Table is full, insertion fails
+                return false;
+            }
+        }
+        
+        table[index] = key;
+        occupied[index] = true;
+        return true;
+    }
+\end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{Searching}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool search(int key) const {
+        int index = hash(key);
+        int originalIndex = index;
+
+        // Linear probing to search for the key
+        while (occupied[index]) {
+            if (table[index] == key) {
+                return true;  // Key found
+            }
+            index = (index + 1) % TABLE_SIZE;
+            if (index == originalIndex) {
+                // Key not found, returned to original index
+                return false;
+            }
+        }
+        return false;  // Key not found
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Removing}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool remove(int key) {
+        int index = hash(key);
+        int originalIndex = index;
+
+        // Linear probing to find the key
+        while (occupied[index]) {
+            if (table[index] == key) {
+                // Key found, mark as removed
+                table[index] = -1;
+                occupied[index] = false;
+                return true;
+            }
+            index = (index + 1) % TABLE_SIZE;
+            if (index == originalIndex) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\bigbreak \noindent 
+\subsubsection{Searching and removing with tombstones}
+\bigbreak \noindent 
+Consider the hash table
+\begin{align*}
+    0:\ 142 \\ 
+    1:\ 27  \\
+    2:\ 15  \\
+    3:\ \text{empty}  \\
+    4:\ \text{empty} \\
+    5:\ 83  \\
+    6:\ 18 \\ 
+    7:\ \text{empty} \quad \text{add 109}\\
+    8:\ 47 \\
+    9:\ \text{empty} \\ 
+    10:\ 10 \\ 
+    11:\ \text{empty} \\
+    12:\ 90 
+.\end{align*}
+\bigbreak \noindent 
+Suppose now we add key 109, which hashes to slot 5. Since 5 is taken, and we are using open addressing with a linear probe, 109 gets added to slot 7 instead.
+\bigbreak \noindent 
+Since the while loop depends on not finding any unoccupied slots in the path to the key, it could happen that on the path an element that previously existed was removed, thereby creating an unoccupied slot in the linear path to the requested element. In this case, the search function would incorrectly assume that the requested key does not exist! The while loop detected an empty slot before finding the key, therefore the key must not exist. To solve this problem, we need a way to indicate that slots that are empty have had data previously in them. We introduce a new array to track what we call tombstones, slots that are empty but previously held data.
+\bigbreak \noindent 
+In the example above, suppose we remove key 18, doing so creates a hole between 83 and 109, which both hash to 5. Searching for 109 in this case would give false, when it is clearly a member of the table.
+\bigbreak \noindent 
+Since the remove function also relies on searching for the key, it too needs the additional tombstone logic. 
+\bigbreak \noindent 
+Thus, we simply create a boolean tombstone array, and make slight adjustmennts to the search and remove logic.
+\bigbreak \noindent 
+\begin{cppcode}
+    bool tombstone[TABLE_INDEX]; // Make sure to initially fill with zeros.
+
+    // Adjustments to search
+    while (occupied[index] || tombstone[index]) {
+        if (occupied[index] && table[index] == key) {
+            return true;  // Key found
+        }
+        ...
+
+    // Adjustments to remove
+    while (occupied[index] || tombstone[index]) {
+        if (occupied[index] && table[index] == key) {
+            // Key found, mark as removed
+            occupied[index] = false;
+            tombstone[index] = true;
+            return true;
+        }
+        ...
+\end{cppcode}
+
+\pagebreak 
+\subsection{Static hashing with quadratic probing implementation}
+\bigbreak \noindent 
+The code for quadratic probing is similar to linear probing, but with a slight adjustment to the probe increment. For this example, we use
+\begin{align*}
+    h^{\prime}(x) = h(x) + i^{2} \ \text{for } i=1,2,3,...,m
+.\end{align*}
+Where $m$ is the size of the table.
+\bigbreak \noindent 
+\subsubsection{Inserting}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool insert(int key) {
+        int index = hash(key);
+        int originalIndex = index;
+        int i=1;
+
+        // quadratic probing to find an open slot
+        while (occupied[index]) {
+            if (table[index] == key) {
+                // Key already exists, insertion fails to avoid duplicates
+                return false;
+            }
+            index = (index + (i*i)) % TABLE_SIZE;
+            ++i; if (i>TABLE_SIZE) return false;
+        }
+
+        table[index] = key;
+        occupied[index] = true;
+        return true;
+    }
+\end{cppcode}
+
+\pagebreak 
+\bigbreak \noindent 
+\subsubsection{Searching}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool search(int key) const {
+        int index = hash(key);
+        int originalIndex = index;
+        int i=1;
+
+        // Linear probing to search for the key
+        while (occupied[index]) {
+            if (table[index] == key) {
+                return true;  // Key found
+            }
+            index = (index + (i*i)) % TABLE_SIZE;
+            ++i; if (i>TABLE_SIZE) return false;
+        }
+        return false;  // Key not found
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Removing}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool remove(int key) {
+        int index = hash(key);
+        int originalIndex = index;
+        int i=1;
+
+        // Linear probing to find the key
+        while (occupied[index]) {
+            if (table[index] == key) {
+                // Key found, mark as removed
+                occupied[index] = false;
+                rehash();
+                return true;
+            }
+            index = (index + (i*i)) % TABLE_SIZE;
+            ++i; if (i > TABLE_SIZE) return false;
+        }
+
+        return false;
+    }
+\end{cppcode}
 
 
 
 
 
 \pagebreak 
+\subsection{Static hashing with chaining implementation}
+\bigbreak \noindent 
+An improvement on the collision resolution technique above would be to instead use linked lists as the hash table elements. This way, if we have collisions, we can just add the element that hashes to the same slot to that slots linked list front. The hash function will remain the same
+\bigbreak \noindent 
+\subsubsection{The basics}
+\bigbreak \noindent 
+\begin{cppcode}
+template<size_t TABLE_SIZE>
+class hashtable {
+    list<int> table[TABLE_SIZE];
+    bool occupied[TABLE_SIZE]; 
+
+public:
+    hashtable() {
+        fill(std::begin(occupied), std::end(occupied), 0);
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+Instead of a table of integers, we now use a table of doubly linked lists of integers. The occupied array remains the same.
+\bigbreak \noindent 
+\subsubsection{Inserting}
+\bigbreak \noindent 
+The insert function becomes much easier, we simply add the key to the slots linked list.
+\bigbreak \noindent 
+\begin{cppcode}
+    void insert(int key) {
+        int hx = hash(key);
+        table[hx].push_front(key);
+        occupied[hx] = 1;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Searching}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool search(int key) const {
+        int hx = hash(key);
+        if (!occupied[hx]) 
+        return false;
+
+        if (std::find(table[hx].begin(), table[hx].end(), key) != table[hx].end()) 
+        return true;
+        return false;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Removing}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool remove(int key) {
+        int hx = hash(key);
+
+        if (!occupied[hx])
+        return false;
+
+        table[hx].remove(key);    
+        if (table[hx].empty()) 
+        occupied[hx] = 0;
+
+        return true;
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Injective hashing}
+\bigbreak \noindent 
+A hash function is injective if it maps every distinct input to a distinct output, i.e., it has no collisions. In other words,
+\begin{align*}
+    h(k_{1}) = h(k_{2}) \implies k_{1} = k_{2}
+.\end{align*}
+\bigbreak \noindent 
+However, this is often impractical for large or infinite domains because it requires the output space to be at least as large as the input space.
+
+\bigbreak \noindent 
+\subsection{Perfect hashing}
+\bigbreak \noindent 
+ A hash function is perfect if it is collision-free for a specific, finite set of inputs. For a given set $S$, a perfect hash function $h$ maps every element in $S$ to a unique value (injectivity is guaranteed within $S$).
+ \bigbreak \noindent 
+ If the output range of $h$ matches the size of $S$, it is a minimal perfect hash function
+ \bigbreak \noindent
+ It applies only to a known, finite set of inputs. Does not guarantee injectivity outside the specific set $S$. Computationally feasible and often used when the set of inputs is fixed, such as in compiler keyword lookups.
+
+
+
+\pagebreak 
+\unsect{Table indexing and row-major order}
+\bigbreak \noindent 
+Table indexing in multidimensional arrays is a method to access elements in an array by calculating their position in memory based on their indices. Since multidimensional arrays are often stored in contiguous memory as a single, linear array, table indexing is used to convert the array's multidimensional coordinates (like $A[i][j][k]$) into a single-dimensional index. This process allows programming languages to efficiently store and retrieve elements without the overhead of creating separate memory locations for each dimension.
+\bigbreak \noindent 
+\subsection{Row-major order}
+\bigbreak \noindent 
+In row-major order (used by C, C++, and many other languages), the elements are stored row by row. For a 2D array $A$ with dimensions $[m][n]$, the element $A[i][j]$ is stored in a 1D array at position:
+\begin{align*}
+    \text{index } = i \times n + j 
+.\end{align*}
+\bigbreak \noindent 
+For a 3D array $[x][y][z]$, the element $A[i][j][k]$ is at
+\begin{align*}
+    \text{index } = i \times (y \times z ) + j \times z + k
+.\end{align*}
+\bigbreak \noindent 
+This approach generalizes for any $n$-dimensional array by multiplying indices by the product of the sizes of subsequent dimensions.
+\bigbreak \noindent 
+For an \( n \)-dimensional array \( A[d_1][d_2] \ldots [d_n] \), where each \( d_k \) is the size of the \( k \)-th dimension, the index of element \( A[i_1][i_2] \ldots [i_n] \) can be calculated as:
+\bigbreak \noindent 
+\[
+\text{index} = i_1 \times (d_2 \times d_3 \ldots \times d_n) + i_2 \times (d_3 \ldots \times d_n) + \ldots + i_n
+\]
+\bigbreak \noindent 
+Table indexing is essential for optimizing memory usage and access speed in multidimensional arrays. It enables direct memory access with a single calculation, avoiding nested loops or additional data structures, which is especially useful in low-level programming and performance-critical applications.
+
+
+\pagebreak 
 \unsect{Math algorithms}
 \bigbreak \noindent 
-\subsubsection{Euclidean GCD Algorithm}
+\subsection{Euclidean GCD Algorithm}
 \bigbreak \noindent 
 The GCD of two integers $a$ and $b$ (with $a \leq b$) is the largest integer that divides both $a$ and $b$. The Euclidean algorithm is based on the principle that
 \begin{align*}
@@ -3604,12 +5343,22 @@ This means that the GCD of two numbers doesn't change if the larger number is re
     }
 \end{cppcode}
 
+\bigbreak \noindent 
+\subsection{Fibonacci numbers in constant time}
+\bigbreak \noindent 
+The formula for the $n$th Fibonacci number $F(n)$ can be derived using Binet's formula, which expresses the Fibonacci sequence in terms of powers of the golden ratio.
+\begin{align*}
+    F(n) = \frac{\phi^{n} - \psi^{n}}{\sqrt{5}}
+.\end{align*}
+Where $\phi$ is the golden ration $\frac{1+\sqrt{5}}{2} \approx 1.618 $, and $\psi$ is the conjugate of the golden ration $\psi = \frac{1- \sqrt{5}}{2} \approx -0.618 $
 
-
-
-
-
-
+\bigbreak \noindent 
+\subsection{Sterlings factorial approximation}
+\bigbreak \noindent 
+Stirling's Approximation provides an approximation for factorials, particularly useful for large values of $n$. The formula is:
+\begin{align*}
+    n! \approx  \sqrt{2\pi n}\left(\frac{n}{e}\right)^{n}
+.\end{align*}
 
 
 

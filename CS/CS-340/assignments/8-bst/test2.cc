@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     }
   }
   typedef NodeLRP<int> NODE;
-  //NODE * root = nullptr; 
+  // NODE * root = nullptr; 
   NODE * root; // hope clang-tidy detects this
   cout << "********************************************************************************\n";
   cout << "* Building binary search tree by inserting the sequence:\n";
