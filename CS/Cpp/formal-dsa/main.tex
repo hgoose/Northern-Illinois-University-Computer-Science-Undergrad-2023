@@ -3509,6 +3509,27 @@ or moved, for the following reasons:
     \item No red nodes have been made adjacent. If \(z\) has at most one child, then \(y\) and \(z\) are the same node. That node is removed, with a child taking its place. If the removed node was red, then neither its parent nor its children can also be red, so moving a child to take its place cannot cause two red nodes to become adjacent. If, on the other hand, \(z\) has two children, then \(y\) takes \(z\)'s place in the tree, along with \(z\)'s color, so there cannot be two adjacent red nodes at \(y\)'s new position in the tree. In addition, if \(y\) was not \(z\)'s right child, then \(y\)'s original right child \(x\) replaces \(y\) in the tree. Since \(y\) is red, \(x\) must be black, and so replacing \(y\) by \(x\) cannot cause two red nodes to become adjacent.
     \item Because \(y\) could not have been the root if it was red, the root remains black.
 \end{enumerate}
+\bigbreak \noindent 
+If node \(y\) was black, three problems may arise, which the call of \textbf{RB-DELETE-FIXUP} will remedy. First, if \(y\) was the root and a red child of \(y\) became the new root, property 2 is violated. Second, if both \(x\) and its new parent are red, then a violation of property 4 occurs. Third, moving \(y\) within the tree causes any simple path that previously contained \(y\) to have one less black node. Thus, property 5 is now violated by any ancestor of \(y\) in the tree. We can correct the violation of property 5 by saying that when the black node \(y\) is removed or moved, its blackness transfers to the node \(x\) that moves into \(y\)'s original position, giving \(x\) an “extra” black. That is, if we add 1 to the count of black nodes on any simple path that contains \(x\), then under this interpretation, property 5 holds. But now another problem emerges: node \(x\) is neither red nor black, thereby violating property 1. Instead, node \(x\) is either “doubly black” or “red-and-black,” and it contributes either 2 or 1, respectively, to the count of black nodes on simple paths containing \(x\). The color attribute of \(x\) will still be either \textbf{RED} (if \(x\) is red-and-black) or \textbf{BLACK} (if \(x\) is doubly black). In other words, the extra black on a node is reflected in \(x\)'s pointing to the node rather than in the color attribute.
+\bigbreak \noindent 
+The procedure RB-DELETE-FIXUP on the next page restores properties 1, 2, and 4
+\bigbreak \noindent 
+The goal of the while loop in lines 1-43 is to move the extra black up the tree until
+\bigbreak \noindent 
+\begin{enumerate}
+    \item $x$ points to a red-and-black node, in which case line 44 colors $x$ (singly) black;
+    \item $x$ points to the root, in which case the extra black simply vanishes; or
+    \item having performed suitable rotations and recolorings, the loop exits. 
+\end{enumerate}
+\bigbreak \noindent 
+Like RB-INSERT-FIXUP, the RB-DELETE-FIXUP procedure handles two symmetric situations: lines 3-22 for when node $x$ is a left child, and lines 24-43 for
+when $x$ is a right child. Our proof focuses on the four cases shown in lines 3-22
+\pagebreak \bigbreak \noindent 
+\begin{cppcode}
+RB-DELETE-FIXUP(T, x)
+\end{cppcode}
+
+
 
 
 
@@ -3579,7 +3600,7 @@ We create two nodes, a root node and the nil node. In the constructor, we create
     }
 \end{cppcode}
 \bigbreak \noindent 
-\texttt{right\_rotate} is achieved by replacing left with right, and right with left in \textt{left\_rotate}.
+\texttt{right\_rotate} is achieved by replacing left with right, and right with left in \texttt{left\_rotate}.
 
 \pagebreak 
 \paragraph{Insert}
@@ -4784,6 +4805,12 @@ For example, if the hash table has size $m=12 $ and the key is $k=100$, then $h(
 \bigbreak \noindent 
 The division method may work well when $m$ is a prime not too close to an exact power of 2. There is no guarantee that this method provides good average-case performance, however, and it may complicate applications since it constrains the size of the hash tables to be prime.
 \bigbreak \noindent 
+It is best to ensure that the table size is a prime number,  because keys are typically not randomly distributed, and usually have some pattern.
+
+
+
+
+\bigbreak \noindent 
 \subsubsection{The multiplication method}
 \bigbreak \noindent 
 The general multiplication method for creating hash functions operates in two steps. First, multiply the key \( k \) by a constant \( A \) in the range \( 0 < A < 1 \) and extract the fractional part of \( kA \). Then, multiply this value by \( m \) and take the floor of the result. That is, the hash function is
@@ -4794,6 +4821,7 @@ The general multiplication method for creating hash functions operates in two st
 where "$kA \ \text{mod} \ 1$" means the fractional part of $kA$, that is, $kA - \lfloor kA \rfloor $
 \bigbreak \noindent 
 The general multiplication method has the advantage that the value of $m$ is not critical and you can choose it independently of how you choose the multiplicative constant $A$
+
 
 \bigbreak \noindent 
 \subsection{Open addressing}
@@ -5321,6 +5349,197 @@ For an \( n \)-dimensional array \( A[d_1][d_2] \ldots [d_n] \), where each \( d
 \]
 \bigbreak \noindent 
 Table indexing is essential for optimizing memory usage and access speed in multidimensional arrays. It enables direct memory access with a single calculation, avoiding nested loops or additional data structures, which is especially useful in low-level programming and performance-critical applications.
+
+\pagebreak 
+\unsect{Graphs}
+\bigbreak \noindent 
+A graph is a collection of nodes and the connections between them. There are many different types of graphs
+\bigbreak \noindent 
+\begin{itemize}
+    \item Simple graph
+    \item Directed graph
+    \item Multi-graph
+    \item Weighted graph
+    \item Complete graph
+\end{itemize}
+etc...
+\bigbreak \noindent 
+\subsection{Simple Graph}
+\bigbreak \noindent 
+A simple graph $G=(V,E)$ consists of a nonempty set $V$ of vertices and a possibly empty set $E$ of edges. Each edge connects two vertices from $V$:
+\bigbreak \noindent 
+A simple graph is a graph that satisfies the following properties:
+\begin{enumerate}
+    \item \textbf{Undirected:} The edges have no direction.
+    \item \textbf{No Loops:} No vertex has an edge to itself.
+    \item \textbf{No Multiple Edges:} There is at most one edge between any pair of vertices.
+\end{enumerate}
+\bigbreak \noindent 
+In a undirected graph, $\{v_{i}, v_{j}\} = \{v_{j}, v_{i}\}$. We denote the number of vertices in a graph by $\abs{V}$, and the number of edges in a graph by $\abs{E}$
+\bigbreak \noindent 
+\subsection{Undirected graph}
+\bigbreak \noindent 
+An undirected graph is a graph where edges have no direction. If there is an edge between $u$ and $v$, it is the same as the edge between $v$ and $u$
+\bigbreak \noindent 
+\subsection{Directed graph}
+\bigbreak \noindent 
+A directed graph (digraph) $G=(V,E)$ consists of a nonempty set $V$ of vertices and a possibly empty set $E$ of edges (or archs). Each edge connects two vertices from $V$
+\begin{align*}
+    \{v_{i}, v_{j}\} \ne \{v_{j}, v_{i}\}
+.\end{align*}
+
+\bigbreak \noindent 
+\subsection{Weighted Graph}
+\bigbreak \noindent 
+A weighted graph is a graph where edges have assigned numbers. The numbers could be distances values, lengths, costs, ..., etc
+\bigbreak \noindent 
+\subsection{Complete Graph}
+\bigbreak \noindent 
+For each pair of vertices, there is exactly one edge connecting them.
+
+\bigbreak \noindent 
+\subsection{More terms}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Subgraph}: $G^{\prime}$ of $G=(V,E)$ is a graph $(V^{\prime},E^{\prime})$ such that $V^{\prime}  \subseteq V$, and $E^{\prime} \subseteq E $
+    \item \textbf{Adjacent vertices}: Two vertices $v_{i}$ and $v_{j}$ are adjacent if edge $(v_{i}, v_{j})  \subseteq E$
+        \bigbreak \noindent 
+        Such edge is called incident with vertices $v_{i}$ and $v_{j}$
+    \item \textbf{Degree}: The degree of a vertex $v$, $\text{deg}(v)$, is the number of edges incident with $v$
+        \bigbreak \noindent 
+        If $\text{deg}(v) = 0$, $v$ is called isolated vertex.
+    \item \textbf{Path}: A sequence of edges \((v_1, v_2), (v_2, v_3), \dots, (v_{n-1}, v_n)\), denoted as the path:
+        \[
+            v_1 v_2 v_3 \dots v_n
+        \]
+    \item \textbf{Circuit}: There exists a path \(v_1, v_2, \dots, v_n\) where \(v_1 = v_n\), and no edge is repeated.
+    \item \textbf{Cycle}: If all vertices in a circuit are different.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Graph representations}
+\bigbreak \noindent 
+One way to represent a graph is an \textit{adjacency list}. Vertices are stored as records or objects, and every vertex stores a list of adjacent vertices.
+\bigbreak \noindent 
+This data structure allows the storage of additional data on the vertices.
+\bigbreak \noindent 
+\begin{minipage}[]{0.47\textwidth}
+    \fig{.5}{./figures/25.png}
+\end{minipage}
+\begin{minipage}[]{0.47\textwidth}
+\begin{align*}
+    &a,c,d,f \\
+    &b, d, e \\
+    &c, a, f \\
+    &d, a, b, e, f \\
+    &e,b,d \\ 
+    &f,a,c,d \\
+    &g
+.\end{align*}
+\end{minipage}
+\bigbreak \noindent 
+We can also store the same information as a matrix, called an \textit{adjacency matrix}. Rows represent source vertices, columns represent destination vertices. Data on edges and vertices are stored externally
+\bigbreak \noindent 
+\[
+\begin{bmatrix}
+0 & 0 & 1 & 1 & 0 & 1 & 0 \\
+0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 & 1 & 0 \\
+1 & 1 & 0 & 0 & 1 & 1 & 0 \\
+0 & 1 & 0 & 1 & 0 & 0 & 0 \\
+1 & 0 & 1 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{bmatrix}
+\]
+\bigbreak \noindent 
+Adjacency matrices have rows and columns in order, in the example above, row one column one is a,a. 
+\bigbreak \noindent 
+Adjacency matrices are symmetric for simple graphs, non-symmetric for digraphs
+\bigbreak \noindent 
+In case of weighted graphs, values in matrix indicate weights of edges, but only if we don't allow weights to be zero.
+\bigbreak \noindent 
+\subsection{Interface of adjacency lists and matrices}
+\bigbreak \noindent 
+\begin{itemize}
+    \item Insert node
+    \item Delete node
+    \item Insert edge
+    \item Delete edge
+    \item Check existence of edge
+    \item Get/set edge weight
+    \item Get neighbors of node
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Complexities for adjacency operations}
+\bigbreak \noindent 
+\begin{center}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Operation}               & \textbf{Adjacency Matrix} & \textbf{Adjacency List} \\ \hline
+        Add a node                       & \(O(|V|^2)\)             & \(O(1)\)               \\ \hline
+        Remove a node                    & \(O(|V|^2)\)             & \(O(|E|)\)             \\ \hline
+        Add an edge                      & \(O(1)\)                 & \(O(1)\)               \\ \hline
+        Remove an edge                   & \(O(1)\)                 & \(O(|V|)\)             \\ \hline
+        Get neighbors of a node          & \(O(|V|)\)               & \(O(|V|)\)             \\ \hline
+        Test an edge                     & \(O(1)\)                 & \(O(|V|)\)             \\ \hline
+        Get/set edge                     & \(O(1)\)                 & \(O(|V|)\)             \\ \hline
+        Storage                          & \(O(|V|^2)\)             & \(O(|V| + |E|)\)       \\ \hline
+    \end{tabular}
+\end{center}
+
+\bigbreak \noindent 
+\subsection{Graph traversal/search}
+\bigbreak \noindent 
+We want to visit all vertices once and only once. There may be cycles, which can cause infinite loops. There may be isolated vertices or isolated sub- graphs
+\bigbreak \noindent 
+\subsubsection{Breadth-first-traversal}
+\bigbreak \noindent 
+Visit siblings first before visiting children.
+\bigbreak \noindent 
+\begin{cppcode}
+BFS(Graph, startNode):
+    1. Create an empty queue `Q` to store nodes to be visited.
+    2. Create a set `visited` to track visited nodes.
+    3. Enqueue the `startNode` into `Q`.
+    4. Add `startNode` to the `visited` set.
+
+    5. While `Q` is not empty:
+        a. Dequeue a node `current` from `Q`.
+        b. Process `current` (e.g., print it or record it).
+
+        c. For each neighbor `neighbor` of `current`:
+            i. If `neighbor` is not in `visited`:
+                - Enqueue `neighbor` into `Q`.
+                - Add `neighbor` to the `visited` set
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Depth-first traversal}
+\bigbreak \noindent 
+Visit children before siblings, recursive.
+\bigbreak \noindent 
+\begin{cppcode}
+DFS(Graph, currentNode, visited):
+    1. If `currentNode` is not in `visited`:
+        a. Add `currentNode` to `visited`.
+        b. Process `currentNode` (e.g., print it or record it).
+
+        c. For each neighbor `neighbor` of `currentNode`:
+            i. Call DFS(Graph, neighbor, visited).
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Shortest path problems}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Single pair shortest path problem}: Finding a path between two vertices that the sum of weights of its edges is minimal
+    \item \textbf{Single source shortest path problem}: Finding shortest paths from one vertices to all others
+    \item \textbf{All pair shortest path problem}: Finding shortest paths for all pairs of vertices
+\end{itemize}
+
+
+
 
 
 \pagebreak 
