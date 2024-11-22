@@ -102,7 +102,7 @@
         return false;
     }
     function validateCount($str) {
-        if (preg_match("/^\s*((\d+),?(\d+))+\s*$/", $str)) {
+        if (preg_match("/^\s*((\d+),?(\d+))*\s*$/", $str)) {
           return true;
         }
         return false;
@@ -145,7 +145,7 @@
                 $tag = ($_POST["listtype"] == "unordered" ? "ul" : "ol");
                 // Draw the list
                 echo "<$tag>";
-                    for ($i = 0; $i<10; $i++) {
+                    for ($i = 0; $i<$_POST["count"]; $i++) {
                         echo "<li>". $_POST["word"] . "</li>";
                     }
 
