@@ -1,45 +1,12 @@
-    insert-fixup(T, z) {
-        while (z.p.color == red) {
-            if  (z.p == z.p.p.left) { // Is z's parent a left child?
-                y = z.p.p.right // y is z's uncle
-                if (y.color == red) { // are z's parent and uncle both red?
-                    /* Case 1 */
-                    z.p.color = black
-                    y.color = black
-                    z.p.p.color = red
-                    z = z.p.p
-                    /* ------ */
-
-                } else {
-                    if (z== z.p.right) {
-                        /* case 2 */
-                        z = z.p
-                        left-rotate(T,z)
-                        /* ------ */
-                    }
-                    /* case 3 */
-                    z.p.color = black
-                    z.p.p.color = red
-                    right-rotate(T,z.p.p)
-                    /* ------ */
-                }
-            // Right and left exchanged
-            } else {
-                y = z.p.p.left
-                if (y.color == red) {
-                    z.p.color = black
-                    y.color = black
-                    z.p.p.color = red
-                    z = z.p.p
-                } else {
-                    if (z== z.p.left) {
-                        z = z.p
-                        right-rotate(T,z)
-                    }
-                    z.p.color = black
-                    z.p.p.color = red
-                    left-rotate(T,z.p.p)
+    void insert(unsigned pos, int element) {
+        std::function<void(node*&, unsigned)> r_insert = [&] (node*& p, unsigned curr_pos) {
+            if (curr_pos == 0) {
+                node* new_node = new node(nullptr, element);
+                new_node->next = p;
+                p = new_node;
+                return;
             }
-        }
+            r_insert(p->next,  curr_pos-1);
+        };
+        r_insert(head, pos);
     }
-    T.root.color = black
