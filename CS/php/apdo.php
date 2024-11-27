@@ -44,19 +44,23 @@
     // Function to make a table based on a sql select statement, 
     // calls maketable above
     function displaySelect($pdo, $query) {
-        // Prepare the query
-        $prepare = $pdo->prepare($query);
-        // Execute
-        $sucess = $prepare->execute();
-    
-        // If execute was successful, fetch the rows
-        if ($sucess) {
-            // Fetch the returned rows
-            $result = $prepare->fetchAll(PDO::FETCH_ASSOC);
-            // Grab the column names
-            $column_names = array_keys($result[0]);
-            // Generate the html table
-            makeTable($column_names, $result, "stable1");
+        try {
+            // Prepare the query
+            $prepare = $pdo->prepare($query);
+            // Execute
+            $sucess = $prepare->execute();
+
+            // If execute was successful, fetch the rows
+            if ($sucess) {
+                // Fetch the returned rows
+                $result = $prepare->fetchAll(PDO::FETCH_ASSOC);
+                // Grab the column names
+                $column_names = array_keys($result[0]);
+                // Generate the html table
+                makeTable($column_names, $result, "stable1");
+            }
+        } catch (PDOException $e) {
+            echo "Something went wrong";
         }
     }
 
@@ -118,21 +122,24 @@
                         AND P.P=\"$part\";";
 
         // Prepare and execute
-        $prepare = $pdo->prepare($query);
-        $success = $prepare->execute();
-
-        if ($success) {
-            // Fetch the returned rows
-            $result = $prepare->fetchAll(PDO::FETCH_ASSOC);
-            // Check the arary is nonempty
-            if (!sizeof($result)) {
-                echo "&#8709"; // \varnothing 
-                return;
+        try {
+            $prepare = $pdo->prepare($query);
+            $success = $prepare->execute();
+            if ($success) {
+                // Fetch the returned rows
+                $result = $prepare->fetchAll(PDO::FETCH_ASSOC);
+                // Check the arary is nonempty
+                if (!sizeof($result)) {
+                    echo "&#8709"; // \varnothing 
+                    return;
+                }
+                // Get the column names
+                $column_names = array_keys($result[0]);
+                // Make the html table
+                makeTable($column_names, $result, "ptable1");
             }
-            // Get the column names
-            $column_names = array_keys($result[0]);
-            // Make the html table
-            makeTable($column_names, $result, "ptable1");
+        } catch (PDOException $e) {
+            echo "Something went wrong";        
         }
     }
 
@@ -168,6 +175,31 @@
             return;
         }
     }
+
+    function queryPartQty($pdo, $part, $supplier) {
+        try {
+            $query = "SELECT QTY FROM SP WHERE P=\"$part\" AND S=\"$supplier\"";
+            $prepare = $pdo->prepare($query);
+            $prepare->execute();
+            $result = $prepare->fetch(PDO::FETCH_ASSOC);
+            return $result["QTY"];
+        } catch (PDOException $e) {
+            echo "Something went wrong";
+        }
+    }
+
+    function checkPartExists($pdo, $part) {
+        try {
+            $query = "SELECT P FROM P WHERE P=\"$part\"";
+            $prepare = $pdo->prepare($query);
+            $prepare->execute();
+            $result = $prepare->fetch(PDO::FETCH_ASSOC);
+            return $result["P"];
+        } catch (PDOException $e) {
+            echo "Something went wrong";
+        }
+    } 
+
 ?>
 
 <?php
@@ -286,6 +318,7 @@
     echo "</select>";
 
     // Generate select for each supplier in the db
+
     echo "<select name=\"suppSelect2\" id=\"buySelect\" style=\"color: black;\">";
     foreach ($supps as $supp) {
         echo "<option style=\"color: black\"> $supp </option>"; 
@@ -293,23 +326,24 @@
     echo "</select>";
 
     // Allow the user to input a purchase quantity
-    echo "<input type=\"number\" name=\"partQty\" id=\"buySelect2\" style=\"color: black; text-align: center\" placeholder=\"Enter Quantity\">";
+    echo "<input type=\"number\" name=\"partQty\" id=\"buySelect2\" style=\"color: black; text-align: center\" min=0 placeholder=\"Enter Quantity\">";
     // Submit
     echo "<input type=\"submit\" value=\"Purchase\" id=\"buySelect\" style=\"color:black;\">";
     echo "</form></div>";
 
     // If the user wants to purchase a part, run the db query to subtract the quantity they purchased
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        if (isset($_POST["suppSelect2"]) && isset($_POST["partSelect2"]) && isset($_POST["partQty"])) {
+        if (isset($_POST["suppSelect2"]) && isset($_POST["partSelect2"]) && isset($_POST["partQty"]) && $_POST["partQty"] > 0) {
             $part = $_POST["partSelect2"];
             $supplier = $_POST["suppSelect2"];
             $amount = $_POST["partQty"];
+            $allowance = queryPartQty($pdo, $part, $supplier);
+            $diff = ($allowance - $amount > 0 ? $allowance-$amount : $allowance);
 
-            $query = "UPDATE SP SET QTY=QTY-$amount WHERE S=\"$supplier\" AND P=\"$part\";";
+            $query = "UPDATE SP SET QTY=$diff WHERE S=\"$supplier\" AND P=\"$part\";";
             runDmlQuery($pdo, $query);
         }
     }
-
     // Allow the user to add a part to the db
     
     // This is just the heading
@@ -324,21 +358,28 @@
         <input type="text" name="addPart" id="buySelect4" style="color: black; text-align: center;" placeholder="Enter part">
         <input type="text" name="addName" id="buySelect4" style="color: black; text-align: center;" placeholder="Enter part name">
         <input type="text" name="addColor" id="buySelect4" style="color: black; text-align: center;" placeholder="Enter part color">
-        <input type="number" name="addPartWeight" id="buySelect3" placeholder="Enter weight" style="color: black; text-align: center;">
+        <input type="number" name="addPartWeight" id="buySelect3" placeholder="Enter weight" min=0 style="color: black; text-align: center;">
         <input type="submit" id="buySelect4" style="color: black" value="Add part">
         </form>
     END;
 
     // If the want to add a part, run the query for them
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        if (isset($_POST["addPart"]) && isset($_POST["addName"]) && isset($_POST["addColor"]) && isset($_POST["addPartWeight"])) {
-            $part = $_POST["addPart"];
-            $name = $_POST["addName"];
-            $color = $_POST["addColor"];
-            $weight = $_POST["addPartWeight"];
+        if (isset($_POST["addPart"]) && isset($_POST["addName"]) && isset($_POST["addColor"]) && isset($_POST["addPartWeight"]) && $_POST["addPartWeight"] > 0) {
+            try {
+                $part = $_POST["addPart"];
+                $name = $_POST["addName"];
+                $color = $_POST["addColor"];
+                $weight = $_POST["addPartWeight"];
 
-            $query = "INSERT INTO P (P, PNAME, COLOR, WEIGHT) VALUES (\"$part\", \"$name\", \"$color\", $weight)";
-            runDmlQuery($pdo, $query);
+                $partExists = checkPartExists($pdo, $part);
+                if ($partExists == NULL) {
+                    $query = "INSERT INTO P (P, PNAME, COLOR, WEIGHT) VALUES (\"$part\", \"$name\", \"$color\", $weight)";
+                    runDmlQuery($pdo, $query);
+                }
+            } catch (PDOException $e){
+               echo "Something went wrong"; 
+            }
         }
     }
     echo "</div>";
@@ -364,20 +405,24 @@
     
     // Let the user enter a number (quantity)
     echo <<<END
-        <input type="number" name="addQty" id="buySelect3" placeholder="Enter Quantity" style="color: black; text-align: center;">
+        <input type="number" name="addQty" id="buySelect3" placeholder="Enter Quantity" min=0 style="color: black; text-align: center;">
         <input type="submit" id="buySelect4" style="color: black" value="Add part">
         </form>
     END;
 
     // If the user wants to update part supplier information, run the query for them
     if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        if (isset($_POST["infoSupp"]) && isset($_POST["infoPart"]) && isset($_POST["addQty"])) {
-            $infoSupp = $_POST["infoSupp"];
-            $infoPart = $_POST["infoPart"];
-            $qty = $_POST["addQty"];
+        if (isset($_POST["infoSupp"]) && isset($_POST["infoPart"]) && isset($_POST["addQty"]) && $_POST["addQty"] > 0) {
+            try {
+                $infoSupp = $_POST["infoSupp"];
+                $infoPart = $_POST["infoPart"];
+                $qty = $_POST["addQty"];
 
-            $query = "INSERT INTO SP (S, P, QTY) VALUES (\"$infoSupp\", \"$infoPart\", $qty)";
-            runDmlQuery($pdo, $query);
+                $query = "INSERT INTO SP (S, P, QTY) VALUES (\"$infoSupp\", \"$infoPart\", $qty)";
+                runDmlQuery($pdo, $query);
+            } catch (PDOException $e) {
+                echo "Something went wrong";
+            }
         }
     }
     echo "</div>";

@@ -5660,7 +5660,459 @@ The graph in this case will be directed, and represented by an adjacency list
 %                 decrease-key(q,v,v.d)
 % \end{cppcode}
 
+\pagebreak 
+\subsection{Undirected graph in c++ with an adjacency list}
+\bigbreak \noindent 
+\subsubsection{Internal structure}
+\bigbreak \noindent 
+To represent the adjacency list, we use a map to map nodes to a vector of adjacent nodes. In this example we use an orderded map
+\bigbreak \noindent 
+\begin{cppcode}
+    struct graph {
+        unorderd_map<int, vector<int>> adjlist;
+    };
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Interface}
+\bigbreak \noindent 
+\begin{cppcode}
+   void addEdge(int v1, int v2) {}
+   void addNode(int v) {}
+   vector<int> getNeighbors(int v) {}
+   bool hasEdge(int v1, int v2) {}
+   void display() {}
+\end{cppcode}
 
+\bigbreak \noindent 
+\subsubsection{Adding edges}
+\bigbreak \noindent 
+\begin{cppcode}
+    void addEdge(int v1, int v2) {
+        if (std::find(adjlist[v1].begin(), adjlist[v1].end(), v2) == adjlist[v1].end()) {
+            adjlist[v1].push_back(v2);
+        }
+        if (std::find(adjlist[v2].begin(), adjlist[v2].end(), v1) == adjlist[v2].end()) {
+            adjlist[v2].push_back(v1);
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Adding edges is pretty simple in an adjacency list, we simply add vertex$_{1}$ to the map as the key, and add vertex$_{2}$ to vertex$_1$s vector. If vertex$_1$ doesn't exist, the map will add it for us. If the vertex already exists in the vector, we don't add it.
+\bigbreak \noindent 
+We could also use a set instead of a vector, but vectors are generally faster to traverse.
+
+\bigbreak \noindent 
+\subsubsection{Adding nodes}
+\bigbreak \noindent 
+\begin{cppcode}
+    void addNode(int v) {
+        if (adjlist.find(v) == adjlist.end()) {
+            adjlist[v] = {};
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+If the node does not exist as a key in the map, we add it.
+
+\bigbreak \noindent 
+\subsubsection{Getting the neighbors}
+Pretty straightforward
+\bigbreak \noindent 
+\begin{cppcode}
+    vector<int> getNeighbors(int v) {
+        vector<int> ret{};
+        for (const auto& item : adjlist[v]) {
+            ret.push_back(item);
+        }
+        return ret;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Checking if an edge exists}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool hasEdge(int v1, int v2) {
+        if (adjlist.find(v1) != adjlist.end() && std::find(adjlist[v1].begin(), adjlist[v1].end(), v2) != adjlist[v1].end()) {
+            return true;
+        } return false;
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Breadth first traversal}
+\bigbreak \noindent 
+\begin{cppcode}
+   void bft(int start) {
+        bool visited[size()]; 
+        std::fill(visited, visited + size(), 0);
+        queue<int> q;
+
+        if (adjlist.find(start) == adjlist.end()) {
+            cout << "Starting point does not exist" << endl;
+            return;
+        }
+        q.push(start);
+        visited[start] = 1;
+
+        while (!q.empty()) {
+            int curr = q.front();
+            cout << curr << " ";
+            q.pop();
+
+            for (const auto& item : adjlist[curr]) {
+                if (!visited[item]) {
+                    q.push(item);
+                    visited[item] = 1;
+                }
+            }
+        }
+   }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Breadth first search to find the shortest path}
+\bigbreak \noindent 
+\begin{cppcode}
+    void bfs(int start, int end) {
+        vector<bool> visited(size(), 0);
+        unordered_map<int,int> parent;
+        queue<int> q;
+
+        q.push(start);
+        visited[start] = 1;
+        parent[start] = -1;
+
+        while (!q.empty()) {
+            int curr = q.front();
+            q.pop();
+
+            if (curr == end) {
+                vector<int> path;
+
+                for (int v = end; v != -1; v = parent[v]) {
+                    path.push_back(v);
+                }
+                std::reverse(path.begin(), path.end());
+
+                for (const auto& item : path) {
+                    cout << item << " -> ";
+                }
+                cout << endl;
+                return;
+            }
+
+
+            for (const auto& item : adjlist[curr]) {
+                if (!visited[item]) {
+                    q.push(item);
+                    visited[item] = 1;
+                    parent[item] = curr;
+                }
+            }
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Depth first traversal}
+\bigbreak \noindent 
+\begin{cppcode}
+    void r_dft(int v, vector<bool>& visited) {
+        cout << v << " ";
+
+        for (const auto& item : adjlist[v]) {
+            if (!visited[item]) {
+                visited[item] =  1;
+                r_dft(item, visited);
+            }
+        }
+    }
+
+    void dft(int start) {
+        if (adjlist.find(start) == adjlist.end()) {
+            cout << "Starting point does not exist" << endl;
+            return;
+        }
+        vector<bool> visited(size(), 0);
+        visited[start] = 1;
+        r_dft(start, visited);
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Undirected graph in c++ with adjacency matrix}
+\bigbreak \noindent 
+\subsubsection{Setup}
+\bigbreak \noindent 
+\begin{cppcode}
+struct graph {
+    vector<vector<int>> matrix;
+    int numVertices{0};
+
+    graph(int n) : numVertices(n) {
+        matrix.resize(n, vector<int>(n,0));
+    }
+};
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Adding an edge}
+\bigbreak \noindent 
+\begin{cppcode}
+    void addEdge(int v1, int v2) {
+        if (v1 >=0 && v1 < numVertices && v2 >= 0 && v2 < numVertices) {
+            matrix[v1][v2] = 1;
+            matrix[v2][v1] = 1;
+        } 
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Removing an edge}
+\bigbreak \noindent 
+\begin{cppcode}
+    void removeEdge(int v1, int v2) {
+        if (v1 >= 0 && v1 < numVertices && v2 >= 0 && v2 < numVertices) {
+            matrix[v1][v2] = 0; 
+            matrix[v2][v1] = 0;
+        } 
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Getting neighbors}
+\bigbreak \noindent 
+\begin{cppcode}
+    vector<int> getNeighbors(int v) {
+        vector<int> ret{};
+        int row = v; 
+        for (int j=0; j<numVertices; ++j) {
+            if (matrix[row][j]) ret.push_back(j);
+        }
+        return ret;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Checking if an edge exists}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool hasEdge(int v1, int v2) {
+        if (v1 >= 0 && v1 < numVertices && v2 >= 0 && v2 < numVertices) {
+            return matrix[v1][v2] == 1;
+        } 
+        return false;
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Breadth-first traversal}
+\bigbreak \noindent 
+\begin{cppcode}
+    void bft(int start) {
+        if (start < 0 || start >= numVertices) {
+            cout << "Starting point does not exist" << endl;
+            return;
+        }
+        vector<bool> visited(numVertices,0);
+        queue<int> q;
+        q.push(start);
+        visited[start] = 1;
+
+        while (!q.empty()) {
+            int curr = q.front();
+            q.pop();
+            cout << curr << " ";
+
+            int i = curr;
+            for (int j=0; j<numVertices; ++j) {
+                if (matrix[i][j] && !visited[j]) {
+                    q.push(j);
+                    visited[j] = 1;
+                }
+            }
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Depth-first traversal}
+\bigbreak \noindent 
+\begin{cppcode}
+    void r_dft(int v, vector<bool>& visited) {
+        cout << v << " ";
+
+        int i=v;
+        for (int j=0; j<numVertices; ++j) {
+            if (matrix[i][j] && !visited[j]) {
+                visited[j] = 1;
+                r_dft(j, visited);
+            }
+        }
+    }
+
+    void dft(int start) {
+        if (start < 0 || start >= numVertices) {
+            return;
+        }
+        vector<bool> visited(numVertices,0);
+        visited[start] = 1;
+        r_dft(start, visited);
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Weighted graph in C++ with an adjacency matrix}
+\bigbreak \noindent 
+We can represent a weighted graph in c++ using an adjacency matrix, where the entry at $[i][j]$ represents the weight of the edge from node $i$ to $j$. If there is no edge, we can use some specical value like $-1,0$, or \textit{INF}.
+\bigbreak \noindent 
+\subsubsection{Setup}
+\bigbreak \noindent 
+\begin{cppcode}
+const int INF = std::numeric_limits<int>::max();
+
+struct graph {
+    int n = 0;
+    vector<vector<int>> matrix;
+
+    graph() = default;
+    graph(int n) : n(n) {
+        matrix = vector<vector<int>>(n, vector<int>(n,0));
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Adding and removing edges}
+\bigbreak \noindent 
+\begin{cppcode}
+    void addEdge(int v, int u, int weight) {
+        if (v >=0 && v < n && u >= 0 && u < n) {
+            matrix[v][u] = weight;
+            matrix[u][v] = weight;
+        }
+    }
+
+    void removeEdge(int v, int u) {
+        if (v >=0 && v < n && u >= 0 && u < n) {
+            matrix[v][u] = 0;
+            matrix[u][v] = 0;
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsubsection{Dijkstra}
+\bigbreak \noindent 
+\begin{cppcode}
+    void dijkstra(int start) {
+        priority_queue<std::pair<int,int>, vector<std::pair<int,int>>, std::greater<>> pq;
+        vector<int> dist(n, INF);
+        vector<int> parent(n,-1);
+        dist[start] = 0;
+
+        pq.emplace(0,start);
+
+        while (!pq.empty()) {
+            auto [d,u] = pq.top();
+            pq.pop();
+
+            if (d > dist[u]) continue;
+
+            for (int v = 0; v<n; ++v) {
+                if (matrix[u][v] > 0) {
+                    int weight = matrix[u][v];
+                    if (dist[u] + weight < dist[v]) {
+                        dist[v] = dist[u] + weight;
+                        pq.emplace(dist[v], v);
+                        parent[v] = u;
+                    }
+                }
+            }
+        }
+        for (int i=0; i<n; ++i) {
+            if (dist[i] == INF) {
+                cout << "Distance " << start << " -> " << i << ": " << "not reachable" << endl;
+            } else {
+                cout << "Distance " << start << " -> " << i << ": " << dist[i] << endl;
+                cout << "Path: ";
+                vector<int> path;
+                for (int v = i; v != -1; v = parent[v]) {
+                    path.push_back(v);
+                }
+                std::reverse(path.begin(), path.end());
+
+                for (const auto& item : path) {
+                    cout << item << " -> ";
+                }
+                cout << endl << endl;
+            }
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\subsection{Topological sort (DFS approach)}
+\bigbreak \noindent 
+Topological sort is a linear ordering of vertices in a directed acyclic graph (DAG) such that for every directed edge $u\to v$, vertex $u$ appears before $v$ in the ordering. It is used in applications where certain tasks must be performed before others, such as task scheduling, build systems, and dependency resolution.
+\begin{itemize}
+    \item \textbf{Applies only to DAGs:} A topological sort is possible only for directed acyclic graphs. If there are cycles, a topological ordering does not exist.
+    \item \textbf{Not unique:} A graph can have multiple valid topological orderings if some vertices are not constrained by dependencies.
+\end{itemize}
+\bigbreak \noindent 
+We perform a DFS, and add nodes to a stack after visiting all their neighbor
+
+\bigbreak \noindent 
+\subsubsection{C++ Setup}
+\bigbreak \noindent 
+\begin{cppcode}
+struct graph {
+    unordered_map<int, vector<int>> list;
+
+    void addEdge(int v, int u) {
+        list[v].push_back(u);
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Topological sort with dfs helper}
+\bigbreak \noindent 
+\begin{cppcode}
+    void topologicalSort() {
+        unordered_set<int> visited; // Set to keep track of visited nodes
+        stack<int> s;               // Stack to store the topological order
+
+        // Visit each node that hasn't been visited yet
+        for (const auto& [node, _] : list) {
+            if (visited.find(node) == visited.end()) {
+                dfs(node, visited, s);
+            }
+        }
+
+        // Print the nodes in topological order
+        cout << "Topological Sort: ";
+        while (!s.empty()) {
+            cout << s.top() << " ";
+            s.pop();
+        }
+        cout << endl;
+    }
+
+    // Helper function for DFS
+    void dfs(int node, unordered_set<int>& visited, stack<int>& s) {
+        visited.insert(node); // Mark the current node as visited
+
+        // Visit all the neighbors
+        for (int neighbor : list[node]) {
+            if (visited.find(neighbor) == visited.end()) {
+                dfs(neighbor, visited, s);
+            }
+        }
+
+        // Push the current node onto the stack after visiting all its neighbors
+        s.push(node);
+    }
+\end{cppcode}
 
 
 

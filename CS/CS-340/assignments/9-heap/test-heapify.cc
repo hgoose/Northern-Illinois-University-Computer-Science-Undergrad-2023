@@ -25,8 +25,8 @@ void test_heapify(std::ostream &ost, const char *label, const CONTAINER &input, 
   ost << heapify_in_place_up(temp.begin(), temp.end(), compare);
   ost << " swaps\n";
   print_heap_stats(ost, temp, temp.size()); 
-  
   temp.assign(input.begin(), input.end()); // reset our data to initial sequence
+  
   ost << "heapify_in_place_down took ";
   ost << heapify_in_place_down(temp.begin(), temp.end(), compare);
   ost << " swaps\n";
