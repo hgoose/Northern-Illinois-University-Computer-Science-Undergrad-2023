@@ -186,6 +186,17 @@
         }
     }
     proc();
+
+    $song = "on";
+    $s = "moving on";
+
+    if (preg_match("/.*" . $song . ".*/", $s)) {
+        echo "same";
+    } else {
+        echo "not saame";
+    }
+
+    echo date("Y-m-d h:i:s");
 ?>
 
 <?php

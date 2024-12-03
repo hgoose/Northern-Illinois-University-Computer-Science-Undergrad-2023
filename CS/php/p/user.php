@@ -2,6 +2,8 @@
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
+    session_start();
+    // $_SESSION["c"] = 0;
 ?>
 
 <?php
@@ -66,10 +68,10 @@
                 SELECT title, artist, version, song.song_id, file.file_id 
                     FROM song, file
                     WHERE song.song_id = file.song_id 
-                    AND song.title=:title;
+                    AND song.title LIKE :title;
             ";
             $prepare = $pdo->prepare($query);
-            $success = $prepare->execute(array(":title" => $song));
+            $success = $prepare->execute(array(":title" => "%" . $song . "%"));
             if ($success) {
                 return $prepare->fetchAll(PDO::FETCH_ASSOC);
             }
@@ -80,6 +82,63 @@
                 WHERE song.song_id = file.song_id;
         ";
         return $pdo->query($query, PDO::FETCH_ASSOC);
+    }
+
+    function querySongbyArtist($pdo, $artist) {
+        $query = "
+            SELECT title, artist, version, song.song_id, file.file_id 
+            FROM song, file 
+                WHERE song.song_id = file.song_id
+                AND artist LIKE :art;
+        ";
+        $prepare = $pdo->prepare($query);
+        $success = $prepare->execute(array(":art" => "%" . $artist . "%"));
+        if ($success) {
+            $result =  $prepare->fetchAll(PDO::FETCH_ASSOC);
+            if (sizeof($result)) {
+                return $result;
+            }
+        }
+    }
+
+    function querySongByContributor($pdo, $contributor) {
+        $query = "
+            SELECT title, artist, version, song.song_id, file.file_id 
+            FROM song, file, contributor, song_contributor
+                WHERE song.song_id = file.song_id
+                AND contributor.contrib_id = song_contributor.contrib_id
+                AND song_contributor.song_id = song.song_id
+                AND contributor.name LIKE :name;
+        ";
+        $prepare = $pdo->prepare($query);
+        $success = $prepare->execute(array(":name" => "%" .$contributor . "%"));
+        if ($success) {
+            $result =  $prepare->fetchAll(PDO::FETCH_ASSOC);
+            if (sizeof($result)) {
+                return $result;
+            }
+        }
+    }
+
+    function findSong($pdo, $key) {
+        // Try to find by name
+        $res = querySongs($pdo, $key);
+        if ($res && sizeof($res)) {
+            return $res;
+        }
+
+        // Try to find by artist
+        $res = querySongByArtist($pdo, $key);
+        if ($res && sizeof($res)) {
+            return $res;
+        }
+
+        // Try to find by contributor
+        $res = querySongByContributor($pdo, $key);
+        if ($res && sizeof($res)) {
+            return $res;
+        }
+
     }
 
     function getSongList($pdo) {
@@ -123,7 +182,7 @@
 
     function validateSong($song, $songList) {
         foreach($songList as $s) {
-            if ($song == $s) {
+            if ($s == $song) {
                 return true;
             }
         } 
@@ -146,19 +205,68 @@
         return ($foundSong && $foundVersion ? true : false);
     }
 
+    function getSortedSongList($pdo, $queryObj, $ob, $c) {
+        $query = $queryObj->queryString;
+        $new = "";
+        for ($i = 0; $i<strlen($query)-1; $i++) {
+            if ($query[$i] == ';') continue;
+            $new[$i] = $query[$i]; 
+        }
+        
+        $new .= "ORDER BY $ob " . ($c == 0 ? "ASC" : "DESC");
+        $prepare = $pdo->prepare($new);
+        $success = $prepare->execute();
+        if ($success) {
+            return $prepare->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+
     function makeSongTable($songHeads, $songList, $tableClass) {
+        global $pdo;
         echo "<table class=\"$tableClass\">";
             // Headings
             echo "<tr>";
             echo "<th> </th>";
             foreach($songHeads as $songHead) {
-                echo "<th> $songHead </th>";
+                echo "<th> <a id='alink' href='user.php?action=$songHead'> $songHead </a> </th>";
             }
             echo "</tr>";
 
+            if (!isset($_SESSION["c"])) {
+                $_SESSION["c"] = 0;
+            }
+
+            if (isset($_GET["action"]) && $_GET["action"] == "title") {
+                $songList = getSortedSongList($pdo, $songList, "title", $_SESSION["c"]);
+                $_SESSION["c"] = ($_SESSION["c"] + 1) % 2;    
+            }
+
+            if (isset($_GET["action"]) && $_GET["action"] == "artist") {
+                $songList = getSortedSongList($pdo, $songList, "artist", $_SESSION["c"]);
+                $_SESSION["c"] = ($_SESSION["c"] + 1) % 2;    
+            }
+
+            if (isset($_GET["action"]) && $_GET["action"] == "version") {
+                $songList = getSortedSongList($pdo, $songList, "version", $_SESSION["c"]);
+                $_SESSION["c"] = ($_SESSION["c"] + 1) % 2;    
+            }
+
+            if (isset($_GET["action"]) && $_GET["action"] == "song_id") {
+                $songList = getSortedSongList($pdo, $songList, "song_id", $_SESSION["c"]);
+                $_SESSION["c"] = ($_SESSION["c"] + 1) % 2;    
+            }
+
+            if (isset($_GET["action"]) && $_GET["action"] == "file_id") {
+                $songList = getSortedSongList($pdo, $songList, "file_id", $_SESSION["c"]);
+                $_SESSION["c"] = ($_SESSION["c"] + 1) % 2;    
+            }
+
+
+            $i = 1;
             foreach($songList as $row) {
                 echo "<tr>";
-                echo "<td> <img src=\"noFilter.png\" id=\"songImg\" alt=\"Song Thumbnail\"></img> </td>";
+                echo "<td> <img src=./songThumbnails/$i.jpg id=\"songImg\" alt=\"Song Thumbnail\"></img> </td>";
+                $i++;
                 foreach($row as $item) {
                     echo "<td> $item </td>";
                 }
@@ -171,18 +279,16 @@
     
 
     function queryContributors($pdo, $song) {
-        // Idk just gonna noop
-
         // good to query
         $query = "
             SELECT song.title, song.artist, contributor.name, role, contributor.contrib_id 
                 FROM song, contributor, song_contributor 
                     WHERE song.song_id = song_contributor.song_id 
                     AND contributor.contrib_id = song_contributor.contrib_id 
-                    AND song.title = :title;
+                    AND song.title LIKE :title;
         ";
         $prepare = $pdo->prepare($query);
-        $success = $prepare->execute(array(":title" => $song));
+        $success = $prepare->execute(array(":title" => "%" . $song . "%"));
         if ($success) {
             return $prepare->fetchAll(PDO::FETCH_ASSOC);
         }
@@ -198,7 +304,7 @@
     }
 
     function makeContribTable($pdo, $song) {
-        if (!validateSong($song, getSongList($pdo))) { echo "<p style='text-align:center;'>Song Not Found</p>"; return; } 
+        // if (!validateSong(strtolower($song), getSongList($pdo))) { echo "<p style='text-align:center;'>Song Not Found</p>"; return; } 
         $heads = getContributorInfoHeads($pdo, $song);
         $info = queryContributors($pdo, $song);
         echo "<table class='songTable'>";
@@ -216,9 +322,6 @@
             }
         echo "</table>";
     }
-
-
-
 
 ?>
 
@@ -252,7 +355,7 @@
             echo "<option> $user </option>";
         }
         echo "</select>";
-        echo "<input type=\"text\" name=\"songTitle\" id=\"formInp1\" placeholder=\"Enter song title\" style=\"text-align: center;\">";
+        echo "<input type=\"text\" name=\"songTitle\" id=\"formInp1\" autocomplete='off' placeholder=\"Enter song title\" style=\"text-align: center;\">";
         echo "<input type=\"text\" name=\"songVersion\" id=\"formInp2\" placeholder=\"Enter song version\" style=\"text-align: center;\">";
         echo "<input type=\"number\" name=\"payAmount\" id=\"formInp3\" placeholder=\"Pay to enter priority queue\" style=\"text-align: center;\">";
         echo "<input type=\"submit\" id=\"songSubmit\" value=\"Enter queue\">";
@@ -269,14 +372,11 @@
         }
     }
 
-
-
-
     echo "<div class=\"songHeading\"><h1> Song Selection </h1></div>";
 
     echo "<div class=\"songSearch\">";
         echo "<form action=\"user.php\" method=\"POST\" class='songSearchform'>";
-            echo "<input type=\"text\" id='songSearchformIN' name=\"songSearch\" placeholder=\"Search for a song\" style=\"text-align: center;\">";
+            echo "<input type=\"text\" id='songSearchformIN' name=\"songSearch\" placeholder=\"Search by title, artist, or contributor\" style=\"text-align: center;\">";
             echo "<input type=\"submit\" id='songSearchformSubmit' value=\"search\">";
         echo "</form>";
     // End song search
@@ -285,8 +385,11 @@
 
     echo "<div class='d1-contain'>";
     echo "<div class=\"d1\">";
-            if (isset($_POST["songSearch"]) && validateSong($_POST["songSearch"], getSongList($pdo)) && $_POST["songSearch"] != "all") {
-                makeSongTable(getSongHeads($pdo), querySongs($pdo, $_POST["songSearch"]), "songTable");
+            if (isset($_POST["songSearch"]) && strlen($_POST["songSearch"])) {
+                $song = findSong($pdo, $_POST["songSearch"]);
+                if ($song) {
+                    makeSongTable(getSongHeads($pdo), $song, "songTable");
+                }
             } else {
                 makeSongTable(getSongHeads($pdo), querySongs($pdo), "songTable");
             }

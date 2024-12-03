@@ -2701,6 +2701,253 @@ The final regular expression is then
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{TM Variations}
+    \begin{itemize}
+        \item \textbf{Intro}: As we have seen, different classes of automata have different power in their ability to define languages
+            \begin{itemize}
+                \item \textbf{Finite automata}: Regular languages
+                \item \textbf{Pushdown automata}: Context free languages
+                \item  \textbf{Turing Machines}: Recursively enumerable languages
+            \end{itemize}
+            \bigbreak \noindent 
+            We have also experimented (and we can do other experiments) with different automata to see how such changes might impact the languages each accepts
+            \bigbreak \noindent 
+            For Finite automata
+            \begin{itemize}
+                \item Adding $\epsilon$-moves and/or non-determinism didn’t make a difference
+                \item Adding a stack makes a difference; equivalent to PDA
+            \end{itemize}
+            \bigbreak \noindent 
+            For Pushdown automata
+            \begin{itemize}
+                \item Removing non-determinism (i.e., forcing determinism) makes a difference; reduces the languages accepted
+                \item Adding one or more stacks (i.e., >1 stack) makes a difference; equivalent to Turing Machine
+            \end{itemize}
+        \item \textbf{Can we do better?} In the cases that we have studied for which modifications make no difference, we demonstrate equivalence by presenting algorithmic conversions between the automaton with and without the modifications
+            \bigbreak \noindent 
+            In such cases we never concern ourselves with efficiency; How much time or how many steps would one automaton take compared to another?
+            \bigbreak \noindent 
+            We only concerned ourselves with whether or not both automata always produce the same result; Does the modification render the automaton more restrictive, less restrictive, or keep it exactly the same.
+            \bigbreak \noindent 
+            We now consider variations on the Turing Machine with the same question in mind; Will the variation change the set of languages the TM can accept?
+            \bigbreak \noindent 
+            We ignore questions of efficiency
+        \item \textbf{Stay Option}: What if we allowed the TM to not move the tape head on a transition, instead of just L or R also allow S, which means “stay”?
+            \bigbreak \noindent 
+            On the surface this may sound trivial, but it adds the ability to change state without disturbing the tape or tape head
+            \bigbreak \noindent 
+            While it is obvious that adding the stay option does not reduce the languages a Turing Machine can accept one might ask ... Does the stay option give Turing Machines any extra real power? The answer is no it does not
+            \bigbreak \noindent 
+            Although the stay option can be useful in reducing the number of states a TM may require, it adds no new power to TMs.
+            \bigbreak \noindent 
+            \textit{Theorem}: For any Turing Machine with the stay option there is some Turing Machine that acts the same way on all inputs; looping, crashing, or accepting, while leaving the same data on the tape, and vice versa
+            \bigbreak \noindent 
+            First, $TM \subseteq TM$ with stay option. Every TM is a TM with a stay option that simply does not have any stay option transitions
+            \bigbreak \noindent 
+            Part II... TM with stay option $\to$ equivalent TM
+            \bigbreak \noindent 
+            Construct a new TM from the TM with the stay option by first copying the machine and then converting every transition with a stay option as follows
+            \bigbreak \noindent 
+            \fig{.5}{./figures/57.png}
+            \bigbreak \noindent 
+            $\therefore$ Turing machine with stay option = Turing Machine
+        \item \textbf{Move Multiple}: What if we allowed the TM to move the tape head multiple cells on a transition, instead of just L or R (one cell)?
+            \bigbreak \noindent 
+            \textit{Theorem}: For any Turing Machine with the move multiple option there is some Turing Machine that acts the same way on all inputs; looping, crashing, or accepting, while leaving the same data on the tape, and vice versa.
+            \bigbreak \noindent 
+            \textit{Proof.} Part I: TM $\subseteq$ TM with move multiple option. Every TM is a TM with a move multiple option where $n=1$ on all move transitions
+            \bigbreak \noindent 
+            Part II. TM with move multiple option $\to$ equivalent TM
+            \bigbreak \noindent 
+            Construct a new TM from the TM with the move multiple option by first copying the machine and then converting every transition where $n>1$ as in the the following $3L$ example (do likewise for $nR$):
+            \bigbreak \noindent 
+            \fig{.5}{./figures/58.png}
+            \bigbreak \noindent 
+            $\therefore$ Turing machine with move multiple option = Turing Machine
+        \item \textbf{Move-in-State}: Consider the following variation to Turing Machines that specifies tape head movement in states rather than on transitions:
+            \bigbreak \noindent 
+            \fig{.5}{./figures/59.png}
+            \bigbreak \noindent 
+            Transitions labeled $p,q$ meaning read $p$ and replace with $q$ on tape
+            \bigbreak \noindent 
+            States (except HALT) labeled $q_{i} /\{L \text{ or } R\}$ meaning move tape head either L or R upon entering state.
+            \bigbreak \noindent 
+            Do not move tape head at beginning in $q_{0}$ but if you re-enter $q_{0}$ then move the tape head as indicated.
+            \bigbreak \noindent 
+            In original TMs when we entered a state like $q_{j}$ above we moved the tape head, sometimes L other times R, before entering the state. How do we handle this with a move-in-state TM?
+            \bigbreak \noindent 
+            Does this make the TM or the move-in-state TM more powerful than the other? ... No, they are equally powerful.
+            \bigbreak \noindent 
+            \textit{Theorem}. For any Turing Machine with the move-in-state option there is some Turing Machine that acts the same way on all inputs; looping, crashing, or accepting, while leaving the same data on the tape, and vice versa.
+            \bigbreak \noindent 
+            \textit{Proof}. Part I: TM with move-in-state $\to$ TM
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Encoding TMs}
+    \begin{itemize}
+        \item \textbf{Recall}: Recall that a Turing Machine is formally defined as a 7-tuple
+            \begin{align*}
+                M = (Q, \Sigma, \Gamma, \delta, q_{0}, \Delta, F)
+            .\end{align*}
+            \bigbreak \noindent 
+            And that we conveniently depict it as a state diagram. 
+        \item \textbf{Encoding}: Rather than using the 7-tuple to draw a picture we could, instead, represent the TM as a string of characters (i.e., encode the TM)
+            \begin{align*}
+                M = (Q, \Sigma, \Gamma, \delta, q_{0}, \Delta, F) \to \text{ some string $w$ that represents $M$}
+            .\end{align*}
+            \bigbreak \noindent 
+            There are many ways to encode a Turing Machine, we present one.
+            \bigbreak \noindent 
+            Recall that $Q$ is a finite set of states where
+            \begin{itemize}
+                \item $q_{0} \in Q$ is the start state
+                \item $F \subseteq Q$ is the (possibly empty) set of HALT state(s)
+            \end{itemize}
+            \bigbreak \noindent 
+            Without loss of generality we can modify $M$ by “collapsing” any and all HALT states to a single HALT state.
+            \bigbreak \noindent 
+            In other words, if $F$ was originally non-empty, then $F$ will be left with a single state (and $\delta$ modified accordingly), otherwise $F$ will remain empty and $\delta$ will be left unchanged.
+            \bigbreak \noindent 
+            We continue by assigning numbers to each of the states in $Q$ as follows:
+            \begin{itemize}
+                \item The start state $q_{0}$ is assigned 1.
+                \item The (now single) HALT state, if one exists, is assigned 2.
+                \item The remaining states are assigned arbitrary numbers other than 1 or 2 and such that each state is assigned a unique number.
+            \end{itemize}
+            \bigbreak \noindent 
+            Use the numbered states and the transition function $\delta$ to create a new table that has a row for each transition (i.e., cell in $\delta$).
+            \bigbreak \noindent 
+            \fig{.5}{./figures/60.png}
+            \bigbreak \noindent 
+            We next, use input symbols in $\Sigma \subset \gamma $ to create:
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item A fixed-length encoding for each tape symbol in $\Gamma$ and
+                \item An encoding for each direction (L or R)
+            \end{itemize}
+            \bigbreak \noindent 
+            Note, in order to do this $\Sigma$ must have at least two symbols
+            \bigbreak \noindent 
+            \fig{.5}{./figures/61.png}
+            \bigbreak \noindent 
+            We now encode each row of the new table as follows;
+            \begin{itemize}
+                \item \textbf{Transition from state}: $i \to j:\ a^{i}ba^{j}b$
+                \item \textbf{Read/Write:} use fixed-width encoding
+                \item \textbf{Direction}: use fixed-width encoding
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/62.png}
+            \bigbreak \noindent 
+            The encoding of the TM concludes by concatenating the encoded rows (in any order) to create a single string. (with the understanding that start state = 1 and halt state = 2.)
+        \item \textbf{Notes and the code word language (CWL):} Every TM with at least two symbols in $\Sigma$ can be encoded to a string
+            \bigbreak \noindent 
+            Not every string
+            \begin{itemize}
+                \item Can be decoded to a TM (e.g., strings that begin with ‘b’ do not represent a TM)
+                \item \textbf{Decodes to a valid TM}: Might decode to a TM that is non-deterministic, has transitions from the HALT state, have READ, WRITE, or Move encodings that are invalid, etc.
+
+            \end{itemize}
+            \bigbreak \noindent 
+            In fact, using our last example where each symbol in $\Gamma$ had an encoding length=3, from $\Sigma^{*} $ we see that anything outside $(a^{+}ba^{+}b(a+b)^{7})^{*} $ is definitely not a valid TM, and even some of those strings are not a valid TM.
+            \bigbreak \noindent 
+            Nonetheless, that regular expression comes pretty close to defining the set of valid TM’s so we call it the Code Word Language (CWL)
+            \begin{align*}
+                \text{CWL } = (a^{+}ba^{+}b(a+b)^{7})^{*}
+            .\end{align*}
+            \bigbreak \noindent 
+            And we note
+            \begin{align*}
+                \text{valid TM encodings } \subset   \text{ CWL } \subset \Sigma^{*}
+            .\end{align*}
+        
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Revisiting Recursively Enumerable Languages}
+    \begin{itemize}
+        \item \textbf{Recall}:  The definitions of recursively enumerable and recursive languages: A language that is accepted by a Turing Machine is said to be a recursively enumerable language
+            \bigbreak \noindent 
+            A language that is accepted by at least one Turing Machine that halts on all inputs is said to be a recursive language.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/63.png}
+            \bigbreak \noindent 
+            We’ve seen an example of a recursive language that is not a context free language: $a^{n}b^{n}c^{n}$
+            \bigbreak \noindent 
+            But is there a language that is recursively enumerable that is not recursive? Is there a language that is not even recursively enumerable?
+            \bigbreak \noindent 
+            Yes to both 
+        \item \textbf{Turing Machines and Their Encodings}: Recall that we can take a Turing Machine (having at least two input symbols in $\Sigma$) and encode it using its own input alphabet $\Sigma$
+            \bigbreak \noindent 
+            That means we can use a TM to process its own encoding.
+            \bigbreak \noindent 
+            Thinking about this same prospect in a different way, consider the strings in CWL = $(a^{+}ba^{+}b(a+b)^{7})^{*}$, which we can partition into the following three sets:
+            \begin{itemize}
+                \item Invalid TMs
+                \item Valid TMs that accept their own encoding
+                \item Valid TMs that do not accept their own encoding
+
+            \end{itemize}
+            \bigbreak \noindent 
+            And given that partitioning we can define two new languages, Acc,NotAcc $\subseteq$ CWL, as follows:
+            \begin{align*}
+               Acc = 
+               \begin{cases}
+                   w \in \text{ CWL such that: } \\
+                   w \text{ is a valid TM that is } \\
+                   \text{accepted by the TM it encodes}
+               \end{cases} \\
+               NotAcc = 
+               \begin{cases}
+                   w \in \text{ CWL such that: } \\
+                   \text{1. w is not a valid TM or} \\
+                   \text{2. w is a valid TM that is not accepted by the TM it encodes }
+               \end{cases}
+            .\end{align*}
+            What kind of language is NotAcc? Regular? Context-free? Recursive? Recursively enumerable? none of the above, meaning, there does not exist a TM that accepts NotAcc.
+            \bigbreak \noindent 
+            \textit{Theorem}. There exists a language that is not recursively enumerable.
+\bigbreak \noindent 
+\textit{Proof (by contradiction)}. Assume that the language NotAcc is recursively enumerable.:
+\bigbreak \noindent 
+\fig{.5}{./figures/64.png}
+\bigbreak \noindent 
+This means that there exists some Turing Machine, $T$, that accepts NotAcc.
+\bigbreak \noindent If we have a Turing Machine, $T$, then we can create a string $w$ from $T$’s input alphabet $\Sigma$ that encodes $T$. Because $w$ was built from $T$’s input alphabet $\Sigma$, we can process $w$ using $T$ (i.e., have a TM process its own encoding).
+\bigbreak \noindent There are only two possibilities; either $T$ accepts $w$, or it does not.
+\bigbreak \noindent 
+Case I – $T$ accepts $w$
+\bigbreak \noindent 
+Because $w$ is a valid encoding of $T$, and (in this case) $T$ accepts $w$, we see that $w \in$ “Valid TM’s, Accepts own Encoding”,
+which means $w \not\in $ NotAcc. However, (in this case) $T$ accepts $w$, which means $w \in$ NotAcc. (contradiction)
+\bigbreak \noindent 
+Case II – $T$ does not accept $w$
+\bigbreak \noindent 
+Because w is a valid encoding of T and (in this case) T does not accept w, we see
+that $w \in$ “Valid TM’s, Does not accept own Encoding”, which means $w \in$ NotAcc.
+\bigbreak \noindent 
+However, T (in this case) T did not accept w,
+which means $w \not\in$ NotAcc (contradiction)
+\bigbreak \noindent 
+Since the only two possible cases each led to a contradiction, we
+conclude that our assumption that NotAcc is a recursively
+enumerable language must be false.
+\bigbreak \noindent 
+$\therefore$ NotAcc is not a recursively enumerable language.
+
+
+
+    \end{itemize}
+
+
+
 
 
 
