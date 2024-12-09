@@ -2946,6 +2946,226 @@ $\therefore$ NotAcc is not a recursively enumerable language.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Universal turing machine}
+    \begin{itemize}
+        \item \textbf{Turing Machines and Their Encodings}: We have seen that NotAcc is not a recursively enumerable language, meaning one cannot create a TM that accepts NotAcc.
+            \bigbreak \noindent 
+            What about the remaining partition?
+            \bigbreak \noindent 
+            What kind of language is Acc? Regular? Context-free? Recursive? Recursively enumerable? ... before we can answer that we need to create a special TM.
+        \item \textbf{UTM}: We will create a special TM and call it a UTM. We will describe our new UTM in general terms rather than drawing it explicitly.
+            \bigbreak \noindent 
+            First, the UTM takes as input some $w$ which is an encoding of some TM.
+            \bigbreak \noindent 
+            The basic function of the UTM is to simulate the TM that is encoded as its input, that is, the UTM should;
+            \begin{itemize}
+                \item accept strings the encoded TM would accept
+                \item Reject (i.e., crash) strings the encoded TM would reject
+                \item Loop on strings on which the encoded TM would loop
+            \end{itemize}
+            \bigbreak \noindent 
+            The first thing the UTM does is
+            \begin{enumerate}
+                \item Shift the input string to the right one cell inserting a \# in the leftmost cell
+                \item Append a \$ to the end of the input string
+                \item Append a copy of the original input string just after the \$
+            \end{enumerate}
+            \bigbreak \noindent 
+            The general idea is that the UTM will use
+            \begin{enumerate}
+                \item $w_{1}$ to simulate the encoded TM (never changing it)
+                \item $w_{2}$ as the input to the encoded TM (changing often)
+            \end{enumerate}
+            \bigbreak \noindent 
+            Recall that an encoded TM is a concatenation of rows from a table (i.e., one row per transition in the encoded TM).
+            \bigbreak \noindent 
+            The UTM next inserts a blank ($\Delta$)
+            \begin{enumerate}
+                \item Before each row in $w_{1}$
+                \item Before each symbol in $w_{2}$
+            \end{enumerate}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/65.png}
+            \bigbreak \noindent 
+            To complete its initialization phase, the UTM Inserts a “dummy row” at the beginning of the tape whose only value is its “To” state which must indicate the start state = 1
+            \bigbreak \noindent 
+            Places an * before
+            \begin{itemize}
+                \item the newly inserted “dummy row” (to indicate that was the last transition processed)
+                \item The first character in $w_{2}$ to indicate the simulated tape head location
+            \end{itemize}
+            \bigbreak \noindent 
+            This ends the setup phase for the UTM. It is now ready to enter its next phase in which it simulates the TM encoded by $w$.
+            \bigbreak \noindent 
+            The UTM runs right down the tape to read the next character from $w_{2}$
+            \bigbreak \noindent 
+            It next runs left back up the tape down a different branch in the UTM depending on the character that it read.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/66.png}
+            \bigbreak \noindent 
+            The UTM runs right down the tape to find the * in $w_{1}$ to discover what state the simulated TM is in (i.e., the To state from the row $r_{i}$ last processed).
+            \bigbreak \noindent 
+            Then, Find the row $r_{j}$ in $w_{1}$ whose
+            \begin{itemize}
+                \item From state matches the simulated TM’s current state
+                \item Read character matches the last character read by the simulated TM
+            \end{itemize}
+            \bigbreak \noindent 
+            If no such row $r_{j}$ in $w_{1}$ can be found, then the simulated TM crashes, so crash the UTM. Otherwise
+            \begin{itemize}
+                \item Move the * in $w_{1}$ to precede the matching row $r_{j}$
+                \item Update the character in $w_{2}$ (i.e., WRITE)
+                \item Move the * in $w_{2}$ (L or R).
+            \end{itemize}
+            \bigbreak \noindent 
+            If the To state in matching row $r_{j}$ is 2 (i.e., HALT), then the simulated TM HALTs (accepts) its input, so the UTM should also HALT (accept).
+            \bigbreak \noindent 
+            In this way the UTM accurately simulates the TM that is encoded as its input in that the UTM
+            \begin{enumerate}
+                \item accepts strings the encoded TM would accept
+                \item Rejects (i.e., crash) strings the encoded TM would reject
+                \item Loops on strings on which the encoded TM would loop
+
+            \end{enumerate}
+            \bigbreak \noindent 
+            In other words, the UTM is a TM that accepts the language Acc. Therefore, Acc is a recursively enumerable language.
+            \bigbreak \noindent 
+            Is Acc a recursive language?
+            \bigbreak \noindent 
+            Before we can answer that question, we must first take a closer look at recursive languages by revisiting regular languages.
+            \bigbreak \noindent 
+            Recall that if $L$ is a regular language, then its compliment $L^{\prime}$ is also a regular language.
+            \bigbreak \noindent 
+            We accomplish this by taking a DFA that accepts $L$ and changing all accepting states to non-accepting, and vice versa.
+            \bigbreak \noindent 
+            We can do something with recursive languages to show that if $L$ is a recursive language then its compliment $L^{\prime}$ is also a recursive language.
+            \bigbreak \noindent 
+            We accomplish this by constructing a new TM that swaps “yes/no” decisions.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/67.png}
+            \bigbreak \noindent 
+            Similarly, the union of two recursive languages is also a recursive language. We accomplish this by constructing a new TM from the two recursive TMs.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/68.png} 
+            \bigbreak \noindent 
+            Returning to Acc ... we know
+            \begin{itemize}
+               \item CWL is a regular language
+                \item CWL$^{\prime}$ is a regular language
+                \item CWL$^{\prime}$ is a recursive language
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item (CWL $^{\prime} \cup $  Acc) is a recursive language
+                \item (CWL $^{\prime} \cup $ Acc)$^{\prime}$ is a recursive language 
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/69.png}
+            \bigbreak \noindent 
+            However, (CWL$^{\prime} \cup $ Acc)$^{\prime}$ = NotAcc, which we know is not recursively enumerable (much less recursive) ... contradiction.
+            \bigbreak \noindent 
+            $\therefore$ Acc is a recursively enumerable language that is not recursive.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/70.png}
+        \item \textbf{More on UTM}: Consider the UTM we just described to accept Acc. UTM took as input an encoding of some TM and started by making a copy of that encoding;
+            \begin{itemize}
+                \item $w_{1}$ – encoding of TM that UTM did not change
+                \item $w_{2}$ – copy of encoded TM (w1) that served as input to simulated TM – UTM frequently changed
+            \end{itemize}
+            \bigbreak \noindent 
+            After the initialization phase (i.e., making a copy of $w_{1}$) and the UTM entered the simulation phase, it didn’t matter that that $w_{2}$ was a copy of $w_{1}$.
+            \bigbreak \noindent 
+        In other words, we could have placed any input for $w_{2}$ and the UTM would have simulated the TM encoded by $w_{1}$ processing the arbitrary input we placed as $w_{2}$
+        \bigbreak \noindent 
+        Now the UTM becomes our \textit{first stored-program computer}
+        \bigbreak \noindent 
+        The UTM takes as input (a) an encoded TM and (b) input for that encoded TM, and simulates the TM (a) as it processes input (b)
+        \bigbreak \noindent 
+        The UTM is a TM that can simulate any TM processing any data, and hence its name, The Universal Turing Machine (Turing, 1936).
+        \bigbreak \noindent 
+        The Universal Turing Machine is the foundation of all computing theory and was the conceptual archetype of the early computer.
+        \bigbreak \noindent 
+        It is not a computer’s operating system, but rather, the logic that guides a computer’s instruction fetch and execution cycle (typically implemented in a computer’s hardware).
+        \bigbreak \noindent 
+        The first stored-program computer was built by John von Neumann and his colleagues within years of Turing’s work.
+        \bigbreak \noindent 
+        Contemporary computers implement the UTM differently (for efficiency) but they are all based on the UTM.
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{The halting problem}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Revisiting Turing Machines}: If a TM has been processing some string for a long time, how do we know if this is a case when the TM will be looping forever?
+            \bigbreak \noindent 
+            If the TM is going to loop forever, then let’s just stop now and declare the input string outside the language accepted by the TM!
+        \item \textbf{The halting problem}: There is a problem, The Halting Problem, that states:
+            \bigbreak \noindent 
+            \begin{center}
+                \textit{If we are given a Turing Machine $T$ and input string $w$, can we tell whether $T$ halts on $w$?}
+            \end{center}
+            \bigbreak \noindent 
+            The Halting Problem question does not care if T accepts/rejects w, only whether T eventually stops (accept or crash/reject) or loops forever.
+            \bigbreak \noindent 
+            Obviously, we cannot simply start processing w with T to find the answer.
+            \bigbreak \noindent 
+            The UTM we presented cannot answer the question because it will loop forever if T loops on w.
+            \bigbreak \noindent 
+            What The Halting Problem is calling for is an algorithm (a TM) that
+            \begin{itemize}
+                \item Accepts as input an encoded TM T and input string w
+                \item The Halting Problem TM would never loop forever (i.e., must be recursive, not merely recursively enumerable)
+                \bigbreak \noindent 
+            \item On all possible inputs it would always stop and report either “halts” or “loops” to indicate what T would do when processing w.
+                \bigbreak \noindent 
+            \end{itemize}
+            So the question becomes does such an algorithm exist?... No!
+            \bigbreak \noindent 
+        \item \textbf{Halting problem proof}: Assume a TM exists that solves The Halting Problem, call it $T_{H}$.
+            \bigbreak \noindent 
+            That is, $T_{H}$ is a TM that takes as input and encoded TM T, followed by a #, followed by some input string w.
+            \bigbreak \noindent 
+            $T_{H}$ would always terminate and print as its output on its tape
+            \begin{itemize}
+                \item “HALTS” if T will halt when processing w, or
+                \item “LOOPS” if T will loop forever when processing w
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/71.png}
+            \bigbreak \noindent 
+            We modify $T_{H}$ to create a $T_{H}^{\prime} $ by replacing the TH path from $q_{i}$ through its “writes HALTS” states, to HALT with a new state that loops forever.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/72.png}
+            \bigbreak \noindent 
+            $T_{H}^{\prime} $ will either
+            \begin{itemize}
+                \item Loop forever if input $T$ would halt on its input $w$, or
+                \item Halt with “LOOPS” written on the tape when input $T$ would loop forever on its input $w$
+            \end{itemize}
+            \bigbreak \noindent 
+            Consider how $T_{H}^{\prime}$ would process input $T_{H}^{\prime}\#T_{H}^{\prime}$, that is, ask $T_{H}^{\prime}$ how it would process an encoding of itself
+            \bigbreak \noindent 
+            As we’ve seen, there are only two possible responses from $T_{H}^{\prime} $.
+            \bigbreak \noindent 
+            \textbf{Case I:} $T_{H}^{\prime} $ actually loops forever when processing $T_{H}^{\prime}\#T_{H}^{\prime}$ (i.e., enters $q_{h}^{\prime} $). $T_{H}^{\prime} $ only loops forever when its input T would halt on T’s input w
+            \bigbreak \noindent 
+            Since we processed $T_{H}^{\prime}\#T_{H}^{\prime}$ that would mean that $T_{H}^{\prime}$ must halt when processing its own input, contradiction.
+            \bigbreak \noindent 
+            \textbf{Case II:} $T_{H}^{\prime}$ actually halts with “LOOPS” when processing on $T_{H}^{\prime}\#T_{H}^{\prime} $ (i.e., enters $q_{1}$). 
+            $T_{H}^{\prime}$ only halts with “LOOPS” when its input T would loop forever on T’s input w.
+            \bigbreak \noindent 
+            Since we processed $T_{H}^{\prime}\#T_{H}^{\prime}$ that would mean that $T_{H}^{\prime} $ must loop forever when processing its own input, contradiction.
+            \bigbreak \noindent 
+            This tells us that $T_{H}^{\prime}$ cannot exist, which in itself is not a proof that there is no solution to The Halting Problem
+            \bigbreak \noindent 
+            However, $T_{H}^{\prime}$ was a legitimate modification of $T_{H}$ which we assumed to exist as a solution to The Halting Problem.
+            \bigbreak \noindent 
+            Since $T_{H}^{\prime}$ cannot exist and it was based on a legitimate modification of $T_{H}$, we conclude that $T_{H}$ cannot exist
+            \bigbreak \noindent 
+            $\therefore$ There is no algorithm that can solve The Halting Problem.
+    \end{itemize}
+
 
 
 
@@ -5993,6 +6213,72 @@ indicate which strong entity the weak entity depends upon.
 
 
 
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Transactions and concurrency control}
+    \begin{itemize}
+        \item \textbf{Transaction}: A logical unit of work, a unit of program execution that access and possibly updates various data items
+            \bigbreak \noindent 
+            is initiated by user program written in a high-level data-manipulation language like  SQL, COBOL, C, C++, or Java
+            \bigbreak \noindent 
+            Transactions are delimited by statements such as \textit{begin transaction} \textit{end transaction} or \textit{COMMIT} or \textit{ROLLBACK}
+        \item \textbf{Sample Transaction}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BEGIN TRANSACTION;
+                    UPDATE ACC 123 { BALANCE := BALANCE – 100 };
+                    IF (ANY ERROR) THEN
+                        GO TO UNDO;
+                    ENDIF;
+                    UPDATE ACC 456 { BALANCE := BALANCE + 100 };
+                    UPDATE ACC 456 { BALANCE := BALANCE + 100 };
+                    IF (ANY ERROR) THEN
+                        GO TO UNDO;
+                    ENDIF;
+                    COMMIT;
+                    GO TO FINISH;
+                UNDO:
+                    ROLLBACK;
+                FINISH:
+                    RETURN;
+            \end{cppcode}
+        \item \textbf{ACID properties of transactions:}
+            \begin{itemize}
+                \item \textbf{Atomicity:} either all operations of the transaction are implemented properly or none are.
+                \item \textbf{Consistency:} execution of a transaction in isolation preserves the consistency of the database (with no other transaction executing concurrently).
+                \item \textbf{Isolation:} each transaction is unaware of other transactions executing concurrently in the system.
+                \item \textbf{Durability:} after a transaction completes successfully, the changes it has made to the database persist, even if the system fails.
+            \end{itemize}
+        \item \textbf{Transaction States}: In the absence of any failures, all transactions complete successfully.
+            \bigbreak \noindent 
+            However, there is not always an absence of any failures.
+            \bigbreak \noindent 
+            Thus we have different “states” in which a transaction may reside.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/1.jpg}
+            \begin{itemize}
+                \item \textbf{Active:} the initial state and one in which the transaction stays while it is executing.
+                \item \textbf{Partially committed:} a state after the final statement has been executed.
+                \item \textbf{Failed:} the state after the discovery that normal execution can no longer proceed.
+                \item \textbf{Aborted:} the state after the transaction has been rolled back and the database restored to its condition prior to the start of the transaction.
+                \item \textbf{Committed:} the state after successful execution.
+            \end{itemize}
+        \item \textbf{Committed Transaction}:
+            A transaction is considered committed when it has performed updates that transforms the database into a new consistent state.
+            \bigbreak \noindent 
+            Once a transaction is committed, its effects cannot be undone by a system failure.
+            \bigbreak \noindent 
+            Only way to undo a committed transaction is to execute a compensating transaction.
+            \bigbreak \noindent 
+            However it is not always possible to create a compensating transaction.
+        \item \textbf{Failed \& Aborted Transaction}: When a transaction cannot be completed (due to some kind of system failure), the transaction must be “rolled back”.
+            \bigbreak \noindent 
+             It also enters the aborted state where the system has two options:
+             \begin{itemize}
+                 \item Restart the transaction (but only if aborted due to some hardware or software error).
+                 \item Kill the transaction which is usually done due to some internal logical error.
+             \end{itemize}
     \end{itemize}
 
     \pagebreak 
