@@ -1,9 +1,26 @@
-        $statement = "UPDATE users SET lastname=:name WHERE id=:id";
+        <?php
         try {
-            $p = $pdo->prepare($statement);
+            // Create a new PDO instance
+            $pdo = new PDO('mysql:host=localhost;dbname=testdb', 'username', 'password');
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $p->bindValue(':name', "Appleseed");
-            $p->bindValue(':id', "2");
+            // Start the transaction
+            $pdo->beginTransaction();
 
-            $s = $p->execute();
-        } catch (PDOException $e) { echo "noop"; }
+            // Perform database operations
+            $stmt = $pdo->prepare("INSERT INTO accounts (name, balance) VALUES (?, ?)");
+            $stmt->execute(['Alice', 500]);
+            $stmt->execute(['Bob', 1000]);
+
+            // Simulate an error to demonstrate rollback
+            // This statement will fail if the `balance` column is set to NOT NULL
+            $stmt->execute(['Charlie', null]);
+
+            // Commit the transaction
+            $pdo->commit();
+            echo "Transaction committed successfully.";
+        } catch (Exception $e) {
+            // Rollback the transaction on failure
+            $pdo->rollBack();
+            echo "Transaction failed: " . $e->getMessage();
+        }

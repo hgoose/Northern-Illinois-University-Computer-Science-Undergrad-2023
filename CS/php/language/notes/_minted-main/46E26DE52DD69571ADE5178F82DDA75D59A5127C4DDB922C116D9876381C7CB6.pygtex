@@ -1,0 +1,28 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{o}{\PYGZlt{}?}\PYG{n+nx}{php}
+\PYG{k}{try} \PYG{p}{\PYGZob{}}
+    \PYG{c+c1}{// Create a new PDO instance}
+    \PYG{n+nv}{\PYGZdl{}pdo} \PYG{o}{=} \PYG{k}{new} \PYG{n+nx}{PDO}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}mysql:host=localhost;dbname=testdb\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}username\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}password\PYGZsq{}}\PYG{p}{);}
+    \PYG{n+nv}{\PYGZdl{}pdo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{setAttribute}\PYG{p}{(}\PYG{n+nx}{PDO}\PYG{o}{::}\PYG{n+na}{ATTR\PYGZus{}ERRMODE}\PYG{p}{,} \PYG{n+nx}{PDO}\PYG{o}{::}\PYG{n+na}{ERRMODE\PYGZus{}EXCEPTION}\PYG{p}{);}
+
+    \PYG{c+c1}{// Start the transaction}
+    \PYG{n+nv}{\PYGZdl{}pdo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{beginTransaction}\PYG{p}{();}
+
+    \PYG{c+c1}{// Perform database operations}
+    \PYG{n+nv}{\PYGZdl{}stmt} \PYG{o}{=} \PYG{n+nv}{\PYGZdl{}pdo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{prepare}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}INSERT INTO accounts (name, balance) VALUES (?, ?)\PYGZdq{}}\PYG{p}{);}
+    \PYG{n+nv}{\PYGZdl{}stmt}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{execute}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}Alice\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{500}\PYG{p}{]);}
+    \PYG{n+nv}{\PYGZdl{}stmt}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{execute}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}Bob\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1000}\PYG{p}{]);}
+
+    \PYG{c+c1}{// Simulate an error to demonstrate rollback}
+    \PYG{c+c1}{// This statement will fail if the `balance` column is set to NOT NULL}
+    \PYG{n+nv}{\PYGZdl{}stmt}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{execute}\PYG{p}{([}\PYG{l+s+s1}{\PYGZsq{}Charlie\PYGZsq{}}\PYG{p}{,} \PYG{k}{null}\PYG{p}{]);}
+
+    \PYG{c+c1}{// Commit the transaction}
+    \PYG{n+nv}{\PYGZdl{}pdo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{commit}\PYG{p}{();}
+    \PYG{k}{echo} \PYG{l+s+s2}{\PYGZdq{}Transaction committed successfully.\PYGZdq{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}} \PYG{k}{catch} \PYG{p}{(}\PYG{n+nx}{Exception} \PYG{n+nv}{\PYGZdl{}e}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{c+c1}{// Rollback the transaction on failure}
+    \PYG{n+nv}{\PYGZdl{}pdo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{rollBack}\PYG{p}{();}
+    \PYG{k}{echo} \PYG{l+s+s2}{\PYGZdq{}Transaction failed: \PYGZdq{}} \PYG{o}{.} \PYG{n+nv}{\PYGZdl{}e}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n+na}{getMessage}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

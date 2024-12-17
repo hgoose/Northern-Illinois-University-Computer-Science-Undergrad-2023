@@ -1,0 +1,155 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={MYSQL in c++}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{MYSQL in c++}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Setup and compilation}
+    \bigbreak \noindent 
+    We begin by including the required library
+    \bigbreak \noindent 
+    \begin{cppcode}
+    #include <mysql/mysql.h>
+    \end{cppcode}
+    \bigbreak \noindent 
+    We can then compile  with
+    \begin{cppcode}
+    g++ -o program -I/usr/include/mariadb -lmariadb program.cc
+    \end{cppcode}
+
+
+    \pagebreak 
+    \unsect{Initialization and deinitialization}
+    \bigbreak \noindent 
+    We start with the initialization
+    \bigbreak \noindent 
+    \begin{cppcode}
+    mysql_library_init(0, NULL, NULL);
+    MYSQL* connection = mysql_init(NULL);
+
+    const char* host, *user, *password, *db;
+    host = "...";
+    user = "...";
+    password = "...";
+    db = "...";
+
+    connection = mysql_real_connect(connection, host, user, password, db, 0, NULL, 0);
+
+
+    // At the end of the program
+    mysql_close(connection);
+    mysql_library_end();
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Running a query, getting number of affected rows, and getting the number of columns}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    const char* query = "SELECT * FROM S";
+    int err = mysql_query(connection, query);
+
+    // Returns non-zero on failure, zero on success
+    if (err) {
+        const char* e = mysql_error(connection);
+        unsigned int en = mysql_errno(connection);
+        cout << "Error numeric code: " << en << "\t Message: \t" << e << endl;
+        exit(1);
+    }
+    my_ulonglong affected = mysql_affected_rows(connection);
+    unsigned int fc = mysql_field_count(connection);
+
+    cout << "Affected: " << affected << endl;
+    cout << "Field count: " << fc << endl << endl;
+
+    \end{cppcode}
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{Errors}
+    \bigbreak \noindent 
+    Many of the functions return error codes, we also have two functions regarding errors.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    unsigned int mysql_errno(MYSQL *mysql);
+    const char *mysql_error(MYSQL *mysql);
+    \end{cppcode}
+
+
+    \pagebreak 
+    \unsect{Fetching and processing the result set}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        MYSQL_RES* res = mysql_store_result(connection);
+        ull returned = mysql_num_rows(res);
+
+        cout << "Returned: " << returned << endl;
+
+        MYSQL_ROW row;
+        unsigned int num_fields = mysql_num_fields(res);
+        while ( (row = mysql_fetch_row(res)) ) {
+            for (unsigned int i=0; i< num_fields; ++i) {
+                cout << (row[i] ? row[i] : "NULL") << '\t';
+            }
+            cout << endl;
+        }
+        mysql_free_result(res);
+    \end{cppcode}
+
+
+
+
+\end{document}

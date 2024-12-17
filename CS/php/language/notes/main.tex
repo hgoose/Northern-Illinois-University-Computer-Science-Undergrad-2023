@@ -4383,6 +4383,76 @@ You can also use other characters like \#, $\sim$, or \% as delimiters. This is 
         } catch (PDOException $e) { echo "noop"; }
     \end{phpcode}
 
+    \pagebreak 
+    \subsubsection{Enable PDO Exception Mode}
+    \bigbreak \noindent 
+    To catch errors effectively, set the error mode to exceptions:
+    \bigbreak \noindent 
+    \begin{phpcode}
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    \end{phpcode}
+
+    \pagebreak 
+    \subsubsection{Transactions}
+    \bigbreak \noindent 
+    PHP's PDO (PHP Data Objects) extension provides a consistent interface for accessing databases. Transactions in PDO are used to ensure a set of database operations are executed together in a single unit of work. If any operation within the transaction fails, the changes can be rolled back to maintain data integrity.
+    \begin{enumerate}
+        \item \textbf{Begin a Transaction:} Start a transaction with the database.
+        \item \textbf{Execute Queries:} Perform a series of SQL operations that are part of the transaction.
+        \item \textbf{Commit:} Save the changes made during the transaction.
+        \item \textbf{Rollback:} Undo all changes if something goes wrong.
+    \end{enumerate}
+    \bigbreak \noindent 
+    Start a Transaction: Begin the transaction with:
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $pdo->beginTransaction();
+    \end{phpcode}
+    \bigbreak \noindent 
+    Then, perform the desired database operations using prepare() and execute()
+    \bigbreak \noindent 
+    If all operations succeed, make the changes permanent:
+    \begin{phpcode}
+    $pdo->commit();
+    \end{phpcode}
+    \bigbreak \noindent 
+    If an error occurs, undo all changes by rolling back the transaction:
+    \bigbreak \noindent 
+    \begin{phpcode}
+        $pdo->rollBack();
+    \end{phpcode}
+    \pagebreak \bigbreak \noindent 
+    \begin{phpcode}
+        <?php
+        try {
+            // Create a new PDO instance
+            $pdo = new PDO('mysql:host=localhost;dbname=testdb', 'username', 'password');
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Start the transaction
+            $pdo->beginTransaction();
+
+            // Perform database operations
+            $stmt = $pdo->prepare("INSERT INTO accounts (name, balance) VALUES (?, ?)");
+            $stmt->execute(['Alice', 500]);
+            $stmt->execute(['Bob', 1000]);
+
+            // Simulate an error to demonstrate rollback
+            // This statement will fail if the `balance` column is set to NOT NULL
+            $stmt->execute(['Charlie', null]);
+
+            // Commit the transaction
+            $pdo->commit();
+            echo "Transaction committed successfully.";
+        } catch (Exception $e) {
+            // Rollback the transaction on failure
+            $pdo->rollBack();
+            echo "Transaction failed: " . $e->getMessage();
+        }
+    \end{phpcode}
+
+
+
 
 
 
