@@ -851,6 +851,877 @@
         \begin{align*}
             1 + x \leq e^{x} \leq1 + x + x^{2}
         .\end{align*}
+        When $x\to 0$, the approximation of $e^{x}$ by $1+x$ is quite good
+        \begin{align*}
+            e^{x} = 1 + x + \Theta(x^{2})
+        .\end{align*}
+        Further recall
+        \begin{align*}
+            \lim\limits_{n \to \infty}{\left(1+\frac{x}{n}\right)}^{n} = e^{x}
+        .\end{align*}
+
+        \bigbreak \noindent 
+        \subsubsection{Logarithms}
+        \bigbreak \noindent 
+        We shall use the following notations:
+        \begin{align*}
+            \text{lg}\ n &= \log_{2}{(n)} \\
+            \ln{(n)} &= \log_{e}{(n)} \\
+            \text{lg}^{x}\ n &= (\text{lg}\ n)^{k } \\
+            \text{lglg}\ n&= \text{lg} (\text{lg}\ n)
+        .\end{align*} 
+        \bigbreak \noindent 
+        An important notational convention we shall adopt is that \textit{logarithm functions will apply only to the next term in the formula}, so that \( \lg n + k \) will mean \( (\lg n) + k \) and not \( \lg(n + k) \). If we hold \( b > 1 \) constant, then for \( n > 0 \), the function \( \log_b n \) is strictly increasing.
+        \bigbreak \noindent 
+        For all real \( a > 0 \), \( b > 0 \), \( c > 0 \), and \( n \),
+        \[
+            a = b^{\log_b a} ,
+        \]
+        \[
+            \log_c (ab) = \log_c a + \log_c b ,
+        \]
+        \[
+            \log_b a^n = n \log_b a ,
+        \]
+        \[
+            \log_b a = \frac{\log_c a}{\log_c b} , \tag{3.15}
+        \]
+        \[
+            \log_b (1/a) = - \log_b a ,
+        \]
+        \[
+            \log_b a = \frac{1}{\log_a b} ,
+        \]
+        \[
+            a^{\log_b c} = c^{\log_b a} , \tag{3.16}
+        \]
+        where, in each equation above, logarithm bases are not \( 1 \).
+        \bigbreak \noindent 
+        There is a simple series expansion for \( \ln(1 + x) \) when \( |x| < 1 \):
+        \[
+            \ln(1 + x) = x - \frac{x^2}{2} + \frac{x^3}{3} - \frac{x^4}{4} + \frac{x^5}{5} - \cdots .
+        \]
+        We also have the following inequalities for \( x > -1 \):
+        \[
+            \frac{x}{1 + x} \leq \ln(1 + x) \leq x , \tag{3.17}
+        \]
+        where equality holds only for \( x = 0 \).
+        \bigbreak \noindent 
+        We say that a function \( f(n) \) is \textit{polylogarithmically bounded} if \( f(n) = O(\lg^k n) \) for some constant \( k \). We can relate the growth of polynomials and polylogarithms by substituting \( \lg n \) for \( n \) and \( 2^a \) for \( a \) in equation (3.10), yielding
+        \[
+            \lim_{n \to \infty} \frac{\lg^b n}{(2^a)^{\lg n}} = \lim_{n \to \infty} \frac{\lg^b n}{n^a} = 0 .
+        \]
+        From this limit, we can conclude that
+        \[
+            \lg^b n = o(n^a)
+        \]
+        for any constant \( a > 0 \). Thus, any positive polynomial function grows faster than any polylogarithmic function
+
+        \bigbreak \noindent 
+        \subsubsection{Functional iteration}
+        \bigbreak \noindent 
+        We use the notation \( f^{(i)}(n) \) to denote the function \( f(n) \) iteratively applied \( i \) times to an initial value of \( n \). Formally, let \( f(n) \) be a function over the reals. For non-negative integers \( i \), we recursively define
+        \[
+            f^{(i)}(n) = 
+            \begin{cases} 
+                n & \text{if } i = 0 , \\
+                f(f^{(i-1)}(n)) & \text{if } i > 0 .
+            \end{cases}
+        \]
+        For example, if \( f(n) = 2n \), then \( f^{(i)}(n) = 2^i n \).
+
+        \bigbreak \noindent 
+        \subsubsection{The iterated logarithm function}
+        \bigbreak \noindent 
+        We use the notation \( \lg^* n \) (read “log star of \( n \)”) to denote the iterated logarithm, defined as follows. Let \( \lg^{(i)} n \) be as defined above, with \( f(n) = \lg n \). Because the logarithm of a nonpositive number is undefined, \( \lg^{(i)} n \) is defined only if \( \lg^{(i-1)} n > 0 \). Be sure to distinguish \( \lg^{(i)} n \) (the logarithm function applied \( i \) times in succession, starting with argument \( n \)) from \( \lg^i n \) (the logarithm of \( n \) raised to the \( i \)-th power). Then we define the iterated logarithm function as
+        \[
+            \lg^* n = \min \{ i \geq 0 : \lg^{(i)} n \leq 1 \} .
+        \]
+        The iterated logarithm is a \textit{very} slowly growing function:
+        \[
+            \begin{aligned}
+                \lg^* 2 &= 1 , \\
+                \lg^* 4 &= 2 , \\
+                \lg^* 16 &= 3 , \\
+                \lg^* 65536 &= 4 , \\
+                \lg^* (2^{65536}) &= 5 .
+            \end{aligned}
+        \]
+
+        \pagebreak 
+        \unsect{Divide and conquer}
+        \bigbreak \noindent 
+        Recall that in divide-and-conquer, we solve a problem recursively, applying three steps at each level of the recursion
+        \begin{itemize}
+            \item \textbf{Divide}: the problem into a number of subproblems that are smaller instances of the same problem.
+            \item \textbf{Conquer}: the subproblems by solving them recursively. If the subproblem sizes are small enough, however, just solve the subproblems in a straightforward manner.
+            \item \textbf{Combine}: the solutions to the subproblems into the solution for the original problem.
+        \end{itemize}
+        \bigbreak \noindent 
+        When the subproblems are large enough to solve recursively, we call that the \textbf{\textit{recursive case}}. Once the subproblems become small enough that we no longer recurse, we say that the recursion “bottoms out” and that we have gotten down to the \textbf{\textit{base case}}. Sometimes, in addition to subproblems that are smaller instances of the same problem, we have to solve subproblems that are not quite the same as the original problem. We consider solving such subproblems as part of the combine step
+        \bigbreak \noindent 
+        \subsection{Recurrences}
+        \bigbreak \noindent 
+        A \textbf{\textit{recurrence}} is an equation or inequality that describes a function in terms of its value on smaller inputs. we described the worst-case running time $T(n)$ of the MERGE-SORT procedure by the recurrence
+        \begin{align*}
+            T(n) = \begin{cases}
+                \Theta(1) & \text{ if} n = 1 \\
+                2T(n/2) + \Theta(n) & \text{ if} n > 1
+            \end{cases}
+        .\end{align*}
+        \bigbreak \noindent 
+        Whose solution we claimed to be $T(n)  = \Theta(n\lg n)$
+        \bigbreak \noindent 
+        Recurrences can take many forms. For example, a recursive algorithm might divide subproblems into unequal sizes, such as a 2/3-to-1/3 split. If the divide and combine steps take linear time, such an algorithm would give rise to the recurrence
+        \[
+            T(n) = T(2n/3) + T(n/3) + \Theta(n).
+        \]
+        Subproblems are not necessarily constrained to being a constant fraction of the original problem size. For example, a recursive version of linear search (see Exercise 2.1-3) would create just one subproblem containing only one element fewer than the original problem. Each recursive call would take constant time plus the time for the recursive calls it makes, yielding the recurrence
+        \[
+            T(n) = T(n-1) + \Theta(1).
+        \]
+        This chapter offers three methods for solving recurrences—that is, for obtaining asymptotic “\(\Theta\)” or “\(O\)” bounds on the solution:
+        \begin{itemize}
+            \item In the \textit{substitution method}, we guess a bound and then use mathematical induction to prove our guess correct.
+            \item The \textit{recursion-tree method} converts the recurrence into a tree whose nodes represent the costs incurred at various levels of the recursion. We use techniques for bounding summations to solve the recurrence.
+            \item The \textit{master method} provides bounds for recurrences of the form
+        \end{itemize}
+        \[
+            T(n) = aT(n/b) + f(n) , \tag{4.2}
+        \]
+        where \( a \geq 1 \), \( b > 1 \), and \( f(n) \) is a given function. Such recurrences arise frequently. A recurrence of the form in equation (4.2) characterizes a divide-and-conquer algorithm that creates \( a \) subproblems, each of which is \( 1/b \) the size of the original problem, and in which the divide and combine steps together take \( f(n) \) time.
+        \bigbreak \noindent 
+        To use the master method, you will need to memorize three cases, but once you do that, you will easily be able to determine asymptotic bounds for many simple recurrences
+        \bigbreak \noindent 
+        Occasionally, we shall see recurrences that are not equalities but rather inequalities, such as \( T(n) \leq 2T(n/2) + \Theta(n) \). Because such a recurrence states only an upper bound on \( T(n) \), we will couch its solution using \( O \)-notation rather than \( \Theta \)-notation. Similarly, if the inequality were reversed to \( T(n) \geq 2T(n/2) + \Theta(n) \), then because the recurrence gives only a lower bound on \( T(n) \), we would use \( \Omega \)-notation in its solution.
+        \bigbreak \noindent 
+        \subsection{Technicalities in recurrences}
+        \bigbreak \noindent 
+        \textit{In practice, we neglect certain technical} details when we state and solve recurrences. For example, if we call \textsc{Merge-Sort} on \( n \) elements when \( n \) is odd, we end up with subproblems of size \( \lfloor n/2 \rfloor \) and \( \lceil n/2 \rceil \). Neither size is actually \( n/2 \), because \( n/2 \) is not an integer when \( n \) is odd. Technically, the recurrence describing the worst-case running time of \textsc{Merge-Sort} is really
+        \[
+            T(n) =
+            \begin{cases} 
+                \Theta(1) & \text{if } n = 1, \\
+                T(\lfloor n/2 \rfloor) + T(\lceil n/2 \rceil) + \Theta(n) & \text{if } n > 1 .
+            \end{cases} \tag{4.3}
+        \]
+        Boundary conditions represent another class of details that we typically ignore. Since the running time of an algorithm on a constant-sized input is a constant, the recurrences that arise from the running times of algorithms generally have \( T(n) = \Theta(1) \) for sufficiently small \( n \). Consequently, for convenience, we shall generally omit statements of the boundary conditions of recurrences and assume that \( T(n) \) is constant for small \( n \). For example, we normally state recurrence (4.1) as
+        \[
+            T(n) = 2T(n/2) + \Theta(n) , \tag{4.4}
+        \]
+        without explicitly giving values for small \( n \). The reason is that although changing the value of \( T(1) \) changes the exact solution to the recurrence, the solution typically doesn’t change by more than a constant factor, and so the order of growth is unchanged.
+        \bigbreak \noindent 
+        When we state and solve recurrences, we often omit floors, ceilings, and boundary conditions. We forge ahead without these details and later determine whether or not they matter. They usually do not, but you should know when they do. Experience helps, and so do some theorems stating that these details do not affect the asymptotic bounds of many recurrences characterizing divide-and-conquer algorithms 
+
+        \pagebreak 
+        \subsection{The maximum-subarray problem}
+        \bigbreak \noindent 
+        Suppose that you been offered the opportunity to invest in the Volatile Chemical
+        Corporation. Like the chemicals the company produces, the stock price of the
+        Volatile Chemical Corporation is rather volatile. You are allowed to buy one unit
+        of stock only one time and then sell it at a later date, buying and selling after the
+        close of trading for the day. To compensate for this restriction, you are allowed to
+        learn what the price of the stock will be in the future. Your goal is to maximize
+        your profit
+        \bigbreak \noindent 
+        You might think that you can always maximize profit by either buying at the
+        lowest price or selling at the highest price. For example, in Figure 4.1, we would
+        maximize profit by buying at the lowest price, after day 7. If this strategy always
+        worked, then it would be easy to determine how to maximize profit: find the highest
+        and lowest prices, and then work left from the highest price to find the lowest prior
+        price, work right from the lowest price to find the highest later price, and take
+        the pair with the greater difference. Figure 4.2 shows a simple counterexample, demonstrating that the maximum profit sometimes comes neither by buying at the lowest price nor by selling at the highest price.
+        \bigbreak \noindent 
+        \fig{.5}{./figures/7.png}
+        \bigbreak \noindent 
+        \fig{.5}{./figures/8.png}
+        \pagebreak 
+        \subsubsection{A brute-force solution}
+        \bigbreak \noindent 
+        We can easily devise a brute-force solution to this problem: just try every possible pair of buy and sell dates in which the buy date precedes the sell date. A period of \( n \) days has \( \binom{n}{2} \) such pairs of dates. Since \( \binom{n}{2} \) is \( \Theta(n^2) \), and the best we can hope for is to evaluate each pair of dates in constant time, this approach would take \( \Omega(n^2) \) time. Can we do better?
+        \bigbreak \noindent 
+        \subsubsection{A transformation}
+        \bigbreak \noindent 
+        In order to design an algorithm with an \( o(n^2) \) running time, we will look at the input in a slightly different way. We want to find a sequence of days over which the net change from the first day to the last is maximum. Instead of looking at the daily prices, let us instead consider the daily change in price, where the change on day \( i \) is the difference between the prices after day \( i - 1 \) and after day \( i \). The table in Figure 4.1 shows these daily changes in the bottom row. If we treat this row as an array \( A \), shown in Figure 4.3, we now want to find the nonempty, contiguous subarray of \( A \) whose values have the largest sum. We call this contiguous subarray the \textit{maximum subarray}. For example, in the array of Figure 4.3, the maximum subarray of \( A[1 \ldots 16] \) is \( A[8 \ldots 11] \), with the sum 43. Thus, you would want to buy the stock just before day 8 (that is, after day 7) and sell it after day 11, earning a profit of \$43 per share.
+        \bigbreak \noindent 
+        \fig{.5}{./figures/9.png}
+        \bigbreak \noindent 
+        At first glance, this transformation does not help. We still need to check $\binom{n-1}{2} = \Theta(n^{2}) $ subarrays for a period of $n$ days
+        \bigbreak \noindent 
+        \subsubsection{A solution using divide-and-conquer}
+        \bigbreak \noindent 
+        Let’s think about how we might solve the maximum-subarray problem using the divide-and-conquer technique. Suppose we want to find a maximum subarray of the subarray \( A[\textit{low} \ldots \textit{high}] \). Divide-and-conquer suggests that we divide the subarray into two subarrays of as equal size as possible. That is, we find the midpoint, say \( \textit{mid} \), of the subarray, and consider the subarrays \( A[\textit{low} \ldots \textit{mid}] \) and \( A[\textit{mid} + 1 \ldots \textit{high}] \). As Figure 4.4(a) shows, any contiguous subarray \( A[i \ldots j] \) of \( A[\textit{low} \ldots \textit{high}] \) must lie in exactly one of the following places:
+        \begin{itemize}
+            \item entirely in the subarray \( A[\textit{low} \ldots \textit{mid}] \), so that \( \textit{low} \leq i \leq j \leq \textit{mid} \),
+            \item entirely in the subarray \( A[\textit{mid} + 1 \ldots \textit{high}] \), so that \( \textit{mid} < i \leq j \leq \textit{high} \), or
+            \item crossing the midpoint, so that \( \textit{low} \leq i \leq \textit{mid} < j \leq \textit{high} \).
+        \end{itemize}
+        Therefore, a maximum subarray of \( A[\textit{low} \ldots \textit{high}] \) must lie in exactly one of these places. In fact, a maximum subarray of \( A[\textit{low} \ldots \textit{high}] \) must have the greatest sum over all subarrays entirely in \( A[\textit{low} \ldots \textit{mid}] \), entirely in \( A[\textit{mid} + 1 \ldots \textit{high}] \), or crossing the midpoint. We can find maximum subarrays of \( A[\textit{low} \ldots \textit{mid}] \) and \( A[\textit{mid} + 1 \ldots \textit{high}] \) recursively, because these two subproblems are smaller instances of the problem of finding a maximum subarray. Thus, all that is left to do is find a maximum subarray that crosses the midpoint, and take a subarray with the largest sum of the three
+        \bigbreak \noindent 
+        \fig{.6}{./figures/10.png}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        FIND-MAX-CROSSING-SUBARRAY(|$A$|, |\textit{low,mid,high}|)
+            left-sum = |$-\infty$|
+            sum = 0
+            for i = mid downto low
+                sum = sum + A[i]
+                if sum > left-sum
+                    left-sum = sum
+                    max-left = i
+            right-sum = |$-\infty$|
+            sum = 0
+            for j = mid+1 to high
+                sum = sum + A[j]
+                if sum > right-sum
+                    right-sum = sum
+                    max-right = j
+            return (max-left, max-right, left-sum + right-sum)
+        \end{cppcode}
+        \bigbreak \noindent 
+        If the subarray \( A[\textit{low} \ldots \textit{high}] \) contains \( n \) entries (so that \( n = \textit{high} - \textit{low} + 1 \)), we claim that the call \textsc{Find-Max-Crossing-Subarray}(\( A, \textit{low}, \textit{mid}, \textit{high} \)) takes \( \Theta(n) \) time. Since each iteration of each of the two \textbf{for} loops takes \( \Theta(1) \) time, we just need to count up how many iterations there are altogether. The \textbf{for} loop of lines 3–7 makes \( \textit{mid} - \textit{low} + 1 \) iterations, and the \textbf{for} loop of lines 10–14 makes \( \textit{high} - \textit{mid} \) iterations, and so the total number of iterations is
+        \[
+            (\textit{mid} - \textit{low} + 1) + (\textit{high} - \textit{mid}) = \textit{high} - \textit{low} + 1 = n .
+        \]
+        With a linear-time \textsc{Find-Max-Crossing-Subarray} procedure in hand, we can write pseudocode for a divide-and-conquer algorithm to solve the maximum-subarray problem:
+        \pagebreak 
+        \bigbreak \noindent 
+        \begin{cppcode}
+        FIND-MAXIMUM-SUBARRAY(|$A, low, high$|)
+            if high == low 
+                return |$(low, high, A[low])$|
+            else mid = |$\lfloor (low + high)/2$\rfloor|
+                (left-low,left-high, left-sum) = 
+                    FIND-MAXIMUM-SUBARRAY(A,low,mid)
+                (right-low,right-high, right-sum) = 
+                    FIND-MAXIMUM-SUBARRAY(A,mid+1,high)
+                (cross-low,cross-high, cross-sum) = 
+                    FIND-MAX-CROSSING-SUBARRAY(A, low, mid, high)
+                if left-sum |$ \geq $| right-sum and left-sum |$ \geq $| cross-sum
+                    return (left-low, left-high, left-sum)
+                else if right-sum |$ \geq$| left-sum and right-sum |$ \geq$| cross-sum
+                    return (right-low, right-high, right-sum)
+                else return (cross-low, cross-high, cross-sum)
+        \end{cppcode}
+        \bigbreak \noindent 
+        The initial call \textsc{Find-Maximum-Subarray}(\( A, 1, 1, A.\textit{length} \)) will find a maximum subarray of \( A[1 \ldots n] \).
+        \bigbreak \noindent 
+        Similar to \textsc{Find-Max-Crossing-Subarray}, the recursive procedure \textsc{Find-Maximum-Subarray} returns a tuple containing the indices that demarcate a maximum subarray, along with the sum of the values in a maximum subarray. Line 1 tests for the base case, where the subarray has just one element. A subarray with just one element has only one subarray---itself---and so line 2 returns a tuple with the starting and ending indices of just the one element, along with its value. Lines 3--11 handle the recursive case. Line 3 does the divide part, computing the index \( \textit{mid} \) of the midpoint. Let’s refer to the subarray \( A[\textit{low} \ldots \textit{mid}] \) as the \textit{left subarray} and to \( A[\textit{mid} + 1 \ldots \textit{high}] \) as the \textit{right subarray}. Because we know that the subarray \( A[\textit{low} \ldots \textit{high}] \) contains at least two elements, each of the left and right subarrays must have at least one element. Lines 4 and 5 conquer by recursively finding maximum subarrays within the left and right subarrays, respectively. Lines 6--11 form the combine part. Line 6 finds a maximum subarray that crosses the midpoint. (Recall that because line 6 solves a subproblem that is not a smaller instance of the original problem, we consider it to be in the combine part.) Line 7 tests whether the left subarray contains a subarray with the maximum sum, and line 8 returns that maximum subarray. Otherwise, line 9 tests whether the right subarray contains a subarray with the maximum sum, and line 10 returns that maximum subarray. If neither the left nor right subarrays contain a subarray achieving the maximum sum, then a maximum subarray must cross the midpoint, and line 11 returns it.
+        \bigbreak \noindent 
+        \subsubsection{Analyzing the divide-and-conquer algorithm}
+        \bigbreak \noindent 
+        Next we set up a recurrence that describes the running time of the recursive FINDMAXIMUM-SUBARRAY procedure. we make the simplifying assumption that the original problem size is a power of 2, so that all subproblem sizes are integers.
+        \bigbreak \noindent 
+        We denote by \( T(n) \) the running time of \textsc{Find-Maximum-Subarray} on a subarray of \( n \) elements. For starters, line 1 takes constant time. The base case, when \( n = 1 \), is easy: line 2 takes constant time, and so
+        \begin{align*}
+            T(1) = \Theta(1)
+        .\end{align*}
+        \bigbreak \noindent 
+        The recursive case occurs when \( n > 1 \). Lines 1 and 3 take constant time. Each of the subproblems solved in lines 4 and 5 is on a subarray of \( n/2 \) elements (our assumption that the original problem size is a power of 2 ensures that \( n/2 \) is an integer), and so we spend \( T(n/2) \) time solving each of them. Because we have to solve two subproblems---for the left subarray and for the right subarray---the contribution to the running time from lines 4 and 5 comes to \( 2T(n/2) \). As we have already seen, the call to \textsc{Find-Max-Crossing-Subarray} in line 6 takes \( \Theta(n) \) time. Lines 7--11 take only \( \Theta(1) \) time. For the recursive case, therefore, we have
+        \[
+            T(n) = \Theta(1) + 2T(n/2) + \Theta(n) + \Theta(1)
+        \]
+        \[
+            \hspace{10mm} = 2T(n/2) + \Theta(n) . \tag{4.6}
+        \]
+        Combining equations (4.5) and (4.6) gives us a recurrence for the running time \( T(n) \) of \textsc{Find-Maximum-Subarray}:
+        \[
+            T(n) =
+            \begin{cases}
+                \Theta(1) & \text{if } n = 1 , \\
+                2T(n/2) + \Theta(n) & \text{if } n > 1 .
+            \end{cases} \tag{4.7}
+        \]
+        This recurrence is the same as recurrence (4.1) for merge sort. As we shall see from the master method in the future, this recurrence has the solution \( T(n) = \Theta(n \lg n) \). You might also revisit the recursion tree in Figure 2.5 to understand why the solution should be \( T(n) = \Theta(n \lg n) \).
+        \bigbreak \noindent 
+        \subsection{Strassen’s algorithm for matrix multiplication}
+
+        \bigbreak \noindent 
+        \subsubsection{The standard $\Theta(n^{3})$ approach}
+        \bigbreak \noindent 
+        If \( A = (a_{ij}) \) and \( B = (b_{ij}) \) are square \( n \times n \) matrices, then in the product \( C = A \cdot B \), we define the entry \( c_{ij} \), for \( i, j = 1, 2, \ldots, n \), by
+        \[
+            c_{ij} = \sum_{k=1}^n a_{ik} \cdot b_{kj} . \tag{4.8}
+        \]
+        We must compute \( n^2 \) matrix entries, and each is the sum of \( n \) values. The following procedure takes \( n \times n \) matrices \( A \) and \( B \) and multiplies them, returning their \( n \times n \) product \( C \). We assume that each matrix has an attribute \textit{rows}, giving the number of rows in the matrix.
+
+        \bigbreak \noindent 
+        Using the definition of matrix multiplication, we have the simple algorithm
+        \bigbreak \noindent 
+        \begin{cppcode}
+        SQUARE-MATRIX-MULTIPLY(A,B)
+            n = A.rows
+            let |$C$| be a new |$n\times n$| matrix
+            for i = 1 to n
+                for j = 1 to n
+                    |$c_{ij}$| = 0
+                    for k = 1 to n
+                        |$c_{ij}$| = |$c_{ij} + a_{ik} \cdot  b_{kj}$|
+            return |$C$|
+        \end{cppcode}
+        \bigbreak \noindent 
+        Because each of the triply-nested for loops runs exactly $n$ iterations, and each execution of line 7 takes constant time, the SQUARE-MATRIX-MULTIPLY procedure takes $\Theta(n^{3}) $ time
+        \pagebreak 
+        \subsubsection{A simple divide-and-conquer algorithm}
+        \bigbreak \noindent 
+        To keep things simple, when we use a divide-and-conquer algorithm to compute
+        the matrix product $C = A \cdot B$, we assume that $n$ is an exact power of 2 in each of
+        the $n \times n$ matrices. We make this assumption because in each divide step, we will
+        divide $n \times n$ matrices into four $n/2 \times n/2$ matrices, and by assuming that $n$ is an
+        exact power of 2, we are guaranteed that as long as $n \geq 2$, the dimension $n/2$ is an
+        integer.
+        \bigbreak \noindent 
+        Suppose that we partition each of $A$, $B$, and $C$ into four $n/2 \times n/2$ matrices
+        \[
+            A = \begin{pmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{pmatrix}, \quad
+            B = \begin{pmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{pmatrix}, \quad
+            C = \begin{pmatrix} C_{11} & C_{12} \\ C_{21} & C_{22} \end{pmatrix}, \tag{4.9}
+        \]
+        so that we rewrite the equation $C = A \cdot B$ as
+        \[
+            \begin{pmatrix} C_{11} & C_{12} \\ C_{21} & C_{22} \end{pmatrix} =
+            \begin{pmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{pmatrix} \cdot
+            \begin{pmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{pmatrix}. \tag{4.10}
+        \]
+        Equation (4.10) corresponds to the four equations
+        \[
+            C_{11} = A_{11} \cdot B_{11} + A_{12} \cdot B_{21}, \tag{4.11}
+        \]
+        \[
+            C_{12} = A_{11} \cdot B_{12} + A_{12} \cdot B_{22}, \tag{4.12}
+        \]
+        \[
+            C_{21} = A_{21} \cdot B_{11} + A_{22} \cdot B_{21}, \tag{4.13}
+        \]
+        \[
+            C_{22} = A_{21} \cdot B_{12} + A_{22} \cdot B_{22}. \tag{4.14}
+        \]
+        Each of these four equations specifies two multiplications of $n/2 \times n/2$ matrices
+        and the addition of their $n/2 \times n/2$ products. We can use these equations to create
+        a straightforward, recursive, divide-and-conquer algorithm:
+        \bigbreak \noindent 
+        \begin{cppcode}
+        SQUARE-MATRIX-MULTIPLY-RECURSIVE(A,B)
+            n = A.rows
+            Let |$C$| be a new |$n\times n$| matrix
+            if n == 1
+                |$c_{11} = a_{11} \cdot b_{11}$|
+            else partition |$A, B,$| and |$C$| as in equations (4.9)
+                |$C_{11}$| = SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{11}, B_{11}$|)
+                    +SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{12}, B_{21}$|)
+                |$C_{12}$| = SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{11}, B_{12}$|)
+                    +SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{12}, B_{22}$|)
+                |$C_{21}$| = SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{21}, B_{11}$|)
+                    +SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{22}, B_{21}$|)
+                |$C_{22}$| = SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{21}, B_{12}$|)
+                    +SQUARE-MATRIX-MULTIPLY-RECURSIVE(|$A_{22}, B_{22}$|)
+            return |$C$|
+        \end{cppcode}
+        \bigbreak \noindent 
+        This pseudocode glosses over one subtle but important implementation detail.
+        How do we partition the matrices in line 5? If we were to create 12 new $n/2 \times n/2$
+        matrices, we would spend $\Theta(n^2)$ time copying entries. In fact, we can partition
+        the matrices without copying entries. The trick is to use index calculations. We
+        identify a submatrix by a range of row indices and a range of column indices of
+        the original matrix. We end up representing a submatrix a little differently from
+        how we represent the original matrix, which is the subtlety we are glossing over.
+        The advantage is that, since we can specify submatrices by index calculations,
+        executing line 5 takes only $\Theta(1)$ time (although we shall see that it makes no
+        difference asymptotically to the overall running time whether we copy or partition
+        in place).
+        \bigbreak \noindent 
+        Now, we derive a recurrence to characterize the running time of \textsc{Square-Matrix-Multiply-Recursive}. Let $T(n)$ be the time to multiply two $n \times n$
+        matrices using this procedure. In the base case, when $n = 1$, we perform just the
+        one scalar multiplication in line 4, and so
+        \[
+            T(1) = \Theta(1). \tag{4.15}
+        \]
+        \bigbreak \noindent 
+        The recursive case occurs when $n > 1$. As discussed, partitioning the matrices in
+        line 5 takes $\Theta(1)$ time, using index calculations. In lines 6–9, we recursively call
+        \textsc{Square-Matrix-Multiply-Recursive} a total of eight times. Because each
+        recursive call multiplies two $n/2 \times n/2$ matrices, thereby contributing $T(n/2)$ to
+        the overall running time, the time taken by all eight recursive calls is $8T(n/2)$. We
+        also must account for the four matrix additions in lines 6–9. Each of these matrices
+        contains $n^2/4$ entries, and so each of the four matrix additions takes $\Theta(n^2)$ time.
+        Since the number of matrix additions is a constant, the total time spent adding ma-
+        \bigbreak \noindent 
+        trices in lines 6–9 is $\Theta(n^2)$. (Again, we use index calculations to place the results
+        of the matrix additions into the correct positions of matrix $C$, with an overhead
+        of $\Theta(1)$ time per entry.) The total time for the recursive case, therefore, is the sum
+        of the partitioning time, the time for all the recursive calls, and the time to add the
+        matrices resulting from the recursive calls:
+        \[
+            T(n) = \Theta(1) + 8T(n/2) + \Theta(n^2)
+        \]
+        \[
+            = 8T(n/2) + \Theta(n^2). \tag{4.16}
+        \]
+        Notice that if we implemented partitioning by copying matrices, which would cost
+        $\Theta(n^2)$ time, the recurrence would not change, and hence the overall running time
+        would increase by only a constant factor.
+        \bigbreak \noindent 
+        Combining equations (4.15) and (4.16) gives us the recurrence for the running
+        time of \textsc{Square-Matrix-Multiply-Recursive}:
+        \[
+            T(n) =
+            \begin{cases}
+                \Theta(1) & \text{if } n = 1, \\
+                8T(n/2) + \Theta(n^2) & \text{if } n > 1.
+            \end{cases} \tag{4.17}
+        \]
+        As we shall see from the master method in Section 4.5, recurrence (4.17) has the
+        solution $T(n) = \Theta(n^3)$. Thus, this simple divide-and-conquer approach is no
+        faster than the straightforward \textsc{Square-Matrix-Multiply} procedure.
+        \bigbreak \noindent 
+        \subsubsection{Strassen’s method}
+        \bigbreak \noindent 
+        The key to Strassen’s method is to make the recursion tree slightly less bushy. That is, instead of performing eight recursive multiplications of \(n/2 \times n/2\) matrices, it performs only seven. The cost of eliminating one matrix multiplication will be several new additions of \(n/2 \times n/2\) matrices, but still only a constant number of additions. As before, the constant number of matrix additions will be subsumed by \(\Theta\)-notation when we set up the recurrence equation to characterize the running time.
+        \bigbreak \noindent 
+        Strassen’s method is not at all obvious. 
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item Divide the input matrices \(A\) and \(B\) and output matrix \(C\) into \(n/2 \times n/2\) submatrices, as in equation (4.9). This step takes \(\Theta(1)\) time by index calculation, just as in \textsc{Square-Matrix-Multiply-Recursive}.
+            \item Create 10 matrices \(S_1, S_2, \dots, S_{10}\), each of which is \(n/2 \times n/2\) and is the sum or difference of two matrices created in step 1. We can create all 10 matrices in \(\Theta(n^2)\) time.
+            \item Using the submatrices created in step 1 and the 10 matrices created in step 2, recursively compute seven matrix products \(P_1, P_2, \dots, P_7\). Each matrix \(P_i\) is \(n/2 \times n/2\).
+            \item Compute the desired submatrices \(C_{11}, C_{12}, C_{21}, C_{22}\) of the result matrix \(C\) by adding and subtracting various combinations of the \(P_i\) matrices. We can compute all four submatrices in \(\Theta(n^2)\) time.
+        \end{enumerate}
+        We shall see the details of steps 2--4 in a moment, but we already have enough information to set up a recurrence for the running time of Strassen’s method. Let us assume that once the matrix size \(n\) gets down to 1, we perform a simple scalar multiplication, just as in line 4 of \textsc{Square-Matrix-Multiply-Recursive}. When \(n > 1\), steps 1, 2, and 4 take a total of \(\Theta(n^2)\) time, and step 3 requires us to perform seven multiplications of \(n/2 \times n/2\) matrices. Hence, we obtain the following recurrence for the running time \(T(n)\) of Strassen’s algorithm:
+        \[
+            T(n) = 
+            \begin{cases} 
+                \Theta(1), & \text{if } n = 1, \\
+                7T(n/2) + \Theta(n^2), & \text{if } n > 1.
+            \end{cases}
+        \]
+
+        \bigbreak \noindent 
+        We have traded off one matrix multiplication for a constant number of matrix additions. Once we understand recurrences and their solutions, we shall see that this tradeoff actually leads to a lower asymptotic running time. By the master method in Section 4.5, recurrence (4.18) has the solution \(T(n) = \Theta(n^{\log_2 7})\).
+        \bigbreak \noindent 
+        We now proceed to describe the details. In step 2, we create the following 10 matrices:
+        \[
+            \begin{aligned}
+                S_1 &= B_{12} - B_{22}, \\
+                S_2 &= A_{11} + A_{12}, \\
+                S_3 &= A_{21} + A_{22}, \\
+                S_4 &= B_{21} - B_{11}, \\
+                S_5 &= A_{11} + A_{22}, \\
+                S_6 &= B_{11} + B_{22}, \\
+                S_7 &= A_{12} - A_{22}, \\
+                S_8 &= B_{21} + B_{22}, \\
+                S_9 &= A_{11} - A_{21}, \\
+                S_{10} &= B_{11} + B_{12}.
+            \end{aligned}
+        \]
+        Since we must add or subtract \(n/2 \times n/2\) matrices 10 times, this step does indeed take \(\Theta(n^2)\) time.
+        \bigbreak \noindent 
+        In step 3, we recursively multiply \(n/2 \times n/2\) matrices seven times to compute the following \(n/2 \times n/2\) matrices, each of which is the sum or difference of products of \(A\) and \(B\) submatrices:
+        \[
+            \begin{aligned}
+                P_1 &= A_{11} \cdot S_1 = A_{11} \cdot B_{12} - A_{11} \cdot B_{22}, \\
+                P_2 &= S_2 \cdot B_{22} = A_{11} \cdot B_{22} + A_{12} \cdot B_{22}, \\
+                P_3 &= S_3 \cdot B_{11} = A_{21} \cdot B_{11} + A_{22} \cdot B_{11}, \\
+                P_4 &= A_{22} \cdot S_4 = A_{22} \cdot B_{21} - A_{22} \cdot B_{11}, \\
+                P_5 &= S_5 \cdot S_6 = A_{11} \cdot B_{11} + A_{11} \cdot B_{22} + A_{22} \cdot B_{11} + A_{22} \cdot B_{22}, \\
+                P_6 &= S_7 \cdot S_8 = A_{12} \cdot B_{21} + A_{12} \cdot B_{22} - A_{22} \cdot B_{21} - A_{22} \cdot B_{22}, \\
+                P_7 &= S_9 \cdot S_{10} = A_{11} \cdot B_{11} + A_{11} \cdot B_{12} - A_{21} \cdot B_{11} - A_{21} \cdot B_{12}.
+            \end{aligned}
+        \]
+        \bigbreak \noindent 
+        Expanding out the right-hand side, with the expansion of each \(P_i\) on its own line and vertically aligning terms that cancel out, we see that \(C_{11}\) equals
+        \[
+            \begin{aligned}
+    & A_{11} \cdot B_{11} + A_{11} \cdot B_{22} + A_{22} \cdot B_{11} + A_{22} \cdot B_{22} \\
+    & - A_{11} \cdot B_{11} - A_{22} \cdot B_{21} \\
+    & - A_{11} \cdot B_{22} - A_{12} \cdot B_{22} \\
+    & - A_{22} \cdot B_{22} - A_{22} \cdot B_{21} + A_{12} \cdot B_{22} + A_{12} \cdot B_{21},
+            \end{aligned}
+        \]
+        which simplifies to
+        \[
+            C_{11} = A_{11} \cdot B_{11} + A_{12} \cdot B_{21},
+        \]
+        which corresponds to equation (4.11).
+        \bigbreak \noindent 
+        Similarly, we set
+        \[
+            C_{12} = P_1 + P_2,
+        \]
+        and so \(C_{12}\) equals
+        \[
+            \begin{aligned}
+    & A_{11} \cdot B_{12} - A_{11} \cdot B_{22} \\
+    & + A_{11} \cdot B_{22} + A_{12} \cdot B_{22},
+            \end{aligned}
+        \]
+        which simplifies to
+        \[
+            C_{12} = A_{11} \cdot B_{12} + A_{12} \cdot B_{22},
+        \]
+        corresponding to equation (4.12).
+        \bigbreak \noindent 
+        Setting
+        \[
+            C_{21} = P_3 + P_4,
+        \]
+        makes \(C_{21}\) equal
+        \[
+            \begin{aligned}
+    & A_{21} \cdot B_{11} + A_{22} \cdot B_{11} \\
+    & - A_{22} \cdot B_{11} + A_{22} \cdot B_{21},
+            \end{aligned}
+        \]
+        which simplifies to
+        \[
+            C_{21} = A_{21} \cdot B_{11} + A_{22} \cdot B_{21},
+        \]
+        corresponding to equation (4.13).
+        \bigbreak \noindent 
+        \[
+            C_{22} = P_5 + P_1 - P_3 - P_7,
+        \]
+        so that \(C_{22}\) equals
+        \[
+            \begin{aligned}
+    & A_{11} \cdot B_{11} + A_{11} \cdot B_{22} + A_{22} \cdot B_{11} + A_{22} \cdot B_{22} \\
+    & - A_{11} \cdot B_{12} + A_{11} \cdot B_{11} \\
+    & - A_{21} \cdot B_{11} - A_{21} \cdot B_{12} \\
+    & - A_{11} \cdot B_{12} + A_{21} \cdot B_{11} + A_{21} \cdot B_{12},
+            \end{aligned}
+        \]
+        which simplifies to
+        \[
+            C_{22} = A_{22} \cdot B_{22} + A_{21} \cdot B_{12}.
+        \]
+        \bigbreak \noindent 
+        which corresponds to equation (4.14). Altogether, we add or subtract \(n/2 \times n/2\) matrices eight times in step 4, and so this step indeed takes \(\Theta(n^2)\) time.
+        \bigbreak \noindent 
+        Thus, we see that Strassen’s algorithm, comprising steps 1--4, produces the correct matrix product and that recurrence (4.18) characterizes its running time. Since we shall see in Section 4.5 that this recurrence has the solution \(T(n) = \Theta(n^{\log_2 7})\), Strassen’s method is asymptotically faster than the straightforward \textsc{Square-Matrix-Multiply} procedure. The notes at the end of this chapter discuss some further details.
+
+        \pagebreak 
+        \subsection{The substitution method for solving recurrences}
+        \bigbreak \noindent 
+        Now that we have seen how recurrences characterize the running times of divideand-conquer algorithms, we will learn how to solve recurrences. We start in this section with the “substitution” method.
+        \bigbreak \noindent 
+        The substitution method for solving recurrences comprises two steps:
+        \begin{enumerate}
+            \item  Guess the form of the solution
+            \item Use mathematical induction to find the constants and show that the solution works.
+        \end{enumerate}
+        \bigbreak \noindent 
+        We substitute the guessed solution for the function when applying the inductive hypothesis to smaller values; hence the name “substitution method.” This method is powerful, but we must be able to guess the form of the answer in order to apply it.
+        \bigbreak \noindent 
+        We can use the substitution method to establish either upper or lower bounds on a recurrence. As an example, let us determine an upper bound on the recurrence
+        \begin{align*}
+            T(n) &= 2T\left(\lfloor n/2\rfloor\right) + n
+        .\end{align*}
+        \bigbreak \noindent 
+        We guess that the solution is $T(n) = O(n\lg n)$. The substitution method requires us to prove that 
+        \[ T(n) \leq c n \lg n \]
+        for an appropriate choice of the constant \( c > 0 \). We start by assuming
+        that this bound holds for all positive \( m < n \), in particular for \( m = \lfloor n/2 \rfloor \), yielding
+        \[ T(\lfloor n/2 \rfloor) \leq c \lfloor n/2 \rfloor \lg(\lfloor n/2 \rfloor). \]
+        Substituting into the recurrence yields
+        \begin{align*}
+            T(n) &\leq 2 \big(c \lfloor n/2 \rfloor \lg(\lfloor n/2 \rfloor)\big) + n, \\
+            &\leq c n \lg(n/2) + n, \\
+            &= c n \lg n - c n \lg 2 + n, \\
+            &= c n \lg n - c n + n, \\
+            &\leq c n \lg n.
+        .\end{align*}
+        \bigbreak \noindent 
+        Where the last step holds as long as $c \geq 1$. 
+        \bigbreak \noindent 
+        Mathematical induction now requires us to show that our solution holds for the boundary conditions. Typically, we do so by showing that the boundary conditions are suitable as base cases for the inductive proof. For the recurrence (4.19), we must show that we can choose the constant \( c \) large enough so that the bound 
+        \[
+            T(n) \leq c n \lg n
+        \]
+        works for the boundary conditions as well. This requirement can sometimes lead to problems. Let us assume, for the sake of argument, that \( T(1) = 1 \) is the sole boundary condition of the recurrence. Then for \( n = 1 \), the bound 
+        \[
+            T(n) \leq c n \lg n
+        \]
+        yields \( T(1) \leq c \cdot 1 \cdot \lg 1 = 0 \), which is at odds with \( T(1) = 1 \). Consequently, the base case of our inductive proof fails to hold.
+        \bigbreak \noindent 
+        We can overcome this obstacle in proving an inductive hypothesis for a specific boundary condition with only a little more effort. In the recurrence (4.19), for example, we take advantage of asymptotic notation requiring us only to prove 
+        \[
+            T(n) \leq c n \lg n \quad \text{for} \quad n \geq n_0,
+        \]
+        where \( n_0 \) is a constant that we get to choose. We keep the troublesome boundary condition \( T(1) = 1 \), but remove it from consideration in the inductive proof. We do so by first observing that for \( n > 3 \), the recurrence does not depend directly on \( T(1) \). Thus, we can replace \( T(1) \) by \( T(2) \) and \( T(3) \) as the base cases in the inductive proof, letting \( n_0 = 2 \). Note that we make a distinction between the base case of the recurrence (\( n = 1 \)) and the base cases of the inductive proof (\( n = 2 \) and \( n = 3 \)). With \( T(1) = 1 \), we derive from the recurrence that \( T(2) = 4 \) and \( T(3) = 5 \). Now we can complete the inductive proof that 
+        \[
+            T(n) \leq c n \lg n
+        \]
+        for some constant \( c \geq 1 \) by choosing \( c \) large enough so that 
+        \[
+            T(2) \leq c \cdot 2 \lg 2 \quad \text{and} \quad T(3) \leq c \cdot 3 \lg 3.
+        \]
+        As it turns out, any choice of \( c \geq 2 \) suffices for the base cases of \( n = 2 \) and \( n = 3 \) to hold. For most of the recurrences we shall examine, it is straightforward to extend boundary conditions to make the inductive assumption work for small \( n \), and we shall not always explicitly work out the details.
+        \bigbreak \noindent 
+        \subsubsection{Iterative approach}
+        \bigbreak \noindent 
+        Consider the recurrence
+        \begin{align*}
+            T(n) &= 2T\left(\frac{n}{2}\right) + 2 \quad T(1) = 1
+        .\end{align*}
+        \bigbreak \noindent 
+        If $T(n) = 2T\left(\frac{n}{2}\right) + n$, then
+        \begin{align*}
+            T\left(\frac{n}{2}\right) &= 2T\left(\frac{n}{2^{2}}\right) + \frac{n}{2}
+        .\end{align*}
+        Further,
+        \begin{align*}
+            T\left(\frac{n}{2^{2}}\right) &= 2T\left(\frac{n}{2^{3}}\right) + \frac{n}{2^{2}}
+        .\end{align*}
+        Thus,
+        \begin{align*}
+            T(n) &= 2T\left(\frac{n}{2}\right) + n \\
+                 &= 2\left[2T\left(\frac{n}{2^{2}}\right) + \frac{n}{2}\right] + n \\
+                 &= 2^{2}T\left(\frac{n}{2^{2}}\right) + n + n \\
+                 &= 2^{2}\left[2T\left(\frac{n}{2^{3}}\right) + \frac{n}{2^{2}}\right] + n + n \\
+                 &= 2^{3}T\left(\frac{n}{2^{3}}\right) + n + n + n
+        .\end{align*}
+        Thus, we have a general iterative form
+        \begin{align*}
+            2^{i}T\left(\frac{n}{2^{i}}\right) + in
+        .\end{align*}
+        Since we have a base case $T(1) = 1$, we require
+        \begin{align*}
+            \frac{n}{2^{i}} &=1 \\
+            \implies i&=\lg(n) 
+        .\end{align*}
+        \bigbreak \noindent 
+        Thus, we have
+        \begin{align*}
+            &2^{\lg n}T(1) + \lg(n) n \\
+            &=n^{\lg 2}(1) + \lg(n) n \\
+            &= n\lg + n
+        .\end{align*}
+        Which is precisely $\Theta(n\lg n) $
+
+        \bigbreak \noindent 
+        \subsubsection{Making a good guess}
+        \bigbreak \noindent 
+        Unfortunately, there is no general way to guess the correct solutions to recurrences. Guessing a solution takes experience and, occasionally, creativity.
+        \bigbreak \noindent 
+        If a recurrence is similar to one you have seen before, then guessing a similar solution is reasonable. As an example, consider the recurrence
+        \begin{align*}
+            T(n) &= 2T\left(\lfloor n/2\rfloor + 17 \right) + n
+        .\end{align*}
+        \bigbreak \noindent 
+        which looks difficult because of the added “17” in the argument to $T$ on the righthand side. Intuitively, however, this additional term cannot substantially affect the
+        \bigbreak \noindent 
+        The solution to the recurrence. When \( n \) is large, the difference between \( \lfloor n/2 \rfloor \) and \( \lfloor n/2 \rfloor + 17 \) is not that large: both cut \( n \) nearly evenly in half. Consequently, we make the guess that $T(n) = O(n \lg n)$, which you can verify as correct by using the substitution method
+
+        \bigbreak \noindent 
+        \subsection{The recursion-tree method for solving recurrences}
+        \bigbreak \noindent 
+        Although you can use the substitution method to provide a succinct proof that
+        a solution to a recurrence is correct, you might have trouble coming up with a
+        good guess. Drawing out a recursion tree, as we did in our analysis of the merge
+        sort recurrence, serves as a straightforward way to devise a good
+        guess. In a recursion tree, each node represents the cost of a single subproblem
+        somewhere in the set of recursive function invocations. We sum the costs within
+        each level of the tree to obtain a set of per-level costs, and then we sum all the
+        per-level costs to determine the total cost of all levels of the recursion.
+        \bigbreak \noindent 
+        per-level costs to determine the total cost of all levels of the recursion.
+        A recursion tree is best used to generate a good guess, which you can then verify
+        by the substitution method. When using a recursion tree to generate a good guess,
+        you can often tolerate a small amount of “sloppiness,” since you will be verifying
+        your guess later on. If you are very careful when drawing out a recursion tree and
+        summing the costs, however, you can use a recursion tree as a direct proof of a
+        solution to a recurrence.
+        \bigbreak \noindent 
+        For example, let us see how a recursion tree would provide a good guess for the recurrence $T(n) = 3T\left(\lfloor n/4\rfloor\right)  + \Theta(n^{2})$. We start by focusing on finding an upper bound for the solution. Because we know that floors and ceilings usually do not matter when solving recurrences (here’s an example of sloppiness that we can tolerate), we create a recursion tree for the recurrence $T(n) = 3T(n /4) + cn^{2}$. For convenience, we assume that $n$ is an exact power of 4 (another example of tolerable sloppiness) so that all subproblem sizes are integers.
+        \bigbreak \noindent 
+        Part (a) of the figure shows $T(n) $, which we expand in part (b) into an equivalent tree representing the recurrence
+        The \( cn^2 \) term at the root represents the cost at the top level of recursion, and the three subtrees of the root represent the costs incurred by the subproblems of size \( n/4 \). Part (c) shows this process carried one step further by expanding each node with cost \( T(n/4) \) from part (b). The cost for each of the three children of the root is \( c(n/4)^2 \). We continue expanding each node in the tree by breaking it into its constituent parts as determined by the recurrence.
+        \bigbreak \noindent 
+        \fig{.7}{./figures/11.png}
+        \bigbreak \noindent 
+        Because subproblem sizes decrease by a factor of 4 each time we go down one level, we eventually must reach a boundary condition. How far from the root do we reach one? The subproblem size for a node at depth \( i \) is \( n / 4^i \). Thus, the subproblem size hits \( n = 1 \) when \( n / 4^i = 1 \) or, equivalently, when \( i = \log_4 n \). Thus, the tree has \( \log_4 n + 1 \) levels (at depths \( 0, 1, 2, \ldots, \log_4 n \)).
+        \bigbreak \noindent 
+        Next we determine the cost at each level of the tree. Each level has three times more nodes than the level above, and so the number of nodes at depth \( i \) is \( 3^i \). Because subproblem sizes reduce by a factor of 4 for each level we go down from the root, each node at depth \( i \), for \( i = 0, 1, 2, \ldots, \log_4 n - 1 \), has a cost of \( c(n/4^i)^2 \). Multiplying, we see that the total cost over all nodes at depth \( i \), for \( i = 0, 1, 2, \ldots, \log_4 n - 1 \), is:
+        \[
+            3^i c(n/4^i)^2 = \left(\frac{3}{16}\right)^i c n^2.
+        \]
+        The bottom level, at depth \( \log_4 n \), has \( 3^{\log_4 n} = n^{\log_4 3} \) nodes, each contributing cost \( T(1) \), for a total cost of:
+        \[
+            n^{\log_4 3} T(1),
+        \]
+        which is \( \Theta(n^{\log_4 3}) \), since we assume that \( T(1) \) is a constant.
+        \bigbreak \noindent 
+        Now we add up the costs over all levels to determine the cost for the entire tree:
+        \[
+            T(n) = cn^2 + \frac{3}{16} cn^2 + \left(\frac{3}{16}\right)^2 cn^2 + \cdots + \left(\frac{3}{16}\right)^{\log_4 n - 1} cn^2 + \Theta(n^{\log_4 3}).
+        \]
+        The sum can be written as:
+        \[
+            T(n) = \sum_{i=0}^{\log_4 n - 1} \left(\frac{3}{16}\right)^i cn^2 + \Theta(n^{\log_4 3}).
+        \]
+        This geometric series simplifies to:
+        \[
+            T(n) = \frac{\left(\frac{3}{16}\right)^{\log_4 n} - 1}{\frac{3}{16} - 1} cn^2 + \Theta(n^{\log_4 3}).
+        \]
+        Using equation (A.5), this becomes:
+        \[
+            T(n) = cn^2 + \Theta(n^{\log_4 3}).
+        \]
+        This last formula looks somewhat messy until we realize that we can again take advantage of small amounts of sloppiness and use an infinite decreasing geometric series as an upper bound. Backing up one step and applying equation (A.6), we have:
+        \[
+            T(n) = cn^2 + O(n^{\log_4 3}).
+        \]
+        \[
+            T(n) = \sum_{i=0}^{\log_4 n - 1} \left(\frac{3}{16}\right)^i c n^2 + \Theta(n^{\log_4 3})
+        \]
+        \[
+            < \sum_{i=0}^\infty \left(\frac{3}{16}\right)^i c n^2 + \Theta(n^{\log_4 3}),
+        \]
+        \[
+            = \frac{1}{1 - (3/16)} c n^2 + \Theta(n^{\log_4 3}),
+        \]
+        \[
+            = \frac{16}{13} c n^2 + \Theta(n^{\log_4 3}),
+        \]
+        \[
+            = O(n^2).
+        \]
+
+        Thus, we have derived a guess of \(T(n) = O(n^2)\) for our original recurrence:
+        \[
+            T(n) = 3T(\lfloor n/4 \rfloor) + \Theta(n^2).
+        \]
+        In this example, the coefficients of \(c n^2\) form a decreasing geometric series, and by equation (A.6), the sum of these coefficients 
+        is bounded from above by the constant \( \frac{16}{13} \). Since the root's contribution to the
+        total cost is \( cn^2 \), the root contributes a constant fraction of the total cost. In other
+        words, the cost of the root dominates the total cost of the tree.
+        \bigbreak \noindent 
+        In fact, if \( O(n^2) \) is indeed an upper bound for the recurrence (as we shall verify in
+        a moment), then it must be a tight bound. Why? The first recursive call contributes
+        a cost of \( \Theta(n^2) \), and so \( \Omega(n^2) \) must be a lower bound for the recurrence.
+        \bigbreak \noindent 
+        A.5:
+        \begin{align*}
+            \sum_{k=0}^{n}x^{k} = \frac{x^{n+1} - 1}{x-1}
+        .\end{align*}
+        A.6: For an infinite geometric sum with $\abs{x} < 1 $, we have the infinite decreasing geometric series
+        \begin{align*}
+            \sum_{k=0}^{\infty} x^{k} = \frac{1}{1-x}            
+        .\end{align*}
+        \bigbreak \noindent 
+        Now we can use the substitution method to verify that our guess was correct, 
+        that is, \( T(n) = O(n^2) \) is an upper bound for the recurrence \( T(n) = 3T(\lfloor n/4 \rfloor) + \Theta(n^2) \).
+        We want to show that \( T(n) \leq d n^2 \) for some constant \( d > 0 \). Using the same constant \( c > 0 \) as before, we have:
+        \begin{align*}
+            T(n) &\leq 3T(\lfloor n/4 \rfloor) + c n^2 \\
+            &\leq 3d \lfloor n/4 \rfloor^2 + c n^2 \\
+            &\leq 3d(n/4)^2 + c n^2 \\
+            &= \frac{3}{16} d n^2 + c n^2 \\
+            &\leq d n^2,
+        .\end{align*}
+        where the last step holds as long as \( d > \frac{16}{13} c \).
+        \bigbreak \noindent 
+        In another, more intricate, example, Figure 4.6 shows the recursion tree for
+        \[
+            T(n) = T\left(\frac{n}{3}\right) + T\left(\frac{2n}{3}\right) + O(n).
+        \]
+        (Again, we omit floor and ceiling functions for simplicity.) As before, we let \( c \) represent the constant factor in the \( O(n) \) term. When we add the values across the levels of the recursion tree shown in the figure, we get a value of \( cn \) for every level.
+        \bigbreak \noindent 
+        The longest simple path from the root to a leaf is 
+        \[
+            n \to (2/3)n \to (2/3)^2n \to \cdots \to 1.
+        \]
+        Since \((2/3)^k n = 1\) when \(k = \log_{3/2} n\), the height of the tree is \(\log_{3/2} n\).
+        \bigbreak \noindent 
+        Intuitively, we expect the solution to the recurrence to be at most the number of levels times the cost of each level, or \(O(cn \log_{3/2} n) = O(n \lg n)\). Figure 4.6 shows only the top levels of the recursion tree, however, and not every level in the tree contributes a cost of \(cn\). Consider the cost of the leaves. If this recursion tree were a complete binary tree of height \(\log_{3/2} n\), there would be \(2^{\log_{3/2} n} = n^{\log_{3/2} 2}\) leaves. Since the cost of each leaf is a constant, the total cost of all leaves would then be 
+        \[
+            \Theta(n^{\log_{3/2} 2}),
+        \]
+        which, since \(\log_{3/2} 2\) is a constant strictly greater than 1, is \(\omega(n \lg n)\). This recursion tree is not a complete binary tree, however, as it has fewer than \(n^{\log_{3/2} 2}\) leaves. Moreover, as we go down from the root, more and more internal nodes are absent. Consequently, levels toward the bottom of the recursion tree contribute less than \(cn\) to the total cost. 
+        \bigbreak \noindent 
+        We could work out an accurate accounting of all costs, but remember that we are just trying to come up with a guess to use in the substitution method. Let us tolerate the sloppiness and attempt to show that a guess of \(O(n \lg n)\) for the upper bound is correct.
+        \bigbreak \noindent 
+        \begin{align*}
+            T(n) &\leq T(n/3) + T(2n/3) + cn\\
+                 &\leq d(n/3) \lg(n/3) + d(2n/3) \lg(2n/3) + cn\\
+                 &= \left(d(n/3) \lg n - d(n/3) \lg 3\right) \\
+                 &+ \left(d(2n/3) \lg n - d(2n/3) \lg(3/2)\right) + cn\\
+                 &= d n \lg n - d\left((n/3) \lg 3 + (2n/3) \lg(3/2)\right) + cn\\
+                 &= d n \lg n - d\left((n/3) \lg 3 + (2n/3) \lg 3 - (2n/3) \lg 2\right) + cn\\
+                 &= d n \lg n - d n \left(\lg 3 - 2/3\right) + cn\\
+                 &\leq d n \lg n,
+        .\end{align*}
+        as long as \( d \geq c / (\lg 3 - (2/3)) \). Thus, we did not need to perform a more accurate accounting of costs in the recursion tree.
+        \bigbreak \noindent 
+        \subsection{The master method for solving recurrences}
+        \bigbreak \noindent 
+        The master method provides a “cookbook” method for solving recurrences of the form
+        \begin{align*}
+            T(n) &= aT\left(\frac{n}{b}\right) + f(n)
+        .\end{align*}
+        Where $a \geq 1$, and $b > 1 $ are constants and $f(n)$ is an asymptotically positive function. To use the master method, you will need to memorize three cases, but then you will be able to solve many recurrences quite easily, often without pencil and paper.
+        \bigbreak \noindent 
+        The recurrence (4.20) describes the running time of an algorithm that divides a problem of size \( n \) into \( a \) subproblems, each of size \( n/b \), where \( a \) and \( b \) are positive constants. The \( a \) subproblems are solved recursively, each in time \( T(n/b) \). The function \( f(n) \) encompasses the cost of dividing the problem and combining the results of the subproblems. For example, the recurrence arising from Strassen’s algorithm has \( a = 7 \), \( b = 2 \), and \( f(n) = \Theta(n^2) \).
+        \bigbreak \noindent 
+        As a matter of technical correctness, the recurrence is not actually well defined, because \( n/b \) might not be an integer. Replacing each of the \( a \) terms \( T(n/b) \) with either \( T(\lfloor n/b \rfloor) \) or \( T(\lceil n/b \rceil) \) will not affect the asymptotic behavior of the recurrence, however. (We will prove this assertion in the next section.) We normally find it convenient, therefore, to omit the floor and ceiling functions when writing divide-and-conquer recurrences of this form.
+        \bigbreak \noindent 
+        \subsubsection{The master theorem}
+        \bigbreak \noindent 
+        \textbf{Theorem}. Let \( a \geq 1 \) and \( b > 1 \) be constants, let \( f(n) \) be a function, and let \( T(n) \) be defined on the nonnegative integers by the recurrence
+        \[
+            T(n) = aT(n/b) + f(n),
+        \]
+        where we interpret \( n/b \) to mean either \( \lfloor n/b \rfloor \) or \( \lceil n/b \rceil \). Then \( T(n) \) has the following asymptotic bounds:
+        \begin{enumerate}
+            \item If \( f(n) = O(n^{\log_b a - \varepsilon}) \) for some constant \( \varepsilon > 0 \), then \( T(n) = \Theta(n^{\log_b a}) \).
+            \item If \( f(n) = \Theta(n^{\log_b a}) \), then \( T(n) = \Theta(n^{\log_b a} \lg n) \).
+            \item If \( f(n) = \Omega(n^{\log_b a + \varepsilon}) \) for some constant \( \varepsilon > 0 \), and if \( af(n/b) \leq cf(n) \) for some constant \( c < 1 \) and all sufficiently large \( n \), then \( T(n) = \Theta(f(n)) \).
+        \end{enumerate}
+        \bigbreak \noindent 
+        Before applying the master theorem to some examples, let’s spend a moment trying to understand what it says. In each of the three cases, we compare the function \( f(n) \) with the function \( n^{\log_b a} \). Intuitively, the larger of the two functions determines the solution to the recurrence. If, as in case 1, the function \( n^{\log_b a} \) is the larger, then the solution is \( T(n) = \Theta(n^{\log_b a}) \). If, as in case 3, the function \( f(n) \) is the larger, then the solution is \( T(n) = \Theta(f(n)) \). If, as in case 2, the two functions are the same size, we multiply by a logarithmic factor, and the solution is 
+        \[
+            T(n) = \Theta(n^{\log_b a} \lg n) = \Theta(f(n) \lg n).
+        \]
+        Beyond this intuition, you need to be aware of some technicalities. In the first case, not only must \( f(n) \) be smaller than \( n^{\log_b a} \), it must be \emph{polynomially smaller}.
+        That is, \( f(n) \) must be asymptotically smaller than \( n^{\log_b a} \) by a factor of \( n^\epsilon \) for some constant \( \epsilon > 0 \). In the third case, not only must \( f(n) \) be larger than \( n^{\log_b a} \), it also must be polynomially larger and in addition satisfy the “regularity” condition that 
+        \[
+            a f(n/b) \leq c f(n).
+        \]
+        This condition is satisfied by most of the polynomially bounded functions that we shall encounter.
+        \bigbreak \noindent 
+        Note that the three cases do not cover all the possibilities for \( f(n) \). There is a gap between cases 1 and 2 when \( f(n) \) is smaller than \( n^{\log_b a} \) but not polynomially smaller. Similarly, there is a gap between cases 2 and 3 when \( f(n) \) is larger than \( n^{\log_b a} \) but not polynomially larger. If the function \( f(n) \) falls into one of these gaps, or if the regularity condition in case 3 fails to hold, you cannot use the master method to solve the recurrence.
+        \bigbreak \noindent 
+        \subsubsection{Using the master method}
+        \bigbreak \noindent 
+        To use the master method, we simply determine which case (if any) of the master theorem applies and write down the answer.
+        \bigbreak \noindent 
+        As a first example, consider
+        \begin{align*}
+            T(n) = 9T\left(\frac{n}{3}\right) + n
+        .\end{align*}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
