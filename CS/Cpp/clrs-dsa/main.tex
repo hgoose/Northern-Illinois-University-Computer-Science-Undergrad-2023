@@ -1698,6 +1698,113 @@
         \begin{align*}
             T(n) = 9T\left(\frac{n}{3}\right) + n
         .\end{align*}
+        \bigbreak \noindent 
+        For this recurrence, we have \( a = 9 \), \( b = 3 \), \( f(n) = n \), and thus we have that 
+        \[
+            n^{\log_b a} = n^{\log_3 9} = \Theta(n^2).
+        \]
+        Since \( f(n) = O(n^{\log_3 9 - \epsilon}) \), where \( \epsilon = 1 \), we can apply case 1 of the master theorem and conclude that the solution is \( T(n) = \Theta(n^2) \).
+        \bigbreak \noindent 
+        Now consider 
+        \[
+            T(n) = T(2n/3) + 1,
+        \]
+        in which \( a = 1 \), \( b = 3/2 \), \( f(n) = 1 \), and \( n^{\log_b a} = n^{\log_{3/2} 1} = n^0 = 1 \). Case 2 applies, since \( f(n) = \Theta(n^{\log_b a}) = \Theta(1) \), and thus the solution to the recurrence is \( T(n) = \Theta(\lg n) \).
+        \bigbreak \noindent 
+        For the recurrence 
+        \[
+            T(n) = 3T(n/4) + n \lg n,
+        \]
+        we have \( a = 3 \), \( b = 4 \), \( f(n) = n \lg n \), and \( n^{\log_b a} = n^{\log_4 3} = O(n^{0.793}) \). Since \( f(n) = \Omega(n^{\log_4 3 + \epsilon}) \), where \( \epsilon \approx 0.2 \), case 3 applies if we can show that the regularity condition holds for \( f(n) \). For sufficiently large \( n \), we have that 
+        \[
+            a f(n/b) = 3(1/4)n \lg(n/4) \leq (3/4)n \lg n = c f(n) \text{ for } c = 3/4.
+        \]
+        Consequently, by case 3, the solution to the recurrence is \( T(n) = \Theta(n \lg n) \).
+        \bigbreak \noindent 
+        The master method does not apply to the recurrence 
+        \[
+            T(n) = 2T(n/2) + n \lg n,
+        \]
+        even though it appears to have the proper form: \( a = 2 \), \( b = 2 \), \( f(n) = n \lg n \), and \( n^{\log_b a} = n \). You might mistakenly think that case 3 should apply, since
+
+        \bigbreak \noindent 
+        \subsubsection{More on polynomially smaller / larger functions}
+        \bigbreak \noindent 
+        When comparing two functions $f(n)$ and $g(n)$, describing one as polynomially smaller or polynomially larger relates to how their growth rates differ with respect to a polynomial factor.
+        \bigbreak \noindent 
+        A function \( f(n) \) is polynomially smaller than \( g(n) \) if there exists a constant \( k > 0 \) such that:
+        \[
+            f(n) = O\left(\frac{g(n)}{n^k}\right).
+        \]
+        This means that \( f(n) \) grows slower than \( g(n) \) by at least a factor of \( n^k \) for large \( n \).
+        \bigbreak \noindent 
+        For example:
+        \[
+            f(n) = n^2 \text{ is polynomially smaller than } g(n) = n^4, \text{ because:}
+        \]
+        \[
+            \frac{g(n)}{f(n)} = \frac{n^4}{n^2} = n^2,
+        \]
+        and \( n^2 \) is a polynomial factor.
+        \bigbreak \noindent 
+        A function \( f(n) \) is polynomially larger than \( g(n) \) if there exists a constant \( k > 0 \) such that:
+        \[
+            f(n) = \Omega\left(g(n) \cdot n^k\right).
+        \]
+        This means that \( f(n) \) grows faster than \( g(n) \) by at least a factor of \( n^k \) for large \( n \).
+        \bigbreak \noindent 
+        For example:
+        \[
+            f(n) = n^6 \text{ is polynomially larger than } g(n) = n^3, \text{ because:}
+        \]
+        \[
+            \frac{f(n)}{g(n)} = \frac{n^6}{n^3} = n^3,
+        \]
+        and \( n^3 \) is a polynomial factor.
+        \bigbreak \noindent 
+        \( f(n) = n \lg n \) is asymptotically larger than \( n^{\log_b a} = n \). The problem is that it
+        is not polynomially larger. The ratio \( \frac{f(n)}{n^{\log_b a}} = \frac{n \lg n}{n} = \lg n \) is asymptotically
+        less than \( n^\epsilon \) for any positive constant \( \epsilon \). Consequently, the recurrence falls
+        into the gap between case 2 and case 3. 
+        \bigbreak \noindent 
+        Let’s use the master method to solve the recurrences we saw in earlier sections
+        \bigbreak \noindent 
+        Consider
+        \[
+            T(n) = 2T(n/2) + \Theta(n),
+        \]
+        characterizes the running times of the divide-and-conquer algorithm for both the
+        maximum-subarray problem and merge sort. (As is our practice, we omit stating
+        the base case in the recurrence.) Here, we have \( a = 2, b = 2, f(n) = \Theta(n) \), and
+        thus we have that \( n^{\log_b a} = n^{\log_2 2} = n \). Case 2 applies, since \( f(n) = \Theta(n) \), and so
+        we have the solution \( T(n) = \Theta(n \lg n) \).
+        \bigbreak \noindent 
+        Recurrence (4.17),
+        \[
+            T(n) = 8T(n/2) + \Theta(n^2),
+        \]
+        describes the running time of the first divide-and-conquer algorithm that we saw
+        for matrix multiplication. Now we have \( a = 8, b = 2, f(n) = \Theta(n^2) \),
+        and so \( n^{\log_b a} = n^{\log_2 8} = n^3 \). Since \( n^3 \) is polynomially larger than \( f(n) \) (that is,
+        \( f(n) = O(n^{3 - \epsilon}) \) for \( \epsilon = 1 \)), case 1 applies, and \( T(n) = \Theta(n^3) \).
+        \bigbreak \noindent 
+        Finally, consider recurrence (4.18),
+        \[
+            T(n) = 7T(n/2) + \Theta(n^2),
+        \]
+        which describes the running time of Strassen’s algorithm. Here, we have \( a = 7 \),
+        \( b = 2, f(n) = \Theta(n^2) \), and thus \( n^{\log_b a} = n^{\log_2 7} \). Rewriting \( \log_2 7 \) as \( \lg 7 \) and
+        recalling that \( 2.80 < \lg 7 < 2.81 \), we see that \( f(n) = O(n^{\lg 7 - \epsilon}) \) for \( \epsilon = 0.8 \).
+        Again, case 1 applies, and we have the solution \( T(n) = \Theta(n^{\lg 7}) \).
+
+        \pagebreak 
+        \unsect{Heap sort}
+        \bigbreak \noindent
+
+
+
+        
+
 
 
 
