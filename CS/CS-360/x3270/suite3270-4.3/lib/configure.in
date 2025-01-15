@@ -1,0 +1,269 @@
+dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl All rights reserved.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the names of Paul Mattes nor the names of his contributors
+dnl       may be used to endorse or promote products derived from this software
+dnl       without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+dnl WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+dnl MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+dnl EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+dnl SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+dnl TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+dnl PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+dnl LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT([lib],[4.3])
+AC_PREREQ([2.69])
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_PROG_EGREP
+AC_CHECK_TOOLS(AR, [ar])
+
+dnl Figure out what sort of host this is.
+AC_CANONICAL_HOST
+ansi="-std=c99 -pedantic"
+case "$host_os" in
+*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+    		ansi=""
+		;;
+hpux|*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+		;;
+solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
+		AC_DEFINE(CONNECT_GETPEERNAME,1)
+		;;
+darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
+		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+		case "$build" in
+		a*) if test -d /opt/homebrew/opt; then HOMEBREW=/opt/homebrew/opt; fi ;;
+		x*) if test -d /usr/local/opt; then HOMEBREW=/usr/local/opt; fi ;;
+                esac
+		mac_os=1
+		;;
+linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
+		;;
+esac
+if test "$GCC" = yes
+then	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
+fi
+AC_SUBST(host)
+AC_SUBST(CCOPTIONS)
+AC_SUBST(CONNECT_GETPEERNAME)
+AC_SUBST(BUILD_CC)
+AC_SUBST(BUILD_LDFLAGS)
+AC_SUBST(BUILD_LIBS)
+AC_SUBST(BUILD_CFLAGS)
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(readline/history.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(malloc.h)
+AC_CHECK_HEADERS(langinfo.h)
+
+# OpenSSL is the default.
+use_openssl=yes
+
+AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
+AC_ARG_ENABLE(stransport,[  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (macOS)])
+if test -z "$mac_os" -a -n "$enable_stransport"
+then	AC_MSG_ERROR(--enable-stransport/--disable-stransport is only for macOS);
+fi
+if test "$enable_stransport" = yes
+then	use_openssl=no
+fi
+AC_ARG_ENABLE(mock_tls,[  --enable-mock-tls       use TLS mock for testing])
+if test "$enable_mock_tls" = yes
+then	use_openssl=no
+	enable_stransport=no
+fi
+
+dnl If TLS is disabled, don't go looking for OpenSSL.
+if test "$enable_tls" = no
+then	use_openssl=no
+fi
+
+dnl Check for OpenSSL header files.
+AC_ARG_WITH(openssl,[  --with-openssl=DIR      specify OpenSSL install directory])
+if test "$use_openssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	if test -z "$with_openssl" -o "$with_openssl" = yes; then
+	 if test -n "$HOMEBREW" -a -d $HOMEBREW/openssl; then
+	  with_openssl=$HOMEBREW/openssl
+	 fi
+	fi
+	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl /opt/local/include/openssl-3
+	do	header_fail=0
+		if test -n "$dir"
+		then if test -d "$dir/include"
+			then	idir="$dir/include"
+			elif test -d "$dir/openssl"
+			then	idir="$dir"
+			else	header_fail=1
+				continue
+			fi
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$idir)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$idir"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling TLS -- missing OpenSSL headers)
+		use_openssl="no"
+		enable_tls="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
+AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	unkw=1
+	;;
+esac
+AC_SUBST(USE_ICONV)
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_CHECK_HEADERS(iconv.h)
+AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR(No iconv library function); fi))
+AC_SEARCH_LIBS(getaddrinfo_a, anl, AC_DEFINE(HAVE_GETADDRINFO_A,1))
+
+dnl Handle iconv library dependency.
+if echo "$LIBS" | $EGREP -e '-liconv\>' >/dev/null
+then	ICONV_LIBS="-liconv"
+fi
+AC_SUBST(ICONV_LIBS)
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(vasprintf)
+AC_CHECK_FUNCS(malloc_usable_size)
+AC_FUNC_FSEEKO
+
+dnl Check for OpenSSL libraries.
+if test "$use_openssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+    	orig_LIBS="$LIBS"
+	unset any
+	if test -n "$with_openssl"
+	then	ssl_libs="$with_openssl/lib $with_openssl/ssl/lib"
+	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib /usr/local/opt/openssl/lib /opt/local/lib/openssl-3"
+	fi
+	for dir in $ssl_libs
+	do	lib_fail=0
+		if test "$dir" = nil
+		then	dir=""
+		fi
+		if test -n "$dir" -a ! -d "$dir"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir"
+			TLS_LDFLAGS=-L$dir
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		unset TLS_LDFLAGS
+		any=1
+	done
+
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling TLS -- missing OpenSSL libraries)
+		use_openssl="no"
+		enable_tls="no"
+	else	TLS_LIBS="-lssl -lcrypto"
+	fi
+fi
+AC_SUBST(TLS_LDFLAGS)
+AC_SUBST(TLS_LIBS)
+
+dnl Set up getaddrinfo_a dependencies.
+if echo "$LIBS" | $EGREP -e '-lanl\>' >/dev/null
+then	GAI_LIBS="-lanl"
+fi
+AC_SUBST(GAI_LIBS)
+AC_SUBST(HAVE_GETADDRINFO_A)
+
+dnl Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for unwanted parts.
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	;;
+esac
+AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
+case "$enable_local_process" in
+""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
+	;;
+esac
+
+dnl Set up TLS modules and libraries
+if test "$enable_mock_tls" = yes
+then	TLS_MODULES=sio_mock.o
+elif test "$enable_tls" = no
+then	TLS_MODULES=""
+elif test ! -z "$mac_os" -a "$enable_stransport" = yes
+then	TLS_MODULES=sio_secure_transport.o
+	TLS_LIBS="-framework CoreFoundation -framework Security"
+else	TLS_MODULES=sio_openssl.o
+fi
+AC_SUBST(TLS_MODULES)
+AC_SUBST(TLS_LIBS)
+
+dnl Generate the files.
+AC_CONFIG_HEADERS(include/unix/conf.h)
+AC_CONFIG_FILES(3270/Makefile 3270/Makefile.obj 3270/Makefile.test 3270/Makefile.test.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 32xx/Makefile.test 32xx/Makefile.test.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk)
+AC_OUTPUT

@@ -1,0 +1,1 @@
+WS3270_OBJECTS = s3270.o

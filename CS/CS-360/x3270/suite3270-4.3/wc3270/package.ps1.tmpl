@@ -1,0 +1,58 @@
+﻿# Set up constants.
+$inno = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+$cert = 'C:\Users\pdm\Documents\Certs\Cert2022.pfx'
+$signtool = 'C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe'
+$timestamp = 'http://timestamp.digicert.com'
+# timestamp was http://timestamp.comodoca.com
+$version = '%VERSION%'
+
+# Any error kills the script.
+$ErrorActionPreference = 'Stop'
+
+# Read the password.
+$p = Read-Host 'Enter key password' -AsSecureString
+$pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))
+
+# Sign the binaries.
+$files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName
+Write-Host -ForegroundColor Green 'Signing', $files.Count, 'binaries'
+& $signtool sign /f $cert /p $pass /td SHA256 /tr $timestamp /fd SHA256 $files
+
+# Create the noinstall files.
+Write-Host -ForegroundColor Green 'Creating no-install zipfiles'
+if (Test-Path wc3270-$version-noinstall-32.zip) {
+    Remove-Item wc3270-$version-noinstall-32.zip
+}
+$zip32 = Get-Content .\wc3270\wc3270-32.zipit
+Compress-Archive -Path $zip32 -DestinationPath wc3270-$version-noinstall-32.zip
+if (Test-Path wc3270-$version-noinstall-64.zip) {
+    Remove-Item wc3270-$version-noinstall-64.zip
+}
+$zip64 = Get-Content .\wc3270\wc3270-64.zipit
+Compress-Archive -Path $zip64 -DestinationPath wc3270-$version-noinstall-64.zip
+
+# Create the wx3270 extern zipfiles.
+Write-Host -ForegroundColor Green 'Creating wx3270 extern zipfiles'
+if (Test-Path wx3270-$version-extern-32.zip) {
+    Remove-Item wx3270-$version-extern-32.zip
+}
+$zip32 = Get-Content .\wc3270\wx3270-32.zipit
+Compress-Archive -Path $zip32 -DestinationPath wx3270-$version-extern-32.zip
+if (Test-Path wx3270-$version-extern-64.zip) {
+    Remove-Item wx3270-$version-extern-64.zip
+}
+$zip64 = Get-Content .\wc3270\wx3270-64.zipit
+Compress-Archive -Path $zip64 -DestinationPath wx3270-$version-extern-64.zip
+
+# Run Inno Setup to create the installer.
+Write-Host -ForegroundColor Green 'Running Inno Setup'
+$signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr $timestamp /fd SHA256 `$p" + '"'
+& $inno $signparm /Qp wc3270.iss
+
+# Archive to bgp.nu and moby.
+Write-Host -ForegroundColor Green 'Archiving to bgp.nu'
+$v=[int[]]($version -split "\." -replace "[a-z].*", "")
+$vdir="{0:D2}.{1:D2}" -f @($v)
+& scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip bgp.nu:www/download/$vdir/
+Write-Host -ForegroundColor Green 'Archiving to moby'
+& scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip 10.0.0.12:gr/

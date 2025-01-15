@@ -1,0 +1,168 @@
+# Copyright (c) 1999-2024 Paul Mattes.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# Makefile for x3270
+
+RM = rm -f
+CC = @CC@
+# Set BUILD_CC, BUILD_LDFLAGS and BUILD_LIBS.
+BUILD_CC = @BUILD_CC@
+BUILD_LDFLAGS = @BUILD_LDFLAGS@
+BUILD_LIBS = @BUILD_LIBS@
+BUILD_CFLAGS = @BUILD_CFLAGS@
+HOST = @host@
+include x3270_files.mk libs.mk
+
+VOBJS = $(X3270_OBJECTS) fallbacks.o
+
+OBJS1 = $(VOBJS) version.o
+
+FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
+	3270.pcf.gz 3270b.pcf.gz 3270gr.pcf.gz 3270gt12.pcf.gz \
+	3270gt12b.pcf.gz 3270gt16.pcf.gz 3270gt16b.pcf.gz 3270gt24.pcf.gz \
+	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
+	3270h.pcf.gz
+
+ICONS = x3270-192x192.png x3270-256x256.png x3270-48x48.png \
+	x3270-512x512.png x3270-96x96.png
+
+all: x3270 x3270a x3270.desktop x3270if $(FONTS) $(ICONS) dryrun
+
+LIBDIR = @libdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+sysconfdir = @sysconfdir@
+datarootdir = @datarootdir@
+LIBX3270DIR = @LIBX3270DIR@
+MANDIR = @mandir@
+BINDIR = @bindir@
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_DATA = @INSTALL_DATA@
+CIFONTDIR = @CIFONTDIR@
+ICONDIR = /usr/share/icons/hicolor
+APPDIR = /usr/share/applications
+
+CCOPTIONS = @CCOPTIONS@
+XCPPFLAGS = -I$(THIS) -I$(TOP)/include @XINC@ -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
+CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+LDFLAGS = @XLIB@ @LDFLAGS@
+LIBS = @LIBS@
+
+include buildmacros.mk
+
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) version.txt
+	$(RM) $(XVERSION)
+	sh $< x3270 $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
+fallbacks.c: mkfb $(FALLBACKS)
+	$(RM) $@
+	./mkfb -o $@ $(filter-out mkfb,$^)
+
+mkfb: mkfb.c
+	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
+
+x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+%.pcf.gz: %.bdf
+	bdftopcf $< | gzip -n9 >$@
+
+%.png: %.png.in
+	cp $< $@
+
+dryrun: dryrun.in
+	cp $< $@
+
+x3270a: x3270a.in
+	cp $< $@
+
+x3270.desktop: x3270.desktop.in
+	cp $< $@
+
+x3270if: ../x3270if/x3270if
+	cp -p ../x3270if/x3270if $@
+
+man:: x3270.man
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
+man:: ibm_hosts.man
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
+
+install:: x3270
+	[ -d $(DESTDIR)$(BINDIR) ] || \
+		mkdir -p $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) x3270 $(DESTDIR)$(BINDIR)/x3270
+install:: x3270a
+	[ -d $(DESTDIR)$(BINDIR) ] || \
+		mkdir -p $(DESTDIR)$(BINDIR)
+	$(INSTALL_SCRIPT) x3270a $(DESTDIR)$(BINDIR)/x3270a
+install:: ibm_hosts
+	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
+		mkdir -p $(DESTDIR)$(LIBX3270DIR)
+	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
+		$(INSTALL_DATA) $< $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
+install::
+	[ -d $(DESTDIR)$(CIFONTDIR) ] || \
+		mkdir -p $(DESTDIR)$(CIFONTDIR)
+	@for i in $(FONTS); \
+	do	(set -x; $(INSTALL_DATA) $$i $(DESTDIR)$(CIFONTDIR)/$$i); \
+	done
+	-chmod u+w $(DESTDIR)$(CIFONTDIR) $(DESTDIR)$(CIFONTDIR)/fonts.dir
+	mkfontdir $(DESTDIR)$(CIFONTDIR)
+	chmod u=rwx,go=rx $(DESTDIR)$(CIFONTDIR)
+	chmod a=r $(DESTDIR)$(CIFONTDIR)/fonts.dir
+install::
+	if [ -d $(DESTDIR)$(ICONDIR) ]; \
+	then	for icon in $(ICONS); \
+		do	res=`echo $$icon | sed -e s/x3270-// -e s/.png//`; \
+			mkdir -p $(DESTDIR)$(ICONDIR)/$$res/apps/; \
+			$(INSTALL_DATA) $$icon $(DESTDIR)$(ICONDIR)/$$res/apps/x3270.png; \
+		done; \
+	fi
+	if [ -d $(DESTDIR)$(APPDIR) ]; \
+	then	$(INSTALL_DATA) x3270.desktop $(DESTDIR)$(APPDIR)/x3270.desktop; \
+	fi
+
+install.man: man
+	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
+		mkdir -p $(DESTDIR)$(MANDIR)/man1
+	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
+		mkdir -p $(DESTDIR)$(MANDIR)/man5
+	$(INSTALL_DATA) x3270.man $(DESTDIR)$(MANDIR)/man1/x3270.1
+	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
+
+clean:
+	$(RM) *.o *pcf.gz mkfb fallbacks.c
+clobber: clean
+	$(RM) x3270 x3270a *.d *.man dryrun
+
+# Include auto-generated dependencies.
+-include $(X3270_OBJECTS:.o=.d) mkfb.d

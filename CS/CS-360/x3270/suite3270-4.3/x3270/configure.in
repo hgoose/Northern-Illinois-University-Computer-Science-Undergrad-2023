@@ -1,0 +1,154 @@
+dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl All rights reserved.
+dnl 
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the name of Paul Mattes nor his contributors may be used
+dnl       to endorse or promote products derived from this software without
+dnl       specific prior written permission.
+dnl 
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
+dnl OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+dnl WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED. IN NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT,
+dnl INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+dnl POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT([x3270],[4.3])
+AC_PREREQ([2.69])
+AC_CONFIG_HEADERS([conf.h])
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Compute host-specific flags.
+AC_CANONICAL_HOST
+case "$host_os" in
+solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
+		;;
+darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
+		;;
+linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+		;;
+esac
+if test "$GCC" = yes
+then	# Add common gcc options, plus flags for dependency generation.
+    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -MMD -MP"
+fi
+AC_SUBST(host)
+AC_SUBST(CCOPTIONS)
+AC_SUBST(BUILD_CC)
+AC_SUBST(BUILD_LDFLAGS)
+AC_SUBST(BUILD_LIBS)
+AC_SUBST(BUILD_CFLAGS)
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+
+dnl Check for X
+AC_PATH_X
+if test "$no_x" = "yes"; then AC_MSG_ERROR('Cannot find X utilities or libraries'); fi
+if test -n "$x_includes"
+then	CPPFLAGS="$CPPFLAGS -I$x_includes"
+fi
+if test -n "$x_libraries"
+then	LDFLAGS="$LDFLAGS -L$x_libraries"
+fi
+
+dnl Check for --enable-app-defaults
+AC_ARG_ENABLE(app-defaults,
+    [  --enable-app-defaults   use a separate app-defaults file],
+    [DEFINE_UAD="#define USE_APP_DEFAULTS 1"; if test "$enable_app_defaults" = "yes"; then UAD_FLAGS="-DCOLOR"; else UAD_FLAGS="$enable_app_defaults"; fi],
+    [DEFINE_UAD=""; UAD_FLAGS="-DCOLOR"; FALLBACKS_O=fallbacks.o])
+AC_SUBST(UAD_FLAGS)
+AC_SUBST(DEFINE_UAD)
+AC_SUBST(FALLBACKS_O)
+
+dnl Check for --with-fontdir=DIR
+AC_ARG_WITH(fontdir,[  --with-fontdir=DIR      install fonts in directory DIR [DIR=PREFIX/share/fonts/X11/misc]])
+case "$with_fontdir" in
+""|yes|no)
+	CIFONTDIR='$'"(prefix)/share/fonts/X11/misc"
+	;;
+/*)
+	CIFONTDIR="$with_fontdir"
+	;;
+*)
+	CIFONTDIR='$'"(exec_prefix)/fonts/$with_fontdir"
+	;;
+esac
+AC_SUBST(CIFONTDIR)
+
+# Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for other libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
+AC_SEARCH_LIBS(gethostbyname, nsl_s nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_CHECK_HEADERS(X11/Shell.h, , AC_MSG_ERROR("Cannot find X11 header files"))
+AC_CHECK_HEADERS(X11/Xmu/Atoms.h, , AC_MSG_ERROR("Cannot find Xmu header files"))
+AC_CHECK_HEADERS(X11/Xaw/Form.h, , AC_MSG_ERROR("Cannot find Xaw header files"))
+AC_SEARCH_LIBS(XFillRectangle, X11, , AC_MSG_ERROR("Cannot find libX11"))
+AC_SEARCH_LIBS(XtVaSetValues, Xt, , AC_MSG_ERROR("Cannot find libXt"))
+AC_SEARCH_LIBS(XmuAddInitializer, Xmu, , AC_MSG_ERROR("Cannot find libXmu"))
+AC_SEARCH_LIBS(XawInitializeWidgetSet, Xaw, , AC_MSG_ERROR("Cannot find libXaw"))
+
+dnl Checks for library functions.
+AC_CHECK_FUNCS(vasprintf)
+AC_FUNC_FSEEKO
+
+dnl Check for xmkmkf or bdftopcf and mkfontdir
+AC_CHECK_PROG(bdftopcf_found,bdftopcf,found,notfound)
+if test "$bdftopcf_found" = "notfound"
+then	AC_MSG_ERROR('Cannot find bdftopcf')
+fi
+AC_CHECK_PROG(mkfontdir_found,mkfontdir,found,notfound)
+if test "$mkfontdir_found" = "notfound"
+then	AC_MSG_ERROR('Cannot find mkfontdir')
+fi
+
+dnl Check for unwanted parts.
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	;;
+esac
+AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
+case "$enable_local_process" in
+""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
+	;;
+esac
+
+if test "$x_includes"
+then	XINC=-I$x_includes
+fi
+if test "$x_libraries"
+then	XLIB=-L$x_libraries
+fi
+AC_SUBST(XINC)
+AC_SUBST(XLIB)
+AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_OUTPUT

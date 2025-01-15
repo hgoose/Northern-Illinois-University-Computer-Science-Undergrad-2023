@@ -1,0 +1,112 @@
+# Copyright (c) 1993-2024 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Makefile for tcl3270 (tcl-based scripted 3270 emulator)
+# Makefile.  Generated from Makefile.in by configure.
+
+RM = rm -f
+CC = @CC@
+BUILD_CC = @BUILD_CC@
+BUILD_LDFLAGS = @BUILD_LDFLAGS@
+BUILD_LIBS = @BUILD_LIBS@
+BUILD_CFLAGS = @BUILD_CFLAGS@
+
+all: tcl3270 x3270if s3270
+
+HOST = @host@
+include tcl3270_files.mk libs.mk
+
+VOBJS = $(TCL3270_OBJECTS) fallbacks.o
+
+OBJS1 = $(VOBJS) version.o
+
+LIBDIR = @libdir@
+exec_prefix = @exec_prefix@
+prefix = @prefix@
+sysconfdir = @sysconfdir@
+datarootdir = @datarootdir@
+LIBX3270DIR = @LIBX3270DIR@
+MANDIR = @mandir@
+BINDIR = @bindir@
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+CCOPTIONS = @CCOPTIONS@
+XCPPFLAGS = -I$(THIS) -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
+CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+
+include buildmacros.mk
+
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) version.txt
+	$(RM) $(XVERSION)
+	sh $< tcl3270 $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+FALLBACKS = fb-common
+fallbacks.c: mkfb $(FALLBACKS)
+	$(RM) $@
+	./mkfb -c -o $@ $(filter-out mkfb,$^)
+
+mkfb: mkfb.c
+	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
+
+tcl3270: $(OBJS1)
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)
+
+x3270if: ../x3270if/x3270if
+	cp -p ../x3270if/x3270if $@
+
+s3270: ../s3270/s3270
+	cp -p ../s3270/s3270 $@
+
+man:: tcl3270.man
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
+
+man:: tcl3270.man
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
+
+install: tcl3270
+	[ -d $(DESTDIR)$(BINDIR) ] || \
+		mkdir -p $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) tcl3270 $(DESTDIR)$(BINDIR)/tcl3270
+
+install.man: man
+	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
+		mkdir -p $(DESTDIR)$(MANDIR)/man1
+	$(INSTALL_DATA) tcl3270.man $(DESTDIR)$(MANDIR)/man1/tcl3270.1
+
+clean:
+	$(RM) *.o mkfb
+clobber: clean
+	$(RM) tcl3270 *.d *.man
+
+# Include auto-generated dependencies.
+-include $(TCL3270_OBJECTS:.o=.d) mkfb.d
