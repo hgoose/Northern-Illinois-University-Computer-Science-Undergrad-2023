@@ -3160,8 +3160,10 @@
                 d_{\mathbb{S}} &= r\theta  = r\cos^{-1}{\left(\frac{ax+by+cz}{r^{2}}\right)}
             \end{align*}
             As desired \hspace*{\fill} $\blacksquare$
+            \bigbreak \noindent 
+            \textbf{Note:} There are no parallel lines in $\mathbb{S}$, any two great circles meet at a pair of antipodes.
         \item \textbf{The chords of a circle}: A chord of a circle is a straight line segment whose endpoints lie on the circle. In other words, it is a line segment that connects two points on the circumference of a circle
-        \item \textbf{The hyperbolic plane}: Let $\mathbb{H}$ denote the hypebolic plane, which is the set of all points inside (but not on) the unit circle in $\mathbb{E}$. That is, all $(x,y)$ with $x^{2} + y^{2} < 1 $
+        \item \textbf{The hyperbolic plane (Poincare disk model)}: Let $\mathbb{H}$ denote the hypebolic plane, which is the set of all points inside (but not on) the unit circle in $\mathbb{E}$. That is, all $(x,y)$ with $x^{2} + y^{2} < 1 $
             \bigbreak \noindent 
             Lines in $\mathbb{H}$ are defined to be the chords of the circle.
             \bigbreak \noindent 
@@ -3184,6 +3186,29 @@
             So if absolute value is used in this way, then we need not worry about which point on the unit circle is marked $M$ and which is marked $N$.
             \bigbreak \noindent 
             If $A=B$ in $\mathbb{H}$, take any chord through $A$ and let $M,N$ be as previously. Since $\frac{e(AN)e(AM)}{e(AM)e(AN)} =1$, it is consistent with the preceding definition to set $d_{\mathbb{H}}(AA) = 0$.
+            \bigbreak \noindent 
+            We note that $N$ using the distance formula above is always the point from $A$ through $B$, and the point $M$ is the point from $B$ through $A$. With this in mind, it is clear that $\frac{e(AN)e(BM)}{e(AM)e(BN)} \to \infty$ as we move $A$ and $B$ closer to the opposing sides of the unit circle. Since $\ln:\ (0,\infty) \to \mathbb{R}$, and we noted earlier that $\frac{e(AN)e(BM)}{e(AM)e(BN)} > 1$, distances in the hyperbolic plane can get arbitrary large or small, without bound.
+            \bigbreak \noindent 
+            Further, Euclids 5th postulate/Playfairs postulate is  false on the hyperbolic plane. Observe
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{e5}
+                \label{fig:e5}
+            \end{figure}
+            \fc{Euclids fifth postulate does not hold on the hyperbolic plane}
+            \bigbreak \noindent 
+            These lines will never meet, because they are stopped by the unit circle boundary. Further, they will in a sense continue on forever, because distances can get arbitrarily large
+            \bigbreak \noindent 
+            Also,
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{play}
+                \label{fig:play}
+            \end{figure}
+            \bigbreak \noindent 
+            We see that given a point $P$ not on the line $\ell$, there are many lines through $P$ that are parallel to $\ell$. All of these lines are parallel to $\ell$, because they will never intersect with $\ell$
         \item \textbf{The gap plane}: Let $\mathbb{G}$ denote the \textit{gap}, or \textit{missing strip} plane. The points of $\mathbb{G}$ are all those of $\mathbb{E}$ except those $(x,y)$ with $0< x \leq 1$
             \bigbreak \noindent 
             \begin{figure}[ht]
@@ -3218,7 +3243,7 @@
                     e(AB) - e(CD) & \text{ for $A,B$ on the opposite sides of the gap} 
                 \end{cases}
             \end{align*}
-        \item \textbf{Potential dangers and the exterior angle inequality}
+        \item \textbf{Potential dangers and the exterior angle inequality}:
 
 
 
@@ -3228,6 +3253,67 @@
 
     \pagebreak 
     \unsect{Numerical analysis}
+    \subsection{Numerical algorithms, roundoff errors, and nonlinear equations in one variable}
+    \begin{itemize}
+        \item \textbf{Scientific computing}: Scientific computing is a discipline concerned with the development and study of \textbf{numerical algorithms} for solving mathematical problems that arise in various disciplines in science and engineering.
+            \bigbreak \noindent 
+            Typically, the starting point is a given \textbf{mathematical model} which has been formulated in an attempt to explain and understand an observed phenomenon in biology, chemistry, physics, economics, or any other scientific or engineering discipline. We will concentrate on those mathematical models which are continuous (or piecewise continuous) and are difficult or impossible to solve analytically; this is usually the case in practice
+            \bigbreak \noindent 
+            In order to solve such a model approximately on a computer, the continuous or piecewise continuous problem is approximated by a discrete one. Functions are approximated by finite arrays of values. Algorithms are then sought which approximately solve the mathematical problem efficiently, accurately, and reliably. This is the heart of scientific computing. \textbf{Numerical analysis} may be viewed as the theory behind such algorithms
+            \bigbreak \noindent 
+            \fig{.5}{./figures/22.png}
+        \item \textbf{Relative and absolute errors}: There are in general two basic types of measured error. Given a scalar quantity $u$ and its approximation $v$:
+            \begin{itemize}
+                \item \textbf{Absolute error}: The \textit{absolute error} in $v$ is 
+                    \begin{align*}
+                        \left\lvert u - v \right\rvert
+                    \end{align*}
+                \item \textbf{Relative error}: The \textit{relative error}, assuming $u\ne 0$ is 
+                    \begin{align*}
+                        \frac{\left\lvert u-v \right\rvert}{\left\lvert u \right\rvert}
+                    \end{align*}
+            \end{itemize}
+            \textbf{Note:} If we take the absolute error, $\left\lvert u-v \right\rvert $. Then it is clear it will be some percentage of $u$. In other words, some scaled version of $u$. Thus, we have $\left\lvert u-v \right\rvert  = p\left\lvert u \right\rvert$.
+            \bigbreak \noindent 
+            The relative error is usually a more meaningful measure. This is especially true for errors in floating point representation. For example, we record absolute and relative errors for various hypothetical calculations in the following table
+            \begin{center}
+                \begin{tabular}{|c|c|c|c|}
+                    \hline
+                    $u$ & $v$ & Absolute error & Relative error \\ \hline
+                    1 & 0.99 & 0.01 & 0.01 \\ \hline
+                    1 & 1.01 & 0.01 & 0.01 \\ \hline
+                    -1.5 & -1.2 & 0.3 & 0.2 \\ \hline
+                    100 & 99.99 & 0.01 & 0.0001 \\ \hline
+                    100 & 99 & 1 & 0.01 \\ \hline
+                \end{tabular}
+            \end{center}
+            \bigbreak \noindent 
+            We expect the approximation in the last row of the above table to be similar in quality to the one in the first row. This expectation is borne out by the value of the relative error but is not reflected by the value of the absolute error
+            \bigbreak \noindent 
+            When the approximated value is small in magnitude, things are a little more delicate, and here is where relative errors may not be so meaningful. But let us not worry about this at this early point.
+        \item \textbf{The sterling approximation}: The quantity
+            \begin{align*}
+                v = S_{n} = \sqrt{2\pi n}\left(\frac{n}{e}\right)^{n}
+            \end{align*}
+            Is called sterling's approximation and is used to approximate $u = n!$ for large $n$
+        \item \textbf{Error types}: Knowing how errors are typically measured, we now move to discuss their source. There are several types of error that may limit the accuracy of a numerical calculation.
+            \begin{enumerate}
+                \item \textbf{Errors in the problem to be solved}: These may be approximation errors in the mathematical model
+                    \bigbreak \noindent 
+                    Another typical source of error in the problem is error in the input data. This may arise, for instance, from physical measurements, which are never infinitely accurate. Thus, it may be that after a careful numerical simulation of a given mathematical problem, the resulting solution would not quite match observations on the phenomenon being examined.
+                    \bigbreak \noindent 
+                    At the level of numerical algorithms, which is the focus of our interest here, there is really nothing we can do about the above-described errors. Nevertheless, they should be taken into consideration, for instance, when determining the accuracy (tolerance with respect to the next two types of error mentioned below) to which the numerical problem should be solved.
+                \item  \textbf{Approximation errors}: Such errors arise when an approximate formula is used in place of the actual function to be evaluated.
+                    \bigbreak \noindent 
+                    We will often encounter two types of approximation errors:
+                    \begin{enumerate}
+                        \item \textbf{Discretization errors} arise from discretizations of continuous processes, such as interpolation, differentiation, and integration.
+                        \item \textbf{Convergence errors} arise in iterative methods. For instance, nonlinear problems must generally be solved approximately by an iterative process. Such a process would converge to the exact solution in infinitely many iterations, but we cut it off after a finite (hopefully small!) number of such iterations. Iterative methods in fact often arise in linear algebra.
+                    \end{enumerate}
+                \item \textbf{Roundoff errorss:} Any computation with real numbers involves roundoff error. Even when no approximation error is produced (as in the direct evaluation of a straight line, or the solution by Gaussian elimination of a linear system of equations), roundoff errors are present. These arise because of the finite precision representation of real numbers on any computer, which affects both data representation and computer arithmetic.
+            \end{enumerate}
+
+    \end{itemize}
 
 
 
