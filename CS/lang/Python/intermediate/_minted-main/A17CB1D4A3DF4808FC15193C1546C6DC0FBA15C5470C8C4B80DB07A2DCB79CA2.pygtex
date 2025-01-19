@@ -1,0 +1,41 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+ch}{\PYGZsh{}!/usr/bin/python3}
+\PYG{k+kn}{import} \PYG{n+nn}{threading}
+\PYG{k+kn}{import} \PYG{n+nn}{concurrent.futures}
+\PYG{k+kn}{from} \PYG{n+nn}{time} \PYG{k+kn}{import} \PYG{n}{sleep}
+
+\PYG{k}{class} \PYG{n+nc}{foobar}\PYG{p}{(}\PYG{n+nb}{object}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}lock} \PYG{o}{=} \PYG{n}{threading}\PYG{o}{.}\PYG{n}{Lock}\PYG{p}{()}
+    \PYG{k}{def} \PYG{n+nf}{do\PYGZus{}stuff}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{name}\PYG{p}{):}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{name}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ about to lock\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{with} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}lock}\PYG{p}{:}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{name}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ has lock\PYGZdq{}}\PYG{p}{)}
+            \PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x}\PYG{o}{+=}\PYG{l+m+mi}{1}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Updated Value, }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{name}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ releasing lock\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Relased lock\PYGZdq{}}\PYG{p}{)}
+
+\PYG{n}{f1} \PYG{o}{=} \PYG{n}{foobar}\PYG{p}{()}
+\PYG{k}{with} \PYG{n}{concurrent}\PYG{o}{.}\PYG{n}{futures}\PYG{o}{.}\PYG{n}{ThreadPoolExecutor}\PYG{p}{(}\PYG{n}{max\PYGZus{}workers}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)} \PYG{k}{as} \PYG{n}{executer}\PYG{p}{:}
+    \PYG{n}{executer}\PYG{o}{.}\PYG{n}{map}\PYG{p}{(}\PYG{n}{f1}\PYG{o}{.}\PYG{n}{do\PYGZus{}stuff}\PYG{p}{,} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{))}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Ending value: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{f1}\PYG{o}{.}\PYG{n}{x}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{Output:}
+\PYG{l+s+sd}{1 about to lock}
+\PYG{l+s+sd}{1 has lock}
+\PYG{l+s+sd}{2 about to lock}
+\PYG{l+s+sd}{3 about to lock}
+\PYG{l+s+sd}{Updated Value, 1 releasing lock}
+\PYG{l+s+sd}{Relased lock}
+\PYG{l+s+sd}{2 has lock}
+\PYG{l+s+sd}{Updated Value, 2 releasing lock}
+\PYG{l+s+sd}{Relased lock}
+\PYG{l+s+sd}{3 has lock}
+\PYG{l+s+sd}{Updated Value, 3 releasing lock}
+\PYG{l+s+sd}{Relased lock}
+\PYG{l+s+sd}{Ending value: 3}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\end{Verbatim}

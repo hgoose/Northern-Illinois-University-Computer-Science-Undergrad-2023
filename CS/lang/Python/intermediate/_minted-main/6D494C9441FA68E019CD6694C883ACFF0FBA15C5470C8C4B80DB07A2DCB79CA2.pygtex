@@ -1,0 +1,57 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+ch}{\PYGZsh{}!/usr/bin/python3}
+\PYG{k+kn}{import} \PYG{n+nn}{asyncio}
+
+\PYG{k}{class} \PYG{n+nc}{foo}\PYG{p}{(}\PYG{n+nb}{object}\PYG{p}{):}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{start}\PYG{p}{,}\PYG{n}{stop}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{start}\PYG{o}{=} \PYG{n}{start}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stop} \PYG{o}{=} \PYG{n}{stop}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{start}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}aenter\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Entering Iterator at Start Value }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{start}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{...\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}aexit\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{exc\PYGZus{}type}\PYG{p}{,}\PYG{n}{exc\PYGZus{}val}\PYG{p}{,}\PYG{n}{exc\PYGZus{}tb}\PYG{p}{):}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Exiting Iterator at Exit Value }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stop}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ (not inclusive)...\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n}{exc\PYGZus{}type} \PYG{o+ow}{is} \PYG{o+ow}{not} \PYG{k+kc}{None}\PYG{p}{:}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{exc\PYGZus{}type}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{exc\PYGZus{}val}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}aiter\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}
+
+    \PYG{k}{async} \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}anext\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current} \PYG{o}{\PYGZlt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stop}\PYG{p}{:}
+            \PYG{n}{value} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current} \PYG{o}{+=} \PYG{l+m+mi}{1}
+            \PYG{k}{return} \PYG{n}{value}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{k}{raise} \PYG{n+ne}{StopAsyncIteration}
+
+\PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{do\PYGZus{}stuff}\PYG{p}{():}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Doing stuff\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{await} \PYG{n}{asyncio}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}did stuff\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{use\PYGZus{}iterator}\PYG{p}{():}
+    \PYG{k}{async} \PYG{k}{with} \PYG{n}{foo}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{)} \PYG{k}{as} \PYG{n}{thing}\PYG{p}{:}
+        \PYG{k}{async} \PYG{k}{for} \PYG{n}{item} \PYG{o+ow}{in} \PYG{n}{thing}\PYG{p}{:}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{item}\PYG{p}{)}
+
+\PYG{k}{async} \PYG{k}{def} \PYG{n+nf}{main}\PYG{p}{():}
+    \PYG{k}{await} \PYG{n}{asyncio}\PYG{o}{.}\PYG{n}{gather}\PYG{p}{(}\PYG{n}{do\PYGZus{}stuff}\PYG{p}{(),} \PYG{n}{use\PYGZus{}iterator}\PYG{p}{())}
+
+\PYG{n}{asyncio}\PYG{o}{.}\PYG{n}{run}\PYG{p}{(}\PYG{n}{main}\PYG{p}{())}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{Outputs:}
+\PYG{l+s+sd}{Doing stuff}
+\PYG{l+s+sd}{Entering Iterator at Start Value 0...}
+\PYG{l+s+sd}{0}
+\PYG{l+s+sd}{1}
+\PYG{l+s+sd}{2}
+\PYG{l+s+sd}{3}
+\PYG{l+s+sd}{4}
+\PYG{l+s+sd}{Exiting Iterator at Exit Value 5 (not inclusive)...}
+\PYG{l+s+sd}{did stuff}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\end{Verbatim}

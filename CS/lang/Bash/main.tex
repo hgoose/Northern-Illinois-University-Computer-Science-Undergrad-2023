@@ -1,0 +1,1126 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Warner \thepage}
+\rhead{}
+% \lhead{\leftmark}
+\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Bash Mastery} \\
+           The complete guide to BASH shell scripting
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           August 3, 2023 \\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak \bigbreak \noindent
+    \section{\LARGE Setting up scripts}
+    \bigbreak \noindent 
+    In order to write shell scripts, we must use the file extension .sh. When we begin the script, we must include a \textit{shebang}, which looks something like:
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+#!/usr/bin/bash
+    \end{minted}
+    \bigbreak \noindent 
+    However, this could depend on the users system. To locate which file path to use, we can use the command:
+    \begin{minted}{bash}
+which bash
+    \end{minted}
+    \bigbreak \noindent 
+    This will provide the path to use for the shebang.
+    \bigbreak \noindent 
+    The anatomy of a shell script can be described with the following parts:
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item Shebang 
+        \item Commands
+        \item Exit statement (0=successful, 1-255=unsuccessful)
+    \end{enumerate}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    
+    \begin{minted}{bash}
+#!/usr/bin/bash
+
+echo "Hello World!"
+exit 0
+    \end{minted}
+    \bigbreak \noindent 
+    
+    \bigbreak \noindent 
+    \nt{The recommended file permissions for scripts is 744 (chmod 744 \textit{filename})}
+
+    \bigbreak \noindent 
+    \subsection{Adding scripts to PATH}
+    \bigbreak \noindent 
+    To add scripts to your PATH for BASH, we can open up our .bashrc, and add at the bottom of the file:
+    \bigbreak \noindent 
+    
+    \begin{minted}{bash}
+export PATH="$PATH:$HOME/dirlocation"
+    \end{minted}
+    
+    \bigbreak \noindent 
+    This will append some directory to the end of our PATH variable. To do the same for the \textit{fish} shell, in the fish config file, we can add.
+    \bigbreak \noindent 
+    
+    \begin{minted}{bash}
+set -gx PATH $PATH $HOME/somedirectory
+    \end{minted}
+    
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Variables and Shell Expansions}
+    \bigbreak \noindent 
+    \subsection{User-Defined variables and parameter expansion}
+    \bigbreak \noindent 
+    \smallbreak \noindent
+    \begin{definition}
+        A \textbf{parameter} is any entity that stores values. In bash, we have three types:
+        \begin{enumerate}
+            \item Variables
+            \item Positional Parameters
+            \item Special Parameters
+        \end{enumerate}
+    \end{definition}
+    \bigbreak \noindent 
+    To define variables in our script, we can do:
+    
+    \begin{minted}{bash}
+identifier=value # NO WHITESPACE
+name="nate" # Example
+declare -i a=1 # Integer variable
+
+# Parameter Expansion (Reference variables)
+echo "Hello, ${name}!" 
+    \end{minted}
+    \bigbreak \noindent 
+    
+
+    \bigbreak \noindent 
+    \subsection{Shell variables}
+    \bigbreak \noindent 
+    Shell variables are builtin variables that we can access but don't need to define ourself, some common shell variables are:
+    \begin{itemize}
+        \item PATH
+        \item HOME 
+        \item USER 
+        \item HOSTNAME
+        \item HOSTTYPE
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Positional Parameters}
+    \bigbreak \noindent 
+    Positional parameters are variables that hold the command-line arguments to a script or function. They are denoted by numbers.
+    \begin{enumerate}
+        \item \$0 (Contains the name of the script)
+        \item \$1, \$2 ... \$n (The first, second, third, etc. arguments to the script or function.)
+        \item \$\# (The number of arguments passed to the script or function.)
+        \item \$@ (All the arguments. When quoted ("\$@"), it treats each argument as a separate word. Useful for loops, more on this later)
+        \item \$* (All the arguments. When quoted ("\$*"), it treats all arguments as a single word. Useful for loops, more on this later)
+    \end{enumerate}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Special Parameters}
+    \bigbreak \noindent 
+    These are variables that provide special functionality or information about the script or command's execution:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \$?: The exit status of the last executed command. \(0\) usually indicates success, and a non-zero value indicates an error.
+        \item \$\$: The process ID (PID) of the currently executing script or shell instance.
+        \item \$!: The process ID (PID) of the last backgrounded command.
+        \item \$-: The current options set for the shell. For instance, if you used \texttt{set -x} for debugging, \texttt{x} would be part of the value.
+        \item \$\_: The last argument of the previous command. Also sometimes used to get the last path argument to the \texttt{cd} command.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Parameter Expansion Tricks}
+    \bigbreak \noindent 
+    Default Values:
+    \begin{itemize}
+        \item \$\{parameter:-word\}: If parameter is unset or null, this expansion will return word. Otherwise, it returns the value of parameter.
+        \item \$\{parameter:=word\}: If parameter is unset or null, it will be set to word.
+    \end{itemize}
+    \bigbreak \noindent 
+    String Length:
+    \begin{itemize}
+        \item \${\#parameter}: Returns the length of the value of the parameter.
+    \end{itemize}
+    \bigbreak \noindent 
+    Substring Expansion:
+    \begin{itemize}
+        \item \$\{parameter:offset:length\}: Extracts a substring from \$parameter starting at offset (0-indexed) and of length length.
+    \end{itemize}
+    \bigbreak \noindent 
+    String Removal (Pattern Matching):
+    \begin{itemize}
+        \item \$\{parameter\#pattern\}: Removes the shortest match of pattern from the beginning of \$parameter.
+        \item \$\{parameter\#\#pattern\}: Removes the longest match of pattern from the beginning of \$parameter.
+        \item \$\{parameter\%pattern\}: Removes the shortest match of pattern from the end of \$parameter.
+        \item \$\{parameter\%\%pattern\}: Removes the longest match of pattern from the end of \$parameter. 
+    \end{itemize}
+    \bigbreak \noindent 
+    String Replacement:
+    \begin{itemize}
+        \item \$\{parameter/pattern/string\}: Replaces the first match of pattern with string in \$parameter.
+        \item \$\{parameter//pattern/string\}: Replaces all matches of pattern with string in \$parameter
+    \end{itemize}
+    \bigbreak \noindent 
+    Variable Indirection:
+    \begin{itemize}
+        \item \$\{!parameter\}: Treats the value of parameter as the name of another variable, and fetches the value of that variable.
+    \end{itemize}
+    \bigbreak \noindent 
+    Case Modification:
+    \begin{itemize}
+        \item \$\{parameter$\land$\}: Capitalizes the first letter of the value.
+        \item \$\{parameter$\land\land$\}: Capitalizes all letters of the value.
+        \item \$\{parameter,\}: Converts the first letter to lowercase.
+        \item \$\{parameter,,\}: Converts all letters to lowercase.
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Command Substitution}
+    \bigbreak \noindent 
+    \begin{concept}
+		 Command substitution can be used to:
+	\end{concept}
+    \begin{itemize}
+        \item Save the output of commands in variables
+        \item Use the output of one command \textit{inside} another command
+    \end{itemize}
+    \bigbreak \noindent 
+    The syntax for this is:
+    
+    \begin{minted}{bash}
+$(command)
+# Example...
+time=$(date +%H:%M:%S)
+echo "Hello, the current time is ${time}"
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \bigbreak \noindent 
+    \subsection{Arithmetic Expansion}
+    \bigbreak \noindent 
+    The syntax for \textit{Arithmetic Expansion} is:
+    
+    \begin{minted}{bash}
+$((expression))
+# Example...
+echo $((1+1)) # 2
+# When dealing with arithmetic expansion, we do not need a $ to reference variables
+x=1
+y=1
+echo $(( x + y ))
+    \end{minted}
+    \bigbreak \noindent
+    
+    
+    \bigbreak \noindent 
+    \subsection{Dealing with floating point numbers}
+    \bigbreak \noindent 
+    To be able to do floating point arithmetic in our scripts, we need to use the \textbf{bc} command.
+    \bigbreak \noindent 
+    Example:
+    
+    \begin{minted}{bash}
+echo "scale=2; 5/2" | bc # 2.50
+result=$(echo "scale=2; 5/2" | bc)
+# scale sets the precision of the output
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Tilde Expansion}
+    \bigbreak \noindent 
+    I'm sure you're already familiar with using tilde to jump to your home directory, but we can also use $\sim$- to jump between our current directory, and our home directory
+
+    \bigbreak \noindent 
+    \subsection{Brace Expansion}
+    \bigbreak \noindent 
+    We have two types of brace expansions:
+    \begin{itemize}
+        \item String lists
+        \item Range lists
+    \end{itemize}
+    \bigbreak \noindent 
+    Here is examples of what we can do with brace expansion:
+    \bigbreak \noindent 
+    
+    \begin{minted}{bash}
+echo {jan,feb,march} # jan feb march NO WHITESPACE IN BRACES
+echo {1..5} # 1 2 3 4 5
+echo {1..10..2} # 1 3 5 7 9
+echo {a..e} # a b c d e
+echo {a,b}{1,2,3} # (Cartesian product...) a1 a2 a3 b1 b2 b3
+# Useful for commands...
+mkdir dir_{1..3}.txt
+touch file_{1..5}.txt
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE How Bash Processes Commands}
+    \bigbreak \noindent 
+    Bash uses a 5 step process to interpret a command
+    \bigbreak \noindent 
+    \begin{enumerate}
+        \item \textbf{Tokenisation:} A token is a sequence of characters that is considered as a single unit by the shell. The shell determines were a token starts and ends with the following special (meta) characters
+            \begin{itemize}
+                \item |
+                \item \&
+                \item ;
+                \item ()
+                \item < >
+                \item Space, tab, newline
+            \end{itemize}
+            The shell then determines whether these tokens are words, or operators. A \textbf{word} is a token that does not contain an unquoted metacharacter. \textbf{Operators} are tokens that contain at least one unquoted metacharacter. This makes quoting a key concept in how the shell operates
+        \item \textbf{Command identification:} The shell breaks the command up into either simple, or compound commands. \textbf{Simple commands} are just a bunch of individual words, and each simple command is terminated by a control operator. \textbf{Compound commands} provide bash with its programming constructs, such as if statements, for loops, while loops, etc...
+        \item \textbf{Expansions:}
+        \item \textbf{Quote removal:} We add quotes to control how the command is interpreted, so this step will simply remove all those supportive quotes.
+        \item \textbf{Redirection:}
+    \end{enumerate}
+    After these 5 steps are completed, bash will then execute the command that is left over.
+
+    \bigbreak \noindent 
+    \subsection{Quoting}
+    \bigbreak \noindent 
+    \begin{concept}
+		 Quoting is about \textbf{removing special meanings}. There are three types of quoting:
+	\end{concept}
+    \begin{itemize}
+        \item \textbf{Backslash (\textbackslash):} This removes special meaning from next character
+        \item \textbf{Single Quotes:} Removes special meaning from all characters inside
+        \item \textbf{Double Quotes:} Removes special meaning from all inside except dollar signs (\$) and backticks (\ \`\ )
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Step 1. Tokenisation}
+    \bigbreak \noindent 
+    We learned earlier that whether or not a token is interpreted as a word or an operator, depends on if there are any \textbf{unquoted metacharacters}. In bash we have two types of operators:
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.5\textwidth}
+    \textbf{Control operators:}
+    \begin{itemize}
+        \item Newline: command separator, similar to the semicolon (;).
+        \item | used to send the output of one command as the input to another command.
+        \item || Used to execute the command following it only if the command preceding it fails 
+        \item \& This is used to execute a command in the background
+        \item \&\& Used to execute the command following it only if the command preceding it succeeds 
+        \item ; Acts as a command separator.
+        \item ;; Used in the context of a case statement in shell scripting. It signifies the end of an option within a case block.
+        \item ;\& Also used in a case statement. After executing the associated block for a matched pattern, the control will flow to the block of the next pattern without testing.
+        \item ;;\& Another operator used in a case statement. The control will test the next pattern after executing the block for the matched pattern.
+        \item |\& This is shorthand for 2>\&1 |. It redirects both standard output (stdout) and standard error (stderr) of the command before the pipe to the command after the pipe.
+        \item ( used to group commands and execute them in a subshell. 
+        \item ) used to group commands and execute them in a subshell. 
+    \end{itemize}
+   \end{minipage}
+   \begin{minipage}[t]{0.5\textwidth}
+       \textbf{Redirection Operators}
+       \begin{itemize}
+           \item < Redirects input for a command from a file rather than from the keyboard.
+            \item > Redirects the output of a command to a file
+            \item << Provides multiple lines of input to a command 
+            \item >> Similar to >, but instead of overwriting the file, it appends to the file.
+            \item <\& Duplicates one input file descriptor to another, allowing for more advanced redirections.
+            \item >\& Duplicates one output file descriptor to another.
+            \item >| (Clobber): This is used in conjunction with the noclobber option in Bash (set -o noclobber). It allows you to forcefully overwrite a file when output redirection is used, even if noclobber is set.
+            \item <<- Similar to <<, but it allows leading tabs (not spaces) to be ignored, 
+            \item <>  Opens a file in read-write mode for a command. 
+       \end{itemize}
+   \end{minipage}
+
+   \pagebreak \bigbreak \noindent 
+   \subsection{Step 2. Command Identification (Simple commands)}
+   \bigbreak \noindent 
+   As we stated earlier, we have two types of commands, simple, and complex. Let's have a look at a simple command.
+   \bigbreak \noindent 
+   \begin{center}
+       $\underbrace{\text{echo}}_{\parbox{2cm}{\centering \text{Command}\\ \text{name}}} \underbrace{1\ 2\ 3}_{\parbox{2cm}{individual arguments}}$
+   \end{center}
+   \bigbreak \noindent 
+   All simple commands are terminated by a control operator, which we have discussed earlier. In this case, it is a newline
+   \bigbreak \noindent 
+   Thus, "echo" is identified as the command, and the rest is identified as the commands arguments, since there are no \textbf{control operators}
+
+   \bigbreak \noindent 
+  \subsection{Step 2. Command Identification (Simple commands)}
+  \bigbreak \noindent 
+  \begin{concept}
+		 Compound commands are essentially bash's programming constructs. Each compound command begins with a \textbf{reserved word} and is terminated by a \textbf{reserved word}.
+	\end{concept}
+
+  \bigbreak \noindent 
+  \subsection{Step 3. Expansions}
+  \bigbreak \noindent 
+  The shell goes through 4 stages of expansion.
+  \begin{itemize}
+      \item \textbf{Stage 1:} Brace expansion
+        \item \textbf{Stage 2:}
+            \begin{itemize}
+                \item Parameter expansion
+                \item Arithmetic expansion
+                \item Command substation
+                \item Tilde expansion
+            \end{itemize}
+        \item \textbf{Stage 3:} Word splitting
+        \item \textbf{Stage 4:} Globbing
+  \end{itemize}
+  \bigbreak \noindent 
+  An important thing to know is that expansions in earlier stages, happen before expansions in later stages. This means if we had the code:
+  
+  \begin{minted}{bash}
+x=10
+echo {1..$x}
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  We would \textbf{not} get the expected results, this is because the brace expansion will take place \textbf{before} the parameter expansion.
+  \bigbreak \noindent 
+  Another important thing to know is that items in \textbf{stage 2} have the same precedence, thus, they will be preformed left to right. Similar to how multiplication and division works in the rules of PEMDAS.
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{Word splitting}
+  \bigbreak \noindent 
+  \begin{concept}
+     \textbf{Word splitting}  is a process the shell performs to split the result of some unquoted expansions into separate words. Word splitting can have some very significant effects on how your commands are interpreted
+  \end{concept}
+  \bigbreak \noindent 
+  Word splitting is only performed on the results of unquoted 
+  \begin{itemize}
+      \item Parameter expansions
+        \item Command substitutions
+        \item Arithmetic expansions
+  \end{itemize}
+  \bigbreak \noindent 
+  The characters used to split words are governed by the IFS (Internal Field Separator) variable.
+  \begin{itemize}
+      \item Space, tab, and newline
+  \end{itemize}
+  \bigbreak \noindent 
+  Suppose we have:
+  
+  \begin{minted}{bash}
+numbers="1 2 3 4 5"
+touch ${numbers}
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  We will get 5 \textbf{different} files, labeled 1-5. This is because the parameter expansion was \textbf{unquoted}. Instead, we can do:
+  
+  \begin{minted}{bash}
+numbers="1 2 3 4 5"
+touch "${numbers}"
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  This will prevent word splitting, and treat "1 2 3 4 5" as a single word. Creating just \textbf{one} file.
+  \bigbreak \noindent 
+  So we shall follow one simple rule. If we want the output of a:
+  \begin{itemize}
+      \item Parameter expansion 
+        \item Command substation
+        \item Arithmetic expansion
+  \end{itemize}
+  \bigbreak \noindent 
+  To be considered as a \textbf{single word}, we must \textbf{wrap that expansion in double quotes!}
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{Globbing}
+  \bigbreak \noindent 
+  \begin{concept}
+      \textbf{Globbing} is used as shorthand for listing the files that a command should operate on. Globbing is \textbf{only} performed on words (not operators)
+  \end{concept}
+  \bigbreak \noindent 
+  Globbing patters are words that contain unquoted \textbf{Special pattern characters}
+  \begin{itemize}
+      \item * (used as a wildcard for any word)
+        \item ? (used as a wildcard for any character, very strict in terms of length)
+        \item \textlbrackdbl\ \  (Like question mark, but we can control the characters)
+  \end{itemize}
+  
+  \begin{minted}{bash}
+ls *.txt # will list all .txt files
+ls file?.txt # will list all .txt files named "file[somecharacter]"
+# Note: Anything with 2 or more characters after "file" will not be listed
+ls file[ab].txt # will list either filea.txt, fileb.txt, or nothing
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  We can also treat the brackets as character classes...
+  
+  \begin{minted}{bash}
+ls file[a-z].txt
+  \end{minted}
+  \bigbreak \noindent
+  
+
+  \bigbreak \noindent 
+  \subsection{Quote removal}
+  \bigbreak \noindent 
+  During the quote removal stage, the shell removes ALL unquoted backslashes, single quote characters, and double quote characters that \textbf{did not} result from a shell expansion.
+  \bigbreak \noindent 
+
+  \bigbreak \noindent 
+  \subsection{Redirection}
+  \bigbreak \noindent 
+  \textbf{Data Streams}
+  \begin{itemize}
+      \item Stream 0: Standard input (stdin)
+      \item Stream 0: Standard output (stdout)
+      \item Stream 0: Standard error (stderr)
+  \end{itemize}
+  \bigbreak \noindent 
+  \textbf{Standard input} provides us with an alternative way of providing input to a command, aside from using command line arguments. Default source is keyboard
+  \bigbreak \noindent 
+  \textbf{Standard output} contains the data that is produced after a successful command execution. Default source is terminal 
+  \bigbreak \noindent 
+  \textbf{Standard error} contains all error messages and status messages  that a command produces . Default source is terminal
+  \bigbreak \noindent 
+  Using redirection is all about changing the sources or destinations of these streams. For example, if we use the \textit{cat} command, we are changing the input stream source from the keyboard to a file.
+  \pagebreak \bigbreak \noindent 
+  For redirection we can use the following operators:
+  \begin{itemize}
+      \item > Redirects standard output to a file, overwriting the file if it exists.
+        \item >> Redirects standard output to a file, appending to the file if it exists.
+        \item < Takes input from a file
+        \item 2> Redirects standard error to a file, overwriting the file if it exists.
+        \item 2>> Redirects standard error to a file, appending to the file if it exists.
+        \item \&> or >\& Redirects both standard output and standard error to a file, overwriting the file if it exists.
+        \item \&>> Redirects both standard output and standard error to a file, appending to the file if it exists.
+        \item | (pipe) Takes the standard output of one command and uses it as the standard input for another command.
+  \end{itemize}
+
+  \pagebreak \bigbreak \noindent 
+  \section{\LARGE Requesting user input}
+  \bigbreak \noindent 
+  \subsection{Positional Parameters}
+  \bigbreak \noindent 
+  Recall from 2.3, where we discussed the concept of \textbf{positional parameters}, in this section, we will discuss how we can use them in our scripts.
+  \bigbreak \noindent 
+  Suppose we had some script call
+  
+  \begin{minted}{bash}
+./1.sh nate $HOME
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  Here we are passing two arguments to this script. For these arguments to be relevant, let's take a look at the script...
+  
+  \begin{minted}{bash}
+echo "Hello, I am ${0}"
+echo "My name is, ${1}"
+echo "My home directory is ${2}"
+# Hello, I am ./1
+# My name is, nate
+# My home directory is /home/datura
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  So you can see we are making use of some \textbf{positional parameters} to gain access to the things that we passed to the script we it was executed.
+  \bigbreak \noindent 
+  \nt{It's important we use the curly brace expansion syntax for double digit numbers or we might get unexpected results}
+
+  \bigbreak \noindent 
+  \subsection{Special Parameters}
+  \bigbreak \noindent 
+  Now that we have learned how to use \textbf{positional parameters} in our scripts. We will take a look at \textbf{Special parameters}, these parameters give us information about the script. The definitions for these were described in 2.4
+  \bigbreak \noindent 
+  
+  \begin{minted}{bash}
+echo "Exit code: ${?}"
+echo "PID: ${??}"
+# Exit code: 0 
+# PID: 0
+  \end{minted}
+  \bigbreak \noindent
+  
+
+  \pagebreak \bigbreak \noindent 
+  \subsection{The read command}
+  \bigbreak \noindent 
+  We can use the \textbf{read} command in bash to get input from the user, for example:
+  
+  \begin{minted}{bash}
+read name age
+# Or
+read -p "Enter your name: " name
+read -p "Enter your age " age
+  \end{minted}
+  \bigbreak \noindent
+  
+  \bigbreak \noindent 
+  Then when we run this script, we can enter some data. This data will be stored in the variables "name" and "age". Notice that the second example lets us define a prompt.
+  \bigbreak \noindent 
+  Other options we have for the read command are:
+    \begin{itemize}
+        \item -t: timeout, specified in seconds
+        \item -s: make input s.t it is not visible in the terminal 
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{The select command}
+    \bigbreak \noindent 
+    Using the \textbf{select} command, we can create menus for the user, and have the shell carry out different commands based on what is selected. 
+    
+    \begin{minted}{bash}
+PS3="Enter: "
+select day in a b c d e f; do
+    echo "You entered ${day}"
+break
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    There are some key things to notice here. For one, we can define the \textbf{PS3} variable to give the user a custom prompt. Second, this select command will by default result in a continuous loop. Thus, we must use the \textbf{break} command to terminate it.
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Logic}
+    \bigbreak \noindent 
+    \subsection{Chaining commands} 
+    \bigbreak \noindent 
+    In bash we have the following operators:
+    \begin{itemize}
+        \item \& (send command to background)
+        \item ; (chain commands)
+        \item \&\& (only execute next command if previous was successful)
+        \item || (only execute next command if previous was unsuccessful)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Test commands and conditional operators}
+    \bigbreak \noindent 
+    \begin{concept}
+       If a test is evaluated to be true, the test will return an exit status of 0. If a test is evaluated to be false, the test will return an exit status of 1. The \textbf{test} command can be used in bash to compare different pieces of information.
+    \end{concept}
+    \bigbreak \noindent 
+    The syntax for the test command is a set of square brackets [\ \ ]. Its important that you have a space separating the contents of the square bracket and the actual square brackets otherwise you will get a syntax error.
+    \bigbreak \noindent 
+    \nt{The set of square brackets is the \textbf{short hand form}, the long hand form is using the \textbf{test} keyword}
+    \bigbreak \noindent 
+    Example:
+    \bigbreak \noindent 
+    In conjunction with the test command, we can use the following operators:
+    \bigbreak \noindent 
+    \begin{minipage}[t]{0.47\textwidth}
+        \textbf{File Tests:}
+        \begin{itemize}
+            \item -s FILE: True if FILE exists and has a size greater than zero.
+            \item -h FILE or -L FILE: True if FILE exists and is a symbolic link.
+            \item -r FILE: True if FILE exists and is readable.
+            \item -e FILE: True if FILE exists.
+            \item -d FILE: True if FILE exists and is a directory.
+            \item -w FILE: True if FILE exists and is writable.
+            \item -x FILE: True if FILE exists and is executable.
+            \item -f FILE: True if FILE exists and is a regular file.
+        \end{itemize}
+    \end{minipage}
+    \begin{minipage}[t]{0.47\textwidth}
+        \textbf{String tests:}
+        \begin{itemize}
+            \item -z STRING: True if STRING has a length of zero.
+            \item -n STRING: True if STRING has a length greater than zero.
+            \item STRING1 = STRING2: True if STRING1 and STRING2 are the same.
+            \item STRING1 != STRING2: True if STRING1 and STRING2 are not the same.
+        \end{itemize}
+    \end{minipage}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{minipage}[]{0.47\textwidth}
+        \textbf{Arithmetic Comparisons:}
+        \begin{itemize}
+            \item -eq: Equal to.
+            \item -ne: Not equal to.
+            \item -lt: Less than.
+            \item -le: Less than or equal to.
+            \item -gt: Greater than.
+            \item -ge: Greater than or equal to
+        \end{itemize}
+    
+    \end{minipage}
+    \begin{minipage}[]{0.47\textwidth}
+        \textbf{Logical Operators:}
+        \begin{itemize}
+            \item ! (logical not)
+            \item -a (logical and)
+            \item -o (logical or)
+        \end{itemize}
+    \end{minipage}
+
+    \bigbreak \noindent 
+    Example:
+    
+    \begin{minted}{bash}
+# Long hand
+if test 1 -le 2; then
+    echo "1 is less than 2"
+fi
+# Short hand...
+if [ 1 -le 2 ]; then 
+    echo "1 is less than 2"
+fi
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    Additionally, we have the \textbf{double bracket}. This is known as the extended test command, offers several advantages and additional capabilities over the traditional test command. It allows for:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Word splitting does not occur
+        \item Regex matching using =$\sim$
+        \item String comparison using == or !=
+        \item Compound comparisons using \&\& (and) and || (or)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{If statements}
+    The syntax for if statements
+    \bigbreak \noindent 
+    
+    \begin{minted}{bash}
+if [ condition ]; then 
+
+elif [ condition ]; then
+
+else 
+
+fi
+    \end{minted}
+
+
+    \bigbreak \noindent 
+    \subsubsection{Double Brackets (Extended test)}
+    \bigbreak \noindent 
+    The double bracket is a more modern syntax introduced by the KornShell (ksh) and later adopted by bash. It provides enhanced functionality over single brackets.
+    \begin{enumerate}
+        \item \textbf{Enhanced Features:} Supports additional features like pattern matching with ==, regex matching with =~, and logical operators && and ||.
+        \item \textbf{No Word Splitting:} Inside [[ ... ]], word splitting and pathname expansion (globbing) are not performed.
+        \item \textbf{Safer:} Reduces the need for excessive quoting, minimizing common errors with spaces and special characters.
+        \item \textbf{Non-POSIX:} Not as portable as single brackets, primarily available in bash, ksh, and zsh.
+
+    \end{enumerate}
+    \bigbreak \noindent 
+    \begin{bashcode}
+        if [[ "$1" -eq 10 ]]; then
+        echo "The number is 10"
+        fi
+
+        if [[ "$string" == "pattern*" ]]; then
+        echo "String matches pattern"
+        fi
+
+        if [[ "$string" =~ ^regex$ ]]; then
+        echo "String matches regex"
+        fi
+    \end{bashcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Pattern matching with ==}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item The == operator is used for string comparison within double brackets.
+        \item When the right-hand side of == contains wildcard characters like *, it performs pattern matching.
+    \end{itemize}
+    \bigbreak \noindent 
+    \nt{when using == with double brackets, you are limited to basic pattern matching with wildcards such as *.}
+
+    \bigbreak \noindent 
+    \subsubsection{Regex matching with =$\sim$}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item The =~ operator is used for regular expression (regex) matching within double brackets.
+        \item The right-hand side of =~ is treated as a regex pattern.
+    \end{itemize}
+
+    \bigbreak \noindent
+    \subsubsection{Arithmetic evalutations in if statements}
+    \bigbreak \noindent 
+    The (( ... )) construct is used to evaluate arithmetic expressions. It allows you to perform arithmetic operations and evaluate the result directly within the script. When used inside an if statement, it evaluates the expression and returns a boolean value (true or false) based on the result of the expression.
+    \bigbreak \noindent 
+    \begin{bashcode}
+    if (( 9 % 3 == 0 )); then
+        echo "9 is divisible by 3"
+    fi 
+    \end{bashcode}
+    
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Case statements}
+    \bigbreak \noindent 
+    Syntax:
+    
+    \begin{minted}{bash}
+case "${var}" in 
+    value)
+        statement
+        ;;
+    value)
+        statement
+        ;;
+esac
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Process options and read from files}
+    \bigbreak \noindent 
+    \subsection{While loops}
+    \bigbreak \noindent 
+    Syntax:
+    
+    \begin{minted}{bash}
+while [[ test ]]; do
+    statements;
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    So for example:
+    
+    \begin{minted}{bash}
+read -p "Enter a number: " num
+while [[ $num -lt 5 ]]; do
+    echo $num
+    num=$(($num+1))
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+
+
+    \bigbreak \noindent 
+    \subsection{Handling command line options}
+    \bigbreak \noindent 
+    For this we can use the \textbf{getopts} command to get any options that the user runs with the script
+    \bigbreak \noindent 
+    Syntax:
+    
+    \begin{minted}{bash}
+getopts "ab" varname # Defines two possible options, 'a', and 'b', stores in varname
+getopts 'a:b:' varname # Lets the options take in values. Stores in varname
+echo $OPTARG # Built in variable to house the option value
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    In order to ensure that the getopts command gets ALL options, we must write the command as the test for a while loop
+    
+    \begin{minted}{bash}
+while getopts 'a:b:' varname; do 
+    echo $OPTARG
+done
+# Run script
+./scriptname -a 2 -b 3
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Iterating over files with read-while loop}
+    \bigbreak \noindent 
+    \begin{concept}
+        Read-while loops are while loops that use the \textbf{read} command as their test command
+    \end{concept}
+    
+    \begin{minted}{bash}
+while read line; do
+    echo "$line"
+done < "${1}"
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    We can also use a technique called \textbf{process substation} to redirect standard input from a process
+    
+    \begin{minted}{bash}
+while read line; do
+    echo "$line"
+done < <(ls $HOME)
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Arrays and For loops}
+    \bigbreak \noindent 
+    \subsection{Working with indexed arrays}
+    Arrays in bash are as follows...
+    
+    \begin{minted}{bash}
+myarr=(1 2 3)  # Direct assignment
+declare -a myarr=(1 2 3) # Typeset
+myarr[0] # Standard indexing
+myarr[0]=1 # Standard reassigning
+read -a myarr <<< "1 2 3" # nonnatural assignment
+
+# Changing IFS for read command
+IFS="${IFS} ," # add colon to IFS
+read myarr2 >>> "1,2,3"
+
+# Outputting values
+echo ${myarr[0]}
+echo ${myarr[@]} # Output all values
+echo ${#myarr[@]} # Length of array
+echo ${!myarr[@]} # Output index numbers
+
+# Appending to array
+myarr+=(1) # Add to end
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    To summarize, we have:
+    \begin{itemize}
+        \item Declaring arrays (direct, typeset, read)
+        \item Indexing
+        \item Reassign
+        \item  Read with Custom IFS
+        \item Outputting (specific, all, length, index numbers)
+        \item Appending
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{readarray command}
+    \bigbreak \noindent 
+    We can use the readarray command to create arrays from lines in a file
+    
+    \begin{minted}{bash}
+readarray arr < file.txt
+echo "${arr[@]@Q}" # Show raw data (trailing newlines)
+readarray -t arr < file.txt # Not storing trailing newlines
+
+# Alternatively...
+IFS=
+while read -r line; do
+    arr+=($line)
+done < file.txt
+    \end{minted}
+    \bigbreak \noindent
+    
+    
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE For loops in bash}
+    \bigbreak \noindent 
+    We have a couple different ways of creating for loops in bash.
+    \bigbreak \noindent 
+    \subsection{Standard Syntax}
+    \smallbreak \noindent
+    
+    \begin{minted}{bash}
+for var in list-of-values; do
+    statements
+done
+
+# Example
+for var in 1 2 3 4; do
+    echo $var
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \bigbreak \noindent 
+    \subsection{C-style syntax}
+    \smallbreak \noindent
+    
+    \begin{minted}{bash}
+for (( initilization; condition; update )); do 
+    statements
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    \subsection{Using the seq command}
+    \smallbreak \noindent
+    
+    \begin{minted}{bash}
+for i in $(seq start end); do
+    statements
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \bigbreak \noindent 
+    \subsection{Iterating over arrays}
+    \smallbreak \noindent
+    
+    \begin{minted}{bash}
+arr=(1 2 3)
+for i in "${arr[@]}"; do
+    echo $i
+done
+    \end{minted}
+    \bigbreak \noindent
+    
+
+    \pagebreak \bigbreak \noindent 
+    \section{\LARGE Scheduling and automation}
+    \bigbreak \noindent 
+    \subsection{The "at" command}
+    \bigbreak \noindent 
+    \begin{concept}
+        The "at" command is used to schedule a command or script to run once at a specified time in the future. It's the most basic way to schedule commands in linux
+    \end{concept}
+    \bigbreak \noindent 
+    By default, we will not have access to this command. Thus, we need to install the package
+    \bigbreak \noindent 
+    \begin{verbatim}
+sudo pacman -Sy at
+sudo apt install at
+    \end{verbatim}
+    \bigbreak \noindent 
+    This we give us access to the \textbf{atd} (at daemon).
+    \bigbreak \noindent 
+    \begin{verbatim}
+sudo systemctl status atd  
+    \end{verbatim}
+    \bigbreak \noindent 
+    The usage for this command is:
+    
+    \begin{minted}{bash}
+at <time>
+    \end{minted}
+    \bigbreak \noindent
+    
+    \bigbreak \noindent 
+    We can list the jobs that are scheduled with \textit{at -l}. We can remove jobs with \textit{at -r <job-id>}. To schedule scripts, can add the -f option. For example \textit{at <time> -f myscript.sh}. 
+    \bigbreak \noindent 
+    We can also give specific days or dates. For example:
+    \begin{minted}{bash}
+at 9:00am Monday -f myscript.sh
+at 9:00am 12/23/2023 -f myscript.sh
+at 9:00am next week -f myscript.sh
+at now + 5 [seconds/minutes/days/etc]
+    \end{minted}
+    \bigbreak \noindent
+    
+    \pagebreak \bigbreak \noindent 
+    \subsection{cron}
+    \bigbreak \noindent 
+    After we install and start the cron service, we can then access its features. To edit the crontab file, we can run:
+    \begin{minted}{bash}
+crontab -e
+    \end{minted}
+    \bigbreak \noindent 
+    The usage for this service is pretty straight forward, we can just follow the documentation found in the crontab file to schedule our scripts.
+    \bigbreak \noindent 
+    Note: The format is minute hour "day of month" "month number" "day of week". We can use the wildcard (*) in place of specific times or days to signify perpetuity.
+
+    \bigbreak \noindent 
+    \subsection{Crontab.guru}
+    \bigbreak \noindent 
+    Crontab.guru is a website that can generate cron expressions for us
+
+    \bigbreak \noindent 
+    \subsection{cron directories}
+    \bigbreak \noindent 
+    \begin{concept}
+        Cron directories are directories on your system where you can place scripts to run at a particular frequency. If we run:
+    \end{concept}
+    \bigbreak \noindent 
+    \begin{minted}{bash}
+ls /etc | grep cron
+    \end{minted}
+    \bigbreak \noindent
+    We can then enter /etc/crontab to see how these directories are run and timed. These schedules use the \textbf{run-parts} command to run all executable files within any of the directories 
+
+    \bigbreak \noindent 
+    \subsection{anacron}
+    \bigbreak \noindent 
+    The difference between this program and the regular \textbf{cron} program is that anacron can recover missed jobs. Thus, if the machine is turned off when a job is supposed to be activated, this program will run any missed jobs when the machine is turned on 
+    \bigbreak \noindent 
+    The anacron file is located /etc/anacron, and anything scheluding in the cron directories will be taken care of by anacron. The syntax for the anacron file is 
+    \bigbreak \noindent
+\begin{minted}{bash}
+frequency interval_between_scripts (minutes) reference command
+\end{minted}
+\bigbreak \noindent
+    
+    \pagebreak \bigbreak \noindent 
+
+    
+    
+
+
+
+
+    
+
+
+
+
+
+  
+
+
+
+
+  
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+\end{document}

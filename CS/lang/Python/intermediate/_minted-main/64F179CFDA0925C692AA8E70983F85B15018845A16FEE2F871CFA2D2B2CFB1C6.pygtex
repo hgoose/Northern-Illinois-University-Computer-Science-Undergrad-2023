@@ -1,0 +1,42 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+ch}{\PYGZsh{}!/usr/bin/python3}
+\PYG{k+kn}{from} \PYG{n+nn}{functools} \PYG{k+kn}{import} \PYG{n}{singledispatch}\PYG{p}{,} \PYG{n}{singledispatchmethod}
+
+\PYG{k}{class} \PYG{n+nc}{MathOperations}\PYG{p}{:}
+    \PYG{n+nd}{@singledispatchmethod}
+    \PYG{k}{def} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{*}\PYG{n}{args}\PYG{p}{):}
+        \PYG{k}{raise} \PYG{n+ne}{NotImplementedError}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Unsupported argument types\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{n+nd}{@add}\PYG{o}{.}\PYG{n}{register}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{)}
+    \PYG{k}{def} \PYG{n+nf}{add\PYGZus{}int}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{o}{*}\PYG{n}{args}\PYG{p}{):}
+        \PYG{n}{result} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{k}{for} \PYG{n}{item} \PYG{o+ow}{in} \PYG{n}{args}\PYG{p}{:}
+            \PYG{n}{result}\PYG{o}{+=}\PYG{n}{item}
+        \PYG{k}{return} \PYG{n}{result}
+
+    \PYG{n+nd}{@add}\PYG{o}{.}\PYG{n}{register}\PYG{p}{(}\PYG{n+nb}{str}\PYG{p}{)}
+    \PYG{k}{def} \PYG{n+nf}{add\PYGZus{}str}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{o}{*}\PYG{n}{args}\PYG{p}{):}
+        \PYG{n}{result} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{for} \PYG{n}{item} \PYG{o+ow}{in} \PYG{n}{args}\PYG{p}{:}
+            \PYG{n}{result}\PYG{o}{+=}\PYG{n}{item} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}
+        \PYG{k}{return} \PYG{n}{result}
+
+    \PYG{n+nd}{@add}\PYG{o}{.}\PYG{n}{register}\PYG{p}{(}\PYG{n+nb}{list}\PYG{p}{)}
+    \PYG{k}{def} \PYG{n+nf}{add\PYGZus{}list}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{o}{*}\PYG{n}{args}\PYG{p}{):}
+        \PYG{n}{result} \PYG{o}{=} \PYG{p}{[]}
+        \PYG{k}{for} \PYG{n}{item} \PYG{o+ow}{in} \PYG{n}{args}\PYG{p}{:}
+            \PYG{n}{result} \PYG{o}{+=} \PYG{n}{item}
+        \PYG{k}{return} \PYG{n}{result}
+
+
+
+\PYG{n}{math} \PYG{o}{=} \PYG{n}{MathOperations}\PYG{p}{()}
+\PYG{k}{try}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{math}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{))}                \PYG{c+c1}{\PYGZsh{}5}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{math}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Hello\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}World\PYGZdq{}}\PYG{p}{))}    \PYG{c+c1}{\PYGZsh{}Hello World}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{math}\PYG{o}{.}\PYG{n}{add}\PYG{p}{([}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{],} \PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{]))}      \PYG{c+c1}{\PYGZsh{}[1, 2, 3, 4]}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{math}\PYG{o}{.}\PYG{n}{add}\PYG{p}{(}\PYG{l+m+mf}{2.5}\PYG{p}{,} \PYG{l+m+mf}{3.7}\PYG{p}{))}            \PYG{c+c1}{\PYGZsh{}Not implemented, Unsupported argument types}
+\PYG{k}{except} \PYG{n+ne}{NotImplementedError} \PYG{k}{as} \PYG{n}{E}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Not implemented, }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{E}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\end{Verbatim}
