@@ -1,0 +1,2465 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Julia}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Programming in Julia}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Creating and running Julia scripts, and outputting}
+    \bigbreak \noindent 
+    First, make sure you have Julia (juliaup) downloaded on your machine. Create a .jl file and run it with 
+    \bigbreak \noindent 
+    \begin{bashcode}
+    julia script.jl
+    \end{bashcode}
+    \bigbreak \noindent 
+    Here is a simple Hello World! script written in julia
+    \bigbreak \noindent 
+    \begin{jlcode}
+    # helloworld.jl 
+    println("Hello World!")
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Outputting data}
+    \bigbreak \noindent 
+    \subsubsection{println}
+    \bigbreak \noindent 
+    Prints the value followed by a newline. Suitable for general-purpose printing
+    \bigbreak \noindent 
+    \begin{jlcode}
+    println("Hello world")
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Print}
+    \bigbreak \noindent 
+    Similar to \texttt{println}, but does not append a newline
+
+    \bigbreak \noindent 
+    \subsubsection{Formatted output: @printf from the Printf module}
+    \bigbreak \noindent 
+    Prints the value followed by a newline. Suitable for general-purpose printing
+    \bigbreak \noindent 
+    \begin{jlcode}
+    using Printf
+    @printf("Pi to 3 decimal places: %.3f\n", pi)  # Output: Pi to 3 decimal places: 3.142
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Error and debugging output}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{@warn}: Logs a warning message.
+            \bigbreak \noindent 
+            \begin{jlcode}
+                @warn "This is a warning message."
+            \end{jlcode}
+        \item \textbf{@info}: Logs an informational message.
+            \bigbreak \noindent 
+            \begin{jlcode}
+            @info "This is an informational message."
+            \end{jlcode}
+        \item \textbf{@error}: Logs an error message.
+            \bigbreak \noindent 
+            \begin{jlcode}
+            @error "This is an error message."
+            \end{jlcode}
+        \item \textbf{@show}: Prints the expression and its value. Useful for debugging.
+            \bigbreak \noindent 
+            \begin{jlcode}
+                x = 42
+                @show x  # Output: x = 42
+            \end{jlcode}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Display}
+    \bigbreak \noindent 
+    Displays a value using a richer representation (e.g., for plots or tables in Jupyter).
+    \bigbreak \noindent 
+    \begin{jlcode}
+    display("Hello, World!")  # Output: "Hello, World!"
+    \end{jlcode}
+
+    \pagebreak 
+    \unsect{Preliminary}
+    \bigbreak \noindent 
+    \subsection{Typing style}
+    \bigbreak \noindent 
+    Julia has a dynamic and strong typing system with optional type annotations.
+    \bigbreak \noindent 
+    \subsubsection{Dynamic Typing}
+    \bigbreak \noindent 
+    Variables don’t need explicit type declarations, but their types are checked at runtime.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 42       # Type inferred as Int
+        y = 3.14     # Type inferred as Float64
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Optional Type Annotations}
+    \bigbreak \noindent 
+     Types can be explicitly specified for variables, function arguments, and return values to enforce constraints or improve readability.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         function add(a::Int, b::Int)::Int
+             return a + b
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Just in time}
+     \bigbreak \noindent 
+     Julia is a Just-In-Time (JIT) compiled language. It uses the LLVM compiler framework to generate efficient machine code at runtime.
+     \bigbreak \noindent 
+     Julia infers types of variables and function arguments dynamically when a function is called.
+     \bigbreak \noindent 
+     For each unique combination of input types, Julia generates specialized machine code. This allows functions to be optimized for the specific types of data they operate on.
+     \bigbreak \noindent 
+     The first time a function is called with a specific set of argument types, Julia compiles it to machine code. Subsequent calls with the same types execute the precompiled code, leading to improved performance.
+     \bigbreak \noindent 
+     The JIT compilation provides the interactivity of an interpreted language (like Python) with the performance of a compiled language (like C or Fortran).
+     \bigbreak \noindent 
+    However, the initial compilation can introduce a "time-to-first-call" latency, which is a common trade-off in JIT-compiled languages
+
+    \bigbreak \noindent 
+    \subsection{Language style}
+    \bigbreak \noindent 
+    Julia's language style is explicit, concise, and block-delimited, resembling languages like Python and MATLAB
+    \bigbreak \noindent 
+    \subsubsection{Block structure}
+    \bigbreak \noindent 
+    Block Structure: Julia uses explicit keywords to start and end code blocks, ensuring clarity and readability.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function add(a, b)  # Function block starts with `function`
+            return a + b
+        end                 # Block ends with `end`
+    \end{jlcode}
+    \bigbreak \noindent 
+    \textbf{Note:} Julia supports optional semicolons (;) for separating statements on the same line. 
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Paradigms}
+    \bigbreak \noindent 
+    Julia is a multi-paradigm programming language that supports a variety of programming styles, allowing flexibility and adaptability for different use cases. The key paradigms Julia offers include
+    \begin{enumerate}
+        \item \textbf{Procedural Programming}: Follows a structured approach with sequences of instructions (procedures or functions).
+            \bigbreak \noindent 
+            Uses variables, loops, and conditionals to control the flow of execution.
+        \item \textbf{Object-Oriented Programming (OOP)}: While Julia doesn't have traditional classes and inheritance, it uses structures (struct) and multiple dispatch to model OOP-like behavior.
+            \bigbreak \noindent 
+            Supports encapsulation and polymorphism using types and methods.
+        \item \textbf{Functional Programming}: Treats functions as first-class citizens (can be passed as arguments, returned as results)
+            \bigbreak \noindent 
+            Supports immutability, higher-order functions, and function composition.
+        \item \textbf{Meta-programming}: Julia has powerful capabilities for generating and transforming code at runtime using macros and the Expr type.
+            \bigbreak \noindent 
+            Enables code introspection and metaprogramming.
+        \item \textbf{Dynamic Programming}: Julia supports dynamic typing and runtime type flexibility, making it suitable for exploratory programming.
+        \item \textbf{ Concurrent and Parallel Programming}: Julia provides built-in support for concurrent and parallel computing with features like coroutines (@async), threads, and distributed computing
+        \item \textbf{Scientific and Numerical Programming}: Julia's syntax and performance are well-suited for numerical computation, similar to MATLAB or NumPy.
+            \bigbreak \noindent 
+            Provides rich libraries for linear algebra, optimization, and differential equations.
+        \item \textbf{Multiple Dispatch (Core Paradigm of Julia)}: At its core, Julia leverages multiple dispatch, allowing method selection based on the types of all function arguments, not just the first one (as in single dispatch).
+            \bigbreak \noindent 
+            This provides flexibility and is fundamental to Julia's design.
+        \item \textbf{Array-Oriented Programming}: ulia is designed for efficient array and matrix operations, similar to MATLAB or R.
+            \bigbreak \noindent 
+            Supports broadcasting and element-wise operations with the . operator.
+    \end{enumerate}
+
+    \bigbreak \noindent 
+    \subsection{Memory}
+    \bigbreak \noindent 
+    In Julia, memory management is automatic, and it uses references under the hood for many operations. While Julia doesn’t expose raw pointers in the same way as C or C++, it provides mechanisms to work with references and low-level memory when needed
+    \bigbreak \noindent 
+    Julia has automatic garbage collection to manage memory, reclaiming unused objects when they are no longer referenced.
+    \bigbreak \noindent 
+    Users generally don't need to manually free memory, but they can force garbage collection using GC.gc() if necessary
+    \bigbreak \noindent 
+    \subsubsection{The garbage collector}
+    \bigbreak \noindent 
+    A garbage collector is a system for automatic memory management in programming languages. Its purpose is to reclaim memory occupied by objects no longer accessible or needed, thus preventing memory leaks and reducing the need for manual memory management by the programmer.
+    \bigbreak \noindent 
+    The garbage collector periodically identifies and frees unused memory by determining which objects are no longer reachable from the program. The process typically involves the following steps:
+    \bigbreak \noindent 
+    When objects or variables are created, memory is allocated from the heap (a memory area reserved for dynamic allocation). The garbage collector manages this heap and tracks references to objects.
+    \bigbreak \noindent 
+    The GC determines which objects are "reachable" and should not be collected. Reachable objects are those that can be accessed directly or indirectly by the program.
+    \bigbreak \noindent 
+    The starting points for determining reachability, such as
+    \begin{itemize}
+        \item Global variables
+        \item Local variables in the current call stack
+        \item CPU registers
+    \end{itemize}
+    Unreachable objects are those that:
+    \begin{itemize}
+        \item Are not referenced by any active part of the program.
+        \item Cannot be accessed directly or indirectly from the "roots."
+    \end{itemize}
+    Once the GC identifies unreachable objects, it frees the memory they occupy, making it available for new allocations.
+    \bigbreak \noindent 
+    Garbage collectors use a technique called "\textit{reference counting}". Reference counting tracks the number of references to each object. When an object's reference count drops to zero, it is immediately deallocated.
+    \bigbreak \noindent 
+    A limitation of garbage collectors are \textit{circular references}. A circular reference occurs when two or more objects reference each other in a way that creates a loop. This can prevent proper memory deallocation in systems that rely solely on reference counting for garbage collection.
+
+    \bigbreak \noindent 
+    \subsection{Importing}
+    \bigbreak \noindent 
+    In Julia, imports are managed using the using and import keywords to access modules and their functionality. Modules are collections of functions, types, and constants that help organize code into namespaces.
+    \bigbreak \noindent 
+    \subsubsection{Using}
+    \bigbreak \noindent 
+    Makes all exported symbols of a module available. Symbols (functions, types, etc.) are accessed directly without the module prefix.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    using Random  # Load the Random module
+
+    x = rand(1:10, 5)  # Use `rand` directly (exported by Random)
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Import}
+    \bigbreak \noindent 
+    Imports the module but does not bring its symbols into the current namespace.
+    \bigbreak \noindent 
+    You must qualify all functions/types with the module name unless explicitly brought into scope.
+
+    \bigbreak \noindent 
+    \subsubsection{Selective imports with using}
+    \bigbreak \noindent 
+    Allows you to bring only specific exported symbols into the current namespace.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        using Random: rand  # Import only `rand`
+
+        x = rand(1:10, 5)  # Use `rand` directly
+    \end{jlcode}
+    \bigbreak \noindent 
+    Makes the specific symbol (rand in this case) from the Random module accessible in the current scope. Allows you to use rand directly in your code without the Random. prefix.
+    \bigbreak \noindent 
+    However, you cannot extend (add methods to) the rand function using this approach.
+
+    \bigbreak \noindent 
+    \subsubsection{Selective imports with import}
+    \bigbreak \noindent 
+    Allows you to import specific symbols, even if they are not exported by the module.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    import Random: rand, shuffle!  # Import `rand` and `shuffle!`
+
+    x = rand(1:10, 5)
+    \end{jlcode}
+    \bigbreak \noindent 
+    Imports the specific symbol (rand) from the Random module into the current scope and allows extending it.
+    \bigbreak \noindent 
+    rand is directly accessible in your code.
+    \bigbreak \noindent 
+    You can extend the rand function by adding new methods.
+
+
+    \bigbreak \noindent 
+    \subsubsection{Extending functions}
+    \bigbreak \noindent 
+    If you want to extend a function from a module (e.g., add a new method), you must use import.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        import Base: +
+
+        # Extend the `+` operator for a custom type
+        struct MyType
+        x::Int
+        end
+
+        +(a::MyType, b::MyType) = MyType(a.x + b.x)
+    \end{jlcode}
+
+
+
+
+
+
+
+
+
+    \pagebreak 
+    \unsect{The basics}
+    \bigbreak \noindent 
+    \subsection{Data types}
+    \bigbreak \noindent 
+    Julia has the following data types
+    \bigbreak \noindent 
+    \subsubsection{Numerical Types}
+    \begin{itemize}
+        \item \textbf{Integers:}
+            \begin{itemize}
+                \item \texttt{Int8, Int16, Int32, Int64, Int128:} Signed integers with various bit sizes.
+                \item \texttt{UInt8, UInt16, UInt32, UInt64, UInt128:} Unsigned integers.
+                \item \texttt{Int:} Default signed integer type (dependent on the platform, typically Int64 or Int32).
+            \end{itemize}
+        \item \textbf{Floating-point numbers:} \texttt{Float16, Float32, Float64:} IEEE 754 floating-point numbers.
+        \item \textbf{Big numbers:}
+            \begin{itemize}
+                \item \texttt{BigInt:} Arbitrary precision integers.
+                \item \texttt{BigFloat:} Arbitrary precision floating-point numbers.
+            \end{itemize}
+        \item \textbf{Complex numbers:} \texttt{Complex\{T\}:} Complex numbers with real and imaginary parts of type T.
+        \item \textbf{Rational numbers:} \texttt{Rational\{T\}:} Fractions represented as numerator//denominator.
+    \end{itemize}
+    \bigbreak \noindent 
+    In Julia, the default type for a literal integer like 15 is Int (platform-dependent, typically Int64 on 64-bit systems). However, you can explicitly create integers of specific types (Int8, Int16, etc.) using constructors. For example,
+    \bigbreak \noindent 
+    \begin{jlcode}
+     x = Int8(15)  # Creates an Int8 with value 15
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Boolean Type}
+    \begin{itemize}
+        \item \textbf{Bool}: true or false
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Characters and Strings}
+    \begin{itemize}
+        \item \textbf{Char:} Single Unicode character (e.g., 'a').
+        \item \textbf{String:} A sequence of characters (e.g., "Hello, world!").
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Abstract Data Types}
+    \begin{itemize}
+        \item \textbf{Number:} Abstract type for all numbers.
+        \item \textbf{Real:} Abstract type for real numbers (Int, Float64, etc.).
+        \item \textbf{AbstractString:} Abstract type for string-like objects.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Composite Types}
+    \begin{itemize}
+        \item \textbf{Tuples:} Fixed-size collections of values, e.g., (1, "hello", true).
+        \item \textbf{NamedTuples:} Tuples with named fields, e.g., (a=1, b=2).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Collection Types}
+    \begin{itemize}
+        \item \textbf{Arrays}:
+            \begin{itemize}
+                \item \textbf{1D arrays (vectors):} Vector\{T\} (e.g., [1, 2, 3]).
+                \item \textbf{2D arrays (matrices):} Matrix\{T\} (e.g., [1 2; 3 4]).
+                \item \textbf{Higher-dimensional arrays:} Array\{T, N\}.
+            \end{itemize}
+        \item \textbf{Ranges:}
+            \begin{itemize}
+                \item \textbf{1:10:} A range from 1 to 10.
+                \item \textbf{1:2:10:} A range with a step of 2.
+            \end{itemize}
+        \item \textbf{Dictionaries:}
+            \begin{itemize}
+                \item \textbf{Dict\{K, V\}:} A collection of key-value pairs, e.g., Dict("a" => 1, "b" => 2).
+            \end{itemize}
+        \item \textbf{Sets}:
+            \begin{itemize}
+                \item \textbf{Set{T}:} An unordered collection of unique elements, e.g., Set([1, 2, 3])
+            \end{itemize}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Nothing and Missing:}
+    \begin{itemize}
+        \item \textbf{Nothing:} Represents the absence of a value (similar to null in other languages).
+        \item \textbf{Missing:} Represents missing data (useful in data analysis).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{User-defined Types }
+    \begin{itemize}
+        \item \textbf{struct:} Immutable composite types.
+        \item \textbf{mutable struct:} Mutable composite types.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{typeof()}
+    \bigbreak \noindent 
+    We can use the \texttt{typeof()} function to retrieve the type of a variable
+    \bigbreak \noindent 
+    \begin{jlcode}
+    x = 10
+    println(typeof(x))
+    \end{jlcode}
+
+
+
+
+
+
+
+    \bigbreak \noindent 
+    \subsection{Type conversions}
+    \bigbreak \noindent 
+    \subsubsection{Using Constructors}
+    \bigbreak \noindent 
+    Julia uses constructors to convert a value to a specific type. This is the most common way to perform type casting.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        # Convert to Integer Types
+        x = Int8(42)       # Converts 42 to an Int8
+        y = UInt16(300)    # Converts 300 to a UInt16
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Using convert Function}
+    \bigbreak \noindent 
+    The convert function explicitly converts a value to the desired type.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    convert(Type, value)
+    \end{jlcode}
+    \bigbreak \noindent 
+    For example
+    \bigbreak \noindent 
+    \begin{jlcode}
+        # Convert to Int
+        x = convert(Int, 42.5)       # Converts 42.5 to 42 (truncates the decimal)
+
+        # Convert to Float64
+        y = convert(Float64, 42)     # Converts 42 to 42.0
+
+        # Convert to String
+        s = convert(String, 123)     # Converts 123 to "123"
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Parsing Strings}
+    \bigbreak \noindent 
+    To convert a string to a numerical type, use the parse function.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    parse(Type, string)
+    \end{jlcode}
+    \bigbreak \noindent 
+    For example,
+    \bigbreak \noindent 
+    \begin{jlcode}
+        # Parse to Integer
+        x = parse(Int, "123")        # Converts "123" to 123
+
+        # Parse to Float64
+        y = parse(Float64, "3.14")   # Converts "3.14" to 3.14
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Automatic Conversion}
+    \bigbreak \noindent 
+    Some operations perform automatic type promotion or conversion.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = 3          # Int
+        b = 2.5        # Float64
+        c = a + b      # Automatically promotes `a` to Float64
+        println(c)     # Output: 5.5
+        println(typeof(c))  # Output: Float64
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Type coercion / Type promotion}
+    \bigbreak \noindent 
+    Type coercion in Julia refers to the process of converting a value from one type to another. This can happen explicitly when you manually convert types or implicitly when Julia promotes values to a common type to ensure compatibility in operations.
+    \bigbreak \noindent 
+    Explicit type coercion is performed using the convert function or type constructors. These methods create a new value of the desired type from an existing value.
+    \bigbreak \noindent 
+    Implicit type coercion occurs automatically when Julia promotes values to a common type during operations. This is part of Julia's type promotion system.
+    \bigbreak \noindent 
+    When two values of different types are used in an operation, Julia promotes them to a common type
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 3    # Int
+        y = 3.5  # Float64
+
+        z = x + y  # `x` is promoted to Float64
+        println(typeof(z))  # Output: Float64
+    \end{jlcode}
+    \bigbreak \noindent 
+    Julia's promotion rules are designed for precision and performance:
+    \begin{itemize}
+        \item Integers are promoted to floats when combined with floating-point numbers.
+        \item Smaller numeric types (e.g., Int8) are promoted to larger types (e.g., Int or Float64).
+        \item Complex numbers are preserved when combined with real numbers.
+    \end{itemize}
+    \bigbreak \noindent 
+    The promote function explicitly promotes multiple values to a common type without performing operations
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a, b = promote(2, 3.5)
+        println(typeof(a))  # Float64
+        println(typeof(b))  # Float64
+    \end{jlcode}
+    \bigbreak \noindent 
+    We can easily convert numeric types to strings, but errors will occur when you try to do the opposite
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 1
+        x = string(x)
+        println(typeof(x)) # string
+
+        # ERROR!
+        y = "1"
+        y = Int(y) # Cannot do
+    \end{jlcode}
+
+
+
+
+    \bigbreak \noindent 
+    \subsection{Variables}
+    \bigbreak \noindent 
+    In Julia, variables are declared simply by assigning a value to a name. Julia is dynamically typed, so variables don't need an explicit type declaration, but you can optionally annotate types.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    x = 10
+    name = "Julia"
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Type annotations}
+    \bigbreak \noindent 
+    You can explicitly specify the type of a variable using a :: type annotation:
+    \bigbreak \noindent 
+    \begin{jlcode}
+        y::Int = 42    # y must always hold an Int
+        z::Float64 = 3.14
+    \end{jlcode}
+    \bigbreak \noindent 
+    If the value assigned to the variable doesn’t match the specified type, Julia throws a TypeError
+
+    \bigbreak \noindent 
+    \subsubsection{Constant Declaration (Immutable Binding / mutable content)}
+    \bigbreak \noindent  
+    Use the const keyword to declare constants. The type of the constant is inferred from its initial value, and while the value itself can be mutable, the binding cannot be changed
+    \bigbreak \noindent 
+    \begin{jlcode}
+    const pi = 3.14159
+    \end{jlcode}
+    \bigbreak \noindent 
+    (\textbf{Immutable binding}): "the binding cannot be changed"  means that the name of the constant is permanently bound to the initial object it was assigned to, and you cannot reassign the constant to a new value or object. However, if the value itself is a mutable object, you can modify the content of that object.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    const MY_CONSTANT = 42
+
+    MY_CONSTANT = 100  # ERROR: invalid redefinition of constant MY_CONSTANT
+    \end{jlcode}
+    \bigbreak \noindent 
+    (\textbf{Mutable content}): If the constant is a mutable object (e.g., an array or dictionary), the content of the object can still be modified, even though the binding to the name is fixed
+    \bigbreak \noindent 
+    \begin{jlcode}
+        const MY_ARRAY = [1, 2, 3]
+
+        # Modify the content of the array (allowed)
+        push!(MY_ARRAY, 4)
+        println(MY_ARRAY)  # Output: [1, 2, 3, 4]
+
+        # Reassign the constant to a new object (not allowed)
+        MY_ARRAY = [5, 6, 7]  # ERROR: invalid redefinition of constant MY_ARRAY
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Local / global keywords}
+    \bigbreak \noindent 
+    The local and global keywords control the scope of variables and determine whether a variable exists within a local scope (e.g., inside a function or loop) or the global scope (outside all functions, at the top level of a module or script).
+    \bigbreak \noindent 
+    The global scope refers to variables that are accessible throughout the entire module or script. Variables in the global scope are defined at the top level and are not limited to specific blocks or functions.
+    \bigbreak \noindent 
+    By default, variables assigned outside functions or blocks are global.
+    \bigbreak \noindent 
+    You can explicitly declare a variable as global inside a function if you want to modify a variable from the global scope.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 10  # Global variable
+
+        function modify_global()
+        global x  # Declare x as global to modify it
+        x += 5
+        end
+
+        modify_global()
+        println(x)  # Output: 15
+    \end{jlcode}
+    \bigbreak \noindent 
+    Variables in the global scope can be read within functions without using the global keyword. To modify a global variable inside a function, you must explicitly declare it as global.
+    \bigbreak \noindent 
+    By default, variables declared inside loops are local to the loop. To modify a global variable inside a loop, you must use global.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 0  # Global variable
+
+        for i = 1:5
+            global x += i  # Explicitly declare x as global to modify it
+        end
+
+        println(x)  # Output: 15
+    \end{jlcode}
+
+
+
+    \bigbreak \noindent 
+    The local scope refers to variables that are confined to a specific block, such as a function, loop, or let block. These variables cannot be accessed outside the block where they are defined.
+    \bigbreak \noindent 
+    Variables declared inside a function, loop, or block are local by default. You can explicitly use the local keyword to restrict a variable to the current block.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function example()
+            local_var = 42  # Local variable
+            println(local_var)
+        end
+
+        example()
+        # println(local_var)  # ERROR: local_var is not defined outside the function
+    \end{jlcode}
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 100  # Global variable
+
+        function nested_scope()
+        local x = 50  # Create a local variable named x
+        println(x)    # Output: 50 (local variable)
+        end
+
+        nested_scope()
+        println(x)        # Output: 100 (global variable remains unchanged)
+    \end{jlcode}
+    \bigbreak \noindent 
+    Use the local keyword for clarity.
+
+    \bigbreak \noindent 
+    \subsection{Operators}
+    \bigbreak \noindent 
+    \textbf{Arithmetic:}
+    \begin{itemize}
+        \item \textbf{Addition:} \texttt{+} (e.g., \texttt{a + b})
+        \item \textbf{Subtraction:} \texttt{-} (e.g., \texttt{a - b})
+        \item \textbf{Multiplication:} \texttt{*} (e.g., \texttt{a * b})
+        \item \textbf{Division:} \texttt{/} (e.g., \texttt{a / b})
+        \item \textbf{Integer Division:} \texttt{div} (e.g., \texttt{div(a, b)})
+        \item \textbf{Modulo (Remainder):} \texttt{\%} (e.g., \texttt{a \% b})
+        \item \textbf{Floor Division:} \texttt{//} (e.g., \texttt{a // b})
+        \item \textbf{Power:} \texttt{$^{\land}$} (e.g., \texttt{$a^{\land}b$})
+        \item \textbf{Negation:} \texttt{-} (e.g., \texttt{-a})
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Comparison}
+    \begin{itemize}
+        \item \textbf{Equality:} ==
+        \item \textbf{Inequality:} != or $\ne$
+        \item \textbf{Less than:} <
+        \item \textbf{Greater than:} >
+        \item \textbf{Less than or equal to:} <= or $ \leq$
+        \item \textbf{Greater than or equal to:} >= or $ \geq $
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Logical Operators}
+    \begin{itemize}
+        \item \textbf{Logical AND:} \&\&
+        \item \textbf{Logical OR:} ||
+        \item \textbf{Logical NOT:} !
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Bitwise Operators}
+    \begin{itemize}
+        \item \textbf{Bitwise AND:} \&
+        \item \textbf{Bitwise OR:} |
+        \item \textbf{Bitwise XOR:} $\veebar$ (veebar in REPL with \LaTeX)
+        \item \textbf{Bitwise NOT:} $\sim$ (Keyboard tilde)
+        \item \textbf{Left Shift:} <<
+        \item \textbf{Right Shift:} >>
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Assignment Operators}
+    \begin{itemize}
+        \item \textbf{Basic assignment:} =
+        \item \textbf{Compound assignments:} +=, -=, *=, /=, ÷=, \%=, $^{\land}$=, \&=, |=, $\veebar$=, <<=, >>=
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Inclusive range:}
+    \begin{itemize}
+        \item \textbf{Inclusive range:} :
+        \item \textbf{Exclusive range:} start:step:end
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \textbf{Element-wise Operators}
+    \begin{itemize}
+        \item \textbf{Dot syntax for element-wise operations:} .+, .-, .*, ./, .$^{\land}$, .// (add a . before an operator to make it element-wise)
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{String Operators}
+    \begin{itemize}
+        \item \textbf{String concatenation:} *
+        \item \textbf{String interpolation:} \$
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Ternary}
+    \begin{itemize}
+        \item \textbf{Ternary conditional:} $a ? b : c $ (c-style)
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Concatenation and Splitting Operators}
+    \begin{itemize}
+        \item \textbf{Horizontal concatenation:} hcat
+        \item \textbf{Vertical concatenation:} vcat
+        \item \textbf{Range concatenation:} ... (splatting)
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{ Broadcasting Operator}
+    \begin{itemize}
+        \item \textbf{Dot syntax for broadcasting:} .
+    \end{itemize}
+
+
+    \bigbreak \noindent 
+    \subsection{Operator precedence}
+    \bigbreak \noindent 
+    Julia follows PEMDAS
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{Ranges}
+    \bigbreak \noindent 
+    Ranges are compact representations of sequences with a defined step size. They are memory-efficient as they do not explicitly store each element.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        # Default step of 1
+        r1 = 1:5
+        println(collect(r1))  # Output: [1, 2, 3, 4, 5]
+
+        # Custom step size
+        r2 = 1:2:10
+        println(collect(r2))  # Output: [1, 3, 5, 7, 9]
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Concatenation and Splitting Operators}
+    \bigbreak \noindent 
+    Julia provides functions and operators to concatenate or split arrays, matrices, and strings.
+    \bigbreak \noindent 
+    Consider the two arrays
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1, 2]
+        b = [3, 4]
+    \end{jlcode}
+    \begin{itemize}
+        \item \textbf{Horizontal Concatenation (hcat):} Combines arrays horizontally (columns).
+            \bigbreak \noindent 
+            \begin{jlcode}
+                result = hcat(a, b)
+                println(result)  # Output: [1 3; 2 4]
+            \end{jlcode}
+        \item \textbf{Vertical Concatenation (vcat): Combines arrays vertically (rows).}
+            \bigbreak \noindent 
+            \begin{jlcode}
+                result = vcat(a, b)
+                println(result)  # Output: [1; 2; 3; 4]
+            \end{jlcode}
+        \item \textbf{Concatenation Operator ([...]): Combines arrays inline.}
+            \bigbreak \noindent 
+            \begin{jlcode}
+                result = [a; b]  # Vertical concatenation
+                println(result)  # Output: [1; 2; 3; 4]
+
+                result = [a b]  # Horizontal concatenation
+                println(result)  # Output: [1 3; 2 4]
+            \end{jlcode}
+        \item \textbf{Strings can be split using split:}
+            \bigbreak \noindent 
+            \begin{jlcode}
+                str = "Hello,World,Julia"
+                result = split(str, ",")
+                println(result)  # Output: ["Hello", "World", "Julia"]
+            \end{jlcode}
+        \item \textbf{Arrays can be split manually with slicing:}
+            \bigbreak \noindent 
+            \begin{jlcode}
+                arr = [1, 2, 3, 4, 5]
+                part1 = arr[1:3]
+                part2 = arr[4:end]
+                println(part1)  # Output: [1, 2, 3]
+                println(part2)  # Output: [4, 5]
+            \end{jlcode}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Broadcasting}
+    \bigbreak \noindent 
+    Broadcasting allows you to apply a function or operator element-wise to arrays or other collections. This is achieved using the dot operator (.).
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1, 2, 3]
+        b = [4, 5, 6]
+
+        # Element-wise addition
+        c = a .+ b
+        println(c)  # Output: [5, 7, 9]
+
+        # Broadcasting with scalar
+        d = a .* 2
+        println(d)  # Output: [2, 4, 6]
+    \end{jlcode}
+    \bigbreak \noindent 
+    You can also broadcast custom functions:
+    \bigbreak \noindent 
+    \begin{jlcode}
+        f(x, y) = x + y^2
+        result = f.(a, b)
+        println(result)  # Output: [17, 27, 39]
+    \end{jlcode}
+
+
+
+
+
+
+
+
+    \bigbreak \noindent 
+    \subsection{Comments}
+    \bigbreak \noindent 
+    Julia uses the pound sign for comments
+    \bigbreak \noindent 
+    \begin{jlcode}
+    # Comment
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{The in operator}
+    \bigbreak \noindent 
+    The in operator works similar to Python
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        println(1 in a) # True
+        println(5 in a) # False
+
+        if 2 in a
+            println("2 is in a")
+        end
+
+        # Error: Use occursin
+        b = "Julia"
+        println("J" in b)
+        println("x" in b)
+    \end{jlcode}
+
+    \pagebreak 
+    \unsect{Functions}
+    \bigbreak \noindent 
+    Functions in Julia are first-class, and can therefore be higher order. In programming, first-class functions refer to functions that are treated as first-class citizens. This means they are treated like any other value or variable in the language
+    \begin{itemize}
+        \item \textbf{Assignment:} Functions can be assigned to variables.
+        \item \textbf{Passing as Arguments:} Functions can be passed as arguments to other functions.
+        \item \textbf{Returning from Other Functions:} Functions can be returned as the result of other functions.
+        \item \textbf{Storage in Data Structures:} Functions can be stored in lists, dictionaries, or other data structures.
+    \end{itemize}
+    If functions in a language lack any of these properties, they are not first-class. Such functions are sometimes referred to as second-class functions or non-first-class functions
+    \bigbreak \noindent 
+    A higher-order function is a function that satisfies at least one of the following criteria:
+    \begin{itemize}
+        \item Takes another function as an argument
+        \item Returns a function as its result
+    \end{itemize}
+    \bigbreak \noindent 
+    A function that neither takes a function as an argument nor returns a function is not a higher-order function. These are sometimes referred to as first-order functions or regular functions
+
+
+    \bigbreak \noindent 
+    Functions in Julia are created with the keyword \textit{function} and ended with the keyword \textit{end}
+    \bigbreak \noindent 
+    \begin{jlcode}
+    function f()
+        ...
+    end
+    \end{jlcode}
+    \bigbreak \noindent 
+    Functions can also take arguments and access globals
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 5
+
+        function f(arg1)
+            println(x)
+            println(arg1)
+        end
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsection{Returning}
+    \bigbreak \noindent 
+    We can specify a return value with the keyword \textit{return}, but if it is omitted, Julia will return the last evaluated expression. Observe the following function
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function f()
+            5 + 10
+        end
+
+        x = f()
+        println(x) # 15
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsection{Short form (single-line) functions}
+    \bigbreak \noindent 
+    For simple functions, you can define them in a single line.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    fn(x,y) = x + y 
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsubsection{Lambdas}
+    \bigbreak \noindent 
+    Anonymous functions are unnamed functions and are often used as arguments to other functions.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        (x,y) -> x+y
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Multiple Dispatch}
+    \bigbreak \noindent 
+    Multiple dispatch is a core feature of Julia that allows the selection of a method to execute based on the types of all arguments passed to a function, not just the first argument (as in single dispatch). This makes Julia highly flexible and efficient for polymorphism.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    # Define methods for different type combinations
+    function calculate(a::Int, b::Int)
+        a + b
+    end
+
+    function calculate(a::Float64, b::Float64)
+        a * b
+    end
+
+    function calculate(a::Int, b::Float64)
+        a - b
+    end
+
+    # Call the function
+    println(calculate(3, 4))       # Output: 7 (Int + Int)
+    println(calculate(3.0, 4.0))   # Output: 12.0 (Float64 * Float64)
+    println(calculate(3, 4.0))     # Output: -1.0 (Int - Float64)
+    \end{jlcode}
+
+    \pagebreak 
+    \unsect{Control flow}
+    \bigbreak \noindent 
+    \subsection{The let block}
+    \bigbreak \noindent 
+    In Julia, the let block is used to create a new local scope. This allows you to define variables whose lifetime is limited to the block, even if there are variables with the same name in the surrounding scope.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        let [variables = initial_values]
+            ...
+        end
+    \end{jlcode}
+    \bigbreak \noindent 
+    For example, 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        let a=5,b=10
+            println(a,"\n", b)
+        end
+
+        println(a, "\n", b) # Error
+    \end{jlcode}
+    \bigbreak \noindent 
+    If no variable is declared in the let block, it still serves as a local scope:
+    \bigbreak \noindent 
+    \begin{jlcode}
+        let
+            y = 5  # Only exists within this block
+            println("y inside let: $y")
+        end
+
+        # println(y)  # This would cause an error since y is not defined outside
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Conditional blocks (if-elseif-else)}
+    \bigbreak \noindent 
+    Used for conditional execution of code.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 10
+        if x > 0
+            println("Positive")
+            elseif x == 0
+            println("Zero")
+        else
+            println("Negative")
+        end
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{For loops}
+    \bigbreak \noindent 
+    Used for iterating over collections, ranges, or custom iterables.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        for i in 1:5
+            println(i)  # Output: 1, 2, 3, 4, 5
+        end
+    \end{jlcode}
+    \bigbreak \noindent 
+    Iterating Over Collections
+    \bigbreak \noindent 
+    \begin{jlcode}
+        arr = ["apple", "banana", "cherry"]
+        for fruit in arr
+            println(fruit)
+        end
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{While loops}
+    \bigbreak \noindent 
+    Repeats a block of code as long as a condition is true.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 5
+        while x > 0
+            println(x)
+            x -= 1
+        end
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Short-Circuit Control}
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 5
+        x > 0 && println("Positive")  # Executes if x > 0
+        x < 0 || println("Not Negative")  # Executes if x >= 0
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Begin blocks}
+    \bigbreak \noindent 
+    Groups multiple statements into a single block, useful for one-liners or compound expressions.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        begin
+            x = 1
+            y = 2
+            println(x + y)  # Output: 3
+        end
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Anonymous Blocks}
+    \bigbreak \noindent 
+    You can use anonymous blocks for scoping purposes without naming them explicitly.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        x = 10
+        println("Before block: $x")
+        # New block
+        x = begin
+            y = 20
+            z = y + 10
+            z  # Return value
+        end
+        println("After block: $x")  # Output: 30
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Functions as Control Blocks (do blocks)}
+    \bigbreak \noindent 
+    \begin{jlcode}
+        map(x -> x^2, [1, 2, 3])  # Single-line lambda
+        # Equivalent with a do block
+        map([1, 2, 3]) do x
+            x^2
+        end
+    \end{jlcode}
+
+    % \pagebreak 
+    % \unsect{Macros}
+    % \bigbreak \noindent 
+    % \subsection{Expr and quote blocks}
+    % \bigbreak \noindent 
+    % An Expr (short for "expression") in Julia represents a piece of unevaluated Julia code as a data structure. This is a key feature of Julia's metaprogramming, where you can manipulate, analyze, and generate code programmatically.
+    % \bigbreak \noindent 
+    % An Expr object is composed of:
+    % \begin{enumerate}
+    %     \item \textbf{A head:} A symbol indicating the type of the expression.
+    %     \item \textbf{Arguments:} A list (array) of sub-expressions or literal values.
+    % \end{enumerate}
+    % \bigbreak \noindent 
+    % You can create an Expr using:
+    % \begin{itemize}
+    %     \item The quote block.
+    %     \item The Expr constructor directly.
+    %     \item The :() shorthand for simple expressions.
+    % \end{itemize}
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    % ex = :(x + y)  # Create an expression
+    % println(ex)    # Output: :(x + y)
+    %
+    % ex = quote
+    %     x + y
+    % end
+    % \end{jlcode}
+    % \bigbreak \noindent 
+    % The components of an Expr can be accessed programmatically.
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    %     ex = :(x + y)
+    %
+    %     # Access components
+    %     println(typeof(ex))  # Expr
+    %     println(ex.head)     # :call (indicates a function call)
+    %     println(ex.args)     # [:+, :x, :y] (the operator and operands)
+    % \end{jlcode}
+    % \bigbreak \noindent 
+    % Thus, this same Expr object can be created with
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    % ex = Expr(:call, :+, :x, :y)
+    % \end{jlcode}
+
+
+
+
+
+
+
+    % \bigbreak \noindent 
+    % Macros in Julia are special constructs that perform code transformations at compile time, before the code is executed. They allow you to generate and include fragments of code in a program, providing powerful metaprogramming capabilities.
+    % \bigbreak \noindent 
+    % Macros are invoked with the @ symbol, followed by the macro name and any arguments.
+    % \bigbreak \noindent 
+    % Macros take input in the form of expressions (Expr) and produce modified or new expressions. This happens during compilation, meaning they do not execute the code directly but transform it into something that gets executed later.
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    % macro macro_name(args...)
+    %     # Code transformation
+    % end
+    % \end{jlcode}
+    % \bigbreak \noindent 
+    % Use @macro\_name to call the macro, optionally with arguments:
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    % @macro_name args
+    % \end{jlcode}
+    % \bigbreak \noindent 
+    % For example, here is a macro that prints an expression and its result:
+    % \bigbreak \noindent 
+    % \begin{jlcode}
+    % macro show_expr(expr)
+    %     quote
+    %         println("Expression: ", $(Expr(:quote, expr)))
+    %         println("Result: ", $expr)
+    %     end
+    % end
+    %
+    % @show_expr 1 + 2
+    %
+    % # Output:
+    % # Expression: 1 + 2
+    % # Result: 3
+    % \end{jlcode}
+
+    \pagebreak 
+    \unsect{Strings}
+    \bigbreak \noindent
+    In Julia, strings are sequences of characters, and they are used to represent text. Strings are immutable, meaning once a string is created, it cannot be altered directly
+    \bigbreak \noindent 
+    \subsection{String Operations}
+    \bigbreak \noindent 
+    In general, you can’t perform mathematical operations on strings, even if the strings look like numbers. But there are two exceptions, * and $^{\land}$.
+    \bigbreak \noindent 
+    The * operator performs string concatenation, which means it joins the strings by linking them end-to-end. For example:
+    \bigbreak \noindent 
+    The $^{\land} $ operator also works on strings; it performs repetition. For example, "Spam"$^{\land}3$ is "SpamSpamSpam". If one of the values is a string, the other has to be an integer.
+    \bigbreak \noindent 
+    Use \$ to insert variables or expressions into strings.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        name = "Julia"
+        println("Welcome to $name programming!")  # Output: "Welcome to Julia programming!"
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsection{Indexing and Slicing}
+    \bigbreak \noindent 
+    Julia strings are 1-indexed, and you can access individual characters using square brackets.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        str = "Julia"
+        first_char = str[1]  # 'J'
+        substring = str[2:4]  # "uli"
+    \end{jlcode}
+
+
+    \bigbreak \noindent 
+    \subsection{Into to string Functions }
+    \bigbreak \noindent 
+    Julia provides a variety of built-in functions to work with strings:
+    \begin{itemize}
+        \item \textbf{Length}:
+            \bigbreak \noindent 
+            \begin{jlcode}
+            length("hello")
+            \end{jlcode}
+        \item \textbf{Find and replace}:
+            \bigbreak \noindent 
+            \begin{jlcode}
+                str = "apple pie"
+                new_str = replace(str, "apple" => "cherry")  # "cherry pie"
+            \end{jlcode}
+        \item \textbf{Splitting and joining}:
+            \bigbreak \noindent 
+            \begin{jlcode}
+                split_str = split("a,b,c", ",")  # ["a", "b", "c"]
+                joined_str = join(["a", "b", "c"], "-")  # "a-b-c"
+            \end{jlcode}
+        \item \textbf{Searching}:
+            \bigbreak \noindent 
+            \begin{jlcode}
+                occursin("Julia", "Hello, Julia!")  # true
+                findfirst("Julia", "Hello, Julia!")  # 8 (start index of the match)
+            \end{jlcode}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Unicode Support}
+    \bigbreak \noindent 
+    Julia strings are fully Unicode-compliant, meaning they support characters from virtually all languages.
+    \bigbreak \noindent 
+    \subsection{Mutability}
+    \bigbreak \noindent 
+    Strings in Julia are immutable, so modifying an existing string directly is not allowed. However, you can create new strings based on the original.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    str = "Hello"
+    str[1] = 'J'  # Error: Strings are immutable
+    \end{jlcode}
+    \bigbreak \noindent 
+    Instead, create a new string:
+    \bigbreak \noindent 
+    \begin{jlcode}
+    new_str = "J" * str[2:end]  # "Jello"
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsection{Multiline Strings}
+    \bigbreak \noindent 
+    For strings spanning multiple lines, use triple double quotes (""").
+    \bigbreak \noindent 
+    \begin{jlcode}
+        multiline_str = """
+        This is a
+        multiline string.
+        """
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Raw Strings}
+    \bigbreak \noindent 
+    Use raw"..." to create raw strings where escape sequences like \textbackslash n are not processed.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    raw_str = raw"Line 1\nLine 2"  # "Line 1\\nLine 2"
+    \end{jlcode}
+    \bigbreak \noindent 
+    \subsection{String Types}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{String:} The default string type in Julia.
+        \item \textbf{SubString:} A view of a part of a string, created using slicing. More efficient for substring operations.
+            \bigbreak \noindent 
+            \begin{jlcode}
+                s = "Hello, Julia!"
+                sub_s = SubString(s, 8, 12)  # "Julia"
+            \end{jlcode}
+    \end{itemize}
+    \bigbreak \noindent 
+    Use String for general-purpose text and SubString for efficient substring manipulation
+
+    \bigbreak \noindent 
+    \subsection{String functions}
+    \bigbreak \noindent 
+    Julia provides a rich set of functions for working with strings. Below is a comprehensive list categorized for easier reference.
+    \bigbreak \noindent 
+    \subsubsection{Basic String Information}
+    \begin{itemize}
+        \item length(s) - Returns the number of characters in the string s.
+        \item sizeof(s) - Returns the number of bytes in the string s.
+        \item isequal(s1, s2) - Checks if two strings are exactly the same.
+        \item isempty(s) - Returns true if the string s is empty
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{String Manipulation}
+    \begin{itemize}
+        \item join(strings, delim) - Joins strings in an array with delim as the separator.
+        \item replace(s, pattern => replacement) - Replaces all occurrences of pattern with replacement.
+        \item strip(s) - Removes leading and trailing whitespace.
+        \item lstrip(s) - Removes leading whitespace.
+        \item rstrip(s) - Removes trailing whitespace.
+        \item chomp(s) - Removes the trailing newline character.
+        \item pad(s, n; lpad=n1, rpad=n2) - Pads a string to a specified length.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Searching and Matching}
+    \begin{itemize}
+        \item occursin(substr, s) - Checks if substr exists in s.
+        \item findfirst(substr, s) - Finds the first occurrence of substr in s and returns its index.
+        \item findlast(substr, s) - Finds the last occurrence of substr in s.
+        \item findall(substr, s) - Returns all indices where substr occurs in s.
+        \item startswith(s, prefix) - Checks if s starts with prefix.
+        \item endswith(s, suffix) - Checks if s ends with suffix.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Splitting and Joining}
+    \begin{itemize}
+        \item split(s, delim) - Splits s into an array of substrings using delim.
+        \item rsplit(s, delim) - Splits s into substrings from the right.
+        \item split(s) - Splits s by whitespace.
+        \item join(strings, delim) - Joins an array of strings into one string using delim.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{String Transformation}
+    \begin{itemize}
+        \item uppercase(s) - Converts all characters in s to uppercase.
+        \item lowercase(s) - Converts all characters in s to lowercase.
+        \item titlecase(s) - Converts the first character of each word to uppercase.
+        \item capitalize(s) - Converts the first character of s to uppercase.
+        \item replace(s, pattern => replacement) - Replaces all occurrences of pattern with replacement.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Character Inspection }
+    \begin{itemize}
+        \item isuppercase(c) - Checks if a character c is uppercase.
+        \item islowercase(c) - Checks if a character c is lowercase.
+        \item isletter(c) - Checks if a character c is a letter.
+        \item isdigit(c) - Checks if a character c is a digit.
+        \item iswhitespace(c) - Checks if a character c is a whitespace.
+        \item isascii(c) - Checks if a character c is an ASCII character.
+        \item isprint(c) - Checks if a character c is printable.
+        \item isalnum(c) - Checks if a character c is alphanumeric.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Splatting and slurping}
+    \bigbreak \noindent 
+    \subsection{Splatting}
+    \bigbreak \noindent 
+    The ellipsis (...) can unpack elements from collections like arrays or tuples when calling a function or constructing another collection.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function sum_numbers(a, b, c)
+            return a + b + c
+        end
+
+        nums = [1, 2, 3]
+        result = sum_numbers(nums...)  # Equivalent to sum_numbers(1, 2, 3)
+        println(result)  # 6
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Slurping}
+    \bigbreak \noindent 
+    In function definitions, ... allows a function to accept a variable number of arguments, known as varargs.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function greet(names...)
+            for name in names
+                println("Hello, $name!")
+            end
+        end
+
+        greet("Alice", "Bob", "Charlie")
+        # Output:
+        # Hello, Alice!
+        # Hello, Bob!
+        # Hello, Charlie!
+    \end{jlcode}
+
+    \pagebreak 
+    \unsect{Arrays}
+    \bigbreak \noindent 
+    Arrays in Julia are a core data structure used to store collections of elements in an ordered and indexed manner. They can have multiple dimensions and are highly efficient, making them suitable for numerical computations and general-purpose programming.
+    \bigbreak \noindent 
+    \subsection{Creating Arrays}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{1D Array (Vector):}
+            \bigbreak \noindent 
+            \begin{jlcode}
+            arr = [1, 2, 3, 4]  # Creates a 1D array with elements 1, 2, 3, and 4
+            \end{jlcode}
+        \item \textbf{2D Array (Matrix):}
+            \bigbreak \noindent 
+            \begin{jlcode}
+                mat = [1 2; 3 4]  # Creates a 2x2 matrix
+            \end{jlcode}
+        \item \textbf{Using Array constructor}:
+            \bigbreak \noindent 
+            \begin{jlcode}
+            arr = Array{Int64}(undef, 5)  # Creates a 1D array of integers with 5 elements, uninitialized
+            mat = Array{Float64}(undef, 3, 3)  # Creates a 3x3 matrix of uninitialized floats
+            \end{jlcode}
+        \item \textbf{Zeros and Ones:}
+            \begin{jlcode}
+            zeros(3, 3)  # 3x3 matrix filled with zeros
+            ones(4)      # 1D array with four elements, all ones
+            \end{jlcode}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Accessing elements}
+    \bigbreak \noindent 
+    Julia uses 1-based indexing
+    \bigbreak \noindent 
+    \begin{jlcode}
+    arr = [10, 20, 30]
+    println(arr[1])  # Access the first element (output: 10)
+
+    subarr = arr[1:2]  # Creates a subarray with elements 10 and 20
+
+    mat = [1 2; 3 4]
+    println(mat[1, 2])  # Accesses the element at row 1, column 2 (output: 2)
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Modifying arrays}
+    \bigbreak \noindent 
+    \begin{jlcode}
+    arr[2] = 25  # Modifies the second element of arr to 25
+
+    push!(arr, 40)  # Appends 40 to the end of the array
+    pop!(arr)  # Removes the last element from the array
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Properties of arrays}
+    \bigbreak \noindent 
+    \begin{jlcode}
+    println(size(mat))  # Returns the dimensions of the array
+    println(length(arr))  # Returns the total number of elements
+    println(eltype(arr))  # Returns the type of elements stored in the array
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Broadcasting}
+    \bigbreak \noindent 
+    \begin{jlcode}
+    arr = [1, 2, 3]
+    result = arr .+ 10  # Adds 10 to each element (output: [11, 12, 13])
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Key features}
+    \begin{itemize}
+        \item Arrays in Julia are mutable, meaning you can change their contents.
+        \item Arrays are column-major (like Fortran and MATLAB), which impacts performance for linear algebra operations.
+        \item Built-in functions like map, reduce, and comprehensions make array manipulation concise and powerful.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Array functions}
+    \bigbreak \noindent 
+    \subsubsection{ Array Creation}
+    \begin{itemize}
+        \item Array - Constructs an uninitialized array.
+        \item zeros - Creates an array filled with zeros.
+        \item ones - Creates an array filled with ones.
+        \item fill - Creates an array filled with a specific value.
+        \item rand - Creates an array with random values.
+        \item randn - Creates an array with random values from the normal distribution.
+        \item reshape - Changes the shape of an array without changing its data.
+        \item hcat - Horizontally concatenates arrays.
+        \item vcat - Vertically concatenates arrays.
+        \item hvcat - Concatenates arrays in multiple dimensions.
+        \item repeat - Repeats an array in specified dimensions.
+        \item range - Creates an array of evenly spaced numbers.
+        \item collect - Converts an iterable (like a range) into an array.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Array Properties}
+\begin{itemize}
+        \item size - Returns the dimensions of the array.
+        \item length - Returns the total number of elements in the array.
+        \item ndims - Returns the number of dimensions.
+        \item eltype - Returns the type of elements stored in the array.
+        \item axes - Returns the valid indices for each dimension.
+        \item eachindex - Iterates efficiently over all indices.
+        \item stride - Returns the memory stride for a given dimension.
+        \item strides - Returns the memory strides for all dimensions.
+        \item isempty - Checks if the array is empty.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Array Indexing and Slicing}
+    \begin{itemize}
+        \item getindex - Accesses array elements (arr[i]).
+        \item setindex! - Sets array elements (arr[i] = value).
+        \item view - Creates a view (a lightweight subset) of an array.
+        \item @view - A macro for creating views.
+        \item slice - Extracts a slice of an array.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Array Modification}
+    \begin{itemize}
+        \item push! - Appends an element to the end of a 1D array.
+        \item pop! - Removes the last element of a 1D array.
+        \item append! - Appends all elements of one array to another.
+        \item insert! - Inserts an element at a specific position.
+        \item deleteat! - Deletes elements at specified indices.
+        \item splice! - Removes elements and optionally replaces them.
+        \item empty! - Removes all elements from an array.
+        \item resize! - Resizes an array to a specified size.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Combining and Splitting Arrays}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item cat - Concatenates arrays along a specified dimension.
+        \item hcat, vcat, hvcat - Horizontally, vertically, or multi-dimensionally concatenate arrays.
+        \item splitdims - Splits a multi-dimensional array into its slices along a specified dimension.
+        \item reshape - Reshapes an array into a different dimensionality.
+        \item permutedims - Permutes the dimensions of an array.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Mapping and Broadcasting}
+\begin{itemize}
+        \item map - Applies a function to each element of an array.
+        \item broadcast - Applies a function element-wise to arrays.
+        \item @. - Macro for broadcasting every operation in an expression.
+        \item map! - In-place version of map.
+        \item broadcast! - In-place version of broadcast.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Statistical Functions}
+    \begin{itemize}
+        \item sum - Computes the sum of all elements.
+        \item prod - Computes the product of all elements.
+        \item mean - Computes the mean of all elements.
+        \item std - Computes the standard deviation.
+        \item var - Computes the variance.
+        \item maximum - Finds the maximum value.
+        \item minimum - Finds the minimum value.
+        \item argmax - Returns the index of the maximum value.
+        \item argmin - Returns the index of the minimum value.
+        \item count - Counts the number of elements satisfying a condition.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Array Manipulation}
+    \begin{itemize}
+        \item reverse - Reverses the order of elements.
+        \item sort - Sorts the elements of an array.
+        \item sort! - Sorts an array in-place.
+        \item shuffle - Randomly shuffles the elements.
+        \item permute! - Rearranges elements in a specific order.
+        \item unique - Returns unique elements of an array.
+        \item filter - Filters elements based on a condition.
+        \item findall - Finds all indices where a condition is true.
+        \item findfirst - Finds the first index where a condition is true.
+        \item findlast - Finds the last index where a condition is true
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Matrix-Specific Functions}
+    \begin{itemize}
+        \item transpose - Computes the transpose of a matrix.
+        \item adjoint - Computes the conjugate transpose.
+        \item det - Computes the determinant of a square matrix.
+        \item inv - Computes the inverse of a square matrix.
+        \item rank - Computes the rank of a matrix.
+        \item trace - Computes the trace of a square matrix.
+        \item diag - Extracts or creates a diagonal matrix.
+        \item tril - Extracts the lower triangular part of a matrix.
+        \item triu - Extracts the upper triangular part of a matrix.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{Linear Algebra Functions}
+    \begin{itemize}
+        \item eigen - Computes eigenvalues and eigenvectors.
+        \item svd - Computes the singular value decomposition.
+        \item qr - Computes the QR factorization.
+        \item lu - Computes the LU decomposition.
+        \item chol - Computes the Cholesky decomposition.
+        \item pinv - Computes the pseudo-inverse.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Other containers}
+    \bigbreak \noindent 
+    \subsection{Tuples}
+    \bigbreak \noindent 
+    Immutable ordered collections of elements
+    \bigbreak \noindent 
+    \begin{jlcode}
+        t = (1, "hello", 3.14)
+        println(t[2])  # Access elements by index (1-based)
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Named Tuples}
+    \bigbreak \noindent 
+    Tuples with named fields for each element.
+    \begin{jlcode}
+    nt = (a = 1, b = "hello", c = 3.14)
+    println(nt.b)  # Access elements by name
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Dictionaries}
+    \bigbreak \noindent 
+    Key-value pairs, like hash maps in other languages.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    dict = Dict("a" => 1, "b" => 2)
+    dict["c"] = 3  # Add a new key-value pair
+    println(dict["b"])  # Access value by key
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Sets}
+    \bigbreak \noindent 
+    Unordered collections of unique elements.
+    \bigbreak \noindent 
+    \begin{jlcode}
+        s = Set([1, 2, 2, 3])
+        push!(s, 4)  # Add an element
+        println(3 in s)  # Check membership
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Ranges}
+    \bigbreak \noindent 
+     Compact representations of sequences of numbers.
+     \bigbreak \noindent 
+     \begin{jlcode}
+     r = 1:2:10  # Start at 1, increment by 2, stop at 10
+    println(collect(r))  # Convert to an array
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Sparse Arrays}
+     \bigbreak \noindent 
+     Efficient storage for arrays with mostly zero elements.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         using SparseArrays
+         sp = sparse([1, 0, 0; 0, 2, 0; 0, 0, 3])
+         println(sp[2, 2])  # Access elements
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Deques (from the DataStructures package)}
+     \bigbreak \noindent 
+     Double-ended queues, allowing efficient insertion and deletion from both ends.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         using DataStructures
+         dq = Deque([1, 2, 3])
+         push!(dq, 4)  # Add to the end
+         pushfirst!(dq, 0)  # Add to the front
+         println(dq)
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Stores elements with associated priorities.}
+     \bigbreak \noindent 
+     \begin{jlcode}
+         using DataStructures
+         pq = PriorityQueue()
+         enqueue!(pq, "task1", 1)  # Add element with priority
+         enqueue!(pq, "task2", 0)
+         println(dequeue!(pq))  # Returns "task2" (lowest priority first)
+     \end{jlcode}
+
+     \pagebreak 
+     \unsect{Iterators}
+     \bigbreak \noindent
+     iterators provide a way to traverse through elements of a collection (or any iterable object) in a systematic way
+     \bigbreak \noindent 
+     For an object to be iterable in Julia, it must implement the iterate function. The iterate function acts as the foundation for traversing elements of a collection.
+     \bigbreak \noindent 
+     \begin{jlcode}
+     iterate(iterable, state)
+     \end{jlcode}
+     \begin{itemize}
+         \item \textbf{iterable:} The object to iterate over.
+         \item \textbf{state:} Tracks the current position in the iteration.
+         \item \textbf{Returns:} A tuple (value, new\_state) if there are elements remaining, or nothing when iteration is complete
+     \end{itemize}
+     \bigbreak \noindent 
+     Iteration is automatically handled by Julia's built-in constructs, like loops:
+     \bigbreak \noindent 
+     \begin{jlcode}
+         for x in collection
+             println(x)
+         end
+     \end{jlcode}
+     \bigbreak \noindent 
+     You can make any type iterable by defining the iterate function.
+     \bigbreak \noindent 
+     \begin{jlcode}
+ struct Counter
+    max::Int
+end
+
+function Base.iterate(counter::Counter, state=1)
+    if state > counter.max
+        return nothing
+    end
+    return (state, state + 1)
+end
+
+counter = Counter(5)
+for x in counter
+    println(x)
+end
+     \end{jlcode}
+
+     \pagebreak 
+     \unsect{Structs}
+     \bigbreak \noindent 
+     In Julia, a struct (short for "structure") is a composite data type that groups together related variables (called fields) under one entity. It is a way to create custom types in Julia, allowing you to organize data more effectively and work with it in a structured manner.
+     \bigbreak \noindent 
+     \subsection{Key features}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{Immutable by Default:} Fields in a struct cannot be modified once the struct is created. This immutability ensures safety and efficiency in operations.
+         \item \textbf{Custom Types:} Structs allow you to define your own types, which can be used in functions, arrays, or as fields in other structs.
+         \item \textbf{Can Be Made Mutable:} By using mutable struct, the fields can be modified after the struct is instantiated.
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Creating structs}
+     \bigbreak \noindent 
+     \begin{jlcode}
+         struct StructName
+             field1::DataType1
+             field2::DataType2
+             # Add as many fields as needed
+         end
+     \end{jlcode}
+     \bigbreak \noindent 
+     For example,
+     \bigbreak \noindent 
+     \begin{jlcode}
+         struct Point
+             x::Float64
+             y::Float64
+         end
+     \end{jlcode}
+     \bigbreak \noindent 
+     To create an instance of a struct:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     p = Point(3.0, 4.0)
+
+     # Access fields with the dot notation
+     println(p.x)  # Output: 3.0
+     println(p.y)  # Output: 4.0
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Mutable Structs}
+     \bigbreak \noindent 
+     Use mutable struct when you want to modify fields after the struct is created
+     \bigbreak \noindent 
+     \begin{jlcode}
+         mutable struct PointMutable
+             x::Float64
+             y::Float64
+         end
+
+         p = PointMutable(3.0, 4.0)
+         p.x = 5.0  # Now p.x is updated to 5.0
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Structs Without Field Type Annotations}
+     \bigbreak \noindent 
+     Fields can omit type annotations, making them more flexible but less type-specific
+     \bigbreak \noindent 
+     \begin{jlcode}
+     struct FlexiblePoint
+         x
+         y
+     end
+
+     p = FlexiblePoint(3.0, "hello")
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Default Values}
+     \bigbreak \noindent 
+     Julia does not directly support default field values in struct definitions. However, you can achieve this using constructors
+     \bigbreak \noindent 
+     \begin{jlcode}
+         struct PointDefault
+             x::Float64
+             y::Float64
+             PointDefault(x::Float64, y::Float64 = 0.0) = new(x, y)
+         end
+
+         p1 = PointDefault(3.0)  # y defaults to 0.0
+         p2 = PointDefault(3.0, 4.0)  # y is explicitly set to 4.0
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Parametric Structs}
+     \bigbreak \noindent 
+     Parametric structs allow you to define types that work with different data types
+     \bigbreak \noindent 
+     \begin{jlcode}
+         struct PointParametric{T}
+             x::T
+             y::T
+         end
+
+         p = PointParametric{Int}(3, 4)
+         q = PointParametric{Float64}(3.0, 4.0)
+     \end{jlcode}
+     \bigbreak \noindent 
+     Here, \{T\} is a type parameter that makes the struct generic.
+
+     \bigbreak \noindent 
+     \subsection{Abstract types and Subtypes}
+     \bigbreak \noindent 
+     Julia does not have traditional object-oriented inheritance like some other languages (e.g., Python, Java, C++). However, Julia supports hierarchical relationships using its type system. Specifically, Julia enables inheritance via abstract types and parametric types.
+     \bigbreak \noindent 
+     \subsubsection{Abstract types}
+     \bigbreak \noindent 
+     In Julia, abstract types are part of the type hierarchy and are used to define a blueprint for other types. They are placeholders in the type system, allowing you to group related types without specifying implementation details. Abstract types cannot be instantiated directly but serve as parent types for concrete types.
+     \begin{itemize}
+         \item \textbf{Abstract:} You cannot create instances of an abstract type.
+         \item \textbf{Purpose:} Abstract types define a common interface or grouping for a set of related types.
+         \item \textbf{Inheritance:} Concrete types or other abstract types can inherit (subtype) from an abstract type using the <: symbol.
+     \end{itemize}
+     \bigbreak \noindent 
+     \begin{jlcode}
+     abstract type AbstractName end
+
+     # For example
+     abstract type Shape end
+     \end{jlcode}
+     \bigbreak \noindent 
+     Here, Shape is an abstract type that can act as a parent for all kinds of shapes like circles, squares, and triangles.
+
+     \bigbreak \noindent 
+     \subsubsection{Concrete types}
+     \bigbreak \noindent 
+     Concrete types inherit from abstract types by using the <: symbol.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         abstract type Shape end  # Abstract type
+
+         # Concrete subtypes
+         struct Circle <: Shape
+             radius::Float64
+         end
+
+         struct Rectangle <: Shape
+             width::Float64
+             height::Float64
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Usage of Abstract Types}
+     \bigbreak \noindent 
+     Abstract types are often used with functions and multiple dispatch to define methods that can operate on a group of related types.
+
+     \bigbreak \noindent 
+     \begin{jlcode}
+ abstract type Shape end
+
+struct Circle <: Shape
+    radius::Float64
+end
+
+struct Rectangle <: Shape
+    width::Float64
+    height::Float64
+end
+
+# Define a generic method for `Shape`
+area(::Shape) = throw(NotImplementedError("area method not implemented for this shape"))
+
+# Specialize the method for each subtype
+area(c::Circle) = π * c.radius^2
+area(r::Rectangle) = r.width * r.height
+
+# Usage
+circle = Circle(5.0)
+rect = Rectangle(4.0, 3.0)
+
+println(area(circle))  # Output: 78.53981633974483
+println(area(rect))    # Output: 12.0
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     Julia’s type hierarchy has a top-level abstract type called Any, from which all other types derive.
+     \bigbreak \noindent 
+     \begin{jlcode}
+ abstract type Animal end  # Abstract type
+
+struct Dog <: Animal
+    name::String
+end
+
+struct Cat <: Animal
+    name::String
+end
+
+# Animal is a subtype of Any
+println(Animal <: Any)  # Output: true
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Abstract Types and Parametric Types}
+     \bigbreak \noindent 
+     Abstract types can also be parametric, which means they accept type parameters. This allows for more generic and flexible type definitions.
+     \bigbreak \noindent 
+     \begin{jlcode}
+abstract type Container{T} end  # Abstract type with a type parameter T
+
+struct Box{T} <: Container{T}
+    value::T
+end
+
+# Usage
+int_box = Box{Int}(42)
+string_box = Box{String}("Hello")
+
+println(typeof(int_box))  # Output: Box{Int64}
+println(typeof(string_box))  # Output: Box{String}
+     \end{jlcode}
+
+
+     \pagebreak 
+     \unsect{Memory}
+     \bigbreak \noindent 
+     \subsection{Stack Allocation}
+     \bigbreak \noindent 
+     Used for small, fixed-size objects like immutable values and local variables. Allocation and deallocation are very fast because they operate on the call stack
+     \bigbreak \noindent 
+     \begin{jlcode}
+         function add(a, b)
+             return a + b
+         end
+     \end{jlcode}
+     \bigbreak \noindent 
+     Here, $a$ and $b$ are allocated on the stack.
+     \bigbreak \noindent 
+     \subsection{Heap Allocation}
+     \bigbreak \noindent 
+     Used for larger or dynamically sized objects, such as arrays and mutable structs
+     Allocation is slower than stack allocation because it uses the heap memory, which requires garbage collection to free unused memory
+     \bigbreak \noindent 
+     \begin{jlcode}
+     arr = [1, 2, 3]  # Array is allocated on the heap
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Garbage collection}
+     \bigbreak \noindent 
+     Julia uses automatic garbage collection to free memory that is no longer in use.
+     The garbage collector periodically identifies objects in heap memory that are no longer referenced and reclaims that memory.
+     \bigbreak \noindent 
+     You can trigger garbage collection manually using
+     \bigbreak \noindent 
+     \begin{jlcode}
+     GC.gc()
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Memory Views and Sharing}
+     \bigbreak \noindent 
+     Julia avoids unnecessary copying by using views for slicing arrays. Instead of creating a new array, a view provides a lightweight reference to the original array's data.
+     \bigbreak \noindent 
+     \begin{jlcode}
+     arr = [1, 2, 3, 4]
+     v = @view arr[1:2]  # Does not allocate new memory
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Static arrays}
+     \bigbreak \noindent 
+     For small, fixed-size arrays, use StaticArrays.jl to avoid heap allocations.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         using StaticArrays
+         v = SVector(1.0, 2.0, 3.0)
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Advanced: Memory Buffers and Pointers}
+     \bigbreak \noindent 
+     Julia allows low-level memory management through buffers and pointers. For example
+     \bigbreak \noindent 
+     \begin{jlcode}
+         buf = Base.Libc.malloc(1024)  # Allocate 1024 bytes manually
+         Base.Libc.free(buf)          # Free the allocated memory
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{References}
+     \bigbreak \noindent 
+     In Julia, references play a key role in determining how objects are handled in memory, particularly for mutable and immutable objects. Understanding references is crucial for working effectively with Julia's memory model, especially for mutable objects like arrays and mutable struct
+     \bigbreak \noindent 
+     A reference is essentially a pointer to an object's location in memory. When you assign or pass objects in Julia, whether by value or by reference depends on the type of object.
+     \bigbreak \noindent 
+     \subsubsection{Immutable types}
+     \bigbreak \noindent 
+     Immutable types are passed by value. When you assign or pass an immutable object (e.g., Int, Float64, or a struct without mutable), Julia creates a copy of the object rather than a reference.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         x = 5  # `x` holds the value directly
+         y = x  # `y` is a copy of `x`
+         y += 1
+         println(x)  # 5 (unchanged)
+         println(y)  # 6 (modified copy)
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Mutable Types}
+     \bigbreak \noindent 
+     Mutable types are passed by reference.
+     When you assign or pass a mutable object (e.g., arrays or mutable struct), Julia creates a reference to the same memory location. Any modifications affect the original object.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         arr = [1, 2, 3]  # Array is mutable
+         arr_copy = arr    # `arr_copy` references the same array
+         arr_copy[1] = 10  # Modify through `arr_copy`
+         println(arr)      # [10, 2, 3] (original is modified)
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Copying Mutable Objects}
+     \bigbreak \noindent 
+     If you need to modify a mutable object without affecting the original, you must create a deep or shallow copy.
+     \begin{itemize}
+         \item \textbf{Shallow Copy (copy):} Creates a new container but references the same inner objects.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 a = [[1, 2], [3, 4]]
+                 b = copy(a)
+                 b[1][1] = 99
+                 println(a)  # [[99, 2], [3, 4]] (inner objects are shared)
+             \end{jlcode}
+         \item \textbf{Deep Copy (deepcopy):} Recursively copies all objects, creating completely independent copies.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 a = [[1, 2], [3, 4]]
+                 c = deepcopy(a)
+                 c[1][1] = 99
+                 println(a)  # [[1, 2], [3, 4]] (completely independent)
+             \end{jlcode}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsubsection{References in Functions}
+     \bigbreak \noindent 
+     Mutable objects are passed by reference to functions, so any modifications made within the function affect the original object
+     \bigbreak \noindent 
+     \begin{jlcode}
+         function modify_array(arr)
+             arr[1] = 100
+         end
+
+         x = [1, 2, 3]
+         modify_array(x)
+         println(x)  # [100, 2, 3] (modified in-place)
+     \end{jlcode}
+     \bigbreak \noindent 
+     If you want to avoid modifying the original, you can pass a copy
+     \bigbreak \noindent 
+     \begin{jlcode}
+     modify_array(copy(x))
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsubsection{Ref for Explicit References}
+     \bigbreak \noindent 
+     The Ref type in Julia provides a way to create explicit references to values, even for immutable types. This is useful for interfacing with low-level code or when you want mutable behavior for a normally immutable value.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         r = Ref(5)  # Create a reference to an immutable value
+         println(r[])  # Access the value (5)
+         r[] = 10     # Modify the value
+         println(r[])  # Access the updated value (10)
+     \end{jlcode}
+     \bigbreak \noindent 
+     The syntax r[] in Julia is used to access or modify the value stored in a Ref object. The Ref type in Julia is essentially a container for a single value, allowing you to treat the contained value as mutable, even if it's normally immutable (like numbers).
+
+
+     \pagebreak 
+     \unsect{Working with files}
+     \bigbreak \noindent 
+     \subsection{The basics}
+     \bigbreak \noindent 
+     Files are accessed using their file paths, which can be absolute or relative. You specify how the file will be opened with the following modes
+     \begin{itemize}
+         \item \textbf{"r":} Read-only.
+         \item \textbf{"w":} Write-only (truncates if the file exists).
+         \item \textbf{"a":} Append mode (writes at the end of the file).
+         \item \textbf{"r+":} Read and write.
+         \item \textbf{"w+":} Read and write (truncates if the file exists).
+         \item \textbf{"a+":} Read and write (writes at the end of the file).
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Reading Files}
+     \bigbreak \noindent 
+     Reading Entire File
+     \bigbreak \noindent 
+     \begin{jlcode}
+         content = read("example.txt", String)
+         println(content)
+     \end{jlcode}
+     \bigbreak \noindent 
+     Line-by-Line Reading
+     \bigbreak \noindent 
+     \begin{jlcode}
+         open("example.txt", "r") do file
+             for line in eachline(file)
+                 println(line)
+             end
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Writing Files}
+     \bigbreak \noindent 
+     Writing Strings
+     \bigbreak \noindent 
+     \begin{jlcode}
+     write("output.txt", "Hello, Julia!")
+     \end{jlcode}
+     \bigbreak \noindent 
+     Appending to a File
+     \bigbreak \noindent 
+     \begin{jlcode}
+         open("output.txt", "a") do file
+             write(file, "\nAdding a new line.")
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Checking File Properties}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item Does the file exist?
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 if isfile("example.txt")
+                     println("File exists!")
+                 else
+                     println("File does not exist.")
+                 end
+             \end{jlcode}
+         \item Is it a directory?
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 if isdir("my_directory")
+                     println("It's a directory.")
+                 end
+             \end{jlcode}
+         \item Get file size
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 size = filesize("example.txt")
+                 println("File size: $size bytes")
+             \end{jlcode}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Directory Operations}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item List Files in Directory
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 for entry in readdir(".")
+                     println(entry)
+                 end
+             \end{jlcode}
+        \item Create Directory
+            \bigbreak \noindent 
+            \begin{jlcode}
+            mkdir("new_directory")
+            \end{jlcode}
+        \item Remove File or Directory
+            \bigbreak \noindent 
+            \begin{jlcode}
+                rm("example.txt")  # Removes a file
+                rm("empty_directory", recursive=true)  # Removes a directory and its contents
+            \end{jlcode}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Example: Copying a File }
+     \bigbreak \noindent 
+     \begin{jlcode}
+         open("source.txt", "r") do src
+             open("destination.txt", "w") do dest
+                 write(dest, read(src, String))
+             end
+         end
+     \end{jlcode}
+
+     \pagebreak 
+     \unsect{Error handling}
+     \bigbreak \noindent 
+     \subsection{Throwing errors}
+     \bigbreak \noindent 
+     To signal an error, you use the throw function. Julia provides several built-in error types, and you can define custom error types if needed.
+     \begin{itemize}
+         \item \textbf{ErrorException:} A general-purpose error.
+         \item \textbf{ArgumentError:} Raised when a function argument is invalid.
+         \item \textbf{DomainError:} Raised when a value is outside the domain of a function.
+         \item \textbf{MethodError:} Raised when a method is not found for the given arguments.
+         \item \textbf{KeyError:} Raised when a key is not found in a dictionary.
+         \item \textbf{BoundsError:} Raised when an index is out of bounds.
+         \item \textbf{DivideError}: Throw to prevent division by zero
+     \end{itemize}
+     \bigbreak \noindent 
+     \textbf{Note:} Division by zero yields \texttt{Inf (infinity)} in Julia, no exception will be thrown automatically
+     \bigbreak \noindent 
+     \begin{jlcode}
+         function divide(a, b)
+             if b == 0
+                 throw(DivideError())  # Raise a DivideError
+             end
+                 return a / b
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Handling Errors}
+     \bigbreak \noindent 
+     You use the try-catch block to handle errors. If an error occurs in the try block, control is transferred to the appropriate catch block.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         try
+             # Code that might throw an error
+         catch e
+             # Handle the error
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Finally Block}
+     \bigbreak \noindent 
+     The finally block runs after the try and catch blocks, regardless of whether an error occurred. It is typically used for cleanup operations.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         function file_operations()
+             file = open("example.txt", "w")
+             try
+                 write(file, "Hello, world!")
+             catch e
+                 println("Caught an error: $e")
+             finally
+                 close(file)  # Ensures the file is closed
+             end
+         end
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Custom Errors}
+     \bigbreak \noindent 
+     You can define custom error types by creating a struct that inherits from Exception
+     \bigbreak \noindent 
+     \begin{jlcode}
+         struct CustomError <: Exception
+             msg::String
+         end
+
+         function risky_function()
+             throw(CustomError("This is a custom error"))
+         end
+
+         try
+             risky_function()
+         catch e
+             println("Caught error: $e")
+         end
+     \end{jlcode}
+
+     \pagebreak 
+     \unsect{Regular expressions}
+     \bigbreak \noindent 
+     Regular expressions (regex) in Julia are a powerful tool for matching and manipulating strings based on patterns. Julia's regular expressions are based on the Perl-compatible Regular Expressions (PCRE) library, which provides rich functionality for pattern matching.
+     \bigbreak \noindent 
+     \subsection{Basic Syntax}
+     \bigbreak \noindent 
+     In Julia, regular expressions are written as strings prefixed with the $r$ macro
+     \bigbreak \noindent 
+     \begin{jlcode}
+     r"pattern"
+     \end{jlcode}
+     \bigbreak \noindent 
+     The $r$ before the quotes signifies that the string contains a regular expression.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         r"\d+"  # Matches one or more digits
+         r"\s"   # Matches any whitespace character
+         r"[A-Za-z]+"  # Matches one or more alphabetic characters
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Key Functions for Regex in Julia}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{occursin:} Checks if a pattern exists in a string.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 occursin(r"\d+", "There are 123 apples.")  # true
+             \end{jlcode}
+         \item \textbf{match:} Returns the first match of the pattern in a string.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 m = match(r"\d+", "There are 123 apples.")
+                 println(m.match)  # "123"
+             \end{jlcode}
+         \item \textbf{eachmatch:} Returns an iterator of all matches in a string.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 for m in eachmatch(r"[a-z]+", "Julia is fun")
+                     println(m.match)
+                 end
+                 # Output:
+                 # "ulia"
+                 # "is"
+                 # "fun"
+             \end{jlcode}
+         \item \textbf{replace:} Replaces parts of a string that match the pattern.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 replace("123-456", r"\d", "X")  # "XXX-XXX"
+             \end{jlcode}
+         \item \textbf{split:} Splits a string based on a pattern.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 split("one, two, three", r",\s*")  # ["one", "two", "three"]
+             \end{jlcode}
+         \item \textbf{ismatch:} Checks if the entire string matches the pattern.
+             \bigbreak \noindent 
+             \begin{jlcode}
+                 ismatch(r"^\d+$", "12345")  # true
+                 ismatch(r"^\d+$", "123abc")  # false
+             \end{jlcode}
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Flags}
+     \bigbreak \noindent 
+     Flags modify the behavior of the regex. 
+     \begin{itemize}
+         \item \textbf{i:} Case-insensitive matching.
+         \item \textbf{m:} Multi-line mode (allows $^{\land} $ and \$ to match the start and end of lines).
+         \item \textbf{s:} Dot-all mode (makes . match newline characters).
+     \end{itemize}
+     \bigbreak \noindent 
+     \begin{jlcode}
+     r"hello"i  # Case-insensitive match for "hello"
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{RegexMatch Object}
+     \bigbreak \noindent 
+     The match and eachmatch functions return RegexMatch objects. These contain details about the match:
+     \begin{itemize}
+         \item \textbf{m.match:} The full match.
+         \item \textbf{m.captures:} Captured groups.
+     \end{itemize}
+     \bigbreak \noindent 
+     \begin{jlcode}
+         m = match(r"(\d+)-(\d+)", "123-456")
+         println(m.match)    # "123-456"
+         println(m.captures) # ["123", "456"]
+     \end{jlcode}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+\end{document}
