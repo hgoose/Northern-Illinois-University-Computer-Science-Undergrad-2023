@@ -893,10 +893,9 @@
             println("2 is in a")
         end
 
-        # Error: Use occursin
         b = "Julia"
-        println("J" in b)
-        println("x" in b)
+        println('J' in b) # True
+        println('x' in b) # False
     \end{jlcode}
 
     \pagebreak 
@@ -992,6 +991,77 @@
     println(calculate(3, 4))       # Output: 7 (Int + Int)
     println(calculate(3.0, 4.0))   # Output: 12.0 (Float64 * Float64)
     println(calculate(3, 4.0))     # Output: -1.0 (Int - Float64)
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Default argument}
+    \bigbreak \noindent 
+    Default  arguments work the way you would expect
+    \bigbreak \noindent 
+    \begin{jlcode}
+    function f(name="Julia")
+        println(name)
+    end
+    f() # Julia
+    f("Nate") # Nate
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Variadic functions and kwargs}
+    \bigbreak \noindent 
+    \subsubsection{Variadic functions}
+    \bigbreak \noindent 
+    We use the elipsis (...) notation to create variadic functions
+    \bigbreak \noindent 
+    \begin{jlcode}
+    function f(args...)
+        println(args) # (1,2,3)
+        println(typeof(args)) # Tuple{Int64, Int64, Int64}
+    end
+
+    f(1,2,3)
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Kwarg functions}
+    \bigbreak \noindent 
+    kwarg functions are functions that accept keyword arguments. Keyword arguments are optional parameters specified by name when calling a function. They are particularly useful for setting default values and making functions more readable and flexible.
+    \bigbreak \noindent 
+    Keyword arguments are defined using a semicolon ; instead of a comma in the function definition:
+    \bigbreak \noindent 
+    \begin{jlcode}
+function f(firstname; lastname="Doe")
+    println("$firstname, $lastname")
+end
+
+f("Julia", lastname="Coder") # Julia Coder
+f("Julia") # Julia Doe
+    \end{jlcode}
+    \bigbreak \noindent 
+    Suppose we only had one keyword argument, then we could write
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function f(; arg="Nothing")
+            println(arg)
+        end
+
+        f()
+        f(arg="Something")
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Variadic kwargs}
+    \bigbreak \noindent 
+    We use the syntax
+    \bigbreak \noindent 
+    \begin{jlcode}
+        function f(; arg...)
+            for a in arg
+                println(a)
+            end
+        end
+
+        f(arg1="a1", arg2="a2")
     \end{jlcode}
 
     \pagebreak 
@@ -1217,6 +1287,16 @@
 
     \pagebreak 
     \unsect{Strings}
+    \bigbreak \noindent 
+    \subsection{Characters}
+    \bigbreak \noindent 
+    Characters in Julia use the single quote syntax, similar to C.
+    \begin{jlcode}
+    ch = 'a'
+
+    str = 'Julia' # ERROR
+    str = "j" # Acceptable
+    \end{jlcode}
     \bigbreak \noindent
     In Julia, strings are sequences of characters, and they are used to represent text. Strings are immutable, meaning once a string is created, it cannot be altered directly
     \bigbreak \noindent 
@@ -1234,6 +1314,32 @@
         name = "Julia"
         println("Welcome to $name programming!")  # Output: "Welcome to Julia programming!"
     \end{jlcode}
+    \bigbreak \noindent 
+    \textbf{Note:} We can also concatenate strings using the string constructor
+    \bigbreak \noindent 
+    \begin{jlcode}
+    a = string("hello", " ", "world")
+    print(a) # Hello world
+    \end{jlcode}
+    \bigbreak \noindent 
+    Further, we can use the \texttt{repeat} function instead of the string exponentiation operator, which uses * under the hood. Observe
+    \bigbreak \noindent 
+    \begin{jlcode}
+    println(repeat("Hello", 2)) #  HelloHello
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Converting to strings}
+    \bigbreak \noindent 
+    To convert say, an int, we can use the string constructor.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    a = 10 
+    println(typof(string(a))) # String
+    \end{jlcode}
+
+
+
     \bigbreak \noindent 
     \subsection{Indexing and Slicing}
     \bigbreak \noindent 
@@ -1514,6 +1620,118 @@
     \end{itemize}
 
     \bigbreak \noindent 
+    \subsection{Traversing an array}
+    \bigbreak \noindent 
+    The most common way to traverse the elements of an array is with a for loop. The
+    syntax is the same as for strings
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        for item in a
+            println(item)
+        end
+    \end{jlcode}
+    \bigbreak \noindent 
+    If you want to write or update the elements, you need the indices. One technique is to use the builtin function \texttt{eachindex}
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        for idx in eachindex(a)
+            println(idx)
+        end
+
+        # Output
+            1
+            2
+            3
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Array slicing}
+    \bigbreak \noindent 
+    The slice operator $[start:stop:step]$, or just $[start:stop]$ also works on arrays. 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        println(a[1:2]) # From 1 to 2
+        println(a[1:]) # From 1 to the end
+        println(a[1:]) # From start to the end
+        println(a[begin:end]) # From start to the end
+        println(a[end:-1:begin]) # Reverse the array
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Arrays and strings}
+    \bigbreak \noindent 
+    We can break a string into an array of characters with the \texttt{collect} function. We can also split a string into an array of words with the \texttt{split} function. The function \texttt{join} is the inverse of split
+    \bigbreak \noindent 
+    \begin{jlcode}
+a = "Julia is cool"
+
+# ['J', 'u', 'l', 'i', 'a', ' ', 'i', 's', ' ', 'c', 'o', 'o', 'l']
+println(collect(a)) 
+
+# SubString{String}["Julia", "is", "cool"]
+println(split(a))
+
+b = split(a)
+c = join(b, ' ') # ' ' is the delimiter
+println(c)
+    \end{jlcode}
+
+    \bigbreak \noindent 
+    \subsection{Objects and values}
+    \bigbreak \noindent 
+    An object is something a variable can refer to. Consider the two statements
+    \bigbreak \noindent 
+    \begin{jlcode}
+    a = "Julia"
+    b = "Julia"
+    \end{jlcode}
+    \bigbreak \noindent 
+    To check whether two variables refer to the same object, you can use the $\equiv$ (\textbackslash equiv in the REPl), or === operator.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    println(a === b) # True
+    \end{jlcode}
+    \bigbreak \noindent 
+    In this example, Julia only created one string object, and both a and b refer to it. But when you create two arrays, you get two objects
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        b = [1,2,3]
+
+        println(a === b) # False
+    \end{jlcode}
+    \bigbreak \noindent 
+    In this case we would say that the two arrays are equivalent, because they have the same elements, but not identical, because they are not the same object. If two objects are identical, they are also equivalent, but if they are equivalent, they are not necessar‐ ily identical.
+    \bigbreak \noindent 
+    To be precise, an object has a value. If you evaluate [1, 2, 3], you get an array object whose value is a sequence of integers. If another array has the same elements, we say it has the same value, but it is not the same object.
+
+    \bigbreak \noindent 
+    \subsection{Aliasing}
+    \bigbreak \noindent 
+    If $a$ refers to an object and you assign $b = a$, then both variables refer to the same object:
+    \bigbreak \noindent 
+    \begin{jlcode}
+        a = [1,2,3]
+        b = a
+        println(b === a) # True
+    \end{jlcode}
+    \bigbreak \noindent 
+    The association of a variable with an object is called a \textit{reference}. In this example, there are two references to the same object.
+    \bigbreak \noindent 
+    An object with more than one reference has more than one name, so we say that the object is \textit{aliased.}
+    \bigbreak \noindent 
+    If the aliased object is mutable, changes made with one alias affect the other
+    \bigbreak \noindent 
+    For immutable objects like strings, aliasing is not as much of a problem.
+
+    
+
+
+
+    \bigbreak \noindent 
     \subsection{Array functions}
     \bigbreak \noindent 
     \subsubsection{ Array Creation}
@@ -1733,6 +1951,253 @@
          enqueue!(pq, "task2", 0)
          println(dequeue!(pq))  # Returns "task2" (lowest priority first)
      \end{jlcode}
+
+     \pagebreak 
+     \unsect{Dictionaries}
+     \bigbreak \noindent 
+     The function \texttt{Dict} creates a new dictionary with no items. To add items to the dictionary, you can use square brackets:
+     \bigbreak \noindent 
+     \begin{jlcode}
+         d = Dict()
+         d["key1"] = "item1"
+
+         println(d) # Dict{Any, Any}("key1" => "item1")
+     \end{jlcode}
+     \bigbreak \noindent 
+     We can create a dictionary and fill it with values all in one motion with the constructor function and the $=>$ syntax
+     \begin{align*}
+         d = Dict("key1" => "item1", "key2" => "item2")
+     \end{align*}
+     \bigbreak \noindent 
+     \subsubsection{Getting the length}
+     \bigbreak \noindent 
+     The length function works on dictionaries; it returns the number of key-value pairs:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     println(length(d))
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Getting the keys}
+     \bigbreak \noindent 
+     The function keys returns a collection with the keys of the dictionary:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     println(keys(d)) # e["key2", "key1"]
+     \end{jlcode}
+     \bigbreak \noindent 
+     \subsubsection{Checking if a key exists}
+     \bigbreak \noindent 
+     You can use the in operator $\in$ paired with keys to check if a key exists
+     \bigbreak \noindent 
+     \begin{jlcode}
+         ks = keys(d)
+         println("key1" in ks) # True
+         println("key3" in ks) # False
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Getting the values}
+     \bigbreak \noindent 
+     You can use the \texttt{values} function to get a collection of the dicts values
+     \bigbreak \noindent 
+     \begin{jlcode}
+         vals = values(d)
+         println("item1" in vals)
+         println("item3" in vals)
+     \end{jlcode}
+     \bigbreak \noindent 
+     \textbf{Note:} For dictionaries, Julia uses an algorithm called a hash table
+
+     \bigbreak \noindent 
+     \subsection{Looping through dictionaries}
+     \bigbreak \noindent 
+     We can use a for loop to loop through the key value pairs
+     \bigbreak \noindent 
+     \begin{jlcode}
+     for item in d
+         println(item)
+     end
+
+     # Output
+     "key2" => "item2"
+     "key1" => "item1"
+     \end{jlcode}
+     \bigbreak \noindent 
+     Note that \textit{item} is a \texttt{pair(string, string)}. Julia offers the C++ style \textit{.first, .second} to access the key and value separately
+     \bigbreak \noindent 
+     \begin{jlcode}
+         for item in d
+             println(item.first)
+         end
+
+         # output
+         key2
+         key1
+     \end{jlcode}
+
+     \pagebreak 
+     \unsect{Pairs}
+     \bigbreak \noindent 
+     In Julia, a pair is a simple data structure that holds two values, often used to represent key-value pairs. Pairs are created using the => operator and are of the type Pair.
+     \bigbreak \noindent 
+     \begin{jlcode}
+     p1 = "f" => 100
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Key features}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{Immutable:} Pairs are immutable, meaning you cannot change their key or value after creation.
+         \item \textbf{Type:} A pair has the type Pair\{T1, T2\} where T1 is the type of the key and T2 is the type of the value.
+         \item \textbf{Common Use:} Pairs are commonly used in dictionaries, where they represent individual key-value entries.
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Accessing elements}
+     \bigbreak \noindent 
+     Use .first for the key, .second for the value
+
+     \pagebreak 
+     \unsect{Sets}
+     \bigbreak \noindent 
+     Sets in Julia represent unordered collections of unique elements. They are implemented as the Set type and are part of Julia's standard library. Sets are efficient for membership testing and can perform common set operations such as union, intersection, and difference.
+     \bigbreak \noindent 
+     \subsection{Creating sets}
+     \bigbreak \noindent 
+     You can create a Set using the Set constructor or by converting an iterable.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         s = Set([1,2,3])
+         empty_set = Set()
+     \end{jlcode}
+     \bigbreak \noindent 
+     Or from a range
+     \bigbreak \noindent 
+     \begin{jlcode}
+     s = Set(1:5) # Output: Set([1, 2, 3, 4, 5])
+     \end{jlcode}
+     \bigbreak \noindent 
+      Sets in Julia are mutable, meaning you can add or remove elements after creation.
+
+
+     \bigbreak \noindent 
+     \subsection{Basic Operations}
+     \bigbreak \noindent 
+     Sets support operations like adding, removing, and checking membership.
+     \bigbreak \noindent 
+     \begin{jlcode}
+     2 in s
+     \end{jlcode}
+     \bigbreak \noindent 
+     Adding and removing elements
+     \bigbreak \noindent 
+     \begin{jlcode}
+     push!(s,4)
+     pop!(s)
+     delete!(s,2)
+     \end{jlcode}
+     \bigbreak \noindent 
+     Getting the length
+     \bigbreak \noindent 
+     \begin{jlcode}
+     length(s)
+     \end{jlcode}
+     \bigbreak \noindent 
+     Julia provides functions for common set operations:
+     \bigbreak \noindent 
+     \begin{jlcode}
+         a = Set([1,2,3])
+         b = Set([2,3,4])
+         c = union(a, b)
+         d = intersect(a, b)
+         e = setdiff(a, b)  # Elements in `a` but not in `b`
+         symdiff(a, b)  # Elements in `a` or `b`, but not both
+
+         issubset(Set([1, 2]), a)
+         issuperset(a, Set([1, 2]))
+     \end{jlcode}
+     \bigbreak \noindent 
+
+
+
+
+
+     \pagebreak 
+     \unsect{Comprehensions}
+     \bigbreak \noindent 
+     Comprehensions in Julia provide a concise and expressive way to create collections such as arrays, sets, or dictionaries by specifying their elements in terms of an existing set of data, combined with transformations and filters. They are similar to comprehensions in Python, but with Julia's unique syntax and capabilities.
+     \bigbreak \noindent 
+     \begin{jlcode}
+         [expression for item in collection]
+     \end{jlcode}
+     \begin{itemize}
+         \item \textbf{expression:} A computation or transformation to apply to each element.
+         \item \textbf{item:} A variable representing each element of the collection.
+         \item \textbf{collection:} The iterable (e.g., array, range) to traverse.
+     \end{itemize}
+     For example
+     \bigbreak \noindent 
+     \begin{jlcode}
+         a = [x^2 for x in 1:5]
+     \end{jlcode}
+     \bigbreak \noindent 
+     With a Condition:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     even_squares = [x^2 for x in 1:10 if x % 2 == 0]
+     # Output: [4, 16, 36, 64, 100]
+     \end{jlcode}
+     \bigbreak \noindent 
+     Nested Loops:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     pairs = [(x, y) for x in 1:2, y in 3:4]
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Set Comprehensions}
+     \bigbreak \noindent 
+     You can create sets using a similar syntax but with Set:
+     \bigbreak \noindent 
+     \begin{jlcode}
+         squares_set = Set(x^2 for x in 1:5)
+         # Output: Set([1, 4, 9, 16, 25])
+     \end{jlcode}
+
+     \bigbreak \noindent 
+     \subsection{Dictionary Comprehensions}
+     \bigbreak \noindent 
+     Dictionary comprehensions use a key-value pair syntax:
+     \bigbreak \noindent 
+     \begin{jlcode}
+     squared_dict = Dict(x => x^2 for x in 1:5)
+     # Output: Dict(1 => 1, 2 => 4, 3 => 9, 4 => 16, 5 => 25)
+     \end{jlcode}
+     \bigbreak \noindent 
+     Comprehensions are often more expressive for creating collections than broadcasting, but both are idiomatic in Julia:
+     \bigbreak \noindent 
+     \begin{jlcode}
+         # Using comprehension
+         squared = [x^2 for x in 1:5]
+
+         # Using broadcasting
+         squared = (1:5) .^ 2
+     \end{jlcode}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
      \pagebreak 
      \unsect{Iterators}
@@ -2441,6 +2906,7 @@ println(typeof(string_box))  # Output: Box{String}
          println(m.match)    # "123-456"
          println(m.captures) # ["123", "456"]
      \end{jlcode}
+
 
 
 

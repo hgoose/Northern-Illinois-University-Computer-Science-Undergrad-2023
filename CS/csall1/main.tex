@@ -7253,6 +7253,88 @@ indicate which strong entity the weak entity depends upon.
             \textbf{Note:} To interpret a signed hexadecimal value as an integer in a two's complement system, you must first convert it to binary. This is because the two's complement representation inherently operates on binary numbers
             \bigbreak \noindent 
             If the leftmost hex digit is $8-F$, the value is negative, whereas $0-7$  is positive.
+        \item \textbf{$n$-bit addressing}: $n$-bit addressing refers to a memory addressing system where each memory address is represented using 24 bits. This addressing scheme allows a system to address up $2^{n}$ to unique memory locations.
+            \bigbreak \noindent 
+            The IBM System/370 uses 24-bit addressing. Thus, each memory address is represented using 24 bits (3 bytes/6 hex digits), and there are $2^{24} = 16,777,216$ unique memory locations (16mb)
+            \bigbreak \noindent 
+            The first byte of memory has the hex address $00 \ 00 \ 00$, the second has $00 \ 00 \ 01$, up to the address with value $2^{24}-1 $, which is $FF \ FF \ FF $
+        \item \textbf{General purpose registers and relative addressing}: Main storage (memory) was introduced earlier as a hardware unit into which data could be stored in the form of binary numbers. Modern IBM computers also contain 16 general purpose registers as units for storing and manipulating data. Each register is a 32-bit storage unit whose contents can be altered or accessed in much less time than it would take to alter or access a field in main storage. Because of the difference in response time, the registers are often used as storage for frequently referenced data items or as operands in arithmetic operations.
+            \bigbreak \noindent 
+            The 16 registers are numbered $0,1,2,...,15$ and will be referred to as $R0, R1, ...,R15 $
+            \bigbreak \noindent 
+            One important use of registers involves the concept of addressing. Every byte of storage has associated with it an absolute address, and every field is addressed by the address of its leftmost byte. Recall that  the number given to a byte is called the absolute \textit{address} of the byte. It is often necessary to reference \textit{fields} that contain several bytes. The address of such a field is considered to be the address of the first (leftmost) byte in the field.
+            \bigbreak \noindent 
+            Whenever a program is run, it must be stored somewhere in main storage. Thus, each instruction and each item of data in the program will have an absolute address. In a program, when a reference is made to a data item or to an instruction, the computer must have an absolute address to find what is referred to.
+            \bigbreak \noindent 
+            A difficulty arises immediately: The writer of a program does not know where in storage his program will be stored when it is run and therefore does not  any of the relevant absolute addresses. Some other means has to be provided for referring to data or instructions within the program.
+            \bigbreak \noindent 
+            The means that is provided is called \textit{base-displacement addressing} or  \textit{explicit addressing}. The idea is that within  a program the relative positions of any two statements are fixed, such that if the absolute address of any one statement in the program were known, then the address of any other statement could be calculated. To do this, one would compute the distance between the statement whose absolute address is known and the one whose address is to be found. Such a distance, measured as a number of bytes, is called a \textit{displacement}.
+            \bigbreak \noindent 
+            But how, you ask, can the absolute address of even one statement in the program be known? For now, it is sufficient to know, when a program is executed, such an address will be contained in at least one of the general purpose registers. A register that holds an absolute address, from which the addresses of other statements can be calculated, is called a \textit{base register}.
+            \bigbreak \noindent 
+            The standard way, then, to refer to any data item or instruction in a program is to specify a base register and a displacement. When the instruction containing the reference is executed, the sum of the displacement and the absolute address in the base register will be calculated to obtain the absolute address of the item or instruction.
+            \bigbreak \noindent 
+            As an example, if the displacement specified were 4, the base register specified were $R1$, and $R1$ contained 0000007C, the absolute address formed would be 000080
+            \bigbreak \noindent 
+            Note that in a 24-bit environment (with 24-bit addressing), the contents of the registers will always be 32-bits, but the absolute addresses will remain 24-bit.
+            \bigbreak \noindent 
+            Base-displacement addresses are often specified in the format
+            \begin{align*}
+                D(B)
+            \end{align*}
+            Where $D$ is the displacement, expressed as a decimal number in the range 0 to 4095, and $B$ is the number of the base register.
+            \bigbreak \noindent 
+            For example, consider the base-displacement addresses.
+            \begin{align*}
+               4(1) \quad 20(13) \quad 0(11) 
+            \end{align*}
+            In the first example $4_{10} = 4_{16}$ is added to the contents of $R1$. In the second example, $20_{10}$ is converted to $14_{16}$ and added to the contents of $R13$. In the third example, the contents of $R11$ give the desired address without modification.
+            \bigbreak \noindent 
+            Occasionally, it is convenient to express an address as the sum of a displacement, the contents of a base register, and the contents of a second register as well. The additional register is called an \textit{index register}; the format for an address that includes an index register is
+            \begin{align*}
+                D(X,B)
+            \end{align*}
+            Where $D$ and $B$ have the same meaning as above, and $X$ is the number of the index register. Consider 
+            \begin{align*}
+                4(7,1)
+            \end{align*}
+            Is a $D(X,B)$ address, using $R7$ as the index register, $R1$ as the base register, and $4$ as the displacement. If $R1$ contains $0000007C$ and $R7$ contains $00000010$, the address calculated will be the sum of the contents of the two registers plus the displacement, or $000090$
+            \bigbreak \noindent 
+            It should be noted that $D(B)$ or $D(X,B)$ addresses never stand alone, they are always used as part of a particular instruction. The rules for the instruction always specify which of the two addressing formats should be used.
+            \bigbreak \noindent 
+            There are three details that qualify the above remarks
+            \begin{enumerate}
+                \item When the contents of an index register or a base register are used to calculate an address, only the value represented by the rightmost 24 bits of the register is used in the calculation. Thus, for the purpose of calculating an address, the value added from a register must always be in the range \texttt{000000} to \texttt{FFFFFF}. As an example, suppose that R1 contained \texttt{FFFFFFFF} (the encoding of $-1$). Then the effective address derived from \texttt{0(R1)} is not negative; rather it is \texttt{FFFFFF}, an extremely large absolute address.
+                \item In either the \texttt{D(B)} or the \texttt{D(X,B)} address format, the registers may be omitted. This means that when a \texttt{D(B)} address is required, the programmer may use either of the following forms:
+                    \begin{center}
+                        \begin{tabular}{ll}
+                            \textbf{Form} & \textbf{Example} \\
+                            \texttt{D(B)} & \texttt{42(15)} \\
+                            \texttt{D}    & \texttt{42}
+                        \end{tabular}
+                    \end{center}
+                    Similarly, when a \texttt{D(X,B)} address is required, the programmer may use:
+                    \begin{center}
+                        \begin{tabular}{ll}
+                            \textbf{Form} & \textbf{Example} \\
+                            \texttt{D(X,B)} & \texttt{42(1,14)} \\
+                            \texttt{D(X)}   & \texttt{42(1)} \\
+                            \texttt{D(,B)}  & \texttt{42(,14)} \\
+                            \texttt{D}      & \texttt{42}
+                        \end{tabular}
+                    \end{center}
+                    Note that if only one register is specified in the \texttt{D(X,B)} address format, the presence or absence of a comma determines whether the register given is considered an index register or a base register.
+                    \bigbreak \noindent 
+                    When registers are omitted from a \texttt{D(B)} or \texttt{D(X,B)} address, the calculation of the corresponding absolute address is performed by using 0 in place of the contents of the omitted registers. Thus, either \texttt{42(14)} or \texttt{42(,14)} results in the same absolute address.
+                    \texttt{42(,14)} is converted to an absolute address by adding the binary equivalent of decimal 42 to the binary number represented by the rightmost three bytes of the contents of R14.
+                \item $R0$ should not ordinarily be used as an index register or as a base register. If R0 is specified in an address, it will be taken to mean that the corresponding register has been omitted. (As an example, both \texttt{4(,15)} and \texttt{4(0,15)} refer to the same absolute address.)
+
+            \end{enumerate}
+
+            \pagebreak 
+            \subsection{Basic concepts}
+            
+            
 
 
 
