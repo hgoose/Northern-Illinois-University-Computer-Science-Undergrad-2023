@@ -1,2 +1,5 @@
-squared = (1:5) .^ 2
-println(squared)
+a = :hello
+println(a) # :hello
+println(typeof(a)) # Symbol
+
+
