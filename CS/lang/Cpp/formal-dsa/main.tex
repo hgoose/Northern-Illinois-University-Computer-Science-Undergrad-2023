@@ -5337,6 +5337,157 @@ However, this is often impractical for large or infinite domains because it requ
     \item \textbf{size}: Number of elements
     \item \textbf{buckets}: \texttt{vector<list<pair<key, value>>>}
  \end{itemize}
+ Thus, we have
+ \bigbreak \noindent 
+ \begin{cppcode}
+     template<typename key, typename value>
+     class umap {
+         private:
+         static const size_t default_buckets = 16;
+         static constexpr float load_factor = 0.75f;
+
+         vector<list<pair<key, value>>> buckets;
+         size_t size = 0;
+     };  
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsection{Interface}
+ \bigbreak \noindent 
+ We will support the following operations
+ \begin{itemize}
+     \item \textbf{Insert:} 
+     \item \textbf{Find:} 
+     \item \textbf{Erase:}
+     \item \textbf{Empty:}
+     \item \textbf{Index ([] operator):}
+ \end{itemize}
+ \bigbreak \noindent 
+ \begin{cppcode}
+    void insert(const key& k, const value& v);
+    value* find(const key& k) const;
+    bool empty();
+    void erase(const key& k);
+    value& operator[](const key& k);
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsection{Public methods: Hash and rehash}
+ \bigbreak \noindent 
+ \begin{cppcode}
+     size_t hash(const key& k) const {
+         return std::hash<key>{}(k) % buckets.size();
+     }
+     void rehash() {
+         vector<list<pair<key,value>>> new_buckets(buckets.size() * 2);
+
+         for (const auto& bucket : buckets) {
+             for (const auto& pair : bucket) {
+                 size_t h = std::hash<key>{}(pair.first) % (buckets.size() * 2);
+                 new_buckets[h].emplace_back(pair.first, pair.second);
+             }
+         }
+         buckets.swap(new_buckets);
+     }
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsection{Inserting and erasing}
+ \bigbreak \noindent 
+ \subsubsection{Insertion}
+ \bigbreak \noindent 
+ Regarding insertion, if the load of the map (the number of elements divided by the size of the buckets container) exceeds the prescribed limit of 0.75, we trigger a rehash, which doubles the size of the buckets container.
+ \bigbreak \noindent 
+ \begin{cppcode}
+     void insert(const key& k, const value& v) {
+         if (static_cast<float>(size) / buckets.size() > load_factor) {
+             rehash();
+         } 
+
+         size_t h = hash(k);        
+         auto& bucket = buckets[h];
+
+         for (auto it = bucket.begin(); it!=bucket.end(); ++it) {
+             if (it->first == k) {
+                 it->second = v;
+                 return;
+             }
+         }
+         bucket.emplace_back(k,v);
+         ++size;
+     }
+ \end{cppcode}
+ \bigbreak \noindent 
+ If we find that the key already exists, we simply replace its value. If the key does not exist, we can add it to the bucket.
+ \bigbreak \noindent 
+ \subsubsection{Erasing}
+ \bigbreak \noindent 
+ \begin{cppcode}
+     void erase(const key& k) {
+         size_t h = hash(k);
+         auto& bucket = buckets[h];
+
+         for (auto it = bucket.begin(); it != bucket.end(); ++it) {
+             if (it->first == k) {
+                 bucket.erase(it);
+                 --size;
+                 return;
+             }
+         }
+     }
+ \end{cppcode}
+ \bigbreak \noindent 
+ If the key is found, we erase it. Otherwise, noop.
+
+ \bigbreak \noindent 
+ \subsection{Finding and checking if the map is empty}
+ \bigbreak \noindent 
+ \subsubsection{Finding}
+ \bigbreak \noindent 
+ \begin{cppcode}
+     value* find(const key& k) {
+        size_t h = hash(k);
+        auto& bucket = buckets[h];
+
+        for (auto it = bucket.begin(); it!=bucket.end(); ++it) {
+            if (it->first == k) {
+                return &(it->second);
+            }
+        }
+        return nullptr;
+    }
+ \end{cppcode}
+ \bigbreak \noindent 
+ If the key is found in the map, we return a pointer to its value. Otherwise, return nullptr
+
+ \bigbreak \noindent 
+ \subsubsection{Empty}
+ \bigbreak \noindent 
+ \begin{cppcode}
+    bool empty() const {
+        return size ==  0;
+    }
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsection{The subscript operator}
+ \bigbreak \noindent 
+ \begin{cppcode}
+     value& operator[](const key& k) {
+         size_t h = hash(k);
+         auto& bucket = buckets[h];
+         for (auto it = bucket.begin(); it!=bucket.end(); ++it) {
+             if (it->first == k) return it->second;
+         }
+
+         buckets[h].emplace_back(k, value());
+         ++size;
+         return buckets[h].back().second;
+     }
+ \end{cppcode}
+ \bigbreak \noindent 
+ If the key is found, return a reference to its value. Otherwise, add the key to the map with a default value. Once added, return a reference to that default value.
+
 
 
 \pagebreak 
