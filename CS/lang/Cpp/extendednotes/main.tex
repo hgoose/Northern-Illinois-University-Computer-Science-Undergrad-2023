@@ -2987,6 +2987,85 @@ void foo(myclass<T>& obj) {
     fn(std::forward<decltype(y)>(y));
     \end{cppcode}
 
+    \pagebreak 
+    \subsection{Concepts}
+    \bigbreak \noindent 
+    Concepts are a feature introduced in C++20 that allow you to specify constraints on template parameters in a clear, concise, and readable way. They improve the expressiveness, safety, and usability of templates by providing a mechanism to enforce specific requirements on the types passed to a template.
+    \bigbreak \noindent 
+    A concept is defined using the concept keyword and is essentially a compile-time boolean expression that evaluates to true or false.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <concepts>
+
+        // Define a concept
+
+        // This is std::integral
+        template <typename T>
+        concept Integral = std::is_integral_v<T>;
+
+        // This is std::floating_point
+        template <typename T>
+        concept FloatingPoint = std::is_floating_point_v<T>;
+    \end{cppcode}
+    \bigbreak \noindent 
+    You can constrain template parameters directly using a concept.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <Integral T>
+        T add(T a, T b) {
+            return a + b;
+        }
+
+        add(40,20) // OK
+        add(40.0f, 20.0f) // ERROR
+    \end{cppcode}
+    \bigbreak \noindent 
+    Alternatively, you can use a requires clause:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <typename T>
+        requires Integral<T>
+        T add(T a, T b) {
+            return a + b;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    You can combine concepts with auto for a more concise syntax:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        auto add(Integral auto a, Integral auto b) {
+            return a + b;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Concepts can also be used to constrain class templates.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template <Integral T>
+        class Calculator {
+            T value;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Concepts can be combined using logical operators (\&\&, ||, !).
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template <typename T>
+    concept Numeric = Integral<T> || FloatingPoint<T>;
+\end{cppcode}
+\bigbreak \noindent 
+The <concepts> header provides a set of predefined concepts for common use cases:
+\begin{itemize}
+    \item std::same\_as<T, U>	Ensures T is the same type as U.
+    \item std::convertible\_to<T, U>	Ensures T can be converted to U.
+    \item std::derived\_from<T, U>	Ensures T is derived from U.
+    \item std::integral	Matches integral types (int, char, etc.).
+    \item std::floating\_point	Matches floating-point types (float, double).
+    \item std::assignable\_from<T, U>	Ensures T = U is valid.
+\end{itemize}
+
+
+
 
 
 
@@ -4616,6 +4695,648 @@ int main() {
          int x; [[maybe_unused]] float y; string z;
          std::tie(x,std::ignore,z) = t;
      \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsubsection{std::optional}
+     \bigbreak \noindent 
+     std::optional (introduced in C++17) is a utility that represents an optional value—a value that may or may not be present. It provides a safer and clearer alternative to using raw pointers or special values like nullptr or -1 for optional semantics.
+     \bigbreak \noindent 
+     Either contains a value or is empty (no value).
+     \bigbreak \noindent 
+     Useful Methods:
+     \begin{itemize}
+         \item std::optional<T>::has\_value() – Checks if a value is present.
+         \item std::optional<T>::value() – Accesses the contained value (throws if empty).
+         \item std::optional<T>::value\_or(default\_value) – Returns the value or a default if empty.
+     \end{itemize}
+     \bigbreak \noindent 
+     Once set, it behaves like a \texttt{T}.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::optional<int> divide(int a, int b) {
+             if (b == 0) return std::nullopt; // No value
+             return a / b; // Contains a value
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     std::nullopt is a constant of type std::nullopt\_t. Used to indicate that an std::optional does not contain a value.
+
+     \pagebreak 
+     \unsect{Views and Ranges}
+     \bigbreak \noindent 
+     \subsection{Views}
+     \bigbreak \noindent 
+     A view is a lightweight, non-owning adaptor in the C++20 Ranges library that lazily transforms, filters, or otherwise manipulates a range without creating a new container. Views enable the efficient and expressive processing of data using pipelines.
+     \begin{itemize}
+         \item \textbf{Non-Owning:}: A view does not own the underlying data. It operates on a range or another view.
+         \item \textbf{Lazy Evaluation:} Computations are deferred until the elements are accessed, which improves performance by avoiding unnecessary computations.
+         \item \textbf{Composable:} Views can be chained together using the | operator, creating expressive pipelines.
+         \item \textbf{Efficient}: Since views are non-owning and lazy, they avoid copying or storing intermediate results, minimizing memory overhead.
+     \end{itemize}
+     \bigbreak \noindent 
+     Views are built on the concept of range adaptors, which modify or filter ranges. For example:
+     \begin{itemize}
+         \item \textbf{std::ranges::views::filter:} Filters elements based on a predicate.
+         \item \textbf{std::ranges::views::transform:} Transforms elements using a function.
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{Filter and transform}
+     \begin{cppcode}
+         #include <ranges>
+         #include <vector>
+         #include <iostream>
+
+         int main() {
+             std::vector<int> nums = {1, 2, 3, 4, 5, 6};
+
+             auto evens = nums | std::ranges::views::filter([](int n) { return n % 2 == 0; });
+
+                 for (int n : evens) {
+                     std::cout << n << " "; // Output: 2 4 6
+                 }
+             }
+         \end{cppcode}
+         \bigbreak \noindent 
+         \begin{cppcode}
+         auto squares = nums | std::ranges::views::transform([](int n) { return n * n; });
+         \end{cppcode}
+         \bigbreak \noindent 
+         We can also combine views
+         \bigbreak \noindent 
+         \begin{cppcode}
+             auto evens_squared = v | filter([](int n) { return !(n % 2); }) | transform([](int n) {return n*n;});
+         \end{cppcode}
+
+
+         \bigbreak \noindent 
+         \subsubsection{Iota}
+         \bigbreak \noindent 
+         std::ranges::views::iota Generates a sequence of numbers.
+         \bigbreak \noindent 
+         \begin{cppcode}
+         auto numbers = std::ranges::views::iota(1, 10); // [1, 2, ..., 9]
+
+         for (auto i : std::ranges::views::iota(1,10)) cout << i << " ";
+         \end{cppcode}
+
+         \bigbreak \noindent 
+         \subsubsection{Take and drop}
+         \bigbreak \noindent 
+         \begin{itemize}
+             \item \textbf{std::ranges::views::take:} Takes the first $n $ elements from a range.
+            \item \textbf{std::ranges::views::drop:} Drops the first n elements from a range.
+         \end{itemize}
+         \bigbreak \noindent 
+         \begin{cppcode}
+             auto firstThree = numbers | std::ranges::views::take(3); // [1, 2, 3]
+             auto afterThree = numbers | std::ranges::views::drop(3); // [4, 5, ...]
+         \end{cppcode}
+
+         \bigbreak \noindent 
+         \subsection{The ranges library}
+         \bigbreak \noindent 
+         The ranges library is an extension and generalization of the algorithms and iterator libraries that makes them more powerful by making them composable and less error-prone.
+         \bigbreak \noindent 
+         The library creates and manipulates range views, lightweight objects that indirectly represent iterable sequences (ranges).
+
+
+
+
+     \pagebreak 
+     \unsect{constexpr}
+     \bigbreak \noindent 
+     constexpr is a keyword introduced in C++11 and enhanced in later standards. It is used to indicate that the value of a variable, function, or object can be evaluated at compile time, provided all inputs and operations are also constant expressions. This helps in improving performance by allowing certain computations to be done during compilation rather than runtime.
+     \begin{itemize}
+         \item \textbf{Compile-Time Evaluation:} If possible, constexpr ensures computations are performed at compile time, resulting in faster execution.
+         \item \textbf{Constants:} Variables declared as constexpr must be initialized with constant expressions.
+         \item \textbf{Functions:} A constexpr function can be evaluated at compile time if called with constant arguments. It can also be called at runtime with non-constant arguments.
+     \end{itemize}
+     \bigbreak \noindent 
+     \begin{cppcode}
+         constexpr int x = 5; // Compile-time constant
+         constexpr int square(int n) { return n * n; }
+
+         constexpr int result = square(4); // Evaluated at compile time
+     \end{cppcode}
+     \bigbreak \noindent 
+     \begin{cppcode}
+     constexpr int factorial(int n) {
+         return (n <= 1) ? 1 : n * factorial(n - 1);
+     }
+
+     constexpr int result = factorial(5); // Computed at compile time
+ \end{cppcode}
+ \bigbreak \noindent 
+If result is not declared as constexpr, it would simply be a regular, non-constant integer variable. The compiler would still attempt to evaluate the factorial(5) call at compile time if the inputs and the function itself meet the requirements for a constexpr evaluation. However, since result is not explicitly marked as constexpr, its value would be treated as a runtime constant.
+
+ \bigbreak \noindent 
+ \subsection{constexpr Objects}
+ \bigbreak \noindent 
+ You can use constexpr constructors to define constant objects:
+ \bigbreak \noindent 
+ \begin{cppcode}
+     struct Point {
+         int x, y;
+         constexpr Point(int x_val, int y_val) : x(x_val), y(y_val) {}
+     };
+
+     constexpr Point p(3, 4); // p is a constant expression
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsection{More on constexpr variables}
+ \bigbreak \noindent 
+ If a variable is declared as constexpr in C++, it means that:
+ \begin{itemize}
+     \item The value of the variable must be known and evaluated at compile time.
+     \item The initializer for a constexpr variable must be a constant expression (an expression that the compiler can evaluate during compilation).    
+ \end{itemize}
+ Consider the code
+ \bigbreak \noindent 
+ \begin{cppcode}
+     constexpr int x = 42; // Compile-time constant
+     constexpr int y = x + 10; // Also a compile-time constant
+ \end{cppcode}
+ Here, both x and y are evaluated at compile time, and their values are embedded into the compiled program as constants.
+ \bigbreak \noindent 
+ constexpr variables are read-only after they are initialized. Once assigned, their value cannot be changed
+ \bigbreak \noindent 
+ If $x$ is not constexpr, it is treated as a regular variable, and the compiler cannot guarantee that its value is a compile-time constant.
+ \bigbreak \noindent 
+    Since the initializer for $y$ depends on $x$, and $x$ is not constexpr, $y$ would fail to meet the requirement of being initialized with a constant expression.
+
+
+
+ \bigbreak \noindent 
+ A constexpr variable can be used in contexts where a constant expression is required, such as
+ \bigbreak \noindent 
+ \begin{itemize}
+     \item Array sizes
+     \item Template parameters
+     \item static\_assert conditions
+\end{itemize}
+\bigbreak \noindent 
+Because the value of a constexpr variable is computed at compile time, it eliminates the need for runtime computation, which can improve performance.
+
+\bigbreak \noindent 
+\subsection{When const Can Make a Compile-Time Constant}
+\bigbreak \noindent 
+If the initializer of a const variable is a constant expression, then the const variable can be a compile-time constant. This is common for basic types like integers and floating-point numbers.
+\bigbreak \noindent 
+\begin{cppcode}
+const int x = 42; // x is a compile-time constant
+int arr[x];       // Valid because x is a constant expression
+\end{cppcode}
+\bigbreak \noindent 
+If the initializer of a const variable involves a value that is not known until runtime, the variable is not a compile-time constant, even though it is immutable.
+\bigbreak \noindent 
+\begin{cppcode}
+int runtimeValue = 42;
+const int x = runtimeValue; // x is NOT a compile-time constant
+int arr[x];                // Error: x is not a constant expression
+\end{cppcode}
+\bigbreak \noindent 
+Here, $x$ is const, but its initializer (runtimeValue) is not a constant expression, so $x$ cannot be used in contexts requiring a constant expression.
+
+\bigbreak \noindent 
+\subsection{if constexpr}
+\bigbreak \noindent 
+if constexpr is a feature introduced in C++17 that allows conditional branching at compile-time. Unlike a regular if statement, the condition in if constexpr must be a compile-time constant expression that the compiler can evaluate during compilation. This enables writing more efficient, type-safe, and flexible code, especially in template programming.
+\begin{itemize}
+    \item \textbf{Compile-Time Condition:} The condition inside if constexpr is evaluated during compilation.
+        \bigbreak \noindent 
+        Only the branch corresponding to the true condition is compiled; other branches are ignored.
+\item \textbf{Dead Code Removal:} Unreachable branches are completely removed by the compiler, so there is no runtime overhead.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void printType(T value) {
+    if constexpr (std::is_integral<T>::value) {
+        std::cout << "Integral type: " << value << '\n';
+    } else if constexpr (std::is_floating_point<T>::value) {
+        std::cout << "Floating-point type: " << value << '\n';
+    } else {
+        std::cout << "Other type\n";
+    }
+}
+\end{cppcode}
+
+\pagebreak 
+\unsect{Smart pointers}
+\bigbreak \noindent 
+We know that pointers are important but are a source of trouble. One reason to use pointers is to have reference semantics outside the usual boundaries of scope. However, it can be very tricky to ensure that their lifetime and the lifetime of the objects they refer to match, especially when multiple pointers refer to the same object. For example, to have the same object in multiple collections , you have to pass a pointer into each collection, and ideally there should be no problems when one of the pointers gets destroyed (no “dangling pointers” or multiple deletions of the referenced object) and when the last reference to an object gets destroyed (no “resource leaks”).
+\bigbreak \noindent 
+A usual approach to avoid these kinds of problems is to use “smart pointers.” They are “smart”
+in the sense that they support programmers in avoiding problems such as those just described. For
+example, a smart pointer can be so smart that it “knows” whether it is the last pointer to an object
+and uses this knowledge to delete an associated object only when it, as “last owner” of an object,
+gets destroyed.
+\bigbreak \noindent 
+Note, however, that it is not sufficient to provide only one smart pointer class. Smart pointers can
+be smart about different aspects and might fulfill different priorities, because you might pay a price
+for the smartness. Note that with a specific smart pointer, it’s still possible to misuse a pointer or to
+program erroneous behavior.
+\bigbreak \noindent 
+Since C++11, the C++ standard library provides two types of smart pointer:
+\begin{itemize}
+    \item \textbf{Class shared\_ptr}: for a pointer that implements the concept of shared ownership. Multiple smart pointers can refer to the same object so that the object and its associated resources get released whenever the last reference to it gets destroyed. To perform this task in more complicated scenarios, helper classes, such as weak\_ptr, bad\_weak\_ptr, and enable\_shared\_from\_this, are provided.
+    \item \textbf{Class unique\_ptr}: for a pointer that implements the concept of exclusive ownership or strict ownership. This pointer ensures that only one smart pointer can refer to this object at a time. However, you can transfer ownership. This pointer is especially useful for avoiding resource leaks, such as missing calls of delete after or while an object gets created with new and an exception occurred.
+\end{itemize}
+\textbf{Quick note}: When an object is created using the new operator in C++ and an exception occurs during its construction, C++ ensures that
+\begin{itemize}
+    \item \textbf{Memory Allocated by new is Automatically Freed:} If the constructor of the object throws an exception, the memory allocated by new is automatically released to prevent a memory leak.
+        \bigbreak \noindent 
+        This behavior is part of the C++ standard, ensuring robust exception safety during dynamic allocation.
+    \item \textbf{The Destructor is Not Called:}: Since the object's construction is incomplete, its destructor will not be called. Only fully constructed objects have their destructors called.
+\end{itemize}
+\bigbreak \noindent 
+Historically, C++98 had only one smart pointer class provided by the C++ standard library, class
+auto\_ptr<>, which was designed to perform the task that unique\_ptr now provides. However,
+due to missing language features, such as move semantics for constructors and assignment operators
+and other flaws, this class turned out to be difficult to understand and error prone. So, after class
+shared\_ptr was introduced with TR1 and class unique\_ptr was introduced with C++11, class
+auto\_ptr officially became deprecated with C++11, which means that you should not use it unless
+you have old existing code to compile.
+\bigbreak \noindent 
+All smart pointer classes are defined in the <memory> header file.
+\bigbreak \noindent 
+\subsection{Class shared\_ptr}
+\bigbreak \noindent 
+Almost every nontrivial program needs the ability to use or deal with objects at multiple places at the
+same time. Thus, you have to “refer” to an object from multiple places in your program. Although
+the language provides references and pointers, this is not enough, because you often have to ensure
+that when the last reference to an object gets deleted, the object itself gets deleted, which might
+require some cleanup operations, such as freeing memory or releasing a resource
+\bigbreak \noindent 
+So we need a semantics of “cleanup when the object is nowhere used anymore.” Class shared\_ptr provides this semantics of shared ownership. Thus, multiple shared\_ptrs are able to share, or “own,” the same object. The last owner of the object is responsible for destroying it and cleaning up all resources associated with it.
+\bigbreak \noindent 
+By default, the cleanup is a call of delete, assuming that the object was created with new. But you can (and often must) define other ways to clean up objects. You can define your own destruction policy. For example, if your object is an array allocated with new[], you have to define that the cleanup performs a delete[]. Other examples are the deletion of associated resources, such as handles, locks, associated temporary files, and so on
+\bigbreak \noindent 
+To summarize, the goal of shared\_ptrs is to automatically release resources associated with objects when those objects are no longer needed (but not before).
+\bigbreak \noindent 
+\subsubsection{Using Class shared\_ptr}
+\bigbreak \noindent 
+You can use a shared\_ptr just as you would any other pointer. Thus, you can assign, copy, and
+compare shared pointers, as well as use operators * and ->, to access the object the pointer refers to.
+Consider the following example
+\bigbreak \noindent 
+\begin{cppcode}
+    shared_ptr<string> pNico(new string("nico"));
+    shared_ptr<string> pJutta(new string("jutta"));
+
+    // capitalize person names
+    (*pNico)[0] = 'N';
+    pJutta->replace(0,1,"J");
+
+    // put them multiple times in a container
+    vector<shared_ptr<string>> whoMadeCoffee;
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pNico);
+    whoMadeCoffee.push_back(pJutta);
+    whoMadeCoffee.push_back(pNico);
+
+    // print all elements
+    for (auto ptr : whoMadeCoffee) {
+        cout << *ptr << " ";
+    }
+    cout << endl;
+
+    // overwrite a name again
+    *pNico = "Nicolai";
+
+    // print all elements again
+    for (auto ptr : whoMadeCoffee) {
+        cout << *ptr << " ";
+    }
+    cout << endl;
+
+    // print some internal data
+    cout << "use_count: " << whoMadeCoffee[0].use_count() << endl;
+\end{cppcode}
+\bigbreak \noindent 
+After including <memory>, where shared\_ptr class is defined, two shared\_ptrs representing pointers to strings are declared and initialized:
+\bigbreak \noindent 
+Note that because the constructor taking a pointer as single argument is explicit, you can’t use the assignment notation here because that is considered to be an implicit conversion. However, the new initialization syntax is also possible:
+\bigbreak \noindent 
+\begin{cppcode}
+shared_ptr<string> pNico = new string("nico"); // ERROR
+shared_ptr<string> pNico{new string("nico")}; // OK
+\end{cppcode}
+\bigbreak \noindent 
+You can also use the convenience function make\_shared() here:
+\bigbreak \noindent 
+\begin{cppcode}
+shared_ptr<string> pNico = make_shared<string>("nico");
+shared_ptr<string> pJutta = make_shared<string>("jutta");
+\end{cppcode}
+\bigbreak \noindent 
+This way of creation is faster and safer because it uses one instead of two allocations: one for the object and one for the shared data the shared pointer uses to control the object
+\bigbreak \noindent 
+Alternatively, you can declare the shared pointer first and assign a new pointer later on. However, you can’t use the assignment operator; you have to use reset() instead
+\bigbreak \noindent 
+\begin{cppcode}
+shared_ptr<string> pNico4;
+pNico4 = new string("nico"); // ERROR: no assignment for ordinary pointers
+pNico4.reset(new string("nico")); // OK
+\end{cppcode}
+\bigbreak \noindent 
+\fig{.9}{./figures/1.png}
+\bigbreak \noindent 
+We insert both pointers multiple times into a container of type vector<>. The container usually creates its own copy of the elements passed, so we would insert
+copies of strings if we inserted the strings directly. However, because we pass pointers to the strings,
+these pointers are copied, so the container now contains multiple references to the same object. This
+means that if we modify the objects, all occurrences of this object in the container get modified.
+Thus, after replacing the value of the string pNico, all occurrences of this object now refer to the new value.\bigbreak \noindent 
+The last row of the output is the result of calling use\_count() for the first shared pointer in the
+vector. use\_count() yields the current number of owners an object referred to by shared pointers
+has. As you can see, we have four owners of the object referred to by the first element in the vector:
+pJutta and the three copies of it inserted into the container
+\bigbreak \noindent 
+At the end of the program, when the last owner of a string gets destroyed, the shared pointer calls
+delete for the object it refers to. Such a deletion does not necessarily have to happen at the end of
+the scope. For example, assigning the nullptr to pNico or resizing
+the vector so that it contains only the first two elements would delete the last owner of the string
+initialized with nico.
+\bigbreak \noindent 
+\subsubsection{Defining a Deleter}
+\bigbreak \noindent 
+We can declare our own deleter, which, for example, prints a message before it deletes the referenced object:
+\bigbreak \noindent 
+\begin{cppcode}
+    shared_ptr<string> pNico(new string("nico"),
+    [](string* p) {
+        cout << "delete " << *p << endl;
+        delete p;
+    });
+    ...
+    pNico = nullptr; // pNico does not refer to the string any longer
+    whoMadeCoffee.resize(2); // all copies of the string in pNico are destroyed
+\end{cppcode}
+\bigbreak \noindent 
+The lambda function gets called when the last owner of a string gets destroyed. So the preceding program with this modification would print
+\bigbreak \noindent 
+\begin{cppcode}
+delete Nicolai
+\end{cppcode}
+\bigbreak \noindent 
+when resize() gets called after all statements as discussed before. The effect would be the same if we first changed the size of the vector and then assigned nullptr or another object to pNico.
+\bigbreak \noindent 
+\subsubsection{Dealing with Arrays}
+\bigbreak \noindent 
+Note that the default deleter provided by shared\_ptr calls delete, not delete[]. This means
+that the default deleter is appropriate only if a shared pointer owns a single object created with new.
+Unfortunately, creating a shared\_ptr for an array is possible but wrong:
+\bigbreak \noindent 
+\begin{cppcode}
+std::shared_ptr<int> p(new int[10]); // ERROR, but compiles
+\end{cppcode}
+\bigbreak \noindent 
+So, if you use new[] to create an array of objects you have to define your own deleter. You can do
+that by passing a function, function object, or lambda, which calls delete[ ] for the passed ordinary
+pointer
+\bigbreak \noindent 
+\begin{cppcode}
+    std::shared_ptr<int> p(new int[10],
+    [](int* p) {
+        delete[] p;
+    });
+\end{cppcode}
+\bigbreak \noindent 
+You can also use a helper officially provided for unique\_ptr, which calls delete[] as deleter
+\bigbreak \noindent 
+\begin{cppcode}
+    std::shared_ptr<int> p(new int[10], std::default_delete<int[]>());
+\end{cppcode}
+\bigbreak \noindent 
+Note, however, that shared\_ptr and unique\_ptr deal with deleters in slightly different ways. For
+example, unique\_ptrs provide the ability to own an array simply by passing the corresponding
+element type as template argument, whereas for shared\_ptrs this is not possible:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<int[]> p(new int[10]); // OK
+std::shared_ptr<int[]> p(new int[10]); // ERROR: does not compile
+\end{cppcode}
+\bigbreak \noindent 
+std::unique\_ptr can handle arrays natively because its design allows for specialization to manage arrays directly. std::unique\_ptr has a specialized version for arrays (std::unique\_ptr<T[]>), which ensures that the correct delete[] operator is called for arrays.
+\bigbreak \noindent 
+In addition, for unique\_ptrs, you have to specify a second template argument to specify your own deleter:
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<int,void(*)(int*)> p(new int[10],
+    [](int* p) {
+        delete[] p;
+    });
+\end{cppcode}
+\bigbreak \noindent 
+Note also that shared\_ptr does not provide an operator [ ]. For unique\_ptr, a partial specialization for arrays exists, which provides operator [ ] instead of operators * and ->. The reason for
+this difference is that unique\_ptr is optimized for performance and flexibility
+
+\bigbreak \noindent 
+\subsubsection{More on make\_shared}
+\bigbreak \noindent 
+Recall the two methods used above 
+\bigbreak \noindent 
+\begin{cppcode}
+std::shared_ptr<std::string> ptr(new std::string("Hello"));
+std::shared_ptr<std::string> ptr = std::make_shared<std::string>("Hello");
+\end{cppcode}
+\bigbreak \noindent 
+For the first method, memory gets allocated twice, once for the std::string object, again for the control block. This results in two separate memory allocations, which is less efficient.
+\bigbreak \noindent 
+If an exception is thrown between the allocation of the object and the creation of the shared\_ptr, the memory allocated for the object will leak because the shared\_ptr never takes ownership of it. If the constructor of std::string throws an exception, the new operation has already allocated memory, and there’s no shared\_ptr to clean it up.
+\bigbreak \noindent 
+For the second method, memory gets allocated once. std::make\_shared allocates memory for both the control block and the object in a single allocation. This reduces heap fragmentation and improves performance.
+\bigbreak \noindent 
+std::make\_shared ensures that the object and the shared\_ptr's control block are created together in a single step. If any part of the process throws an exception, no memory leak occurs because all cleanup is handled by make\_shared.
+
+\bigbreak \noindent 
+\subsubsection{Understanding the reference count}
+\bigbreak \noindent 
+Consider the following code
+\bigbreak \noindent 
+\begin{cppcode}
+auto a = make_shared<string>("Hello");
+\end{cppcode}
+A std::shared\_ptr named $a$ is created. It dynamically allocates a std::string with the value "Hello". The shared\_ptr internally manages the resource using reference counting. The reference count for the managed resource is 1 because a owns it.
+\bigbreak \noindent 
+When main ends, $a$ goes out of scope. The destructor of $a$ is called automatically, which 
+\begin{itemize}
+    \item  Decrements the reference count for the managed resource.
+    \item Since the reference count becomes 0, the std::string object is destroyed, and its memory is deallocated.
+\end{itemize}
+\bigbreak \noindent 
+Next, consider
+\bigbreak \noindent 
+\begin{cppcode}
+    auto a = std::make_shared<string>("Hello");
+    shared_ptr<string> b = a;
+\end{cppcode}
+\bigbreak \noindent 
+We creates a dynamically allocated std::string with the value "Hello". A std::shared\_ptr named $a$ is created to manage this resource. The reference count for the resource is now 1.
+\bigbreak \noindent 
+Then, a new std::shared\_ptr named $b$ is created by copying $a$ Both $a$ and $b$ now share ownership of the same std::string resource. The reference count for the resource is incremented to 2.
+\bigbreak \noindent 
+When main ends, both $a$ and $b$ go out of scope.
+Their destructors are called in the reverse order of creation:
+\begin{itemize}
+    \item $b$ is destroyed first, decrementing the reference count to 1.
+    \item Then $a$ is destroyed, decrementing the reference count to 0.
+\end{itemize}
+Since the reference count reaches 0, the managed resource (the std::string) is destroyed, and its memory is deallocated.
+\bigbreak \noindent 
+Understand that the reference count is stored in a control block that is managed internally by std::shared\_ptr. This control block is allocated when the first std::shared\_ptr is created for a given resource (in your case, when a is initialized using std::make\_shared).
+\bigbreak \noindent 
+The control block is a separate structure that contains:
+\begin{itemize}
+    \item \textbf{The reference count (use\_count):} Tracks how many std::shared\_ptr instances share ownership of the resource.
+    \item \textbf{The weak reference count:} Tracks how many std::weak\_ptr instances observe the resource.
+    \item \textbf{A pointer to the managed resource}: (e.g., the std::string in your code).
+\end{itemize}
+\bigbreak \noindent 
+Both $a$ and $b$ in the above code point to the same control block, which manages the reference count and the std::string resource.
+\bigbreak \noindent 
+\subsubsection{Cyclic references}
+\bigbreak \noindent 
+Cyclic references occur when two or more objects reference each other in a way that creates a loop, preventing them from being deallocated properly
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+struct A {
+    shared_ptr<A> adjacent;
+};
+
+shared_ptr<A> p_a1(new A());
+shared_ptr<A> p_a2(new A());
+\end{cppcode}
+\bigbreak \noindent 
+So we have two objects, call them $a_{1}$, and $a_{2}$, and pointers $p_{a_1}$, and $p_{a_2}$ to them.
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{shared2}
+    \label{fig:shared2}
+\end{figure}
+\bigbreak \noindent 
+Now, define
+\bigbreak \noindent 
+\begin{cppcode}
+    p_a1->adjacent = p_a2;
+    p_a2->adjacent = p_a1;
+\end{cppcode}
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{shared3}
+    \label{fig:shared3}
+\end{figure}
+\bigbreak \noindent 
+When the program ends, $p_{a_2}$ will be destroyed, but the object that it points to still has a reference count of one, because $a_1$ "owns" it, so it will not be destroyed. Similarly, when $p_a_1$ gets destroyed, the object that it refers to ($a_1$) still has a reference count of one, because $a_2$ still remains and "owns" $a_1$. This is a cyclic reference.
+\bigbreak \noindent 
+Introduced in the next section, we use weak\_ptr to solve this issue. If we adjust the code
+\bigbreak \noindent 
+\begin{cppcode}
+struct A {
+    weak_ptr<A> adjacent;
+};
+
+shared_ptr<A> p_a1(new A());
+shared_ptr<A> p_a2(new A());
+
+p_a1->adjacent = p_a2;
+p_a2->adjacent = p_a1;
+\end{cppcode}
+\bigbreak \noindent 
+Our problem is resolved. A std::weak\_ptr is a smart pointer in C++ that provides a non-owning reference to an object managed by a std::shared\_ptr. Unlike std::shared\_ptr, a std::weak\_ptr does not increase the reference count of the object it observes, making it useful for breaking cyclic references.
+\bigbreak \noindent 
+When $p_{a_2}$ gets destroyed, the object that it manages ($a_2$) has no references to it. That is, its reference count will be zero because it has instead a weak\_ptr to it. Then, when $p_{a_1}$ gets destroyed, $a_2$ will have already been destroyed, and thus $a_1$ has no references to it, and is therefore also destroyed.
+
+
+
+
+
+\bigbreak \noindent 
+\subsection{Class weak\_ptr}
+\bigbreak \noindent 
+The major reason to use shared\_ptrs is to avoid taking care of the resources a pointer refers to. As written, shared\_ptrs are provided to automatically release resources associated with objects no longer needed.
+\bigbreak \noindent 
+However, under certain circumstances, this behavior doesn’t work or is not what is intended:
+\begin{itemize}
+    \item One example is cyclic references. If two objects refer to each other using shared\_ptrs, and you want to release the objects and their associated resource if no other references to these objects exist, shared\_ptr won’t release the data, because the use\_count() of each object is still 1. You might want to use ordinary pointers in this situation, but doing so requires explicitly caring for and managing the release of associated resources
+    \item Another example occurs when you explicitly want to share but not own an object. Thus, you have the semantics that the lifetime of a reference to an object outlives the object it refers to. Here, shared\_ptrs would never release the object, and ordinary pointers might not notice that the object they refer to is not valid anymore, which introduces the risk of accessing released data
+\end{itemize}
+\bigbreak \noindent 
+For both cases, class weak\_ptr is provided, which allows sharing but not owning an object. This
+class requires a shared pointer to get created. Whenever the last shared pointer owning the object
+loses its ownership, any weak pointer automatically becomes empty. Thus, besides default and copy
+constructors, class weak\_ptr provides only a constructor taking a shared\_ptr
+\bigbreak \noindent 
+You can’t use operators * and -> to access a referenced object of a weak\_ptr directly. Instead, you have to create a shared pointer out of it. This makes sense for two reasons:
+\begin{itemize}
+    \item Creating a shared pointer out of a weak pointer checks whether there is (still) an associated object. If not, this operation will throw an exception or create an empty shared pointer (what exactly happens depends on the operation used).
+    \item While dealing with the referenced object, the shared pointer can’t get released.
+\end{itemize}
+As a consequence, class weak\_ptr provides only a small number of operations: Just enough to create, copy, and assign a weak pointer and convert it into a shared pointer or check whether it refers to an object.
+\bigbreak \noindent 
+\subsubsection{Using a weak\_ptr}
+\bigbreak \noindent 
+std::weak\_ptr is used as a companion to std::shared\_ptr to prevent circular references, which can lead to memory leaks. It provides a way to observe an object managed by a std::shared\_ptr without affecting its reference count
+\bigbreak \noindent 
+Characteristics:
+\begin{itemize}
+    \item \textbf{No Ownership:} A std::weak_ptr does not own the object it observes. It does not contribute to the reference count of the std::shared_ptr it observes.
+    \item \textbf{Temporary Access:} You must convert a std::weak_ptr to a std::shared_ptr to safely access the managed object.
+    \item \textbf{Null Safety:} If the managed object has been destroyed, the std::weak_ptr becomes expired.
+\end{itemize}
+\bigbreak \noindent 
+You create a std::weak\_ptr from a std::shared\_ptr:
+\bigbreak \noindent 
+\begin{cppcode}
+std::shared_ptr<int> sharedPtr = std::make_shared<int>(42);
+std::weak_ptr<int> weakPtr = sharedPtr; // weakPtr observes sharedPtr
+\end{cppcode}
+\bigbreak \noindent 
+You must lock a std::weak\_ptr to get a std::shared\_ptr. This ensures the object is not destroyed while you're using it
+\bigbreak \noindent 
+\begin{cppcode}
+if (auto locked = weakPtr.lock()) { // lock() returns a std::shared_ptr
+    std::cout << "Value: " << *locked << std::endl;
+} else {
+    std::cout << "The object has been destroyed." << std::endl;
+}
+\end{cppcode}
+\bigbreak \noindent 
+You can check whether the object managed by a std::weak\_ptr still exists using expired()
+\bigbreak \noindent 
+\begin{cppcode}
+if (weakPtr.expired()) {
+    std::cout << "The object has expired." << std::endl;
+}
+\end{cppcode}
+\bigbreak \noindent 
+ou do not need to convert a std::shared\_ptr back to a std::weak\_ptr when you're done accessing the object.
+\begin{itemize}
+    \item \textbf{Temporary Ownership via std::shared\_ptr:} When you convert a std::weak\_ptr to a std::shared\_ptr using lock(), the resulting std::shared\_ptr takes temporary ownership of the managed object for as long as it is in scope. Once the std::shared\_ptr goes out of scope, it automatically releases this ownership, reducing the reference count.
+    \item \textbf{std::weak\_ptr Remains Unchanged:} The original std::weak\_ptr remains intact and continues observing the managed object, if it still exists. There is no need to explicitly convert a std::shared\_ptr back to a std::weak\_ptr
+\end{itemize}
+
+
+
+
+
+\pagebreak 
+\unsect{C++ versions and their additions}
+\begin{itemize}
+    \item \textbf{c++11}: Move Semantics, Automatic Type Deduction (auto keyword), Lambdas, Range-Based For Loops, constexpr, Smart Pointers, Threading, nullptr, Uniform initialization with \{\} braces
+    \item \textbf{c++14}: Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. Generic Lambdas, lambdas parameters can be set auto, std::make\_unique, Return type deduction for normal functions.
+    \item \textbf{c++17}: Structured Bindings, if constexpr (Compile-time conditional branching), std::optional, std::variant
+\end{itemize}
+
+
+
+
 
 
 
