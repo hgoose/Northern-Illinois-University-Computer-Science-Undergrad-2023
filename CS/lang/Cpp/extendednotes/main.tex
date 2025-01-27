@@ -4799,6 +4799,40 @@ int main() {
          \bigbreak \noindent 
          The library creates and manipulates range views, lightweight objects that indirectly represent iterable sequences (ranges).
 
+         \bigbreak \noindent 
+         \subsection{std::span}
+         \bigbreak \noindent 
+         std::span is a lightweight, non-owning view of a contiguous sequence of elements. Introduced in C++20, it provides a way to access and manipulate arrays, std::vectors, or other contiguous containers without copying or transferring ownership of the data.
+         \bigbreak \noindent 
+         \begin{cppcode}
+             int arr[] = {1,2,3,4};
+             std::span<int> sp(arr);
+
+             for (const auto& item : sp) cout << item;
+
+             vector<int> v{1,2,3,4};
+             std::span<int> sp(v.data(),3); // First three elements
+
+             for (const auto& item : sp) cout << item;
+         \end{cppcode}
+
+         \bigbreak \noindent 
+         \subsubsection{subspans}
+         \bigbreak \noindent 
+         \begin{cppcode}
+             int arr[] = {1, 2, 3, 4, 5};
+             std::span<int> sp(arr, 5);
+             auto sub = sp.subspan(1, 3); // Elements 1 to 3
+         \end{cppcode}
+         \bigbreak \noindent 
+         \subsubsection{Key member functions}
+         \begin{itemize}
+             \item \textbf{.at()}
+             \item \textbf{.size()}
+             \item \textbf{.subspan()}
+             \item \textbf{.data()}
+         \end{itemize}
+
 
 
 
@@ -5322,6 +5356,75 @@ ou do not need to convert a std::shared\_ptr back to a std::weak\_ptr when you'r
     \item \textbf{std::weak\_ptr Remains Unchanged:} The original std::weak\_ptr remains intact and continues observing the managed object, if it still exists. There is no need to explicitly convert a std::shared\_ptr back to a std::weak\_ptr
 \end{itemize}
 
+\pagebreak 
+\unsect{Three way comparisons (spaceship operator) <compare>}
+\bigbreak \noindent 
+Suppose we had a Point structure
+\bigbreak \noindent 
+\begin{cppcode}
+    struct Point {
+        int x,y;
+    };
+\end{cppcode}
+\bigbreak \noindent 
+Then if we tried to compare say to objects of type Point, C++ would not know how to handle the comparisons unless we overloaded the comparison operators. We would generally need to write overloads for all the comparison operators we need. $<, >, <=, >=, ==$, etc. 
+\bigbreak \noindent 
+Since c++20, we can get the compiler to generate default comparison overloads with some simple syntax. Observe
+\bigbreak \noindent 
+\begin{cppcode}
+    #include <compare>
+    struct Point {
+        int x,y;
+
+        auto operator <=>(const Point& other) const = default;
+    }
+
+    Point p1{1,2},p2{3,4};
+
+    cout << (p1 < p2) << 
+        (p1 > p2) << 
+        (p1 == p2) << endl;
+\end{cppcode}
+\bigbreak \noindent 
+\subsection{Custom <=> logic}
+\bigbreak \noindent 
+We can also define specific details for the spaceship operator
+\bigbreak \noindent 
+struct Rect {
+    int width, height;
+
+    auto operator<=>(const Rec& other) const {
+        return (width * height) <=> (other.width * other.height);
+    }
+};
+
+\bigbreak \noindent 
+\subsection{Return types}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{std::strong\_ordering:} For classes where all comparisons (<, <=, >, >=, ==, !=) are meaningful and consistent.
+    \item \textbf{std::weak\_ordering:} For cases where equivalence (==) is consistent with ordering but doesn't imply substitutability.
+    \item \textbf{std::partial\_ordering:} For cases where not all values are always comparable (e.g., floating-point numbers).
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Spaceship on primitive types}
+\bigbreak \noindent 
+Consider the spaceship operator no integers
+\bigbreak \noindent 
+\begin{cppcode}
+int a = 5, b = 10;
+std::strong_ordering c = a <=> b;
+
+if (c == std::strong_ordering::less) {
+    ...
+} else if (c == std::strong_ordering::greater) {
+    ...
+} else if (c == std::strong_ordering::equal)
+\end{cppcode}
+
+
+
 
 
 
@@ -5329,9 +5432,22 @@ ou do not need to convert a std::shared\_ptr back to a std::weak\_ptr when you'r
 \pagebreak 
 \unsect{C++ versions and their additions}
 \begin{itemize}
-    \item \textbf{c++11}: Move Semantics, Automatic Type Deduction (auto keyword), Lambdas, Range-Based For Loops, constexpr, Smart Pointers, Threading, nullptr, Uniform initialization with \{\} braces
-    \item \textbf{c++14}: Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. Generic Lambdas, lambdas parameters can be set auto, std::make\_unique, Return type deduction for normal functions.
+    \item \textbf{c++11}: Move Semantics, Automatic Type Deduction (auto keyword), Lambdas, Range-Based For Loops, constexpr, Smart Pointers, Threading, nullptr, Uniform initialization with \{\} braces, threading and concurrency, std::array, std::unordered\_map, std::tuple, <type\_traits>
+    \item \textbf{c++14}: Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. Generic Lambdas, lambdas parameters can be set auto, std::make\_unique, Return type deduction for normal functions, make\_unique
     \item \textbf{c++17}: Structured Bindings, if constexpr (Compile-time conditional branching), std::optional, std::variant
+    \item \textbf{c++20}: Ranges library, concepts library, modules, coroutines, spaceship operator, std::span
+    \item \textbf{c++23}: 
+        \begin{itemize}
+            \item \textbf{std::expected}: Represents a value or an error, simplifying error handling.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                std::expected<int, std::string> result = 42;
+                \end{cppcode}
+            \item \textbf{Deduction Guides}: For better type deduction in templates.
+            \item \textbf{Extended constexpr}: Nearly all standard library functions are constexpr.
+            \item \textbf{Improved Pattern Matching}:
+Early steps toward native pattern-matching constructs.
+        \end{itemize}
 \end{itemize}
 
 

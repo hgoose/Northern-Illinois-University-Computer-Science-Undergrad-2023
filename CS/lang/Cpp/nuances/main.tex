@@ -89,6 +89,257 @@
     \end{cppcode}
     \bigbreak \noindent 
     std::string::npos is defined as the maximum value representable by the type size\_t. This value is typically used to signify an error condition or a not-found condition when working with strings and other sequence types. However, when used as a length argument in methods like std::string::substr, it effectively becomes a directive to process characters until the end of the string. This is because any attempt to access beyond the end of the string would exceed the string's length, and the methods are designed to stop processing at that point.
+
+    \pagebreak 
+    \unsect{Narrowing}
+    \bigbreak \noindent 
+    Narrowing happens when:
+    \begin{itemize}
+        \item A value of a larger or more precise type is converted to a smaller or less precise type (e.g., double to int, int to char).
+        \item A floating-point value is converted to an integer type.
+        \item An integer value is converted to a smaller integer type (e.g., int to short) and does not fit within the destination type's range.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Aggregate types}
+    \bigbreak \noindent 
+    Aggregate types in C++ are simple data structures that hold collections of values and have minimal additional behavior. They are essentially "plain old data" structures that are easy to initialize and manipulate. The term "aggregate" is formally defined by the C++ standard.
+    \bigbreak \noindent 
+    A class, struct, or union is considered an aggregate if it satisfies all of the following conditions:
+    \begin{enumerate}
+        \item No User-Defined Constructors: It must not have any explicitly declared constructors (including default, copy, or move constructors).
+        \item No Private or Protected Non-Static Data Members: All non-static data members must be public.
+        \item No Virtual Functions: It must not have any virtual functions.
+        \item No Base Classes: It must not inherit from another class or struct.
+        \item No Virtual Base Classes: It must not use virtual inheritance.
+    \end{enumerate}
+    \bigbreak \noindent 
+    For example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x,y;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Aggregate initialization}
+    \bigbreak \noindent 
+    Aggregate initialization in C++ refers to a special form of initialization for aggregate types using an initializer list enclosed in \{\} braces. This allows you to directly specify values for the members of an aggregate type in the order they are declared.
+    \bigbreak \noindent 
+    Each member of the aggregate is initialized with the corresponding value provided in the initializer list. The order of values in the initializer list must match the declaration order of members in the aggregate.
+    \bigbreak \noindent 
+    If fewer values are provided in the initializer list than there are members in the aggregate, the remaining members are value-initialized (e.g., zero-initialized for fundamental types).
+    \bigbreak \noindent 
+    If the type is not an aggregate (e.g., has a user-defined constructor, private members, or virtual functions), aggregate initialization cannot be used.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            int x,y;
+        };
+
+        S s = {1,2};
+    \end{cppcode}
+    \bigbreak \noindent 
+    Consider the next example,
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            int x,y;
+
+            S(int x, int y) : x(x), y(y) {}
+        };
+         
+        S s = {1,2}; // Works fine
+    \end{cppcode}
+    \bigbreak \noindent 
+    Since the class $S$ has a user-defined constructor, it is no longer an aggregate type.
+    \bigbreak \noindent 
+    Aggregate initialization is not applicable here. Instead, C++ checks for constructors that match the initializer list \{1, 2\}.
+    \bigbreak \noindent 
+    Since it found one, the compiler interprets it as calling the constructor S(int x, int y) with the arguments 1 and 2.
+    \bigbreak \noindent 
+    In modern C++ (C++11 and later), brace-enclosed initialization is often used for uniform initialization.
+    \bigbreak \noindent 
+    If a constructor is available that matches the initializer list, it is called.
+
+    \bigbreak \noindent 
+    \subsection{Narrowing is not allowed in aggregate-initialization from an initializer list}
+    \bigbreak \noindent 
+    The error "narrowing is not allowed in aggregate-initialization from an initializer list" occurs in C++ when you try to initialize an aggregate type (e.g., structs, arrays, or classes with no user-defined constructors) using values in an initializer list, but the values undergo an implicit narrowing conversion that could lose information or precision.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            int x;
+            float y;
+        };
+
+        A a = {1, 3.14}; // OK, no narrowing
+        A b = {1, 3.14f}; // OK, no narrowing (3.14f is a float literal)
+
+        A c = {1, 3.14}; // ERROR: narrowing from `double` to `float`
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{implicit conversion using a single-argument constructor}
+    \bigbreak \noindent 
+     A constructor that takes one argument can be used for implicit conversion of that argument type to the class type.
+     \bigbreak \noindent 
+     \begin{cppcode}
+     struct s {
+         int x;
+         s(int value) : x(value) {} // Single-argument constructor
+     };
+     s s1 = 1;
+ \end{cppcode}
+ \bigbreak \noindent 
+ The integer 1 is implicitly converted to an object of type s using the s(int value) constructor.
+ \bigbreak \noindent 
+ By default, a single-argument constructor allows implicit conversions. If you want to prevent implicit conversions and require explicit construction, you can use the explicit keyword
+ \bigbreak \noindent 
+ \begin{cppcode}
+     struct s {
+         int x;
+         explicit s(int value) : x(value) {}
+     };
+
+     int main() {
+         s s1 = 1; // ERROR: Explicit constructor prevents implicit conversion
+         s s2(1);  // OK: Direct initialization
+     }
+ \end{cppcode}
+
+
+
+
+
+    \pagebreak 
+    \unsect{Floating point literals}
+    \bigbreak \noindent 
+    Floating point literals in c++ will be of type double. For example,
+    \bigbreak \noindent 
+    \begin{cppcode}
+    cout << typeid(4.09).name(); // d
+    \end{cppcode}
+    \bigbreak \noindent 
+    Append $f$ to the literal to make it a float
+    \bigbreak \noindent 
+    \begin{cppcode}
+        cout << typeid(4.09f).name(); // d
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Size of structs and classes}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s { }
+        cout << sizeof(s) << endl; // 1
+
+        s s1;
+        cout << sizeof(s1) << endl; // 1
+    \end{cppcode}
+    Notice that empty structs do not have a size of zero. Empty structs have a size of one byte. 
+    \bigbreak \noindent 
+    A size of zero for a struct would mean that it occupies no memory. If multiple instances of such a struct are created, they would have no unique memory location to occupy. As a result, the compiler would assign the same memory address to all instances, which would violate fundamental rules of object-oriented programming in C++.
+    \bigbreak \noindent 
+    Furthermore, giving fields to the struct or class increases the size of that struct or class by size of the type. 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s { int x; }
+        cout << sizeof(s); // 4
+    \end{cppcode}
+    \bigbreak \noindent 
+    Notice that the size is \textbf{not} 5. Creating functions and creating variables in those functions does not add to the size
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            void f()  {
+                int  x;
+            }
+        }
+        cout << sizeof(s); // 1
+    \end{cppcode}
+    \bigbreak \noindent 
+    Creating structs inside structs and even adding fields to the inner structs does not increase the size
+    \bigbreak \noindent 
+    \begin{cppcode}
+    struct s {
+        struct k { int x; };
+    };
+
+    cout << sizeof(s); // 1
+    cout << sizeof(s::k); // 4
+    \end{cppcode}
+    \bigbreak \noindent 
+    Lastly, constructors and destructors do not increase the size.
+    \bigbreak \noindent 
+    It seems only fields increase the size.
+
+    \pagebreak 
+    \unsect{When is trailing return type useful}
+    \bigbreak \noindent 
+    \subsection{Decltype on template parameters}
+    \bigbreak \noindent 
+    Suppose we had two template types $T,U$, and a function that accepts $T a, U b$. Suppose we wanted the return type to be the type of $T + U$, we could of course just write
+    \bigbreak \noindent 
+    \begin{cppcode}
+        template<typename T, typename U>
+        decltype(T{} + U{}) f(T a, U b) {
+            return a + b; 
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Or, we could utilize a trailing return
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename T, typename U>
+    auto f(T a, U b) -> decltype(a+b) {
+        return a + b; 
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Nested structs}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            struct B {};
+
+            B f() const;
+        };
+
+        A::B A::f() const { }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Instead of having to use the scope resolution operator, we could use a trailing return type.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        auto A::f() const -> B {
+
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    By using a trailing return type, we are essentially inside the scope of $A$ by the time we specify the return type.
+
+    \pagebreak 
+    \unsect{Most vexing parse}
+    \bigbreak \noindent 
+    The most vexing parse is a phenomenon in C++ where a line of code that looks like a variable declaration is instead interpreted by the compiler as a function declaration. This often happens because of C++'s ambiguous grammar for declarations.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    std::string s(); // Treated as a function declaration
+    \end{cppcode}
+    \bigbreak \noindent 
+    This will not be treated as a default constructed string by the C++ compiler, but instead as a function declaration. To fix this issue, we instead use brace initialization
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::string s{} // A default string variable
+    \end{cppcode}
+
+
+
     
 
     
