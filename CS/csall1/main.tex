@@ -7328,11 +7328,88 @@ indicate which strong entity the weak entity depends upon.
                     When registers are omitted from a \texttt{D(B)} or \texttt{D(X,B)} address, the calculation of the corresponding absolute address is performed by using 0 in place of the contents of the omitted registers. Thus, either \texttt{42(14)} or \texttt{42(,14)} results in the same absolute address.
                     \texttt{42(,14)} is converted to an absolute address by adding the binary equivalent of decimal 42 to the binary number represented by the rightmost three bytes of the contents of R14.
                 \item $R0$ should not ordinarily be used as an index register or as a base register. If R0 is specified in an address, it will be taken to mean that the corresponding register has been omitted. (As an example, both \texttt{4(,15)} and \texttt{4(0,15)} refer to the same absolute address.)
-
+                \item \textbf{Note about register zero as index or base}: In assembly language (e.g., for IBM System/360 or z/Architecture), the address specification $D(X,B)$ refers to a displacement $D$ an index register $x$, and a base register $B$. When an index or base register is omitted, it is implicitly treated as 0.
+                    \bigbreak \noindent 
+                    Register 0 (R0) is often special in many architectures. When used as an index register (x) or base register (B), it is ignored in the address calculation, effectively contributing 0 to the address.
             \end{enumerate}
 
             \pagebreak 
             \subsection{Basic concepts}
+            \begin{itemize}
+                \item \textbf{The function of a program}: The modern computer can perform millions of operations per second. If these operations occur in the proper sequence, meaningful results will be obtained that might have been totally inaccessible otherwise. The function of a program is to direct the order in which operations are executed within the computer.
+                    \bigbreak \noindent 
+                    The creation of programs that correctly direct the sequence of operations is, therefore of fundamental importance if computers are to be successfully utilized.
+                \item \textbf{Type of assembly on IBM mainframes}: The language used in this text is a symbolic language called \textit{Basic Assembler Language}, this is the assembler language developed for use on IBM mainframe computers.
+                    \bigbreak \noindent 
+                    Note that the computer cannot directly carry out or execute assembler language instructions. Each of these instructions must be translated into a machine-language instruction before the computer can begin to perform the task that the program was intended to accomplish.
+                    \bigbreak \noindent 
+                    The machine language instructions that the computer can execute directly are strings of binary digits that are difficult for a human to decipher. A program consisting entirely of machine-language instructions is called an \textit{object program}.
+                    \bigbreak \noindent 
+                \item \textbf{The \textit{Job Control Language} (JCL)}: After an assembler language program has been prepared, a few additional instructions in JCL are added to the program and the resulting program is presented to the computer through an input device, such as a card reader or a terminal. The JCL instructions invoke a program called an \textit{assembler}, which translates the source program instructions into machine-language instructions and thus produces an object program.
+                    \bigbreak \noindent 
+                    If no syntax errors are detected, the object program is loaded into the main storage of the computer and execution of the program begins.
+                \item \textbf{Execution of the program}: The actual execution of the program is depicted by the following algorithm
+                    \begin{enumerate}
+                         \item Initially, the absolute address of the first instruction of the program to be executed is inserted into a special pointer called the \textbf{Program Status Word (PSW)}.
+                         \item The machine retrieves from storage the instruction that is pointed to by the PSW.
+                         \item The machine then updates the contents of the PSW to point to the next instruction.
+                         \item The machine executes the operation indicated by the previously retrieved instruction. If the instruction did not cause a branch to occur (a branch is caused by a basic operation analogous to a \texttt{GOTO} statement in a higher-level language), then go to \textbf{Step 2}. Otherwise, put the absolute address that is to be branched to into the PSW, and go to \textbf{Step 2}.
+                    \end{enumerate}
+                    \bigbreak \noindent 
+                    \textbf{Note:} In ASSIST, general purpose register 15 (R15) is commonly used as the Program status word (PSW)
+                \item \textbf{Types of Instructions}: The process of encoding instructions can be clarified by considering some specific instructions in their symbolic and encoded forms. Instructions are encoded according to five distinct formats, RR, RX, RS, SI, and SS. The set of instructions encoded in the RR format is referred to as the \textit{RR instructions}.
+                \item \textbf{RR Instructions, add register (AR)}: An RR instruction is most often used to cause an operation involving two registers.
+                    \bigbreak \noindent 
+                    Consider the format of the Add Register instruction
+                    \begin{align*}
+                        AR \quad r1,r2
+                    \end{align*}
+                    Execution of this instruction causes the contents of r2 to be added to the contents of r1; the contents of r2 are unaltered, unless r2 is r1. If an overflow occurs in the process of addition, a fixed point overflow condition will exist, this will normal cause termination of the program.
+                    \bigbreak \noindent 
+                    This symbolic form must be translated into an encoded form before the instruction is actually executed. The encoded form of any RR instruction is a 16-bit binary number that will occupy a halfword of storage in the machine when the program is executed. The encoded instruction can therefore be represented as a four digit hexadecimal number. The precise format of an encoded RR instruction is
+                    \begin{align*}
+                        h_{0}h_{0}h_{r1}h_{r2}
+                    \end{align*}
+                    Where
+                    \begin{itemize}
+                        \item $h_0h_0$ is a two-digit operation code specifying the purpose of the instruction.
+                        \item $h_r$ is the number of the register (0-F) that is to be used as the first operand.
+                        \item $h_r$ is the number of the register that is to be used as the second operand.
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    The operation code (\textbf{op code}) for an \textbf{AR} instruction is \texttt{1A}. Therefore, the encoding of:
+                    \[
+                        \text{AR } 14,0
+                    \]
+                    is \texttt{1AE0}. The \texttt{1A} means that the encoded instruction is an \textbf{AR}, the \texttt{E} indicates that the first operand is \texttt{R14}, and the \texttt{0} indicates that \texttt{R0} is the second operand.
+                \item \textbf{RR Instructions, SR (Subtract register) and LR (Load register)}: Consider the instruction
+                    \begin{align*}
+                        SR \quad r1,r2
+                    \end{align*}
+                    Execution causes the number represented by the contents of r2 to be subtracted from the number represented by the contents of r1. Just as for AR, r2 is unaltered. Fixed-point overflow can occur. Next, consider
+                    \begin{align*}
+                        LR \quad r1,r2
+                    \end{align*}
+                    Causes the replacement of the original contents of r1 by the contents of r2, r2 remains unaltered.
+                    \bigbreak \noindent 
+                    The opcode for SR is 1B, and the opcode for LR is 18
+                \item \textbf{RX instructions}: RX instructions usually cause an operation that involves a register and main storage to be performed. For example, consider the Load instruction
+                    \begin{align*}
+                        r,D(X,B)
+                    \end{align*}
+                    Which causes the fullword in storage starting at the effective address derived from $D(X,B)$ to be loaded into $r$. The original contents of $r$ are replaced, while the fullword in storage remains unaltered
+                    \bigbreak \noindent 
+                    Three errors might occur during the execution of a load instruction
+                    \begin{enumerate}
+                        \item If the absolute address calculated from \( D(X, B) \) is not a multiple of 4 (not a fullword boundary), a \textit{specification exception} occurs.
+                        \item If \( D(X, B) \) is an address greater than any actual storage address, an \textit{addressing exception} will occur. This exception can happen only if either the \( X \) or the \( B \) register contains an excessively large number.
+                        \item If \( D(X, B) \) is the actual address of an area, but the address is not within the area of storage allocated to the program, a \textit{protection error} will occur.
+                    \end{enumerate}
+
+
+
+
+            \end{itemize}
             
             
 

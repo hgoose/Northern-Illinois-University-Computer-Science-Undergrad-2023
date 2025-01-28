@@ -5350,11 +5350,192 @@ if (weakPtr.expired()) {
 }
 \end{cppcode}
 \bigbreak \noindent 
-ou do not need to convert a std::shared\_ptr back to a std::weak\_ptr when you're done accessing the object.
+You do not need to convert a std::shared\_ptr back to a std::weak\_ptr when you're done accessing the object.
 \begin{itemize}
     \item \textbf{Temporary Ownership via std::shared\_ptr:} When you convert a std::weak\_ptr to a std::shared\_ptr using lock(), the resulting std::shared\_ptr takes temporary ownership of the managed object for as long as it is in scope. Once the std::shared\_ptr goes out of scope, it automatically releases this ownership, reducing the reference count.
     \item \textbf{std::weak\_ptr Remains Unchanged:} The original std::weak\_ptr remains intact and continues observing the managed object, if it still exists. There is no need to explicitly convert a std::shared\_ptr back to a std::weak\_ptr
 \end{itemize}
+
+\bigbreak \noindent
+\subsection{Unique\_ptr}
+\bigbreak \noindent 
+The unique\_ptr type, provided by the C++ standard library since C++11, is a kind of a smart pointer that helps to avoid resource leaks when exceptions are thrown. In general, this smart pointer implements the concept of exclusive ownership, which means that it ensures that an object and its associated resources are “owned” only by one pointer at a time. When this owner gets destroyed or becomes empty or starts to own another object, the object previously owned also gets destroyed, and any associated resources are released.
+\bigbreak \noindent 
+Class unique\_ptr succeeds class auto\_ptr, which was originally introduced with C++98 but is deprecated now. Class unique\_ptr provides a simple and clearer interface, making it less error prone than auto\_pointers have been
+\bigbreak \noindent 
+If bound to local objects, the resources acquired on entry get freed automatically on function exit
+because the destructors of those local objects are called. But if resources are acquired explicitly
+and are not bound to any object, they must be freed explicitly. Resources are typically managed
+explicitly when pointers are used.
+\bigbreak \noindent 
+A typical example of using pointers in this way is the use of new and delete to create and destroy an object
+\bigbreak \noindent 
+\begin{cppcode}
+    void f()
+    {
+        ClassA* ptr = new ClassA; // create an object explicitly
+        ... // perform some operations
+        delete ptr; // clean up (destroy the object explicitly)
+    }
+\end{cppcode}
+\bigbreak \noindent 
+This function is a source of trouble. One obvious problem is that the deletion of the object might be
+forgotten, especially if you have return statements inside the function. There also is a less obvious
+danger that an exception might occur. Such an exception would exit the function immediately,
+without calling the delete statement at the end of the function. The result would be a memory leak
+or, more generally, a resource leak
+\bigbreak \noindent 
+Avoiding such a resource leak usually requires that a function catch all exceptions. For example:
+\bigbreak \noindent 
+\begin{cppcode}
+    void f()
+    {
+        ClassA* ptr = new ClassA; // create an object explicitly
+        try {
+            ... // perform some operations
+        }
+        catch (...) { // for any exception
+            delete ptr; // - clean up
+            throw; // - rethrow the exception
+        }
+        delete ptr; // clean up on normal end
+    }
+\end{cppcode}
+\bigbreak \noindent 
+To handle the deletion of this object properly in the event of an exception, the code gets more complicated and redundant. If a second object is handled in this way, or if more than one catch clause is used, the problem gets worse. This is bad programming style and should be avoided because it is complex and error prone.
+\bigbreak \noindent 
+A smart pointer can help here. The smart pointer can free the data to which it points whenever the pointer itself gets destroyed. Furthermore, because it is a local variable, the pointer gets destroyed automatically when the function is exited, regardless of whether the exit is normal or is due to an exception. The class unique\_ptr was designed to be such a smart pointer
+\bigbreak \noindent 
+A unique\_ptr is a pointer that serves as a unique owner of the object to which it refers. As a result, an object gets destroyed automatically when its unique\_ptr gets destroyed. A requirement of a unique\_ptr is that its object have only one owner
+\bigbreak \noindent 
+Here is the previous example rewritten to use a unique\_ptr:
+\bigbreak \noindent 
+\begin{cppcode}
+    // header file for unique_ptr
+    #include <memory>
+    void f()
+    {
+        // create and initialize an unique_ptr
+        std::unique<ClassA> ptr(new ClassA);
+        ... // perform some operations
+    }
+\end{cppcode}
+\bigbreak \noindent 
+That’s all. The delete statement and the catch clause are no longer necessary.
+\bigbreak \noindent 
+\subsubsection{Using a unique\_ptr}
+\bigbreak \noindent 
+A unique\_ptr has much the same interface as an ordinary pointer; that is, operator * dereferences the object to which it points, whereas operator -> provides access to a member if the object is a class or a structure:
+\bigbreak \noindent 
+However, no pointer arithmetic, such as ++, is defined (this counts as an advantage because pointer arithmetic is a source of trouble). Pointer arithmetic allows you to move a pointer beyond the bounds of an array or allocated memory. Accessing memory outside valid bounds results in undefined behavior
+\bigbreak \noindent 
+Note that class unique\_ptr<> does not allow you to initialize an object with an ordinary pointer
+by using the assignment syntax. Thus, you must initialize the unique\_ptr directly, by using its
+value:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<int> up = new int; // ERROR
+std::unique_ptr<int> up(new int); // OK
+\end{cppcode}
+\bigbreak \noindent 
+A unique\_ptr does not have to own an object, so it can be empty. This is, for example, the case when it is initialized with the default constructor:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<std::string> up;
+\end{cppcode}
+\bigbreak \noindent 
+You can also assign the nullptr or call reset() :
+\begin{align*}
+    up = nullptr;
+    up.reset();
+\end{align*}
+\bigbreak \noindent 
+n addition, you can call release(), which yields the object a unique\_ptr owned, and gives up ownership so that the caller is responsible for its object now
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<std::string> up(new std::string("nico"));
+    ...
+    std::string* sp = up.release(); // up loses ownership
+\end{cppcode}
+\bigbreak \noindent 
+You can check whether a unique pointer owns an object by calling operator bool():
+\bigbreak \noindent 
+\begin{cppcode}
+    if (up) { // if up is not empty
+        std::cout << *up << std::endl;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Instead, you can also compare the unique pointer with nullptr or query the raw pointer inside the unique\_ptr, which yields nullptr if the unique\_ptr doesn’t own any object
+\begin{cppcode}
+    if (up != nullptr) // if up is not empty
+    if (up.get() != nullptr) // if up is not empty
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Transfer of Ownership by unique\_ptr}
+\bigbreak \noindent 
+A unique\_ptr provides the semantics of exclusive ownership. However, it’s up to the programmer to ensure that no two unique pointers are initialized by the same pointer:
+\bigbreak \noindent 
+\begin{cppcode}
+std::string* sp = new std::string("hello");
+std::unique_ptr<std::string> up1(sp);
+std::unique_ptr<std::string> up2(sp); // ERROR: up1 and up2 own same data
+\end{cppcode}
+\bigbreak \noindent 
+Unfortunately, this is a runtime error, so the programmer has to avoid such a mistake.
+\bigbreak \noindent 
+This leads to the question of how the copy constructor and the assignment operator of
+unique\_ptrs operate. The answer is simple: You can’t copy or assign a unique pointer if you use
+the ordinary copy semantics. However, you can use the move semantics provided since C++11. In that case, the constructor or assignment operator transfers the ownership
+to another unique pointer
+\bigbreak \noindent 
+\begin{cppcode}
+    // initialize a unique_ptr with a new object
+    std::unique_ptr<ClassA> up1(new ClassA);
+    // copy the unique_ptr
+    std::unique_ptr<ClassA> up2(up1); // ERROR: not possible
+    // transfer ownership of the unique_ptr
+    std::unique_ptr<ClassA> up3(std::move(up1)); // OK
+\end{cppcode}
+\bigbreak \noindent 
+After the first statement, up1 owns the object that was created with the new operator. The second,
+which tries to call the copy constructor, is a compile-time error because up2 can’t become another
+owner of that object. Only one owner at a time is allowed. However, with the third statement, we
+transfer ownership from up1 to up3. So afterward, up3 owns the object created with new, and up1
+no longer owns the object. The object created by new ClassA gets deleted exactly once: when up3
+gets destroyed
+\bigbreak \noindent 
+The assignment operator behaves similarly:
+\bigbreak \noindent 
+\begin{cppcode}
+    // initialize a unique_ptr with a new object
+    std::unique_ptr<ClassA> up1(new ClassA);
+    std::unique_ptr<ClassA> up2; // create another unique_ptr
+    up2 = up1; // ERROR: not possible
+    up2 = std::move(up1); // assign the unique_ptr
+    // - transfers ownership from up1 to up2
+\end{cppcode}
+\bigbreak \noindent 
+Here, the move assignment transfers ownership from up1 to up2. As a result, up2 owns the object previously owned by up1.
+\bigbreak \noindent 
+If up2 owned an object before an assignment, delete is called for that object. A unique_ptr that loses the ownership of an object without getting a new ownership refers to no object.
+\bigbreak \noindent 
+To assign a new value to a unique\_ptr, this new value must also be a unique\_ptr. You can’t assign an ordinary pointer:
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<ClassA> ptr; // create a unique_ptr
+    ptr = new ClassA; // ERROR
+    ptr = std::unique_ptr<ClassA>(new ClassA); // OK, delete old object
+    // and own new
+\end{cppcode}
+\bigbreak \noindent 
+Assigning nullptr is also possible, which has the same effect as calling reset():
+\bigbreak \noindent 
+\begin{cppcode}
+up = nullptr; // deletes the associated object, if any
+\end{cppcode}
+
+
 
 \pagebreak 
 \unsect{Three way comparisons (spaceship operator) <compare>}
@@ -5445,8 +5626,7 @@ if (c == std::strong_ordering::less) {
                 \end{cppcode}
             \item \textbf{Deduction Guides}: For better type deduction in templates.
             \item \textbf{Extended constexpr}: Nearly all standard library functions are constexpr.
-            \item \textbf{Improved Pattern Matching}:
-Early steps toward native pattern-matching constructs.
+            \item \textbf{Improved Pattern Matching}: Early steps toward native pattern-matching constructs.
         \end{itemize}
 \end{itemize}
 
