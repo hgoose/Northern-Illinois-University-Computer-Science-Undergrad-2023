@@ -3802,6 +3802,198 @@ deriv_approx(f, 1.0, cos(1.0))
         \item how the data in memory is accessed
     \end{enumerate}
 \item \textbf{Robustness (Reliability)}: We want to ensure that our code works under \textit{all possible inputs}, and generates the clear warnings when it is not possible to produce an accurate result for some input.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Roundoff errors}
+    \begin{itemize}
+        \item \textbf{Real numbers stored on a computer}: Real numbers are stored on a computer following the IEEE floating-point standard:
+            \begin{enumerate}
+                \item \textbf{half precision:} using 16 bits (Julia type: `Float16`)
+                \item \textbf{single precision:} using 32 bits (Julia type: `Float32`)
+                \item \textbf{double precision:} using 64 bits (Julia type: `Float64`)
+            \end{enumerate}
+            \bigbreak \noindent 
+            Julia also has an \textit{arbitrary precision} floating-point data type called `BigFloat`. It is excellent if you need more precision, but it is also much slower.
+            \bigbreak \noindent 
+            Julia has the type \textit{AbstractFloat}, which is a subtype of the class Real, and is an abstract supertype for all floating point numbers.
+            \bigbreak \noindent 
+            \begin{jlcode}
+            AbstractFloat <: Real
+
+            > subtypes(AbstractFloat)
+             5-element Vector{Any}:
+             BigFloat
+             Core.BFloat16
+             Float16
+             Float32
+             Float64           
+         \end{jlcode}
+     \item \textbf{Description of the IEEE Float64}: Suppose $x$ is a floating-point number stored in the following 64-bits:
+         $$
+         \begin{array}{|c|c|c|c|c|c|c|}
+             \hline
+             1 & 2 & \cdots & 12 & 13 & \cdots & 64 \\
+             \hline
+             s & e_{10} & \cdots & e_0 & f_1 & \cdots & f_{52} \\
+             \hline
+         \end{array}
+         $$
+         Where
+         \begin{itemize}
+             \item 1 bit $s$ represents the \textbf{sign}
+             \item 11 bits $e_{10} \cdots e_{0}$ represent the \textbf{exponent}
+             \item 52 bits $f_1 \cdots f_{52}$ represent the \textbf{fraction} (a.k.a. the mantissa or significand)
+         \end{itemize}
+         Then
+         $$ x = (-1)^s [1.f_1 \cdots f_{52}]_2 \times 2^{(e-1023)}.$$
+         \bigbreak \noindent 
+         \textbf{Notes:}
+         \begin{itemize}
+             \item $x$ is \textbf{normalized} to have its first digit nonzero.
+             \item $e = [e_{10} \cdots e_{0}]_2 = e_{10} 2^{10} + \cdots + e_1 2^1 + e_0 2^0 \in \left[0, 2^{11}-1\right] = [0, 2047]$
+             \item $e = 0$ and $e = 2047$ are reserved for special floating-point values, so 
+         \end{itemize}
+         $$e \in [1, 2046]$$
+     The "$-1023$" in the exponent is called the \textbf{bias}:  $e-1023 \in [-1022,1023]$
+     \bigbreak \noindent 
+     Also, 
+     \begin{align*}
+         [1.f_1 \cdots f_{52}]_2 = 1 + \frac{f_1}{2^1} + \frac{f_2}{2^2} + \cdots + \frac{f_{52}}{2^{52}}
+     \end{align*}
+     \bigbreak \noindent 
+     For example, suppose
+     \begin{align*}
+         x & = -[1.101101]_2 \times 2^{(1026-1023)} \\
+           & = -[1.101101]_2 \times 2^{3} \\
+           & = -[1101.101]_2 \\
+           & = -\left(1 \cdot 8 + 1 \cdot 4 + 0 \cdot 2 + 1 \cdot 1 + 1 \cdot \frac{1}{2} + 0 \cdot \frac{1}{4} + 1 \cdot \frac{1}{8}\right)  \\
+           & = -13.625
+     \end{align*}
+     \bigbreak \noindent 
+     Even if a number can be represented exactly in base-10 with a finite number of digits, it may require an infinite number of digits in base-2.
+     $$
+     0.1 = \left[0.000110011001\ldots\right]_2 = \left[1.\overline{1001}\right]_2 \times 2^{-4}
+     $$
+     Therefore, $0.1$ cannot be represented exactly as a floating-point number.
+    \item \textbf{16-bit and 32-bit IEEE representation}
+        \begin{itemize}
+            \item \textbf{16-bit (half-precision)}: The IEEE 754 half-precision floating-point format consists of:
+                \begin{itemize}
+                    \item 1 bit for the sign (\(s\))
+                    \item 5 bits for the exponent (\(e_4, e_3, e_2, e_1, e_0\))
+                    \item 10 bits for the fraction/mantissa (\(f_1, f_2, \ldots, f_{10}\))
+                \end{itemize}
+
+                \[
+                    \begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+                        \hline
+                        1 & 2 & 3 & 4 & 5 & 6 & \cdots & 16 \\
+                        \hline
+                        s & e_4 & e_3 & e_2 & e_1 & e_0 & f_1 & \cdots & f_{10} \\
+                        \hline
+                    \end{array}
+                \]
+            \item \textbf{32-bit (Single precision)}: The IEEE 754 single-precision floating-point format consists of:
+                \begin{itemize}
+                    \item 1 bit for the sign (\(s\))
+                    \item 8 bits for the exponent (\(e_7, e_6, e_5, e_4, e_3, e_2, e_1, e_0\))
+                    \item 23 bits for the fraction/mantissa (\(f_1, f_2, \ldots, f_{23}\))
+                \end{itemize}
+                \[
+                    \begin{array}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+                        \hline
+                        1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & \cdots & 32 \\
+                        \hline
+                        s & e_7 & e_6 & e_5 & e_4 & e_3 & e_2 & e_1 & e_0 & f_1 & \cdots & f_{23} \\
+                        \hline
+                    \end{array}
+                \]
+        \end{itemize}
+    \item \textbf{Bias calculation}: The bias used above is calculated as 
+        \begin{align*}
+            \text{Bias} = 2^{(E-1)} -1
+        \end{align*}
+        where $E$ is the number of bits allocated to the exponent field.
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item \textbf{16-bit half precision}: Exponent is allowed 5 bits, thus
+                \begin{align*}
+                    \text{Bias} = 2^{5-1} - 1 = 15
+                \end{align*}
+            \item \textbf{32-bit single precision}: Exponent is allowed 8 bits, thus
+                \begin{align*}
+                    \text{Bias} = 2^{7} - 1 = 127
+                \end{align*}
+            \item \textbf{64-bit double precision}: Exponent is allowed 11 bits, thus
+                \begin{align*}
+                    \text{Bias} = 2^{10} - 1 = 1023
+                \end{align*}
+        \end{itemize}
+    \item \textbf{Convert real to binary representation}: So we now know how to convert a binary representation of a float to its decimal representation. 
+        \bigbreak \noindent 
+        Consider the base ten real $-13.625$. To convert a base ten real into its binary representation, we first
+        \bigbreak \noindent 
+        \textbf{Convert the integer part to binary}: Following the standard algorithm to convert 13 to binary
+        \begin{align*}
+            13 &= 2(6) + 1:\ 1_{2} \\
+            6 &= 2(3) + 0:\ 0_{2} \\
+            3 &= 2(1) + 1:\ 1_{2} \\
+            1 &= 2(0) + 1:\ 1_{2}
+        \end{align*}
+        $13_{10}$ is therefore $1101_{2}$
+        \bigbreak \noindent 
+        \textbf{Convert the fractional part}: Convert the fractional part (0.625) by repeatedly multiplying by 2 and recording the whole number parts. Stop when the fractional part becomes 0. We build the resulting representation in the opposite way of the integer algorithm (top down)
+        \begin{align*}
+            0.625 \cdot 2 &= 1.25:\ 1_{2} \\
+            0.25 \cdot 2 &= 0.5:\ 0_{2} \\
+            0.5 \cdot 2 &= 1:\ 1_{2}
+        \end{align*}
+        The result is therefore $101_{2} $
+        \bigbreak \noindent 
+        \textbf{Combine the integer and fractional parts}: We have
+        \begin{align*}
+            13.625_{10} = 1101.101_{2}
+        \end{align*}
+        \bigbreak \noindent 
+        \textbf{Normalize the Binary Number}: Normalize the binary number to the form 
+        \begin{align*}
+            1.\text{mantissa} \cdot 2^{\text{exponent}}
+        \end{align*}
+        For $1101.101_{2}$, shift the decimal point left by three places to get $1.101101_{2}$. The exponent is therefore three because
+        \begin{align*}
+            1101.101 = 1.101101 \cdot 2^{3}
+        \end{align*}
+        \bigbreak \noindent 
+        \textbf{Determine the Sign Bit}: The sign bit is:
+        \begin{itemize}
+            \item 0 for positive numbers.
+            \item 1 for negative numbers.
+        \end{itemize}
+        Since $-13.625$ is negative, the sign bit is 1
+        \bigbreak \noindent 
+        \textbf{Encode the Exponent}: The exponent is stored in "biased" form, for 64-bit double precision the bias is $1023$. We add the bias to the actual exponent to get the biased to get the biases exponent
+        \begin{align*}
+            3+1023 = 1026
+        \end{align*}
+        Then, convert the biased exponent to binary
+        \begin{align*}
+            1026_{10} = 10000000010_{2} 
+        \end{align*}
+        \bigbreak \noindent 
+        \textbf{Encode the Mantissa}: The mantissa is the fractional part of the normalized binary number ( 1.mantissa), excluding the leading 1.
+        \bigbreak \noindent 
+        From $1.101101_{2}$, the mantissa is 101101. We pad with zeros to make it the required 52 bits
+        \bigbreak \noindent 
+        \textbf{Combine the parts}: The IEEE 754 representation is formed by combining
+        \begin{itemize}
+            \item \textbf{Sign bit (1 bit):} 1
+            \item \textbf{Exponent (11 bits):} 10000000010
+            \item \textbf{Mantissa (52 bits):} 10110100000000000000000...$0_{52}$
+        \end{itemize}
+
+         
+
 
 
 

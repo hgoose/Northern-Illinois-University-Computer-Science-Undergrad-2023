@@ -5535,6 +5535,123 @@ Assigning nullptr is also possible, which has the same effect as calling reset()
 up = nullptr; // deletes the associated object, if any
 \end{cppcode}
 
+\bigbreak \noindent 
+\subsubsection{Source and Sink}
+\bigbreak \noindent 
+The transfer of ownership implies a special use for unique\_ptrs; that is, functions can use them to transfer ownership to other functions. This can occur in two ways:
+\begin{enumerate}
+    \item A function can behave as a \textit{sink} of data. This happens if a unique\_ptr is passed as an argument to the function by rvalue reference created with std::move(). In this case, the parameter of the called function gets ownership of the unique\_ptr. Thus, if the function does not transfer it again, the object gets deleted on function exit:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            void sink(std::unique_ptr<ClassA> up) // sink() gets ownership
+            {
+                ...
+            }
+            std::unique_ptr<ClassA> up(new ClassA);
+            ...
+            sink(std::move(up)); // up loses ownership
+        \end{cppcode}
+    \item A function can behave as a \textit{source} of data. When a unique\_ptr is returned, ownership of the returned value gets transferred to the calling context. The following example shows this technique
+        \bigbreak \noindent 
+        \begin{cppcode}
+            std::unique_ptr<ClassA> source()
+            {
+                std::unique_ptr<ClassA> ptr(new ClassA); // ptr owns the new object
+                ...
+                return ptr; // transfer ownership to calling function
+            }
+            void g()
+            {
+                std::unique_ptr<ClassA> p;
+                for (int i=0; i<10; ++i) {
+                    p = source(); // p gets ownership of the returned object
+                    // (previously returned object of f() gets deleted)
+                    ...
+                }
+            } // last-owned object of p gets deleted
+        \end{cppcode}
+        \bigbreak \noindent 
+        Each time source() is called, it creates an object with new and returns the object, along with its ownership, to the caller. The assignment of the return value to p transfers ownership to p. In the second and additional passes through the loop, the assignment to p deletes the object that p owned previously. Leaving g(), and thus destroying p, results in the destruction of the last object owned by p. In any case, no resource leak is possible. Even if an exception is thrown, any unique\_ptr that owns data ensures that this data is deleted.
+\end{enumerate}
+
+\bigbreak \noindent 
+\subsubsection{unique\_ptrs as Members}
+\bigbreak \noindent 
+By using unique\_ptrs within a class, you can also avoid resource leaks. If you use a unique\_ptr
+instead of an ordinary pointer, you no longer need a destructor because the object gets deleted with
+the deletion of the member. In addition, a unique\_ptr helps to avoid resource leaks caused by
+exceptions thrown during the initialization of an object. Note that destructors are called only if any
+construction is completed. So, if an exception occurs inside a constructor, destructors are called
+only for objects that have been fully constructed. This can result in resource leaks for classes with
+multiple raw pointers if during the construction the first new was successful but the second was not.
+
+\bigbreak \noindent 
+\begin{cppcode}
+    class ClassB {
+    private:
+        ClassA* ptr1; // pointer members
+        ClassA* ptr2;
+    public:
+        // constructor that initializes the pointers
+        // - will cause resource leak if second new throws
+        ClassB (int val1, int val2)
+        : ptr1(new ClassA(val1)), ptr2(new ClassA(val2)) {
+        }
+        ~ClassB () {
+            delete ptr1;
+            delete ptr2;
+        }
+\end{cppcode}
+\bigbreak \noindent 
+To avoid such a possible resource leak, you can simply use unique\_ptrs:
+\bigbreak \noindent 
+\begin{cppcode}
+    class ClassB {
+    private:
+        std::unique_ptr<ClassA> ptr1; // unique_ptr members
+        std::unique_ptr<ClassA> ptr2;
+    public:
+        // constructor that initializes the unique_ptrs
+        // - no resource leak possible
+        ClassB (int val1, int val2)
+        : ptr1(new ClassA(val1)), ptr2(new ClassA(val2)) {
+        }
+    };
+\end{cppcode}
+\bigbreak \noindent 
+Note, first, that you can skip the destructor now because unique\_ptr does the job for you. You also
+have to implement the copy constructor and assignment operator. By default, both would try to copy
+or assign the members, which isn’t possible. If you don’t provide them, ClassB also would provide
+only move semantics.
+
+\bigbreak \noindent 
+\subsubsection{Dealing with arrays}
+\bigbreak \noindent 
+By default, unique\_ptrs call delete for an object they own if they lose ownership (because they
+are destroyed, get a new object assigned, or become empty). Unfortunately, due to the language rules
+derived from C, C++ can’t differentiate between the type of a pointer to one object and an array of
+objects. However, according to language rules for arrays, operator delete[] rather than delete
+has to get called. So, the following is possible but wrong:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<std::string> up(new std::string[10]); // runtime ERROR
+\end{cppcode}
+\bigbreak \noindent 
+Now, you might assume that as for class shared\_ptr, you have to define your own deleter to deal with arrays. But this is not necessary.
+\bigbreak \noindent 
+Fortunately, the C++ standard library provides a partial specialization of class unique_ptr for
+arrays, which calls delete[ ] for the referenced object when the pointer loses the ownership to it.
+So, you simply have to declare:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<std::string[]> up(new std::string[10]); // OK
+\end{cppcode}
+\bigbreak \noindent 
+Note, however, that this partial specialization offers a slightly different interface. Instead of operators * and ->, operator [ ] is provided to access one of the objects inside the referenced array
+\bigbreak \noindent 
+As usual, it’s up to the programmer to ensure that the index is valid. Using an invalid index results in undefined behavior.
+
+
 
 
 \pagebreak 

@@ -338,6 +338,223 @@
         std::string s{} // A default string variable
     \end{cppcode}
 
+    \pagebreak 
+    \unsect{Notes about copy constructors}
+    \bigbreak \noindent 
+    The copy constructor in C++ typically takes a const reference (const T\&) to ensure correctness and efficiency. If the copy constructor took its parameter by value, this would require making a copy of other before calling the constructor itself. But that copy itself would require calling the copy constructor, leading to infinite recursion until a stack overflow.
+    \bigbreak \noindent 
+    If the copy constructor took a non-const reference, this would not allow copying from const objects.
+    \bigbreak \noindent 
+    Since a copy operation should not modify the original object, using const ensures the copy constructor can be called for const objects.
+    \bigbreak \noindent 
+    Recall that functions (and methods) that take a const reference insure that the function can be called on both const objects and non-const objects. Functions that take non-const references can only accept non-const objects.
+    \bigbreak \noindent 
+    As a quick side note, since we are on the topic of const correctness, recall that constant member functions cannot call non-const member functions.
+
+    \pagebreak 
+    \unsect{Exceptions during a call to new}
+    \bigbreak \noindent 
+    When using raw pointers, an exception occurring after a new allocation leads to a resource leak if the allocated memory is not properly managed. This happens because new dynamically allocates memory on the heap, but if an exception interrupts execution before delete is called, the allocated memory remains unreachable and never freed.
+    \bigbreak \noindent 
+    To prevent this, use smart pointers (std::unique\_ptr or std::shared\_ptr), which automatically manage memory and clean up even if an exception occurs.
+    \bigbreak \noindent 
+    However, it is true that using std::unique\_ptr and std::shared\_ptr does not guarantee that there will be no resource leaks if they are not used properly. Specifically, passing new directly to their constructors can still lead to resource leaks in certain cases. This is why std::make\_unique and std::make\_shared are preferred
+    \bigbreak \noindent 
+    make\_shared performs a single allocation that stores both the object and the control block together. If an exception occurs, no memory leak happens because allocation and ownership setup happen in one step.
+    \bigbreak \noindent 
+    Same is true for make\_unique
+    \bigbreak \noindent 
+    \subsection{Exceptions during constructors}
+    \bigbreak \noindent 
+    If a call to new results in an exception, the object is never allocated.
+    When you use new, the operator first tries to allocate memory by calling operator new(size), which is similar to malloc.
+    \bigbreak \noindent 
+    If memory allocation is successful, the constructor of the object is called.
+    \bigbreak \noindent 
+    If there isn't enough memory, operator new will throw a std::bad\_alloc exception (unless you use nothrow new, which returns nullptr)
+    \bigbreak \noindent 
+    If memory allocation succeeds but the constructor of the object throws an exception, the allocated memory is automatically freed, so there is no memory leak. If an exception is thrown in the constructor after memory has been allocated but before construction is complete, the C++ runtime ensures that the allocated memory is automatically freed. This is done by:
+    \begin{itemize}
+        \item Catching the exception inside the new operator.
+        \item Calling operator delete(ptr) to deallocate the memory.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Notes about polymorphism}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct base {
+            virtual void print() const {
+                cout << "Base" << endl;
+            }
+
+            virtual ~base() {
+                cout << "Cleaned up base" << endl;
+            }
+        };
+        struct derived : base {
+            void print() const override {
+                cout << "Derived" << endl;
+            }
+
+            ~derived() {
+                cout << "Cleaned up derived" << endl;
+            }
+        };
+
+        void f(const base* o) {
+            o->print();
+        }
+
+        void f(const base& o) {
+            o.print();
+        }
+
+        derived d1;
+        base& b1 = d1;
+
+        f(b1);
+
+        base* d = new derived();
+        f(d);
+
+        delete d;
+    \end{cppcode}
+    \bigbreak \noindent 
+    We get the output
+    \bigbreak \noindent 
+    \begin{cppcode}
+        Derived
+        Cleaned up derived
+        Cleaned up base
+    \end{cppcode}
+    \bigbreak \noindent 
+    The reason both destructor messages ("Cleaned up derived" and "Cleaned up base") are printed when you call delete d; is due to polymorphic destruction.
+    \bigbreak \noindent 
+    The base class has a virtual destructor (virtual $\sim$base()). This ensures that when an object is deleted through a pointer to base, the destructor of the derived class will also be invoked before the base destructor.
+    \bigbreak \noindent 
+    $d$ is deleted, and because base has a virtual destructor, the destructor call correctly cascades down the inheritance chain:
+    \begin{itemize}
+        \item First, $\sim$derived() runs and prints "Cleaned up derived".
+        \item Then, $\sim$base() runs and prints "Cleaned up base".
+    \end{itemize}
+    \bigbreak \noindent 
+    If the destructor in base wasn't virtual, deleting a derived object through a base* pointer would cause undefined behavior (likely only $\sim$base() would be called, leading to memory leaks).
+    \bigbreak \noindent 
+    If base has fields (member variables), whether directly inherited by derived or not, the base destructor must be called to clean up those fields properly when a derived object is deleted.
+
+    \bigbreak \noindent 
+    \subsection{Polymorphism with arrays and slicing}
+    \bigbreak \noindent 
+    \subsubsection{Object Slicing}
+    \bigbreak \noindent 
+    Object slicing occurs when an object of a derived class is assigned to a variable of a base class type, causing the derived part of the object to be "sliced off", leaving only the base class portion.
+    \bigbreak \noindent 
+    Slicing occurs when 
+    \begin{itemize}
+        \item A derived object is assigned to a base class object (not a pointer or reference).
+        \item A derived object is stored in a container of base class objects (e.g., an array of base objects).
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct base {
+            int x{1};
+
+        };
+        struct derived : base {
+            int y{5};
+        };
+
+        base b = derived{};
+        // Error, no member named y in base
+        cout << b.x << endl << b.y;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Polymorphism with arrays}
+    \bigbreak \noindent 
+    Consider the following code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct base {
+            virtual void print() const {
+                cout << "Base" << endl;
+            }
+
+            virtual ~base() {
+                cout << "Cleaned up base" << endl;
+            }
+        };
+
+        struct derived : base {
+            void print() const override {
+                cout << "Derived" << endl;
+            }
+
+            ~derived() {
+                cout << "Cleaned up derived" << endl;
+            }
+        };
+
+        void f(const base& o) {
+            o.print();
+        }
+
+        auto main(int argc, const char* argv[]) -> int {
+            base* barr = new derived[5];
+
+            delete[] barr;
+
+            return EXIT_SUCCESS;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    barr is declared as base*, but the memory actually holds derived objects. When delete[] barr; is called, C++ treats barr as an array of base objects, not derived objects. This breaks proper destructor calls, leading to undefined behavior.
+    \bigbreak \noindent 
+    Even though base has a virtual ~base(), the problem is not about virtual dispatch. Instead, it's about how C++ tracks array allocations.
+    \bigbreak \noindent 
+    The array of derived objects was allocated using new derived[5], but delete[] barr; doesn’t have enough information to correctly call derived destructors.
+    \bigbreak \noindent 
+    When delete[] barr; is called, C++ sees a base* pointer and assumes it points to an array of base objects.
+    \bigbreak \noindent 
+    Instead we either,
+    \begin{cppcode}
+        derived* darr = new derived[n]
+    \end{cppcode}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        vector<unique_ptr<base>> v(5);
+        for (auto& item : v) {
+            item = make_unique<derived>();
+        }
+
+        // Or the standard approach
+        vector<base*> v2(5);
+        for (auto& item : v2) {
+            item = new derived();
+        }
+
+        for (auto& item : v2) {
+            delete item;
+        }
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Note about heap allocated memory in vectors}
+    \bigbreak \noindent 
+    If your std::vector contains raw pointers (e.g., std::vector<int*>), the vector will only destroy the pointers themselves but not the dynamically allocated memory they point to. This will cause a memory leak if you don’t manually delete each allocated object before the vector goes out of scope.
+    \bigbreak \noindent 
+    To avoid leaks, manually delete the elements before clearing the vector
+
+    
+
+
+
+
+
+
 
 
     
