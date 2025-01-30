@@ -99,6 +99,125 @@ Certain companies try to compete for talent by shortening their interview cycles
 A shorter decision cycle obviously means fewer interviews. Sometimes this approach is combined with the lack of coding interviews - at least for senior engineers. The idea behind is that many engineers despise the idea of implementing those coding exercises. They find it irrelevant and even derogative to implement a linked list. Instead, they will ask questions that help evaluate how deep you understand the given programming language.
 
 \pagebreak 
+\unsect{Background}
+\bigbreak \noindent 
+\subsection{Rvalue references}
+\bigbreak \noindent 
+An rvalue reference is a reference that can only bind to rvalues (temporary values).
+\bigbreak \noindent 
+\begin{cppcode}
+void func(int&& param) {
+    std::cout << "Rvalue reference received\n";
+}
+
+int main() {
+    int x = 10;
+    // func(x);  // ❌ Error! x is an lvalue
+    func(20);    // ✅ OK, 20 is an rvalue
+}
+\end{cppcode}
+\bigbreak \noindent 
+Rvalue references allow efficient resource transfers via std::move. They do not accept lvalues.
+\bigbreak \noindent 
+\subsection{Universal References (T\&\& in templates)}
+\bigbreak \noindent 
+A universal reference is when T\&\& appears in a template parameter and depends on type deduction.
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    void func(T&& param) {
+        std::cout << "Universal reference received\n";
+    }
+
+    int main() {
+        int x = 10;
+        func(x);   // ✅ param is int& (lvalue reference)
+        func(20);  // ✅ param is int&& (rvalue reference)
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Universal references can bind to both lvalues and rvalues. Their behavior depends on type deduction. Used primarily for perfect forwarding
+
+\bigbreak \noindent 
+\subsection{Perfect forwarding}
+\bigbreak \noindent 
+Perfect forwarding is a technique that allows a function to pass its arguments to another function while preserving their original value category (i.e., whether they are lvalues or rvalues).
+\bigbreak \noindent 
+This is crucial when writing generic functions that should forward arguments efficiently, without unnecessary copies or moves.
+\bigbreak \noindent 
+\subsubsection{The Problem Without Perfect Forwarding}
+\bigbreak \noindent 
+Without perfect forwarding, lvalues and rvalues can be unintentionally converted, leading to performance issues.
+\bigbreak \noindent 
+\begin{cppcode}
+    void func(int& x) { std::cout << "Lvalue reference\n"; }
+    void func(int&& x) { std::cout << "Rvalue reference\n"; }
+
+    template <typename T>
+    void wrapper(T x) {  // Passes by value (unintended copy)
+        func(x); // Always an lvalue inside wrapper
+    }
+
+    int main() {
+        int a = 10;
+        wrapper(a);  // Calls func(int&) (expected)
+        wrapper(20); // Calls func(int&) (unexpected, should be func(int&&))
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The problem is that T x always treats x as an lvalue inside wrapper, even if it was originally an rvalue. This causes an unnecessary copy and prevents func(int\&\&) from being called.
+\bigbreak \noindent 
+\subsubsection{ Perfect Forwarding with std::forward}
+\bigbreak \noindent 
+Perfect forwarding ensures that arguments retain their original value category.
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    void wrapper(T&& arg) { 
+        func(std::forward<T>(arg));  // Perfectly forwards argument
+    }
+\end{cppcode}
+\begin{itemize}
+    \item If arg is an lvalue, T deduces as T\&, so std::forward<T>(arg) behaves like an lvalue reference.
+    \item If arg is an rvalue, T deduces as T, so std::forward<T>(arg) behaves like an rvalue reference.
+\end{itemize}
+\bigbreak \noindent 
+If you do not use std::forward in a universal reference (T\&\& in a template), the argument loses its rvalue status and is always treated as an lvalue inside the function. This can lead to incorrect function overload resolution and unnecessary copies/moves.
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    void wrapper(T&& arg) { 
+        func(arg);  // Problem: 'arg' is always an lvalue inside wrapper
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Even though arg is declared as T\&\&, it becomes an lvalue when used inside wrapper.
+\bigbreak \noindent 
+This means that even if you pass an rvalue, it will be treated as an lvalue.
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \bigbreak \noindent 
+% Every rvalue ref is denoted by ‘\&\&’ but the converse is not true
+% \begin{align*}
+%     \text{rvalue reference } \implies \&\& \\
+%     \&\& \not\implies \text{ rvalue reference}
+% \end{align*}
+% \bigbreak \noindent 
+% “\&\&” in source code though may have the syntactic appearance of an rvalue reference (“\&&”), but the meaning of an lvalue reference (“\&”).
+
+
+\pagebreak 
 \unsect{Categories}
 \bigbreak \noindent 
 The questions in this book fall into the following categories
@@ -118,6 +237,147 @@ The questions in this book fall into the following categories
     \item The STL
     \item Misc
 \end{itemize}
+
+\pagebreak 
+\unsect{Auto and type deduction}
+\bigbreak \noindent 
+auto type deduction is usually the same as template type deduction, but auto type deduction assumes that a braced initializer represents a std::initializer\_list, and template type deduction doesn’t hold such premises.
+\bigbreak \noindent 
+\begin{cppcode}
+    auto x = {1, 2, 3}; // auto deduces std::initializer_list<int>
+\end{cppcode}
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    void func(T t) {
+        std::cout << typeid(T).name() << "\n";
+    }
+
+    int main() {
+        func({1, 2, 3}); // ❌ Error: cannot deduce T from {1, 2, 3}
+    }
+\end{cppcode}
+\bigbreak \noindent 
+However, if we explicitly specify std::initializer\_list<T>, it works
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    void func(std::initializer_list<T> t) {
+        for (T n : t) {
+            std::cout << n << " ";
+        }
+    }
+
+    int main() {
+        func({1, 2, 3}); // ✅ Works, T = int
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Auto with const}
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+    const int x = 10;
+    auto y = x;   // y is `int`, not `const int`
+\end{cppcode}
+\bigbreak \noindent 
+We must const qualify $y$ if we require it to maintain constness
+\bigbreak \noindent 
+\begin{cppcode}
+const auto y = x; // y is int and const
+\end{cppcode}
+
+
+\bigbreak \noindent 
+\subsection{Const with auto and references}
+\bigbreak \noindent 
+Using auto\& ensures that the deduced type keeps the const qualifier when referencing a const object.
+\bigbreak \noindent 
+\begin{cppcode}
+const int a = 42;
+auto& b = a;  // `b` is `const int&`
+\end{cppcode}
+\bigbreak \noindent 
+\begin{cppcode}
+    const int x = 5;
+    auto& y = x;
+
+    y = 15; // Error
+\end{cppcode}
+\bigbreak \noindent 
+If $x$ were not const, we could also qualify $y$ to be const, therefore not allowing modification of $x$ through $y$
+\bigbreak \noindent 
+\begin{cppcode}
+    int x = 5;
+    const auto& y = x;
+
+    y = 15; // Error
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Const with auto and pointers}
+\bigbreak \noindent 
+First, recall
+\bigbreak \noindent 
+\begin{cppcode}
+    int x = 5;
+    int y = 10;
+
+    // Pointer is mutable, value is not
+    const int* ptr = &x; 
+    int const* ptr = &x; // Pointer is mutable, value is not
+    //
+    // // // Pointer is immutable, value is mutable
+    int* const ptr = &x;
+    int *const ptr = &x;
+
+    // Pointer and value are immutable
+    const int* const ptr = &x;
+    const int *const ptr = &x;
+    int const *const ptr = &x;
+\end{cppcode}
+\bigbreak \noindent 
+First, we discuss mutable pointers to const values
+\bigbreak \noindent 
+\begin{cppcode}
+    // Pointer is mutable, value is not
+    const int* ptr = &x; 
+
+    // Pointer to constant int
+    auto ptr2 = ptr;
+    *ptr2 = 20; // Error
+    // Pointer is mutable
+    ptr2 = &y;
+
+    // Both value and pointer are immutable
+    const auto ptr2 = ptr;
+    *ptr2 = 20;  // Error
+    ptr2 = &y // Error
+\end{cppcode}
+\bigbreak \noindent 
+Next, constant pointers to non-const data
+\bigbreak \noindent 
+\begin{cppcode}
+    // Pointer is immutable, value is mutable
+    int* const ptr = &x;
+
+    // Disregards const, ptr2 is non-const and value is non-const
+    auto ptr2 = ptr;
+    *ptr2 = 20;
+    ptr2 = &y; 
+
+    // Pointer is const, value non-const
+    const auto ptr2 = ptr;
+\end{cppcode}
+\bigbreak \noindent 
+Similarly for const pointers to const data, using auto will maintain constness for the data, but not for the pointer. Therefore, in this case, we must also qualify ptr2 with const.
+
+\bigbreak \noindent 
+\subsection{rvalue references with auto}
+\bigbreak \noindent 
+
 
 
 

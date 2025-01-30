@@ -6238,6 +6238,24 @@ struct graph {
 \end{cppcode}
 
 \pagebreak 
+\subsection{Weighted graph in c++ with structure}
+\bigbreak \noindent 
+\begin{cppcode}
+typedef pair<int,int> Vpair;
+
+struct graph {
+    int V, E;
+    vector<pair<int,Vpair>> edges;
+
+    graph(int v, int e) : V(v), E(e) {}
+
+    void addEdge(int u, int v, int w) {
+        edges.push_back({w, {u,v}});
+    }
+};
+\end{cppcode}
+
+\pagebreak 
 \subsection{Topological sort (DFS approach)}
 \bigbreak \noindent 
 Topological sort is a linear ordering of vertices in a directed acyclic graph (DAG) such that for every directed edge $u\to v$, vertex $u$ appears before $v$ in the ordering. It is used in applications where certain tasks must be performed before others, such as task scheduling, build systems, and dependency resolution.
@@ -6299,6 +6317,240 @@ struct graph {
         s.push(node);
     }
 \end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\subsection{Union-Find Data Structure (Disjoint Set Union - DSU)}
+\bigbreak \noindent 
+The Union-Find data structure, also known as Disjoint Set Union (DSU), is used to efficiently handle dynamic connectivity queries. It is particularly useful in applications such as Kruskal's algorithm for finding the Minimum Spanning Tree (MST) and cycle detection in graphs.
+\bigbreak \noindent 
+Union-Find keeps track of a partition of a set into disjoint subsets. It supports two primary operations:
+\begin{enumerate}
+    \item \textbf{Find(x):} Determines which set the element x belongs to.
+    \item \textbf{Union(x, y):} Merges the sets containing x and y.
+\end{enumerate}
+\bigbreak \noindent 
+Each subset is represented as a tree, where each element points to a parent. The root of the tree represents the set.
+
+\bigbreak \noindent 
+\subsubsection{Class structure and Fields}
+\bigbreak \noindent 
+\begin{cppcode}
+    class UnionFind {
+        vector<int> parent;
+
+    public:
+        UnionFind(int n) {
+            parent.resize(n,0);
+            for (int i=0; i<n; ++i) {
+                parent[i] = i;
+            }
+        }
+
+        int find(x);
+        void unionsets(int x, int y)
+    };
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Find}
+\bigbreak \noindent 
+Find returns the representative of the group. It does this by moving up the tree until it reaches the root, in which case it then simply returns the root.
+\bigbreak \noindent 
+\begin{cppcode}
+    int find(x) {
+        if (parent[x] != x) {
+            return find(parent[x]);
+        } else {
+            return x;
+        }
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Union}
+\bigbreak \noindent 
+Finds the root of both elements and merges one set into the other
+\bigbreak \noindent 
+\begin{cppcode}
+    void unionSets(int x, int y) {
+        int rootX = find(x);  // Find root of x
+        int rootY = find(y);  // Find root of y
+
+        if (rootX != rootY)   // If they are in different sets, merge them
+            parent[rootY] = rootX;  // Make rootX the parent of rootY
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Find and union optimizations}
+\bigbreak \noindent 
+To efficiently perform Find and Union, we use two optimizations:
+\begin{itemize}
+    \item Path Compression (for efficient Find operations)
+    \item Union by Rank (for efficient Union operations)
+\end{itemize}
+\bigbreak \noindent 
+When calling Find(x), we update each node along the path to point directly to the root. This reduces the tree depth and speeds up future queries.
+\bigbreak \noindent 
+\begin{cppcode}
+    int find(x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        } 
+        return parent[x];
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Instead of arbitrarily merging trees, we attach the smaller tree under the larger tree to keep the structure balanced. We make an additional field \textit{rank}, which is a vector<int>. Note that we must resize it to $n$ in the constructor, and fill with ones.
+\bigbreak \noindent 
+The rank vector is used to keep track of the depth of each set's tree. This helps in balancing the trees when performing unionSets(x, y), preventing them from becoming too deep.
+\bigbreak \noindent 
+\begin{cppcode}
+    // Union by rank
+    void unite(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+
+        if (rootX != rootY) {
+            if (rank[rootX] > rank[rootY]) {
+                parent[rootY] = rootX; // Attach smaller tree to larger one
+            } else if (rank[rootX] < rank[rootY]) {
+                parent[rootX] = rootY;
+            } else {
+                parent[rootY] = rootX;
+                rank[rootX]++; // Increase rank if same
+            }
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Since the rank tracks the depth, we only increase the rank if both trees have the same depth. If we only merge the smaller one into the larger one, then the larger one will always "obsorb" the smaller one without increasing the depth. Thus, the depth only will increase if they have the same rank (depth).
+
+\bigbreak \noindent 
+\subsection{Using UnionFind}
+\bigbreak \noindent 
+\begin{cppcode}
+    int main() {
+        UnionFind uf(5); // Create a DSU with 5 elements (0 to 4)
+
+        uf.unionSets(0, 1);
+        uf.unionSets(1, 2);
+
+        cout << (uf.find(0) == uf.find(2)) << endl; // 1 (true, same set)
+        cout << (uf.find(3) == uf.find(4)) << endl; // 0 (false, different sets)
+
+        uf.unionSets(3, 4);
+        cout << (uf.find(3) == uf.find(4)) << endl; // 1 (true, now same set)
+
+        return 0;
+    }
+\end{cppcode}
+
+
+\pagebreak \bigbreak \noindent 
+\subsection{Minimum spanning trees}
+\bigbreak \noindent 
+A spanning tree is a subset of Graph G, such that all the vertices are connected using minimum possible number of edges. Hence, a spanning tree does not have cycles and a graph may have more than one spanning tree.
+\begin{itemize}
+    \item A Spanning tree does not exist for a disconnected graph.
+    \item For a connected graph having \(N\) vertices, the number of edges in the spanning tree for that graph will be \(N-1\).
+    \item A Spanning tree does not have any cycle.
+    \item We can construct a spanning tree for a complete graph by removing \(E-N+1\) edges, where \(E\) is the number of edges and \(N\) is the number of vertices.
+    \item \textbf{Cayley's Formula:} It states that the number of spanning trees in a complete graph with \(N\) vertices is \(N^{N-2}\).
+    \begin{itemize}
+        \item For example: \(N=4\), then the maximum number of spanning trees possible is \(4^{4-2} = 16\) (shown in the above image).
+    \end{itemize}
+\end{itemize}
+\bigbreak \noindent 
+A minimum spanning tree (MST) or minimum weight spanning tree for a weighted, connected, undirected graph is a spanning tree with a weight less than or equal to the weight of every other spanning tree. To learn more about Minimum Spanning Tree
+\bigbreak \noindent 
+In an unweighted graph, all edges have the same "weight" (implicitly 1). Thus, the concept of a "minimum" spanning tree becomes more about ensuring a spanning tree that connects all vertices with the minimum number of edges.
+\bigbreak \noindent 
+Since all edges are equal in weight, every spanning tree of the graph is an MST because there is no way to differentiate one tree from another based on edge weights.
+\bigbreak \noindent 
+An MST is unique if and only if all edge weights in the graph are distinct
+\bigbreak \noindent 
+If the graph contains edges with equal weights, multiple MSTs may exist.
+
+\bigbreak \noindent 
+\subsubsection{Kruskal's algorithm}
+\bigbreak \noindent 
+Given an undirected, connected and weighted graph, we can find the Minimum Spanning Tree (MST) of the graph using Kruskal’s algorithm.
+\bigbreak \noindent 
+Below are the steps for finding MST using Kruskal’s algorithm
+\begin{enumerate}
+    \item Sort all the edges in non-decreasing order of their weight.
+    \item Pick the smallest edge. Check if it forms a cycle with the spanning tree formed so far. If cycle is not formed, include this edge. Else, discard it.
+    \item Repeat step#2 until there are (V-1) edges in the spanning tree.
+\end{enumerate}
+\bigbreak \noindent 
+Note that step two uses union find.
+
+\bigbreak \noindent 
+The graph structure is
+\begin{cppcode}
+typedef pair<int, int> iPair; 
+
+struct Graph { 
+    int V, E; 
+    vector<pair<int, iPair>> edges; 
+
+    Graph(int V, int E) : V(V), E(E) {}
+
+    void addEdge(int u, int v, int w) { 
+        edges.push_back({w, {u, v}}); 
+    } 
+
+    int kruskalMST(); 
+}; 
+\end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\begin{cppcode}
+int Graph::kruskalMST() 
+{ 
+    int mst_wt = 0; // Initialize result 
+  
+    // Sort edges in increasing order on basis of cost 
+    sort(edges.begin(), edges.end()); 
+  
+    // Create disjoint sets 
+    DisjointSets ds(V); 
+  
+    // Iterate through all sorted edges 
+    vector< pair<int, iPair> >::iterator it; 
+    for (it=edges.begin(); it!=edges.end(); it++) 
+    { 
+        int u = it->second.first; 
+        int v = it->second.second; 
+  
+        int set_u = ds.find(u); 
+        int set_v = ds.find(v); 
+  
+        // Check if the selected edge is creating 
+        // a cycle or not (Cycle is created if u 
+        // and v belong to same set) 
+        if (set_u != set_v) 
+        { 
+            // Current edge will be in the MST 
+            // so print it 
+            cout << u << " - " << v << endl; 
+  
+            // Update MST weight 
+            mst_wt += it->first; 
+  
+            // Merge two sets 
+            ds.merge(set_u, set_v); 
+        } 
+    } 
+  
+    return mst_wt; 
+} 
+\end{cppcode}
+\bigbreak \noindent 
+Note that DisjointSets uses the union find data structure described earlier.
+
+
 
 
 

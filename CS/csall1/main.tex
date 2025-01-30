@@ -7356,7 +7356,8 @@ indicate which strong entity the weak entity depends upon.
                          \item The machine executes the operation indicated by the previously retrieved instruction. If the instruction did not cause a branch to occur (a branch is caused by a basic operation analogous to a \texttt{GOTO} statement in a higher-level language), then go to \textbf{Step 2}. Otherwise, put the absolute address that is to be branched to into the PSW, and go to \textbf{Step 2}.
                     \end{enumerate}
                     \bigbreak \noindent 
-                    \textbf{Note:} In ASSIST, general purpose register 15 (R15) is commonly used as the Program status word (PSW)
+                \item \textbf{R14 and R15} In ASSIST, general purpose register 15 (R15) is used to hold the address of the first byte of the program. R14 holds the return address, the address to return to after the program ends. In ASSIST virtual memory, it is simulated that the program starts at address  0
+                \item \textbf{Explicit addressing}: $D(X,B)$ displacement addressing is \textit{explicit} addressing
                 \item \textbf{Types of Instructions}: The process of encoding instructions can be clarified by considering some specific instructions in their symbolic and encoded forms. Instructions are encoded according to five distinct formats, RR, RX, RS, SI, and SS. The set of instructions encoded in the RR format is referred to as the \textit{RR instructions}.
                 \item \textbf{RR Instructions, add register (AR)}: An RR instruction is most often used to cause an operation involving two registers.
                     \bigbreak \noindent 
@@ -7393,7 +7394,7 @@ indicate which strong entity the weak entity depends upon.
                     Causes the replacement of the original contents of r1 by the contents of r2, r2 remains unaltered.
                     \bigbreak \noindent 
                     The opcode for SR is 1B, and the opcode for LR is 18
-                \item \textbf{RX instructions}: RX instructions usually cause an operation that involves a register and main storage to be performed. For example, consider the Load instruction
+                \item \textbf{RX instructions: L (load)}: RX instructions usually cause an operation that involves a register and main storage to be performed. For example, consider the Load instruction
                     \begin{align*}
                         r,D(X,B)
                     \end{align*}
@@ -7405,6 +7406,208 @@ indicate which strong entity the weak entity depends upon.
                         \item If \( D(X, B) \) is an address greater than any actual storage address, an \textit{addressing exception} will occur. This exception can happen only if either the \( X \) or the \( B \) register contains an excessively large number.
                         \item If \( D(X, B) \) is the actual address of an area, but the address is not within the area of storage allocated to the program, a \textit{protection error} will occur.
                     \end{enumerate}
+                    The encoded form of an RX instruction occupies two halfwords and conforms to the following format:
+                    \[
+                        h_0 h_0 h_r h_X \quad h_B h_D h_D
+                    \]
+                    where
+                    \begin{itemize}
+                        \item $h_0 h_0$ is the op code indicating the particular instruction
+                        \item $h_r$ is the number of the register used as the first operand
+                        \item $h_X$ is the number of the index register (0 if omitted)
+                        \item $h_B$ is the number of the base register (0 if omitted)
+                        \item $h_D h_D h_D$ is the displacement
+                    \end{itemize}
+                    Thus, since the op code of L is 58,
+                    \[
+                        L \quad 2, 12(1, 10)
+                    \]
+                    is encoded as $5821 \, \text{A00C}$. Note that the displacement used in a relative address must be in the range $0$ to $4095$ simply because $FFF_{16} = 4095_{10}$ is the largest three-digit hexadecimal number (and only three digits are provided in the encoded form of the instruction).
+
+                \item \textbf{RX: ST (store)}: The \texttt{ST} instruction performs the inverse of the operation of the \texttt{L} instruction:
+                    \[
+                        \texttt{ST} \quad r, D(X, B) \quad \text{(Store)}
+                    \]
+                    Execution of this instruction causes the contents of \texttt{r} to replace the fullword at the location determined by \texttt{D(X, B)}; the condition of \texttt{r} remains unaltered. The absolute address corresponding to \texttt{D(X, B)} must, therefore, be on a fullword boundary. The same exceptions (errors) that can occur for an \texttt{L} instruction can also occur for an \texttt{ST} instruction.
+                    \bigbreak \noindent 
+                    The opcode of $ST$ is $80$
+                \item \textbf{A complete program}: Given a choice, a programming would naturally choose to write programs using the symbolic instructions. The role of an assembler program is to accept as input a source program written using symbolic notations and to encode the instructions into executable  format. The precise format used to represent a symbolic instruction that can be submitted to the assembler is as follows.
+                    \begin{enumerate}
+                        \item A label may start in column 1. A label is a string of from one to eight characters such that:
+                            \begin{enumerate}
+                                \item The first character is either a letter from \texttt{A} to \texttt{Z}, a \texttt{\$}, a \texttt{\#}, or an \texttt{@}.
+                                \item Each of the characters following may be any of the above or any one of the decimal digits (0, 1, 2, \dots, 9).
+                            \end{enumerate}
+                            Thus,
+                            \begin{verbatim}
+                                WORD1
+                                LOOP
+                                MYROUTNE
+                                BRANCH01
+                            \end{verbatim}
+                            are valid labels. 
+                        \item A mnemonic for the operation code, such as \texttt{AR} for Add Register, starts in column 10. (Appendix C contains a list of valid op codes and the corresponding mnemonics.)
+                        \item The operands start in column 16.
+                        \item Any comment that the user wishes to append to the instruction can occur after allowing at least one blank following the last character of the operands. The only restriction on the comment is that it cannot extend past column 71 of the input record.
+                    \end{enumerate}
+                    The following example of a symbolic instruction, with indications of where the fields would appear, illustrates the above points:
+                    \begin{verbatim}
+    1          10       16
+    LOADUP     L        1,0(2,3)       LOAD THE WORD INTO R1
+                    \end{verbatim}
+                    \bigbreak \noindent 
+                    Up to this point, the only symbolic instructions that have been discussed are those that are to be encoded into executable instructions. There are, however, several instructions, called \textit{assembler instructions}, that are not used to generate machine instructions. Rather, these instructions are used to communicate to the assembler information about how the user's program is to be processed and to direct the generation of constants and storage areas. The following assembler instructions are of particular importance:
+                    \begin{enumerate}
+                        \item The \texttt{CSECT} instruction is used to begin a program and must appear before any executable instructions in the program. The format of the \texttt{CSECT} instruction is:
+                            \begin{verbatim}
+                    label      CSECT
+                            \end{verbatim}
+                        \item The end of a program is signified by an \texttt{END} statement. The \texttt{END} statement has as an operand the label of the place in the program where execution of the program should begin. Normally this label is the label of the \texttt{CSECT} statement. For example, the \texttt{CSECT} and \texttt{END} statements would typically occur as:
+                            \begin{verbatim}
+                    MYPROG      CSECT
+                                .
+                                .
+                                .
+                                END  MYPROG
+                            \end{verbatim}
+                        \item A \texttt{DC} statement is used to define constants. The only form of a \texttt{DC} statement that is needed at this point is:
+                            \begin{verbatim}
+                    label      DC      mF'n'
+                            \end{verbatim}
+                            where 
+                            \begin{itemize}
+                                \item \texttt{m} is a nonnegative decimal integer (duplication factor)
+                                \item \texttt{n} is a decimal integer
+                            \end{itemize}
+
+                            If \texttt{m} is omitted, it is assumed to be 1. The effect of this \texttt{DC} statement is to cause \texttt{m} consecutive fullwords, each containing the number \texttt{n}, to be generated. Thus,
+                            \begin{verbatim}
+                    TWO       DC      F'2'
+                            \end{verbatim}
+                            causes one fullword containing \texttt{00000002} to be generated and makes it accessible to the program by its symbolic name \texttt{TWO}. \texttt{DC} statements can appear anywhere between the \texttt{CSECT} and \texttt{END} statements in the program. The fullwords that are generated as the result of such \texttt{DC} statements will always begin on fullword boundaries.
+\item A \texttt{DS} statement is used to set aside areas of storage for fullwords that require no initial values. The format of the \texttt{DS} statement is:
+    \begin{verbatim}
+                    label      DS      mF
+    \end{verbatim}
+    The above statement causes the assembler to set aside the next \texttt{m} fullwords as a storage area. An area of \texttt{n} bytes, which may or may not begin on a fullword boundary, can be set aside by use of a \texttt{DS} statement in the following format:
+    \begin{verbatim}
+                    label      DS      CLn
+    \end{verbatim}
+    Here, \texttt{CLn} stands for Character, Length \texttt{n}. Again, if more than one such area is required, a duplication factor can be used. For example, the statement:
+    \begin{verbatim}
+                    label      DS      mCLn
+    \end{verbatim}
+    causes \texttt{m} fields, each of which has a length of \texttt{n} bytes, to be set aside.
+
+\end{enumerate}
+    Before looking at a sample program, two additional details should be mentioned:
+    \begin{itemize}
+        \item When execution of a program begins, \texttt{R15} will always contain the absolute address of the beginning of the program. For now, this can be assumed to mean that \texttt{R15} contains the address of the first generated instruction in the program. This fact is significant since it allows all relative addresses to be created using R15 as a base register
+        \item When execution of a program begins, R14 contains the absolute address of the routine that should be branched to when execution of the program has been completed. That is, when execution of a program terminates, branch to the address in R14 should be effected. This is referred to as \textit{exiting} from the program. Although branching instructions are not covered until later in this text, the format of the branch instruction that causes the exit is
+            \bigbreak \noindent 
+            \begin{center}
+    label BCR B'1111',14     
+            \end{center}
+    \end{itemize}
+                \item \textbf{Sample program}:
+                    \begin{verbatim}
+    ADD2     CSECT 
+             L     1,16(,15)
+             L     2,20(15)
+             AR    1,2
+             ST    1,24(15)
+
+             BCR   B'1111',14
+             DC    F'4'
+             DC    F'6'
+             DS    F
+             END   ADD2
+                    \end{verbatim}
+                   Note that any input record with an asterisk in column 1 is a comment. The comment can be anywhere form column 2 through column 71. 
+                   \bigbreak \noindent 
+                   The actual instructions in this program that will be translated into executable code are
+                   \bigbreak \noindent 
+                   \begin{verbatim}
+                   L     1,16(,15)
+                   L     2,20(15)
+                   AR    1,2
+                   ST    1,24(15)
+                   \end{verbatim}
+                   \bigbreak \noindent 
+                   The assembler will convert these into machine code and produce a listing of the following form.
+                   \begin{center}
+                       \begin{tabular}{|c|c|c|l|}
+                           \hline
+                           \textbf{LOC} & \textbf{OBJ CODE} & \textbf{SOURCE} & \textbf{STATEMENT} \\ \hline
+                           000000       & 5810 F010         & L               & 1,16(15)           \\ \hline
+                           000004       & 582F 0014         & L               & 2,20(15)           \\ \hline
+                           000008       & 1A12              & AR              & 1,2                \\ \hline
+                           00000A       & 501F 0018         & ST              & 1,24(15)           \\ \hline
+                           00000E       & 07FE              & BCR             & B'1111',14         \\ \hline
+                       \end{tabular}
+                   \end{center}
+                   \bigbreak \noindent 
+                   In the first instruction, R15 is used as a base register. In the other RX instructions no base register is used, and R15 is used as an index register. When only one of the two registers is specified in a D(X,B) address, it makes no difference in the execution of the program whether it is used as the X or the B register.
+                   \bigbreak \noindent 
+                   The constants are generated starting at location \texttt{000010} and the listing produced from the \texttt{DC} and \texttt{DS} statements is:
+                   \begin{center}
+                       \begin{tabular}{|c|c|c|l|}
+                           \hline
+                           \textbf{LOC}   & \textbf{OBJ CODE} & \textbf{SOURCE} & \textbf{STATEMENT} \\ \hline
+                           000010         & 00000004          & DC              & F'4'               \\ \hline
+                           000014         & 00000006          & DC              & F'6'               \\ \hline
+                           000018         &                   & DS              & F                  \\ \hline
+                       \end{tabular}
+                   \end{center}
+                   Note that the \texttt{DS} statement generates no object code.
+                   \bigbreak \noindent 
+                   The \texttt{END} statement marks the end of the program and contains the label of the starting point as the operand. Normally, this is the label that is used in the \texttt{CSECT} statement.
+                \item \textbf{The using statement}: The USING directive is used in IBM's System/360 Assembly Language (including the ASSIST simulator) to tell the assembler which register should be used as a base register for address resolution. It enables the assembler to generate base-displacement addressing automatically.
+                    \bigbreak \noindent 
+                    \begin{verbatim}
+                    PROGRAM1  CSECT 
+                              USING  PROGRAM1,15
+                    \end{verbatim}
+                    \bigbreak \noindent 
+                    Sets us \textit{addressability} off of $R15$. In this way, we can use named vars instead of $D(X,B)$
+                \item \textbf{Intro to LTORG and using named variables}: The LTORG directive forces the assembler to dump the current literal pool (a set of constants stored in memory) at that point in the program.
+                    \bigbreak \noindent 
+                    If we wrote the sample program above as
+                    \bigbreak \noindent 
+                    \begin{verbatim}
+                ADD2     CSECT 
+                         USING ADD2,15
+
+                         L     1,NUM1
+                         L     2,NUM2
+                         AR    1,2
+                         ST    1,RESULT
+
+                         BCR   B'1111',14
+
+                         LTORG
+
+                NUM1     DC    F'4'
+                NUM2     DC    F'4'
+                RESULT   DS    F
+
+                         END   ADD2
+                    \end{verbatim}
+                    \bigbreak \noindent 
+                    Then we see we can used the named variables instead of directly calculating the $D(X,B)$ address. This form of addressing is called \textit{implicit} addressing. In doing this, any additional instructions that may shift the bytes of our constants won't force us to recalculate the $D(X,B)$ addresses
+                \item \textbf{The location counter (LOC)}: The location counter is a hidden variable maintained by the assembler that tracks the current address where instructions and data are assembled in memory.
+                    \bigbreak \noindent 
+                    In ASSIST, the LOC starts at 000000, it increments as instructions and data are defined.
+
+                    
+                    
+
+
+                   
+                    
+
+
+
 
 
 
