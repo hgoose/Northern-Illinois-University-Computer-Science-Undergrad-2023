@@ -541,6 +541,159 @@
         }
     \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Runtime polymorphism, dynamic dispatch, dynamic binding,  and the vtable}
+    \bigbreak \noindent 
+    Runtime polymorphism in C++ is achieved through function overriding and is implemented using virtual functions in an inheritance hierarchy. It allows a derived class to provide a specific implementation of a function that is already defined in its base class.
+    \bigbreak \noindent 
+    \subsubsection{Dynamic dispatch and dynamic binding}
+    \bigbreak \noindent 
+    Dynamic dispatch is a mechanism where the function to be executed is determined at runtime, rather than at compile-time. This is a key feature of runtime polymorphism and is enabled by virtual functions in C++
+    \bigbreak \noindent 
+    When a virtual function is declared in a base class and overridden in a derived class, C++ does not resolve function calls at compile-time.
+    \bigbreak \noindent 
+    Instead, when a function is called using a base class pointer/reference, C++ performs a runtime lookup to determine which function to execute.
+    \bigbreak \noindent 
+    This lookup is performed using the VTable (Virtual Table) and VPtr (Virtual Pointer) mechanism.
+    \bigbreak \noindent 
+    As a side note, the following will not work
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct foo {
+            consteval virtual int print() const {
+                return 12;
+            }
+
+            virtual ~foo() {}
+        };
+
+        struct bar : foo {
+            consteval int print() const override {
+                return 0;
+            }
+        };
+
+        foo* f = new bar{};
+        constexpr int x = f.print();
+    \end{cppcode}
+    \bigbreak \noindent 
+    The issue is that since the print functions are determined and called at runtime, it cannot be a compile time constant expression. We get the error "The value of $f$ is not usable in a constant expression"
+    \bigbreak \noindent 
+    Dynamic binding (also called late binding) is the underlying mechanism that allows dynamic dispatch to work. It refers to the process of determining which function implementation should be executed at runtime, rather than at compile time.
+    \bigbreak \noindent 
+    Binding refers to associating a function call with a function definition. Dynamic binding means this association happens at runtime, based on the actual type of the object.
+    \bigbreak \noindent 
+    Dynamic binding ensures that when a function is called on a base class pointer/reference, the correct overridden function from the derived class is invoked at runtime. Dynamic dispatch is the result of dynamic binding
+
+
+    \bigbreak \noindent 
+    \subsubsection{The Vtable}
+    \bigbreak \noindent 
+    C++ implements runtime polymorphism using a VTable (Virtual Table) and a VPointer (VPtr)
+    \bigbreak \noindent 
+    A VTable is a table of function pointers maintained per class. It stores pointers to the virtual functions defined in a class. Each class with virtual functions has a single VTable.
+    \bigbreak \noindent 
+    Each object of a class that has virtual functions contains a hidden pointer, called VPtr (Virtual Pointer). VPtr points to the VTable of that particular class.
+    \bigbreak \noindent 
+    During runtime, when a virtual function is called via a base class pointer, the VPtr is used to look up the correct function implementation in the VTable.
+    \bigbreak \noindent
+    When the program starts, the compiler creates a VTable for every class that has virtual functions. Every object of such a class gets a hidden VPtr, which points to the corresponding VTable.
+    \bigbreak \noindent 
+    When a virtual function is called using a base class pointer, the call is resolved dynamically by checking the VTable.
+    \bigbreak \noindent 
+    The VTable (Virtual Table) is created at compile time, but the VPtr (Virtual Pointer) is assigned and used at runtime.
+    \bigbreak \noindent 
+    The VTable itself is constructed at compile time, meaning the compiler generates and lays out the function pointers in the table before the program runs.
+    \bigbreak \noindent 
+    The VPtr is assigned at runtime, when an object of the class is created.
+    \bigbreak \noindent 
+    Because having virtual functions in our struct / class requires this VPtr to be created, having virtual functions therefore will increase the size of the struct and the objects created by the size of a pointer (8 bytes on 64-bit systems or 4 bytes on 32-bit systems).
+
+    \bigbreak \noindent 
+    each class in the inheritance hierarchy that has at least one virtual function has its own vtable.
+    \begin{itemize}
+        \item A base class with virtual functions has a vtable that stores pointers to its virtual functions.
+        \item A derived class that overrides any virtual functions gets its own vtable, which replaces the base class’s function pointers with the derived class’s implementations.
+        \item The vtable is associated with a class, not individual objects.
+        \item Each object of a class with virtual functions has a vptr (virtual table pointer) that points to the vtable of its actual type.
+    \end{itemize}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct foo {
+            virtual void print() const {
+                cout << "Foo" << endl;
+            }
+
+            virtual ~foo() {}
+        };
+
+        struct bar : foo {
+            void print() const override {
+                cout << "Bar" << endl;
+            }
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Since foo has virtual functions (print and the destructor), it will have a vtable.
+    \begin{center}
+        \begin{tabular}{p{4cm}|p{4cm}} 
+            Index	&Function Pointer \\
+            \hline
+            0	&foo::print() \\
+            1	&foo::$\sim$foo() (destructor) 
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    Every instance of foo has a vptr (virtual table pointer) pointing to this table.
+    \bigbreak \noindent 
+    Since bar overrides print(), but still inherits the virtual destructor from foo, its vtable will have the overridden version of print().
+    \begin{center}
+        \begin{tabular}{p{4cm}|p{4cm}}
+            Index	&Function Pointer \\
+            0	&bar::print() \\
+            1	&foo::$\sim$foo() (inherited destructor) 
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    Each instance of bar will have its vptr pointing to vtable for bar.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int main() {
+            foo* obj = new bar();
+            obj->print();  // Calls bar::print() because vptr points to bar's vtable
+            delete obj;    // Calls foo::~foo() due to virtual destructor
+        }
+    \end{cppcode}
+
+
+
+
+
+
+    \pagebreak 
+    \unsect{The existence of structs and classes}
+    \bigbreak \noindent 
+    Does a Struct Exist in Memory Before an Object is Created? Yes and No. It depends on what part of the struct you're referring to:
+    \begin{itemize}
+        \item \textbf{Struct Definition (Type Information) – Exists at Compile Time}: The struct itself is just a blueprint (like a class). It does not occupy memory on its own.
+            \bigbreak \noindent 
+            Only when you create an object of the struct does memory get allocated for its members.
+        \item \textbf{VTable (for Virtual Functions) – Exists in Memory, Even Without Objects}: If the struct contains virtual functions, the compiler generates a VTable at compile time. The VTable itself is stored in static memory (not per object). Even if no object is created, the struct’s VTable exists somewhere in memory.
+        \item \textbf{Object Instances – Exist in Memory When Created}: When you instantiate an object of the struct, memory is allocated for that object’s data members. If the struct has virtual functions, each object has a hidden VPtr (Virtual Pointer), which increases its size.
+    \end{itemize}
+    \bigbreak \noindent 
+    If $A$ is a struct, why does sizeof(A) have a size even if no object is created? When you define a struct in C++, the compiler determines the size of its layout at compile time. This means that even if you don’t create an object of the struct, sizeof(A) can still return a valid size.
+    \bigbreak \noindent 
+    The compiler does not assign fixed memory addresses to struct members. Instead, it determines the memory layout (size, alignment, and padding) at compile time. Actual memory addresses are assigned at runtime when an object is created.
+
+
+
+
+
+
+
     \pagebreak 
     \unsect{Note about heap allocated memory in vectors}
     \bigbreak \noindent 
@@ -583,6 +736,175 @@
 
 
     
+    \pagebreak 
+    \unsect{Notes about c++ casts}
+    \bigbreak \noindent 
+    First, recall
+    \begin{itemize}
+        \item static\_cast is used for safe and well-defined type conversions that are checked at compile-time.
+        \item dynamic\_cast is used only with polymorphic types (i.e., classes with at least one virtual function). It performs runtime type checking and is mainly used for safe downcasting.
+        \item const\_cast is used to add or remove const or volatile qualifiers from a variable. It is the only cast that can remove const, allowing modifications to otherwise constant data.
+        \item reinterpret\_cast is the most dangerous cast—it converts between completely unrelated types. It does not perform type checking and is used for low-level pointer manipulation.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Static\_cast}
+    \bigbreak \noindent 
+    \textbf{When to Use static\_cast}:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Converting between numeric types (e.g., int to double).
+        \item Converting between pointers of related classes (e.g., upcasting in inheritance).
+        \item Converting between explicitly defined conversion operators.
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{What It CANNOT Do}:
+    \begin{itemize}
+        \item It does not check for validity at runtime.
+        \item It cannot cast between unrelated types (use reinterpret\_cast for that).
+        \item It cannot remove const or volatile qualifiers (use const\_cast for that).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Dynamic\_cast}
+    \bigbreak \noindent 
+    Dynamic casting in C++ is a feature provided by the language to safely convert pointers or references of base class types to pointers or references of derived class types at runtime. This is particularly useful in scenarios involving polymorphism, where you have a base class pointer or reference pointing to an object of a derived class, and you need to access derived class-specific members or methods.
+    \bigbreak \noindent 
+    Dynamic casting is used with pointers or references in class hierarchies that involve polymorphism (i.e., classes with at least one virtual function).
+    \bigbreak \noindent 
+    \begin{cppcode}
+    dynamic_cast<new_type>(expression)
+    \end{cppcode}
+    \bigbreak \noindent 
+    Dynamic casting performs a runtime check to ensure the cast is valid. If the cast is not possible, it returns nullptr for pointers or throws a std::bad\_cast exception for references.
+    \bigbreak \noindent 
+    Dynamic casting relies on Run-Time Type Information (RTTI), which must be enabled in your compiler.
+    \bigbreak \noindent 
+    \subsubsection{When to Use Dynamic Casting}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item When you need to safely downcast in a polymorphic hierarchy.
+        \item When you are unsure of the actual type of the object at runtime and need to check it.
+    \end{itemize}
+    \bigbreak \noindent 
+    Dynamic casting incurs a runtime overhead due to the type checking. It only works with polymorphic types (classes with at least one virtual function).
+    \bigbreak \noindent 
+    Overuse of dynamic casting can indicate a design flaw; prefer virtual functions and polymorphism where possible.
+
+    \bigbreak \noindent 
+    \subsubsection{RTTI}
+    \bigbreak \noindent 
+    RTTI stands for Run-Time Type Information. It is a feature in C++ that provides mechanisms to determine the type of an object at runtime. RTTI is particularly useful in scenarios involving polymorphism, where you need to identify the actual type of an object pointed to by a base class pointer or reference.
+    \bigbreak \noindent 
+    RTTI relies on metadata stored by the compiler for polymorphic types (classes with at least one virtual function). This metadata includes:
+    \begin{itemize}
+        \item A vtable (virtual table) for each polymorphic class, which contains pointers to its virtual functions.
+        \item A type\_info object for each class, which stores information about the class's type.
+    \end{itemize}
+    \bigbreak \noindent 
+    When you use typeid or dynamic\_cast, the compiler generates code to access this metadata at runtime to determine the object's type.
+
+    \bigbreak \noindent 
+    \subsection{const\_cast}
+    \bigbreak \noindent 
+    const\_cast is only used to remove const or volatile qualifiers from a variable. It cannot be used to add const.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <iostream>
+
+        void modify(int* ptr) {
+            *ptr = 42;
+        }
+
+        int main() {
+            const int x = 10;
+
+            // Removing const
+            int* ptr = const_cast<int*>(&x);
+
+            modify(ptr); // Undefined behavior if `x` was originally a `const` object
+
+            std::cout << "x: " << x << std::endl; // This may not reflect the change due to UB
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This is unsafe if x was originally declared as const int x = 10;, because modifying x leads to undefined behavior. However, if x was originally non-const and then cast to const, modifying it later using const\_cast is safe.
+    \bigbreak \noindent 
+    If you want to add const, you should use
+    \begin{itemize}
+        \item Implicit conversion
+        \item static\_cast
+        \item Declaring a const reference or pointer to a non-const object
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int a = 5;
+        const int* ptr = &a; // Adding const implicitly
+        const int& ref = a;  // Adding const implicitly
+    \end{cppcode}
+    \bigbreak \noindent 
+    const\_cast is useful in a few specific cases where you need to work around const qualifiers safely. 
+    \bigbreak \noindent 
+    \subsubsection{Modifying a non-const object that was passed as const}
+    \bigbreak \noindent 
+    If a function receives a const parameter but you know that the actual object is non-const, you can safely cast away const and modify it.
+    \bigbreak \noindent 
+    \subsubsection{Removing const to use overloaded functions}
+    \bigbreak \noindent 
+    Sometimes you have an overloaded function where one version accepts const and another modifies the object. const\_cast allows selecting the modifying version when needed.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        #include <iostream>
+
+        class Example {
+            public:
+            void print() {
+                std::cout << "Non-const print" << std::endl;
+            }
+
+            void print() const {
+                std::cout << "Const print" << std::endl;
+            }
+        };
+
+        void forceModify(const Example& obj) {
+            const_cast<Example&>(obj).print();  // Calls non-const version
+        }
+
+        int main() {
+            Example e;
+            forceModify(e);  // Calls non-const print()
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \textbf{Note:} Const cast is a runtime operation and does not perform any checks
+
+    \bigbreak \noindent 
+    \subsection{reinterpret\_cast}
+    \bigbreak \noindent 
+    reinterpret\_cast is a type of casting operator in C++ that is used to convert one pointer type to another, even if the types are entirely unrelated. It performs a low-level reinterpretation of the underlying binary representation of the data.
+    \bigbreak \noindent 
+    \textbf{Note:} reinterpret\_cast is a runtime operation and does not perform any checks
+
+    \bigbreak \noindent 
+    \subsection{Why are c casts unsafe?}
+    \bigbreak \noindent 
+    C-style casting is unsafe and ambiguous because:
+    \begin{itemize}
+        \item It can perform multiple types of conversions at once, including:
+            \begin{itemize}
+                \item static\_cast
+                \item reinterpret\_cast
+                \item const\_cast
+                \item Even dynamic\_cast (if a class has virtual functions)
+            \end{itemize}
+        \item It lacks compile-time safety—you might unintentionally use an invalid cast.
+        \item It is hard to search and debug since (Type) doesn’t indicate what kind of conversion is being performed.
+    \end{itemize}
+
+
+
+
+
+
 
 
 

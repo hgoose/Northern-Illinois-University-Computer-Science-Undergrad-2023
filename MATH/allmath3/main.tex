@@ -3505,7 +3505,7 @@
             Then, $m,n$ do not meet on that side of $\ell$
             \bigbreak \noindent 
             \textbf{\textit{Proof.}} Assume for the sake of contradiction that the statement is false. That is, suppose $m,n$ meet on that side of $\ell$. Then, we must have
-            \pagebreak \bigbreak \noindent 
+            \bigbreak \noindent 
             \begin{figure}[ht]
                 \centering
                 \incfig{p2}
@@ -3569,7 +3569,7 @@
 
 
     \pagebreak 
-    \unsect{Numerical analysis}
+    \unsect{Numerical analysis with Julia}
     \subsection{Numerical algorithms, roundoff errors, and nonlinear equations in one variable}
     \begin{itemize}
         \item \textbf{Scientific computing}: Scientific computing is a discipline concerned with the development and study of \textbf{numerical algorithms} for solving mathematical problems that arise in various disciplines in science and engineering.
@@ -4065,8 +4065,351 @@ deriv_approx(f, 1.0, cos(1.0))
             \item \textbf{Exponent (11 bits):} 10000000010
             \item \textbf{Mantissa (52 bits):} 10110100000000000000000...$0_{52}$
         \end{itemize}
+    \item \textbf{Finding decimal value}: In a binary string of all ones, we have a mathematical formula to compute its value... Specifically
+        \begin{align*}
+            1 + 2 + 4 + 8 +... + 2^{n} = 2^{n+1}-1
+        \end{align*}
+        For example (unsigned), $1111 = 2^{3+1}-1 = 15$. But what about for binary decimals numbers, where we instead divide by two to find its value. Consider the binary string
+        \begin{align*}
+            0.11111_{2} = \frac{1}{2} + \frac{1}{4} + \frac{1}{8} + \frac{1}{16} + ...
+        \end{align*}
+        Notice this a geometric series
+        \begin{align*}
+            S = \sum_{k=1}^{n}\frac{1}{2^{k}}
+        \end{align*}
+        The sum of the geometric series is given by
+        \begin{align*}
+            S = \frac{a(1-r^{n})}{1-r}
+        \end{align*}
+        Where $a$ is the first term, $r$ is the common ratio, and $n$ is the number of terms. Therefore, for $a=\frac{1}{2}, r =\frac{1}{2}$, we have
+        \begin{align*}
+            S &= \frac{1}{2} \cdot \frac{1-\left(\frac{1}{2}\right)^{n}}{1-\left(\frac{1}{2}\right)} \\
+            &= 1-\frac{1}{2^{n}}
+        \end{align*}
+        Thus, consider $0.1111$, where $n=4$. Note that $n$ is not $3$, like in the formula described for integers, this is because the sum starts at $n=1$, instead of $n=0$ like the integer formula.  Thus,
+        \begin{align*}
+            0.1111 = 0 + 1-\frac{1}{2^{n}} = 1-\frac{1}{2^{4}} = 0.9375
+        \end{align*}
+        And 
+        \begin{align*}
+            1.1111 = 1 + 1-\frac{1}{2^{n}} = 1-\frac{1}{2^{4}} = 1 + 0.9375 = 1.9375
+        \end{align*}
+    \item \textbf{More on normalized float}: To be normalized in the context of IEEE 754 floating-point numbers means that the number is represented in a standardized form where:
+        \begin{itemize}
+            \item The leading digit of the significand (mantissa) is always 1 (except for special cases like subnormal numbers).
+            \item This representation ensures there is only one unique way to represent each number.
+        \end{itemize}
+        \bigbreak \noindent 
+        This is akin to scientific notation, where we always write numbers like 
+        \( 3.25 \times 10^2 \) instead of \( 32.5 \times 10^1 \) or \( 0.325 \times 10^3 \). 
+        In IEEE 754, normalized numbers always take the form:
 
-         
+        \[
+            1.\text{fraction} \times 2^{(\text{exponent} - \text{bias})}
+        \]
+    \item \textbf{Exponent of all ones}: All ones in the exponent is reserved for  infinity and NaN. Thus, the largest exponent to work with in calculations is $11111111110 = 2046$
+    \item \textbf{Limits of floating point numbers}: The largest Float64 is $(2-2^{-52}) \times 2^{1023} \approx 1.97769 \times 10^{308} \approx  2\times 10^{308}$
+        \bigbreak \noindent 
+        The largest float is when the sign bit is zero, all exponent bits are one, and all fraction bits are one. The exponent is then $2^{10 + 1}- 1 - 2047$, However, this value is reserved for infinity (and NaN). The largest finite exponent is 2046. The exponent bias is 1023, so the largest actual exponent $2046 - 1023 = 1023$. is The fractional part is $1.111...1_{52} = 1 + 1-\frac{1}{2^{52}} = 2-\frac{1}{2^{52} } = 2$. Thus, we get
+        \begin{align*}
+            (-1)^{0} \cdot 2 \cdot 2^{1023} = 2^{1024} \approx 2\times 10^{308}
+        \end{align*}
+        \bigbreak \noindent 
+        Thus, the largest possible float64 is
+        \begin{align*}
+            0\ 11111111110\ 111...1_{64}
+        \end{align*}
+        \bigbreak \noindent 
+        The smallest positive possible normalized float64 is $2^{-1022} \approx 2\times 10^{-308} $, and it occurs when the sign bit is zero, the exponent is $00000000001$ (all zeros reserved), and the fractional part is $1.000000...0_{52} = 1.0_{10}$. Thus, we get
+        \begin{align*}
+            (-1)^{0} \cdot  1.0 \cdot 2^{1-1023} = 2^{-1022} \approx 2.225 \times 10^{-308} \approx 2 \times 10^{-308}
+        \end{align*}
+        \bigbreak \noindent 
+        The smallest negative possible normalized float64 is then when the sign bit is one, we have
+        \begin{align*}
+            (-1)^{1} \cdot 1.0 \cdot 2^{-1022} \approx -2.225 \times 10^{-308} \approx -2 \times 10^{-308}
+        \end{align*}
+    \item \textbf{Finding these values in julia}: In julia, we have the functions
+        \bigbreak \noindent 
+        \begin{jlcode}
+        floatmax(T = Float64)
+        floatmin(T = Float64)
+        typemax(T)
+        \end{jlcode}
+    \item \textbf{Float overflow and underflow}: Floating-point overflow occurs when a calculation produces a number larger than the maximum representable value in the floating-point system. In IEEE 754 double precision (Float64), the largest finite number is $\approx 1.79769 \times 10^{308} \approx 2\times 10^{308}$
+        \bigbreak \noindent 
+        If an operation results in a number greater than this limit, IEEE 754 rules dictate that the result is represented as positive infinity
+        \bigbreak \noindent 
+        If the result is negative, it becomes negative infinity
+    \item \textbf{De-normalized (subnormal) floating-point numbers}: The IEEE floating-point standard also allows de-normalized numbers that are smaller than $\pm 2^{-1022}$. De-normalized floats are represented by $e=0$. Also note that subnormal floats have mantissa non-zero. Subnormal is therefore represented as
+        \begin{align*}
+            (-1)^{s} \cdot [0.f_{1}f_{2}...]_{2} \cdot 2^{-1022}
+        \end{align*}
+        Note that the exponent is $-1022$ instead of $-1023$. This is due to the IEE convention for subnormal numbers to insure there is no gap between the largest subnormal number and the smallest normal number
+        \bigbreak \noindent 
+        The smallest positive subnormal float that is not zero is therefore
+        \begin{align*}
+            0 \ 00000000000 \ 000...01
+        \end{align*}
+        And is equal to 
+        \begin{align*}
+            (-1)^{0} \frac{1}{2^{52}} \cdot 2^{-1022} \approx  4.94 \times 10^{-324} \approx 5 \times 10^{-324}
+        \end{align*}
+    \item \textbf{Other special floats}:
+        \begin{itemize}
+            \item \textbf{0.0 and -0.0}:
+                \begin{align*}
+                    e_{10}...e_{0} = 0... 0 \text{ and } f_{1}...f_{52} = 0...0
+                \end{align*}
+                \bigbreak \noindent 
+                If a very small negative number is rounded to zero, then it becomes $-0.0$. If a very small positive number rounds to zero, it becomes $0.0$
+            \item \textbf{Inf and -Inf}:
+                \begin{align*}
+                    e_{10}...e_{0} = 1... 1 \text{ and } f_{1}...f_{52} = 0...0
+                \end{align*}
+            \item \textbf{Nan}:
+                \begin{align*}
+                    e_{10}...e_{0} = 1... 1 \text{ and } f_{1}...f_{52} \ne 0
+                \end{align*}
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Note:} $0.0, -0.0, \infty, -\infty, NaN$ are neither normal or subnormal
+        \bigbreak \noindent 
+        Also, from Julia
+        \begin{itemize}
+            \item Finite numbers are ordered in the usual manner.
+            \item Positive zero is equal but not greater than negative zero.
+            \item Inf is equal to itself and greater than everything else except NaN.
+            \item -Inf is equal to itself and less then everything else except NaN.
+            \item NaN is not equal to, not less than, and not greater than anything, including itself.
+        \end{itemize}
+    \item \textbf{Summary (Float64)}
+        \begin{itemize}
+            \item \textbf{0.0 and -0.0}:
+                \begin{align*}
+                    0 \ 00000000000 \ 000...0
+                    1 \ 00000000000 \ 000...0
+                \end{align*}
+            \item \textbf{Smallest positive normal}
+                \begin{align*}
+                    0 \ 00000000001 \ 000...00
+                \end{align*}
+                And has value
+                \begin{align*}
+                    (-1)^{0}[1.000...0]_{2} \cdot 2^{1-1023}  = 1.0 \cdot 2^{-1022} \approx 2.225 \cdot 10^{-308}
+                \end{align*}
+            \item \textbf{Largest positive normal}: Occurs when
+                \begin{align*}
+                    0 \ 11111111110 \ 111...11
+                \end{align*}
+                And has value
+                \begin{align*}
+                    &(-1)^{0}[1.111...11]_{2} \cdot 2^{2^{10+1} -1 - 1-1023} \\
+                    &=1 + 1- \frac{1}{2^{52}} \cdot 2^{2046 -1023} = 2 - \frac{1}{2^{52}} \cdot 2^{1023} \approx 1.797 \times 10^{308}
+                \end{align*}
+            \item \textbf{Smallest positive subnormal}
+                \begin{align*}
+                   0 \ 00000000000 \ 000...01 
+                \end{align*}
+                And has value
+                \begin{align*}
+                    (-1)^{0} \cdot \frac{1}{2^{52}} \cdot 2^{-1022} \approx 4.94 \times 10^{-324}
+                \end{align*}
+            \item \textbf{Largest positive subnormal}
+                \begin{align*}
+                    0 \ 00000000000 \ 111..11
+                \end{align*}
+                \begin{align*}
+                    (-1)^{0} \cdot 1-\frac{1}{2^{52}} \cdot 2^{-1022} \approx 2.225 \times 10^{-308}
+                \end{align*}
+            \item \textbf{$\infty$ and $-\infty$}
+                \begin{align*}
+                    0 \ 11111111111 \ 000...00 \\
+                    1 \ 11111111111 \ 000...00 \\
+                \end{align*}
+            \item \textbf{NaN}: Any sign bit, exponent all ones, any nonzero combination of fractional bits.
+        \end{itemize}
+        Therefore, we can also derive the largest and smallest negative normals and subnormals
+            \item \textbf{Largest negative normal}
+                \begin{align*}
+                    1 \ 00000000001 \ 000...00
+                \end{align*}
+                And has value
+                \begin{align*}
+                    (-1)^{1}[1.000...0]_{2} \cdot 2^{1-1023}  = (-1) 1.0 \cdot 2^{-1022} \approx -2.225 \cdot 10^{-308}
+                \end{align*}
+            \item \textbf{Smallest negative normal}: Occurs when
+                \begin{align*}
+                    1 \ 11111111110 \ 111...11
+                \end{align*}
+                And has value
+                \begin{align*}
+                    &(-1)^{1}[1.111...11]_{2} \cdot 2^{2^{10+1} -1 - 1-1023} \\
+                    &=(-1) 1 + 1- \frac{1}{2^{52}} \cdot 2^{2046 -1023} = (-1) 2 - \frac{1}{2^{52}} \cdot 2^{1023} \approx -1.797 \times 10^{308}
+                \end{align*}
+            \item \textbf{Largest negative subnormal}
+                \begin{align*}
+                   1 \ 00000000000 \ 000...01 
+                \end{align*}
+                And has value
+                \begin{align*}
+                    (-1)^{1} \cdot \frac{1}{2^{52}} \cdot 2^{-1022} \approx -4.94 \times 10^{-324}
+                \end{align*}
+            \item \textbf{Smallest negative subnormal}
+                \begin{align*}
+                    1 \ 00000000000 \ 111..11
+                \end{align*}
+                \begin{align*}
+                    (-1)^{1} \cdot 1-\frac{1}{2^{52}} \cdot 2^{-1022} \approx -2.225 \times 10^{-308}
+                \end{align*}
+                \bigbreak \noindent 
+                \textbf{Notes:} Float underflow takes you to -inf, float overflow takes you to +inf. A negative number rounded to zero will be -0.0, a positive number rounded to zero will be 0.0
+                \bigbreak \noindent 
+                Behold
+                \bigbreak \noindent 
+                \begin{figure}[ht]
+                    \centering
+                    \incfig{beholdmane}
+                    \label{fig:beholdmane}
+                \end{figure}
+            \item \textbf{nextfloat and prevfloat in Julia}: In Julia, we can find the next float and the previous float with
+                \bigbreak \noindent 
+                \begin{jlcode}
+                nextfloat(f)
+                prevfloat(f)
+                \end{jlcode}
+            \item \textbf{Bounding of significand in a normalized number}: The significand is always in the range
+                \begin{align*}
+                    1 \leq 1.b_{1}b_{2}b_{3}...b_{t-1} < 2
+                \end{align*}
+                since the leading bit is always 1 in a normalized number.
+                \bigbreak \noindent 
+                This means that $x$ satisfies
+                \begin{align*}
+                    2^{e} \leq \left\lvert x \right\rvert < 2^{e+1}
+                \end{align*}
+                We sometimes take $\left\lvert x \right\rvert \approx 2^{e} $
+
+
+            \item \textbf{Machine epsilon}: In the IEEE 754 floating-point standard, machine epsilon (denoted as $\epsilon_{\text{mach}}$) is the smallest positive number that, when added to 1, results in a different representable floating-point number. It represents the upper bound on relative error due to rounding in floating-point arithmetic. That is
+                \begin{align*}
+                    1 + \epsilon \ne 1
+                \end{align*}
+                \bigbreak \noindent 
+                For a floating-point system with $t$ bits in the significand (mantissa) (including the implicit leading 1), the machine epsilon is:
+                \begin{align*}
+                    e_{\text{mach}} = 2^{-(t-1)}
+                \end{align*}
+                For the IEEE 754 double precision (64-bit) format, the mantissa has $52$ fractional bits and one implicit leading bit. Thus, the machine epsilon is
+                \begin{align*}
+                    2^{-(53-1)} = 2^{-52} \approx 2.2204 \times 10^{-16}
+                \end{align*}
+                \bigbreak \noindent 
+                In Julia, we can find the machine epsilon with
+                \bigbreak \noindent 
+                \begin{jlcode}
+                eps(Float64)
+                \end{jlcode}
+                \bigbreak \noindent 
+                Any rounding error in IEEE floating-point arithmetic is bounded above by $\epsilon_{\text{mach}} $
+            \item \textbf{Understanding machine epsilon}:
+                In an IEEE 754 floating-point number with $t$ bits in the significand (including the implicit 1), the machine epsilon is defined as
+                \begin{align*}
+                    \epsilon_{\text{mach}} = 2^{-(t-1)} = \frac{1}{2^{t-1}}
+                \end{align*}
+                A floating-point number is stored in normalized form
+                \begin{align*}
+                    x = 1.b_{1}b_{2}b_{3}...b_{t-1} \times 2^{e}
+                \end{align*}
+                The gap between two consecutive representable floating-point numbers is determined by the last bit of the significand
+                \begin{align*}
+                    \text{Unit gap } = 2^{e-(t-1)}
+                \end{align*}
+                \bigbreak \noindent 
+                This is because the smallest possible difference in the mantissa is $2^{-t(t-1)} $, which gets scaled by $2^{e} $
+                \bigbreak \noindent 
+                When rounding to the nearest floating-point number, the maximum error occurs when $x$ falls exactly between two consecutive representable numbers.
+                \bigbreak \noindent 
+                Since the gap between two consecutive numbers is
+                \begin{align*}
+                    2^{e-(t-1)}
+                \end{align*}
+                the maximum absolute rounding error is
+                \begin{align*}
+                    \frac{1}{2} \times 2^{e-(t-1)}
+                \end{align*}
+                because the number is rounded to the nearest representable value.
+                \bigbreak \noindent 
+                The relative error is given by
+                \begin{align*}
+                    \frac{\text{max absolute rounding error}}{\left\lvert x \right\rvert}
+                \end{align*}
+                Since $\left\lvert x \right\rvert \approx  2^{e}$ in normalized form
+                \begin{align*}
+                    \frac{\frac{1}{2}2^{e-(t-1)}}{e} = \frac{1}{2} \times 2^{-(t-1)}
+                \end{align*}
+                Since $\epsilon_{\text{mach}} =2^{-(t-1)}$, we conclude
+                \begin{align*}
+                    \text{Relative rounding error} \leq \frac{1}{2}\epsilon_{\text{mach}}
+                \end{align*}
+
+
+
+
+
+
+
+            \item \textbf{Unit roundoff $\eta$}: We define the unit roundoff $\eta = \frac{\epsilon}{2.0}$, and it is the largest possible relative error due to roundoff
+                \begin{align*}
+                    \eta = 2^{-53} \approx 1.1 \times 10^{-16}
+                \end{align*}
+                \bigbreak \noindent 
+                The unit roundoff represents the maximum rounding error in a floating-point system when using round-to-nearest mode
+                \bigbreak \noindent 
+                (the default in IEEE 754). This is because rounding introduces an error at most half the distance between two consecutive representable floating-point numbers.
+            \item \textbf{Roundoff error example}: Suppose we are using a base-10 floating-point system with 4 significant digits, using `RoundNearest`:
+                \begin{align*}
+                    \left( 1.112 \times 10^1 \right) \times \left( 1.112 \times 10^2 \right)
+                    & = 1.236544 \times 10^3 \\
+                    & \rightarrow 1.237 \times 10^3 = 1237
+                \end{align*}
+                The absolute error is $1237 - 1236.544 = 0.456$.
+                \bigbreak \noindent 
+                The relative error is 
+                \begin{align*}
+                    \frac{0.456}{1236.544} \approx 0.0004 = 0.04 \%
+                \end{align*}
+                The default rounding mode is `RoundNearest` (round to the nearest floating-point number). This implies that
+                $$ \frac{|x - \mathrm{fl}(x)|}{|x|} \leq \eta.$$
+                If `RoundToZero` is used (a.k.a. \textbf{chopping}), then
+                $$ \frac{|x - \mathrm{fl}(x)|}{|x|} \leq 2 \eta.$$
+                `RoundNearest` is used since it produces smaller roundoff errors.
+            \item \textbf{Roundoff error accumulation}: When performing arithmetic operations on floats, extra \textbf{guard digits} are used to ensure \textbf{exact rounding}. This guarantees that the relative error of a floating-point operation (\textbf{flop}) is small. More precisely, for floating-point numbers \(x\) and \(y\), we have
+                \begin{align*}
+                    \mathrm{fl}(x \pm y) &= (x \pm y)(1 + \varepsilon_1) \\
+                    \mathrm{fl}(x \times y) &= (x \times y)(1 + \varepsilon_2) \\
+                    \mathrm{fl}(x \div y) &= (x \div y)(1 + \varepsilon_3) \\
+                \end{align*}
+                where \( |\varepsilon_i| \leq \eta \), for \( i = 1,2,3 \), where \( \eta \) is the unit roundoff.
+                \bigbreak \noindent 
+                Although the relative error of each flop is small, it is possible to have the roundoff error accumulate and create significant error in the final result. If \( E_n \) is the error after \( n \) flops, then:
+                \begin{itemize}
+                    \item \textbf{Linear roundoff error accumulation} is when \( E_n \approx c_0 n E_0 \)
+                    \item \textbf{Exponential roundoff error accumulation} is when \( E_n \approx c_1^n E_0 \), for some \( c_1 > 1 \)
+                \end{itemize}
+                In general, linear roundoff error accumulation is unavoidable. On the other hand, exponential roundoff error accumulation is not acceptable and is an indication of an \textbf{unstable algorithm}. (See Example 1.6 in Ascher-Greif for an example of exponential roundoff error accumulation, and see Exercise 5 in Section 1.4 for a numerically stable method to accomplish the same task.)
+            \item \textbf{General advice}: 
+                \begin{enumerate}
+                    \item Adding \( x + y \) when \( |x| \gg |y| \) can cause the information in \( y \) to be "lost" in the summation.
+                    \item Dividing by very small numbers or multiplying by very large numbers can \textbf{magnify error}.
+                    \item Subtracting numbers that are almost equal produces \textbf{cancellation error}.
+                    \item An \textbf{overflow} occurs when the result is too large in magnitude to be representable as a float. The result will become either \texttt{Inf} or \texttt{-Inf}. Overflows should be avoided.
+                    \item An \textbf{underflow} occurs when the result is too small in magnitude to be representable as a float. The result will become either \texttt{0.0} or \texttt{-0.0}.
+                \end{enumerate}
+
+
+
+
 
 
 

@@ -1,4 +1,21 @@
-        const int& ref = 100; // OK: binds to temporary, lifetime extended
-        std::cout << ref << std::endl; // Prints 100
+        #include <iostream>
 
-        int& ref = 100; // ERROR: Cannot bind non-const lvalue reference to an rvalue
+        class Example {
+            public:
+            void print() {
+                std::cout << "Non-const print" << std::endl;
+            }
+
+            void print() const {
+                std::cout << "Const print" << std::endl;
+            }
+        };
+
+        void forceModify(const Example& obj) {
+            const_cast<Example&>(obj).print();  // Calls non-const version
+        }
+
+        int main() {
+            Example e;
+            forceModify(e);  // Calls non-const print()
+        }

@@ -216,6 +216,117 @@ This means that even if you pass an rvalue, it will be treated as an lvalue.
 % \bigbreak \noindent 
 % “\&\&” in source code though may have the syntactic appearance of an rvalue reference (“\&&”), but the meaning of an lvalue reference (“\&”).
 
+\bigbreak \noindent 
+\subsection{Exception safety: four types}
+\bigbreak \noindent 
+Exception safety in C++ refers to the guarantees a function or piece of code provides regarding its behavior when exceptions are thrown. Exception safety ensures that objects remain in a valid state and that resources (such as memory, file handles, and locks) are properly managed even in the presence of exceptions.
+\bigbreak \noindent 
+Exception safety is typically categorized into four levels:
+\begin{enumerate}
+    \item \textbf{No Guarantee (Unsafe)}: The function provides no exception safety. If an exception is thrown, the program may enter an invalid state, leak resources, or cause undefined behavior.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            void unsafeFunction(std::vector<int>& vec, int value) {
+                vec.push_back(value); // If push_back throws, `vec` may be in an inconsistent state.
+                doSomething(); // May not run if push_back fails.
+            }
+        \end{cppcode}
+    \item \textbf{Basic Guarantee}: If an exception is thrown, no resources leak, and all objects remain in a valid (but possibly modified) state.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            void basicGuarantee(std::vector<int>& vec, int value) {
+                try {
+                    vec.push_back(value); // If this throws, `vec` is still valid.
+                } catch (...) {
+                    // Exception handling ensures no resource leaks.
+                }
+            }
+        \end{cppcode}
+    \item \textbf{Strong Guarantee}: Either the function succeeds completely or has no effect (strong exception safety). This is often achieved using copy-and-swap techniques or transactions.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            void strongGuarantee(std::vector<int>& vec, int value) {
+                std::vector<int> temp(vec); // Copy to temporary
+                temp.push_back(value); // Modify the copy
+                vec.swap(temp); // Commit the change safely
+            }
+        \end{cppcode}
+        \bigbreak \noindent 
+        If push\_back throws, vec remains unchanged.
+    \item \textbf{No-Throw Guarantee (Exception Neutrality)}: The function is guaranteed not to throw exceptions. Achieved by using only non-throwing operations (noexcept)
+        \bigbreak \noindent 
+        \begin{cppcode}
+            void noThrowFunction(std::vector<int>& vec, int value) noexcept {
+                vec.push_back(value); // Assumes `push_back` does not throw
+            }
+        \end{cppcode}
+\end{enumerate}
+
+\bigbreak \noindent 
+\subsection{Resource Acquisition Is Initialization (RAII)}
+\bigbreak \noindent 
+Resource Acquisition Is Initialization (RAII) is a programming technique in C++ where resource management (such as memory, file handles, or locks) is tied to the lifetime of objects. This ensures that resources are acquired in a constructor and released in a destructor, providing exception safety and preventing resource leaks.
+\bigbreak \noindent 
+Smart pointers are an example of this
+\bigbreak \noindent 
+\begin{cppcode}
+    void badFunction() {
+        int* ptr = new int(10);
+        throw std::runtime_error("Exception!"); 
+        delete ptr;  // This line is never reached, memory leak!
+    }
+\end{cppcode}
+\bigbreak \noindent 
+With smart pointers, we can guarantee RAII
+\bigbreak \noindent 
+\begin{cppcode}
+    void goodFunction() {
+        std::unique_ptr<int> ptr = std::make_unique<int>(10);
+        throw std::runtime_error("Exception!"); 
+        // `ptr` is destroyed automatically, no memory leak.
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The name Resource Acquisition Is Initialization (RAII) comes from the idea that acquiring a resource (e.g., memory, file, mutex, etc.) should happen at the same time as object initialization—specifically, in the constructor of a class.
+\begin{itemize}
+    \item Resource Acquisition $\to$ The act of obtaining or allocating a resource (e.g., opening a file, allocating memory).
+    \item Is Initialization $\to$ This acquisition happens during the initialization phase of an object, meaning inside its constructor.
+\end{itemize}
+\bigbreak \noindent 
+C++ only guarantees deterministic destruction for objects with automatic (stack) storage duration. That is, objects created on the stack are automatically destroyed when they go out of scope.
+\bigbreak \noindent 
+However, RAII extends this guarantee to dynamically allocated resources by using smart pointers and custom RAII classes.
+\bigbreak \noindent 
+If resource acquisition does not happen during the initialization phase (i.e., inside the constructor in C++), several issues can arise, primarily resource leaks, partially initialized objects, and lack of exception safety.
+\bigbreak \noindent 
+If a class does not acquire its resource in the constructor, but instead in a separate function, the object may exist in an invalid state.
+\bigbreak \noindent 
+\begin{cppcode}
+class ResourceManager {
+    FILE* file;
+public:
+    ResourceManager() { file = nullptr; } // No resource acquired here 
+
+    void openFile(const char* filename) {
+        file = fopen(filename, "r");  // Resource acquired separately 
+    }
+
+    ~ResourceManager() {
+        if (file) fclose(file);
+    }
+};
+
+int main() {
+    ResourceManager rm;
+    // Forgot to call `openFile()`, now `rm` is in an invalid state 
+}
+\end{cppcode}
+\bigbreak \noindent 
+The object exists in an invalid state unless openFile() is called manually. A user of the class might forget to call openFile(), leading to runtime errors.
+
+
+
+
 
 \pagebreak 
 \unsect{Categories}
