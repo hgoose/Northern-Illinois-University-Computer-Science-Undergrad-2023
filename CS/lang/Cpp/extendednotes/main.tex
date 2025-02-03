@@ -4837,7 +4837,7 @@ int main() {
 
 
      \pagebreak 
-     \unsect{constexpr}
+     \unsect{constexpr, consteval, and constinit}
      \bigbreak \noindent 
      constexpr is a keyword introduced in C++11 and enhanced in later standards. It is used to indicate that the value of a variable, function, or object can be evaluated at compile time, provided all inputs and operations are also constant expressions. This helps in improving performance by allowing certain computations to be done during compilation rather than runtime.
      \begin{itemize}
@@ -4915,22 +4915,48 @@ Because the value of a constexpr variable is computed at compile time, it elimin
 \bigbreak \noindent 
 \subsection{When const Can Make a Compile-Time Constant}
 \bigbreak \noindent 
-If the initializer of a const variable is a constant expression, then the const variable can be a compile-time constant. This is common for basic types like integers and floating-point numbers.
+Whether a const variable is a compile-time constant depends on how and where it is initialized.
 \bigbreak \noindent 
-\begin{cppcode}
-const int x = 42; // x is a compile-time constant
-int arr[x];       // Valid because x is a constant expression
-\end{cppcode}
+A const variable is considered a compile-time constant if its value is known at compile time. This typically occurs in the following scenarios
+\begin{itemize}
+    \item \textbf{Literal Initialization}: If a const variable is initialized with a literal or a constant expression, it is a compile-time constant.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            const int x = 10;  // Compile-time constant
+            const double pi = 3.14159;  // Compile-time constant
+        \end{cppcode}
+    \item \textbf{Constant Expressions}: If a const variable is initialized with a constant expression (an expression that can be evaluated at compile time), it is a compile-time constant.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            const int y = x + 5;  // Compile-time constant if `x` is a compile-time constant
+            const int z = sizeof(int) * 2;  // Compile-time constant
+        \end{cppcode}
+    \item \textbf{constexpr Variables:} The constexpr keyword explicitly indicates that a variable must be a compile-time constant. If a variable is declared with constexpr, it must be initialized with a constant expression.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            constexpr int a = 10;  // Compile-time constant
+            constexpr int b = a * 2;  // Compile-time constant
+        \end{cppcode}
+\end{itemize}
 \bigbreak \noindent 
-If the initializer of a const variable involves a value that is not known until runtime, the variable is not a compile-time constant, even though it is immutable.
-\bigbreak \noindent 
-\begin{cppcode}
-int runtimeValue = 42;
-const int x = runtimeValue; // x is NOT a compile-time constant
-int arr[x];                // Error: x is not a constant expression
-\end{cppcode}
-\bigbreak \noindent 
-Here, $x$ is const, but its initializer (runtimeValue) is not a constant expression, so $x$ cannot be used in contexts requiring a constant expression.
+A const variable is not a compile-time constant if its value is determined at runtime. This happens in the following cases
+\begin{itemize}
+    \item \textbf{Dynamic Initialization:} If a const variable is initialized with a value that is not known until runtime, it is not a compile-time constant.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int input;
+            std::cin >> input;
+            const int c = input;  // Not a compile-time constant
+        \end{cppcode}
+    \item \textbf{Function Return Values:} If a const variable is initialized with the return value of a function (unless the function is constexpr), it is not a compile-time constant.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int getValue() { return 42; }
+            const int d = getValue();  // Not a compile-time constant
+        \end{cppcode}
+\end{itemize}
+
+
 
 \bigbreak \noindent 
 \subsection{if constexpr}
@@ -4955,6 +4981,123 @@ void printType(T value) {
     }
 }
 \end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Is constexpr const}
+\bigbreak \noindent 
+Is constexpr const? Does it make read-only variables? The short answer is yes, constexpr implies const for variables, but not for functions or class members.
+\bigbreak \noindent 
+When you declare a variable as constexpr, it is implicitly const, meaning it cannot be modified after initialization.
+\bigbreak \noindent 
+\begin{cppcode}
+constexpr int x = 42;
+x = 10;  // ERROR: x is read-only (implicitly `const`)
+\end{cppcode}
+\bigbreak \noindent 
+This is equivalent to 
+\bigbreak \noindent 
+\begin{cppcode}
+const int x = 42;
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{consteval}
+\bigbreak \noindent 
+consteval is a keyword introduced in C++20 that specifies a function must be evaluated exclusively at compile time. Unlike constexpr, which allows a function to be evaluated at either compile time or runtime, consteval ensures that the function is always evaluated at compile time. This makes it a stricter form of constexpr.
+\bigbreak \noindent 
+A consteval function can only be called in a context where the result can be computed at compile time.
+\bigbreak \noindent 
+If you try to call a consteval function in a runtime context, the code will not compile.
+\bigbreak \noindent 
+constexpr functions can be called at runtime if their arguments are not compile-time constants.
+\bigbreak \noindent 
+consteval functions cannot be called at runtime under any circumstances.
+\bigbreak \noindent 
+Since consteval functions are evaluated at compile time, they introduce no runtime overhead.
+\bigbreak \noindent 
+The result of the function is "baked into" the compiled code.
+\bigbreak \noindent 
+Understand that to call a consteval function, the functions must be called with compile time expressions
+\bigbreak \noindent 
+\begin{cppcode}
+    consteval int f(int x) {
+        return x;
+    }
+    constexpr x = 20;
+    f(x);
+\end{cppcode}
+\bigbreak \noindent 
+Consider the following code
+\bigbreak \noindent 
+\begin{cppcode}
+    consteval int f(int x) {
+        int y = 20;
+        return x+y;
+    }
+    constexpr int x = 20;
+    cout << f(x) << endl;
+\end{cppcode}
+\bigbreak \noindent 
+Why does this work? Isn't \texttt{int y = 20} a runtime operation?  The key here is understanding the distinction between compile-time evaluation and runtime behavior in the context of consteval functions. Let’s clarify why int y = 20 inside a consteval function is not a runtime thing and how the compiler handles it.
+\bigbreak \noindent 
+A consteval function is required to be evaluated at compile time. This means that everything inside the function (including local variables like int y = 20) is processed and computed during compilation, not at runtime.
+\bigbreak \noindent 
+The compiler treats the entire body of a consteval function as a compile-time context.
+\bigbreak \noindent 
+When you declare a local variable inside a consteval function, such as int y = 20, the compiler does not allocate memory for it at runtime.
+\bigbreak \noindent 
+Instead, the compiler treats y as a compile-time constant because:
+\begin{itemize}
+    \item It is initialized with a literal value (20), which is a compile-time constant.
+    \item The function itself is required to be evaluated at compile time.
+\end{itemize}
+\bigbreak \noindent 
+Therefore, you can essentially create constexpr variables without the use of constexpr or const if the variable is initialized inside a consteval function?
+\bigbreak \noindent 
+Next, consider
+\bigbreak \noindent 
+\begin{cppcode}
+    consteval void f() {
+        int data;
+        cout << "Enter: ";
+        cin >>  data;
+    }
+    f();
+\end{cppcode}
+\bigbreak \noindent 
+This code violates the fundamental requirement of consteval functions: they must be evaluated entirely at compile time
+\bigbreak \noindent 
+A consteval function is required to be evaluated exclusively at compile time. This means that all computations and operations inside the function must be resolvable during compilation.
+\bigbreak \noindent 
+The compiler must be able to determine the result of the function without executing any runtime code.
+
+\bigbreak \noindent 
+\subsection{constinit}
+\bigbreak \noindent 
+the constinit keyword was introduced to ensure that a variable is initialized at compile-time with a constant expression. This keyword is used to enforce that the initialization of a variable is done in a way that is compatible with constant initialization, which can help catch errors early and improve performance by guaranteeing that the initialization happens at compile-time.
+\bigbreak \noindent 
+Unlike constexpr, constinit does not imply that the variable is immutable (const). The variable can still be modified at runtime, but its initial value must be a compile-time constant.
+\bigbreak \noindent 
+constinit is typically used with static or thread_local variables, as these are the kinds of variables that benefit from compile-time initialization.
+\bigbreak \noindent 
+A variable cannot be declared with both constinit and constexpr because constexpr already implies compile-time initialization and immutability.
+\bigbreak \noindent 
+If the initialization expression is not a constant expression, the compiler will generate an error, helping to catch mistakes early.
+\bigbreak \noindent 
+Note that constinit cannot be used with local variables
+
+\bigbreak \noindent 
+\subsection{constexpr and consteval functions are implicitly inline}
+\bigbreak \noindent 
+All constexpr functions are implicitly treated as inline by the compiler. This is because constexpr functions are often evaluated at compile-time, and their definitions need to be available in every translation unit where they are used.
+\bigbreak \noindent 
+Like constexpr functions, consteval functions are also implicitly inline.
+\bigbreak \noindent 
+This ensures that their definitions are available wherever they are used, as they must always be evaluated at compile-time.
+
+
+
+
 
 \pagebreak 
 \unsect{Smart pointers}
@@ -5639,7 +5782,7 @@ std::unique_ptr<std::string> up(new std::string[10]); // runtime ERROR
 \bigbreak \noindent 
 Now, you might assume that as for class shared\_ptr, you have to define your own deleter to deal with arrays. But this is not necessary.
 \bigbreak \noindent 
-Fortunately, the C++ standard library provides a partial specialization of class unique_ptr for
+Fortunately, the C++ standard library provides a partial specialization of class unique\_ptr for
 arrays, which calls delete[ ] for the referenced object when the pointer loses the ownership to it.
 So, you simply have to declare:
 \bigbreak \noindent 

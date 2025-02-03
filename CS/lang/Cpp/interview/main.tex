@@ -106,14 +106,23 @@ A shorter decision cycle obviously means fewer interviews. Sometimes this approa
 An rvalue reference is a reference that can only bind to rvalues (temporary values).
 \bigbreak \noindent 
 \begin{cppcode}
+int&& x = 50;
+\end{cppcode}
+\bigbreak \noindent 
+Here, $z$ is an rvalue reference that binds directly to the temporary value 50. While this might seem trivial for primitive types like int, it becomes powerful when working with objects that manage resources (e.g., strings, vectors, or custom classes). By binding to an rvalue, you can extend the lifetime of the temporary object and potentially "move" its resources.
+\bigbreak \noindent 
+\begin{cppcode}
 void func(int&& param) {
     std::cout << "Rvalue reference received\n";
 }
 
 int main() {
     int x = 10;
-    // func(x);  // ❌ Error! x is an lvalue
-    func(20);    // ✅ OK, 20 is an rvalue
+    // func(x);  // Error! x is an lvalue
+    func(20);    //  OK, 20 is an rvalue
+    
+    int&& z = 30;
+    func(z);
 }
 \end{cppcode}
 \bigbreak \noindent 
@@ -131,8 +140,8 @@ A universal reference is when T\&\& appears in a template parameter and depends 
 
     int main() {
         int x = 10;
-        func(x);   // ✅ param is int& (lvalue reference)
-        func(20);  // ✅ param is int&& (rvalue reference)
+        func(x);   //  param is int& (lvalue reference)
+        func(20);  //  param is int&& (rvalue reference)
     }
 \end{cppcode}
 \bigbreak \noindent 
@@ -324,9 +333,249 @@ int main() {
 \bigbreak \noindent 
 The object exists in an invalid state unless openFile() is called manually. A user of the class might forget to call openFile(), leading to runtime errors.
 
+\bigbreak \noindent 
+\subsection{The partition of memory}
+\bigbreak \noindent 
+In C++, when a program runs, its memory is divided into distinct segments, each serving different purposes. These segments partition the memory block allocated to the program
+\bigbreak \noindent 
+\subsubsection{Text segment (code segment)}
+\bigbreak \noindent 
+This segment contains the executable code of the program. It is usually read-only to prevent accidental modification. The size of this segment is fixed once the program is loaded into memory.
+
+\bigbreak \noindent 
+\subsubsection{Data Segment}
+\bigbreak \noindent 
+Stores global and static variables.
+\begin{itemize}
+    \item \textbf{Initialized Data Segment:} Stores global/static variables with explicit initial values.
+    \item \textbf{Uninitialized Data Segment (BSS - Block Started by Symbol):} Stores global/static variables initialized to zero (default).
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Stack}
+\bigbreak \noindent 
+Used for function calls, local variables, and return addresses. Each function call pushes a new frame onto the stack, which is popped when the function returns. The stack grows downward (toward lower memory addresses).
+\bigbreak \noindent 
+It has a fixed size, set by the operating system or runtime environment.
+\bigbreak \noindent 
+Stack Overflow happens if it exceeds its allocated space (e.g., excessive recursion).
+\bigbreak \noindent 
+On linux the default stack size is typically 8mb, on windows it is typically 1mb.
+\bigbreak \noindent 
+Note that the \textit{call stack} is essentially the stack in the context of program execution. However, the term "call stack" specifically refers to how the stack is used to manage function calls, while "stack" is a more general term for the data structure or memory region itself. Let me clarify the relationship between the two:
+\bigbreak \noindent 
+The call stack is a region of memory that operates as a Last-In-First-Out (LIFO) data structure. It is used to keep track of function calls, their parameters, local variables, and control flow. Each time a function is called, a new stack frame (or activation record) is created and pushed onto the call stack. When the function returns, its stack frame is popped off the stack.
+\bigbreak \noindent 
+The last function called is the first one to return, which aligns with the LIFO principle.
+\bigbreak \noindent 
+A special register (e.g., esp on x86 or rsp on x86-64) keeps track of the current top of the stack. It is adjusted as data is pushed onto or popped off the stack.
+\bigbreak \noindent 
+Another register (e.g., ebp on x86 or rbp on x86-64) is often used to reference the base of the current stack frame, making it easier to access local variables and function parameters.
+\bigbreak \noindent 
+When a function is called, the following happens:
+\begin{itemize}
+    \item The return address (where the program should continue after the function returns) is pushed onto the stack.
+    \item The function's parameters are pushed onto the stack.
+    \item The stack pointer is adjusted to allocate space for local variables.
+\end{itemize}
+\bigbreak \noindent 
+The function uses its stack frame to store local variables and intermediate results.
+\bigbreak \noindent 
+The frame pointer (if used) helps navigate the stack frame.
+\bigbreak \noindent 
+When the function finishes, its stack frame is popped off the stack:
+\begin{itemize}
+    \item The stack pointer is restored to its previous position.
+    \item The return address is used to jump back to the caller.
+\end{itemize}
+\bigbreak \noindent 
+The size of a stack frame in C++ (or any other programming language) depends on several factors, including:
+\begin{itemize}
+    \item The size of local variables declared in the function.
+    \item The size of function parameters passed to the function.
+    \item The size of the return address (typically the size of a memory pointer, e.g., 4 bytes on 32-bit systems or 8 bytes on 64-bit systems).
+    \item The size of saved registers (if any) that need to be preserved across function calls.
+    \item Alignment requirements (e.g., the stack frame might be padded to align data to specific boundaries for performance reasons).
+\end{itemize}
 
 
+\bigbreak \noindent 
+\subsubsection{Heap}
+\bigbreak \noindent 
+Used for dynamic memory allocation (new, malloc). The program can allocate and free memory at runtime.
+\bigbreak \noindent 
+The heap grows upward (toward higher memory addresses). Memory leaks occur if allocated memory is not freed properly.
+\bigbreak \noindent 
+Unlike the stack, the heap does not have a fixed size limit, but it is constrained by system memory.
 
+\bigbreak \noindent 
+\subsubsection{A programs execution}
+\bigbreak \noindent 
+When a program is executed, the operating system (OS) finds a suitable slot in memory to load the program and manages its memory layout.
+\bigbreak \noindent 
+The OS reserves a contiguous block of memory for the program's execution. This includes space for the text segment (code), data segment (globals/statics), stack, and heap.
+\bigbreak \noindent 
+The OS determines a base address and loads the program's executable code into that location.
+\bigbreak \noindent 
+Once the program is loaded the text segment is placed first and has a fixed size.
+\bigbreak \noindent 
+The data segment follows, holding global/static variables.
+\bigbreak \noindent 
+The stack starts from a high memory address and grows downward as functions call each other.
+\bigbreak \noindent 
+The heap starts from a low memory address (above the data segment) and grows upward when dynamic allocations (new, malloc) occur.
+\bigbreak \noindent 
+The OS does not preallocate a fixed size for the heap or stack but instead reserves an initial size for the stack and heap and expands or shrinks them dynamically based on need (within system constraints).
+\bigbreak \noindent 
+If the stack grows too much (e.g., deep recursion) or the heap expands too far, they may collide, causing a crash (segmentation fault).
+\bigbreak \noindent 
+Stack size is often limited by the OS (default is a few MB), but heap size depends on system RAM
+\bigbreak \noindent 
+If the stack needs more space, the OS allocates additional pages unless it hits the stack limit (causing a stack overflow).
+\bigbreak \noindent 
+ If the heap needs more memory (malloc or new), the OS extends it using sbrk() or memory mapping (mmap).
+ \bigbreak \noindent 
+ \fig{1}{./figures/1.png}
+ \bigbreak \noindent 
+ The free space (or gap between the stack and heap) in a program's memory layout represents unallocated virtual memory that can be used by either the stack or heap as the program runs.
+ \bigbreak \noindent 
+ It acts as a buffer zone between the stack (growing downward) and the heap (growing upward).
+
+ \bigbreak \noindent 
+ \subsubsection{What does it mean for memory to be "allocated"}
+ \bigbreak \noindent 
+ When memory is "allocated," it means that a specific portion of the computer's memory space has been set aside and reserved for a particular program or data to use, essentially giving that program exclusive access to that memory area to store information during its execution; this is done by the operating system based on the program's needs
+
+ \bigbreak \noindent 
+ \subsubsection{"Static allocation"}
+ \bigbreak \noindent 
+ In C++ (and programming in general), statically allocated refers to memory that is allocated at compile time and remains fixed in size and location for the entire duration of the program's execution. This is in contrast to dynamic allocation, where memory is allocated and deallocated at runtime.
+ \bigbreak \noindent 
+ Static allocation means that the memory for a variable or object is reserved when the program is compiled, and it persists for the entire lifetime of the program.
+ \bigbreak \noindent 
+ The memory is allocated in one of the following regions
+ \begin{enumerate}
+     \item \textbf{Global/Static Memory:} For global variables and static variables.
+ \end{enumerate}
+ \bigbreak \noindent 
+ \textbf{Characteristics of Static Allocation}
+ \bigbreak \noindent 
+ \begin{itemize}
+     \item \textbf{Fixed Size:} The size of the memory block is known at compile time and cannot change during runtime.
+     \item \textbf{Lifetime:} The memory exists for the entire duration of the program (for global/static variables) or for the duration of the function call (for local variables).
+     \item \textbf{Efficiency:} Statically allocated memory is fast to allocate and access because it is managed by the compiler and does not require runtime overhead (e.g., no need for new/delete or malloc/free).
+     \item \textbf{Scope:} The visibility of the variable depends on where it is declared:
+         \begin{itemize}
+             \item Global variables are accessible throughout the program.
+             \item Static variables inside a function are accessible only within that function but retain their value between calls.
+         \end{itemize}
+ \end{itemize}
+
+ \bigbreak \noindent 
+ \subsubsection{"Automatic allocation"}
+ \bigbreak \noindent 
+ Automatic allocation refers to memory that is allocated automatically for local variables when a function is called and deallocated automatically when the function exits.
+ \bigbreak \noindent 
+ This memory is allocated on the stack, which is a region of memory managed by the compiler and the runtime environment.
+ \bigbreak \noindent 
+ The term "automatic" comes from the fact that the allocation and deallocation are handled automatically by the system, without requiring explicit intervention from the programmer (e.g., no need for new/delete or malloc/free).
+ \begin{itemize}
+     \item \textbf{Lifetime:} The memory is allocated when a function is called and deallocated when the function returns.
+     \item \textbf{Scope:} The variables are only accessible within the block (e.g., function or {} block) where they are declared.
+     \item \textbf{Speed:} Allocation and deallocation are very fast because the stack is a simple LIFO (Last-In-First-Out) data structure.
+ \end{itemize}
+ \bigbreak \noindent 
+ \textbf{Does the Compiler Assign Memory Locations at Compile Time?} Yes and no. Here’s the distinction:
+ \bigbreak \noindent 
+ The size of the stack frame (e.g., how much memory is needed for local variables and parameters) is determined at compile time. The layout of the stack frame (e.g., the order of variables and their offsets within the frame) is also determined at compile time.
+ \bigbreak \noindent 
+ The actual memory addresses on the stack are assigned at runtime when the function is called.
+ \bigbreak \noindent 
+ The stack pointer (a CPU register, e.g., esp on x86 or rsp on x86-64) keeps track of the current top of the stack and is adjusted dynamically as functions are called and return.
+ \bigbreak \noindent 
+ While stack memory is used for local variables, the actual allocation happens at runtime, not compile time.
+ \bigbreak \noindent 
+ When a function is called, the necessary stack space is allocated for its local variables.
+ \bigbreak \noindent 
+ The values of these variables are stored on the stack as the function executes.
+ \bigbreak \noindent 
+ When the function returns, the stack space is deallocated, effectively destroying the local variables.
+
+ \bigbreak \noindent 
+ \subsubsection{"Dynamic allocation"}
+ \bigbreak \noindent 
+ Dynamic memory allocation refers to memory that is explicitly allocated and deallocated at runtime by the programmer using new, new[], malloc(), or similar functions. This memory is managed on the heap, which has a more flexible lifespan than stack memory.
+
+ \bigbreak \noindent 
+ \subsubsection{Stack vs heap allocation}
+ \bigbreak \noindent 
+ Stack memory is allocated at runtime, but it is not explicitly controlled by the programmer. Instead, the compiler and runtime manage it automatically.
+ \bigbreak \noindent 
+ Unlike heap memory, stack allocation is deterministic (it follows a Last In, First Out order) and does not require explicit deallocation.
+ \bigbreak \noindent 
+ Heap memory, on the other hand, allows arbitrary allocation and deallocation at any time, making it truly "dynamic."
+
+ \bigbreak \noindent 
+ \subsubsection{Why new (dynamic allocation) is slow and stack allocation is fast}
+ \bigbreak \noindent 
+ The new operator in C++ is considered slow compared to stack allocation for several reasons
+ \bigbreak \noindent 
+ new allocates memory from the heap, which is managed dynamically by the operating system. Heap memory is not contiguous like the stack, so the allocator needs to search for a large enough free block of memory. This requires bookkeeping (maintaining free lists, fragmentation handling, etc.), which adds computational overhead.
+ \bigbreak \noindent 
+ If the heap does not have enough free space, new might call malloc(), which, in turn, may invoke sbrk() or mmap() at the OS level.
+ \bigbreak \noindent 
+    System calls (context switches to the kernel) are expensive compared to simple pointer arithmetic used in stack allocation.
+    \bigbreak \noindent 
+    Stack memory is pre-allocated at program startup. Allocation is just moving the stack pointer (simple arithmetic, e.g., esp -= size). No system calls or bookkeeping are required.
+    \bigbreak \noindent 
+    Deallocation is implicit—when a function returns, all its local variables are freed automatically.
+    \bigbreak \noindent 
+    Most systems use a downward-growing stack, meaning the stack grows from higher memory addresses to lower ones.
+    \bigbreak \noindent 
+    The Stack Pointer (SP or ESP/RSP in x86/x86-64) keeps track of the top of the stack.
+    \bigbreak \noindent 
+    Pushing data decrements the stack pointer (moves it to a lower address).
+    \bigbreak \noindent 
+    Popping data increments the stack pointer (moves it to a higher address).
+    \bigbreak \noindent 
+    Yes, the stack pointer (SP, ESP in x86, RSP in x86-64) is used to keep track of where to allocate and deallocate memory on the stack.
+    \bigbreak \noindent 
+    \subsubsection{Does new call malloc?}
+    \bigbreak \noindent 
+    in most standard C++ implementations, new eventually calls malloc() (or an equivalent memory allocation function), but with additional functionality.
+    \bigbreak \noindent 
+    When you write:
+    \begin{cppcode}
+    int* ptr = new int(10);
+    \end{cppcode}
+    \bigbreak \noindent 
+    The following steps happen
+    \begin{enumerate}
+        \item operator new(size\_t) is called, which internally calls malloc(size).
+        \item If malloc() succeeds, operator new() returns the allocated memory.
+        \item The constructor is called (for non-POD types).
+        \item A pointer to the object is returned.
+    \end{enumerate}
+    \bigbreak \noindent 
+    For example, the default operator new() might look like this:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void* operator new(std::size_t size) {
+            void* ptr = std::malloc(size);  // Calls malloc internally
+            if (!ptr) throw std::bad_alloc();  // Handle allocation failure
+            return ptr;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Similarly, new[] calls malloc() but also stores extra metadata for array size.
+
+\bigbreak \noindent 
+\subsection{Dangling pointer, memory leak, and resource leak}
+\begin{itemize}
+    \item \textbf{Dangling pointer}: A dangling pointer is a pointer that continues to reference a memory location that has been deallocated or freed. Accessing such a pointer can lead to undefined behavior, crashes, or security vulnerabilities.
+    \item \textbf{Memory leak}: A memory leak occurs when dynamically allocated memory is not properly deallocated, causing unreachable memory to remain allocated until the program terminates. This can lead to increased memory consumption over time.
+    \item \textbf{Resource leak}: A resource leak occurs when a program fails to release system resources such as file handles, network sockets, or database connections, leading to exhaustion of available system resources.
+\end{itemize}
 
 \pagebreak 
 \unsect{Categories}
@@ -426,6 +675,8 @@ If $x$ were not const, we could also qualify $y$ to be const, therefore not allo
 
     y = 15; // Error
 \end{cppcode}
+\bigbreak \noindent 
+So we see, auto cannot implicitly give us references, we must use auto\&
 
 \bigbreak \noindent 
 \subsection{Const with auto and pointers}
@@ -488,6 +739,116 @@ Similarly for const pointers to const data, using auto will maintain constness f
 \bigbreak \noindent 
 \subsection{rvalue references with auto}
 \bigbreak \noindent 
+\begin{cppcode}
+    int x = 50;
+    auto&& y = x; // y is int&
+    auto&& z = 50; // z is int&&
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Auto in function return types or lambda parameters}
+\bigbreak \noindent 
+auto in a function return type or a lambda parameter implies template type deduction, not auto type deduction.
+
+\bigbreak \noindent 
+\subsection{When can auto deduce undesired types?}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    std::vector<bool> foo() {
+        // ...
+    }
+
+    void bar(bool b) {
+        // ...
+    }
+
+    auto someBit = foo()[2]; // this is some pointer to a temp object
+
+    std::vector<bool> bits{ true, false, false, true };
+    bar(bits[2]); // Undefined behaviour
+\end{cppcode}
+\bigbreak \noindent 
+std::vector<bool> is a specialized version of std::vector that is optimized for space efficiency. Instead of storing each bool as a full byte, it typically stores each bool as a single bit.
+\bigbreak \noindent 
+This specialization means that std::vector<bool> does not behave exactly like other std::vector types. Specifically, accessing elements does not return a reference to a bool but rather a proxy object (of type std::vector<bool>::reference) that simulates a reference to a single bit.
+\bigbreak \noindent 
+When you access an element of a std::vector<bool> using operator[], it returns a temporary proxy object (std::vector<bool>::reference) that represents the bit at that position.
+\bigbreak \noindent 
+This proxy object can be implicitly converted to a bool, but it is not a direct reference to a bool in the vector.
+\bigbreak \noindent 
+Temporary objects (like the proxy object returned by foo()[2]) are destroyed at the end of the full expression in which they are created. This means that if you try to use the temporary object after the expression, you will be accessing a destroyed object, leading to undefined behavior.
+\bigbreak \noindent 
+\textbf{Note:} A proxy object is an intermediate object that stands in for another object. In the case of std::vector<bool>, accessing an element (e.g., foo()[2]) returns a proxy object of type std::vector<bool>::reference. This proxy object is not a direct reference to a bool but rather a lightweight object that provides access to a single bit in the underlying storage of the std::vector<bool>.
+\bigbreak \noindent 
+So what's happening here?
+\begin{enumerate}
+    \item foo() returns a temporary std::vector<bool>.
+    \item foo()[2] creates a temporary proxy object (std::vector<bool>::reference) that refers to the bit at index 2 in the temporary vector.
+    \item The temporary proxy object is assigned to $x$.
+\end{enumerate}
+However, the problem arises because The temporary std::vector<bool> returned by foo() is destroyed at the end of the full expression.
+\bigbreak \noindent 
+The proxy object (std::vector<bool>::reference) depends on the temporary vector for its existence. Once the vector is destroyed, the proxy object becomes invalid because it no longer has a valid vector to refer to.
+\bigbreak \noindent 
+The language rules specify that temporaries are destroyed at the end of the full expression unless they are bound to a const reference (which extends their lifetime to the lifetime of the reference).
+\bigbreak \noindent 
+Proxy objects like std::vector<bool>::reference are not regular objects but rather lightweight intermediaries. They are not designed to outlive the container they depend on.
+\bigbreak \noindent 
+To avoid the problem of the proxy object becoming invalid, you need to ensure that the std::vector<bool> outlives the proxy object. Here are two ways to do this:
+\bigbreak \noindent 
+1. Store the vector in a named variable
+\bigbreak \noindent 
+\begin{cppcode}
+auto bits = foo(); // Store the vector in a named variable
+auto x = bits[2];  // Access the bit from the persistent vector
+\end{cppcode}
+\bigbreak \noindent 
+ Extract the value immediately, If you only need the value of the bit and not the proxy object, you can extract the value immediately:
+ \bigbreak \noindent 
+ \begin{cppcode}
+ bool x = foo()[2]; // Extract the value of the bit
+ \end{cppcode}
+ \bigbreak \noindent 
+ Here, x is a bool (not a proxy object), so it does not depend on the temporary vector.
+ \bigbreak \noindent 
+ In such situations, it’s better either not to use auto at all, or use the idiom that Meyers (effective modern c++) calls the the explicitly typed initializer idiom.
+ \begin{cppcode}
+     auto x = static_cast<bool>(bits[2])
+ \end{cppcode}
+ \bigbreak \noindent 
+ The idiom can also come in handy when you deal with proxy types.
+
+ \bigbreak \noindent 
+ \subsection{What are the advantages of using auto?}
+ \bigbreak \noindent 
+ auto variables must be initialized and as such, they are generally immune to type mismatches that can lead to portability or efficiency problems. auto can also make refactoring easier, and it typically requires less typing than explicitly specified types.
+ \bigbreak \noindent 
+ auto variables mainly can improve correctness, performance, maintainability, and robustness. It is also more convenient to type, but that’s its least important advantage.
+ \bigbreak \noindent 
+ \subsubsection{Regarding local variables}
+ \bigbreak \noindent 
+ Regarding local variables, if you use the auto x = expr; way of declaration, there are many advantages.
+ \begin{itemize}
+     \item It’s guaranteed that your variable will be initialized. If you forgot, you’ll get an error from the compiler.
+     \item There are no temporary objects, implicit conversion, so it is more efficient.
+     \item Using auto guarantees that you will use the correct type.
+     \item In the case of maintenance, refactoring, there is no need to update the type.
+     \item It is the simplest way to portably spell the implementationspecific type of arithmetic operations on built-in types. Those types might vary from platform to platform, and it also ensures that you cannot accidentally get lossy narrowing conversions.
+     \item You can omit difficult to spell types, such as lambdas, iterators, etc.
+ \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

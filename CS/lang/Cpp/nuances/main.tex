@@ -239,6 +239,7 @@
         s s1;
         cout << sizeof(s1) << endl; // 1
     \end{cppcode}
+    \bigbreak \noindent 
     Notice that empty structs do not have a size of zero. Empty structs have a size of one byte. 
     \bigbreak \noindent 
     A size of zero for a struct would mean that it occupies no memory. If multiple instances of such a struct are created, they would have no unique memory location to occupy. As a result, the compiler would assign the same memory address to all instances, which would violate fundamental rules of object-oriented programming in C++.
@@ -275,6 +276,21 @@
     Lastly, constructors and destructors do not increase the size.
     \bigbreak \noindent 
     It seems only fields increase the size.
+
+    \bigbreak \noindent 
+    \subsection{Padding}
+    \bigbreak \noindent 
+    Consider the following struct
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            char c; // 1 byte
+            int x; // 4 bytes
+        };
+        cout << sizeof(s) << endl; // 8
+    \end{cppcode}
+    \bigbreak \noindent 
+    Notice that we do not get a size of 5. In C++, padding is introduced by the compiler to ensure proper memory alignment of data members. This improves performance on most hardware architectures. The first member, char $c$, occupies 1 byte. The next member, int $x$, requires 4 bytes and should be aligned to a 4-byte boundary (on most systems). To achieve this alignment, 3 bytes of padding are added after c before x starts.
 
     \pagebreak 
     \unsect{When is trailing return type useful}
@@ -667,6 +683,11 @@
         }
     \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Can you call pure virtual methods}
+    \bigbreak \noindent 
+    You cannot instantiate abstract classes. Thus, you cannot call pure virtual methods
+
 
 
 
@@ -900,6 +921,309 @@
         \item It is hard to search and debug since (Type) doesn’t indicate what kind of conversion is being performed.
     \end{itemize}
 
+    \pagebreak 
+    \unsect{The compiler and functions}
+    \bigbreak \noindent 
+     The compiler handles functions through several stages, from parsing the source code to generating machine code. Here's an overview of how the compiler deals with functions
+     \begin{enumerate}
+         \item \textbf{Parsing and Syntax Analysis:} The compiler reads the source code and identifies function declarations and definitions.
+             \bigbreak \noindent 
+                It checks the syntax of the function, such as the return type, function name, parameter list, and body.
+         \item \textbf{Semantic Analysis:} The compiler checks the meaning of the function, such as
+             \begin{itemize}
+                 \item Whether the function is declared before use (or has a prototype).
+                 \item Whether the function parameters and return type match the function calls.
+                 \item Whether the function body adheres to type rules (e.g., no invalid operations on types).
+             \end{itemize}
+         \item \textbf{Function Overloading Resolution:} If multiple functions with the same name exist (function overloading), the compiler determines which function to call based on the arguments provided.
+         \item \textbf{Code Generation:} The compiler generates intermediate or machine code for the function body.
+             \bigbreak \noindent 
+            It allocates memory for local variables and parameters.
+            \bigbreak \noindent 
+            It generates instructions for the function's logic, such as arithmetic operations, loops, and conditionals.
+         \item \textbf{Function Calls:} When a function is called, the compiler generates code to:
+             \begin{itemize}
+                 \item Push the arguments onto the stack (or pass them via registers, depending on the calling convention).
+                 \item Transfer control to the function's code.
+                 \item Save the return address so the program knows where to continue after the function finishes.
+             \end{itemize}
+         \item \textbf{Inlining (Optional):} If a function is marked with the inline keyword or the compiler determines it is beneficial, the compiler may replace the function call with the actual function body to avoid the overhead of a function call.
+         \item \textbf{Linkage:}
+             If a function is declared in one translation unit (source file) and defined in another, the compiler ensures the function is properly linked.
+             \bigbreak \noindent 
+            The compiler generates symbols for functions, which the linker resolves during the linking phase.
+         \item \textbf{Optimization:}
+             The compiler may optimize functions to improve performance, such as:
+             \begin{itemize}
+                 \item Removing unused code (dead code elimination).
+                 \item Unrolling loops.
+                 \item Inlining small functions.
+                 \item Optimizing tail-recursive functions.
+             \end{itemize}
+     \end{enumerate}
+     \bigbreak \noindent 
+     When a function is called, the compiler (and the runtime environment) manages memory for local variables in a specific way
+     \bigbreak \noindent 
+     Local variables in a function are typically stored in the stack, a region of memory that is managed automatically by the compiler and runtime environment.
+     \bigbreak \noindent 
+     When a function is called, the compiler allocates memory on the stack for all of its local variables.
+     \bigbreak \noindent 
+     This memory is only valid for the duration of the function call. Once the function returns, the memory is deallocated (freed).
+     \bigbreak \noindent 
+     Each function call creates a stack frame (also called an activation record), which contains:
+     \begin{itemize}
+         \item The function's local variables.
+         \item The return address (where the program should continue after the function finishes).
+         \item The function's parameters (if any).
+     \end{itemize}
+    The stack grows downward in memory, and each new function call adds a new stack frame on top of the previous one.
+    \bigbreak \noindent 
+    When a function returns, its stack frame is deallocated, and the memory becomes available for reuse.
+    \bigbreak \noindent 
+    If the same function is called again, a new stack frame is created, and the local variables are allocated in the same memory region (which may have been overwritten by other function calls in the meantime).
+    \bigbreak \noindent 
+    Local variables have automatic storage duration, meaning they are created when the function is called and destroyed when the function returns.
+    \bigbreak \noindent 
+    This means that the values of local variables are not preserved between function calls.
+    \bigbreak \noindent 
+    constexpr variables are treated differently because they are compile-time constants.
+    \bigbreak \noindent 
+    The compiler evaluates constexpr variables at compile time and replaces their uses with their computed values.
+    \bigbreak \noindent 
+    No memory is allocated for constexpr variables at runtime—they are essentially "baked into" the code.
+    \bigbreak \noindent 
+    If a local variable is declared static, it has static storage duration, meaning it is allocated memory once and persists across function calls.
+    \bigbreak \noindent 
+    Static local variables are not stored on the stack but in a separate region of memory (typically the data segment).
+
+    \bigbreak \noindent 
+    \subsection{Important: compile time constant variables and memory (constant propagation/constant folding)}
+    \bigbreak \noindent 
+    When the compiler encounters a compile-time constant (e.g., a constexpr variable), it evaluates the constant expression at compile time and replaces all uses of the variable with the computed value. This means:
+    \begin{itemize}
+        \item \textbf{No Memory Allocation for the Variable:} Since the value of the compile-time constant is known at compile time, the compiler does not allocate memory for the variable at runtime.
+            \bigbreak \noindent 
+            Instead, the variable is treated like a literal value (e.g., 10, 3.14, etc.), and its value is "baked into" the generated code wherever it is used.
+        \item \textbf{Replacement of Uses:} The compiler replaces every occurrence of the compile-time constant variable with its computed value.
+        This process is called constant propagation or constant folding.
+    \end{itemize}
+
+
+    \pagebreak 
+    \unsect{The introduction of the nullptr}
+    \bigbreak \noindent 
+    nullptr was introduced in C++11 to address several issues and improve type safety when dealing with null pointers. Prior to C++11, the standard way to represent a null pointer was to use the macro NULL, which is typically defined as 0 or ((void*)0) in C++. However, this approach had several drawbacks:
+    \bigbreak \noindent 
+    \subsection{Ambiguity in Overloaded Functions}
+    \bigbreak \noindent 
+    In C++, NULL is typically defined as 0, which is an integer. This can lead to ambiguity when overloading functions that take both integer and pointer arguments. For example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void foo(int);
+        void foo(char*);
+
+        foo(NULL); // Which foo is called? Ambiguous, as NULL is an integer.
+    \end{cppcode}
+    \bigbreak \noindent 
+    nullptr resolves this ambiguity because it has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type but not to integral types. Thus:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        foo(nullptr); // Unambiguously calls foo(char*)
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Type safety}
+    \bigbreak \noindent 
+    Using 0 or NULL for null pointers can lead to type safety issues because 0 is an integer literal, and it can be implicitly converted to other types, such as bool or int. This can result in unintended behavior or bugs.
+    \bigbreak \noindent 
+    nullptr is a keyword that explicitly represents a null pointer, and it cannot be implicitly converted to an integer. This makes the code more type-safe and less prone to errors.
+    \bigbreak \noindent 
+    \subsection{The type of nullptr}
+    \bigbreak \noindent 
+    nullptr is of type nullptr\_t
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto ptr = nullptr // has type nullptr\_t
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{nullptr vs void*}
+    \bigbreak \noindent 
+    nullptr is used to explicitly indicate that a pointer does not point to any valid memory location.
+    \bigbreak \noindent 
+    It has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type (e.g., int*, char*, etc.) but not to other types like integers.
+    \bigbreak \noindent 
+    void* is a generic pointer type that can point to any data type.
+
+
+    \pagebreak 
+    \unsect{Brace initialization vs Parenthesized Initialization}
+    \bigbreak \noindent 
+    Brace initialization (also called uniform initialization or list initialization) was introduced in C++11 and has stricter rules compared to parenthesized initialization. Specifically, consider a uniform initialization of the form \texttt{type\{expr\}}
+    \begin{itemize}
+        \item \textbf{Prohibits narrowing conversions:} Brace initialization does not allow implicit narrowing conversions. If expr cannot be converted to Type without losing information (e.g., converting a double to an int), the compiler will emit an error.
+        \item \textbf{Prevents most vexing parse:} Brace initialization avoids ambiguity with function declarations, which can occur with parenthesized initialization.
+        \item \textbf{Calls constructors explicitly:} If Type has a constructor that takes an std::initializer\_list, brace initialization will prefer that constructor.
+    \end{itemize}
+    \bigbreak \noindent 
+    If an std::initializer\_list constructor exists, it will be chosen over other constructors, even if another constructor is a better match.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            s(int x) {cout << "1" << endl;}
+            s(initializer_list<int> x) {cout << "2" << endl;}
+        };
+        s s1{2}; // 2
+        s s2(2); // 1
+    \end{cppcode}
+
+
+
+
+    \bigbreak \noindent 
+    Parenthesized initialization (also called direct initialization) is more permissive and allows narrowing conversions. It behaves like a function call, where the compiler attempts to convert expr to Type using implicit conversions, even if narrowing occurs.
+    \bigbreak \noindent 
+    Note that parenthesized initialization does call constructors
+    \bigbreak \noindent 
+    Since c++20, direct initialization will work for aggregate types
+    \begin{align*}
+        struct lattice {
+            int x,y;
+        };
+        lattice p(10,20); // OK since c++20
+    \end{align*}
+
+
+    \pagebreak 
+    \unsect{Are chars unsigned?}
+    \bigbreak \noindent 
+    In C++, the char type is neither inherently signed nor unsigned. It's implementation-defined behavior.
+    \begin{itemize}
+        \item char, signed char, and unsigned char are distinct types.
+        \item The default behavior of char depends on the compiler. Some compilers treat char as signed char, while others treat it as unsigned char.
+        \item To ensure consistent behavior, use signed char or unsigned char explicitly.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Size of types}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{bool}: 1 Byte
+        \item \textbf{char}: 1 Byte
+        \item \textbf{short}: 2 Bytes
+        \item \textbf{int}: 4 Bytes
+        \item \textbf{long}: 4 or 8 bytes
+        \item \textbf{long long}: 8 bytes
+        \item \textbf{float}: 4 bytes
+        \item \textbf{double}: 8 bytes
+        \item \textbf{long double}: 16 bytes
+        \item \textbf{string}: 32 bytes
+        \item \textbf{Pointers}: 8 bytes
+    \end{itemize}
+    \bigbreak \noindent 
+    Note that the size of primitive types are usually implementation defined, and adding signed or unsigned does not change the size.
+    \bigbreak \noindent 
+    Also, references are the size of the type they refer to. 
+
+    \pagebreak 
+    \unsect{Trivially copyable}
+    \bigbreak \noindent 
+    A trivially copyable type in C++ is a type that can be copied efficiently using memcpy or similar low-level operations without breaking its correctness. This means it does not require custom copy/move constructors or destructors.
+    \bigbreak \noindent 
+    A class or struct is trivially copyable if:
+    \begin{itemize}
+        \item Can be copied with memcpy without breaking program semantics.
+        \item Has no user-defined copy/move constructors, assignment operators, or destructors.
+        \item Only contains trivially copyable members.
+        \item Does not have virtual functions or virtual base classes.
+    \end{itemize}
+
+
+    \pagebreak 
+    \unsect{POD types (Plain old data)}
+    \bigbreak \noindent 
+    POD (Plain Old Data) refers to a type in C++ that is simple, compatible with C structures, and has well-defined memory layouts. A POD type behaves like a C-style struct and lacks modern C++ features such as constructors, destructors, virtual functions, and non-trivial member functions.
+    \bigbreak \noindent 
+    A type is considered POD if:
+    \begin{itemize}
+        \item It is a trivial type (trivial constructor, destructor, copy/move operations).
+        \item It is a standard-layout type (data layout matches C structs).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Trivial type}
+    \bigbreak \noindent 
+    A type is trivial if:
+    \begin{itemize}
+        \item It has a trivial default constructor (compiler-generated, does nothing).
+        \item It has a trivial copy/move constructor and assignment (member-wise copying).
+        \item It has a trivial destructor (compiler-generated, does nothing).
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Standard layout}
+    \bigbreak \noindent 
+    A type is standard-layout if:
+    \begin{itemize}
+        \item It has no virtual functions or virtual base classes.
+        \item It has only standard-layout base classes.
+        \item All non-static data members have the same access control (public vs private matters).
+        \item It does not inherit from multiple base classes with different access specifiers.
+    \end{itemize}
+    \bigbreak \noindent 
+    For a C++ structure (struct or class) to match a C struct's layout, it must
+    \begin{itemize}
+        \item Store its members in the same order as declared.
+        \item Not have hidden padding or unexpected compiler transformations.
+        \item Not have virtual functions or virtual base classes.
+        \item Not use complex features like multiple inheritance.
+        \item Use only standard-layout types for its members.
+    \end{itemize}
+    \bigbreak \noindent 
+    If a type is both trivial and standard-layout, it is POD.
+
+
+
+    \pagebreak 
+    \unsect{Notes about constructors}
+    \bigbreak \noindent 
+    \subsection{Value initialized vs default initialized}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s1 {
+            string s{};
+            int x{};
+        };
+
+        struct s2 {
+            string s;
+            int x;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Whats the difference? In s1, the members are explicitly initialized with \{\}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s1 {
+            std::string s{};  // Initializes to an empty string
+            int x{};          // Initializes to 0
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    This ensures that when an instance of s1 is created, s will be initialized to an empty string (""), and x will be initialized to 0.
+    \bigbreak \noindent 
+    In s2, the members are not explicitly initialized:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s2 {
+            std::string s;  // Default constructor of std::string initializes it to ""
+            int x;          // Uninitialized, contains garbage value if not explicitly set
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    s is fine because std::string has a default constructor that initializes it to "".
+    \bigbreak \noindent 
+    x, however, remains uninitialized when a default-constructed object of s2 is created, leading to an indeterminate value.
 
 
 
@@ -907,13 +1231,366 @@
 
 
 
+    \bigbreak \noindent 
+    \subsection{What exactly is =default}
+    \bigbreak \noindent 
+    the = default specifier is used to explicitly declare that a special member function should be automatically generated by the compiler with its default behavior.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            char c; 
+            int x; 
+
+            s() = default;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    This declares a default constructor (s()) explicitly, but it tells the compiler to generate it using the default implementation.
+    \bigbreak \noindent 
+    By default, the compiler-generated constructor does not initialize member variables. So, this:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    s() = default;
+    \end{cppcode}
+    \bigbreak \noindent 
+    is equivalent to:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    s() {}  // Default constructor, does nothing
+    \end{cppcode}
+    \bigbreak \noindent 
+    which means the members (char c; int x;) remain uninitialized when an object of s is created
+    \bigbreak \noindent 
+    \subsubsection{Non-POD fields}
+    \bigbreak \noindent 
+    =default construct (default constructor) calls default constructors of non-POD (plain-old-data) members.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str; // std::string has a default constructor
+            int x;
+
+            S() = default; // Compiler generates: S() {} (but calls std::string's constructor)
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    The std::string member is properly initialized (since std::string has a default constructor). The int x is uninitialized.
+
+    \bigbreak \noindent 
+    \subsubsection{With copy constructors}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str;
+            int x;
+
+            S() = default;
+            S(const S&) = default;  // Compiler generates: S(const S& other) : str(other.str), x(other.x) {}
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Generates a copy constructor that copies each member individually using their copy constructors.
+
+    \bigbreak \noindent 
+    \subsubsection{Copy Assignment}
+    \bigbreak \noindent 
+    Generates an assignment operator that copies each member individually.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str;
+            int x;
+
+            S& operator=(const S&) = default;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Equivalent to
+    \bigbreak \noindent 
+    \begin{cppcode}
+        S& operator=(const S& other) {
+            str = other.str; // Calls std::string's assignment operator
+            x = other.x;     // Simply copies x
+            return *this;
+        }
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Move constructor}
+    \bigbreak \noindent 
+    Generates a move constructor that moves each member individually.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str;
+            int x;
+
+            S(S&&) = default;  // Compiler generates: S(S&& other) : str(std::move(other.str)), x(other.x) {}
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    This allows efficient moving:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        S obj1;
+        S obj2 = std::move(obj1);  // Moves `str`, but leaves `x` as a copy
+    \end{cppcode}
+    \bigbreak \noindent 
+    the move constructor does not "move" the int x. Instead, it simply copies x from the source. This is because int is a trivially copyable type, and moving it is no different from copying.
+
+    \bigbreak \noindent 
+    \subsubsection{ Move Assignment}
+    \bigbreak \noindent 
+    Generates a move assignment operator that moves each member individually.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str;
+            int x;
+
+            S& operator=(S&&) = default;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Equivalent to:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        S& operator=(S&& other) {
+            str = std::move(other.str);  // Moves the string instead of copying
+            x = other.x;  // Simply copies x (since int doesn't benefit from move)
+            return *this;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsubsection{Destructor}
+    \bigbreak \noindent 
+    Generates a destructor that:
+    \begin{itemize}
+        \item Does nothing for fundamental types.
+        \item Calls the destructors of member objects.
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            std::string str;
+            int x;
+
+            ~S() = default;  // Compiler generates: ~S() {} (but calls std::string's destructor)
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Do you need to write them?}
+    \bigbreak \noindent 
+    In C++, the compiler will automatically generate default implementations for special member functions only if they are needed and not explicitly declared.
+    \bigbreak \noindent 
+    However, if you declare any of them (without defining them), the compiler will not automatically generate them. This is where = default comes in—it explicitly tells the compiler to generate the default implementation.
 
 
+    \bigbreak \noindent 
+    \subsection{=delete}
+    \bigbreak \noindent 
+    =delete does the opposite of =default... It deletes the default implementation
 
+    \bigbreak \noindent 
+    \subsection{Rule of five}
+    \bigbreak \noindent 
+    In C++, the Rule of Five states that if you define or explicitly delete any of the following five special member functions, you should likely define or delete all five
+    \begin{itemize}
+        \item Destructor
+        \item copy constructor
+        \item copy assignment operator
+        \item move constructor 
+        \item move assignment operator
+    \end{itemize}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            string str{};
 
+            s(const s& other) {
+                cout << "Copy constructor called" << endl;
+                str = other.str;
+            }
+        };
+        s s1;
+    \end{cppcode}
+    \bigbreak \noindent 
+    In this case, we get an error. When you explicitly define a copy constructor in C++, the compiler does not automatically generate the default constructor for you. This is due to the Rule of Five
+    \bigbreak \noindent 
+    The C++ standard states that if you declare any of the above special member functions, the compiler will not generate a default constructor for you:
+    \bigbreak \noindent 
+    Once you define any of these functions, the compiler assumes you want full control over object creation and copying, so it does not provide the default constructor.
 
+    \pagebreak 
+    \unsect{Notes about inheritance}
+    \bigbreak \noindent 
+    \subsection{Constructor chain}
+    \bigbreak \noindent 
+    In C++ inheritance, the constructor chain (or constructor delegation) refers to the sequence in which constructors of base and derived classes are called when an object of the derived class is created.
+    \bigbreak \noindent 
+    When an object of a derived class is created, the constructor of the base class runs before the constructor of the derived class.
+    \bigbreak \noindent 
+    If the base class has multiple levels, constructors are called in top-to-bottom order (from base to most derived).
+    \bigbreak \noindent 
+    If the base class does not have a user-defined constructor, the compiler provides a default constructor that is automatically invoked.
+    \bigbreak \noindent 
+    If the base class has a parameterized constructor, you must explicitly call it in the initializer list of the derived class.
+    \bigbreak \noindent 
+    \subsection{Destructor chain}
+    \bigbreak \noindent 
+    Destructors execute in reverse order of constructors (i.e., derived class destructor runs first, then base class destructor).
 
+    \pagebreak 
+    \unsect{Booleans under the hood: Adding two booleans}
+    \bigbreak \noindent 
+    In C++, bool is typically represented under the hood as an integral type, often stored as a single byte (char-sized) in memory. However, when used in expressions, bool values implicitly promote to int.
+    \bigbreak \noindent 
+    In C++, bool is effectively an integer type but only holds 0 (false) or 1 (true).
+    \bigbreak \noindent 
+    When used in an arithmetic expression, a bool value is promoted to an int.
+    \bigbreak \noindent 
+    This is part of the integral promotion rules in C++.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool b1 = 1, b2 = 1;
+        cout << typeid(b1 + b2).name();
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Type Promotion}
+    \bigbreak \noindent 
+    Type promotion in C++ refers to the implicit conversion of smaller or lower-ranked types to larger or higher-ranked types in expressions. This ensures consistent operations without data loss.
+    \begin{itemize}
+        \item \textbf{Boolean Promotion:} bool converts to int (false → 0, true → 1) when used in arithmetic or bitwise operations.
+        \item \textbf{Integral Promotion:} Types smaller than int (char, short, bool) promote to int if int can represent all values; otherwise, they promote to unsigned int.
+    \end{itemize}
+    If operands have different types, the one with the lower rank is converted to the higher-ranked type.
+    \bigbreak \noindent 
+    \subsection{Ranking}
+    \bigbreak \noindent 
+    \begin{center}
+        bool $\to$ char/short $\to$ int $\to$ long $\to$ long long $\to$ float $\to$ double $\to$ long double
+    \end{center}
+
+    \pagebreak 
+    \unsect{Notes about static}
+    \bigbreak \noindent 
+    \subsection{Static variables inside member functions}
+    \bigbreak \noindent 
+    Static variables inside member functions behave the same as static variables in regular functions
+    \bigbreak \noindent 
+    \subsection{Using instances to call static methods}
+    \bigbreak \noindent 
+    We note that we can use instances to call static methods using the dot notation
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s{
+            int x = 20;
+            static void f() {
+                cout << "static method" << endl;
+            }
+        };
+        s::f();
+
+        s S;
+        S.f();
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Can you make pure virtual methods static?}
+    \bigbreak \noindent 
+    No, you cannot
+
+    \pagebreak 
+    \unsect{Trying to move const objects}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            string str{};
+
+            s() = default;
+
+            s(const string& other) {
+                cout << "Copy constructor called" << endl;
+                str = other;
+            }
+
+            s(string&& other) {
+                cout << "Move constructor called " << endl;
+
+            }
+        };
+        const string str = "Hello";
+        s s1(std::move(str));
+    \end{cppcode}
+    \bigbreak \noindent 
+    Something interesting happens, we get \textit{"Copy constructor called"}. A constant object cannot be moved because moving modifies the source object.
+    \bigbreak \noindent 
+    The move constructor requires an argument of type std::string\&\& (a temporary, non-const string).
+    \bigbreak \noindent 
+    However, std::move(str) produces a const std::string\&\& (rvalue reference to const), which cannot be passed to the move constructor because the move constructor expects a non-const rvalue reference (string\&\&).
+    \bigbreak \noindent 
+    \begin{cppcode}
+        s(const string& other) {   // (1) Copy constructor
+            cout << "Copy constructor called" << endl;
+            str = other;
+        }
+
+        s(string&& other) {        // (2) Move constructor
+            cout << "Move constructor called" << endl;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Since std::move(str) produces const std::string\&\&, it cannot bind to (2) s(string\&\&), because the move constructor does not accept const.
+    \bigbreak \noindent 
+    Instead, s(const string\&) (the copy constructor) is selected, because it can accept a const std::string\&.
+    \bigbreak \noindent 
+    This is one reason why we have const in the copy constructor, if the copy constructors argument was not const, we would get an error trying to move the const object.
+
+    \pagebreak 
+    \unsect{Smart pointers in conjunction with raw ptrs}
+    \subsection{Shared\_ptr with raw ptrs}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int x = 50;
+    std::shared_ptr<int> ptr = std::make_shared<int>(50);
+    \end{cppcode}
+    \bigbreak \noindent 
+    What happens if we do
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int* ptr2 = &(*ptr);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Will it increase the reference count? No it does not
+    \bigbreak \noindent 
+    \begin{cppcode}
+        cout << ptr.use_count() << endl; // 1
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{Unique\_ptr with raw ptrs}
+    \bigbreak \noindent 
+    What if we do
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::unique_ptr<int> ptr = std::make_unique<int>(50);
+        int* ptr2 = &(*ptr);
+    \end{cppcode}
+    \bigbreak \noindent 
+    Does this even work? Yes, this works perfectly fine. *ptr dereferences the std::unique\_ptr<int>, retrieving the integer it owns. \&(*ptr) takes the address of that integer, effectively obtaining a raw pointer to the managed object.
+    \bigbreak \noindent 
+    If ptr2 is used only within the scope where ptr exists and is valid, it's generally fine
+    \bigbreak \noindent 
+    If ptr is reset or goes out of scope, ptr2 becomes a dangling pointer, leading to undefined behavior
     
+
+
+
+
 
     
 \end{document}
