@@ -7771,6 +7771,34 @@ indicate which strong entity the weak entity depends upon.
                         \item 4-B: 4 byte instruction
                         \item C-F: 6 byte instruction
                     \end{itemize}
+                \item \textbf{Note about fullword boundarys}: An address is at the start of a fullword boundary if the last digit is $0,4,8,$ or $C $
+                \item \textbf{A note about literals}: Consider the instruction
+                    \begin{cppcode}
+                    L 3,=F'235'
+                    \end{cppcode}
+                    This takes the decimal literal 235 and loads it into register 3. However, this is a sloppy way to do it. This instruction uses 8 bytes, 4 for the encoded instruction, and 4 for the fullword literal. Instead, we can do
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    LA 3,235
+                    \end{cppcode}
+                    Since LA needs a $D(X,B)$ address, 235 is shorthand for $235(0,0)$. Since we ignore R0 in the address calculation, the above instruction loads the "address" $235_{10} = EB_{16}$ (plus nothing because we ignore R0) into R3. In this way, we skip needing to store the literal 235 in storage. Therefore, the above instruction only uses 4 bytes instead of 8.
+                    \bigbreak \noindent 
+                    Further, consider a situation where we need to "zero out" a register. We could write
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    L 8,=F'0'
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Which replaces the contents of R8 with zero, effectively "zeroing out" the registers contents. Again, the above instruction uses 8 bytes. Instead, we could write
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    SR 8,8
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Which subtracts the contents of register 8 from register 8. This instruction therefore only uses two bytes... The two bytes required to encode the instruction.
+                \item \textbf{A note about define storage}: If we specify a value in a DS instruction, the value wont be placed in storage. It will behave just like a regular DS.
+                \item \textbf{Note about instructions Load and Store}: The instructions L and ST require arguments at fwb's (full word boundarys), failure to supply a value at a fwd results in a ABEND (SOC6), which is a \textit{specification exception}
+                    
 
 
     \end{itemize}
