@@ -4721,6 +4721,18 @@ int main() {
      \bigbreak \noindent 
      std::nullopt is a constant of type std::nullopt\_t. Used to indicate that an std::optional does not contain a value.
 
+     \bigbreak \noindent 
+     \subsubsection{std::format}
+     \bigbreak \noindent 
+     std::format (from <format>) provides a Python-like string formatting mechanism
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int age = 21;
+         std::string name = "Nate";
+
+         std::string message = std::format("Hello, {}! You are {} years old.", name, age);
+     \end{cppcode}
+
      \pagebreak 
      \unsect{Views and Ranges}
      \bigbreak \noindent 
@@ -4815,6 +4827,46 @@ int main() {
 
              for (const auto& item : sp) cout << item;
          \end{cppcode}
+
+         \bigbreak \noindent 
+         \begin{cppcode}
+             vector<int> v{1,2,3,4,5};
+
+             std::span<int> sp(v.data(),3);
+
+             cout << sp[0] << endl;
+             sp[0] = 5;
+
+             cout << "Observing v:" << endl;
+             for (const auto& item : v) cout << item << " ";
+             cout << endl << endl;
+
+             cout << "Observing span:" << endl;
+             for (const auto& item : sp) cout << item << " ";
+
+             /*
+             1
+             Observing v:
+             5 10 3 4 5 
+
+             Observing span:
+             5 10 3 ⏎
+             */
+         \end{cppcode}
+         \bigbreak \noindent 
+         Notice that when we change an element of $sp$, that same element of $v$ gets changed, and when we change an element of $v$, that same element of $sp$ gets changed. 
+
+         \bigbreak \noindent 
+         \subsubsection{What does it mean to be "non-owning"}
+         \bigbreak \noindent 
+         when we say that std::span is "non-owning," we mean that it does not manage the lifetime of the objects it refers to. Instead, it provides a lightweight view over a contiguous sequence of elements in memory without copying or taking ownership of the data.
+         \bigbreak \noindent 
+         \begin{itemize}
+             \item \textbf{No Memory Allocation or Deallocation:} std::span does not allocate or free memory—it merely observes an existing range of elements.
+             \item \textbf{References Existing Data:} It simply stores a pointer to the first element and a size, allowing it to access a subset of an array, std::vector, or other contiguous memory.
+             \item \textbf{Does Not Extend Lifetime:} If a std::span outlives the data it points to, it becomes dangling (undefined behavior), as it does not keep the underlying data alive.
+             \item \textbf{Lightweight \& Cheap to Copy:} Since std::span only holds a pointer and a size, copying a std::span is as cheap as copying two integers, unlike std::vector, which involves deep copies of data.
+         \end{itemize}
 
          \bigbreak \noindent 
          \subsubsection{subspans}
@@ -5430,6 +5482,47 @@ Our problem is resolved. A std::weak\_ptr is a smart pointer in C++ that provide
 \bigbreak \noindent 
 When $p_{a_2}$ gets destroyed, the object that it manages ($a_2$) has no references to it. That is, its reference count will be zero because it has instead a weak\_ptr to it. Then, when $p_{a_1}$ gets destroyed, $a_2$ will have already been destroyed, and thus $a_1$ has no references to it, and is therefore also destroyed.
 
+\bigbreak \noindent 
+\subsubsection{Practical use of owner\_before()}
+\bigbreak \noindent 
+The owner\_before method is used to compare ownership order of std::shared\_ptr (or std::weak\_ptr). It does not compare the actual pointer values but rather their control blocks (ownership metadata).
+\bigbreak \noindent 
+\begin{cppcode}
+    std::shared_ptr<int> sp1 = std::make_shared<int>(10);
+    std::shared_ptr<int> sp2 = std::make_shared<int>(20);
+
+    if (sp1.owner_before(sp2)) {
+        std::cout << "sp1's ownership is before sp2\n";
+    } else if (sp2.owner_before(sp1)) {
+        std::cout << "sp2's ownership is before sp1\n";
+    } else {
+        std::cout << "sp1 and sp2 have the same ownership\n";
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Let's examine a practical use case in std::set
+\bigbreak \noindent 
+\begin{cppcode}
+    std::set<std::shared_ptr<int>, std::owner_less<std::shared_ptr<int>>> spSet;
+
+    auto sp1 = std::make_shared<int>(10);
+    auto sp2 = std::make_shared<int>(20);
+
+    spSet.insert(sp1);
+    spSet.insert(sp2);
+
+    std::cout << "Stored shared_ptr objects in set:\n";
+    for (const auto& sp : spSet) {
+        std::cout << *sp << " ";
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+ Here, std::owner\_less<std::shared\_ptr<int>> ensures std::set is ordered based on ownership metadata, not the actual pointer values.
+
+
+
+
 
 
 
@@ -5661,7 +5754,7 @@ The assignment operator behaves similarly:
 \bigbreak \noindent 
 Here, the move assignment transfers ownership from up1 to up2. As a result, up2 owns the object previously owned by up1.
 \bigbreak \noindent 
-If up2 owned an object before an assignment, delete is called for that object. A unique_ptr that loses the ownership of an object without getting a new ownership refers to no object.
+If up2 owned an object before an assignment, delete is called for that object. A unique\_ptr that loses the ownership of an object without getting a new ownership refers to no object.
 \bigbreak \noindent 
 To assign a new value to a unique\_ptr, this new value must also be a unique\_ptr. You can’t assign an ordinary pointer:
 \bigbreak \noindent 
@@ -5794,8 +5887,58 @@ Note, however, that this partial specialization offers a slightly different inte
 \bigbreak \noindent 
 As usual, it’s up to the programmer to ensure that the index is valid. Using an invalid index results in undefined behavior.
 
+\bigbreak \noindent 
+\subsubsection{Double ownership}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    int* ptr = new int(5);
 
+    std::unique_ptr<int> up1(ptr);
+    std::unique_ptr<int> up2(ptr);
 
+    /*
+    fish: Job 1, './bin' terminated by signal SIGABRT (Abort)
+    free(): double free detected in tcache 2
+    */
+\end{cppcode}
+\bigbreak \noindent 
+The issue with this code is that it results in double ownership of the dynamically allocated memory, which leads to undefined behavior due to double deletion.
+\bigbreak \noindent 
+Since std::unique\_ptr is designed for exclusive ownership, when up1 and up2 both attempt to delete the same pointer upon going out of scope, you get double deletion, which results in undefined behavior.
+\bigbreak \noindent 
+C++ does not automatically track raw pointers, and std::unique\_ptr's constructor does not check if another std::unique\_ptr is already managing the same pointer. Since ptr is just a raw pointer, nothing stops you from using it to initialize multiple unique\_ptr instances.
+\bigbreak \noindent 
+To transfer ownership, we must use the move constructor
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<int> up1(ptr);
+    std::unique_ptr<int> up2(std::move(up1));
+\end{cppcode}
+\bigbreak \noindent 
+The move constructor will ensure that up1 is set to a valid state (nullptr)
+
+\bigbreak \noindent 
+\subsection{Smart pointers to stack memory?}
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+    int x=10;
+    int* ptr = &x;
+
+    std::unique_ptr<int> up1(ptr);
+
+    /*
+    free(): invalid pointer
+    fish: Job 1, './bin' terminated by signal SIGABRT (Abort)
+    */
+\end{cppcode}
+\bigbreak \noindent 
+The issue is that up1 tries to delete a non-heap-allocated memory when it goes out of scope, leading to undefined behavior (usually a crash).
+\bigbreak \noindent 
+When up1 is destroyed (out of scope), it tries to call delete ptr, which is invalid because $x$ was never allocated using new.
 
 \pagebreak 
 \unsect{Three way comparisons (spaceship operator) <compare>}
@@ -5876,7 +6019,7 @@ if (c == std::strong_ordering::less) {
     \item \textbf{c++11}: Move Semantics, Automatic Type Deduction (auto keyword), Lambdas, Range-Based For Loops, constexpr, Smart Pointers, Threading, nullptr, Uniform initialization with \{\} braces, threading and concurrency, std::array, std::unordered\_map, std::tuple, <type\_traits>
     \item \textbf{c++14}: Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. Generic Lambdas, lambdas parameters can be set auto, std::make\_unique, Return type deduction for normal functions, make\_unique
     \item \textbf{c++17}: Structured Bindings, if constexpr (Compile-time conditional branching), std::optional, std::variant
-    \item \textbf{c++20}: Ranges library, concepts library, modules, coroutines, spaceship operator, std::span
+    \item \textbf{c++20}: Ranges library, concepts library, modules, coroutines, spaceship operator, std::span, std::format
     \item \textbf{c++23}: 
         \begin{itemize}
             \item \textbf{std::expected}: Represents a value or an error, simplifying error handling.

@@ -935,6 +935,193 @@ std::default_random_engine engine(seed);
             \item \texttt{std::underlying\_type}: Retrieves the underlying type of an enumeration.
         \end{itemize}
 
+        \pagebreak 
+        \unsect{Smart pointers}
+        \bigbreak \noindent 
+        \subsection{Unique\_ptr}
+        \bigbreak \noindent 
+        \subsubsection{Constructors}
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item \textbf{std::unique\_ptr();}	Default constructor (holds nullptr).
+            \item \textbf{explicit std::unique\_ptr(T* ptr);}	Takes ownership of a raw pointer.
+            \item \textbf{explicit std::unique\_ptr(T* ptr, Deleter d);}	Takes ownership and uses a custom deleter.
+            \item \textbf{std::unique\_ptr(std::unique\_ptr\&\& other) noexcept;}	Move constructor (transfers ownership).
+            \item \textbf{explicit std::unique\_ptr(T[] ptr);}	Specialized constructor for arrays.
+            \item \textbf{explicit std::unique\_ptr(T[] ptr, Deleter d);}	Specialized constructor for arrays with a custom deleter.
+        \end{itemize}
+        \bigbreak \noindent 
+        The explicit keyword prevents implicit conversions, ensuring that std::unique\_ptr is only created in a deliberate and controlled way. This helps avoid unintended behavior, especially when working with raw pointers and preventing accidental ownership transfer.
+        \bigbreak \noindent 
+        \begin{cppcode}
+        std::unique_ptr<int> up1 = new int(10);  // ERROR: Cannot implicitly convert
+        std::unique_ptr<int> up2(new int(10));   // OK: Explicitly calling the constructor
+        \end{cppcode}
+        \bigbreak \noindent 
+        \subsubsection{Modifer methods}
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item \textbf{pointer release()}: returns a pointer to the managed object and releases the ownership
+            \item \textbf{void reset(ptr)}: replaces the managed object
+            \item \textbf{void swap(other)}: swaps the managed objects
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Observers}
+        \begin{itemize}
+            \item \textbf{pointer get()}: returns a pointer to the managed object
+            \item \textbf{Deleter\& get\_deleter()}: returns the deleter that is used for destruction of the managed object
+            \item \textbf{bool operator bool}: checks if there is an associated managed object, true if *this owns an object, false otherwise.
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Operators}
+        \bigbreak \noindent 
+        We have operator bool, dereference (*), the arrow operator (->), index operator ([]), output operator (<<), and the comparison operators. Comparison operators compare the pointer not the value 
+
+        \bigbreak \noindent 
+        \subsubsection{Non member functions}
+        \begin{itemize}
+            \item \textbf{unique\_ptr<T> make\_unique(args, size)}: creates a unique pointer that manages a new object
+            \item \textbf{unique\_ptr<T> make\_unique\_for\_overwrite(args, size)} creates a unique pointer that manages a new object
+            \item \textbf{void swap(lhs,rhs)}: specializes the std::swap algorithm
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{shared\_ptr}
+        \bigbreak \noindent 
+        \subsubsection{Constructors}
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item \textbf{std::shared\_ptr();}	Default constructor (holds nullptr).
+            \item \textbf{explicit std::shared\_ptr(T* ptr);}	Takes ownership of a raw pointer and enables shared ownership.
+            \item \textbf{std::shared\_ptr(T* ptr, Deleter d);}	Takes ownership with a custom deleter.
+            \item \textbf{std::shared\_ptr(T* ptr, Deleter d, Allocator a);}	Takes ownership with a custom deleter and allocator.
+            \item \textbf{std::shared\_ptr(const std::shared\_ptr\& other);}	Copy constructor (increments reference count).
+            \item \textbf{std::shared\_ptr(std::shared\_ptr\&\& other) noexcept;}	Move constructor (transfers ownership, does not increase reference count).
+            \item \textbf{template<class Y> std::shared\_ptr(const std::shared\_ptr<Y>\& other);}	Copy constructor for related types (e.g., shared\_ptr<Derived> to shared\_ptr<Base>).
+            \item \textbf{template<class Y> std::shared\_ptr(std::shared\_ptr<Y>\&\& other);}	Move constructor for related types.
+            \item \textbf{template<class Y> explicit std::shared\_ptr(const std::weak\_ptr<Y>\& other);}	Creates a shared\_ptr from a weak\_ptr, if the resource is still available.
+            \item \textbf{explicit std::shared\_ptr(std::nullptr\_t);}	Constructs a shared\_ptr that holds nullptr.
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Modifiers}
+        \begin{itemize}
+            \item \textbf{void reset(ptr, deleter(optional), allocator(optional))}: replaces the managed object
+            \item \textbf{void swap(other)}: swaps the managed objects
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Observers}
+        \begin{itemize}
+            \item \textbf{pointer get()}: returns the stored pointer
+            \item \textbf{long use\_count()}: returns the number of shared\_ptr objects referring to the same managed object
+            \item \textbf{bool unique()}: checks whether the managed object is managed only by the current shared\_ptr object
+            \item \textbf{operator bool:}
+            \item \textbf{bool owner\_before(other):} provides owner-based ordering of shared pointers. used to compare ownership order of std::shared\_ptr (or std::weak\_ptr). It does not compare the actual pointer values but rather their control blocks (ownership metadata)
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    std::shared_ptr<int> sp1 = std::make_shared<int>(10);
+                    std::shared_ptr<int> sp2 = std::make_shared<int>(20);
+
+                    if (sp1.owner_before(sp2)) {
+                        std::cout << "sp1's ownership is before sp2\n";
+                    } else if (sp2.owner_before(sp1)) {
+                        std::cout << "sp2's ownership is before sp1\n";
+                    } else {
+                        std::cout << "sp1 and sp2 have the same ownership\n";
+                    }
+                \end{cppcode}
+            \item \textbf{bool owner\_equal(other):} provides owner-based equal comparison of shared pointers
+                \bigbreak \noindent 
+                Checks whether this shared\_ptr and other share ownership or are both empty. The comparison is such that two smart pointers compare equivalent only if they are both empty or if they both own the same object
+            \item \textbf{bool operator bool()}: Checks if *this stores a non-null pointer
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Overloads}
+        \bigbreak \noindent 
+        We have operator bool, dereference, arrow, index operator, operator <<, and all comparision operators 
+        \bigbreak \noindent 
+        Note that the comparison operators do not compare the value that the pointer points to, but rather the object itself.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            shared_ptr<int> ptr1 = std::make_shared<int>(20);
+            shared_ptr<int> ptr2 = std::make_shared<int>(20);
+
+            cout << (ptr1 == ptr2) << endl; // False
+
+            shared_ptr<int> ptr3 = std::make_shared<int>(20);
+            shared_ptr<int> ptr4 = ptr3;
+
+            cout << (ptr3 == ptr4) << endl; // True
+        \end{cppcode}
+        \bigbreak \noindent 
+        Further note that the output stream operator (<<) outputs the value of the ptr (the address that it holds)
+        \bigbreak \noindent 
+        \begin{cppcode}
+            shared_ptr<int> ptr1 = std::make_shared<int>(20);
+            cout << ptr1; // 0x55e55983b2c0
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        \subsubsection{Non member functions}
+        \begin{itemize}
+            \item \textbf{make\_shared:} creates a shared pointer that manages a new object
+            \item \textbf{make\_shared\_for\_overwrite:} creates a shared pointer that manages a new object
+            \item \textbf{allocate\_shared} creates a shared pointer that manages a new object allocated using an allocator
+            \item \textbf{allocate\_shared\_for\_overwrite} creates a shared pointer that manages a new object allocated using an allocator
+            \item \textbf{static\_pointer\_cast} applies static\_cast, dynamic\_cast, const\_cast, or reinterpret\_cast to the stored pointer
+            \item \textbf{dynamic\_pointer\_cast} applies static\_cast, dynamic\_cast, const\_cast, or reinterpret\_cast to the stored pointer
+            \item \textbf{const\_pointer\_cast} applies static\_cast, dynamic\_cast, const\_cast, or reinterpret\_cast to the stored pointer
+            \item \textbf{reinterpret\_pointer\_cast} applies static\_cast, dynamic\_cast, const\_cast, or reinterpret\_cast to the stored pointer
+            \item \textbf{std::swap(std::shared\_ptr)}: specializes the std::swap algorithm
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{weak\_ptr}
+        \bigbreak \noindent 
+        \subsubsection{Constructors}
+        \begin{itemize}
+            \item \textbf{std::weak\_ptr();}	Default constructor (creates an empty weak pointer).
+            \item \textbf{std::weak\_ptr(const std::weak\_ptr\& other);}	Copy constructor (creates a new weak pointer that shares the ownership control block).
+            \item \textbf{std::weak\_ptr(std::weak\_ptr\&\& other) noexcept;}	Move constructor (transfers ownership of the weak reference).
+            \item \textbf{template<class Y> std::weak\_ptr(const std::weak\_ptr<Y>\& other);}	Copy constructor for related types.
+            \item \textbf{template<class Y> std::weak\_ptr(std::weak\_ptr<Y>\&\& other);}	Move constructor for related types.
+            \item \textbf{template<class Y> std::weak\_ptr(const std::shared\_ptr<Y>\& other);}	Constructs a weak\_ptr from a shared\_ptr, sharing ownership control but not ownership of the resource.
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Modifiers}
+        \begin{itemize}
+            \item \textbf{void reset()}: Releases the reference to the managed object 
+            \item \textbf{void swap(other)} swaps the managed objects
+        \end{itemize}
+
+        \bigbreak \noindent 
+        \subsubsection{Observers}
+        \begin{itemize}
+            \item \textbf{long use\_count()}: returns the number of shared\_ptr objects that manage the object
+            \item \textbf{bool expired()}: checks whether the referenced object was already deleted
+            \item \textbf{shared\_ptr<T> lock()}: creates a shared\_ptr that manages the referenced object
+            \item \textbf{bool owner\_before(other)}: provides owner-based ordering of weak pointers
+            \item \textbf{bool owner\_equal(other)}: provides owner-based equal comparison of weak pointers
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Note:} No operator overloads
+        \bigbreak \noindent 
+        \subsubsection{Non member functions}
+        \begin{itemize}
+            \item \textbf{void std::swap(lhs,rhs)}: specializes the std::swap algorithm
+        \end{itemize}
+
+
+
+
+
+
+
 
 
 

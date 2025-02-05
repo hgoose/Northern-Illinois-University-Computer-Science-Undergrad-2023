@@ -2469,7 +2469,7 @@ The final regular expression is then
             \bigbreak \noindent 
             What if we temporarily relaxed that restriction by saying that the output may appear anywhere on the tape as long as it is contiguous (i.e., output may be preceded on tape by an arbitrary number of blank cells).
             \bigbreak \noindent 
-            Consider the regular language $L = 1^{m}#1^{n}\$$ for $m,n > 0$
+            Consider the regular language $L = 1^{m}\#1^{n}\$$ for $m,n > 0$
             \bigbreak \noindent 
             Can we create a TM that accepts $L$ and leaves somewhere on the tape a string of the form $1^{mn}$ to compute $f(m,n) = mn$
             \begin{enumerate}
@@ -3124,7 +3124,7 @@ $\therefore$ NotAcc is not a recursively enumerable language.
             \bigbreak \noindent 
         \item \textbf{Halting problem proof}: Assume a TM exists that solves The Halting Problem, call it $T_{H}$.
             \bigbreak \noindent 
-            That is, $T_{H}$ is a TM that takes as input and encoded TM T, followed by a #, followed by some input string w.
+            That is, $T_{H}$ is a TM that takes as input and encoded TM T, followed by a \#, followed by some input string w.
             \bigbreak \noindent 
             $T_{H}$ would always terminate and print as its output on its tape
             \begin{itemize}
@@ -5536,17 +5536,17 @@ indicate which strong entity the weak entity depends upon.
         \end{enumerate}
     \item \textbf{Form validation}: HTML5 provides several attributes for form validation:
         \begin{itemize}
-            \item \textbF{required:} Ensures a field must be filled out.
+            \item \textbf{required:} Ensures a field must be filled out.
                 \bigbreak \noindent 
                 \begin{htmlcode}
                     <input type="email" name="email" required>
                 \end{htmlcode}
-            \item \textbF{pattern:} Specifies a regular expression pattern for input validation.
+            \item \textbf{pattern:} Specifies a regular expression pattern for input validation.
                 \bigbreak \noindent 
                 \begin{htmlcode}
                     <input type="text" name="username" pattern="[A-Za-z]{3,}">
                 \end{htmlcode}
-            \item \textbF{min and max:} Define minimum and maximum values for number fields.
+            \item \textbf{min and max:} Define minimum and maximum values for number fields.
                 \bigbreak \noindent 
                 \begin{htmlcode}
                     <input type="number" name="age" min="1" max="100">
@@ -7446,6 +7446,7 @@ indicate which strong entity the weak entity depends upon.
                     \bigbreak \noindent 
                     Register 0 (R0) is often special in many architectures. When used as an index register (x) or base register (B), it is ignored in the address calculation, effectively contributing 0 to the address.
             \end{enumerate}
+        \end{itemize}
 
             \pagebreak 
             \subsection{Basic concepts}
@@ -7709,22 +7710,67 @@ indicate which strong entity the weak entity depends upon.
                     \end{verbatim}
                     \bigbreak \noindent 
                     Then we see we can used the named variables instead of directly calculating the $D(X,B)$ address. This form of addressing is called \textit{implicit} addressing. In doing this, any additional instructions that may shift the bytes of our constants won't force us to recalculate the $D(X,B)$ addresses
+                \item \textbf{Implicit and explicit addressing}: A $D(X,B)$ displacement (also called relative) address is termed \textit{explicit}, whereas using a label is \textit{implicit}
                 \item \textbf{The location counter (LOC)}: The location counter is a hidden variable maintained by the assembler that tracks the current address where instructions and data are assembled in memory.
                     \bigbreak \noindent 
                     In ASSIST, the LOC starts at 000000, it increments as instructions and data are defined.
-
-            \end{itemize}
-            
-            
-
-
-
-
-
-
-
-
-
+                \item \textbf{Literals in IBM Z/OS and ASSIST}: Consider the add RX instruction, we could write
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    A R,D(X,B)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Adds the contents found at the relative address $D(X,B)$ to the contents of the given register $R$. But can also replace the relative address with a \textit{literal}. Consider 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    A 5,=F'3'
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    F'3' specifies a fullword (4-byte) integer constant with the value 3. The assembler automatically places literals in a literal pool (usually at the end of a program block). The instruction fetches the value from memory, not from a register.
+                    \bigbreak \noindent 
+                    If you need to use the same literal multiple times, you have two options:
+                    \begin{enumerate}
+                        \item Use the Same Literal Again (Assembler Handles It) The assembler will store only one instance of =F'3' in the literal pool, even if you use it multiple times:
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                                A 6,=F'3'   ; Adds 3 to Register 6
+                                A 7,=F'3'   ; Adds 3 to Register 7 (same literal, no duplicate in memory)
+                            \end{cppcode}
+                            \bigbreak \noindent 
+                        \item If you need direct access to the constant, define it explicitly with a DC statement
+                    \end{enumerate}
+                    \bigbreak \noindent 
+                    \textbf{Note:} We note that the $F$ in a DC statement like \texttt{DC F'...'} guarantees that the full word will be placed at the beginning of a fullword boundary
+                \item \textbf{A few basic RR and RX instructions}
+                    \bigbreak \noindent 
+                    Suppose we have the named variable
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    NUM1    DC F'36'
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    \textbf{RR (2 Byte instructions):}
+                    \begin{itemize}
+                        \item \textbf{LR (Load register)}: \texttt{LR 1,2} load contents of register two into register one
+                        \item \textbf{AR (Add register)}: \texttt{AR 1,2} Add contents of R2 into and over contents of R1
+                        \item \textbf{SR (Subtract register)} \texttt{SR 1,2} Add contents of R2 into and over contents of R1
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    \textbf{RX (4 Byte instructions):}
+                    \begin{itemize}
+                        \item \textbf{L (Load)}: \texttt{L 7,NUM1} Load contents of NUM1 into register 7
+                        \item \textbf{ST (Store)}: \texttt{ST 10,NUM1} Store contents of R10 into NUM1
+                        \item \textbf{LA (Load address)}: \texttt{LA 3,NUM1} Load address of the first byte of NUM1 into R3
+                        \item \textbf{A (Add)}: \texttt{A 4,NUM1} add contents of NUM1 to contents of R4
+                        \item \textbf{S (Subtract)}: \texttt{S 9,NUM1} subtract NUM1 from R9
+                    \end{itemize}
+                    
+                \item \textbf{Note about opcodes}: If the opcode has rightmost hex digit
+                    \begin{itemize}
+                        \item 0-3: 2 byte instruction
+                        \item 4-B: 4 byte instruction
+                        \item C-F: 6 byte instruction
+                    \end{itemize}
 
 
     \end{itemize}

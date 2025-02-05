@@ -1180,6 +1180,211 @@
     \bigbreak \noindent 
     If a type is both trivial and standard-layout, it is POD.
 
+    \pagebreak 
+    \unsect{Notes about initialization}
+    \bigbreak \noindent 
+    \subsection{How many names does brace initialization have?}
+    \bigbreak \noindent 
+    \subsubsection{Uniform Initialization (General Term)}
+    \bigbreak \noindent 
+    Introduced in C++11, \{\} initialization is often referred to as uniform initialization because it provides a consistent syntax for initializing objects of any type.
+    \bigbreak \noindent 
+    Note that uniform initialization is an informal term
+
+
+    \bigbreak \noindent 
+    \subsubsection{List Initialization}
+    \bigbreak \noindent 
+    List initialization is the official term in the C++ standard for using \{\} to initialize objects.
+
+    \bigbreak \noindent 
+    \subsubsection{Aggregate Initialization}
+    \bigbreak \noindent 
+    When \{\} is used to initialize aggregates (structs, arrays, or classes with public members and no user-defined constructors), it's called aggregate initialization.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct Point {
+            int x, y;
+        };
+        Point p = {1, 2}; // Aggregate initialization
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsubsection{Value Initialization}
+    \bigbreak \noindent 
+    If \{\} is used without any elements, it results in value initialization.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct  point {
+            int x{},y{}; // Default value initialized
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Note that we can also do
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x,y
+        };
+        point p{}; // Construct p and default value initialize x,y
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Direct List Initialization}
+    \bigbreak \noindent 
+    When \{\} is used with a constructor that takes a list, it is called direct list initialization.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    std::vector<int> v{1, 2, 3}; // Direct list initialization
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Copy List Initialization}
+    \bigbreak \noindent 
+    When \{\} is used on the right-hand side of an assignment or in variable initialization without explicit construction, it's called copy list initialization.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    std::vector<int> v = {1, 2, 3}; // Copy list initialization
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    \subsubsection{Narrowing Prevention Initialization}
+    \bigbreak \noindent 
+    \{\} initialization prevents narrowing conversions, meaning it does not allow implicit type conversions that lose information.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x = 3.5;  // Allowed (implicit conversion)
+        int y{3.5};   // Error (narrowing conversion)
+    \end{cppcode}
+
+
+    \bigbreak \noindent 
+    \subsubsection{ Default Member Initialization}
+    \bigbreak \noindent 
+    \{\} can be used to initialize class members with default values.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct Example {
+            int a = {};  // Value-initialized to 0
+        };
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Copy list initialization and direct list initialization in aggregate types}
+    \bigbreak \noindent 
+    We note that for an aggregate type, copy list initialization and direct list initialization behave the same
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x,y
+        };
+        point p1 = {1,2};
+        point p1{1,2};
+    \end{cppcode}
+    \bigbreak \noindent 
+    For aggregates, both = (copy list initialization) and \{\} (direct list initialization) behave identically because C++ applies aggregate initialization in both cases.
+    \bigbreak \noindent 
+    However, if point had a user-defined constructor, then they could behave differently.
+    \bigbreak \noindent 
+    If we defined a constructor that takes an initializer\_list, both the above objects would call that constructor
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct  point {
+            int x{},y{}; // Default value initialized
+
+            point(std::initializer_list<int> l) {
+                cout << "called init list " << endl;
+            }
+        };
+
+        point p1 = {1,2}; // called init list
+        point p2{1,2}; // called init list
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    Note that if we define a virtual method, our type becomes polymorphic and is no longer aggregate. Therefore, we cannot use either initialization above. Note however that c++ will still implicitly give us the default constructors, so the following will still work
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x,y;
+
+            virtual void f();
+        };
+        point p1{1,2} // Error
+        point p2 = {1,2} // Error
+        point p3{};
+    \end{cppcode}
+    \bigbreak \noindent 
+    In this case, we need to explicitly define our constructor
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x,y;
+
+            point(int x, int y) : x(x), y(y) {}
+
+            virtual void f();
+        };
+        point p1{1,2} 
+        point p2 = {1,2} 
+        point p3{};
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Other forms of initialization and their names}
+    \bigbreak \noindent 
+    \subsubsection{ Direct Initialization}
+    \bigbreak \noindent 
+    Uses the parenthesis () syntax
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x(10);   // Direct initialization
+        std::string s("hello");
+    \end{cppcode}
+    \bigbreak \noindent 
+    Note that aggregate initialization logic  will not work with this syntax
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point{
+            int x,y
+        };
+        point p(1,2) // Error! Must define the constructor.
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Copy Initialization }
+    \bigbreak \noindent 
+    Uses assignment =
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int x = 10;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Creates a temporary object and copies/moves it to initialize the variable. May involve implicit conversions. Calls copy constructor if the type has one.
+
+    \bigbreak \noindent 
+    \subsubsection{ Default Initialization}
+    \bigbreak \noindent 
+    No explicit initializer
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x;      // Default initialization (uninitialized in local scope)
+        std::string s; // Calls default constructor (empty string)
+    \end{cppcode}
+
+
+
+    % \pagebreak 
+    % \unsect{Notes about destructors}
+    % \bigbreak \noindent 
+    % \subsection{Manual destructor calls}
+    % \bigbreak \noindent 
+    % Manually calling a destructor in C++ is dangerous because it can lead to undefined behavior, double destruction, and resource leaks.
+    % \bigbreak \noindent 
+    % If you manually call the destructor and then let the object go out of scope (or delete it via delete), the destructor will be called again, leading to a double free or use-after-free error.
+    %
+
 
 
     \pagebreak 
@@ -1422,6 +1627,82 @@
     \bigbreak \noindent 
     Once you define any of these functions, the compiler assumes you want full control over object creation and copying, so it does not provide the default constructor.
 
+    \bigbreak \noindent 
+    \subsection{A confused compiler}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct  point {
+            int x{};
+
+            point (int x) : x(x) {}
+
+            point(int&& other) {
+                cout << "called second" << endl;
+                x = other;
+            }
+        };
+        point p = 20; // Error
+    \end{cppcode}
+    \bigbreak \noindent 
+    We get "error: conversion from ‘int’ to ‘point’ is ambiguous".
+    \bigbreak \noindent 
+    happens because there are multiple constructors that can accept an int, and the compiler doesn't know which one to pick.
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item point(int) is a direct match for int.
+        \item point(int\&\&) can accept an int as an rvalue reference.
+    \end{itemize}
+    The compiler does not know which one to pick, so it gives an error.
+    \bigbreak \noindent 
+    If we mark the first constructor explicit, we then prevent implicit conversion from int to point, and the second constructor will be the one called.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct  point {
+            int x{};
+
+            explicit point (int x) : x(x) {}
+
+            point(int&& other) {
+                cout << "called second" << endl;
+                x = other;
+            }
+        };
+        point p = 20;
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Which constructor will be called}
+    \bigbreak \noindent 
+    Suppose we have
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct  point {
+            int x{};
+
+            point(const int& other) {
+                cout << "called first" << endl;
+                x = other;
+            }
+
+            point(int&& other) {
+                cout << "called second" << endl;
+                x = other;
+            }
+        };
+        point p = 20;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Which constructor gets called? The second constructor (point(int\&\& other)) is called in this case because the literal 20 is an rvalue.
+    \bigbreak \noindent 
+    We have two suitable constructors, and the compiler must determine which constructor to call.
+    \bigbreak \noindent 
+    The compiler  deems the second as a better match than the first, because 20 is a pure rvalue. Note that if we removed the second constructor, the first would work. A constructor that takes a const reference can bind to both rvalues and lvalues.
+    
+
+
+
     \pagebreak 
     \unsect{Notes about inheritance}
     \bigbreak \noindent 
@@ -1586,6 +1867,15 @@
     If ptr2 is used only within the scope where ptr exists and is valid, it's generally fine
     \bigbreak \noindent 
     If ptr is reset or goes out of scope, ptr2 becomes a dangling pointer, leading to undefined behavior
+
+    \pagebreak 
+    \unsect{Calling delete on a nullptr}
+    \bigbreak \noindent 
+     Calling delete on a nullptr is perfectly safe and has no effect.
+     \bigbreak \noindent 
+     The delete operator first checks whether the pointer is nullptr. If the pointer is nullptr, delete does nothing and returns immediately.
+     \bigbreak \noindent 
+    This behavior ensures that you don’t have to explicitly check for nullptr before calling delete.
     
 
 

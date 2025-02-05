@@ -409,6 +409,24 @@ The heap grows upward (toward higher memory addresses). Memory leaks occur if al
 Unlike the stack, the heap does not have a fixed size limit, but it is constrained by system memory.
 
 \bigbreak \noindent 
+\subsubsection{The free list}
+\bigbreak \noindent 
+In C++, particularly in dynamic memory management, the free list is a data structure used to track free (unused) memory blocks in the heap. It is commonly implemented as a linked list of memory blocks that have been allocated and later freed but are available for reuse.
+\bigbreak \noindent 
+When a program requests memory (e.g., new or malloc), the allocator checks the free list first to find a suitable block.
+\bigbreak \noindent 
+If a sufficiently large free block is found, it is removed from the free list and returned to the caller.
+\bigbreak \noindent 
+If no suitable block is found, a new block is allocated from the heap.
+\bigbreak \noindent 
+When memory is freed (delete or free), the deallocated block is added to the free list.
+
+\bigbreak \noindent 
+\subsubsection{Memory fragmentation}
+\bigbreak \noindent 
+Memory fragmentation refers to inefficient memory allocation where free memory is divided into small, non-contiguous blocks, making it difficult to allocate large contiguous blocks even if there is enough total free memory. It occurs primarily in dynamic memory management when memory is allocated and freed in an unpredictable manner.
+
+\bigbreak \noindent 
 \subsubsection{A programs execution}
 \bigbreak \noindent 
 When a program is executed, the operating system (OS) finds a suitable slot in memory to load the program and manages its memory layout.
@@ -569,13 +587,112 @@ If the stack needs more space, the OS allocates additional pages unless it hits 
     \bigbreak \noindent 
     Similarly, new[] calls malloc() but also stores extra metadata for array size.
 
-\bigbreak \noindent 
-\subsection{Dangling pointer, memory leak, and resource leak}
-\begin{itemize}
-    \item \textbf{Dangling pointer}: A dangling pointer is a pointer that continues to reference a memory location that has been deallocated or freed. Accessing such a pointer can lead to undefined behavior, crashes, or security vulnerabilities.
-    \item \textbf{Memory leak}: A memory leak occurs when dynamically allocated memory is not properly deallocated, causing unreachable memory to remain allocated until the program terminates. This can lead to increased memory consumption over time.
-    \item \textbf{Resource leak}: A resource leak occurs when a program fails to release system resources such as file handles, network sockets, or database connections, leading to exhaustion of available system resources.
-\end{itemize}
+    \bigbreak \noindent 
+    \subsubsection{Delete}
+    \bigbreak \noindent 
+    In C++, when you use delete on a dynamically allocated object, it performs two main actions:
+    \begin{itemize}
+        \item Calls the object's destructor (if it has one).
+        \item Frees the allocated memory using operator delete (which typically calls free under the hood but is not required to).
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsubsection{How does delete know how many bytes to relinquish?}
+    \bigbreak \noindent 
+    The heap allocator (e.g., malloc internally in operator new) tracks allocations. This means when delete is called, the heap manager looks up the size using metadata stored alongside the allocated block.
+
+    \bigbreak \noindent 
+    \subsubsection{Dangling pointer, memory leak, and resource leak}
+    \begin{itemize}
+        \item \textbf{Dangling pointer}: A dangling pointer is a pointer that continues to reference a memory location that has been deallocated or freed. Accessing such a pointer can lead to undefined behavior, crashes, or security vulnerabilities.
+        \item \textbf{Memory leak}: A memory leak occurs when dynamically allocated memory is not properly deallocated, causing unreachable memory to remain allocated until the program terminates. This can lead to increased memory consumption over time.
+        \item \textbf{Resource leak}: A resource leak occurs when a program fails to release system resources such as file handles, network sockets, or database connections, leading to exhaustion of available system resources.
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{New in detail}
+    \bigbreak \noindent 
+    When you use new to allocate memory for an object, the following happens:
+    \begin{enumerate}
+        \item \textbf{Memory allocation:} operator new(size\_t) is called to allocate memory from the heap.
+        \item \textbf{Object construction:} The constructor of the object is called in the allocated memory.
+        \item \textbf{Returns a pointer:} A pointer to the newly created object is returned
+    \end{enumerate}
+    \bigbreak \noindent 
+    If memory allocation fails (e.g., due to insufficient memory), new throws a std::bad\_alloc exception (unless you're using the nothrow version of new).
+
+    \bigbreak \noindent 
+    \subsubsection{Behind the scenes}
+    \bigbreak \noindent 
+    Suppose we have a struct
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct point {
+            int x{},y{};
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The following
+    \bigbreak \noindent 
+    \begin{cppcode}
+        point* p = new point();
+    \end{cppcode}
+    \bigbreak \noindent 
+    Is roughly equivalent to
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void* memory = operator new(sizeof(point));
+        point* ptr = static_cast<point*>(memory);
+        ptr = new (memory) point(); // or point{}
+    \end{cppcode}
+    \bigbreak \noindent 
+    The first line This line allocates raw memory for an object of type point using the global operator new. This only allocates memory but does not construct the object.
+    \bigbreak \noindent 
+    The second line casts the raw memory to a pointer of type point*. However, the object is still not constructed at this point.
+    \bigbreak \noindent 
+    This line uses placement new to construct an object of type point in the already allocated memory. The placement new syntax is new (memory) point(), where memory is the pointer to the pre-allocated memory.
+    \bigbreak \noindent 
+    \subsubsection{operator new}
+    \bigbreak \noindent 
+    operator new is a low-level memory allocation function that allocates raw memory but does not invoke the constructor of an object. The syntax
+    \bigbreak \noindent 
+    \begin{cppcode}
+    void* name = operator new(size)
+    \end{cppcode}
+    \bigbreak \noindent 
+    performs the following steps
+    \begin{enumerate}
+        \item It calls the global operator new function, which allocates \textit{size} bytes of memory from the free store (heap).
+        \item The returned pointer (memory) is of type void* because operator new does not know the actual type of the object to be constructed.
+        \item The allocated memory is not yet initialized (i.e., no constructor is called )
+    \end{enumerate}
+
+    \bigbreak \noindent 
+    \subsubsection{placement new}
+    \bigbreak \noindent 
+    Placement new is a special form of the new operator that constructs an object in a pre-allocated memory block. Instead of allocating memory from the heap, it initializes an object at a specific memory location.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        T* name = new (location) Obj()
+    \end{cppcode}
+    \bigbreak \noindent 
+    Does not allocate new memory—it reuses the given memory.
+
+    \bigbreak \noindent 
+    \subsubsection{nothrow new}
+    \bigbreak \noindent 
+    In C++, the new operator throws an exception (std::bad\_alloc) if it fails to allocate memory. However, you can use std::nothrow to make new return nullptr instead of throwing an exception when memory allocation fails.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int* ptr = new (std::nothrow) int[1000000000]; // Try to allocate a large array
+
+        if (!ptr) {
+            std::cout << "Memory allocation failed!\n";
+        } else {
+            std::cout << "Memory allocation successful!\n";
+            delete[] ptr;
+        }
+    \end{cppcode}
 
 \pagebreak 
 \unsect{Categories}
