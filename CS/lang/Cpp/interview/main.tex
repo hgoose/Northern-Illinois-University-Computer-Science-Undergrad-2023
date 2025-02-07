@@ -938,11 +938,50 @@ auto x = bits[2];  // Access the bit from the persistent vector
  The idiom can also come in handy when you deal with proxy types.
 
  \bigbreak \noindent 
+ \subsection{What is the type of a lambda?}
+ \bigbreak \noindent 
+ Consider the code
+ \bigbreak \noindent 
+ \begin{cppcode}
+     auto f = []() { return 12; }; // Type is class(lambda)
+ \end{cppcode}
+ \bigbreak \noindent 
+ then the type of $f$ is a lambda closure type. The compiler generates a unique unnamed class to represent the lambda expression.
+ \bigbreak \noindent 
+ It is a unique unnamed structure that overloads the function call operator. Every instance of a lambda introduces a new type.
+ \bigbreak \noindent 
+ When a lambda captures variables, it still generates a unique compiler-defined class, but with data members corresponding to the captured variables.
+ \bigbreak \noindent 
+ In the special case of a non-capturing lambda, the structure in addition has an implicit conversion to a function pointer.
+ \bigbreak \noindent 
+ \begin{cppcode}
+     auto f = []() ->int {
+        return 12;
+    };
+    int (*g)();
+    g=f; // OK
+
+    auto f = [&]() ->int {
+        return 12;
+    };
+    int (*g)();
+    g=f; // ERROR
+ \end{cppcode}
+
+
+
+
+
+ \bigbreak \noindent 
  \subsection{What are the advantages of using auto?}
  \bigbreak \noindent 
  auto variables must be initialized and as such, they are generally immune to type mismatches that can lead to portability or efficiency problems. auto can also make refactoring easier, and it typically requires less typing than explicitly specified types.
  \bigbreak \noindent 
  auto variables mainly can improve correctness, performance, maintainability, and robustness. It is also more convenient to type, but that’s its least important advantage.
+ \bigbreak \noindent 
+ Consider declaring local variables auto x = type\{ expr \}; when you do want to explicitly commit to a type. It is self-documenting to show that the code is explicitly requesting a conversion, and
+ \bigbreak \noindent 
+ it guarantees the variable will be initialized, in addition, it won’t allow an accidental implicit narrowing conversion. Only when you do want explicit narrowing, use ( ) instead of \{ \}.
  \bigbreak \noindent 
  \subsubsection{Regarding local variables}
  \bigbreak \noindent 
@@ -955,6 +994,132 @@ auto x = bits[2];  // Access the bit from the persistent vector
      \item It is the simplest way to portably spell the implementationspecific type of arithmetic operations on built-in types. Those types might vary from platform to platform, and it also ensures that you cannot accidentally get lossy narrowing conversions.
      \item You can omit difficult to spell types, such as lambdas, iterators, etc.
  \end{itemize}
+
+ \bigbreak \noindent 
+ \subsubsection{Correctness}
+ \bigbreak \noindent 
+ auto ensures that variables have the exact type returned by expressions, preventing unintended type conversions.
+ \bigbreak \noindent 
+ \begin{cppcode}
+ auto x = someFunction(); // Exact type of the return value
+ \end{cppcode}
+ \bigbreak \noindent 
+ Complex template or iterator types are assigned correctly
+ \bigbreak \noindent 
+ \begin{cppcode}
+     std::unordered_map<std::string, int> myMap;
+     auto it = myMap.begin(); // Correct type without manually specifying
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ \subsubsection{Performance}
+ \bigbreak \noindent 
+ When used with references (auto\&), auto can prevent unnecessary copies.
+ \bigbreak \noindent 
+ \begin{cppcode}
+     std::vector<int> vec = {1, 2, 3};
+     for (auto& v : vec) { // Avoids copying
+         v *= 2;
+     }
+ \end{cppcode}
+ \bigbreak \noindent 
+ And, 
+ \bigbreak \noindent 
+ \textbf{More Efficient Type Deduction:} Instead of relying on implicit conversions, auto allows for direct initialization with the optimal type.
+
+ \bigbreak \noindent 
+ \subsubsection{Maintainability}
+ \bigbreak \noindent 
+ If the return type of a function changes, auto ensures code doesn't need manual updates.
+ \bigbreak \noindent 
+ \begin{cppcode}
+ auto result = computeValue(); // No need to change type if computeValue() changes
+ \end{cppcode}
+ \bigbreak \noindent 
+ \subsubsection{Robustness}
+ \bigbreak \noindent 
+ \begin{itemize}
+     \item \textbf{Ensures Type Safety in Loops:} Avoids iterator mismatches.
+         \bigbreak \noindent 
+         \begin{cppcode}
+             std::vector<std::string> words = {"hello", "world"};
+             for (auto it = words.begin(); it != words.end(); ++it) {
+                 std::cout << *it << "\n";
+             }
+         \end{cppcode}
+         \item \textbf{Encourages Strong Typing with auto\&\&:} Useful in templates for perfect forwarding.
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 template <typename T>
+                 void wrapper(T&& arg) {
+                     process(std::forward<T>(arg)); // Maintains the original type (lvalue/rvalue)
+                 }
+             \end{cppcode}
+ \end{itemize}
+
+ \bigbreak \noindent 
+ \subsection{Intializer\_lists}
+ \bigbreak \noindent 
+ Consider
+ \bigbreak \noindent 
+ \begin{cppcode}
+ auto myCollection = {1,2,3};
+ \end{cppcode}
+ \bigbreak \noindent 
+ The type is std::initializer\_list<int>. The int part is probably straightforward, and about std::initializer\_list, well you just have to know that with auto type deduction, if you use braces, you have two options
+ \bigbreak \noindent 
+ If you put nothing between the curly braces, you’ll get a compilation error as the compiler is unable to deduce ‘std::initializer\_list<auto>’ from ‘<brace-enclosed initializer list>()’. So you don’t get an empty container, but a compilation error instead.
+ \bigbreak \noindent 
+ If you have at least one element between the braces, the type will be std::initializer\_list.
+ \bigbreak \noindent 
+ If you wonder what this type is, you should know that it is a lightweight proxy object providing access to an array of objects of type const T. It is automatically constructed when:
+ \bigbreak \noindent 
+ \begin{itemize}
+     \item a braced-init-list is used to list-initialize an object, where the corresponding constructor accepts a std::initializer\_list parameter
+     \item a braced-init-list is used on the right side of an assignment or as a function call argument, and the corresponding assignment operator/function accepts a std::initializer\_list parameter
+     \item a braced-init-list is bound to auto, including in a ranged for loop
+ \end{itemize}
+ \bigbreak \noindent 
+ Initializer lists may be implemented with a pair of pointers or with a pointer and a length. Copying a std::initializer\_list is considered a shallow copy as it doesn’t copy the underlying objects.
+
+ \bigbreak \noindent 
+ \subsection{decltype}
+ \bigbreak \noindent 
+ Consider
+ \bigbreak \noindent 
+ \begin{cppcode}
+     struct A {
+         double x;
+     }
+
+     // a is a pointer to an A that is const
+     const A* a;
+
+     decltype(a->x) y // y is a double
+     decltype((a->x)) y = z // z is a const double& to y
+ \end{cppcode}
+ \bigbreak \noindent 
+ When decltype is used without parentheses, it gives the declared type
+ \bigbreak \noindent 
+ \begin{cppcode}
+     decltype(a->x) y;  // y is of type double
+ \end{cppcode}
+ \bigbreak \noindent 
+ When decltype is applied to a parenthesized expression, it deduces the expression's type with reference qualifiers:
+ \bigbreak \noindent 
+ \begin{cppcode}
+    decltype((a->x)) z = y; // const double& 
+    const decltype(a->x)& z = y; // Equivalent
+ \end{cppcode}
+ \bigbreak \noindent 
+ Thus, z is a double\&, but since $A$ is a pointer to a constant objects, (a->x) is a reference to a constant
+
+
+ 
+
+
+
+
 
 
 

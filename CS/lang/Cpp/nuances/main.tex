@@ -1876,6 +1876,65 @@
      The delete operator first checks whether the pointer is nullptr. If the pointer is nullptr, delete does nothing and returns immediately.
      \bigbreak \noindent 
     This behavior ensures that you don’t have to explicitly check for nullptr before calling delete.
+
+    \pagebreak 
+    \unsect{Notes about short circuits}
+    \bigbreak \noindent 
+    Short-circuiting in C++ refers to the behavior of logical operators (&& and ||) where the second operand is not evaluated if the result of the entire expression can be determined from the first operand alone.
+    \bigbreak \noindent 
+    \subsection{With ands}
+    \bigbreak \noindent 
+    Consider the following code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool foo() {
+            cout << "Foo" << endl;
+            return false;
+        }
+
+        bool bar() {
+            cout << "bar" << endl;
+            return true;
+        }
+
+        if (foo() && bar()) // "Foo"
+    \end{cppcode}
+    \bigbreak \noindent 
+    The bar function never gets called because when the foo function returns, the if statement "short-circuits" and exits. If we want to prevent short circuiting, we use a bitwise and $(\&)$
+    \bigbreak \noindent 
+    \begin{cppcode}
+    if (foo() & bar()) // Foo\n bar
+    \end{cppcode}
+    \bigbreak \noindent 
+    \subsection{With ors}
+    \bigbreak \noindent 
+    Similarly, 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool foo() {
+            cout << "Foo" << endl;
+            return true;
+        }
+
+        bool bar() {
+            cout << "bar" << endl;
+            return true;
+        }
+
+        if (foo() || bar()) // Foo
+    \end{cppcode}
+    \bigbreak \noindent 
+    We again just get "Foo". When the foo function returns true, the if statement is automatically true and again we get a short circuit, which leads to bar never getting called.  If we want to prevent short circuiting with ors, we use bitwise or (|)
+    \bigbreak \noindent 
+    \begin{cppcode}
+    if (foo() | bar()) // Foo\n bar
+    \end{cppcode}
+
+    \pagebreak 
+    \unsect{Notes about types}
+    \bigbreak \noindent 
+    \subsection{Are chars integral types?}
+
     
 
 

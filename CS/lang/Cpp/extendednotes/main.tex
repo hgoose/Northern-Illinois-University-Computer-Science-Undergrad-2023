@@ -6007,6 +6007,148 @@ if (c == std::strong_ordering::less) {
 } else if (c == std::strong_ordering::equal)
 \end{cppcode}
 
+\pagebreak 
+\unsect{Single Dispatch and Overload Resolution}
+\bigbreak \noindent 
+\subsection{Single dispatch}
+\bigbreak \noindent 
+Single dispatch in C++ refers to the mechanism where the function that gets called is determined by the dynamic type of a single object at runtime. This is typically achieved using virtual functions in a class hierarchy.
+\begin{itemize}
+    \item A base class defines a virtual function.
+    \item Derived classes override that function.
+    \item A pointer or reference to the base class calls the function.
+    \item The actual function executed depends on the runtime type of the object.
+\end{itemize}
+\bigbreak \noindent 
+Uses virtual table (vtable) lookup. Only considers one object's dynamic type (hence, single dispatch). C++ lacks multiple dispatch natively (where function resolution depends on multiple object types).
+
+\bigbreak \noindent 
+\subsection{Overload resolution (compile time)}
+\bigbreak \noindent 
+Involves selecting the best-matching function at compile-time based on function arguments. Uses static (compile-time) polymorphism. Does not rely on runtime object types.
+\bigbreak \noindent 
+"the function is chosen at compile-time" in the context of overload resolution means that the C++ compiler determines which function to call based on the types of arguments provided in the function call, without needing any runtime information.
+\bigbreak \noindent 
+At compile-time, the compiler
+\begin{enumerate}
+    \item Examines the available overloaded functions (functions with the same name but different parameter types).
+    \item Matches the function call to the best candidate based on:
+        \begin{itemize}
+            \item Exact match (best case).
+            \item Implicit conversions (if needed).
+            \item Function templates (if applicable).
+        \end{itemize}
+    \item Generates a direct function call to the resolved function.
+\end{enumerate}
+\bigbreak \noindent 
+Once the best match is found, the function call is hardcoded into the compiled binary, meaning there is no runtime lookup.
+\bigbreak \noindent 
+At runtime, no decision-making occurs—each call directly jumps to the compiled function.
+
+
+\pagebreak 
+\unsect{Bitfields}
+\bigbreak \noindent 
+A bitfield in C++ is a special way of defining and manipulating groups of bits within a structure (struct) or class to optimize memory usage. It allows you to allocate a specific number of bits to a variable, making it useful for situations where you need to store multiple small values compactly.
+\bigbreak \noindent 
+A bitfield is declared inside a struct or class using an integer type followed by a colon (:) and the number of bits it should occupy.
+\bigbreak \noindent 
+\begin{cppcode}
+struct Example {
+    unsigned int a : 3;  // 3-bit field
+    unsigned int b : 5;  // 5-bit field
+    int c : 2;  // 2-bit field
+};
+\end{cppcode}
+\bigbreak \noindent 
+$a$ takes 3 bits, $b$ takes 5 bits, and $c$ takes 2 bits. The type must be an integer type (int, unsigned int, char, etc.), but the exact storage behavior depends on the compiler. The total struct size depends on the compiler's memory alignment rules.
+\bigbreak \noindent 
+\begin{cppcode}
+struct A{
+    unsigned x : 1;
+};
+A a{0};
+A b{1};
+A c{10}; // Implicit truncation from 'int' to bit-field changes value from 10 to 0
+A d{11}; // Implicit truncation from 'int' to bit-field changes value from 11 to 1
+\end{cppcode}
+\bigbreak \noindent 
+\begin{cppcode}
+struct A{
+    int x : 1;
+};
+\end{cppcode}
+\bigbreak \noindent 
+Since $x$ is an signed int, valid values are  $0,-1$, $1$ changes to $-1$, even integers change to $0$, odd integers change to $-1$.
+\bigbreak \noindent 
+Observe
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A{
+        unsigned x : 1;
+    };
+    cout << sizeof(A) << endl; // still 4
+\end{cppcode}
+\bigbreak \noindent 
+The reason sizeof(A) still returns 4 (or another word-aligned size depending on the system) is due to memory alignment and storage unit limitations in C++.
+\bigbreak \noindent 
+Even though the struct contains only a 1-bit field, the compiler allocates memory in units of int or a similar word-aligned type, typically 4 bytes (on most 32-bit and 64-bit systems).
+\bigbreak \noindent 
+So what is efficient about bitfields? Consider the example
+\bigbreak \noindent 
+\begin{cppcode}
+struct A {
+    unsigned a : 3;  // 3 bits
+    unsigned b : 5;  // 5 bits
+    unsigned c : 8;  // 8 bits
+}; // Total: 4 bytes (or slightly more, but much smaller than 12)
+\end{cppcode}
+\bigbreak \noindent 
+The bitfield version can store three values within a single int (4 bytes) instead of requiring 12 bytes.
+\bigbreak \noindent 
+When multiple small values need to be stored, bitfields can significantly reduce memory usage.
+
+\bigbreak \noindent 
+\subsubsection{Address operator on a bitfield?}
+\bigbreak \noindent 
+Consider 
+\begin{cppcode}
+struct A {
+    int x : 3;
+    int y;
+};
+A a;
+cout << (&a.x < &a.y) << endl;
+\end{cppcode}
+\bigbreak \noindent 
+int var1 : 3; declares a bit-field, and you can not apply operator\& to a bit-field.
+\bigbreak \noindent 
+The address-of operator \& shall not be applied to a bit-field, so there are no pointers to bit-fields.
+\bigbreak \noindent 
+Bitfields in C++ are special because they do not have independent memory addresses. The key reason why you cannot take the address of a bitfield is that bitfields are packed into a single integer storage unit, rather than existing as independent variables in memory.
+\bigbreak \noindent 
+Bitfields do not have their own memory locations. Instead, multiple bitfields share a single underlying storage unit (typically an int or char).
+\bigbreak \noindent 
+Unlike normal variables, which reside at specific memory addresses, bitfields exist within a packed storage unit.
+\bigbreak \noindent 
+If we allowed \&a.x, what would it return? There's no separate memory location for x, only an address for the whole storage unit.
+\bigbreak \noindent 
+Since bitfields are stored efficiently, the compiler manipulates bits directly using bitwise operations instead of treating them as full memory objects.
+\bigbreak \noindent 
+Allowing \& would require breaking this optimization and making bitfields behave like regular variables, which defeats their purpose.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6016,10 +6158,53 @@ if (c == std::strong_ordering::less) {
 \pagebreak 
 \unsect{C++ versions and their additions}
 \begin{itemize}
-    \item \textbf{c++11}: Move Semantics, Automatic Type Deduction (auto keyword), Lambdas, Range-Based For Loops, constexpr, Smart Pointers, Threading, nullptr, Uniform initialization with \{\} braces, threading and concurrency, std::array, std::unordered\_map, std::tuple, <type\_traits>
-    \item \textbf{c++14}: Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. Generic Lambdas, lambdas parameters can be set auto, std::make\_unique, Return type deduction for normal functions, make\_unique
-    \item \textbf{c++17}: Structured Bindings, if constexpr (Compile-time conditional branching), std::optional, std::variant
-    \item \textbf{c++20}: Ranges library, concepts library, modules, coroutines, spaceship operator, std::span, std::format
+    \item \textbf{c++11}: 
+        \begin{itemize}
+            \item Move Semantics
+            \item Automatic Type Deduction (auto keyword)
+            \item Lambdas
+            \item Range-Based For Loops
+            \item constexpr
+            \item Smart Pointers
+            \item Threading
+            \item nullptr
+            \item Uniform initialization with \{\} braces
+            \item threading and concurrency
+            \item std::array
+            \item std::unordered\_map
+            \item std::tuple
+            \item <type\_traits>
+            \item Trailing return type
+            \item Variadic templates
+        \end{itemize}
+    \item \textbf{c++14}: 
+        \begin{itemize}
+            \item Relaxed constexpr to allow for control flow (if, for, etc) in constexpr functions. 
+            \item Generic Lambdas,
+            \item lambdas parameters can be set auto,
+            \item std::make\_unique,
+            \item Return type deduction for normal functions,
+            \item make\_unique
+            \item function returns auto without TRT (Trailing return type)
+        \end{itemize}
+    \item \textbf{c++17}: 
+        \begin{itemize}
+            \item Structured Bindings
+            \item if constexpr (Compile-time conditional branching)
+            \item std::optional
+            \item std::variant
+            \item Fold expressions
+        \end{itemize}
+    \item \textbf{c++20}: 
+        \begin{itemize}
+            \item Ranges library
+            \item concepts library
+            \item modules
+            \item coroutines
+            \item spaceship operator
+            \item std::span
+            \item std::format
+        \end{itemize}
     \item \textbf{c++23}: 
         \begin{itemize}
             \item \textbf{std::expected}: Represents a value or an error, simplifying error handling.
