@@ -1393,12 +1393,6 @@ To generate permutations, the key idea is to explore all possible arrangements o
     \item After the recursive call, it swaps back to restore the original array (backtracking), ensuring other permutations can be explored without interference.
 \end{itemize}
 
-
-
-
-
-
-
 \pagebreak 
 \subsection{Recursion in singly linked lists}
 \bigbreak \noindent 
@@ -3681,6 +3675,65 @@ We create two nodes, a root node and the nil node. In the constructor, we create
         root->color = node::BLACK;
     }
 \end{cppcode}
+
+\pagebreak \bigbreak \noindent 
+\subsection{State space tree}
+\bigbreak \noindent 
+A state space tree is a tree structure that shows all possible states of a problem.
+\begin{itemize}
+    \item The root node is the initial state of the problem.
+    \item Each child node is a new state that results from a possible action.
+    \item The branches represent transitions between states.
+    \item The leaves represent either goal states or states with no further possible moves.
+\end{itemize}
+\bigbreak \noindent 
+Consider the state space tree for generating the three element permutations of the set $\{A,B,C\}$. There are a grand total of $3P3 = 3! = 6$ total configurations. Let's draw the state space tree and see how we can us it to find them all.
+\bigbreak \noindent 
+\begin{figure}[ht]
+    \centering
+    \incfig{statespace2}
+    \label{fig:statespace2}
+\end{figure}
+\bigbreak \noindent 
+Then we see we can start at a leaf, and traverse up the tree until we get to the root. This traversal from each leaf to the root generates our six permutations from $3P3$.
+
+\pagebreak \bigbreak \noindent 
+\subsubsection{Generate permutations (Backtracking)}
+\bigbreak \noindent 
+\begin{cppcode}
+    void r_generate_perms(vector<char>& v, vector<vector<char>>& res, vector<char>& perm, vector<bool>& used, const int& k) {
+        // If the permutation size is k, push the result and return
+        if ((int) perm.size() == k) {
+            res.push_back(perm);
+            return;
+        }
+
+        // Loop through the available items in v, start recursion at each item
+        for (int i=0; i<(int)v.size(); ++i) {
+            // If the item is not used
+            if (!used[i]) {
+                // Use it
+                used[i] = true;
+                perm.push_back(v[i]);
+                // Recurse with updated current perm and used array
+                r_generate_perms(v, res, perm, used, k);
+                // Done generating the perm, reset used array and current permutation
+                used[i] = false;
+                perm.pop_back();
+            }
+        }
+    }
+
+    // Helper function to allow the use to only have to call with the input vector and k
+    vector<vector<char>> generate_perms(vector<char>& v, const int& k) {
+        vector<vector<char>> res; 
+        vector<char> perm;
+        vector<bool> used(v.size(), 0);
+        r_generate_perms(v, res, perm, used, k);
+        return res;
+    }
+\end{cppcode}
+
 
 
 

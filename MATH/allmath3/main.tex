@@ -3979,8 +3979,8 @@
                 \implies CB + BA &= CA 
             \end{align*}
             Therefore, by the definition of betweenness, $C-B-A$. Thus, by similar steps, if $C-B-A$, then $A-B-C$ \hspace*{\fill} $\blacksquare$
-    \end{itemize}
 
+    \end{itemize}
 
 
     \pagebreak 
@@ -5017,6 +5017,261 @@ deriv_approx(f, 1.0, cos(1.0))
     \end{enumerate}
     Often a combination of the above conditions is used. For example, items 2 and 3 can be combined:
     $$\left|x_k - x_{k-1}\right| < \mathtt{tol}(1 + \left|x_k\right|).$$
+\item \textbf{Bisection method}: Suppose $f \in C[a,b]$ and that $f(a)$ and $f(b)$ have opposite signs; i.e.,
+    $$
+    f(a) \cdot f(b) < 0.
+    $$
+    \bigbreak \noindent 
+    Recall the IVT from calculus
+    \bigbreak \noindent 
+    If $f \in C[a,b]$ and $f(a) \leq s \leq f(b)$, then there exists a real number $c \in [a,b]$ such that $f(c) = s$.
+    \bigbreak \noindent 
+    Since $f$ changes sign over $[a,b]$, the Intermediate Value Theorem implies that there is some $x^* \in [a,b]$ such that $f(x^*) = 0$.
+    The \textbf{bisection method} searches for a root of $f$ in $[a,b]$ as follows.
+    \begin{enumerate}
+        \item Let $p = \frac{a+b}{2}$ be the \textbf{midpoint} of $[a,b]$.
+        \item If $f(a) \cdot f(p) < 0$, then there is a root in $[a,p]$.
+        \item If $f(a) \cdot f(p) = 0$, then $p$ is a root.
+        \item If $f(a) \cdot f(p) > 0$, then there is a root in $[p,b]$.
+    \end{enumerate}
+    Each time we apply the above, we get a subinterval that contains a root that is \textbf{half the size} of the interval $[a,b]$.
+    \bigbreak \noindent 
+    Consider the Julia code for the bisection method 
+    \bigbreak \noindent 
+    \begin{jlcode}
+function bisect(f, a, b; maxiters=1000, tol=1e-6)
+    fa, fb = f(a), f(b)
+    
+    if fa * fb > 0
+        error("f(a) and f(b) must have opposite signs")  # Ensure root exists
+    end
+    
+    for i in 1:maxiters
+        p = (a + b) / 2
+        fp = f(p)
+
+        if abs(fp) < tol || abs(b - a) < tol  # Stop if function value is small or interval is tiny
+            return p
+        elseif fa * fp < 0
+            b, fb = p, fp
+        else
+            a, fa = p, fp
+        end
+    end
+    
+    return (a + b) / 2  # Return best approximation if maxiters is reached
+end
+
+f(x) = 2cosh(x/4) - x
+a, b = 5.0, 10.0
+
+p = bisect(f, a, b, tol=1e-6)
+p, f(p)
+    \end{jlcode}
+    \bigbreak \noindent 
+    The example
+    \bigbreak \noindent 
+    \begin{jlcode}
+        f(x) = 2cosh(x/4) - x
+        a, b = 5.0, 10.0
+
+        p = bisect(f, a, b, tol=0.0)
+        p, f(p)
+
+        # (8.507199570713027, 1.7763568394002505e-15)
+    \end{jlcode}
+    \bigbreak \noindent 
+    Shows that we get a pretty good approximation
+
+\item \textbf{Analyzing the bisection method}:
+    Initially, we know a root $x^*$ is somewhere in the interval $[a,b]$. If we let $x_k$ be the midpoint of the $k$th subinterval, then
+    $$\left|x^* - x_0\right| \leq \frac{b-a}{2}.$$
+    In the next iteration, 
+    $$\left|x^* - x_1\right| \leq \frac{b-a}{4},$$
+    and in the following iteration,
+    $$\left|x^* - x_2\right| \leq \frac{b-a}{8},$$
+    and so on, each time reducing our error bound by a factor of $2$.
+    In general,
+    $$\left|x^* - x_k\right| \leq \frac{b-a}{2} \cdot 2^{-k}, 
+    \qquad \text{for $k = 0,1,2,\ldots$}.$$
+    Suppose we want to compute $x_k$ such that 
+    $$\left|x^* - x_k\right| \leq \mathtt{atol}.$$
+    Then we just need to find the smallest positive integer $k$ such that
+    $$\frac{b-a}{2} \cdot 2^{-k} \leq \mathtt{atol}.$$
+    That is,
+    $$\frac{b-a}{2\mathtt{atol}} \leq 2^k,$$
+    which gives us
+    $$\log_2\left(\frac{b-a}{2\mathtt{atol}}\right) \leq k,$$
+    so we just need the first integer $k$ that is larger than $\log_2\left(\frac{b-a}{2\mathtt{atol}}\right)$. Therefore, 
+    $$k = \left\lceil \log_2\left(\frac{b-a}{2\mathtt{atol}}\right) \right\rceil.$$
+\item \textbf{Pros and cons of the bisection method}:
+\item \textbf{Pros:}
+    \begin{enumerate}
+        \item \textbf{Simple:} The bisection method only requires function values, is easy to understand and implement, and it is easy to analyze.
+        \item \textbf{Robust:} The bisection method is guaranteed to work, provided that $f$ is continuous and changes sign on the interval $[a,b]$.
+    \end{enumerate}
+\textbf{Cons:}
+\begin{enumerate}
+    \item \textbf{Slow to converge:} The bisection method often requires many function evaluations.
+    \item \textbf{Does not generalize:} The bisection method only applies to solving equations involving one variable; it does not generalize to solving equations involving multiple variables.
+\end{enumerate}
+\item \textbf{Fixed point iteration}:
+    Another simple approach to solving 
+    $$f(x) = 0$$
+    is to re-write it as
+    $$x = g(x)$$
+    for some continuous function $g$. We call a point $x$ a \textbf{fixed-point} of $g$ if $x = g(x)$.
+    \bigbreak \noindent 
+    For example, If we let 
+    $$g(x) = x - f(x),$$ 
+    then
+    $$x = g(x) \quad \Rightarrow \quad x = x - f(x) \quad \Rightarrow \quad f(x) = 0.$$
+    Let's plot these functions using $f(x) = x^2 - 2.$
+    \bigbreak \noindent 
+    \begin{jlcode}
+f(x) = x^2 - 2
+g(x) = x-f(x)
+a, b = -3.0, 3.0
+
+plot(axes_style=:zerolines, aspect_ratio=:equal, legend=:topleft, ylims=[-3,3])
+plot!(f, a, b, label=L"y = f(x)", c=1)
+plot!(g, a, b, label=L"y = g(x)", c=2)
+plot!(x -> x, a, b, label=L"y = x", c=3)
+plot!([-sqrt(2), -sqrt(2)], [0, -sqrt(2)], linestyles=:dash, color=:black, label=:none)
+plot!([sqrt(2), sqrt(2)], [0, sqrt(2)], linestyles=:dash, color=:black, label=:none)
+xlabel!(L"x"); ylabel!(L"y")
+    \end{jlcode}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/savefig40.png}
+    \bigbreak \noindent 
+    We see that $f(x) = 0$ precisely  when $g(x) = x$ (notice when the orange curve intersects the line $y=x$, it traces back up to the root of the blue curve)
+\item \textbf{Fixed point iteration: Choices of $g$}:
+    There are many possible choices for $g$:
+    \begin{itemize}
+        \item $g(x) = x - f(x)$
+        \item $g(x) = x + cf(x)$, for some nonzero constant $c$
+        \item $g(x) = x - f(x)\big/f'(x)$
+    \end{itemize}
+Some choices for $g$ will be better than others.
+\item \textbf{Iterations with fixed point iteration}:
+    Given some initial guess $x_0$, we can use the function $g$ to generate a sequence of iterates as follows:
+    $$x_{k+1} = g(x_{k}), \qquad k = 0, 1, 2, \ldots.$$
+    If the sequence $\{x_k\}$ converges to some point $x^*$, then we must have $x^* = g(x^*)$, so $f(x^*) = 0$.
+    \bigbreak \noindent 
+    Consider the Julia function that runs the above algorithm for $f(x) = x^{2} - 2$, and $g(x) = x-f(x) $
+    \bigbreak \noindent 
+    \begin{jlcode}
+function fixedPointPlot(g, a, b, x0; num=5, usequiver=true)
+
+    plt = plot(g, a, b, label=L"y = g(x)", color=:blue)
+    plot!(x -> x, a, b, label=L"y = x", color=:green)
+    
+    x = x0
+    for i = 1:num
+        if usequiver
+            quiver!([x, x], [x, g(x)],
+                quiver=([0, g(x)-x], [g(x)-x, 0]))
+        else
+            plot!([x, x], [x, g(x)], color=i, label=:none)
+            plot!([x, g(x)], [g(x), g(x)], color=i, label=:none)
+        end
+        x = g(x)
+    end
+    
+    scatter!([x0], [x0], label=:none, color=:lime)
+    scatter!([x], [x], label=:none, color=:red)
+    
+    xlabel!(L"x")
+    ylabel!(L"y")
+    plot!(legend=:outertopright)
+    title!("Fixed-point iteration")
+    
+    return plt
+end
+
+g1(x) = x - f(x)
+fixedPointPlot(g1, -2, 3, x0, num=5)
+    \end{jlcode}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/savefig41.png}
+    \bigbreak \noindent 
+    We can examine $k,$ and $x_{k}$
+    \bigbreak \noindent 
+    \begin{jlcode}
+using Printf
+x0 = 1.0; x = x0
+@printf("%4s %12s\n", "k", "xk")
+for k = 1:20
+    x = g1(x)
+    @printf("%4d %12.4e\n", k, x)
+end 
+    \end{jlcode}
+    \bigbreak \noindent 
+    Which gives the table
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{c c}
+            \hline
+            $k$ & $x_k$ \\
+            \hline
+            1  & 2.0000e+00 \\
+            2  & 0.0000e+00 \\
+            3  & 2.0000e+00 \\
+            4  & 0.0000e+00 \\
+            5  & 2.0000e+00 \\
+            6  & 0.0000e+00 \\
+            7  & 2.0000e+00 \\
+            8  & 0.0000e+00 \\
+            9  & 2.0000e+00 \\
+            10 & 0.0000e+00 \\
+            11 & 2.0000e+00 \\
+            12 & 0.0000e+00 \\
+            13 & 2.0000e+00 \\
+            14 & 0.0000e+00 \\
+            15 & 2.0000e+00 \\
+            16 & 0.0000e+00 \\
+            17 & 2.0000e+00 \\
+            18 & 0.0000e+00 \\
+            19 & 2.0000e+00 \\
+            20 & 0.0000e+00 \\
+            \hline
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    It does not seem to be converging to anything. Now let's try $g(x) = x - f(x)\big/f'(x)$.
+    \bigbreak \noindent 
+    \begin{jlcode}
+    fixedPointPlot(x -> x-f(x)/2x, 1.0, 1.5, 1.1, usequiver=true)
+    \end{jlcode}
+    \bigbreak \noindent 
+    Gives the plot
+    \bigbreak \noindent 
+    \fig{.5}{./figures/savefig42.png}
+    \bigbreak \noindent 
+    We can also examine the absolute errors
+    \bigbreak \noindent 
+    \begin{jlcode}
+x = 1.0; xs = sqrt(2)
+
+@printf("%4s %12s\n", "k", "error")
+for k = 1:5
+    x = (x->x-f(x)/2x)(x)
+    @printf("%4d %12.4e\n", k, x - xs)
+end
+    \end{jlcode}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{cc}
+            k        &error \\
+            1   &8.5786e-02
+            2   &2.4531e-03
+            3   &2.1239e-06
+            4   &1.5947e-12
+            5   &0.0000e+00
+        \end{tabular}
+    \end{center}
+    \bigbreak \noindent 
+    It converges very rapidly! We will see later why this is happening.
 
 
 
