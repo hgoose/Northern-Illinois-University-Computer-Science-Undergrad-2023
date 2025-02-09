@@ -688,6 +688,91 @@
     \bigbreak \noindent 
     You cannot instantiate abstract classes. Thus, you cannot call pure virtual methods
 
+    \bigbreak \noindent 
+    \subsection{Do the signatures need to exactly match on overridden functions}
+    \bigbreak \noindent 
+    Yes, the function signature must exactly match the base class function (including return type, parameters, and const qualifiers). If the signature differs in any way, the function in the derived class will be considered a new, independent function rather than an override.
+
+
+    \bigbreak \noindent 
+    \subsection{Do you need the keyword virtual on overridden methods?}
+    \bigbreak \noindent 
+    In the derived class, you do not need to explicitly write virtual again when overriding, though you can include it for clarity.
+
+    \bigbreak \noindent 
+    \subsection{What happens if you forget the override}
+    \bigbreak \noindent 
+    forgetting to put the override keyword when overriding a base class member function has the following consequences
+    \bigbreak \noindent 
+    The code will still compile, but if the function signature does not exactly match the base class function, you might accidentally create a new function in the derived class instead of overriding the base function.
+    \bigbreak \noindent 
+    If the function signature is incorrect (e.g., different return type, wrong parameters, or missing const qualifier), the base class function is hidden instead of being overridden. This means
+    \begin{itemize}
+        \item Calls to the function through a base class pointer/reference will not invoke the derived class function as intended.
+        \item Instead, the base class implementation will be called, leading to unexpected behavior.
+        \item If the function in the derived class has a different parameter list, the base class function can only be accessed using Base::functionName(...).
+    \end{itemize}
+    \bigbreak \noindent 
+    The override keyword forces the compiler to check whether the function actually overrides a virtual function from the base class. Without it, if the base class function signature changes, the derived class function may silently stop overriding it, leading to subtle runtime errors.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    struct A {
+        virtual void print() const {cout <<  "A"; }
+    };
+
+    struct B : A {
+        virtual void print() {cout << "B";}
+    };
+
+    A* b = new B;
+    b->print(); // A
+
+    delete b;
+    \end{cppcode}
+    \bigbreak \noindent 
+    We forgot the override keyword, which  would be fine as long as the function signatures still matched exactly, but notice that we also forgot the mark B's print const. Thus, B's print method does not override A's, and it is an independent function. Therefore, B's VTable remains
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{c|c}
+            Index & fn \\
+            \hline 
+            0 & A::print()
+        \end{tabular}
+    \end{center}
+    Ie it does not get overridden. If we marked B's print with override, it would give a compiler error since the signatures don't match
+
+    \bigbreak \noindent 
+    \subsection{Overrides with default args}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            virtual void print(int x=5) const {cout <<  "A" << x; }
+        };
+
+        struct B : A {
+            virtual void print(int x=10) const override {cout << "B" << x;}
+        };
+
+        A* b = new B;
+        b->print(); // B5
+
+        delete b;
+        \end{cppcode}
+        \bigbreak \noindent 
+        So B's print gets called, but we get the default arg from A?
+        \bigbreak \noindent 
+        Since print() is virtual, dynamic dispatch occurs. The runtime determines that B::print() should be executed, not A::print().
+        \bigbreak \noindent 
+        However, default arguments are resolved at compile time, based on the static type of the pointer.
+        \bigbreak \noindent 
+        The call b->print(); is interpreted at compile time as
+        \bigbreak \noindent 
+        \begin{cppcode}
+        b->print(5); // Because `b` is an `A*`, it uses A's default argument
+        \end{cppcode}
+
 
 
 
@@ -1104,6 +1189,7 @@
         \item To ensure consistent behavior, use signed char or unsigned char explicitly.
     \end{itemize}
 
+
     \pagebreak 
     \unsect{Size of types}
     \bigbreak \noindent 
@@ -1384,6 +1470,30 @@
     % \bigbreak \noindent 
     % If you manually call the destructor and then let the object go out of scope (or delete it via delete), the destructor will be called again, leading to a double free or use-after-free error.
     %
+
+    \bigbreak \noindent 
+    \subsection{Excess elements in scalar initialization}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int x{1,2,3}
+    \end{cppcode}
+    \bigbreak \noindent 
+    Results in a compilation error "excess elements in scalar initialization"
+    \bigbreak \noindent 
+    Further consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+    template<typename ... Args>
+    struct foo {
+        int var;
+
+        foo(Args... args) : var(args...) {}
+    };
+    X x(1); // fine
+    X y(1,2,3); // Excess elements in scalar initialization
+    \end{cppcode}
 
 
 
@@ -1933,7 +2043,127 @@
     \pagebreak 
     \unsect{Notes about types}
     \bigbreak \noindent 
-    \subsection{Are chars integral types?}
+    \begin{itemize}
+        \item bool
+        \item char (unsigned and signed)
+        \item short (unsigned and signed)
+        \item int (unsigned and signed)
+        \item long (unsigned and signed)
+        \item long long (unsigned and signed)
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Notes about inline functions}
+    \bigbreak \noindent 
+    Recall that an inline function in C++ is a function that is expanded in place where it is called, rather than executing a traditional function call. This is a compiler directive that can reduce function call overhead and potentially improve performance.
+    \bigbreak \noindent 
+    When a function is declared as inline, the compiler replaces the function call with the actual function definition (code) at compile time. This eliminates the overhead of a function call, such as:
+    \begin{itemize}
+        \item Pushing arguments onto the stack.
+        \item Jumping to the function's memory location.
+        \item Returning to the caller.
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Advantages:}
+    \begin{itemize}
+        \item \textbf{Eliminates Function Call Overhead}: Since the function code is directly inserted at the call site, there is no function call overhead.
+        \item \textbf{Faster Execution}: If the function is small, inlining can make the program faster.
+        \item \textbf{Useful for Small, Repeated Functions}: It is particularly useful for small functions that are frequently called (e.g., getter functions in classes).
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Disadvantages}:
+    \begin{itemize}
+        \item \textbf{Increased Binary Size (Code Bloat)}: If a function is large and used in multiple places, its repeated expansion increases the binary size.
+        \item \textbf{Decreased Cache Efficiency}: More inline code means a larger executable, which may lead to poor instruction cache performance.
+    \end{itemize}
+    \bigbreak \noindent 
+    Note that inlining is a suggestion, not a command, The compiler may ignore the inline keyword if the function is too complex.
+
+    \bigbreak \noindent 
+    \subsection{Inline functions in the context of multiple translation units}
+    \bigbreak \noindent 
+    In C++, a program can consist of multiple translation units, where each source file (.cpp) and its included headers form a separate unit compiled independently before linking. Using inline functions across multiple translation units can help avoid multiple definition errors.
+    \bigbreak \noindent 
+    When defining a function in a header file (.h), multiple source files (.cpp) including the header may result in multiple definitions of the function
+    \bigbreak \noindent 
+    When compiled separately and linked together, the linker will complain about multiple definitions of square(int) because each translation unit includes its own separate copy.
+    \bigbreak \noindent 
+    The inline keyword tells the compiler that multiple identical definitions of the function are allowed across translation units, and they should be merged.
+    \bigbreak \noindent 
+    Normally, functions with external linkage (int square(int)) violate the One Definition Rule (ODR) when included in multiple translation units.
+    \bigbreak \noindent 
+    Marking the function inline allows the linker to consolidate multiple instances into one.
+    \bigbreak \noindent 
+
+    \pagebreak 
+    \unsect{Notes about object creation}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A{
+            A() { cout << 'a'}
+            ~A() { cout << 'A'}
+        };
+
+        struct B {
+            B() {cout << 'b'}
+            ~B() {cout << 'B'}
+            A a;
+        };
+
+        int main() {B b;} // abBA
+    \end{cppcode}
+    \bigbreak \noindent 
+    Member variables are initialized before the constructor is called. The destructor is called before member variables are destroyed.
+
+
+    \pagebreak 
+    \unsect{What is a "function signature"}
+    \bigbreak \noindent 
+    a function signature refers to the combination of components that uniquely identify a function within a given scope. However, different contexts use "function signature" to mean slightly different things.
+    \bigbreak \noindent 
+    When the compiler determines whether two functions are overloaded (i.e., different functions in the same scope), it considers:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Function name
+        \item Parameter types (including order and const qualifiers on parameters)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Function Signature (Overriding Perspective)}
+    \bigbreak \noindent 
+    When dealing with function overriding in a derived class, the function signature must exactly match the base class function's:
+    \begin{itemize}
+        \item Function name
+        \item Parameter types (including order and const/reference qualifiers)
+        \item const qualifier (for member functions)
+        \item Volatile qualifier (volatile if present)
+        \item Ref-qualifier (\& or \&\&)
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{What is NOT Part of a Function Signature? }
+    \bigbreak \noindent 
+    The following do not contribute to a function’s signature:
+    \begin{itemize}
+        \item \textbf{Return type}: Functions cannot be overloaded solely by differing return types.
+        \item \textbf{Default arguments}: Default arguments are resolved at compile time, so they are not part of the function signature.
+    \end{itemize}
+    \bigbreak \noindent 
+    \textbf{Note:} Even if parameter types are aliased, they resolve to the same type and do not create a different signature.
+
+    \bigbreak \noindent 
+    \subsection{noexcept?}
+    \bigbreak \noindent 
+    The noexcept specifier is part of the function signature for function overloading but not for overriding.
+
+
+
+
+
+
+
 
     
 

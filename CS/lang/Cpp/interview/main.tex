@@ -1085,6 +1085,38 @@ auto x = bits[2];  // Access the bit from the persistent vector
  \bigbreak \noindent 
  \subsection{decltype}
  \bigbreak \noindent 
+ \subsection{Decltype vs auto}
+ \bigbreak \noindent 
+ decltype deduces the exact type of an expression, including references and const qualifiers. It does not evaluate the expression, only inspects its type. If you pass a variable name without parentheses, it gives the declared type. If you pass an expression, the result depends on how the expression is formed.
+ \bigbreak \noindent 
+ \begin{cppcode}
+ int x = 20;
+ const int& y=x;
+ decltype(y) z = x; // Const int&
+ \end{cppcode}
+ \bigbreak \noindent 
+ When decltype is applied to an expression inside parentheses, it deduces the type as a reference if the expression is an lvalue.
+ \bigbreak \noindent 
+ \begin{cppcode}
+ int x = 20;
+ decltype(x) y; // Int
+ decltype((x)) y = x; // int&
+
+ const int x = 10;
+ decltype(x) y = x; // const int
+ decltype((x)) z = x; // const int&
+
+ decltype(10) k; // int
+ decltype((10)) r; // int
+ \end{cppcode}
+
+ \bigbreak \noindent 
+ auto does not preserve references unless explicitly specified. It removes const qualifiers unless the initializer is explicitly const.
+ 
+
+
+
+ \bigbreak \noindent 
  Consider
  \bigbreak \noindent 
  \begin{cppcode}
@@ -1113,6 +1145,67 @@ auto x = bits[2];  // Access the bit from the persistent vector
  \end{cppcode}
  \bigbreak \noindent 
  Thus, z is a double\&, but since $A$ is a pointer to a constant objects, (a->x) is a reference to a constant
+
+ \bigbreak \noindent 
+ \subsection{decltype(auto)}
+ \bigbreak \noindent 
+ The decltype(auto) idiom was introduced in C++14. Like auto, it deduces a type from its initializer, but it performs the type deduction using the decltype rules.
+ \bigbreak \noindent 
+ in generic code, you have to be able to perfectly
+forward a return type without knowing whether you are dealing
+with a reference or a value. decltype(auto) gives you that ability:
+\bigbreak \noindent 
+\begin{cppcode}
+template<class Fun, class... Args>
+decltype(auto) foo(Fun fun, Args&&... args) {
+    return fun(std::forward(args)...);
+}
+\end{cppcode}
+\bigbreak \noindent 
+If you wanted to achieve the same thing simply with auto, you
+would have to declare different overloads for the same example
+function above, one with the return type auto always deducing to
+a pure value, and one with auto\& always deducing to a reference
+type.
+
+\pagebreak 
+\unsect{Keyword static and its different uses }
+\bigbreak \noindent 
+\subsection{What does a static member variable in C++ mean?}
+\bigbreak \noindent 
+A member variable that is declared static is allocated storage in the static storage area, only once during the program lifetime. Given that there is only one single copy of the variable for all objects, it’s also called a class member.
+\bigbreak \noindent 
+When we declare a static member in the header file, we’re telling
+the compiler about the existence of a static member variable,
+but we do not actually define it (it’s pretty much like a forward
+declaration in that sense). Because static member variables are not
+part of class instances (they are treated similarly to global variables,
+and get initialized when the program starts), you must explicitly
+define the static member outside of the class, in the global scope.
+\bigbreak \noindent 
+\begin{cppcode}
+class A {
+    static MyType s_var;
+};
+MyType A::s_var = value;
+\end{cppcode}
+\bigbreak \noindent 
+Though there are a couple of exceptions. First, when the static member is a const integral type (which includes char and bool) or a const enum, the static member can be initialized inside the class definition:
+\bigbreak \noindent 
+\begin{cppcode}
+class A {
+    static const int s_var{42};
+};
+\end{cppcode}
+\bigbreak \noindent 
+If the member is not const, you either have to initialize it out-of-line,
+or you have to use the inline keyword
+\bigbreak \noindent 
+static constexpr members can be initialized inside the class definition starting from C++17 (no out-of-line initialization required)
+\bigbreak \noindent 
+It’s been already mentioned but it’s worth emphasizing that static
+member variables are created when the program starts and destroyed when the program ends and as such static members exist
+even if no objects of the class have been instantiated.
 
 
  
