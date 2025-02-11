@@ -1208,6 +1208,123 @@ member variables are created when the program starts and destroyed when the prog
 even if no objects of the class have been instantiated.
 
 
+\bigbreak \noindent 
+\subsection{What does a static member function mean in C++?}
+\bigbreak \noindent 
+static member functions can be used to work with static member
+variables in the class or to perform operations that do not require an
+instance of the class. Yet the actions performed in a static member
+function should conceptually, semantically be strongly related to
+the class. Some key points about static member functions.
+\begin{itemize}
+    \item static member functions don’t have the this pointer
+    \item static member functions cannot be virtual
+    \item static member functions cannot access non-static members
+    \item The const and volatile qualifiers aren’t available for static member functions
+\end{itemize}
+\bigbreak \noindent 
+In practice, a static member functions mean that you can call
+such functions without having the class instantiated (you can also call it on an instance).
+\bigbreak \noindent 
+\begin{cppcode}
+    struct S {
+        static void print() {}
+    };
+
+    S::print();
+    S s;
+    s.print();
+\end{cppcode}
+\bigbreak \noindent 
+As this pointer always holds the memory address of the current object and to call a static member you don’t need an object at all, it cannot have a this pointer.
+\bigbreak \noindent 
+A virtual member is something that doesn’t relate directly to any class, only to an instance. A “virtual function” is (by definition) a function that is dynamically linked, i.e. the right implementaion is chosen at runtime depending on the dynamic type of a given object. Hence, if there is no object, there cannot be a virtual call.
+\bigbreak \noindent 
+Accessing a non-static member function requires that the object has been constructed but for static calls, we don’t pass any instantiation of the class. It’s not even guaranteed that any instance has been constructed.
+\bigbreak \noindent 
+Once again, the const and the const volatile keywords modify whether and how an object can be modified or not. As there is no object
+\bigbreak \noindent 
+\subsection{What is the static initialization order fiasco?}
+\bigbreak \noindent 
+The static initialization order fiasco is a subtle aspect of C++ that
+many don’t know about, don’t consider or misunderstand. It’s hard
+to detect as the error often occurs before main() would be invoked.
+\bigbreak \noindent 
+Static or global variables in one translation unit are always initialized according to their definition order. On the other hand, there is
+no strict order for which translation unit is initialized first.
+\bigbreak \noindent 
+Let’s suppose that you have a translation unit A with a static
+variable sA, which depends on static variable sB from translation
+unit B in order to get initialized. You have 50\% chance to fail. This
+is the static initialization order fiasco.
+\bigbreak \noindent 
+\begin{cppcode}
+// File1.cpp
+#include <string>
+std::string name = "Julia";
+
+// File2.cpp
+#include <string>
+extern std::string message = "Hello, " + name;
+
+int main() {cout << message;}
+// g++ -o bin file2.cpp file1.cpp
+// ./bin "Hello, "
+
+// g++ -o bin file1.cpp file2.cpp
+// ./bin "Hello, Julia"
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{How to solve the static initialization order fiasco?}
+\bigbreak \noindent 
+Probably the simplest solution is to replace the variable in file1.cpp with a function. Observe
+\bigbreak \noindent 
+\begin{cppcode}
+// file1.cpp
+#include <string>
+std::string foo() {
+    return std::string("Julia");
+}
+
+// file2.cpp
+#include <string>
+extern std::string foo();
+std::string message = "Hello, " + foo();
+
+int main() {cout << message;}
+// g++ -o bin file2.cpp file1.cpp
+// ./bin "Hello, Julia"
+
+// g++ -o bin file1.cpp file2.cpp
+// ./bin "Hello, Julia"
+\end{cppcode}
+
+\bigbreak \noindent 
+Starting from C++20, the static initialization order fiasco can be solved with the use of constinit. In this case, the static variable will be initialized at compile-time, before any linking.
+
+\bigbreak \noindent 
+\begin{cppcode}
+    // File1.cpp
+    #include <string>
+    constinit std::string name = "Julia";
+
+    // File2.cpp
+    #include <string>
+    extern std::string message = "Hello, " + name;
+
+    int main() {cout << message;}
+    // g++ -o bin file2.cpp file1.cpp
+    // ./bin "Hello, Julia"
+
+    // g++ -o bin file1.cpp file2.cpp
+    // ./bin "Hello, Julia"
+\end{cppcode}
+
+\pagebreak 
+\unsect{Polymorphism, inheritance and virtual functions}
+\bigbreak \noindent 
+
  
 
 

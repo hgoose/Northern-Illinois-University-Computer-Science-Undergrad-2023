@@ -1892,6 +1892,86 @@
     \bigbreak \noindent 
     No, you cannot
 
+    \bigbreak \noindent 
+    \subsection{Static and extern (linkage)}
+    \bigbreak \noindent 
+    Global variables without the use of the keyword static have external linkage. In other translation units that are compiled  with the file that has the global variable, we use the keyword \texttt{extern} to access it
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // File1.cpp
+    int x = 20;
+
+    // File2.cpp
+    extern int x; // Refers to x from file1.cpp
+    \end{cppcode}
+    \bigbreak \noindent 
+    Declaring a global variable as static restricts its visibility to the current translation unit
+    \bigbreak \noindent 
+    If we declare a global variable static in on unit, we can get a separate copy in a different unit by declaring the same variable (with the same signature) and also using the keyword static
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // File1.cpp
+    static int x = 20;
+
+    // File2.cpp
+    static int x = 20; // File2 gets its own copy of x
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Using extern to declare a variable with the same name as a static variable from another translation unit}
+    \bigbreak \noindent 
+    If you use extern to declare a variable with the same name as a static variable from another translation unit, the linker will not find the definition of that variable, leading to a linker error (undefined reference). This is because static variables have internal linkage, meaning they are restricted to their translation unit and cannot be accessed from another file.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // File1.cpp
+    static int x = 20;
+
+    // File2.cpp
+    extern int x; // Linker error
+    \end{cppcode}
+    
+    \bigbreak \noindent 
+    \subsubsection{Forgetting to use extern}
+    \bigbreak \noindent 
+    If you forget to put extern when declaring a global variable in another translation unit, the compiler will treat it as a new, separate definition rather than referring to an existing one. This can lead to multiple definition errors at the linking stage
+    \bigbreak \noindent 
+    \begin{cppcode}
+    //  File1.cpp
+    int x = 20;
+
+    // File2.cpp
+    int x; // Liner error: Multiple definition
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Forgetting to use keyword static}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        //  File1.cpp
+        static int x = 20;
+
+        // File2.cpp
+        int x = 20; 
+    \end{cppcode}
+    \bigbreak \noindent 
+    No errors for two units, file2 will simply make its own version of x with external linkage. If you add a third unit and forget to put static on that x as well, we would then get multiple definition errors.
+
+    \bigbreak \noindent 
+    \subsubsection{Constinit with extern}
+    \bigbreak \noindent 
+    constinit is only required in the definition (where the variable is actually allocated memory).
+    \bigbreak \noindent 
+    When using extern to refer to that variable in another translation unit, constinit is not necessary because extern simply tells the compiler that the variable is defined elsewhere.
+
+    \bigbreak \noindent 
+    \begin{cppcode}
+    // File1.cpp
+    constinit int x = 50;
+
+    // File2.cpp
+    extern int x;
+    \end{cppcode}
+
     \pagebreak 
     \unsect{Trying to move const objects}
     \bigbreak \noindent 

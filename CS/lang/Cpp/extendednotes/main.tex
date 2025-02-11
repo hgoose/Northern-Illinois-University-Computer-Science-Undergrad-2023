@@ -4717,9 +4717,41 @@ int main() {
              if (b == 0) return std::nullopt; // No value
              return a / b; // Contains a value
          }
+         auto x = f(10,0);
+         // We get "undefined", since b is zero and nullopt is returned
+         if (x.has_value()) cout << x.value() << endl;
+         else cout << "undefined" << endl;
+         cout << x.value_or(-1); // -1
      \end{cppcode}
      \bigbreak \noindent 
      std::nullopt is a constant of type std::nullopt\_t. Used to indicate that an std::optional does not contain a value.
+
+     \bigbreak \noindent 
+     \subsubsection{std::expected}
+     \bigbreak \noindent 
+     std::expected<T, E> (introduced in C++23) is a monadic type that represents either a successfully computed value (T) or an error (E). It is useful for error handling without exceptions.
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item \textbf{Success Case:} Holds a value of type T, accessible via .value() or the dereference operator *.
+         \item \textbf{Error Case:} Holds an error of type E, accessible via .error().
+         \item \textbf{Check Status:} Use .has\_value() to determine if it contains a valid result.
+         \item \textbf{Comparison with std::optional:} Unlike std::optional<T>, which only distinguishes between presence or absence of a value, std::expected<T, E> explicitly represents an error.
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::expected<int, string> f2(int a, int b) {
+             if (b == 0) return std::unexpected("Cannot divide by zero");
+             return a/b;
+         }
+         auto x = f2(10,0);
+         // Outputs "cannot divide by zero"
+         if (x.has_value()) {
+             cout << x.value() << endl;
+         } else {
+             cout << x.error() << endl;
+         }
+     \end{cppcode}
 
      \bigbreak \noindent 
      \subsubsection{std::format}
@@ -5130,7 +5162,7 @@ the constinit keyword was introduced to ensure that a variable is initialized at
 \bigbreak \noindent 
 Unlike constexpr, constinit does not imply that the variable is immutable (const). The variable can still be modified at runtime, but its initial value must be a compile-time constant.
 \bigbreak \noindent 
-constinit is typically used with static or thread_local variables, as these are the kinds of variables that benefit from compile-time initialization.
+constinit is typically used with static or thread\_local variables, as these are the kinds of variables that benefit from compile-time initialization.
 \bigbreak \noindent 
 A variable cannot be declared with both constinit and constexpr because constexpr already implies compile-time initialization and immutability.
 \bigbreak \noindent 
@@ -6214,7 +6246,6 @@ Allowing \& would require breaking this optimization and making bitfields behave
                 \begin{cppcode}
                 std::expected<int, std::string> result = 42;
                 \end{cppcode}
-            \item \textbf{Deduction Guides}: For better type deduction in templates.
             \item \textbf{Extended constexpr}: Nearly all standard library functions are constexpr.
             \item \textbf{Improved Pattern Matching}: Early steps toward native pattern-matching constructs.
         \end{itemize}

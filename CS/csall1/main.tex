@@ -7710,6 +7710,7 @@ indicate which strong entity the weak entity depends upon.
                     \end{verbatim}
                     \bigbreak \noindent 
                     Then we see we can used the named variables instead of directly calculating the $D(X,B)$ address. This form of addressing is called \textit{implicit} addressing. In doing this, any additional instructions that may shift the bytes of our constants won't force us to recalculate the $D(X,B)$ addresses
+                \item \textbf{Note about LTORG}: The LTORG directive needs to start at a double word boundary. If LTORG does not naturally start at a double word boundary, it will go to the next available. This means we might get "slack bytes", which are unused bytes from the end of the instruction before the LTORG up until the double word boundary where the LTORG begins.
                 \item \textbf{Implicit and explicit addressing}: A $D(X,B)$ displacement (also called relative) address is termed \textit{explicit}, whereas using a label is \textit{implicit}
                 \item \textbf{The location counter (LOC)}: The location counter is a hidden variable maintained by the assembler that tracks the current address where instructions and data are assembled in memory.
                     \bigbreak \noindent 
@@ -7772,6 +7773,7 @@ indicate which strong entity the weak entity depends upon.
                         \item C-F: 6 byte instruction
                     \end{itemize}
                 \item \textbf{Note about fullword boundarys}: An address is at the start of a fullword boundary if the last digit is $0,4,8,$ or $C $
+                \item \textbf{Note about double word boundarys}: A double word boundary is an address that ends with either 0 or 8.
                 \item \textbf{A note about literals}: Consider the instruction
                     \begin{cppcode}
                     L 3,=F'235'
@@ -7798,6 +7800,8 @@ indicate which strong entity the weak entity depends upon.
                     Which subtracts the contents of register 8 from register 8. This instruction therefore only uses two bytes... The two bytes required to encode the instruction.
                 \item \textbf{A note about define storage}: If we specify a value in a DS instruction, the value wont be placed in storage. It will behave just like a regular DS.
                 \item \textbf{Note about instructions Load and Store}: The instructions L and ST require arguments at fwb's (full word boundarys), failure to supply a value at a fwd results in a ABEND (SOC6), which is a \textit{specification exception}
+                \item \textbf{Note about assist}: The ASSIST assembler fills are bytes in storage with a default value $F5$, and non special registers with value $F4F4F4$
+                \item \textbf{XDUMP}: If we write an XDUMP instruction with no operands, we get a output dump of the contents of all the registers. If we specify a location in memory, and a number of bytes after that location, we get a dump of 32 byte lines in memory starting at program start (000000), and up to the line that contains the starting point of our dump.
                     
 
 
