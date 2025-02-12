@@ -1914,9 +1914,79 @@
     \bigbreak \noindent 
     \subsection{Ranking}
     \bigbreak \noindent 
-    \begin{center}
-        bool $\to$ char/short $\to$ int $\to$ long $\to$ long long $\to$ float $\to$ double $\to$ long double
-    \end{center}
+    % \begin{center}
+    %     bool $\to$ char/short $\to$ int $\to$ long $\to$ long long $\to$ float $\to$ double $\to$ long double
+    % \end{center}
+    Standard conversion sequences are categorized in one of three ranks. The ranks are listed in order from best to worst:
+    \begin{itemize}
+        \item \textbf{Exact match:} This rank includes the following conversions:
+            \begin{itemize}
+                \item Identity conversions
+                \item Lvalue-to-rvalue conversions
+                \item Array-to-pointer conversions
+                \item Qualification conversions
+            \end{itemize}
+        \item \textbf{Promotion:} This rank includes integral and floating point promotions.
+        \item \textbf{Conversion:} This rank includes the following conversions:
+            \begin{itemize}
+                \item Integral and floating-point conversions
+                \item Floating-integral conversions
+                \item Pointer conversions
+                \item Pointer-to-member conversions
+                \item Boolean conversions
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    Consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(double x) { }
+        void f(unsigned x) { }
+        f(1.0); // Error, call to f is ambiguous
+    \end{cppcode}
+    \bigbreak \noindent 
+    This situation is ambiguous because the integer literal 1.0 can be converted to either int or unsigned int, and both conversions have the same rank in the standard conversion sequence (Floating-integral conversions)
+    \bigbreak \noindent 
+    Further, consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(int x) { cout << "1"; }
+        void f(unsigned x) { cout << "2"; } 
+        f((short)5); // 1
+    \end{cppcode}
+    \bigbreak \noindent 
+    Although both conversions have rank \textit{promotion}, the compiler  chooses the first
+    \bigbreak \noindent 
+    The compiler looks for the best function match among the available overloads
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item short $\to$ int is an integral promotion.
+        \item short $\to$ unsigned int is also a promotion, but only considered if int is not available.
+    \end{itemize}
+    Since integral promotions have higher precedence than standard conversions, f(int) is chosen because it's a direct promotion, whereas f(unsigned) is a conversion if int is available.
+    \bigbreak \noindent 
+    Consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void f(char x) { cout << "1"; }
+        void f(short x) { cout << "2"; }
+        f((bool)5); // Error: call to f is ambiguous
+    \end{cppcode}
+    \bigbreak \noindent 
+    The function call f((bool)5); is ambiguous because both void f(char) and void f(short) are equally valid candidates based on integral promotions, and neither is strictly better than the other
+    \bigbreak \noindent 
+    This situation falls under conversion rank because bool is promoted to int first, and then int must be converted to either char or short, both of which have equal ranking in standard conversions.
+    \bigbreak \noindent 
+    promotions are a subset of standard conversions that always take precedence over regular conversions in overload resolution. A promotion only occurs when converting a smaller type to a larger type of the same category (integral or floating-point), without changing its fundamental nature.
+    \bigbreak \noindent 
+    Integral promotions occur when a smaller integer type is promoted to at least int or unsigned int. These promotions are preferred over standard conversions and are commonly used in arithmetic expressions, function calls, and overload resolution.
+
+
+
+
+
+
+
 
     \pagebreak 
     \unsect{Notes about static}
@@ -1945,6 +2015,42 @@
     \subsection{Can you make pure virtual methods static?}
     \bigbreak \noindent 
     No, you cannot
+
+    \bigbreak \noindent 
+    \subsection{Inline Static methods?}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s{
+            static void print() {} // Implicitly inline... Means
+            static inline void print() {} // Exact same
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    However, defining static methods outside the class does not make it implicitly inline
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s  {
+            static void print();
+        };
+        void s::print() {} // Not inline
+    \end{cppcode}
+    \bigbreak \noindent 
+    The inline keyword suggests that the function can be defined inside the header file (or within the struct/class definition) without violating the one-definition rule (ODR).
+    \bigbreak \noindent 
+    It is a hint to the compiler that function calls may be replaced with the actual function body to reduce function call overhead (though modern compilers decide this automatically).
+    \bigbreak \noindent 
+    More importantly, in this case, inline ensures that if the function is defined in a header file and included in multiple translation units, it does not cause multiple definition errors.
+    \bigbreak \noindent 
+    We can of course  still explicitly make the second version inline..
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s  {
+            static void print();
+        };
+        inline void s::print() {} // Not inline
+    \end{cppcode}
 
     \bigbreak \noindent 
     \subsection{Static and extern (linkage)}

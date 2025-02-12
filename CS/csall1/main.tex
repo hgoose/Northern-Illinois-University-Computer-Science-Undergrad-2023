@@ -7774,6 +7774,8 @@ indicate which strong entity the weak entity depends upon.
                     \end{itemize}
                 \item \textbf{Note about fullword boundarys}: An address is at the start of a fullword boundary if the last digit is $0,4,8,$ or $C $
                 \item \textbf{Note about double word boundarys}: A double word boundary is an address that ends with either 0 or 8.
+                    \bigbreak \noindent 
+                    CSECTS (program start) and LTORGS always begin on a dword boundary. In ASSIST CSECT will begin at a dword boundary no matter what because our program starts virtually at address zero (which is a doubleword boundary).
                 \item \textbf{A note about literals}: Consider the instruction
                     \begin{cppcode}
                     L 3,=F'235'
@@ -7801,7 +7803,40 @@ indicate which strong entity the weak entity depends upon.
                 \item \textbf{A note about define storage}: If we specify a value in a DS instruction, the value wont be placed in storage. It will behave just like a regular DS.
                 \item \textbf{Note about instructions Load and Store}: The instructions L and ST require arguments at fwb's (full word boundarys), failure to supply a value at a fwd results in a ABEND (SOC6), which is a \textit{specification exception}
                 \item \textbf{Note about assist}: The ASSIST assembler fills are bytes in storage with a default value $F5$, and non special registers with value $F4F4F4$
-                \item \textbf{XDUMP}: If we write an XDUMP instruction with no operands, we get a output dump of the contents of all the registers. If we specify a location in memory, and a number of bytes after that location, we get a dump of 32 byte lines in memory starting at program start (000000), and up to the line that contains the starting point of our dump.
+                \item \textbf{XDUMP}: If we write an XDUMP instruction with no operands, we get a output dump of the contents of all the registers. If we specify a location in memory, and a number of bytes after that location, we get those requested bytes but they will be buried within the 32 byte line in which they are contained. (Dump gives us 32 byte line starting at previous 32 byte boundary).
+                \item \textbf{Assist and ABENDS}: In ASSIST, ABENDS are called \textit{assist completion dumps}
+                    \bigbreak \noindent 
+                    Note that a return code of zero means that assist finished successfully, the return code will always be zero even if the program abends
+                \item \textbf{Assembler (compilation) errors and execution (runtime errors)}: An abend is always an execution (runtime) error, we cannot get abends during compilation.
+                    \bigbreak \noindent 
+                    The first pass of the assembler looks for syntax errors and addressability errors. The program will not compile if everything in the program is not addressable.
+                \item \textbf{Dumps and the PSW}: A dump of storage will begin by specifying the address of the first byte of the dumped storage
+                    \bigbreak \noindent 
+                    An ABEND dump will dump the registers contents, the storage that our program occupies, and the PSW (program status word). The PSW is 8 bytes. There is one PSW per cpu and each instruction changes the contents. 
+                    \bigbreak \noindent 
+                    The first two bytes of the PSW we should not worry about. The last two bytes of the first four bytes contain the interruption code, the ones we should encounter at this point are the following
+                    \begin{itemize}
+                        \item \textbf{S0C 1 (Operation exception)}: Invalid opcode / instruction
+                        \item \textbf{S0C 4 (Protection exception)}: Good address, outside the scope of the program
+                        \item \textbf{S0C 5 (Addressing exception)}: Bad address
+                        \item \textbf{S0C 6 (Specification exception)}: Happens for a number of reasons, most commonly when you an instruction requires storage on a fullword boundary, but we give storage that is not on a fullword boundary. Load and store are examples of instructions that require the second operand to be on a fullword boundary
+                        \item \textbf{S0C 9 (Fixed-point divide exception)}: divide by zero
+                        \item \textbf{S0C B (Decimal-divide exception)}: divide by zero
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    The next piece of information that is of concern to us is the first 4 bits of the fifth byte of the PSW. The first two bits are ILC (instruction length count), which is the length of the instruction that caused the abend (in halfwords). Therefore, to get the length of the instruction in bytes, we multiply by two. The last two bits is the condition code set by the last successful instruction that sets the condition code. 
+                    \bigbreak \noindent 
+                    To process the information of the first four bits of the 5th byte of the PSW, we take the hex number and convert to binary, the split into two different 2 bit binary numbers. Since the ILC has max value $11$, the biggest an instruction is therefore $3(2) = 6$ bytes. Suppose we our four bits are
+                    \begin{align*}
+                        1000
+                    \end{align*}
+                    We then split into two different 2-bit binary numbers
+                    \begin{align*}
+                        10 \quad 00
+                    \end{align*}
+                    The ILC is therefore $10$, which means instruction length $2(2) = 4$ bytes. And, the condition code is 0.
+                    \bigbreak \noindent 
+                    The last 3 bytes of the 8 byte PSW is the next instruction address, which is the address of the instruction following the one that caused the abend. 
                     
 
 

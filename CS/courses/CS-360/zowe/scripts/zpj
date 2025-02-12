@@ -1,0 +1,33 @@
+#! /bin/env bash
+if [[ $# > 4 ]]; then
+    echo "Usage: zpj [-o owner] [-j job]"
+    exit 1
+fi
+
+declare -a vars
+while getopts 'j:o:' var; do
+    vars+=($OPTARG)
+done
+job=${vars[0]}
+owner=${vars[1]}
+
+if [[ -z $owner ]]; then
+    owner="KC03AEE"
+fi
+
+if [[ -n $job ]]; then
+    zowe zos-jobs delete job "${job}"
+    exit 0
+fi
+
+declare -a jobs
+while read line; do
+    newline=$(echo ${line} | awk '{print $1}')
+    if [[ ${newline:0:3} == "JOB" ]]; then
+        jobs+=("$newline")
+    fi
+done < <(zowe jobs list jobs --owner $owner)
+
+for i in "${jobs[@]}"; do
+    zowe zos-jobs delete job "${i}"
+done
