@@ -1324,6 +1324,50 @@ Starting from C++20, the static initialization order fiasco can be solved with t
 \pagebreak 
 \unsect{Polymorphism, inheritance and virtual functions}
 \bigbreak \noindent 
+\subsection{Rules for virtual functions}
+\bigbreak \noindent 
+\begin{itemize}
+    \item They are always member functions
+    \item They cannot be static
+    \item They can be a friend of another class
+    \item C++ does not contain virtual constructors but can have a virtual destructor
+\end{itemize}
+\bigbreak \noindent 
+In fact, if you want to allow other classes to inherit from a given class, you should always make the destructor virtual, otherwise, you can easily have undefined behaviour
+\bigbreak \noindent 
+if you are using inheritance and intend to delete derived objects through a base class pointer, you should always make the base class destructor virtual, even if there are no other virtual functions.
+\bigbreak \noindent 
+If the base class destructor is not virtual and you delete a derived object through a base class pointer, only the base class destructor will be called, leading to undefined behavior (UB) due to a memory leak.
+\bigbreak \noindent 
+When you declare print() as virtual in the base class, it ensures that the function call is dynamically dispatched.
+\bigbreak \noindent 
+Even though derived::print() is private, it is still part of the vtable, and the lookup mechanism allows it to be called when accessed through a base class pointer
+\bigbreak \noindent 
+Since b->print(); is being called via a base* pointer, the compiler only checks whether base::print() is accessible from the calling scope (which it is, because it's public).
+\bigbreak \noindent 
+The actual function executed (derived::print()) is resolved at runtime, at which point access specifiers do not matter.
+\bigbreak \noindent 
+Thus, the following would not work
+\bigbreak \noindent 
+\begin{cppcode}
+    struct base {
+        private:
+        virtual void print() const {cout << "Base" << endl;}
+    };
+
+    struct derived : base{
+        private:
+        void print() const override {cout << "Derived" << endl;}
+    };
+    base* b = new derived{};
+    b->print(); // Print is a private member of base
+\end{cppcode}
+\bigbreak \noindent 
+Notice that both print methods are now private
+\bigbreak \noindent 
+
+
+
 
  
 

@@ -693,6 +693,22 @@
     \bigbreak \noindent 
     Yes, the function signature must exactly match the base class function (including return type, parameters, and const qualifiers). If the signature differs in any way, the function in the derived class will be considered a new, independent function rather than an override.
 
+    \bigbreak \noindent 
+    \subsection{What happens if you forget the keyword virtual on base class methods}
+    \bigbreak \noindent 
+    Consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s{
+            void print() const & {cout << "Base" << endl;}
+        };
+
+        struct k : s{
+            virtual void print() const & override {cout << "Derived" << endl;}
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    We get a compiler error \textit{print marked override but does not override any member functions}
 
     \bigbreak \noindent 
     \subsection{Do you need the keyword virtual on overridden methods?}
@@ -772,6 +788,44 @@
         \begin{cppcode}
         b->print(5); // Because `b` is an `A*`, it uses A's default argument
         \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{Private and public with polymorphism}
+    \bigbreak \noindent 
+    Recall that for a struct $S$
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+        private: 
+            void print() {}
+        };
+
+        S s;
+        s.print() // Error: Print is private
+    \end{cppcode}
+    \bigbreak \noindent 
+    We cannot call private methods through an object. However, consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct base {
+            virtual void print() const {cout << "Base" << endl;}
+        };
+
+        struct derived : base{
+            private:
+            void print() const override {cout << "Derived" << endl;}
+        };
+        base* b = new derived{};
+        b->print(); // "Derived"
+    \end{cppcode}
+    \bigbreak \noindent 
+    So why does this work? Why are we able to call this private method?
+    \bigbreak \noindent 
+    In C++, access control (private, protected, public) is enforced at compile time and is based on the class from which the call is made. However, when using dynamic dispatch (i.e., calling a virtual function through a base class pointer), the actual function that gets invoked is determined at runtime via the vtable mechanism, which is independent of access control.
+
+
+
+
 
 
 
@@ -2237,6 +2291,27 @@
     \subsection{noexcept?}
     \bigbreak \noindent 
     The noexcept specifier is part of the function signature for function overloading but not for overriding.
+
+    \pagebreak 
+    \unsect{Maximal munch principle}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a=5, b=2; 
+    cout << a+++++b; // ERROR
+    \end{cppcode}
+    \bigbreak \noindent 
+    Why is this an error? Why is it not simply \texttt{a++ + ++b} = 8? The Maximal Munch Principle is a rule used in lexical analysis (tokenization) to determine how to group characters into tokens. It states: \textit{Always consume the longest possible sequence of characters that form a valid token.}
+    \bigbreak \noindent 
+    When scanning input text, the lexer tries to form the longest valid token at each step before moving on. This avoids ambiguity in tokenization. So after parsing a++, it is not allowed to just parse +, it has to parse ++. The sequence is thus parsed as:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    a ++ ++ + b
+    \end{cppcode}
+    which is ill-formed since post-increment requires a modifiable lvalue but the first post-increment will produce a prvalue
+
+
 
 
 

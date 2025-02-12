@@ -4697,7 +4697,7 @@ int main() {
      \end{cppcode}
 
      \bigbreak \noindent 
-     \subsubsection{std::optional}
+     \subsubsection{std::optional <optional>}
      \bigbreak \noindent 
      std::optional (introduced in C++17) is a utility that represents an optional value—a value that may or may not be present. It provides a safer and clearer alternative to using raw pointers or special values like nullptr or -1 for optional semantics.
      \bigbreak \noindent 
@@ -4727,7 +4727,7 @@ int main() {
      std::nullopt is a constant of type std::nullopt\_t. Used to indicate that an std::optional does not contain a value.
 
      \bigbreak \noindent 
-     \subsubsection{std::expected}
+     \subsubsection{std::expected <expected>}
      \bigbreak \noindent 
      std::expected<T, E> (introduced in C++23) is a monadic type that represents either a successfully computed value (T) or an error (E). It is useful for error handling without exceptions.
      \bigbreak \noindent 
@@ -4754,7 +4754,7 @@ int main() {
      \end{cppcode}
 
      \bigbreak \noindent 
-     \subsubsection{std::format}
+     \subsubsection{std::format <format>}
      \bigbreak \noindent 
      std::format (from <format>) provides a Python-like string formatting mechanism
      \bigbreak \noindent 
@@ -4764,6 +4764,73 @@ int main() {
 
          std::string message = std::format("Hello, {}! You are {} years old.", name, age);
      \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsection{std::bitset <bitset>}
+     \bigbreak \noindent 
+     A bitset in C++ (std::bitset) is a fixed-size sequence of bits (0s and 1s). It provides a way to store and manipulate binary data efficiently, offering operations similar to those in bitwise manipulation.
+     \begin{itemize}
+         \item \textbf{Fixed-size:} The size of a bitset must be known at compile-time.
+         \item \textbf{Efficient storage:} Stores bits compactly.
+         \item \textbf{Bitwise operations:} Supports operations like AND (\&), OR (|), XOR ($^{\land}$), shifting (<<, >>).
+         \item \textbf{Access and manipulation:} Allows access to individual bits using indexing.
+     \end{itemize}
+     \bigbreak \noindent 
+     \subsubsection{Operations on bitset}
+     \bigbreak \noindent 
+     Setting, Resetting, and Flipping Bits
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::bitset<8> b("00001111"); 
+
+         b.set(5);    // Sets bit at index 5 (0-based) to 1
+         b.reset(3);  // Resets bit at index 3 to 0
+         b.flip(2);   // Flips bit at index 2 (1 → 0, 0 → 1)
+         b.flip();    // Flips all bits
+
+         std::cout << b << "\n";
+     \end{cppcode}
+     \bigbreak \noindent 
+     Accessing Bits
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::bitset<8> b("11001010");
+         std::cout << "Bit at index 2: " << b[2] << "\n"; // Output: 0
+     \end{cppcode}
+     \bigbreak \noindent 
+     Count Operations
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::bitset<8> b("10101010");
+         std::cout << "Number of set bits: " << b.count() << "\n";      // 4
+         std::cout << "Total bits: " << b.size() << "\n";               // 8
+         std::cout << "Is any bit set? " << b.any() << "\n";            // true
+         std::cout << "Are all bits set? " << b.all() << "\n";          // false
+         std::cout << "Are all bits zero? " << b.none() << "\n";        // false
+     \end{cppcode}
+     \bigbreak \noindent 
+     Conversion to Other Types
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::bitset<8> b("1101");
+
+         unsigned long num = b.to_ulong();  // Convert to unsigned long
+         std::cout << "Decimal: " << num << "\n";  // 13
+
+         std::string str = b.to_string();  // Convert to string
+         std::cout << "String: " << str << "\n";  // 00001101
+     \end{cppcode}
+     \bigbreak \noindent 
+     Bitwise Shift Operations
+     \bigbreak \noindent 
+     \begin{cppcode}
+         std::bitset<8> b("00001111");
+
+         std::cout << "Left shift by 2: " << (b << 2) << "\n";  // 00111100
+         std::cout << "Right shift by 2: " << (b >> 2) << "\n"; // 00000011
+     \end{cppcode}
+
+
 
      \pagebreak 
      \unsect{Views and Ranges}
@@ -6169,6 +6236,78 @@ Since bitfields are stored efficiently, the compiler manipulates bits directly u
 \bigbreak \noindent 
 Allowing \& would require breaking this optimization and making bitfields behave like regular variables, which defeats their purpose.
 
+\pagebreak 
+\unsect{Ref qualifiers}
+\bigbreak \noindent 
+Regarding member functions, we can add \textit{ref qualifers} to our function signatures, which look like this
+\bigbreak \noindent 
+\begin{cppcode}
+struct s{
+    void print() & { // Called when *this is an lvalue
+        cout << "lvalue" << endl;
+    }
+
+    void print() && { // Called when *this is an rvalue
+        cout << "rvalue" << endl;
+    }
+};
+s s1;
+s1.print(); // lvalue
+s().print(); // rvalue
+\end{cppcode}
+\bigbreak \noindent 
+The Compiler selects which one to call based on whether the object that calls it is an rvalue or an lvalue.
+\bigbreak \noindent 
+\begin{itemize}
+    \item \& (lvalue reference qualifier) means the member function can only be called when the object is an lvalue.
+    \item \&\& (rvalue reference qualifier) means the member function can only be called when the object is an rvalue.
+\end{itemize}
+
+\pagebreak 
+\unsect{Understanding function types}
+\bigbreak \noindent 
+In C++, functions have types that specify
+\begin{itemize}
+    \item The return type.
+    \item The parameter list.
+    \item (For member functions) The class they belong to.
+    \item (Optional) cv-qualifiers (const, volatile).
+    \item (Optional) reference qualifiers (\&, \&\&).
+\end{itemize}
+\bigbreak \noindent 
+For a simple function:
+\bigbreak \noindent 
+\begin{cppcode}
+int f();
+\end{cppcode}
+\bigbreak \noindent 
+The type is int() (function taking no arguments, returning int).
+\bigbreak \noindent 
+For a member function:
+\bigbreak \noindent 
+\begin{cppcode}
+struct X {
+    int f();
+};
+\end{cppcode}
+\bigbreak \noindent 
+The function type is still int(). But a pointer to this function inside X is of type
+\bigbreak \noindent 
+\begin{cppcode}
+int (X::*ptr)();
+\end{cppcode}
+\begin{itemize}
+    \item It is a pointer to a member function of X.
+    \item The function returns int and takes no parameters.
+    \item The syntax X::* means "a member of X".
+\end{itemize}
+\bigbreak \noindent 
+\subsection{free functions}
+\bigbreak \noindent 
+A free function is any function that is not a member of a class or struct. It exists at the global scope (or inside a namespace) and operates independently of any class instances.
+
+
+
 
 
 
@@ -6208,6 +6347,7 @@ Allowing \& would require breaking this optimization and making bitfields behave
             \item <type\_traits>
             \item Trailing return type
             \item Variadic templates
+            \item Override keyword
         \end{itemize}
     \item \textbf{c++14}: 
         \begin{itemize}

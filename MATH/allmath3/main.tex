@@ -4016,6 +4016,12 @@
             \begin{align*}
                 A-B-C \text{ in } \mathbb{E} \iff A-B-C \text{ in } \mathbb{M}
             \end{align*}
+        \item \textbf{Betweenness among the planes}: We have
+            \begin{align*}
+                A\text{-}B\text{-}C \text{ in } \mathbb{E} \iff $A\text{-}B\text{-}C$ \text{ in } \mathbb{M} \\
+                A\text{-}B\text{-}C \text{ in } \mathbb{E} \iff $A\text{-}B\text{-}C$ \text{ in } \mathbb{G} \\
+                A\text{-}B\text{-}C \text{ in } \mathbb{E} \iff $A\text{-}B\text{-}C$ \text{ in } \mathbb{H} \\
+            \end{align*}
         \item \textbf{Inside out}: Consider $\mathbb{P} = \{A,B,C,D,E,F\}$, $\mathbb{L}:\ \ell = \{A,B,C,D\}, m = \{A,E\}, n  = \{C,E\} , v = \{D,E\} $, and distance
             \begin{align*}
                 \begin{array}{c|ccccc}
@@ -5146,6 +5152,7 @@ deriv_approx(f, 1.0, cos(1.0))
     \end{enumerate}
     Often a combination of the above conditions is used. For example, items 2 and 3 can be combined:
     $$\left|x_k - x_{k-1}\right| < \mathtt{tol}(1 + \left|x_k\right|).$$
+\item \textbf{Intermediate value theorem}:     If $f \in C[a,b]$ and $f(a) \leq s \leq f(b)$, then there exists a real number $c \in [a,b]$ such that $f(c) = s$.
 \item \textbf{Bisection method}: Suppose $f \in C[a,b]$ and that $f(a)$ and $f(b)$ have opposite signs; i.e.,
     $$
     f(a) \cdot f(b) < 0.
@@ -5401,15 +5408,111 @@ end
     \end{center}
     \bigbreak \noindent 
     It converges very rapidly! We will see later why this is happening.
-
-
-\begin{align*}
-    \sqrt{\frac{1}{a^{2}} + \frac{1}{b^{2}}} &\approx \sqrt{\frac{1}{a^{2}} + 1}  \\
-                                             &= \sqrt{\frac{a^{2} + 1}{a^{2}}} = \frac{\sqrt{a^{2} + 1}}{a} \\
-                                             &= \frac{1}{a}\sqrt{a^{2} + 1} \approx \frac{1}{a} \sqrt{1} = \frac{1}{a}
-
-\end{align*}
-
+\item \textbf{Mean value theorem}: If $f \in C[a,b]$ and $f$ is differentiable on the open interval $(a,b)$, then there exists a number $c \in (a,b)$ such that 
+$$f'(c) = \frac{f(b)-f(a)}{b-a}$$
+\bigbreak \noindent 
+Which means there exists some point $c$ in which the tangent line at $c$ is equal to the secant line drawn connecting points $a$ and $b$
+\item \textbf{Existence and uniqueness of a fixed point}: A fixed point may not exist in $[a,b]$, and if it does, it may not be unique.
+    \bigbreak \noindent 
+    \textbf{Fixed point theorem}:
+    Let $g \in C[a,b]$ such that one of the two following conditions hold:
+    \begin{enumerate}
+        \item $g(a) \geq a$ and $g(b) \leq b$;
+        \item $g(a) \leq a$ and $g(b) \geq b$.
+    \end{enumerate}
+    Then $\exists x^* \in [a,b]$ such that $g(x^*) = x^*$.
+    In addition, if $g$ is differentiable on the open interval $(a,b)$ and 
+    $$\left|g'(x)\right| \leq \rho, \quad \forall x \in (a,b),$$
+    for some $\rho < 1$, then $x^*$ is the \textit{unique} fixed point in $[a,b]$.
+    \bigbreak \noindent 
+    \textbf{\textit{Proof.}}  Suppose $g(a) \geq a$ and $g(b) \leq b$. If $g(a) = a$ or $g(b) = b$, then we are done. Otherwise we have $g(a) > a$ and $g(b) < b$.
+    Let
+    $$\phi(x) = g(x) - x.$$
+    Then $\phi(a) > 0$ and $\phi(b) < 0$. Thus, since $\phi$ is continuous, the **Intermediate Value Theorem** tells us that there is an $x^* \in [a,b]$ such that $\phi(x^*) = 0$. Thus $x^* = g(x^*)$.
+    \bigbreak \noindent 
+    The other case of $g(a) \leq a$ and $g(b) \geq b$ can be proven similarly.
+    \bigbreak \noindent 
+    Now suppose $g$ is differentiable and there is a $\rho < 1$ such that $\left|g'(x)\right| \leq \rho$ for all $x \in (a,b)$. Suppose, **for the sake of contradiciton**, that $x^*$ is not the only fixed point of $g$ in $[a,b]$. Then, there is a $y^* \in [a,b]$ such that $g(y^*) = y^*$ and $y^* \neq x^*$. 
+    \bigbreak \noindent 
+    By the \textbf{Mean Value Theorem}, there is a $\xi$ strictly between $x^*$ and $y^*$ such that
+    $$  g'(\xi) = \frac{g(x^*) - g(y^*)}{x^* - y^*} = \frac{x^* - y^*}{x^* - y^*} = 1.$$
+    Note that $\xi \in (a,b)$. This contradicts our assumption that $\left|g'(x)\right| \leq \rho < 1$, for all $x \in (a,b)$. Therefore, the fixed point of $g$ in $[a,b]$ must be unique. $\blacksquare$
+\item \textbf{Convergence}: We have seen that the fixed point iteration does not always converge. 
+    \bigbreak \noindent 
+    \textbf{Theorem: (Convergence of the Fixed Point Iteration)}:
+    Let $g \in C[a,b]$. If 
+    \begin{itemize}
+        \item$a \leq g(x) \leq b$, for all $x \in [a,b]$, and
+        \item there is a $\rho < 1$ such that $\left|g'(x)\right| \leq \rho$ for all $x \in (a,b),$
+    \end{itemize}
+    then the iteration 
+    $$x_{k+1} = g(x_{k}), \qquad k = 0, 1, 2, \ldots$$
+    converges to the unique fixed point $x^* \in [a,b]$ starting from any $x_0 \in [a,b]$.
+    \bigbreak \noindent 
+    \textbf{\textit{Proof.}} First of all, since $g(x) \in [a,b]$ for all $x \in [a,b]$, and since $x_0 \in [a,b]$, we have $x_k \in [a,b]$, for all $k = 0, 1, 2, \ldots$. Moreover, by the \textbf{Fixed Point Theorem}, our assumptions imply that there is a unique fixed point $x^* \in [a,b]$. 
+    \bigbreak \noindent 
+    Let $k \in \{1,2,\ldots\}$. If $x_{k-1} = x^*$, then we have already converged to the fixed point. Otherwise, suppose that $x_{k-1} \neq x^*$. By the \textbf{Taylor Series Theorem} (could also use the \textbf{Mean Value Theorem} like above), there exists a $\xi$ strictly between $x_{k-1}$ and $x^*$ such that 
+    $$ g(x_{k-1}) = g(x^* + (x_{k-1} - x^*)) = g(x^*) + g'(\xi) (x_{k-1} - x^*).$$
+    Note that $\xi \in (a,b)$. Thus,
+    $$ \left|x_k - x^*\right| = \left|g(x_{k-1}) - g(x^*)\right| = \left|g'(\xi)(x_{k-1} - x^*)\right| = \left|g'(\xi)\right|\left|x_{k-1} - x^*\right| \leq \rho \left|x_{k-1} - x^*\right|. $$
+    So $\left|x_k - x^*\right| \leq \rho \left|x_{k-1} - x^*\right|$ for $k = 1, 2, \ldots$, which implies that
+    $$ 0 \le \left|x_k - x^*\right| \leq \rho \left|x_{k-1} - x^*\right| \leq \rho^2 \left|x_{k-2} - x^*\right| \leq \cdots \leq \rho^k \left|x_{0} - x^*\right|.$$
+    Since $\rho < 1$, the right-hand-side converges to $0$ as $k \to \infty$. Therefore,
+    $$ \lim_{k \to \infty} \left|x_k - x^*\right| = 0,$$
+    so $x_k$ converges to $x^*$. $\blacksquare$
+\item \textbf{Contraction factor}: We call $\rho$ the \textit{contraction factor}, the smaller $\rho$ is, the faster the convergence
+\item \textbf{Convergence example}:
+    The first $g$ we considered was
+    $$g(x) = x - x^2 + 2$$
+    which has the fixed points $x_1^* = -\sqrt{2}$ and $x_2^* = \sqrt{2}$. Note that
+    $$g'(x) = 1 - 2x$$
+    and that 
+    $$\begin{align}
+        g'(x_1^*) & = 1 + 2\sqrt{2} = 3.8284271247461903\ldots, \\
+        g'(x_2^*) & = 1 - 2\sqrt{2} = -1.8284271247461903\ldots. \\
+    \end{align}
+    $$
+    So, $\left|g'(x_i^*)\right| > 1$ for $i=1,2$, which explains why the fixed point iteration would not converge to either fixed point.
+    \bigbreak \noindent 
+    The second $g$ we considered was
+    $$g(x) = x - \frac{x^2 - 2}{2x} = \frac{x}{2} + \frac{1}{x},$$
+    which has the fixed points $x_1^* = -\sqrt{2}$ and $x_2^* = \sqrt{2}$. Now the derivative is
+    $$g'(x) = \frac{1}{2} - \frac{1}{x^2},$$
+    and so
+    $$g'(x_i^*) = 0, \quad i=1,2.$$
+    Thus, for $i=1,2$, we have $\left|g'(x_i^*)\right| < \rho$, for any $\rho \in (0,1)$. This explains why the fixed point iteration converged rapidly to $x_2^*$ from $x_0 = 1.1$; we also expect rapid convergence to $x_1^*$ from suitable $x_0$.
+\item \textbf{Newton's method}:
+    Let 
+    \[
+        f \in C^2[a,b].
+    \]
+    That is, \( f \) is a \textbf{twice-continuously differentiable} function over \([a,b]\), which means that the \textbf{first} and \textbf{second} derivatives of \( f \) \textbf{exist} and are \textbf{continuous} on the open interval \( (a,b) \). \textbf{Newton's method} is defined as:
+    \[
+        x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}, \quad k = 0, 1, 2, \ldots.
+    \]
+    This is the fixed point iteration using the function \( g(x) = x - f(x)\big/ f'(x) \).
+\item \textbf{Formulating Newton's method}:
+    Suppose that $f(x^*) = 0$ and that we are at the iterate $x_k$. By the \textbf{Taylor Series Theorem}, we have
+    $$
+    f(x^*) = f(x_k) + f'(x_k)(x^* - x_k) + \frac{f''(\xi)}{2}(x^* - x_k)^2,
+    $$
+    for some point $\xi$ between $x^*$ and $x_k$. If $x_k$ is already fairly close to $x^*$, then $(x^* - x_k)^2$ will be very small, so we have
+    $$0 \approx f(x_k) + f'(x_k)(x^* - x_k).$$
+    Solving for $x^*$, we obtain
+    $$x^* \approx x_k - \frac{f(x_k)}{f'(x_k)}.$$
+    Therefore, it makes sense to define our next iterate $x_{k+1}$ using this approximation.
+\item \textbf{Another formulation for Newton's method}:
+    Another way to obtain Newton's method is as follows. Consider the \textbf{first-order (linear) approximation} of $f$ around the point $x_k$:
+    $$f(x) \approx f(x_k) + f'(x_k)(x - x_k), \quad \text{for all $x \approx x_k$}.$$
+    Suppose that $x_k$ is close to $x^*$, and that $f(x^*) = 0$. Then
+    $$f(x^*) \approx f(x_k) + f'(x_k)(x^* - x_k),$$
+    which implies that
+    $$x^* \approx x_k - \frac{f(x_k)}{f'(x_k)}.$$
+    Therefore, our next iterate should be 
+    $$x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}.$$
+\item \textbf{Newton's method example: The Babylonian method for computing $\sqrt{a}$}:
+    Let $f(x) = x^2 - a$. Newton's method gives us the iteration:
+$$ x_{k+1} = x_k - \frac{x_k^2 - a}{2x_k} = \frac{1}{2}\left(x_k + \frac{a}{x_k}\right).$$
 
 
 
