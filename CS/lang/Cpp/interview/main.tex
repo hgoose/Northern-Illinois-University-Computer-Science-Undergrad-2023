@@ -1369,6 +1369,217 @@ Notice that both print methods are now private
 \subsection{The diamond problem and its solution}
 \bigbreak \noindent 
 The diamond problem in C++ occurs in multiple inheritance when a class inherits from two base classes that both derive from a common ancestor, leading to duplicate instances of the ancestor and ambiguity in member access. It is resolved using virtual inheritance, ensuring only one shared instance of the common base class exists.
+\bigbreak \noindent 
+Virtual inheritance is a C++ technique that ensures only one copy of
+a base class’s member variables is inherited by grandchild derived
+classes. Without virtual inheritance, if two classes B and C inherit
+from class A, and class D inherits from both B and C, then D will
+contain two copies of A’s member variables: one via B, and one via
+C. These will be accessible independently, using scope resolution
+\bigbreak \noindent 
+Instead, if classes B and C inherit virtually from class A, then
+objects of class D will contain only one set of the member variables
+from class A.
+\bigbreak \noindent 
+In practice, virtual base classes are most suitable when the classes
+that derive from the virtual base, and especially the virtual base
+itself, are pure abstract classes. This means the classes above the
+“join class” (the one at the bottom) have very little if any data.
+\bigbreak \noindent 
+Consider the following class hierarchy to represent the diamond
+problem, though not with pure abstracts.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct Person {
+        virtual ~Person() = default;
+        virtual void speak() {}
+    };
+    struct Student: Person {
+        virtual void learn() {}
+    };
+
+    struct Worker: Person {
+        virtual void work() {}
+    }; // A teaching assistant is both a worker and a student
+    struct TeachingAssistant: Student, Worker {};
+
+    int main() {
+        TeachingAssistant aTeachingAssistant;
+        aTeachingAssistant.Student::speak();
+        // or
+        aTeachingAssistant.Worker::speak();
+
+        // And we can also do
+        Person& p = static_cast<Student&>(aTeachingAssistant);
+        p.speak();
+    }
+\end{cppcode}
+\bigbreak \noindent 
+a call to aTeachingAssistant.speak() is ambiguous because there are two Person (indirect) base classes in
+TeachingAssistant, so any TeachingAssistant object has two different Person base class subobjects. So an attempt to directly bind
+a reference to the Person subobject of a TeachingAssistant object
+would fail, since the binding is inherently ambiguous:
+\bigbreak \noindent 
+To disambiguate, one would have to explicitly convert
+aTeachingAssistant to either base class subobject:
+\bigbreak \noindent 
+If we introduce virtual to our inheritance as such, our problems disappear.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct Person {
+        virtual ~Person() = default;
+        virtual void speak() {}
+    };
+    struct Student: virtual Person {
+        virtual void learn() {}
+    };
+
+    struct Worker: virtual Person {
+        virtual void work() {}
+    }; // A teaching assistant is both a worker and a student
+    struct TeachingAssistant: Student, Worker {};
+
+    TeachingAssistant aTeachingAssistant;
+    aTeachingAssistant.speak();
+
+    Person* p = new TeachingAssistant{};
+    p->speak();
+\end{cppcode}
+\bigbreak \noindent 
+The Person portion of TeachingAssistant::Worker is now the same
+Person instance as the one used by TeachingAssistant::Student,
+which is to say that a TeachingAssistant has only one,
+shared, Person instance in its representation and so a call
+to TeachingAssistant::speak is unambiguous. Additionally,
+a direct cast from TeachingAssistant to Person is also
+unambiguous, now that there exists only one Person instance
+which TeachingAssistant could be converted to.
+\bigbreak \noindent 
+This can be done through vtable pointers. Without going into
+details, the object size increases by two pointers, but there is only
+one Person object behind and no ambiguity.
+\bigbreak \noindent 
+You must use the virtual keyword in the middle level of the
+diamond. Using it at the bottom doesn’t help.
+\bigbreak \noindent 
+\begin{cppcode}
+    cout << sizeof(TeachingAssistant); // 16 (two pointers)
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Should we always use virtual inheritance? If yes, why? If not, why not?}
+\bigbreak \noindent 
+The answer is definitely no, we shouldn’t use virtual inheritance
+all the time. According to an idiomatic answer, one of the key
+C++ characteristics is that you should only pay for what you use.
+And if you don’t need to solve the problems addressed by virtual
+inheritance, you should rather not pay for it.
+\bigbreak \noindent 
+Virtual inheritance is almost never needed. It addresses the diamond inheritance problem that we saw just yesterday. It can only
+happen if you have multiple inheritance, and in case you can avoid
+it, you don’t have the problem to solve. In fact, many languages
+don’t even have this feature
+\bigbreak \noindent 
+Virtual inheritance causes troubles with object initialization and
+copying. Since it is the “most derived” class that is responsible
+for these operations, it has to be familiar with all the intimate
+details of the structure of base classes. Due to this, a more complex
+dependency appears between the classes, which complicates the
+project structure
+\bigbreak \noindent 
+Troubles with type conversions may also be a source of bugs
+\bigbreak \noindent 
+In virtual inheritance, the most derived class is responsible for initializing the virtual base class. This creates tight coupling between the most derived class and all the base classes. The most derived class must be aware of every virtual base class and explicitly initialize them. If not handled properly, virtual base classes may be default-initialized, leading to unintended behaviors or even undefined behavior in some cases.
+\bigbreak \noindent 
+\begin{cppcode}
+    class A {
+        public:
+        int x;
+        A(int val) : x(val) {}
+    };
+
+    class B : virtual public A {
+        public:
+        B() : A(0) {}  // A(0) does nothing because A is virtual
+    };
+
+    class C : virtual public A {
+        public:
+        C() : A(0) {}  // A(0) does nothing because A is virtual
+    };
+
+    class D : public B, public C {
+        public:
+        D() : A(42) {}  // Only the most derived class initializes A
+    };
+
+    int main() {
+        D d;
+        std::cout << d.x << std::endl;  // Correctly prints 42
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The initialization order is as follows
+\bigbreak \noindent 
+When D d; is executed:
+\begin{enumerate}
+    \item Virtual base A is constructed first (via D's constructor).
+    \item B is constructed (but does not initialize A).
+    \item C is constructed (but does not initialize A).
+    \item Finally, D's constructor runs.
+\end{enumerate}
+\bigbreak \noindent 
+Since A is virtually inherited, it is not initialized by B or C at all. The most derived class (D) is responsible for initializing A. If B and C were allowed to initialize A, there would be ambiguity
+\bigbreak \noindent 
+\textbf{Note:} If you try to instantiate a derived class that doesn’t explicitly initialize the virtual base \footnote{When we talk about a "virtual base class", we are referring to the base class that is inherited using virtual}, it may lead to default initialization or even compilation errors if the base has no default constructor.
+\bigbreak \noindent 
+\begin{cppcode}
+class D : public B, public C {
+public:
+    D() {}  // Error: constructor for D must explicitly initialize the base class A
+};
+\end{cppcode}
+\bigbreak \noindent 
+\begin{itemize}
+    \item Virtual inheritance breaks the hierarchical structure of the class relationships because it forces the most derived class to handle the construction of the virtual base.
+    \item This means that a base class (e.g., B or C in the example above) cannot assume that the virtual base (A) has been properly initialized.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsubsection{Issues with Type Conversions}
+\bigbreak \noindent 
+\begin{cppcode}
+class A {
+public:
+    virtual void foo() {}
+};
+
+class B : virtual public A {};
+class C : virtual public A {};
+class D : public B, public C {};
+
+int main() {
+    D d;
+    A* a = &d;  // Works fine
+    B* b = &d;  // Works fine
+    C* c = &d;  // Works fine
+
+    B* b2 = dynamic_cast<B*>(a);  // Requires dynamic_cast due to virtual base
+    C* c2 = dynamic_cast<C*>(b);  // Also requires dynamic_cast
+
+    return 0;
+}
+\end{cppcode}
+\bigbreak \noindent 
+Here, since A is virtually inherited, converting from A* to B* or C* requires a runtime check (dynamic_cast) instead of a simple implicit cast.
+\bigbreak \noindent 
+This increases runtime overhead and makes it harder to predict the behavior of type conversions.
+
+
+
+
+
+
 
 
 

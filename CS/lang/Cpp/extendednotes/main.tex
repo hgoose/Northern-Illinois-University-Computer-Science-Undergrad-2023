@@ -6382,6 +6382,131 @@ It's important to note that std::declval can only be used in unevaluated context
 "Unevaluated contexts" in C++ refer to parts of the code where expressions are analyzed for their type or other properties but are not actually executed. In other words, the compiler processes these expressions without generating executable code for them.
 
 
+\pagebreak 
+\unsect{Value Categories}
+\bigbreak \noindent 
+\subsection{Lvalue (Locator Value)}
+\bigbreak \noindent 
+An lvalue (locator value) represents an object that persists beyond a single expression. It has a distinct memory location (an address) and can appear on the left-hand side of an assignment.
+\bigbreak \noindent 
+\begin{itemize}
+    \item Has an identifiable memory location.
+    \item Can be assigned a new value.
+    \item Includes named variables, function calls returning lvalue references, dereferenced pointers, and array elements.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Rvalue (Right Value)}
+\bigbreak \noindent 
+An rvalue (temporary value) is an expression that does not have a persistent memory address and typically exists only within a single expression. It cannot be assigned to unless bound to an rvalue reference.
+\begin{itemize}
+    \item Cannot appear on the left-hand side of an assignment.
+    \item Typically includes literals, temporary results of expressions, and function calls returning non-references.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Xvalue (Expiring Value)}
+\bigbreak \noindent 
+An xvalue (eXpiring value) is an rvalue that has a memory address and is eligible to be moved from. It is often associated with rvalue references and move semantics
+\begin{itemize}
+    \item Represents a temporary object that can be moved instead of copied.
+    \item Commonly arises from calls to std::move() and functions returning rvalue references.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+    std::string foo() {
+        return "temporary"; // The returned temporary string is an xvalue
+    }
+
+    std::string&& r = std::move(foo()); // std::move forces an xvalue
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Why Does an Xvalue Have a Memory Address?}
+\bigbreak \noindent 
+An xvalue represents an object whose resources can be reused via move semantics. Unlike prvalues, which are purely temporary values without a persistent memory address, xvalues still represent objects in memory but are treated as temporary.
+\bigbreak \noindent 
+When we use std::move(), it casts an expression to an rvalue reference (T\&\&), making it an xvalue. This means the object still exists somewhere in memory, and it can be safely moved.
+
+\bigbreak \noindent 
+When an lvalue is passed through std::move(), it is no longer an lvalue—instead, it becomes an xvalue (expiring value).
+\bigbreak \noindent 
+lvalues have an identifiable memory location and can be assigned to.
+\bigbreak \noindent 
+std::move(lvalue) turns the lvalue into an xvalue, meaning it is now an rvalue but still has a memory address.
+\bigbreak \noindent 
+An xvalue can be moved from, which allows move constructors and move assignment operators to optimize performance.
+
+
+
+\bigbreak \noindent 
+\subsection{PRvalue (Pure Rvalue)}
+\bigbreak \noindent 
+A prvalue (pure rvalue) is an rvalue that does not have a specific memory location. It is typically used for temporary computations.
+\begin{itemize}
+    \item Cannot have its address taken.
+    \item Typically used in expressions that produce temporary values.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+int z = 42;         // '42' is a prvalue
+std::string s = "Hello"; // "Hello" is a prvalue
+int sum = x + y;    // 'x + y' is a prvalue
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Glvalue (Generalized Lvalue)}
+\bigbreak \noindent 
+A glvalue (generalized lvalue) is any expression that has an address in memory. This includes both lvalues and xvalues.
+\bigbreak \noindent 
+\begin{cppcode}
+int a = 10;
+int& ref = a;  // 'a' is a glvalue
+int&& r = std::move(a); // 'std::move(a)' is an xvalue, hence a glvalue
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Summary}
+\bigbreak \noindent 
+\fig{.5}{./figures/2.png}
+
+
+\pagebreak 
+\unsect{Deleting functions}
+\bigbreak \noindent 
+Suppose we had a situation
+\bigbreak \noindent 
+\begin{cppcode}
+    void print(int x) {}
+\end{cppcode}
+\bigbreak \noindent 
+But we wanted to stop calls to this function that are called with a less precise type like char, or bool, we can use =delete
+\bigbreak \noindent 
+\begin{cppcode}
+    void print(int x) {}
+    void print(char x) = delete;
+    void print(bool x) = delete;
+\end{cppcode}
+\bigbreak \noindent 
+Now calls to print with char or bool will not allow the program to compile. Without this method, calls to print with a char or bool argument would promote that argument to int when print(int x) is invoked.
+\bigbreak \noindent 
+\subsection{Deleting all non-matching overloads }
+\bigbreak \noindent 
+Deleting a bunch of individual function overloads works fine, but can be verbose. There may be times when we want a certain function to be called only with arguments whose types exactly match the function parameters. We can do this by using a function template
+\bigbreak \noindent 
+\begin{cppcode}
+    void print(int x) {}
+    
+    template<typename T>
+    void print(T x) = delete;
+
+    printInt(97);   // okay
+    printInt('a');  // compile error
+    printInt(true); // compile error
+\end{cppcode}
+
+
+
+
 
 
 

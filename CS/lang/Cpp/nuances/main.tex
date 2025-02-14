@@ -2071,6 +2071,18 @@
         */
     \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Default access modifier} 
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+    class A {};
+    class B : A {};
+    \end{cppcode}
+    \bigbreak \noindent 
+    The default access modifier  is private for class inheritance, and public for structs.
+
 
 
     \pagebreak 
@@ -2675,6 +2687,114 @@ In C++, catch (...) is a catch-all exception handler, meaning it catches any exc
 \unsect{A typedef cannot be a template}
 \bigbreak \noindent 
 We must use a \textit{using} directive instead
+
+
+\pagebreak 
+\unsect{Return value optimization}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    struct E
+    {
+        E() { std::cout << "1"; }
+        E(const E&) { std::cout << "2"; }
+        ~E() { std::cout << "3"; }
+    };
+
+    E f()
+    {
+        return E();
+    }
+
+    int main()
+    {
+        f(); // 13 (no copy constructor called)
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The copy constructor isn't called because of a compiler optimization known as copy elision (specifically, Return Value Optimization or RVO). In this case, the temporary E() object is constructed directly in the location where the return value of the function f() resides, so no copy (or move) constructor call is needed. This optimization is allowed (and in some cases mandated in C++17 and later) by the C++ standard.
+\bigbreak \noindent 
+
+\pagebreak 
+\unsect{Using function templates in multiple files}
+\bigbreak \noindent 
+Consider the following program, which doesn’t work correctly:
+\bigbreak \noindent 
+\begin{cppcode}
+    // main.cpp:
+    #include <iostream>
+
+    template <typename T>
+    T addOne(T x); // function template forward declaration
+
+    int main() {
+        std::cout << addOne(1) << '\n';
+        std::cout << addOne(2.3) << '\n';
+
+        return 0;
+    }
+
+    // add.cpp
+    template <typename T>
+    T addOne(T x) // function template definition
+    {
+        return x + 1;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+If addOne were a non-template function, this program would work fine: In main.cpp, the compiler would be satisfied with the forward declaration of addOne, and the linker would connect the call to addOne() in main.cpp to the function definition in add.cpp.
+\bigbreak \noindent 
+But because addOne is a template, this program doesn’t work, and we get a linker error:
+\bigbreak \noindent 
+In main.cpp, we call addOne<int> and addOne<double>. However, since the compiler can’t see the definition for function template addOne, it can’t instantiate those functions inside main.cpp. It does see the forward declaration for addOne though, and will assume those functions exist elsewhere and will be linked in later.
+\bigbreak \noindent 
+When the compiler goes to compile add.cpp, it will see the definition for function template addOne. However, there are no uses of this template in add.cpp, so the compiler will not instantiate anything. The end result is that the linker is unable to connect the calls to addOne<int> and addOne<double> in main.cpp to the actual functions, because those functions were never instantiated.
+\bigbreak \noindent 
+If add.cpp had instantiated those functions, the program would have compiled and linked just fine. But such solutions are fragile and should be avoided:
+\bigbreak \noindent 
+The most conventional way to address this issue is to put all your template code in a header (.h) file instead of a source (.cpp) file
+\bigbreak \noindent 
+\begin{cppcode}
+// add.h
+#ifndef ADD_H
+#define ADD_H
+
+template <typename T>
+T addOne(T x) // function template definition
+{
+    return x + 1;
+}
+
+#endif
+// main.cpp
+#include "add.h" // import the function template definition
+#include <iostream>
+
+int main()
+{
+    std::cout << addOne(1) << '\n';
+    std::cout << addOne(2.3) << '\n';
+
+    return 0;
+}
+\end{cppcode}
+\bigbreak \noindent 
+That way, any files that need access to the template can #include the relevant header, and the template definition will be copied by the preprocessor into the source file. The compiler will then be able to instantiate any functions that are needed.
+\bigbreak \noindent 
+You may be wondering why this doesn’t cause a violation of the one-definition rule (ODR). The ODR says that types, templates, inline functions, and inline variables are allowed to have identical definitions in different files. So there is no problem if the template definition is copied into multiple files (as long as each definition is identical).
+\bigbreak \noindent 
+But what about the instantiated functions themselves? If a function is instantiated in multiple files, how does that not cause a violation of the ODR? The answer is that functions implicitly instantiated from templates are implicitly inline. And as you know, inline functions can be defined in multiple files, so long as the definition is identical in each.
+
+
+
+
+
+
+
+
+
+
 
 
 

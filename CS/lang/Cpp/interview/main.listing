@@ -1,11 +1,20 @@
-    struct base {
-        private:
-        virtual void print() const {cout << "Base" << endl;}
-    };
+class A {
+public:
+    virtual void foo() {}
+};
 
-    struct derived : base{
-        private:
-        void print() const override {cout << "Derived" << endl;}
-    };
-    base* b = new derived{};
-    b->print(); // Print is a private member of base
+class B : virtual public A {};
+class C : virtual public A {};
+class D : public B, public C {};
+
+int main() {
+    D d;
+    A* a = &d;  // Works fine
+    B* b = &d;  // Works fine
+    C* c = &d;  // Works fine
+
+    B* b2 = dynamic_cast<B*>(a);  // Requires dynamic_cast due to virtual base
+    C* c2 = dynamic_cast<C*>(b);  // Also requires dynamic_cast
+
+    return 0;
+}
