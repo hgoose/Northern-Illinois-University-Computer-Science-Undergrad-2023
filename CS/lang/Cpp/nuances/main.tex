@@ -823,13 +823,36 @@
     \bigbreak \noindent 
     In C++, access control (private, protected, public) is enforced at compile time and is based on the class from which the call is made. However, when using dynamic dispatch (i.e., calling a virtual function through a base class pointer), the actual function that gets invoked is determined at runtime via the vtable mechanism, which is independent of access control.
 
-
-
-
-
-
-
-
+    \bigbreak \noindent 
+    \subsection{Virtual methods are implicitly inline}
+    \bigbreak \noindent 
+    In C++, virtual methods are implicitly considered inline by the compiler, but this doesn't mean they are always inlined at runtime.
+    \bigbreak \noindent 
+    The inline keyword in C++ does not necessarily mean "replace the function call with its body" (though that is one possible effect). Instead, it has two key meanings:
+    \begin{itemize}
+        \item \textbf{Allows multiple definitions across translation units}:
+        \begin{itemize}
+            \item Normally, a function or method definition must appear in only one .cpp file (ODR - One Definition Rule).
+            \item An inline function can be defined in multiple translation units as long as all definitions are identical.
+        \end{itemize}
+        \item \textbf{Hints for compiler optimization}: The compiler may replace calls to an inline function with its body (but this is not guaranteed).
+    \end{itemize}
+    \bigbreak \noindent 
+    Virtual Methods Are Typically Defined in Header Files
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item Virtual methods must be known at compile-time to construct the vtable (virtual table) correctly.
+        \item Because virtual methods are often declared in a class definition (inside a header file), they must be allowed in multiple translation units.
+        \item Making them implicitly inline prevents ODR violations when the class is included in multiple .cpp files.
+    \end{itemize}
+    \bigbreak \noindent 
+    The primary reason for marking functions inline to avoid ODR (One Definition Rule) violations applies to functions defined in header files that are included in multiple translation units.
+    \bigbreak \noindent 
+    Normally, if you define a function in a header file, and that header is included in multiple .cpp files, you would get multiple definitions of the same function when linking.
+    \bigbreak \noindent 
+    Marking the function inline tells the compiler that all definitions of the function in different translation units are identical and should be treated as a single definition.
+    \bigbreak \noindent 
+     If a function is defined only in a .cpp file, it will not be included in multiple translation units, so inline is unnecessary.
 
 
     \pagebreak 
@@ -1552,7 +1575,7 @@
 
 
     \pagebreak 
-    \unsect{Notes about constructors}
+    \unsect{Notes about constructors and destructors}
     \bigbreak \noindent 
     \subsection{Value initialized vs default initialized}
     \bigbreak \noindent 
@@ -1593,10 +1616,6 @@
     s is fine because std::string has a default constructor that initializes it to "".
     \bigbreak \noindent 
     x, however, remains uninitialized when a default-constructed object of s2 is created, leading to an indeterminate value.
-
-
-
-
 
 
 
@@ -1863,6 +1882,114 @@
     We have two suitable constructors, and the compiler must determine which constructor to call.
     \bigbreak \noindent 
     The compiler  deems the second as a better match than the first, because 20 is a pure rvalue. Note that if we removed the second constructor, the first would work. A constructor that takes a const reference can bind to both rvalues and lvalues.
+
+    \bigbreak \noindent 
+    \subsection{Constructors are implicitly inline constexpr}
+    \bigbreak \noindent 
+    constructors are implicitly constexpr under certain conditions. This means they can be evaluated at compile time if all their operations are constexpr. The main reason for this behavior is to make objects usable in constant expressions without requiring explicit constexpr annotations.
+
+    \bigbreak \noindent 
+    \subsection{Destructors are implicitly noexcept}
+    \bigbreak \noindent 
+    In C++, destructors are implicitly declared as noexcept unless a potentially throwing operation is explicitly present in the destructor's definition. This behavior exists to improve performance, exception safety, and compatibility with standard library features.
+    \bigbreak \noindent 
+    When a function is marked as noexcept, the compiler can generate more efficient code:
+    \bigbreak \noindent 
+    If destructors could throw by default, objects in RAII (Resource Acquisition Is Initialization) and smart pointers (std::unique_ptr, std::shared_ptr) would lead to undefined behavior or terminate the program when a destructor is called during stack unwinding.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct B {
+            ~B() { throw std::runtime_error("Error!"); } // Dangerous!
+        };
+
+        void func() {
+            try {
+                B b;
+                throw std::runtime_error("Oops");
+            } catch (...) {
+                // Stack unwinding will terminate the program if ~B() throws
+            }
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    To prevent such issues, destructors are noexcept by default, meaning they do not propagate exceptions. If an exception occurs in a noexcept destructor, std::terminate() is called.
+    \bigbreak \noindent 
+
+    \bigbreak \noindent 
+    \subsection{ When is an object "Fully constructed"}
+    \bigbreak \noindent 
+    In C++, an object is considered fully constructed when its constructor has finished executing successfully. Specifically:
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{For a non-inherited class (without base classes)}: The object is fully constructed after its constructor runs to completion.
+        \item \textbf{For a class with base classes}: The object is fully constructed after all base class subobjects and non-static data members have been successfully initialized.
+        \item \textbf{For a class with member variables}: Each member is constructed in the order they are declared in the class definition, before the body of the constructor executes. If a member's constructor throws an exception, the object is not fully constructed.
+        \item \textbf{For a derived class}: A derived class object is fully constructed only after
+            \begin{itemize}
+                \item The base class constructor(s) finish execution.
+                \item All member variables of the derived class are constructed.
+                \item The body of the derived class constructor executes successfully.
+            \end{itemize}
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{When is an object not fully constructed}
+    \bigbreak \noindent 
+    If a base class constructor throws, the derived class never completes construction.
+    \bigbreak \noindent 
+    If a member variable's constructor throws, the object never becomes fully constructed.
+    \bigbreak \noindent 
+    If a constructor exits via an exception, the destructor never runs, because the object was never fully formed.
+    \bigbreak \noindent 
+    Consider the code
+    \begin{cppcode}
+        struct B {
+            B() { throw std::runtime_error("Error"); }
+            ~B() { cout << "Destructor called" << endl; }
+        };
+
+        try {
+            B b;
+        } catch (...) {
+
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here we get no output, the constructor never finished, which means the object was not fully constructed, which means the destructor will not get called.
+    \bigbreak \noindent 
+    Further consider 
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct B {
+            B() {}
+            B(int n) : B() { throw std::runtime_error("Error"); }
+            ~B() { cout << "Destructor called" << endl; }
+        };
+
+        try {
+            B b;
+        } catch (...) {
+
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    In this example, we do get "destructor called". The destructor is called because the default constructor B() successfully constructs an object, even though the other constructor (B(int)) throws an exception.
+
+    \pagebreak 
+    \unsect{Dividing by zero}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a = 5, b = 0;
+    int c = a/b;
+    \end{cppcode}
+    \bigbreak \noindent 
+    Here we get \textit{terminated by signal SIGFPE (Floating point exception)}
+
+
+
+
+
     
 
 
@@ -1884,7 +2011,67 @@
     \bigbreak \noindent 
     \subsection{Destructor chain}
     \bigbreak \noindent 
+    When a class has a virtual destructor, the vtable includes a pointer to the most derived destructor. However, destructors are special because they are split into two parts in the vtable:
+    \begin{itemize}
+        \item \textbf{Complete Object Destructor:} Calls all destructors in the chain (Child → Dad → Grandfather).
+        \item \textbf{Base Object Destructor:} Only relevant when the object is part of another object (not directly deleted).
+    \end{itemize}
+    \bigbreak \noindent 
+    When Child overrides Dad (which overrides Grandfather), the vtable for Child includes a pointer to the most derived destructor ($\sim$Child), but that destructor is responsible for calling the entire chain.
+    \bigbreak \noindent 
+    If Grandfather's destructor is not virtual, the vtable will not be consulted during delete obj. Instead, the compiler resolves delete obj at compile-time and calls Grandfather::$\sim$Grandfather() directly, ignoring the destructors of Dad and Child
+    \bigbreak \noindent 
     Destructors execute in reverse order of constructors (i.e., derived class destructor runs first, then base class destructor).
+
+    \bigbreak \noindent 
+    \subsection{So who needs a virtual destructor?}
+    \bigbreak \noindent 
+    Consider the situation
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct grandfather {
+            virtual ~grandfather() = default;
+        };
+
+
+        struct dad : grandfather {
+        };
+
+        struct child : dad {
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    When a destructor is declared virtual in a base class (grandfather), all derived classes (dad and child) automatically have virtual destructors, even if they don’t explicitly declare them
+    \bigbreak \noindent 
+    Since dad and child inherit from grandfather, they do not need to explicitly mark their destructors as virtual—they already are.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct grandfather {
+            virtual ~grandfather() { std::cout << "grandfather destroyed\n"; }
+        };
+
+        struct mom : public virtual grandfather {
+            ~mom() { std::cout << "mom destroyed\n"; } // Implicitly virtual
+        };
+
+        struct dad : public virtual grandfather {
+            ~dad() { std::cout << "dad destroyed\n"; } // Implicitly virtual
+        };
+
+        struct child : public mom, public dad {
+            ~child() { std::cout << "child destroyed\n"; } // Implicitly virtual
+        };
+        grandfather* g = new child();
+        delete g;
+        /* 
+        child destroyed
+        dad destroyed
+        mom destroyed
+        grandfather destroyed
+        */
+    \end{cppcode}
+
+
 
     \pagebreak 
     \unsect{Booleans under the hood: Adding two booleans}
@@ -2335,6 +2522,11 @@
     Marking the function inline allows the linker to consolidate multiple instances into one.
     \bigbreak \noindent 
 
+    \bigbreak \noindent 
+    \subsection{Class/Struct methods are implicitly inline}
+    \bigbreak \noindent 
+    Since it is common to define classes or structs in header files, the c++ compiler makes all methods inline to avoid violation of the one definition rule (ODR)
+
     \pagebreak 
     \unsect{Notes about object creation}
     \bigbreak \noindent 
@@ -2375,12 +2567,24 @@
     \bigbreak \noindent 
     When dealing with function overriding in a derived class, the function signature must exactly match the base class function's:
     \begin{itemize}
+        \item return types
         \item Function name
         \item Parameter types (including order and const/reference qualifiers)
         \item const qualifier (for member functions)
         \item Volatile qualifier (volatile if present)
         \item Ref-qualifier (\& or \&\&)
     \end{itemize}
+    \bigbreak \noindent 
+    While return types are not part of the function signature in the overloading perspective, they are in the overriding perspective
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct s {
+            virtual void print() const {}
+        };
+        struct k : s {
+            int print() const override {} // Error: Return type must match the overridden function
+        }
+    \end{cppcode}
 
     \bigbreak \noindent 
     \subsection{What is NOT Part of a Function Signature? }
@@ -2417,6 +2621,60 @@
     \end{cppcode}
     which is ill-formed since post-increment requires a modifiable lvalue but the first post-increment will produce a prvalue
 
+    \pagebreak 
+    \unsect{What happens if a noexcept function throws an exception?}
+    \bigbreak \noindent 
+    If a function is declared noexcept but still throws an exception, the program immediately terminates by calling std::terminate(). This behavior exists to enforce the contract that noexcept functions are not supposed to throw.
+    \bigbreak \noindent 
+    noexcept functions promise not to throw. The compiler and standard library rely on this assumption. If a noexcept function throws, continuing execution would violate the contract and lead to undefined behavior. Instead of allowing UB, C++ forces a hard fail by calling std::terminate().
+    \bigbreak \noindent 
+    If a noexcept function must perform an operation that might throw, you need to catch exceptions inside the function and handle them before returning.
+
+
+
+    \pagebreak 
+    \unsect{Exception propogation}
+    \bigbreak \noindent 
+    When an exception propagates, it means that the exception is not handled in the current function and is instead passed up the call stack until it reaches a function that can handle it (i.e., a function with a try-catch block). If no function catches the exception, the program terminates.
+    \bigbreak \noindent 
+    When an exception is thrown using throw, control is immediately transferred to the nearest matching catch block in the call stack.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    void foo() {
+        throw std::runtime_error("Error in foo");
+    }
+
+    void bar() {
+        foo();  // No try-catch here, so the exception propagates
+    }
+
+    int main() {
+        try {
+            bar();  // Calls bar(), which calls foo()
+        } catch (const std::runtime_error& e) {
+            std::cout << "Caught exception: " << e.what() << '\n';
+        }
+    }
+\end{cppcode}
+
+\pagebreak 
+\unsect{The catch all exception handler (...)}
+\bigbreak \noindent 
+In C++, catch (...) is a catch-all exception handler, meaning it catches any exception, regardless of its type. It is useful when you want to handle or log exceptions without knowing their exact type.
+\bigbreak \noindent 
+\begin{cppcode}
+    try {
+        someFunction();
+    } catch (...) {
+        std::cerr << "An unknown exception occurred!\n";
+    }
+\end{cppcode}
+
+
+\pagebreak 
+\unsect{A typedef cannot be a template}
+\bigbreak \noindent 
+We must use a \textit{using} directive instead
 
 
 

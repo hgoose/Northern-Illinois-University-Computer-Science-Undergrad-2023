@@ -6310,6 +6310,77 @@ A free function is any function that is not a member of a class or struct. It ex
 \unsect{Covariant return types}
 \bigbreak \noindent 
 Covariant return types in C++ allow a derived class to override a virtual function from a base class while changing the return type, as long as the new return type is a pointer or reference to a derived class of the original return type. This feature enables more specific return types in overridden methods without breaking polymorphism.
+\bigbreak \noindent 
+\subsection{Rules for Covariant Return Types}
+\bigbreak \noindent 
+\begin{itemize}
+    \item The base class function must be virtual.
+    \item The return type of the overridden function in the derived class must be a pointer or reference to a class that is derived from the base class's return type.
+    \item Function parameters must remain exactly the same.
+    \item The function name and signature (excluding return type) must be identical.
+\end{itemize}
+\bigbreak \noindent 
+\begin{cppcode}
+    class Base {
+        public:
+        virtual Base* clone() const {
+            std::cout << "Base clone\n";
+            return new Base(*this);
+        }
+
+        virtual ~Base() = default;
+    };
+
+    class Derived : public Base {
+        public:
+        Derived* clone() const override {  // Covariant return type
+            std::cout << "Derived clone\n";
+            return new Derived(*this);
+        }
+    };
+\end{cppcode}
+Base* b = new Derived();
+Base* copy = b->clone();  // Calls Derived::clone() and returns Derived*
+\bigbreak \noindent 
+
+\subsection{Why Use Covariant Return Types?}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Avoids explicit downcasting:} Without covariant return types, clone() would always return a Base*, requiring explicit casting to Derived* when dealing with derived objects.
+    \item \textbf{Preserves type information:} The overridden function naturally returns the most specific type possible.
+    \item \textbf{Useful in factory patterns:} It allows object creation methods (clone(), createInstance()) to return specialized types.
+\end{itemize}
+
+\pagebreak 
+\unsect{declval}
+\bigbreak \noindent 
+std::declval is a template function in C++ that is used to obtain an rvalue reference to a type, primarily in unevaluated contexts such as decltype and sizeof. It is particularly useful in generic programming and template metaprogramming scenarios where it is necessary to deduce types or perform operations on types without having an actual object instance.
+\bigbreak \noindent 
+\begin{cppcode}
+template <class T>
+typename std::add_rvalue_reference<T>::type declval() noexcept;
+\end{cppcode}
+\bigbreak \noindent 
+It takes a type T as a template argument and returns an rvalue reference to that type (T\&\&). However, std::declval itself does not produce an actual object of type T. It's a compiler trick that allows you to work with types as if they were objects in contexts where no actual object is needed.
+\bigbreak \noindent 
+std::declval is commonly used with decltype to determine the return type of a function or operation without actually calling the function or performing the operation. For example:
+\bigbreak \noindent 
+\begin{cppcode}
+    struct MyClass {
+        int method() const { return 42; }
+    };
+
+    int main() {
+        using ResultType = decltype(std::declval<MyClass>().method());
+        // ResultType is int
+        return 0;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+It's important to note that std::declval can only be used in unevaluated contexts. It is an error to evaluate an expression that contains std::declval at runtime
+\bigbreak \noindent 
+"Unevaluated contexts" in C++ refer to parts of the code where expressions are analyzed for their type or other properties but are not actually executed. In other words, the compiler processes these expressions without generating executable code for them.
+
 
 
 
@@ -6353,6 +6424,8 @@ Covariant return types in C++ allow a derived class to override a virtual functi
             \item Trailing return type
             \item Variadic templates
             \item Override keyword
+            \item Constructors implicitly constexpr
+            \item destructors implicitly noexcept
         \end{itemize}
     \item \textbf{c++14}: 
         \begin{itemize}

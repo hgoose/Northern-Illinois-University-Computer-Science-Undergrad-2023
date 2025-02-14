@@ -2026,6 +2026,61 @@ These relationships assume a 1-based indexing system for the nodes in the tree (
 .\end{align*}
 
 \pagebreak 
+\subsection{Invert a binary tree}
+\bigbreak \noindent 
+To invert a binary tree about a root is to flip the binary tree about the $y$-axis (with the given root as the pivot)
+\bigbreak \noindent 
+\fig{.5}{./figures/1.jpg}
+\fc{Binary tree inverted about the root 4}
+\bigbreak \noindent 
+\subsubsection{Swap node helper method}
+\bigbreak \noindent 
+\begin{cppcode}
+    static void swapNode(TreeNode*& u, TreeNode*& v) {
+        v = std::exchange(u,v);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Level order (BFS) solution}
+\bigbreak \noindent 
+\begin{cppcode}
+    TreeNode* invertTree(TreeNode* root) {
+        if (!root) return nullptr;
+        queue<TreeNode*> q;
+        q.push(root);
+
+        while (!q.empty()) {
+            TreeNode* curr = q.front(); q.pop();
+            if (!curr) continue;
+
+            TreeNode*& left = curr->left, *&right = curr->right;
+
+            swapNode(left, right);
+
+            if (left) q.push(left);
+            if (right) q.push(right);
+        }
+        return root;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Recursive postorder (DFS)}
+\bigbreak \noindent 
+\begin{cppcode}
+    TreeNode* invertTree(TreeNode* root) {
+        if (!root) return nullptr;
+
+        invertTree(root->left);
+        invertTree(root->right);
+
+        swapNode(root->left, root->right);
+        return root;
+    }
+\end{cppcode}
+
+
+\pagebreak 
 \unsect{Applications of binary trees}
 \bigbreak \noindent 
 \subsection{Binary search trees}
@@ -6664,6 +6719,89 @@ Where $n$ is the size of the input array. The suffix product is therefore define
     }
 \end{cppcode}
 
+\pagebreak 
+\unsect{Two pointer}
+\bigbreak \noindent 
+The two-pointer algorithm is an optimization technique used for solving problems involving searching, sorting, and iterating through arrays or linked lists efficiently. It involves using two pointers (indices or iterators) that move through the data structure in a coordinated manner to improve time complexity.
+\begin{itemize}
+    \item \textbf{Opposite Direction (Left and Right Pointers)}:
+        \begin{itemize}
+            \item Used when searching for pairs that satisfy a condition (e.g., Two Sum in a sorted array).
+            \item One pointer starts from the beginning, the other from the end, moving toward each other.
+        \end{itemize}
+    \item \textbf{Same Direction (Fast and Slow Pointers)}:
+        \begin{itemize}
+            \item Used when modifying or filtering data (e.g., removing duplicates in an array).
+            \item The slow pointer keeps track of the valid part of the array, while the fast pointer scans ahead.
+        \end{itemize}
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Two Sum II - Input Array Is Sorted}
+\bigbreak \noindent 
+Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number. Let these two numbers be numbers[index1] and numbers[index2] where $1 \leq \text{index1} < \text{index2} \leq \text{numbers.length}$
+\bigbreak \noindent 
+The idea is that we maintain two pointers to the array, one at the front and one at the back. If the sum of the pointers values is greater than the target, we decrement the right pointer. If the sum of the pointers values is less than the target, increase the front pointer
+\bigbreak \noindent 
+\begin{cppcode}
+    class Solution {
+        public:
+        vector<int> twoSum(vector<int>& numbers, int target) {
+            auto front = numbers.begin(), back = numbers.end() - 1;
+
+            while (front < back) {
+                if ((*front + *back) > target) {
+                    --back;
+                } else if ((*front + *back) < target) {
+                    ++front;
+                } else {
+                    return {(int)std::distance(numbers.begin(), front) + 1, (int)std::distance(numbers.begin(), back) + 1};
+                }
+            }
+            return {};
+        }
+    };
+\end{cppcode}
+\bigbreak \noindent 
+Note we add one to the results of both std::distances because the input array is 1-indexed
+
+\pagebreak 
+\subsection{Is valid palindrome}
+\bigbreak \noindent 
+\begin{cppcode}
+    class Solution {
+        public:
+        bool isPalindrome(string s) {
+            auto left = s.begin(), right = s.end() - 1;
+
+            while (left < right) {
+                if (!isalnum(*left)) { ++left; continue; }
+                if (!isalnum(*right)) { --right; continue; }
+
+                if ((char)tolower(*left) != (char)tolower(*right)) return false;
+                ++left, --right;
+            }
+            return true;
+        }
+    };
+\end{cppcode}
+\bigbreak \noindent 
+We simply maintain two pointers, one at the start and one at the end. If the value of the front pointer does not match the value of the back pointer, we return false. Otherwise, we increment the left pointer and decrease the left pointer.
+\bigbreak \noindent 
+We ignore non alphanumeric characters, and convert uppercase characters to lowercase. If either the left or right pointer detects an invalid character, we move that pointer either left or right and continue to the next iteration. This is quicker than constructing a new string with all bad characters removed and all uppercase characters converted to lower case. Although we could easily do that will a string stream
+\bigbreak \noindent 
+\begin{cppcode}
+    static string augmentString(const string& s) {
+        ostringstream os;
+
+        for (const auto& item : s) {
+            if (isalnum(item)) os << (char)tolower(item);
+        }
+        return os.str();
+    }
+\end{cppcode}
+
+
 
 
 
@@ -6688,6 +6826,33 @@ This means that the GCD of two numbers doesn't change if the larger number is re
         if (!b) return a;
 
         return gcd(b, a%b);
+    }
+    // An iterative approach
+    int gcd(int a, int b ) {
+        if (b < a) {
+            b = std::exchange(a,b);
+        }
+        while (b != 0) {
+            a = std::exchange(b, a % b);
+        }
+        return a;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{GCD of some integer collection}
+\bigbreak \noindent 
+We can apply the above algorithm to find the GCD of a collection of elements
+\bigbreak \noindent 
+\begin{cppcode}
+    int gcd_set(const vector<int>& v) {
+        if (v.empty()) return 0;
+        int result = v[0];
+        for (int i=1; i<(int)v.size(); ++i) {
+            result = gcd(result, v[i]);
+            // Return early
+            if (result == 1) return result;
+        }
+        return result;
     }
 \end{cppcode}
 
@@ -6763,6 +6928,39 @@ Note that we start $i$ at one and go up to including $x$ specifically to handle 
         }
     };
 \end{cppcode}
+
+\pagebreak 
+\subsection{Fast exponentiation ($O(\lg(n))$)}
+\bigbreak \noindent 
+To perform exponentiation faster than $O(n)$, use Exponentiation by Squaring, which runs in $O(logn)$ time.
+\bigbreak \noindent 
+This method efficiently computes $a^{b}$ using the following rules:
+\begin{enumerate}
+    \item If $b$ is even
+        \begin{align*}
+            a^{b} = \left(a^{\frac{b}{2}}\right)^{2} = \left(a^{2}\right)^{\frac{b}{2}}
+        \end{align*}
+    \item If $b$ is odd
+        \begin{align*}
+            a^{b} = a \cdot a^{b-1}
+        \end{align*}
+\end{enumerate}
+\bigbreak \noindent 
+\begin{cppcode}
+    long long fastExponentation(long long a, long long b) {
+        long long result = 1;
+        while (b > 0) {
+            if (b % 2 == 1) {
+            result *= a;
+        } 
+        a*=a;
+        b/=2;
+    }
+    return result;
+}
+\end{cppcode}
+
+
 
 
 
