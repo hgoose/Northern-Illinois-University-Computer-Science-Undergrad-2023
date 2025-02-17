@@ -1615,21 +1615,17 @@ Otherwise, recurse until we are at the second to last node. Then, delete the sec
 \subsubsection{Erasing}
 \bigbreak \noindent 
 \begin{cppcode}
-    void erase(int element) {
-        std::function<void(node*&)> r_erase = [&] (node*& p) -> void {
-            if (p == nullptr) {
-                return;
-            }
+    ListNode* removeElements(ListNode*& head, const int& val) {
+        if (!head) return nullptr;
+        head->next = removeElements(head->next, val);
 
-            r_erase(p->next);
+        if (head->val == val) {
+            ListNode* tmp = head;
+            head = head->next;
+            delete tmp;
+        }
 
-            if (p->data == element) {
-                node* tmp = p;
-                p = p->next;
-                delete tmp;
-            }
-        };
-        r_erase(head);
+        return head;
     }
 \end{cppcode}
 \bigbreak \noindent 
@@ -6959,6 +6955,63 @@ This method efficiently computes $a^{b}$ using the following rules:
     return result;
 }
 \end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Recursive}
+\bigbreak \noindent 
+\begin{cppcode}
+    class Solution {
+        public:
+        double r_fe(double& x, long long& n, double& res) {
+            if (n <= 0) return res;
+
+            if (n%2 == 1) {
+                res*=x;
+                --n;
+            }
+            n/=2;
+            x*=x;
+
+            return r_fe(x,n,res);
+        }
+
+        double myPow(double x, long long n) {
+            double res{1.0};
+            if (n < 0) {
+                n = -n;
+                return 1 / r_fe(x,n,res);
+            }
+            return r_fe(x,n,res);
+        }
+    };
+\end{cppcode}
+
+\pagebreak 
+\subsection{Bitwise power of two}
+\bigbreak \noindent 
+To check if a positive integer $n$ is a power of two. That is, $n = 2^{x}$ for some $x\in\mathbb{N}$, we check
+\bigbreak \noindent 
+\begin{cppcode}
+    if (n & n-1 == 0) {
+        // n is a power of two
+    }
+\end{cppcode}
+\bigbreak \noindent 
+If $n$ is a power of two, it can be written as $2^{k}$ . Its binary form will have a single '1' followed by $k$ zeros
+\bigbreak \noindent 
+When you subtract 1 from a power of two, the binary representation becomes a sequence of $k$ ones.
+\bigbreak \noindent 
+Consider $1000 - 0001$. We can convert $0001$ to its twos complement representation, and change the subtraction to addition. $0001$ in its two complement representation is $1110$. Thus, we have
+\begin{align*}
+    \begin{array}{ccccc} &1&0&0&0 \\ -&0&0&0&1 \\ \hline \end{array} = \begin{array}{ccccc} 1 & 0 & & & \\ & 1 & 0 & 0 & 0 \\ +&1&1&1&1 \\ \hline &0&1&1&1 \end{array}
+\end{align*}
+\bigbreak \noindent 
+The operation $n\&(n-1)$ compares each bit of $n$ and $n-1$. Since $n$ has a single '1' in a position where $n-1$ has a '0' (and vice versa for all lower bits), none of the corresponding bits are '1' at the same time. Therefore, the result is 0.
+\bigbreak \noindent 
+If $n $ is not a power of two, its binary representation will have more than one '1'. Subtracting 1 will not clear all the '1' bits when you perform the AND operation, so the result will be non-zero.
+\bigbreak \noindent 
+If $n =0$, $n \& (n-1)$ will be zero, but $0$ is not a power of two, so we require $n >0$.
+
 
 
 
