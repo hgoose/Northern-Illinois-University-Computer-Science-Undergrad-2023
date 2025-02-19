@@ -854,6 +854,46 @@
     \bigbreak \noindent 
      If a function is defined only in a .cpp file, it will not be included in multiple translation units, so inline is unnecessary.
 
+     \bigbreak \noindent 
+     \subsection{Base class pointer if the base class is abstract}
+     \bigbreak \noindent 
+     Consider the code
+     \bigbreak \noindent 
+     \begin{cppcode}
+     struct A {
+         virtual void print() const = 0;
+         ~A() = default;
+     };
+     struct B : A { };
+     A* b = new B{};
+     \end{cppcode}
+     \bigbreak \noindent 
+     print is declared as a pure virtual function. This means that any concrete (non-abstract) subclass of A must provide an override for print(). However, struct B does not implement print(), so B remains abstract, and you cannot instantiate an object of an abstract class.
+     \bigbreak \noindent 
+     Thus, the fix is to simply override print in B
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct A {
+             virtual void print() const = 0;
+             ~A() = default;
+         };
+
+         struct B : A {
+             void print() const override;
+         };
+         A* b = new B{}; // OK
+     \end{cppcode}
+
+     \bigbreak \noindent 
+     \subsection{Does the destructor need to be pure in an abstract class?}
+     \bigbreak \noindent 
+     it's not necessary to make the destructor pure just because the class is abstract. Here's why:
+     \begin{itemize}
+         \item The class A is abstract due to the pure virtual function print(). You don't need a pure virtual destructor to make a class abstract; a single pure virtual function is enough.
+            \item The destructor in an abstract class should be virtual to ensure proper cleanup of derived objects. Marking the destructor as virtual (even if defaulted) is sufficient. A pure virtual destructor requires an out-of-class definition, which can be unnecessary overhead if you already have other pure virtual functions enforcing abstraction.
+            \item In many cases, a defaulted virtual destructor (i.e., $\sim$A() = default;) is the simplest and most effective choice, allowing for correct object destruction without extra boilerplate.
+     \end{itemize}
+
 
     \pagebreak 
     \unsect{The existence of structs and classes}
@@ -1974,6 +2014,42 @@
     \bigbreak \noindent 
     In this example, we do get "destructor called". The destructor is called because the default constructor B() successfully constructs an object, even though the other constructor (B(int)) throws an exception.
 
+    \bigbreak \noindent 
+    \subsection{Converting (cast) constructors}
+    \bigbreak \noindent 
+    A converting constructor is a constructor that allows you to create an object of a class from a value of another type, often implicitly. For example, if a class B has a constructor that takes an A as a parameter (and it's not marked explicit), then an object of type A can be automatically converted to a B when needed
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            A() { std::cout << "a"; }
+        };
+
+        struct B {
+            B() { std::cout << "b"; }
+            B(const A&) { std::cout << "B"; }
+        };
+        B b = A{};
+    \end{cppcode}
+    \bigbreak \noindent 
+    Consider the example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            int value;   
+            A(int value) : value(value) {}
+            operator int() { // Notice no return type
+                return value;
+            }
+        };
+        A a(5);
+        int x = int(a) // OK, since we defined operator int()  
+        int x = a; // Allow enables implicit conversions since operator int() is not marked explicit
+    \end{cppcode}
+    \bigbreak \noindent 
+    This is an example of a conversion constructor. These operator overloads  do not have return types in their signature. a conversion operator like operator int() doesn’t explicitly state a return type because its return type is implicit—it’s defined by the type you're converting to, the function automatically returns an int. 
+    \bigbreak \noindent 
+    The C++ language grammar specifies that conversion operators are declared without a return type; the type following the operator keyword is the type to which the class is converted
+
     \pagebreak 
     \unsect{Dividing by zero}
     \bigbreak \noindent 
@@ -2785,6 +2861,372 @@ That way, any files that need access to the template can #include the relevant h
 You may be wondering why this doesn’t cause a violation of the one-definition rule (ODR). The ODR says that types, templates, inline functions, and inline variables are allowed to have identical definitions in different files. So there is no problem if the template definition is copied into multiple files (as long as each definition is identical).
 \bigbreak \noindent 
 But what about the instantiated functions themselves? If a function is instantiated in multiple files, how does that not cause a violation of the ODR? The answer is that functions implicitly instantiated from templates are implicitly inline. And as you know, inline functions can be defined in multiple files, so long as the definition is identical in each.
+
+\pagebreak 
+\unsect{Review of access modifiers in inheritance}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Public:} Public members of the base class remain public in the derived class.
+        \bigbreak \noindent 
+        Protected members remain protected.
+        \bigbreak \noindent 
+        Private members are not accessible directly by the derived class (though they are still part of the object).
+    \item \textbf{Protected:}
+        Both public and protected members of the base class become protected in the derived class.
+        \bigbreak \noindent 
+        Private members remain inaccessible.
+    \item \textbf{Private:}
+        Both public and protected members of the base class become private in the derived class.
+        \bigbreak \noindent 
+        Private members remain inaccessible.
+\end{itemize}
+\bigbreak \noindent 
+Recall what it means to be protected
+\begin{itemize}
+    \item \textbf{Within the class:} The protected member is accessible just like a private member.
+    \item \textbf{Outside the class hierarchy:} The protected member is not accessible from code that is not part of the class or its descendants.
+    \item \textbf{In derived classes:} The protected member is accessible to any class that inherits from the base class.
+\end{itemize}
+
+\pagebreak 
+\unsect{Notes about the conditional operator}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        A() { std::cout << "a"; }
+
+        void foo() { std::cout << "1"; }
+    };
+
+    struct B {
+        B() { std::cout << "b"; }
+        B(const A&) { std::cout << "B"; }
+
+        void foo() { std::cout << "2"; }
+    };
+
+    auto L(auto flag) {
+        return flag ? A{} : B{};
+    }
+    L(true).foo();
+    L(false).foo();
+\end{cppcode}
+\bigbreak \noindent 
+We get the output \texttt{aB2b2}. The conditional operator in \texttt{L} has two branches that return different types: one returns an A and the other a B. However, the conditional operator requires both branches to have a common type. Since B has a converting constructor B(const A\&), the A{} in the true branch is converted to a B.
+\bigbreak \noindent 
+Thus, L always returns a B object. When the function is called with the argument flag set to true, a temporary $A$ is constructed, converted to $B$, then $B.foo()$ is called. When the function is called with flag set to false, B is constructed and B.foo() is called. Thus, the output is $aB2b2$
+\bigbreak \noindent 
+So what happens if we remove the converting constructor in $B$?
+\bigbreak \noindent 
+\begin{cppcode}
+auto L(auto flag) {
+    return flag ? A{} : B{};
+}
+L(true);
+\end{cppcode}
+\bigbreak \noindent 
+We get an error: incompatible operand types
+
+\pagebreak 
+\unsect{Notes about CTAD (Class template argument deduction)}
+\bigbreak \noindent 
+CTAD does not consider user-defined conversions (Conversions provided by conversion constructors or conversion operators defined by a user) during deduction
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void call_with(std::function<void(T)> f, T val) {
+    f(val);
+}
+auto print = [] (int x) { std::cout << x; };
+call_with(print, 42)
+\end{cppcode}
+\bigbreak \noindent 
+the lambda print has a unique, unnamed type—not std::function<void(int)>. Even though it can be converted to std::function<void(int)> (since it has a matching operator()), that conversion is a user‐defined conversion, and such conversions are not considered during template argument deduction.
+\bigbreak \noindent 
+One way to resolve this would be 
+\begin{cppcode}
+    call_with<int>(print, 42);
+\end{cppcode}
+\bigbreak \noindent 
+When you write call\_with<int>(print, 42);, you're explicitly specifying that T is int.
+\bigbreak \noindent 
+At this point, the compiler already knows that it needs a std::function<void(int)> for the first parameter. Now, when you pass the lambda print, the compiler sees that print is convertible to std::function<void(int)> via a user-defined conversion (using the converting constructor of std::function). Since the template argument is already fixed as int, the conversion is allowed during the normal overload resolution and conversion process.
+\bigbreak \noindent 
+In summary, explicitly specifying T bypasses the template argument deduction phase. Therefore, the compiler doesn't have to deduce T by matching the lambda to std::function<void(T)> (which would fail because user-defined conversions aren't considered during deduction). Instead, it only needs to check that the lambda can be converted to the already specified type std::function<void(int)>, and that conversion works as expected.
+
+\pagebreak 
+\unsect{Strong types}
+\bigbreak \noindent 
+A strong type is a type that enforces strict type safety by not allowing implicit conversions to or from its underlying type. This means that even if a strong type wraps a primitive type (like an int or double), it won't automatically convert to that primitive type or another type without an explicit conversion. This helps prevent accidental mixing of types that represent different concepts.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct Meter {
+        explicit Meter(int v) : value(v) {}  // Explicit constructor
+        int value;
+    };
+    Meter m(10); // Ok
+    Meter k=5; // Int cannot be implicitly converted to Meter, must be explicit
+    Meter r=static_cast<Meter>(5);  // Ok
+\end{cppcode}
+\bigbreak \noindent 
+C++11 introduced enum classes, which are also an example of strong types. Unlike traditional enums, enum classes do not implicitly convert to integers:
+\bigbreak \noindent 
+\begin{cppcode}
+    enum E {x,y,z};
+    E e = x; // Works fine
+    int x = e; // Works fine
+\end{cppcode}
+
+\bigbreak \noindent 
+\begin{cppcode}
+    enum class E {x,y,z};
+    E e = E::x; // Works fine
+    int x = e; // No implicit conversion, must be explicit
+    int y = static_cast<int>(e); 
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{Why Use Strong Types?}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Type Safety:} They prevent mixing up logically different values (like meters vs. seconds) that might have the same underlying type.
+    \item \textbf{Code Clarity:} They make the programmer’s intent explicit, reducing the chance of bugs.
+    \item \textbf{Maintenance:} They help document the domain model of your application, making the code easier to understand and maintain.
+\end{itemize}
+
+
+\bigbreak \noindent 
+\subsection{Strong typing in regards to readability}
+\bigbreak \noindent 
+Consider the following example
+\bigbreak \noindent 
+\begin{cppcode}
+struct Car {
+    Car(int horsepower, int nDoors, bool isAutomatic, bool isElectric)  : horsepower(horsepower), nDoors(nDoors), isAutomatic(isAutomatic), isElectric(isElectric) {}
+    int horsepower, nDoors;
+    bool isAutomatic, isElectric;
+};
+Car c1(400,4,true, false);
+\end{cppcode}
+\bigbreak \noindent 
+So whats the problem? If the class definition were far away, we would need to take the time to look at it to figure out what the argument list in the instantiation means. Instead, we can enforce strong typing.
+\bigbreak \noindent 
+A strong type in this context is a type that carries extra information, a specific meaning through its name
+\bigbreak \noindent 
+Regarding the example above, we could instead enforce strong typing
+\begin{cppcode}
+struct HorsePower {
+    int horsePower{};
+    HorsePower(int horsepower) : horsePower(horsepower) {}
+};
+
+struct Car {
+    Car(HorsePower horsepower)  : horsepower(horsepower) {}
+    HorsePower horsepower;
+};
+Car c1(HorsePower(400));
+\end{cppcode}
+
+
+\pagebreak 
+\unsect{Argument dependent name lookup (Koenig lookup)}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+namespace x {
+  class C {};
+  void f(const C& i) {
+    std::cout << "1";
+  }
+}
+
+namespace y {
+  void f(const x::C& i) {
+    std::cout << "2";
+  }
+}
+int main() {
+    f(x::C());
+}
+\end{cppcode}
+\bigbreak \noindent 
+This outputs 1
+\bigbreak \noindent 
+Since the functions f are declared inside namespaces, and the call f(x::C()) is unqualified (not preceded by x:: or y::), this would normally not compile.
+\bigbreak \noindent 
+However, due to argument-dependent name lookup a.k.a. "Koenig lookup", the behavior is well-defined.
+\bigbreak \noindent 
+With argument-dependent name lookup, the namespaces of the arguments to a function is added to the set of namespaces to be searched for that function. Since we're passing an x::C to f, the namespace x is also searched, and the function x::f is found
+\bigbreak \noindent 
+If instead we have
+\begin{cppcode}
+    int main() {
+        y::f(x::C());
+    }
+\end{cppcode}
+\bigbreak \noindent 
+We would get 2 as output.
+
+\pagebreak 
+\unsect{C vs c++ external linkage}
+\bigbreak \noindent 
+\subsection{C++ external linkage}
+\bigbreak \noindent 
+This is the default when we use the extern keyword
+\bigbreak \noindent 
+\begin{cppcode}
+extern int x;
+\end{cppcode}
+\bigbreak \noindent 
+Which means
+\begin{itemize}
+    \item \textbf{Name mangling:} The symbol for b might be mangled to include additional type and scope information.
+    \item \textbf{C++ specific features:} This mangling supports function overloading and other C++ features.
+\end{itemize}
+\bigbreak \noindent 
+Name mangling is the process by which C++ compilers encode extra information into the names of functions and variables. This extra information typically includes details like:
+\begin{itemize}
+    \item \textbf{Function parameters:} To distinguish between overloaded functions.
+    \item \textbf{Namespaces or class membership:} So that functions or variables in different scopes (like classes or namespaces) have unique names.
+    \item \textbf{Other attributes:} Such as constness, etc.
+\end{itemize}
+\bigbreak \noindent 
+when you define overloaded functions
+\bigbreak \noindent 
+\begin{cppcode}
+int add(int a, int b);
+double add(double a, double b);
+\end{cppcode}
+\bigbreak \noindent 
+the compiler transforms (or "mangles") these names into unique symbols internally (e.g., something like \_Z3addii for the first function and \_Z3adddd for the second) so that the linker can differentiate between them. This process is essential for supporting C++ features that are not present in C, which does not allow function overloading and thus doesn't need name mangling.
+
+\bigbreak \noindent 
+\subsection{C external linkage}
+\bigbreak \noindent 
+We could also do
+\bigbreak \noindent 
+\begin{cppcode}
+extern "C" int x;
+\end{cppcode}
+\bigbreak \noindent 
+Which tells the compiler that the variable a should use C linkage. This means
+\begin{itemize}
+    \item \textbf{No name mangling:} The symbol for a will have the plain C name.
+        \bigbreak \noindent 
+        The compiler is instructed to leave the name unmangled. The symbol in the object file for a remains simply a and for add it remains exactly add
+        \bigbreak \noindent 
+        This is crucial when linking C++ code with C code. C does not support name mangling (since it doesn’t have function overloading), so the symbols need to match exactly between the C library and your C++ code.
+    \item \textbf{C calling convention:} When used with functions (though here it’s a variable), it would use the C calling convention.
+        \bigbreak \noindent 
+        The calling convention defines how functions receive parameters, return values, and how the call stack is managed. It covers aspects like:
+        \begin{itemize}
+            \item \textbf{Order of parameter passing:} Right-to-left vs. left-to-right.
+            \item \textbf{Who cleans up the stack:} The caller or the callee.
+            \item \textbf{Register usage:} Which registers are used for passing parameters.
+        \end{itemize}
+    \item \textbf{Interoperability:} It can be linked with C code that expects a symbol named exactly a.
+        \bigbreak \noindent 
+        By using extern "C", your C++ code can directly link to and use C libraries. This interoperability is essential when integrating legacy C code with newer C++ codebases or when using system libraries written in C.
+\end{itemize}
+\bigbreak \noindent 
+Consider the following example
+\bigbreak \noindent 
+\begin{cppcode}
+    namespace A{
+        extern "C" int x;
+    };
+
+    namespace B{
+        extern "C" int x;
+    };
+
+    int A::x = 0;
+
+    int main(){
+        std::cout << B::x;
+        A::x=1;
+        std::cout << B::x;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Due to the extern "C" specifications, A::x and B::x actually refer to the same variable.
+\bigbreak \noindent 
+x is first initialized to 0, then main() starts, 0 is printed, x is incremented to 1, and finally 1 is printed.
+
+\pagebreak 
+\unsect{Who cleans up the call stack, the caller or the callee}
+\bigbreak \noindent 
+It depends on the calling convention. With the most common cdecl calling convention used in many C++ environments, the caller is responsible for cleaning up the call stack after the function call. However, if a function uses a calling convention like stdcall, then the callee cleans up the stack before returning.
+\bigbreak \noindent 
+So, in standard C++ using cdecl, the caller cleans up the stack, but this can vary with different calling conventions.
+
+
+\pagebreak 
+\unsect{Notes about sizeof}
+\bigbreak \noindent 
+\subsection{non types in sizeof?}
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+cout << sizeof(1); //4
+cout << sizeof(1.0); // 8
+short x = 5;
+cout << sizeof(x); // 2
+\end{cppcode}
+\bigbreak \noindent 
+In C++, the sizeof operator is evaluated at compile time and it inspects the type of its operand rather than evaluating the operand itself. This means that it doesn’t matter whether you pass an lvalue or an rvalue.
+
+\bigbreak \noindent 
+\subsection{No side effects?}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    int x = 5;
+    cout << sizeof(++x) << endl;
+    cout << x; // 5
+\end{cppcode}
+\bigbreak \noindent 
+Why is $x$ not changed?  sizeof is computed during compilation. No code is executed to determine its value, which means even if the operand has side effects, those side effects will not occur.
+
+\bigbreak \noindent 
+\subsection{What is the output?}
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+    int n = sizeof(0)["abcdefghij"];
+    std::cout << n; // 1
+\end{cppcode}
+\bigbreak \noindent 
+First, recall the sizeof is an operator, not a function. Sizeof(0) = sizeof  0. Since the subscript operator has higher precedence over the sizeof operator, what we get is
+\bigbreak \noindent 
+\begin{cppcode}
+    sizeof 0["abcdefghi"]
+\end{cppcode}
+\bigbreak \noindent 
+Which is
+\bigbreak \noindent 
+\begin{cppcode}
+    sizeof(0["abcdefghi"])
+\end{cppcode}
+\bigbreak \noindent 
+Which is
+\bigbreak \noindent 
+\begin{cppcode}
+sizeof(a) // Char is 1 byte
+\end{cppcode}
+
+
+
+
+
 
 
 
