@@ -3456,6 +3456,46 @@ Consider the code
 \bigbreak \noindent 
 We get true... The standard states that the value of argv[argc] shall be 0.
 
+\pagebreak 
+\unsect{Notes about const}
+\bigbreak \noindent 
+\subsection{Returning const?}
+\bigbreak \noindent 
+Consider the function
+\bigbreak \noindent 
+\begin{cppcode}
+    const int f() {
+        const int x = 10;
+        return x;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+When you call the function, you receive a temporary object of type const int. This means you can’t directly modify the temporary (e.g., writing f() = 30; would be illegal).
+\bigbreak \noindent 
+If you assign the result of the function to a non-const variable, the const qualifier is not carried over. For example:
+\bigbreak \noindent 
+Since the function returns a copy, marking it as const doesn’t protect any underlying data. It only prevents modifications on the temporary object itself before it’s used to initialize another variable.
+\bigbreak \noindent 
+Imagine that you buy a house but you cannot modify it? While
+there can be special cases, in general, you want your house to be
+your castle. Similarly, you want your copy to really be your object
+and you want to be able to do with it just whatever as an owner of
+it.
+\bigbreak \noindent 
+It doesn’t make sense and it’s misleading to return by value a const object
+\bigbreak \noindent 
+Also, returning by value a const object will not allow the compiler to perform the RVO where the temporary is moved instead of copied, since a move would modify the temporary
+\bigbreak \noindent 
+Using const in the return type by value is generally discouraged because it can interfere with move semantics and does not provide additional safety benefits. It’s more common and useful to use const when returning by reference, where you want to prevent the caller from modifying the original object
+\bigbreak \noindent 
+\begin{cppcode}
+    const int& f(const int& x) {
+        return x;
+    }
+    int x = 20;
+    int& y = f(x); // Error: cannot drop const qualifier
+\end{cppcode}
+
 
 
 

@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{lagrangeeval}\PYG{p}{(}\PYG{n}{xspan}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{)}
+
+\PYG{+w}{    }\PYG{n}{n}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{length}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+
+\PYG{+w}{    }\PYG{n}{top}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{zero}\PYG{p}{(}\PYG{n}{xspan}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{bottom}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{zero}\PYG{p}{(}\PYG{n}{xspan}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{exact}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{zeros}\PYG{p}{(}\PYG{k+kt}{Int}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{length}\PYG{p}{(}\PYG{n}{xspan}\PYG{p}{)}\PYG{p}{)}
+
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{j}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{n}
+\PYG{+w}{        }\PYG{n}{xdiff}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{xspan}\PYG{+w}{ }\PYG{o}{.\PYGZhy{}}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]}
+\PYG{+w}{        }\PYG{n}{temp}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]}\PYG{o}{./}\PYG{n}{xdiff}
+\PYG{+w}{        }\PYG{n}{top}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n}{temp}\PYG{o}{*}\PYG{n}{y}\PYG{p}{[}\PYG{n}{j}\PYG{p}{]}
+\PYG{+w}{        }\PYG{n}{bottom}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n}{temp}
+
+\PYG{+w}{        }\PYG{n}{exact}\PYG{p}{[}\PYG{n}{xdiff}\PYG{+w}{ }\PYG{o}{.==}\PYG{+w}{ }\PYG{l+m+mf}{0.0}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{.=}\PYG{+w}{ }\PYG{n}{j}\PYG{+w}{  }\PYG{c}{\PYGZsh{} exact[i] = j if xspan[i] = x[j]}
+\PYG{+w}{    }\PYG{k}{end}
+
+\PYG{+w}{    }\PYG{n}{p}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{top}\PYG{o}{./}\PYG{n}{bottom}
+
+\PYG{+w}{    }\PYG{n}{iinds}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{findall}\PYG{p}{(}\PYG{n}{exact}\PYG{+w}{ }\PYG{o}{.!=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{+w}{  }\PYG{c}{\PYGZsh{} gives the indices i of xspan that equal some x[j]}
+\PYG{+w}{    }\PYG{n}{jinds}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{exact}\PYG{p}{[}\PYG{n}{iinds}\PYG{p}{]}\PYG{+w}{          }\PYG{c}{\PYGZsh{} gives the corresponding j indices}
+\PYG{+w}{    }\PYG{n}{p}\PYG{p}{[}\PYG{n}{iinds}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{[}\PYG{n}{jinds}\PYG{p}{]}\PYG{+w}{           }\PYG{c}{\PYGZsh{} sets any NaNs in p to the correct values from y}
+
+\PYG{+w}{    }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{p}
+\PYG{k}{end}
+
+\PYG{n}{lagrangeeval}\PYG{p}{(}\PYG{n}{xx}\PYG{o}{::}\PYG{k+kt}{Real}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{AbstractVector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Vector}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{lagrangeeval}\PYG{p}{(}\PYG{p}{[}\PYG{n}{xx}\PYG{p}{]}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}
+\end{Verbatim}

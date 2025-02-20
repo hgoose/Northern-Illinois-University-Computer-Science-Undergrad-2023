@@ -6241,6 +6241,107 @@ horner(x::Real, c) = horner([x], c)[1]
     \item \textbf{Adding a new data point is expensive:} must form $A$ and solve $Ac = y$ again
     \item \textbf{Solving $Ac = y$ is often inaccurate:} the Vandermonde matrix is often ill-conditioned.
 \end{enumerate}
+\item \textbf{Lagrange interpolation}:
+    The motivation for \textbf{Lagrange interpolation} is to try to find a basis $\{\phi_j(x)\}_{j=0}^n$ for which the matrix
+    $$
+    A = 
+    \begin{bmatrix}
+        \phi_0(x_0) & \phi_1(x_0) & \cdots & \phi_n(x_0)\\
+        \phi_0(x_1) & \phi_1(x_1) & \cdots & \phi_n(x_1)\\
+        \vdots & \vdots & \ddots & \vdots\\
+        \phi_0(x_n) & \phi_1(x_n) & \cdots & \phi_n(x_n)\\
+    \end{bmatrix}
+    $$
+    is equal to the identity matrix $I$. Then solving $Ac = y$ would be trivial: we would just set $c = y$.
+    \bigbreak \noindent 
+    Thus, we would like to find polynomials that satisfy
+    $$
+    \phi_i(x_i) = 1 \quad \text{for all } i, \quad \text{and} \quad \phi_j(x_i) = 0 \quad \text{for } i \neq j.
+    $$
+    Such polynomials are called \textbf{Lagrange polynomials}, and we denote them as:
+    $$L_0(x), L_1(x), \ldots, L_n(x).$$
+    \bigbreak \noindent 
+    \textbf{Example}: Recall the data from above:
+    \begin{align*}
+        (x_0,y_0) = (2,1)\\
+        (x_1,y_1) = (6,2)\\
+        (x_2, y_2) = (4,3)\\
+        (x_3, y_3) = (8,2)\\
+    \end{align*}
+    Find the Lagrange polynomial $L_0(x) \in \mathbf{P}_3$ such that $L_0(x_0) = 1$ and $L_0(x_1) = L_0(x_2) = L_0(x_3) = 0$.
+    \bigbreak \noindent 
+    Since $L_0(6)= L_0(4) = L_0(8) = 0$, and since $L_0(x) \in \mathbf{P}_3$, we must have
+    $$L_0(x) = a(x-6)(x-4)(x-8)$$
+    for some constant $a$.
+    \bigbreak \noindent 
+    Plugging in $x = 2$, we have that
+    $$1 = a(2-6)(2-4)(2-8),$$
+    so $a = -\frac{1}{48}$. Therefore,
+    $$L_0(x) = -\frac{1}{48}(x-6)(x-4)(x-8).$$
+\item \textbf{Constructing the Lagrange interpolating polynomial}:
+    From the above exercises, we see that
+    $$ L_j(x) = \frac{(x-x_0)\cdots(x-x_{j-1})(x-x_{j+1})\cdots(x-x_n)}{(x_j-x_0)\cdots(x_j-x_{j-1})(x_j-x_{j+1})\cdots(x_j-x_n)} 
+    = 
+    \prod_{\substack{i = 0 \\ i \neq j}}^n \frac{(x-x_i)}{(x_j-x_i)}.$$
+    Thus, to construct each $L_j$, we just need to compute the \textbf{barycentric weights}:
+    $$
+    w_j = \frac{1}{\rho_j}, \quad \text{where} \quad \rho_j = \prod_{\substack{i = 0 \\ i \neq j}}^n (x_j-x_i).
+    $$
+    Then
+    $$L_j(x) = w_j \prod_{\substack{i = 0 \\ i \neq j}}^n (x-x_i).$$
+    Computing these weights requires about $n^2$ flops.
+\item \textbf{Evaluating the Lagrange interpolating polynomial}:
+    Recall that the Lagrange interpolating polynomial is given by
+    $$p(x) = \sum_{j=0}^n y_j L_j(x).$$
+    Notice that
+    $$L_j(x) = w_j \prod_{\substack{i = 0 \\ i \neq j}}^n (x-x_i) = w_j \frac{\psi(x)}{(x-x_j)},
+    \quad \text{where} \quad \psi(x) = \prod_{i=0}^n (x-x_i),$$
+    for $x \neq x_j$. Thus,
+    $$p(x) = \psi(x) \sum_{j=0}^n  \frac{y_j w_j}{(x-x_j)}, \quad \text{for} \quad x \not\in \{x_0, \ldots, x_n\}.$$
+    \bigbreak \noindent 
+    When $y_j = 1$, for all $j$, we have that $p(x) = 1$, for all $x$. Therefore,
+    $$1 = \psi(x) \sum_{j=0}^n  \frac{w_j}{(x-x_j)},$$
+    which implies that
+    $$\psi(x) = \frac{1}{\sum_{j=0}^n  \frac{w_j}{(x-x_j)}}.$$
+    Thus, we obtain the \textbf{barycentric formula} for $p(x)$:
+    $$p(x) = \frac{\sum_{j=0}^n  \frac{y_j w_j}{(x-x_j)}}{\sum_{j=0}^n  \frac{w_j}{(x-x_j)}}, 
+    \quad \text{for} \quad x \not\in \{x_0, \ldots, x_n\}.$$
+    Evaluating $p(x)$ requires about $5n$ flops.
+\item \textbf{An implementation for evaluating the Lagrange interpolating polynomial}:
+    The following code includes a strategy described in the 2004 paper \textit{Barycentric Lagrange Interpolation}
+    by Berrut and Trefethen for handling the case when $x \in \{x_0, \ldots, x_n\}$. Without using this strategy, the evaluation would return `NaN` when $x = x_k$.
+    \bigbreak \noindent 
+    In this paper they also discuss the numerical cancellation that occurs when $x \approx x_j$, making the calculation of $w_j/(x-x_j)$ inaccurate
+    \bigbreak \noindent 
+    \begin{jlcode}
+function lagrangeeval(xspan::AbstractVector, w::Vector, x::AbstractVector, y::Vector)
+    
+    n = length(x)
+    
+    top = zero(xspan)
+    bottom = zero(xspan)
+    exact = zeros(Int, length(xspan))
+
+    for j=1:n
+        xdiff = xspan .- x[j]
+        temp = w[j]./xdiff
+        top += temp*y[j]
+        bottom += temp
+        
+        exact[xdiff .== 0.0] .= j  # exact[i] = j if xspan[i] = x[j]
+    end
+    
+    p = top./bottom
+
+    iinds = findall(exact .!= 0)  # gives the indices i of xspan that equal some x[j]
+    jinds = exact[iinds]          # gives the corresponding j indices
+    p[iinds] = y[jinds]           # sets any NaNs in p to the correct values from y
+    
+    return p  
+end
+
+lagrangeeval(xx::Real, w::Vector, x::AbstractVector, y::Vector) = lagrangeeval([xx], w, x, y)[1]
+    \end{jlcode}
 
 
 
