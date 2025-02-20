@@ -1257,6 +1257,15 @@
     \bigbreak \noindent 
     void* is a generic pointer type that can point to any data type.
 
+    \bigbreak \noindent 
+    \subsection{Zero is a nullptr?}
+    \bigbreak \noindent 
+    The literal 0 is special in C++—it’s a null pointer constant. This means that when 0 is used in a pointer context, it is implicitly converted to a null pointer.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    cout << (nullptr == 0); // True
+    \end{cppcode}
+
 
     \pagebreak 
     \unsect{Brace initialization vs Parenthesized Initialization}
@@ -2159,6 +2168,11 @@
     \bigbreak \noindent 
     The default access modifier  is private for class inheritance, and public for structs.
 
+    \bigbreak \noindent 
+    \subsection{Can a class inherit from a struct, or a struct inherit from a class?}
+    \bigbreak \noindent 
+    Yes, perfectly acceptable. Recall though the default access specifiers for class vs struct inheritance
+
 
 
     \pagebreak 
@@ -2636,6 +2650,23 @@
     \end{cppcode}
     \bigbreak \noindent 
     Member variables are initialized before the constructor is called. The destructor is called before member variables are destroyed.
+
+    \bigbreak \noindent 
+    \subsection{Default initialize const object (const default constructible)?}
+    \bigbreak \noindent 
+    Consider
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            A() = default;
+            int i;
+        } ;
+        const A a;
+    \end{cppcode}
+    \bigbreak \noindent 
+    We actually get an error here: Default initialization of an object of const type 'const A' without a user provided default constructor
+    \bigbreak \noindent 
+    A class type T is const-default-constructible if default-initialization of T would invoke a user-provided constructor of T (not inherited from a base class)
 
 
     \pagebreak 
@@ -3222,6 +3253,211 @@ Which is
 \begin{cppcode}
 sizeof(a) // Char is 1 byte
 \end{cppcode}
+
+\pagebreak 
+\unsect{Parenthesized declarators}
+\bigbreak \noindent 
+Consider the following code
+\bigbreak \noindent 
+\begin{cppcode}
+    int main() {
+        int(myint) = 10; 
+        // Equivalent to
+        int myint = 10;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+This syntax is perfectly legal to create an int named \texttt{myint}, although some warnings will show up about redundant parenthesis. This syntax is just
+\bigbreak \noindent 
+\begin{cppcode}
+int (myint) = 10;
+\end{cppcode}
+\bigbreak \noindent 
+Without the space after \texttt{int}. With this concept in mind, examine the following code
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        A() {cout << "1";}
+        A(const A& other) { cout << "2"; }
+    } object;
+
+    int main() {
+        A(object);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+We get output: 11, the copy constructor is not called, because in main we are creating a new A object named object, which will shadow the global one
+\bigbreak \noindent 
+Note that if we had a constructor that took a value, the compiler will try to use that constructor
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        int x{};   
+        A(int x) : x(x) {}
+    };
+    A(object); // Error: No matching constructor
+\end{cppcode}
+
+\pagebreak 
+\unsect{Notes about classes and member variables}
+\bigbreak \noindent 
+\subsection{Const member variable assigned in constructor?}
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A{
+        const int x;
+        A(int x) : x(x) {}
+    };
+\end{cppcode}
+\bigbreak \noindent 
+This works just fine. Although in a function that is not a constructor, it will not.
+\bigbreak \noindent 
+\begin{cppcode}
+    void setX(int y) {
+        x = y; // Error x is const-qualified
+    }
+\end{cppcode}
+\bigbreak \noindent 
+In C++, const member variables must be initialized at the time of object creation rather than being assigned to later. The constructor’s initializer list (the part after the colon in the constructor) is specifically designed for this purpose. When you write:
+\bigbreak \noindent 
+\begin{cppcode}
+A(int x) : x(x) { 
+    cout << "Constructed A object with x = " << x << endl; 
+}
+\end{cppcode}
+\bigbreak \noindent 
+you aren’t performing an assignment inside the constructor body; instead, you’re initializing the const member x directly with the value provided as an argument. This initialization is allowed even though x is const, because once it’s set during construction, its value cannot be changed thereafter
+\bigbreak \noindent 
+\textbf{Note:} Trying to assign x inside the body of the constructor will fail
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        const int x = 12;
+        A(int y) { 
+            x = y; // Error: x is const-qualified
+            cout << "Constructed A object with x = " << x << endl; 
+        } 
+    };
+\end{cppcode}
+
+\pagebreak 
+\unsect{What is the type of a string literal?}
+\bigbreak \noindent 
+Of type const char*
+
+\pagebreak 
+\unsect{Notes about const\_cast}
+\bigbreak \noindent 
+\subsubsection{Dangers of trying to modify string literals (const char*)}
+\bigbreak \noindent 
+Consider the following code
+\bigbreak \noindent 
+\begin{cppcode}
+    char* a = const_cast<char*>("Hello");
+    a[4] = '\0';
+    std::cout << a;
+\end{cppcode}
+\bigbreak \noindent 
+So we have this const char* string literal "Hello", and we store it in a char* by const casting the constness away. Then, we try to modify it. 
+\bigbreak \noindent 
+Modifying the contents pointed to by a would result in undefined behavior because string literals are usually stored in read-only memory.
+
+\pagebreak 
+\unsect{Notes about friend functions}
+\bigbreak \noindent 
+\subsection{Recall friend}
+\bigbreak \noindent 
+In C++, the friend keyword is used within a class to grant non-member functions or other classes access to its private and protected members. This can be particularly useful when you want a function or another class to have access to the internals of your class without making those members public.
+\begin{itemize}
+    \item \textbf{Friend Function:} A non-member function can be declared as a friend inside a class. This function, although not a member of the class, can access the class's private and protected members.
+    \item \textbf{Friend Class:} You can declare an entire class as a friend. Every member of that friend class will have access to the private and protected members of the class that declares the friendship.
+    \item \textbf{Encapsulation Consideration:} Using the friend keyword is a deliberate break of encapsulation. It should be used sparingly and only when necessary to allow closely related classes or functions to interact efficiently.
+    \item \textbf{Not Inherited:} Friendship is not inherited. If Class A declares Class B as a friend, and Class C inherits from A, Class B is not automatically a friend of Class C.
+\end{itemize}
+
+
+\bigbreak \noindent 
+\subsubsection{Friend functions}
+\bigbreak \noindent 
+\begin{cppcode}
+    class A {
+        public:
+        A(int x) : x(x) {}
+        private:
+        int x{};
+        friend void print(const A& obj); 
+    };
+
+    void print(const A& obj) {
+        cout << obj.x << endl;
+    }
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Friend class}
+\bigbreak \noindent 
+\begin{cppcode}
+    class B;
+
+    class A {
+        public:
+        A(int x) : x(x) {}
+        private:
+        int x{};
+        friend B;
+    };
+
+    class B {
+        public: 
+        void print(const A& a) {
+            cout << a.x << endl;
+        }
+    };
+    A a(10);
+    B aObserver{};
+    aObserver.print(a);
+\end{cppcode}
+\bigbreak \noindent 
+Note that we can also remove the forward declare and just do \texttt{friend class B}
+\bigbreak \noindent 
+\begin{cppcode}
+    class A; // Forward declaration for A (needed for B)
+
+    class B {
+        public:
+        void print(const A& a); // Declare print here.
+    };
+
+    class A {
+        public:
+        A(int x) : x(x) {}
+        private:
+        int x{};
+        friend void B::print(const A& a);  // Now the compiler knows B::print exists.
+    };
+
+    void B::print(const A& a) {
+        cout << a.x << endl;
+    }
+\end{cppcode}
+
+\pagebreak 
+\unsect{What is the value of argv[argc]?}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    int main(int argc, char** argv) {
+        cout << boolalpha << (argv[argc] == nullptr);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+We get true... The standard states that the value of argv[argc] shall be 0.
+
+
+
 
 
 

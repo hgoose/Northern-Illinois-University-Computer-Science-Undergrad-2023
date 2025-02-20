@@ -1,4 +1,13 @@
-class A { };
-class B : private A { };
+    struct A {
+        const int x = 12;
+        A(int x) : x(x) { cout << "Constructed A object with x = " << x << endl; }
 
-A* b = new B(); // Error: Cannot convert B to its private base class A
+        A& operator=(const A& other) {
+            int* tmp = const_cast<int*>(&x);
+            *tmp = other.x;
+            return *this;
+        }
+    };
+    A a1(50);
+    A a2(20);
+    a1 = a2; // Error: Copy assignment implicitly deleted

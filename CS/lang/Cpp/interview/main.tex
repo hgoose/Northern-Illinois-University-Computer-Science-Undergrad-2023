@@ -1655,6 +1655,181 @@ or static, and there can be only one destructor. Hence it cannot be
 overloaded.
 
 
+\pagebreak 
+\unsect{Lambdas}
+\bigbreak \noindent 
+\subsection{When could IILF's (Immediately invoked lambda functions) be useful.}
+\bigbreak \noindent 
+Consider the following example
+\bigbreak \noindent 
+\begin{cppcode}
+    const std::string S = [caseA, caseB, caseC]() -> std::string {
+        if (caseA) {
+            return std::string("A string")
+        } else if (caseB) {
+            return std::string("B string")
+        } else if (caseC) {
+            return std::string("C string")
+        } else {
+            ...
+        }
+    }
+\end{cppcode}
+\bigbreak \noindent 
+In this way, we could perform complex initializations beyond the limitations of the conditional operator.
+
+\bigbreak \noindent 
+\subsection{What kind of captures are available for lambda expressions?}
+\bigbreak \noindent 
+The capture is a comma-separated list of zero or more captures, optionally beginning with the capture-default. The capture list defines the outside variables that are accessible from within the lambda function body.
+\bigbreak \noindent 
+The only capture defaults are:
+\begin{itemize}
+    \item \& (implicitly capture the used automatic variables by reference) and
+    \item = (implicitly capture the used automatic variables by copy).
+\end{itemize}
+\bigbreak \noindent 
+The current object (*this) can be implicitly captured if either of the capture defaults is present. If implicitly captured, it is always captured by reference, even if the capture default is =. However since C++20 the implicit capture of *this with the capture default = is deprecated.
+\bigbreak \noindent 
+\subsubsection{The following types of captures are available:}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{By-copy capture }:
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int num;
+        auto l = [num](){};
+        \end{cppcode}
+    \item \textbf{By-copy capture that is a pack expansion }:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            template <typename Args>
+            void f(Args... args) {
+                auto l = [args...] {
+                    return g(args...);
+                };
+                l();
+            }
+        \end{cppcode}
+    \item \textbf{by-reference capture}:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            nt num=42;
+            auto l = [&num](){};
+        \end{cppcode}
+    \item \textbf{by-reference capture that is a pack expansion }:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            template <typename Args>
+            void f(Args... args) {
+                auto l = [&args...] { return g(args...);};
+                l();
+            }
+        \end{cppcode}
+    \item \textbf{by-copy capture of the current object}:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            auto l = [*this](){};
+        \end{cppcode}
+    \item \textbf{by-reference capture of the current object}:
+        \bigbreak \noindent 
+        \begin{cppcode}
+        auto l = [this](){};
+        \end{cppcode}
+    \item \textbf{by-copy capture with an initializer}
+        \bigbreak \noindent 
+        \begin{cppcode}
+        auto l = [num=5](){};
+        \end{cppcode}
+    \item \textbf{by-reference capture with an initializer}:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            int num=42;
+            auto l = [&num2=num](){};
+        \end{cppcode}
+\end{itemize}
+
+
+\pagebreak 
+\unsect{How to use the const qualifier in C++}
+\bigbreak \noindent 
+\subsection{What are the advantages of using const local variables?}
+\bigbreak \noindent 
+By declaring a local variable const you mark it immutable. It should
+never change its value. If you still try to modify it later on, you’ll
+get a compilation error. For global variables, this is rather useful.
+Otherwise, you have no idea who might modify their values. Of
+course, we should avoid using global variables, do you remember
+the static initialization order fiasco?
+\bigbreak \noindent 
+Moreover, declaring variables as const also helps the compiler to
+perform some optimizations. Unless you explicitly mark a variable
+const, the compiler will not know (at least not for sure) that the
+given variable should not be changed. Again this is something that
+we should use whenever it is possible.
+
+\bigbreak \noindent 
+\subsection{What happens when a class has const member variables?}
+\bigbreak \noindent 
+classes with const members are not assignable. When we have class or struct with const member variables, the copy assignment operator is implicitly deleted
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        const int x = 12;
+        A(int x) : x(x) { cout << "Constructed A object with x = " << x << endl; } 
+
+    };
+    A a1(50);
+    A a2(20);
+    a1 = a2; // Error: Copy assignment implicitly deleted
+\end{cppcode}
+\bigbreak \noindent 
+Although we can still use the copy constructor just fine.
+\bigbreak \noindent 
+If you think about it, it makes perfect sense. A variable is something you cannot change after initialization. And when you want
+to assign a new value to an object, thus to its members, it’s not
+possible anymore.
+\bigbreak \noindent 
+As such it also makes it impossible to use move semantics, for the
+same reason.
+\bigbreak \noindent 
+From the error messages, you can see that the corresponding special
+functions, such as the assignment operator or the move assignment
+operator were deleted. Which means we have to implement them
+by hand. Don’t forget about the rule of 5. If we implement one,
+we have to implement all the 5
+\bigbreak \noindent 
+Let’s take the assignment operator as an example. What should we
+do with it?
+\bigbreak \noindent 
+Do we skip assigning to the const members? Not so great, either we
+depend on that value somewhere, or we should not store the value.
+\bigbreak \noindent 
+If we really want to implement it, we must use const\_cast as a
+workaround. As you cannot cast the constness away from values,
+you have to turn the member values into temporary non-const
+pointers.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        const int x = 12;
+        A(int x) : x(x) { cout << "Constructed A object with x = " << x << endl; } 
+
+        A& operator=(const A& other) {
+            int* tmp = const_cast<int*>(&x);
+            *tmp = other.x;
+            return *this;
+        }
+    };
+    A a1(50);
+    A a2(20);
+    a1 = a2; // Error: Copy assignment implicitly deleted
+\end{cppcode}
+\bigbreak \noindent 
+Recall that const cast can introduce UB. We’ve just had a look at the copy assignment and it wouldn’t work
+without risking undefined behaviour.
+\bigbreak \noindent 
+It’s not worth it!
 
 
 
