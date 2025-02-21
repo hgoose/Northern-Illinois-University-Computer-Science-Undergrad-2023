@@ -1831,6 +1831,42 @@ without risking undefined behaviour.
 \bigbreak \noindent 
 It’s not worth it!
 
+\bigbreak \noindent 
+\subsection{Should you take plain old data types by const reference as a function parameter?}
+\bigbreak \noindent 
+They should not be passed as const references or pointers. It’s
+inefficient. These data types can be accessed with one memory
+read if passed by value. On the other hand, if you pass them by
+reference/pointer, first the address of the variable will be read and
+then by dereferencing it, the value. That’s 2 memory reads instead
+of one.
+\bigbreak \noindent 
+We shall not take fundamental data types by const\&.
+\bigbreak \noindent 
+But should we take them simply by const? As always, it depends. If we don’t plan to modify their value, yes we should. For better readability, for the compiler and for the future.
+\bigbreak \noindent 
+\begin{cppcode}
+    void f(const int x) { }
+    // More efficient than 
+    void f(const int& x) {}
+\end{cppcode}
+\bigbreak \noindent 
+For a simple type like an int, passing by value (i.e. using "void f(int x)") is generally as efficient—or even slightly more efficient—than passing by reference. This is because:
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Small Data Type:} An int is typically a small, built-in type that fits into a register, so copying it has negligible cost.
+    \item \textbf{Reference Overhead:} Passing by reference usually involves an extra level of indirection (a pointer under the hood), which isn’t necessary for such a small type.
+    \item \textbf{Compiler Optimizations:} Modern compilers are very good at optimizing simple value copies, making any potential overhead even less noticeable.
+\end{itemize}
+That said, the difference in performance for an int is extremely minor. For larger, more complex types, or when you need to modify the original variable, passing by reference may be more appropriate.
+
+
+
+
+
+
+
+
 
 
 

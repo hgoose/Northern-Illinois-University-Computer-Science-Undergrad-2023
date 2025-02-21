@@ -3496,6 +3496,25 @@ Using const in the return type by value is generally discouraged because it can 
     int& y = f(x); // Error: cannot drop const qualifier
 \end{cppcode}
 
+\pagebreak 
+\unsect{Mixed type references}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    int a = '0';
+    char const &b = a;
+    std::cout << b;
+    a++;
+    std::cout << b;
+\end{cppcode}
+\bigbreak \noindent 
+We get output 00. In C++, binding a const reference of a different type (in this case, a char const & to an int) does not bind the reference directly to the original variable. Instead, it creates a temporary object
+\bigbreak \noindent 
+Since a is an int and b is a char const \&, C++ performs an implicit conversion from int to char by creating a temporary char object holding the value '0'. The const reference b is then bound to this temporary object, not directly to a. The lifetime of this temporary is extended to match that of b.
+\bigbreak \noindent 
+Even after incrementing a, the temporary object (which b refers to) remains unchanged. Therefore, printing b twice results in "00".
+
 
 
 
