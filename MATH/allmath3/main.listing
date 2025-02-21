@@ -1,27 +1,5 @@
-function lagrangeeval(xspan::AbstractVector, w::Vector, x::AbstractVector, y::Vector)
-
-    n = length(x)
-
-    top = zero(xspan)
-    bottom = zero(xspan)
-    exact = zeros(Int, length(xspan))
-
-    for j=1:n
-        xdiff = xspan .- x[j]
-        temp = w[j]./xdiff
-        top += temp*y[j]
-        bottom += temp
-
-        exact[xdiff .== 0.0] .= j  # exact[i] = j if xspan[i] = x[j]
-    end
-
-    p = top./bottom
-
-    iinds = findall(exact .!= 0)  # gives the indices i of xspan that equal some x[j]
-    jinds = exact[iinds]          # gives the corresponding j indices
-    p[iinds] = y[jinds]           # sets any NaNs in p to the correct values from y
-
-    return p
-end
-
-lagrangeeval(xx::Real, w::Vector, x::AbstractVector, y::Vector) = lagrangeeval([xx], w, x, y)[1]
+            Input: A program |$x$|, with its own input
+            Run |$H(x)$|
+            if |$H(x)$| answers |\textit{Program $x$ will halt} \textbf{then}|
+                begin an infinite loop
+            else halt
