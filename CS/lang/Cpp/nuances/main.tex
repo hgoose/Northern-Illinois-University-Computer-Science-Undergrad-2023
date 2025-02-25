@@ -3515,6 +3515,107 @@ Since a is an int and b is a char const \&, C++ performs an implicit conversion 
 \bigbreak \noindent 
 Even after incrementing a, the temporary object (which b refers to) remains unchanged. Therefore, printing b twice results in "00".
 
+\pagebreak 
+\unsect{The types of literals and builtin suffixes}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Integer Literals:} The type of integral literals depend on the size of the literal. Small integral literals will be of type int, where as large values will be of type long or even unsigned long.
+    \item \textbf{Floating-Point Literals}: A literal like 3.14 is of type double by default
+    \item \textbf{Character literals}: A literal like 'a' is of type char, 
+    \item \textbf{String Literals}: Are of type const char[] by default
+    \item \textbf{Boolean literals}: (true/false) Of type bool, note that 1 and 0 are of type int
+    \item \textbf{Nullptr literal}: of type std::nullptr\_t
+\end{itemize}
+\subsection{Suffixes}
+\bigbreak \noindent 
+For integrals,
+\begin{cppcode}
+42 // no suffix: int if it fits
+42u // unsigned
+42U // unsigned
+42l // long
+42L // long
+42ll // long long
+42LL // long long
+\end{cppcode}
+\bigbreak \noindent 
+For floating point literals,
+\bigbreak \noindent 
+\begin{cppcode}
+3.14 // No suffix: double
+3.14f // float
+3.14F // float
+3.14l // long double
+3.14L // long double
+\end{cppcode}
+\bigbreak \noindent 
+For chars,
+\bigbreak \noindent 
+\begin{cppcode}
+'a' // No suffix: char
+L'a' // wchar_t
+u'a' // utf-16 (char16_t)
+U'a' // utf-32 (char32_t)
+\end{cppcode}
+\bigbreak \noindent 
+For strings,
+\bigbreak \noindent 
+\begin{cppcode}
+L"Hello" // Array of wchar_t
+u8"hello" // UTF-8 encoded string (array of const char8_t)
+u"hello" // UTF-16 (array of const char16_t)
+U"hello" // UTF-32 (array of const char32_t)
+\end{cppcode}
+
+\pagebreak 
+\unsect{Notes about perfect forwarding}
+\bigbreak \noindent 
+Consider the code with the unexpected results 
+\bigbreak \noindent 
+\begin{cppcode}
+    void f(float &&) { std::cout << "f"; }
+    void f(int &&) { std::cout << "i"; }
+
+    template <typename... T>
+    void g(T&&... v)
+    {
+        (f(v), ...);
+    }
+    g(1.0f, 1); // if
+    g(1.0f, 1.2f); // ii
+    g(1,1); // ff
+\end{cppcode}
+\bigbreak \noindent 
+even though each parameter is declared as a forwarding (universal) reference (T\&\&), when you refer to a named parameter (here, “v”), it is an lvalue. That means that even if you pass an rvalue (like 1.0f or 1), inside g the variables v are lvalues.
+\bigbreak \noindent 
+The functions $f$ only accept rvalue arguments. Since the named parameters in g are lvalues, neither f(float\&\&) nor f(int\&\&) can bind directly. However, implicit conversion is available. For an lvalue of type float (coming from 1.0f):
+\begin{itemize}
+    \item It cannot bind to f(float\&\&) (because it’s an lvalue).
+    \item It can convert to an long, which then binds to f(int\&\&) and prints "i".
+\end{itemize}
+\bigbreak \noindent 
+Similarly, for an lvalue of type int (coming from 1):
+\begin{itemize}
+    \item It cannot bind to f(int\&\&).
+    \item It converts to a float, binding to f(float\&\&) and printing "f".
+\end{itemize}
+\bigbreak \noindent 
+To preserve the original value category and get the expected overload, you should forward the arguments:
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename... T>
+    void g(T&&... v) {
+        (f(std::forward<decltype(v)>(v)), ...);
+    }
+\end{cppcode}
+\bigbreak \noindent 
+Since a named int (an lvalue) cannot bind directly to an rvalue reference like int\&\&, the f(int\&\&) overload is rejected. However, the compiler can perform an implicit conversion: it converts the int lvalue to a float, producing a prvalue (an rvalue) that can bind to f(float\&\&). That’s why an int ends up calling f(float\&\&) (printing "f").
+\bigbreak \noindent 
+Similarly, if you pass a float, it ends up converting to int for the other overload, because the float lvalue cannot bind to float\&\& directly, so it converts to an int prvalue to bind to f(int\&\&).
+
+
+
+
 
 
 

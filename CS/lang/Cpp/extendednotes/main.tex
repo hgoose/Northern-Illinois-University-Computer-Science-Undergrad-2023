@@ -6518,6 +6518,53 @@ Copy elision is an optimization technique used by C++ compilers to eliminate unn
 \end{itemize}
 
 
+\pagebreak 
+\unsect{User defined literals}
+\bigbreak \noindent 
+User defined literals (UDLs) are a feature introduced in C++11 that allow programmers to define custom literal suffixes to create objects of user-defined types directly from literal values. This makes code more expressive and type-safe
+\bigbreak \noindent 
+A UDL is implemented by defining a literal operator. The operator’s name is always of the form operator "" \_suffix, where \_suffix is the literal suffix you choose
+\bigbreak \noindent 
+UDL functions can accept different types of parameters based on the literal:
+\begin{itemize}
+    \item \textbf{Integer literals:} Typically handled by a parameter of type unsigned long long
+    \item \textbf{Floating-point literals:} Typically handled by a parameter of type long double
+    \item \textbf{Character and string literals:} Handled by parameters like const char*, a pointer with a length, or even a template parameter pack (e.g., template<char...> for compile-time processing).
+\end{itemize}
+\bigbreak \noindent 
+Once defined, you can append the custom suffix to literal values, which automatically calls your UDL function to convert the literal into your user-defined type
+\bigbreak \noindent 
+Consider a simple example where we define a UDL for distances in meters:
+\bigbreak \noindent 
+\begin{cppcode}
+    class Distance {
+        public:
+        double meters;
+        explicit Distance(double m) : meters(m) {}
+    };
+
+    // UDL for floating-point literals
+    constexpr Distance operator"" _m(long double d) {
+        return Distance(static_cast<double>(d));
+    }
+
+    // UDL for integer literals
+    constexpr Distance operator"" _m(unsigned long long d) {
+        return Distance(static_cast<double>(d));
+    }
+
+    Distance d1 = 3.5_m;  // Calls the long double version
+    Distance d2 = 10_m;   // Calls the unsigned long long version
+\end{cppcode}
+\bigbreak \noindent 
+\subsubsection{Why unsigned long long and long double?}
+\bigbreak \noindent 
+The parameter types for user-defined literal (UDL) operators aren’t chosen arbitrarily—they’re dictated by the C++ standard to ensure consistency and unambiguity when converting literal values.
+\bigbreak \noindent 
+
+
+
+
 
 
 
@@ -6563,6 +6610,7 @@ Copy elision is an optimization technique used by C++ compilers to eliminate unn
             \item Constructors implicitly constexpr
             \item destructors implicitly noexcept
             \item Enum classes
+            \item User defined literals with the operator"" \_suffix syntax
         \end{itemize}
     \item \textbf{c++14}: 
         \begin{itemize}

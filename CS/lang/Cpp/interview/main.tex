@@ -1860,6 +1860,82 @@ For a simple type like an int, passing by value (i.e. using "void f(int x)") is 
 \end{itemize}
 That said, the difference in performance for an int is extremely minor. For larger, more complex types, or when you need to modify the original variable, passing by reference may be more appropriate.
 
+\pagebreak 
+\unsect{Best practices in modern C++}
+\bigbreak \noindent 
+\subsection{What are explicit constructors and what are their advantages?}
+\bigbreak \noindent 
+The explicit specifier specifies that a constructor cannot be used for implicit conversions.
+\bigbreak \noindent 
+If not used, the compiler is allowed to make one implicit conversion
+to resolve the parameters to a function. The compiler can use
+constructors callable with a single parameter to convert from one
+type to another in order to get the right type for a parameter.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        int x{}, y{};
+
+        A(int x) : x(x) {}
+
+        void f(A a) {}
+    };
+    A a(5);
+    a.f(20); // Ok, compiler will use the constructor to implicitly convert
+    A a2 = 10; // Also ok
+\end{cppcode}
+\bigbreak \noindent 
+But if we make the constructor explicit,
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        int x{}, y{};
+
+        explicit A(int x) : x(x) {}
+
+        void f(A a) {}
+    };
+    A a = 5; // No vaiable conversion
+    a.f(20); // No vaiable conversion
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{What are user-defined literals?}
+\bigbreak \noindent 
+User-defined literals allow integer, floating-point, character, and string literals to produce objects of user-defined type by defining a user-defined suffix.
+\bigbreak \noindent 
+User-defined literals can be used with integer, floating-point, character and string types
+\bigbreak \noindent 
+
+\bigbreak \noindent 
+\subsection{Why should we use nullptr instead of NULL or 0?}
+\bigbreak \noindent 
+The literal 0 is an int, not a pointer. If the compiler is looking at
+a 0 where only a pointer can be used, it will interpret 0 as a null
+pointer, but that’s only an implicit conversion, a second option if
+\bigbreak \noindent 
+you prefer. The same is true for NULL, though implementations are
+allowed to give NULL an integral type other than int, such as long,
+which is uncommon
+\bigbreak \noindent 
+This has the following implication. In case you have a function with
+three overloads, including integral types and pointers, you might
+get some surprises:
+\bigbreak \noindent 
+\begin{cppcode}
+void f(int) { cout << "called int fn"; }
+void f(void*) { cout << "called void* fn"; }
+f(0); // calls int fn
+f(nullptr) // calls void* fn
+f(NULL); // Ambiguous, does not compile
+\end{cppcode}
+\bigbreak \noindent 
+On the other hand, nullptr doesn’t have an integral type. It’s type
+is std::nullptr\_t. It is a distinct type that is not itself a pointer
+type or a pointer to member type. At the same time, it implicitly
+converts to all raw pointer types, and that’s what makes nullptr
+act as if it were a pointer of all types.
+
 
 
 
