@@ -4053,6 +4053,7 @@
             \textbf{Note:} $\{X: A-X-B\} \cup \{X: A-B-X\} = \varnothing$
             \bigbreak \noindent 
             \textbf{Notation}: $\overline{AB}, \overrightarrow{AB}, \overleftrightarrow{AB}$ denote sets of points, with $\{A,B\} \subseteq \overline{AB} \subseteq \overrightarrow{AB} \subseteq \overleftrightarrow{AB}$
+        \item \textbf{Carriers}: We call the line $\overleftrightarrow{AB}$ the \textbf{carrier} of $\overrightarrow{AB} $
         \item \textbf{Segments and rays on $\mathbb{S}$}
             \bigbreak \noindent 
             \fig{.5}{./figures/24.png}
@@ -4227,13 +4228,13 @@
             \begin{align*}
                 AX + XB + BC &= AC
             \end{align*}
-            By the triangle inequality, we have $XB + BC \leq XC$. Thus,
+            By the triangle inequality, we have $XB + BC \geq XC$. Thus,
             \begin{align*}
-                AC & =AX + XB +  BC \leq AX + XC
+                AC & =AX + XB +  BC \geq AX + XC
             \end{align*}
             But the triangle inequality also implies that 
             \begin{align*}
-                AX + XC \leq AC
+                AX + XC \geq AC
             \end{align*}
             Thus, since $AX + XC \leq AC \leq AX + XC$. Thus, it must be that $AC = AX + XC$. Hence, $ A\text{-}X\text{-}C $. Next, plugging $AC = AX + XC$ into $AC = AX + XB + BC$ yields
             \begin{align*}
@@ -4499,7 +4500,7 @@
             \begin{itemize}
                 \item \textbf{Points:} $(x,y)$
                 \item \textbf{Lines}: Same as in $\mathbb{E}$
-                \item \textbf{Distance}: $d_{\mathbb{M}}(Ab) = \left\lvert x_{2} - x_{1} \right\rvert + \left\lvert y_{2} - y_{1} \right\rvert = \left\lvert x_{1} - x_{2} \right\rvert(1+\left\lvert m \right\rvert$ 
+                \item \textbf{Distance}: $d_{\mathbb{M}}(Ab) = \left\lvert x_{2} - x_{1} \right\rvert + \left\lvert y_{2} - y_{1} \right\rvert = \left\lvert x_{1} - x_{2} \right\rvert(1+\left\lvert m \right\rvert$) 
             \end{itemize}
         \item \textbf{$\mathbb{S}$}:
             \begin{itemize}
@@ -6766,7 +6767,220 @@ lagrangeeval(xx::Real, w::Vector, x::AbstractVector, y::Vector) = lagrangeeval([
     \begin{enumerate}
         \item \textbf{Cannot also interpolate derivative values}:
     \end{enumerate}
+\item \textbf{Newton polynomial basis}: The Lagrange polynomial basis can be thought of as
+    $$
+    \phi_j(x) = \prod_{\substack{i = 0 \\ i \neq j}}^n (x - x_i), 
+    \quad j = 0,1,\ldots,n.
+    $$
+    The \textbf{Newton polynomial} basis is defined in a very similar way:
+    $$
+    \phi_j(x) = \prod_{i = 0}^{j-1} (x - x_i), 
+    \quad j = 0,1,\ldots,n.
+    $$
+    \bigbreak \noindent 
+    Using the Newton basis, the matrix
+    $$
+    A = 
+    \begin{bmatrix}
+        \phi_0(x_0) & \phi_1(x_0) & \cdots & \phi_n(x_0)\\
+        \phi_0(x_1) & \phi_1(x_1) & \cdots & \phi_n(x_1)\\
+        \vdots & \vdots & \ddots & \vdots\\
+        \phi_0(x_n) & \phi_1(x_n) & \cdots & \phi_n(x_n)\\
+    \end{bmatrix}
+    $$
+    is \textbf{lower-triangular}. This means that we can solve $Ac = y$ using \textbf{forward-substitution} in $\mathcal{O}(n^2)$ flops.
+    \bigbreak \noindent 
+    For example, The Newton polynomial basis for the data
+    \begin{align*}
+        (x_0,y_0) = (2,1)\\
+        (x_1,y_1) = (6,2)\\
+        (x_2, y_2) = (4,3)\\
+        (x_3, y_3) = (8,2)\\
+    \end{align*}
+    is the following set of polynomials
+    $$
+    \begin{align}
+        \phi_0(x) & = 1 \\
+        \phi_1(x) & = (x-2) \\
+        \phi_2(x) & = (x-2)(x-6) \\
+        \phi_3(x) & = (x-2)(x-6)(x-4) \\
+    \end{align}
+    $$
+    Using this basis, we find the interpolating polynomial
+    $$p(x) = c_0 \phi_0(x) + c_1 \phi_1(x) + c_2 \phi_2(x) + c_3 \phi_3(x)$$
+    by solving the linear system $Ac = y$, where
+    $$
+    A = 
+    \begin{bmatrix}
+        \phi_0(x_0) & \phi_1(x_0) & \phi_2(x_0) & \phi_3(x_0)\\
+        \phi_0(x_1) & \phi_1(x_1) & \phi_2(x_1) & \phi_3(x_1)\\
+        \phi_0(x_2) & \phi_1(x_2) & \phi_2(x_2) & \phi_3(x_2)\\
+        \phi_0(x_3) & \phi_1(x_3) & \phi_2(x_3) & \phi_3(x_3)\\
+    \end{bmatrix} =
+    \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        1 & 4 & 0 & 0 \\
+        1 & 2 & -4 & 0 \\
+        1 & 6 & 12 & 48 \\
+    \end{bmatrix}.
+    $$
+    Thus, $Ac = y$ is as follows.
+    $$
+    \begin{matrix}
+        c_0 & &       & &       & &       &=& 1 \\
+        c_0 &+& 4 c_1 & &       & &       &=& 2 \\
+        c_0 &+& 2 c_1 &-& 4c_2  & &       &=& 3 \\
+        c_0 &+& 6 c_1 &+& 12c_2 &+& 48c_3 &=& 2 \\
+    \end{matrix}
+    $$
+    We solve this system by forward-substitution:
+    $$
+    \begin{align}
+        c_0 &= 1 
+        \\
+        c_1 &= \frac{1}{4} (2 - c_0) = \frac{1}{4} 
+        \\
+        c_2 &= -\frac{1}{4}(3 - c_0 - 2 c_1) =  -\frac38
+        \\
+        c_3 &= \frac{1}{48}(2 - c_0 - 6 c_1 - 12 c_2) = \frac{1}{12}
+        \\
+    \end{align}
+    $$
+    \bigbreak \noindent 
+    Thus, the interpolating polynomial is 
+    $$
+    p(x) = 1 + \frac14(x-2) - \frac38(x-2)(x-6) + \frac{1}{12}(x-2)(x-6)(x-4)
+    $$
+\item \textbf{Divided differences}:
+    Given the data points $\left\{(x_i,y_i)\right\}_{i=0}^n$, where $y_i = f(x_i)$, the Newton form of the interpolating polynomial can also be written in closed-form as:
+$$p(x) = \sum_{j=0}^n c_j \phi_j(x) = \sum_{j=0}^n \left( f[x_0,\ldots,x_j] \prod_{i=0}^{j-1}(x-x_i) \right).$$
+That is, the coefficient $c_j$ of $\phi_j(x)$ is the so-called \textbf{$j$th divided difference}:
+$$c_j = f[x_0,\ldots,x_j].$$
+Divided differences are defined recursively by
+$$f[x_i] = f(x_i), \qquad \text{for } 1\leq i \leq n,$$
+and
+$$f[x_i,\ldots,x_j] = \frac{f[x_{i+1},\ldots,x_j] - f[x_i,\ldots,x_{j-1}]}{x_j - x_i}, \qquad \text{for } 1\leq i < j \leq n.$$
+\bigbreak \noindent 
+Divided differences can be nicely represented in a table as follows.
+$$
+\begin{array}{c||c|ccccc}
+i & x_i & f[x_i] & f[x_{i-1},x_i] & f[x_{i-2},x_{i-1},x_i] & \cdots & f[x_0,\ldots,x_n] \\ \hline
+0 & x_0 & f(x_0) \\
+1 & x_1 & f(x_1) & f[x_0,x_1] \\
+2 & x_2 & f(x_2) & f[x_1,x_2] & f[x_0,x_1,x_2] \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \ddots  \\
+n & x_n & f(x_n) & f[x_{n-1},x_n] & f[x_{n-2},x_{n-1},x_n] & \cdots & f[x_0,\ldots,x_n] \\
+\end{array}
+$$
+Note that the coefficients $c_j = f[x_0,\ldots,x_j]$ of the Newton polynomial appear along the diagonal of the table.
+\bigbreak \noindent 
+Let's complete the divided difference table for the data
+\begin{align*}
+    (x_0,y_0) = (2,1)\\
+    (x_1,y_1) = (6,2)\\
+    (x_2, y_2) = (4,3)\\
+    (x_3, y_3) = (8,2)\\
+\end{align*}
+\bigbreak \noindent 
+\begin{align*}
+    \begin{array}{c|c|cccc}
+        i & x_i & f[\cdot] & f[\cdot,\cdot] & f[\cdot,\cdot,\cdot] & f[\cdot,\cdot,\cdot,\cdot] \\
+        \hline
+        0 & 2 & 1 &  &  \\
+        1 & 6 & 2 & \frac{2-1}{6-2} &  \\
+        2 & 4 & 3 & \frac{3-2}{4-6} &  & \\
+        3 & 8 & 2 & \frac{2-3}{8-4} &  &  \\
+    \end{array}
+\end{align*}
 
+\begin{align*}
+    \begin{array}{c|c|cccc}
+        i & x_i & f[\cdot] & f[\cdot,\cdot] & f[\cdot,\cdot,\cdot] & f[\cdot,\cdot,\cdot,\cdot] \\
+        \hline
+        0 & 2 & 1 &  &  \\
+        1 & 6 & 2 & \frac{1}{4} &  \\
+        2 & 4 & 3 & -\frac{1}{2} & \frac{-\frac12 - \frac14}{4-2} & \\
+        3 & 8 & 2 & -\frac{1}{4} & \frac{-\frac14 + \frac12}{8-6} &  \\
+    \end{array}
+\end{align*}
+
+\begin{align*}
+    \begin{array}{c|c|cccc}
+        i & x_i & f[\cdot] & f[\cdot,\cdot] & f[\cdot,\cdot,\cdot] & f[\cdot,\cdot,\cdot,\cdot] \\
+        \hline
+        0 & 2 & 1 &  &  \\
+        1 & 6 & 2 & \frac{1}{4} &  \\
+        2 & 4 & 3 & -\frac{1}{2} & -\frac38 & \\
+        3 & 8 & 2 & -\frac{1}{4} & \frac18 & \frac{\frac18 + \frac38}{8-2} \\
+    \end{array}
+\end{align*}
+
+\begin{align*}
+    \begin{array}{c|c|cccc}
+        i & x_i & f[\cdot] & f[\cdot,\cdot] & f[\cdot,\cdot,\cdot] & f[\cdot,\cdot,\cdot,\cdot] \\
+        \hline
+        0 & 2 & 1 &  &  \\
+        1 & 6 & 2 & \frac{1}{4} &  \\
+        2 & 4 & 3 & -\frac{1}{2} & -\frac38 & \\
+        3 & 8 & 2 & -\frac{1}{4} & \frac18 & \frac{1}{12} \\
+    \end{array}
+\end{align*}
+\bigbreak \noindent 
+Thus, the interpolating polynomial is 
+$$
+p(x) = 1 + \frac14(x-2) - \frac38(x-2)(x-6) + \frac{1}{12}(x-2)(x-6)(x-4).
+$$
+Note that the Newton form can be evaluated using a nested approach:
+$$
+p(x) = 1 + (x-2)\Bigg( \frac14 + (x-6)\bigg(-\frac38 + \frac{1}{12}(x-4)\bigg) \Bigg).
+$$
+\item \textbf{Divided differences in Julia}:
+    \bigbreak \noindent 
+    \begin{cppcode}
+###############################
+function divdif(x::Vector{T}, y::Vector{T}) where T<:Union{AbstractFloat,Rational}
+
+    n = length(x)
+    Table = zeros(T, n, n)
+    
+    Table[:, 1] = y
+    for k = 2:n
+        for i=k:n
+            Table[i, k] = Table[i, k-1] - Table[i-1, k-1]
+            Table[i, k] /= x[i] - x[i-k+1]
+        end
+    end
+    
+    c = diag(Table)
+    
+    return c, Table
+end
+###############################
+    \end{cppcode}
+\item \textbf{Julia: Evaluate Newton interpolation}: 
+    \bigbreak \noindent 
+    \begin{cppcode}
+###############################
+function evalnewt(
+        xspan::AbstractVector, 
+        x::Vector, 
+        c::Vector)
+    n = length(x)
+    
+    p = c[n]*ones(length(xspan))
+    for i = 1:length(p)
+        for j = n-1:-1:1
+            p[i] *= xspan[i] - x[j]
+            p[i] += c[j]
+        end
+    end
+    
+    return p
+end
+
+evalnewt(xx::Real, x::Vector, c::Vector) = evalnewt([xx], x, c)[1]
+###############################
+    \end{cppcode}
 
 
 

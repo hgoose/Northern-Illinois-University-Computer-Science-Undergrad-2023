@@ -1,27 +1,20 @@
-function lagrangeeval(xspan::AbstractVector, w::Vector, x::AbstractVector, y::Vector)
-
+###############################
+function evalnewt(
+        xspan::AbstractVector,
+        x::Vector,
+        c::Vector)
     n = length(x)
 
-    top = zero(xspan)
-    bottom = zero(xspan)
-    exact = zeros(Int, length(xspan))
-
-    for j=1:n
-        xdiff = xspan .- x[j]
-        temp = w[j]./xdiff
-        top += temp*y[j]
-        bottom += temp
-
-        exact[xdiff .== 0.0] .= j  # exact[i] = j if xspan[i] = x[j]
+    p = c[n]*ones(length(xspan))
+    for i = 1:length(p)
+        for j = n-1:-1:1
+            p[i] *= xspan[i] - x[j]
+            p[i] += c[j]
+        end
     end
-
-    p = top./bottom
-
-    iinds = findall(exact .!= 0)  # gives the indices i of xspan that equal some x[j]
-    jinds = exact[iinds]          # gives the corresponding j indices
-    p[iinds] = y[jinds]           # sets any NaNs in p to the correct values from y
 
     return p
 end
 
-lagrangeeval(xx::Real, w::Vector, x::AbstractVector, y::Vector) = lagrangeeval([xx], w, x, y)[1]
+evalnewt(xx::Real, x::Vector, c::Vector) = evalnewt([xx], x, c)[1]
+###############################
