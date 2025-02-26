@@ -3613,6 +3613,79 @@ Since a named int (an lvalue) cannot bind directly to an rvalue reference like i
 \bigbreak \noindent 
 Similarly, if you pass a float, it ends up converting to int for the other overload, because the float lvalue cannot bind to float\&\& directly, so it converts to an int prvalue to bind to f(int\&\&).
 
+\pagebreak 
+\unsect{lazy instantiation in templates}
+\bigbreak \noindent 
+Lazy instantiation means that the compiler defers generating the full definition of a template until it’s actually needed. 
+\bigbreak \noindent 
+When you write a template (like a class template), you're providing a blueprint. The compiler doesn’t generate code for that blueprint until you use it with a specific type in a context that requires the complete definition. For example, merely declaring a pointer to a template instantiation doesn’t force the compiler to instantiate its members.
+\bigbreak \noindent 
+This approach improves compile times by only generating code for the parts of the template that are actually used. It also allows you to write templates that can work with a broader range of types—even if some types would cause errors in unused parts of the template, they won’t be instantiated unless needed.
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+template<typename T>
+struct A {
+    static_assert(false);
+};
+
+A<int>* a; // does not cause static_assert to execute, since a is a pointer
+\end{cppcode}
+
+\pagebreak 
+\unsect{Notes about initializer\_list}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+    struct A {
+        A () = default;
+        A(const A& other) { cout << "Copied" << endl; }
+    };
+    void f(std::initializer_list<A> i) {}
+
+    A a;
+    std::initializer_list<A> i{a};
+    f(i);
+    f(i);
+\end{cppcode}
+\bigbreak \noindent 
+So when we construct the initializer list i, we can imagine a temporary array of one C being created, where the element is copy-initialized. Since c is an lvalue, a copy is made (not for instance a move), and 1 is printed.
+\bigbreak \noindent 
+Then, f is called twice, taking the freshly created initializer\_list by value. So a copy of the initializer\_list is made for each call. Does that make a copy of the elements in the initializer list, as it would when taking for instance a vector or a list by value? No...
+\bigbreak \noindent 
+\begin{quote}
+    Copying an initializer list does not copy the underlying elements.
+\end{quote}
+\bigbreak \noindent 
+If you write an initializer list constructor for your class, never move the elements out of the initializer list. Even if you took it by value, you were not passed an exclusive copy of the elements, which might still be used by others.
+
+\pagebreak 
+\unsect{Notes about operator precedence}
+\bigbreak \noindent 
+\subsection{Logical operators}
+\bigbreak \noindent 
+consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+int i=1,j=1,k=1;
+if (++i || ++j && ++ k);
+cout << i << j << k;
+\end{cppcode}
+\bigbreak \noindent 
+Here, we get $1211$, only $i$ is incremented. \&\& (logical-and-expression) has higher precedence than || (logical-or-expression
+\bigbreak \noindent 
+Logical precedence from lowest to highest
+\begin{enumerate}
+    \item logical-or-expression:
+    \item logical-and-expression
+    \item logical-or-expression || logical-and-expression
+\end{enumerate}
+\bigbreak \noindent 
+So (++I || ++J \&\& ++K) will be equal to (++I || (++J \&\& ++K)). Since $++i$ is true, the short circuiting principle guarantees that the right side will be skipped.
+
+
 
 
 

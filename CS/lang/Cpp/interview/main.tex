@@ -1936,47 +1936,68 @@ type or a pointer to member type. At the same time, it implicitly
 converts to all raw pointer types, and that’s what makes nullptr
 act as if it were a pointer of all types.
 
+\bigbreak \noindent 
+\subsection{What advantages does alias have over typedef?}
+\bigbreak \noindent 
+In case of function pointers, they are more readable:
+\bigbreak \noindent 
+\begin{cppcode}
+    typedef void (*MyFunctionPointer)(int, int);
+    using MyFunctionPointerAlias = void(*)(int, int);
+\end{cppcode}
+\bigbreak \noindent 
+Another advantage is that typedefs don’t support templatization,
+but alias declarations do
 
+\bigbreak \noindent 
+\subsection{Should you explicitly delete unused/unsupported special functions or declare them as private?}
+\bigbreak \noindent 
+You might not want a class to be copied or moved, so you
+want to keep related special functions unreachable for the caller.
+One option is to declare them as private or protected and the other
+is that you explicitly delete them.
+\bigbreak \noindent 
+Before C++11 there was no other option than declaring the unneeded special functions private and not implementing them.
+\bigbreak \noindent 
+Since C++11 you can simply mark them deleted by declaring them as = delete;
+\bigbreak \noindent 
+The C++11 way is a better approach because
+\begin{enumerate}
+    \item it’s more explicit than having the functions in the private section which might only be a mistake
+    \item in case you try to make a copy, you’ll already get an error at compilation time
+\end{enumerate}
+\bigbreak \noindent 
+Deleted functions should be declared as public, not private. It’s not a
+mandate by the compiler, but some compilers might only complain
+that you call a private function, not that it’s deleted.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\bigbreak \noindent 
+\subsection{ What is a trivial class in C++?}
+\bigbreak \noindent 
+When a class or struct in C++ has only compiler-provided or
+explicitly defaulted special member functions, then it is a trivial
+type. It occupies a contiguous memory area. It can have members
+with different access specifiers. In C++, the compiler is free to
+choose how to order members in this situation. Therefore, you can
+memcpy such objects but you cannot reliably consume them from a
+C program. A trivial type T can be copied into an array of char or
+unsigned char and safely copied back into a T variable. Note that
+because of alignment requirements, there might be padding bytes
+between type members.
+\bigbreak \noindent 
+Trivial types have a trivial a default constructor, trivial copy and
+move constructors, trivial copy and move assignment operators and
+a trivial destructor. In each case, trivial means the constructor/operator/destructor is not user-provided and belongs to a class that
+has
+\begin{enumerate}
+    \item no virtual functions or virtual base classes,
+    \item no base classes with a corresponding non-trivial constructor/- operator/destructor
+    \item no data members of class type with a corresponding nontrivial constructor/operator/destructor
+\end{enumerate}
+\bigbreak \noindent 
+Whether a class is trivial or not, you can verify with the std::is\_trivial trait class. It checks whether the class is trivially copyable
+(std::is\_trivially\_copyable) and is trivially default constructible
+std::is\_trivially\_default\_constructible.
 
 
 

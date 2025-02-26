@@ -32,7 +32,8 @@ pack fms(V A, int start, int end) {
 
 int main(int argc, char** argv) {
 
-    vector<int> v{1,3,-4,8,-2,6,-12,7};
+    vector<int> v{1,-3,2,3,-4};
+    // vector<int> v{1,3,-4,8,-2,6,-12,7};
 
     for (const auto& item : v) {
         cout << item << " ";
