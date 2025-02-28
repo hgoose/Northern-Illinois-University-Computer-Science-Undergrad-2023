@@ -1999,6 +1999,144 @@ Whether a class is trivial or not, you can verify with the std::is\_trivial trai
 (std::is\_trivially\_copyable) and is trivially default constructible
 std::is\_trivially\_default\_constructible.
 
+\pagebreak 
+\unsect{Smart pointers}
+\bigbreak \noindent 
+\subsection{RAII}
+\bigbreak \noindent 
+RAII is the bread and butter idiom of C++. It says that anything that
+exists in a system only in limited supply must be acquired before
+we start using it.
+\bigbreak \noindent 
+By such resources, we mean things like
+\begin{itemize}
+    \item allocated heap memory,
+    \item execution thread,
+    \item open sockets,
+    \item files,
+    \item locked mutex,
+    \item disk space,
+    \item or database connections.
+\end{itemize}
+\bigbreak \noindent 
+On the other hand, resources that are not acquired before using
+them, are not part of RAII, such as 
+\begin{itemize}
+    \item CPU cores and time,
+    \item cache capacity,
+    \item network bandwidth,
+    \item electric power consumption
+    \item or even stack memory.
+\end{itemize}
+\bigbreak \noindent 
+In practical terms, an RAII class acquires all the resources
+upon construction and releases everything on destruction time.
+You shouldn’t have to call methods such as init()/open()
+or destroy/close.
+\bigbreak \noindent 
+In the standard library std::string, std::vector or std::thread
+are such RAII classes.
+\bigbreak \noindent 
+On the other hand, if you consider raw pointers, they don’t share
+the RAII concept. When a pointer goes out of scope, it doesn’t get
+destroyed automatically, you have to delete it before it’s lost and
+creates a memory leak. On the other hand, the smart pointers of
+the standard library (std::unique\_ptr, std::shared\_ptr) provide
+such a wrapper.
+\bigbreak \noindent 
+\begin{cppcode}
+    SomeLimitedResource* resource = new SomeLimitedResource();
+    resouce->doIt(); // oops, it throws an exception...
+
+    delete resource; // this never gets called, so we have a leak
+\end{cppcode}
+\bigbreak \noindent 
+Applying RAII by smart pointers, it should be ok:
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<SomeLimitedResource> resource =
+    std::make_unique<SomeLimitedResource>();
+
+    // even if it throws an exception, the resource gets released
+    resouce->doIt();
+\end{cppcode}
+
+\bigbreak \noindent 
+\begin{cppcode}
+// RAII struct
+struct A{
+    int* p;
+    A(int* p) : p(p) { }
+
+    void ex() {
+        throw std::exception();
+    }
+
+    ~A() {
+        delete p;
+    }
+};
+A a(new int(10));
+a.ex(); // Ok! destructor will be called
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{When should we use unique pointers?}
+\bigbreak \noindent 
+If you need a smart pointer, by default, you should reach for
+std::unique\_ptr. It is a small, fast, move-only smart pointer for
+managing resources with exclusive-ownership semantics.
+\bigbreak \noindent 
+They have the same size as a raw pointer, and for most operations,
+they require the same amount of instructions.
+\bigbreak \noindent 
+As mentioned, it’s for exclusive ownership. Whatever it points to,
+it also owns it. std::unique\_ptr is a move only type, copying is
+not allowed, there can be only one owner. There is no reference
+counting, this makes it smaller and faster than the std::shared\_-
+ptr.
+\bigbreak \noindent 
+By default, resource destruction takes place via delete, but custom
+deleters can be specified. Stateful deleters and function pointers
+as deleters increase the size of std::unique\_ptr objects. Resource
+destruction happens as soon as the pointer goes out of scope.
+\bigbreak \noindent 
+\begin{cppcode}
+    std::unique_ptr<T> ptr (new T());
+    // or;
+    T* t = new T();
+    std::unique_ptr<T> ptr2 (t);
+\end{cppcode}
+\bigbreak \noindent 
+C++14 introduced std::make\_unique to ease the creation:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<T> ptr = std::make_unique<T>();
+\end{cppcode}
+\bigbreak \noindent 
+The new way of pointer creation is safer, because before you could
+accidentally pass in a raw pointer twice to a new unique pointer
+like this:
+\bigbreak \noindent 
+\begin{cppcode}
+T* t = new T();
+std::unique_ptr<T> ptr (t);
+std::unique_ptr<T> ptr2 (t);
+\end{cppcode}
+\bigbreak \noindent 
+A common use for std::unique\_ptr is as a factory function return
+type for objects in a hierarchy. In case it turns out that a shared
+pointer would be a better fit, the conversion is really easy:
+\bigbreak \noindent 
+\begin{cppcode}
+std::unique_ptr<T> unique = std::make_unique<T>();
+std::shared_ptr<T> shared = std::move(unique);
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{What are the reasons to use shared pointers?}
+\bigbreak \noindent 
+
 
 
 

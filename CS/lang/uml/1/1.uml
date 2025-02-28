@@ -1,0 +1,41 @@
+@startuml
+actor "Internet Customer" as Customer
+actor "Warehouse Worker" as Warehouse
+actor "Receiving Desk" as Receiving
+actor "Administrator" as Admin
+actor "Credit Card Processor" as CreditCard
+actor "Legacy Product Database" as LegacyDB
+
+rectangle "Product System" {
+  
+  ' Customer use cases
+  Customer --> (Browse Catalog)
+  Customer --> (Place Order)
+  (Place Order) --> (Calculate Total Price)
+  (Place Order) --> (Enter Shipping & Payment Info)
+  (Enter Shipping & Payment Info) --> (Authorize Credit Card)
+  (Authorize Credit Card) --> CreditCard
+  (Place Order) --> (Send Order Confirmation Email)
+
+  ' Relationship with legacy system for product info
+  (Browse Catalog) ..> LegacyDB : "Fetch product info"
+  
+  ' Warehouse worker use cases
+  Warehouse --> (Print Packing List)
+  Warehouse --> (Retrieve Order Items)
+  Warehouse --> (Package Order)
+  Warehouse --> (Print Invoice & Shipping Label)
+  Warehouse --> (Mark Order as Shipped)
+  (Mark Order as Shipped) --> (Send Shipping Confirmation Email)
+
+  ' Receiving desk use case
+  Receiving --> (Update Inventory)
+  (Update Inventory) ..> LegacyDB : "Update product quantities"
+
+  ' Administrator use cases
+  Admin --> (Set Shipping & Handling Charges)
+  Admin --> (Search/View Orders)
+  Admin --> (Display Order Details)
+}
+@enduml
+

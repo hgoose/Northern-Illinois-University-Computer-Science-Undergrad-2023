@@ -367,6 +367,44 @@
     \bigbreak \noindent 
     As a quick side note, since we are on the topic of const correctness, recall that constant member functions cannot call non-const member functions.
 
+    \bigbreak \noindent 
+    \subsection{Copy constructors in inheritance}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            A() { cout << "default" << endl; }
+            A(const A& other) { cout << "other" << endl; }
+        };
+
+        struct B : A {
+            B() { cout << "default" << endl; }
+            B(const B& other) { cout << "other" << endl; }
+        };
+        B b;
+        B b2(b);
+        // Default
+        // Default
+        // Default
+        // Other
+    \end{cppcode}
+    \bigbreak \noindent 
+    So why isn't \texttt{B b2(b)} calling A's copy constructor?
+    \bigbreak \noindent 
+    When you write the copy constructor for class B without an initializer list for the base class A, the base class part of B is default-constructed by default
+    \bigbreak \noindent 
+    Since there is no initializer list here, A is constructed using its default constructor (which prints "default") rather than its copy constructor. To have A's copy constructor called when copying a B object, you need to explicitly initialize the A subobject using A(other) in B’s copy constructor, like so:
+    \bigbreak \noindent 
+    \begin{cppcode}
+    B(const B& other) : A(other) { cout << "other" << endl; }
+    \end{cppcode}
+    \bigbreak \noindent 
+    This change ensures that when you copy a B object, the A part is also copied (using A's copy constructor), and the output would reflect that.
+    \bigbreak \noindent 
+    As it turns out, an implicitly-defined copy constructor would have called the copy constructor of its bases "The implicitly-defined copy/move constructor for a non-union class X performs a memberwise copy/move of its bases and members"). But when you provide a user-defined copy constructor, this is something you have to do explicitly
+
+
     \pagebreak 
     \unsect{Exceptions during a call to new}
     \bigbreak \noindent 
@@ -3684,6 +3722,32 @@ Logical precedence from lowest to highest
 \end{enumerate}
 \bigbreak \noindent 
 So (++I || ++J \&\& ++K) will be equal to (++I || (++J \&\& ++K)). Since $++i$ is true, the short circuiting principle guarantees that the right side will be skipped.
+
+
+\pagebreak 
+\unsect{Alternative tokens}
+\bigbreak \noindent 
+Alternative token representations are provided for some operators and punctuators. In all respects of the language, each alternative token behaves the same, respectively, as its primary token, except for its spelling. The set of alternative tokens is
+\begin{center}
+    \begin{tabular}{|c|c||c|c||c|c|}
+        \hline
+        \textbf{Alternative} & \textbf{Primary} & \textbf{Alternative} & \textbf{Primary} & \textbf{Alternative} & \textbf{Primary} \\
+        \hline
+        \texttt{<\%} & \texttt{\{} & \texttt{and} & \texttt{\&\&} & \texttt{and\_eq} & \texttt{\&=} \\
+            \hline
+        \texttt{\%>} & \texttt{\}} & \texttt{bitor} & \texttt{|} & \texttt{or\_eq} & \texttt{|=} \\
+        \hline
+        \texttt{<:} & \texttt{[} & \texttt{or} & \texttt{||} & \texttt{xor\_eq} & \texttt{$^{\land}$=} \\
+        \hline
+        \texttt{:>} & \texttt{]} & \texttt{xor} & \texttt{\^} & \texttt{not} & \texttt{!} \\
+        \hline
+        \texttt{\%:} & \texttt{\#} & \texttt{compl} & \texttt{\~} & \texttt{not\_eq} & \texttt{!=} \\
+        \hline
+        \texttt{\%:\%:} & \texttt{\#\#} & \texttt{bitand} & \texttt{\&} &  &  \\
+        \hline
+    \end{tabular}
+\end{center}
+
 
 
 

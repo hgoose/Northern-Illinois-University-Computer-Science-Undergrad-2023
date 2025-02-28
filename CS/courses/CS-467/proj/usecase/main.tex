@@ -1,0 +1,359 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={}
+}
+
+\begin{document}
+    % \maketitle
+    %     \begin{titlepage}
+    %    \begin{center}
+    %        \vspace*{1cm}
+    % 
+    %        \textbf{}
+    % 
+    %        \vspace{0.5cm}
+    %         
+    %             
+    %        \vspace{1.5cm}
+    % 
+    %        \textbf{Nathan Warner}
+    % 
+    %        \vfill
+    %             
+    %             
+    %        \vspace{0.8cm}
+    %      
+    %        \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+    %             
+    %        Computer Science \\
+    %        Northern Illinois University\\
+    %        United States\\
+    %        
+    %             
+    %    \end{center}
+    % \end{titlepage}
+    % \tableofcontents
+    \pagebreak 
+    \unsect{Use case diagram}
+    \bigbreak \noindent 
+    \fig{.7}{./figures/1.png}
+
+    \pagebreak 
+    \unsect{Actor Descriptions}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{2cm}|p{7cm}|p{5.2cm}|}
+            \hline
+            Actor	&Description	&Use Case(s) \\
+            \hline
+            Customer&	An individual who uses the online interface to browse the product catalog, select auto parts, and place orders. They provide shipping/billing info and finalize payment.	&Browse Catalog, Make a Purchase \\
+            \hline
+            Warehouse Worker	&An employee in the warehouse responsible for printing packing lists, picking items, packing shipments, and updating shipping status once an order is shipped.	&Print Packing List, Set Shipping Status \\
+            \hline
+            Receiving Employee	&An employee at the receiving desk who updates inventory whenever new product stock arrives (by part number or description) and adjusts quantities on hand in the system.	&Update Inventory \\
+            \hline
+            Administrator	&A privileged user who configures shipping  handling charges, maintains weight-based pricing brackets, and views/searches orders by date, status, or price range.	&Manage Shipping, View Orders \\
+            \hline
+            Credit Card Processing System	&An external service used by the new system to authorize customer credit card transactions. Receives card info, expiration date, and amount, returning authorization.	&Process Payment \\
+            \hline
+            Product Info DB	&The legacy database storing product part numbers, descriptions, weights, pictures, and base prices. The new system retrieves product data from here when displaying the catalog.	&Manage shipping, Update inventory, set shipping status, print packaging list, browse catalog, make a purchase\\
+            \hline
+            Inventory DB	&A new or selected database that stores the quantity on hand for each product, as well as customer orders and their status (authorized, shipped, etc.).	&Make a Purchase, Update Inventory, Browse catalog, Print packaging list, View Orders \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \unsect{Use case descriptions}
+    \bigbreak \noindent 
+    \subsection{Browse Catalog}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{5cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Customer, Product Info DB, Inventory DB \\
+            \hline
+            Description & 
+            The Customer views the online catalog of auto parts. 
+            The system retrieves product information (name, description, 
+            picture, price, weight) from the Product Info DB. 
+            The system retrieves inventory information from the inventory DB.
+             \\
+            \hline
+            Data & 
+            Product details: part number, description, weight, picture link, 
+            price, \\
+            \hline
+            Stimulus & 
+            Customer requests to browse or search the product catalog. \\
+            \hline
+            Response & 
+            System displays a list of products with relevant details. \\
+            \hline
+            Comments & 
+            This use case is the entry point for a Customer 
+            before selecting items to purchase. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \subsection{Make a purchase}
+    \begin{center}
+        \begin{tabular}{|p{5cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Customer, Product Info DB, Inventory DB \\
+            \hline
+            Description & 
+            The Customer selects products, specifies quantities, provides 
+            shipping/billing details, and confirms the order. The system 
+            calculates the total cost (including shipping/handling). \\
+            \hline
+            Data & 
+            Selected products and quantities, Customer shipping/billing information, Shipping and handling charges, Total order price \\
+            \hline
+            Stimulus & 
+            Customer proceeds to checkout (submits order). \\
+            \hline
+            Response & 
+            System creates a new order record, updates inventory levels, 
+            and confirms the order \\
+            \hline
+            Comments & 
+            Credit card authorization is handled by the \emph{Process Payment} 
+            use case. An email confirmation is sent upon successful purchase. \\
+            \hline
+        \end{tabular}
+    \end{center}
+    
+
+    \pagebreak 
+    \subsection{Print Packing List}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{4cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Warehouse Worker, Product Info DB, Inventory DB \\
+            \hline
+            Description & 
+            Warehouse Worker retrieves a list of authorized (paid) orders 
+            ready for fulfillment, then prints a packing list that 
+            includes product details and shipping information. \\
+            \hline
+            Data & 
+            Order details (items, quantities, shipping address), Inventory DB records (order status) \\
+            \hline
+            Stimulus & 
+            Warehouse Worker selects an order to be packed. \\
+            \hline
+            Response & 
+            System generates and prints the packing list \\
+            \hline
+            Comments & 
+            Printing a packing list helps the Warehouse Worker gather 
+            all required items for shipment. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \subsection{Set Shipping Status}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{4cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Warehouse Worker, Product Info DB \\
+            \hline
+            Description & 
+            After packing and shipping an order, the Warehouse Worker 
+            updates the order status to indicate it has shipped. \\
+            \hline
+            Data & 
+            Order ID, Shipping status (shipped date/time, tracking info if applicable) \\
+            \hline
+            Stimulus & 
+            Warehouse Worker marks the order as shipped in the system. \\
+            \hline
+            Response & 
+            System updates the order record in the DB, sends 
+            shipment confirmation email to the Customer. \\
+            \hline
+            Comments & 
+            Indicating that the order is shipped completes the fulfillment 
+            process for that order. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \subsection{Update Inventory}
+    \bigbreak \noindent 
+    \begin{center}
+    \begin{tabular}{|p{4cm}|p{8cm}|}
+        \hline
+        Actors & 
+        Receiving Employee, Product Info DB, Inventory DB \\
+        \hline
+        Description & 
+        The Receiving Employee updates the system whenever new stock 
+        arrives, increasing the quantity on hand for specific products. \\
+        \hline
+        Data & 
+        Product part number or description, New quantity delivered, Current inventory levels \\
+        \hline
+        Stimulus & 
+        Receiving Employee logs new products into the system. \\
+        \hline
+        Response & 
+        System updates the product’s quantity on hand in the DB. \\
+        \hline
+        Comments & 
+        Ensures accurate inventory data for orders.  \\
+        \hline
+    \end{tabular}
+\end{center}
+
+    \pagebreak 
+    \subsection{Manage Shipping}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{4cm}|p{9cm}|}
+            \hline
+            Actors & 
+            Administrator, Product Info DB \\
+            \hline
+            Description & 
+            Administrator configures shipping and handling charges, including 
+            defining or updating weight brackets and associated costs. \\
+            \hline
+            Data & Shipping weight brackets, Shipping/handling charges \\
+            \hline
+            Stimulus & 
+            Administrator chooses to add or modify shipping cost rules. \\
+            \hline
+            Response & 
+            System saves updated shipping rules in the DB, 
+            used for future order calculations. \\
+            \hline
+            Comments & 
+            These charges are factored into the total price when Customers 
+            place orders. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \subsection{View Orders}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{4cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Administrator, Inventory DB \\
+            \hline
+            Description & 
+            Administrator searches and views orders by date range, status, 
+            or price range, and can display full order details. \\
+            \hline
+            Data & 
+            Order records: ID, date, status, items, price, etc. \\
+            \hline
+            Stimulus & 
+            Administrator requests to see orders \\
+            \hline
+            Response & 
+            System retrieves matching orders from the Inventory DB and 
+            displays the results. \\
+            \hline
+            Comments & 
+            The Administrator may also use this information for analysis 
+            or troubleshooting. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \pagebreak 
+    \subsection{Process Payment}
+    \bigbreak \noindent 
+    \begin{center}
+        \begin{tabular}{|p{4cm}|p{8cm}|}
+            \hline
+            Actors & 
+            Credit Card Processing System \\
+            \hline
+            Description & 
+            The new system submits credit card details (number, expiration, amount) 
+            to the external Credit Card Processing System for authorization. \\
+            \hline
+            Data & 
+            Credit card information (number, expiry date), Purchase amount, Authorization result (approval or decline) \\
+            \hline
+            Stimulus & 
+            A request to authorize payment is sent by the new system 
+            during checkout. \\
+            \hline
+            Response & 
+            The external system returns an authorization or decline code. 
+            The new system updates the order status accordingly. \\
+            \hline
+            Comments & 
+            If payment is authorized, the order is marked as paid and 
+            an email confirmation is sent to the Customer. \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
