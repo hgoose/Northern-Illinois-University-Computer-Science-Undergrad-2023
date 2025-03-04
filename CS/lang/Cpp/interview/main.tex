@@ -2136,7 +2136,95 @@ std::shared_ptr<T> shared = std::move(unique);
 \bigbreak \noindent 
 \subsection{What are the reasons to use shared pointers?}
 \bigbreak \noindent 
+Shared pointers brought C++ developers the advantages of two
+worlds. It offers automatic cleanup (a.k.a. garbage collection) that
+is applicable to all types with a destructor and it is predictable, not
+like Garbage Collectors in other languages.
+\bigbreak \noindent 
+Compared to std::unique\_ptr or to a raw pointer, std::shared\_-
+ptr objects are typically twice as big because they don’t just contain
+a raw pointer, but they also contain another raw pointer to a
+dynamically allocated memory area where the reference counting
+happens.
+\bigbreak \noindent 
+By default, destruction happens via delete, but just like for
+std::unique\_ptr, custom deleters can be passed. It’s worth noting
+that the type of the deleter has no effect on the type of the
+std::shared\_ptr.
+\bigbreak \noindent 
+Resource destruction happens as soon as the pointer goes out of
+scope.
+\bigbreak \noindent 
+It’s available since C++11 and there are two ways to initalize a
+shared pointer:
+\bigbreak \noindent 
+\begin{cppcode}
+std::shared_ptr<T> ptr (new T());
+std::shared_ptr<T> ptr2 = std::make_shared<T>();
+\end{cppcode}
+\bigbreak \noindent 
+The second way of pointer creation - via std::make\_shared is safer,
+because before you could accidentally pass in a raw pointer twice
+and the cost of the dynamic allocation for the reference count
+memory is avoided.
+\bigbreak \noindent 
+Avoid creating std::shared\_ptrs from variables of raw pointer
+type as it’s difficult to maintain, difficult to understand when the
+pointed object would be destroyed.
+\bigbreak \noindent 
+Use std::shared\_ptr for shared-ownership resource management.
 
+\bigbreak \noindent 
+\subsection{When to use a weak pointer?}
+\bigbreak \noindent 
+A weak pointer - std::weak\_ptr is a smart pointer that doesn’t
+affect the object’s reference count and as such what it points to
+might have been already destroyed.
+\bigbreak \noindent 
+std::weak\_ptr is created from a shared\_ptr and in case the pointed
+at object gets destroyed, the weak pointer expires.
+\bigbreak \noindent 
+\begin{cppcode}
+    shared_ptr<int> sp = std::make_shared<int>(10);
+    weak_ptr<int> wp(sp);
+
+    sp = nullptr;
+    if (wp.expired()) {
+        cout << "wp exired" << endl;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+In case you want to use it, you can either call lock() on it that either
+returns a std::shared\_ptr or nullptr in case the pointer is expired,
+or you can directly pass a weak ptr to shared\_ptr constructor.
+\bigbreak \noindent 
+\begin{cppcode}
+std::shared_ptr<T> sp = wp.lock();
+std::shared_ptr<T> sp2(wp);
+\end{cppcode}
+\bigbreak \noindent 
+It can be useful for cyclic ownerships, to break the cycle
+\bigbreak \noindent 
+it can also be useful for caching and for the observer pattern.
+\bigbreak \noindent 
+\subsection{What are the advantages of std::make\_shared and std::make\_unique compared to the new operator?}
+\bigbreak \noindent 
+Let’s start with a reminder. While std::make\_shared was added to
+the STL in C++11, std::make\_unique was only added in C++14.
+\bigbreak \noindent 
+Compared to the direct use of new, make functions eliminate source
+code duplication, improve exception safety, and std::make\_shared
+generates code that’s smaller and faster.
+\bigbreak \noindent 
+When you use new, if during construction there is an exception
+thrown, in some circumstances, there might be a resource leak,
+when the pointer has not yet been “processed” by the make function.
+\bigbreak \noindent 
+std::make\_shared is also faster than simply using new as it allocates
+memory only once to hold the object and the control block for reference counting. Whereas when you use new it uses two allocations.
+\bigbreak \noindent 
+Sadly, the mentioned make functions cannot be used if you want to
+specify custom deleters. At least, they are not often used.
 
 
 

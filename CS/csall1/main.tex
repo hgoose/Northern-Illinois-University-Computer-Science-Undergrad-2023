@@ -7942,10 +7942,10 @@ indicate which strong entity the weak entity depends upon.
                     \bigbreak \noindent 
                     \textbf{Carriage controls:}
                     \begin{itemize}
-                        \item \textbf{C'0'}: Double space 
                         \item \textbf{C' '}: Single space 
-                        \item \textbf{C'1'}: Top of next page
+                        \item \textbf{C'0'}: Double space 
                         \item \textbf{C'-'}: Triple space
+                        \item \textbf{C'1'}: Top of next page
                     \end{itemize}
                     \bigbreak \noindent 
                     Let's first discuss the storage. The first byte specifies the carriage control. We define 12 character bytes for each output variable, with 5 space characters in between each output variable. After the 12 character bytes are allocated for OSUM1, and the 5 padding bytes after OSUM1, we have 86 remaining bytes to fill, so we use spaces.
@@ -7985,7 +7985,48 @@ indicate which strong entity the weak entity depends upon.
                     \end{cppcode}
                     \bigbreak \noindent 
                     \textbf{Note:} XDECO requires 12 bytes.
-
+                \item \textbf{Even odd pairs}: An even odd pair of registers are two adjacent registers in which the number of the first register is even and the second is odd, we have the even odd pairs
+                    \begin{align*}
+                        0,1
+                        2,3
+                        4,5
+                        6,7
+                        8,9
+                        10,11
+                        12,13
+                        14,15
+                    \end{align*}
+                    Even odd pairs are used in some instructions in order to 64-bit "Register" in which the two registers are combined
+                \item \textbf{Multiplication and division}: We have the instructions
+                    \begin{cppcode}
+                    MR  R,R
+                    M   R,D(X,B)
+                    DR  R,R
+                    D   R,D(X,B)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Note that the first operand in all the above instructions are even odd pair registers. Thus, the left operand is an even register in $0-14$. The second operand is either an fullword boundary address (M and D), or any register (MR, DR)
+                    \bigbreak \noindent 
+                    Let's first consider the MR instruction.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    LA   3,4
+                    LA   7,3
+                    MR   2,7      Multiply 4 by 3
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    First to note that the even odd pair register R2 used as the first operand to the MR instruction takes R2 and R3, and combines them to make a 64-bit register in which to store the result of the multiplication. Thus, even though the target register is R2, the result will be completely contained within R3 unless the result was big enough to also need to use R2. If the result was not big enough to use R2, the contents of R2 are zeroed out.
+                    \bigbreak \noindent 
+                    Next, we consider division. Let's divide 24 by 6
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    LA  5,24
+                    LA  9,6
+                    M   4,=F'1'   Need to use M to extend the sign bit of R5 into R4
+                    DR  4,9
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    The remainder in this case will be stored in the even register, and the quotient in the odd register.
     \end{itemize}
 
 
