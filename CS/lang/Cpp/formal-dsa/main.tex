@@ -1731,6 +1731,101 @@ The leaves make up the solution set. Because there are $2^{n}$ subsets, and wors
     };
 \end{cppcode}
 
+\pagebreak \bigbreak \noindent 
+\subsubsection{Generate permutations (Without swaps)}
+\bigbreak \noindent 
+\begin{cppcode}
+    void r_generate_perms(vector<char>& v, vector<vector<char>>& res, vector<char>& perm, vector<bool>& used, const int& k) {
+        // If the permutation size is k, push the result and return
+        if ((int) perm.size() == k) {
+            res.push_back(perm);
+            return;
+        }
+
+        // Loop through the available items in v, start recursion at each item
+        for (int i=0; i<(int)v.size(); ++i) {
+            // If the item is not used
+            if (!used[i]) {
+                // Use it
+                used[i] = true;
+                perm.push_back(v[i]);
+                // Recurse with updated current perm and used array
+                r_generate_perms(v, res, perm, used, k);
+                // Done generating the perm, reset used array and current permutation
+                used[i] = false;
+                perm.pop_back();
+            }
+        }
+    }
+
+    // Helper function to allow the use to only have to call with the input vector and k
+    vector<vector<char>> generate_perms(vector<char>& v, const int& k) {
+        vector<vector<char>> res; 
+        vector<char> perm;
+        vector<bool> used(v.size(), 0);
+        r_generate_perms(v, res, perm, used, k);
+        return res;
+    }
+\end{cppcode}
+
+\pagebreak 
+\bigbreak \noindent 
+\subsubsection{Permutations with repetition}
+\bigbreak \noindent 
+To accomplish this, we can just drop the used vector
+\bigbreak \noindent 
+\begin{cppcode}
+void _pwr(vector<vector<char>>& res, vector<char>& v, vector<char>& curr, int k) {
+    if (curr.size() == k) {
+        res.push_back(curr);
+        return;
+    }
+
+    for (int i=0; i<(int)v.size(); ++i) {
+        curr.push_back(v[i]);
+        _pwr(res, v, curr, k);
+        curr.pop_back();
+    }
+}
+
+vector<vector<char>> pwr(vector<char> v, int k) {
+    vector<vector<char>> res;
+    vector<char> cur;
+    _pwr(res, v, cur, k);
+    return res;
+}
+\end{cppcode}
+\bigbreak \noindent 
+The function generates all possible sequences of length \( k \) from a set of \( n \) characters (where \( n \) is the size of the vector \texttt{v}), which amounts to \( n^k \) total sequences. At each leaf (base case), copying a sequence of length \( k \) takes \( O(k) \) time. Additionally, the recursive calls themselves contribute a constant amount of work at each node.
+\bigbreak \noindent 
+Overall, the time complexity is:
+\[
+O(n^k \times k)
+\]
+This is because you generate \( n^k \) sequences, and for each sequence, the work done (including copying) is proportional to \( k \).
+\bigbreak \noindent 
+The overall space complexity is dominated by the space needed to store all the generated permutations. If \( n \) is the size of the input vector \texttt{v}, then there are \( n^k \) sequences each of length \( k \), resulting in an output space of 
+\[
+O(n^k \times k).
+\]
+If we only consider the auxiliary space (i.e., the recursion stack and temporary storage), the maximum depth of the recursion is \( k \), so that part uses 
+\[
+O(k)
+\]
+space.
+\bigbreak \noindent 
+Thus, including the output, the space complexity is 
+\[
+O(n^k \times k),
+\]
+and excluding the output, it is 
+\[
+O(k).
+\]
+
+
+
+
 
 \pagebreak 
 \unsect{The basics of Dynamic Programming (DP)}
@@ -3826,43 +3921,6 @@ Consider the state space tree for generating the three element permutations of t
 \end{figure}
 \bigbreak \noindent 
 Then we see we can start at a leaf, and traverse up the tree until we get to the root. This traversal from each leaf to the root generates our six permutations from $3P3$.
-
-\pagebreak \bigbreak \noindent 
-\subsubsection{Generate permutations (Backtracking)}
-\bigbreak \noindent 
-\begin{cppcode}
-    void r_generate_perms(vector<char>& v, vector<vector<char>>& res, vector<char>& perm, vector<bool>& used, const int& k) {
-        // If the permutation size is k, push the result and return
-        if ((int) perm.size() == k) {
-            res.push_back(perm);
-            return;
-        }
-
-        // Loop through the available items in v, start recursion at each item
-        for (int i=0; i<(int)v.size(); ++i) {
-            // If the item is not used
-            if (!used[i]) {
-                // Use it
-                used[i] = true;
-                perm.push_back(v[i]);
-                // Recurse with updated current perm and used array
-                r_generate_perms(v, res, perm, used, k);
-                // Done generating the perm, reset used array and current permutation
-                used[i] = false;
-                perm.pop_back();
-            }
-        }
-    }
-
-    // Helper function to allow the use to only have to call with the input vector and k
-    vector<vector<char>> generate_perms(vector<char>& v, const int& k) {
-        vector<vector<char>> res; 
-        vector<char> perm;
-        vector<bool> used(v.size(), 0);
-        r_generate_perms(v, res, perm, used, k);
-        return res;
-    }
-\end{cppcode}
 
 
 

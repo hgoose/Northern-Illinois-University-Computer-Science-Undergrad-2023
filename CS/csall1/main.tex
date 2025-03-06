@@ -7624,6 +7624,7 @@ indicate which strong entity the weak entity depends upon.
     label BCR B'1111',14     
             \end{center}
     \end{itemize}
+    \textbf{Note:} The encoding of BCR B'1111',14 is 07FE (important when we look at dumps)
                 \item \textbf{Sample program}:
                     \begin{verbatim}
     ADD2     CSECT 
@@ -8027,6 +8028,108 @@ indicate which strong entity the weak entity depends upon.
                     \end{cppcode}
                     \bigbreak \noindent 
                     The remainder in this case will be stored in the even register, and the quotient in the odd register.
+                \item \textbf{Defining label that does not take up storage}: 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    LB   DS  0H
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    We define storage of zero halfwords... Ie it will not take up any storage and will not increase the LOC. Note that LB is simply the name of the label
+                    \bigbreak \noindent 
+                    you’re not actually reserving any memory; you’re simply associating the label LB with the current location counter value. This label is stored in the assembler’s symbol table. The symbol table holds the address (which is the current location counter at the time of definition) for use during assembly and linking, but it does not correspond to any allocated memory in the final object code.
+                \item \textbf{Compares and branching}: We have the two instructions
+                    \begin{itemize}
+                        \item \textbf{RX: C (compare)}:
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                            C   R,D(X,B)
+                            \end{cppcode}
+                            \bigbreak \noindent 
+                            Compares the contents of R and the storage at address D(X,B)
+                            \bigbreak \noindent 
+                            Note that D(X,B) must be on a fullword boundary (FWB)
+                        \item \textbf{RR: CR (compare register)} 
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                            CR  R,R 
+                            \end{cppcode}
+                            \bigbreak \noindent 
+                            Compares the contents of the specified registers
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    The condition code will be
+                    \begin{itemize}
+                        \item \textbf{Zero:} if $a=b$
+                        \item \textbf{One} if $a<b$
+                        \item \textbf{Two} if $a>b$
+                    \end{itemize}
+                    Note that the condition code can be at most 3, but C and CR never set the CC to 3.
+                    \bigbreak \noindent 
+                    Suppose we want to compare two registers, and branch if the condition code is note zero (values were not equal), we would write
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                            CR      2,3             Compare registers 2 and 3
+                            BC      B'0111',NOTEQ
+
+                    NOTEQ   DS      0H
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Or, using BCR, we could write
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                            LA      7,NOTEQ
+                            CR      2,3             Compare registers 2 and 3
+                            BCR      B'0111',7
+
+                    NOTEQ   DS      0H
+                    \end{cppcode}
+                \item \textbf{Defining or decaling character strings}: We have
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    NAME        DC      CLn'...'   String of length n
+                    NAME        DC      C'...'     Single char
+                    NAME        DC      C'...'     Char str, size is the size of the specified string
+                    NAME        DC      nC'...'    Repeat Single char n times
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    And of course we also have their DS counterparts
+                    \bigbreak \noindent 
+                    The encoding of these strings follows EBCDIC char encodings. The string \textit{smith} is encoded to E2 D4 C9 E3 C8
+                \item \textbf{Copying and comparing strings}: We do not use C or CR on character strings, instead we use the 6 byte SS (storage to storage) instructions
+                    \begin{itemize}
+                        \item \textbf{MVC (Move characters)}: Copies the characters from source to destination
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                            MVC     D(X,B)(length),D(X,B)
+                            \end{cppcode}
+                            \bigbreak \noindent 
+                            Where the second operand is the source, and the first is the destination. Note that the provided length is used for \textbf{both} operands
+                            \bigbreak \noindent 
+                            \textbf{Note:} In this form it is assumed that the length of both operands is the same, more on the other forms later.
+                        \item \textbf{CLC (Compare logical characters)}: Byte by byte lexicographical compare based on the EBCDIC HEX encodings, sets the condition code same as C and CR
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                            CLC     D(L,B),D(B)
+                            CLC     LABEL1(length),LABEL2
+                            \end{cppcode}
+                    \end{itemize}
+                \item \textbf{Encoding of MVC and CLC}: The encoding of the forms described above is 
+                    \bigbreak \noindent 
+                    \begin{align*}
+                        h_{0}h_{0}h_{L}h_{L} \quad h_{B1}h_{D1}h_{D1}h_{D1} \quad h_{B2}h_{D2}h_{D2}h_{D2}
+                    \end{align*}
+                    Where
+                    \begin{itemize}
+                        \item $h_{0}h_{0}$ is the opcode
+                        \item $h_{L}h_{L}$ is the length minus one 
+                        \item $h_{B1}h_{D1}h_{D1}h_{D1}$ Base and displacement of the first operand
+                        \item $h_{B2}h_{D2}h_{D2}h_{D2}$ Base and displacement of the second operand
+                    \end{itemize}
+            \item \textbf{Important EBCDIC encodings to remember}:
+                \begin{itemize}
+                    \item \textbf{Space character}: 40
+                \end{itemize}
+
     \end{itemize}
 
 

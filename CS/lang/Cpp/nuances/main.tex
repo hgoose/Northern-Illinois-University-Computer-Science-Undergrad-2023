@@ -1249,60 +1249,6 @@
     \end{itemize}
 
 
-    \pagebreak 
-    \unsect{The introduction of the nullptr}
-    \bigbreak \noindent 
-    nullptr was introduced in C++11 to address several issues and improve type safety when dealing with null pointers. Prior to C++11, the standard way to represent a null pointer was to use the macro NULL, which is typically defined as 0 or ((void*)0) in C++. However, this approach had several drawbacks:
-    \bigbreak \noindent 
-    \subsection{Ambiguity in Overloaded Functions}
-    \bigbreak \noindent 
-    In C++, NULL is typically defined as 0, which is an integer. This can lead to ambiguity when overloading functions that take both integer and pointer arguments. For example
-    \bigbreak \noindent 
-    \begin{cppcode}
-        void foo(int);
-        void foo(char*);
-
-        foo(NULL); // Which foo is called? Ambiguous, as NULL is an integer.
-    \end{cppcode}
-    \bigbreak \noindent 
-    nullptr resolves this ambiguity because it has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type but not to integral types. Thus:
-    \bigbreak \noindent 
-    \begin{cppcode}
-        foo(nullptr); // Unambiguously calls foo(char*)
-    \end{cppcode}
-
-    \bigbreak \noindent 
-    \subsection{Type safety}
-    \bigbreak \noindent 
-    Using 0 or NULL for null pointers can lead to type safety issues because 0 is an integer literal, and it can be implicitly converted to other types, such as bool or int. This can result in unintended behavior or bugs.
-    \bigbreak \noindent 
-    nullptr is a keyword that explicitly represents a null pointer, and it cannot be implicitly converted to an integer. This makes the code more type-safe and less prone to errors.
-    \bigbreak \noindent 
-    \subsection{The type of nullptr}
-    \bigbreak \noindent 
-    nullptr is of type nullptr\_t
-    \bigbreak \noindent 
-    \begin{cppcode}
-    auto ptr = nullptr // has type nullptr\_t
-    \end{cppcode}
-
-    \bigbreak \noindent 
-    \subsection{nullptr vs void*}
-    \bigbreak \noindent 
-    nullptr is used to explicitly indicate that a pointer does not point to any valid memory location.
-    \bigbreak \noindent 
-    It has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type (e.g., int*, char*, etc.) but not to other types like integers.
-    \bigbreak \noindent 
-    void* is a generic pointer type that can point to any data type.
-
-    \bigbreak \noindent 
-    \subsection{Zero is a nullptr?}
-    \bigbreak \noindent 
-    The literal 0 is special in C++—it’s a null pointer constant. This means that when 0 is used in a pointer context, it is implicitly converted to a null pointer.
-    \bigbreak \noindent 
-    \begin{cppcode}
-    cout << (nullptr == 0); // True
-    \end{cppcode}
 
 
     \pagebreak 
@@ -2062,7 +2008,7 @@
     In this example, we do get "destructor called". The destructor is called because the default constructor B() successfully constructs an object, even though the other constructor (B(int)) throws an exception.
 
     \bigbreak \noindent 
-    \subsection{Converting (cast) constructors}
+    \subsection{Converting constructors (cast constructors)}
     \bigbreak \noindent 
     A converting constructor is a constructor that allows you to create an object of a class from a value of another type, often implicitly. For example, if a class B has a constructor that takes an A as a parameter (and it's not marked explicit), then an object of type A can be automatically converted to a B when needed
     \bigbreak \noindent 
@@ -2097,6 +2043,24 @@
     \bigbreak \noindent 
     The C++ language grammar specifies that conversion operators are declared without a return type; the type following the operator keyword is the type to which the class is converted
 
+    \bigbreak \noindent 
+    \subsection{operator void() overload}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct S {
+            operator void() {
+                std::cout << "F";
+            }
+        };
+        (void)s;
+        static_cast<void>(s);
+        s.operator void();
+    \end{cppcode}
+    \bigbreak \noindent 
+    The only one that actually calls our overload is the third (manual call). According to the C++ standard, conversion functions will never be used to convert an object to void. So the conversion function is only called once, when we manually call it on the line s.operator void()
+
     \pagebreak 
     \unsect{Dividing by zero}
     \bigbreak \noindent 
@@ -2108,12 +2072,6 @@
     \end{cppcode}
     \bigbreak \noindent 
     Here we get \textit{terminated by signal SIGFPE (Floating point exception)}
-
-
-
-
-
-    
 
 
 
@@ -3027,6 +2985,67 @@ At this point, the compiler already knows that it needs a std::function<void(int
 \bigbreak \noindent 
 In summary, explicitly specifying T bypasses the template argument deduction phase. Therefore, the compiler doesn't have to deduce T by matching the lambda to std::function<void(T)> (which would fail because user-defined conversions aren't considered during deduction). Instead, it only needs to check that the lambda can be converted to the already specified type std::function<void(int)>, and that conversion works as expected.
 
+\bigbreak \noindent 
+\subsection{const vs non-const template parameters}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void foo(T& x)
+{
+    std::cout << std::is_same_v<const int, T>;
+}
+
+template <typename T>
+void bar(const T& x)
+{
+    std::cout << std::is_same_v<const int, T>;
+}
+const int i{};
+int j{};
+
+foo(i);
+foo(j);
+bar(i);
+bar(j);
+\end{cppcode}
+\bigbreak \noindent 
+We get 1000.
+\bigbreak \noindent 
+In a function like:
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void foo(T& x)
+{
+    // ...
+}
+\end{cppcode}
+\bigbreak \noindent 
+the type T is deduced to match the argument exactly.
+\begin{itemize}
+    \item If you pass a const int, T becomes const int.
+    \item If you pass an int, T becomes int.
+\end{itemize}
+\bigbreak \noindent 
+In a function like
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void bar(const T& x)
+{
+    // ...
+}
+\end{cppcode}
+\bigbreak \noindent 
+the const in the parameter (const T\&) applies to the entire parameter but is not used in deducing T. This means:
+\begin{itemize}
+    \item Whether you pass a const int or an int, T is deduced as int.
+\end{itemize}
+\bigbreak \noindent 
+During template argument deduction, the compiler examines the argument type and tries to determine what T must be. With a parameter of type const T\&, the compiler looks at the underlying type of the argument without taking the const in the parameter into account.
+
 \pagebreak 
 \unsect{Strong types}
 \bigbreak \noindent 
@@ -3402,6 +3421,11 @@ So we have this const char* string literal "Hello", and we store it in a char* b
 \bigbreak \noindent 
 Modifying the contents pointed to by a would result in undefined behavior because string literals are usually stored in read-only memory.
 
+\bigbreak \noindent 
+\subsection{const\_cast is UB example}
+\bigbreak \noindent 
+Consider the code
+
 \pagebreak 
 \unsect{Notes about friend functions}
 \bigbreak \noindent 
@@ -3748,6 +3772,116 @@ Alternative token representations are provided for some operators and punctuator
     \end{tabular}
 \end{center}
 
+
+\pagebreak 
+\unsect{Notes about C arrays}
+\bigbreak \noindent 
+Consider the following
+\bigbreak \noindent 
+\begin{cppcode}
+    void f(int* arr) {
+        cout << sizeof(arr) << endl // 8: decays to int pointer
+    }
+
+    void f(int arr[]) {
+        cout << sizeof(arr) << endl // 8: decays to int pointer
+    }
+
+    void f(int (&arr)[10]) {
+        cout << sizeof(arr) << endl; // 40: the result is the size of the referenced type.
+        // arr is a reference to an array of 10 ints
+    }
+
+    int main() {
+        int arr[10];
+
+        cout << sizeof(arr) << endl; // 40 (bytes): ten four byte integers 
+    }
+\end{cppcode}
+
+\pagebreak 
+\unsect{Notes about operator overloads}
+\bigbreak \noindent 
+\subsection{Manually calling operator overloads}
+\bigbreak \noindent 
+We can manual call our operator overloads. Observe
+\bigbreak \noindent 
+\begin{cppcode}
+    struct S {
+        int x{};
+        S(int x) : x(x) {}
+        bool operator<(const S& other) {
+            return x < other.x;
+        }
+    };
+    S s1(5);
+    S s2(10);
+    cout << s1.operator <(s2) << endl;
+\end{cppcode}
+
+\pagebreak 
+\unsect{Notes about pointers}
+    \pagebreak 
+    \subsection{The introduction of the nullptr}
+    \bigbreak \noindent 
+    nullptr was introduced in C++11 to address several issues and improve type safety when dealing with null pointers. Prior to C++11, the standard way to represent a null pointer was to use the macro NULL, which is typically defined as 0 or ((void*)0) in C++. However, this approach had several drawbacks:
+    \bigbreak \noindent 
+    \subsubsection{Ambiguity in Overloaded Functions}
+    \bigbreak \noindent 
+    In C++, NULL is typically defined as 0, which is an integer. This can lead to ambiguity when overloading functions that take both integer and pointer arguments. For example
+    \bigbreak \noindent 
+    \begin{cppcode}
+        void foo(int);
+        void foo(char*);
+
+        foo(NULL); // Which foo is called? Ambiguous, as NULL is an integer.
+    \end{cppcode}
+    \bigbreak \noindent 
+    nullptr resolves this ambiguity because it has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type but not to integral types. Thus:
+    \bigbreak \noindent 
+    \begin{cppcode}
+        foo(nullptr); // Unambiguously calls foo(char*)
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{Type safety}
+    \bigbreak \noindent 
+    Using 0 or NULL for null pointers can lead to type safety issues because 0 is an integer literal, and it can be implicitly converted to other types, such as bool or int. This can result in unintended behavior or bugs.
+    \bigbreak \noindent 
+    nullptr is a keyword that explicitly represents a null pointer, and it cannot be implicitly converted to an integer. This makes the code more type-safe and less prone to errors.
+    \bigbreak \noindent 
+    \subsubsection{The type of nullptr}
+    \bigbreak \noindent 
+    nullptr is of type nullptr\_t
+    \bigbreak \noindent 
+    \begin{cppcode}
+    auto ptr = nullptr // has type nullptr\_t
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsubsection{nullptr vs void*}
+    \bigbreak \noindent 
+    nullptr is used to explicitly indicate that a pointer does not point to any valid memory location.
+    \bigbreak \noindent 
+    It has its own type, std::nullptr\_t, which is implicitly convertible to any pointer type (e.g., int*, char*, etc.) but not to other types like integers.
+    \bigbreak \noindent 
+    void* is a generic pointer type that can point to any data type.
+
+    \bigbreak \noindent 
+    \subsubsection{Zero is a nullptr?}
+    \bigbreak \noindent 
+    The literal 0 is special in C++—it’s a null pointer constant. This means that when 0 is used in a pointer context, it is implicitly converted to a null pointer.
+    \bigbreak \noindent 
+    \begin{cppcode}
+    cout << (nullptr == 0); // True
+    \end{cppcode}
+
+    \bigbreak \noindent 
+    \subsection{What does an uninitialized pointer point to?}
+    \bigbreak \noindent 
+    In C++, if you declare a pointer like int* ptr; without initializing it, the pointer's value is indeterminate. This means it doesn't point to a specific, valid memory location—it essentially contains a "garbage" value. Dereferencing such a pointer leads to undefined behavior. It's best practice to initialize pointers to at least nullptr. This way, you can safely check if the pointer is valid before using it.
+    \bigbreak \noindent 
+    An uninitialized pointer contains whatever "garbage" value happens to be in that memory location, so it might point to some
 
 
 

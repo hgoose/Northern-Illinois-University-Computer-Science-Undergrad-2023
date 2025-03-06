@@ -2226,6 +2226,85 @@ memory only once to hold the object and the control block for reference counting
 Sadly, the mentioned make functions cannot be used if you want to
 specify custom deleters. At least, they are not often used.
 
+\bigbreak \noindent 
+\subsection{Should you use smart pointers over raw pointers all the time?}
+\bigbreak \noindent 
+No, raw pointers are, although considered dangerous in many cases, still have their place.
+\bigbreak \noindent 
+std::unique\_ptr transfers and std::shared\_ptr shares ownership.
+\bigbreak \noindent 
+In case a function has nothing to do with ownership, there should
+be no need for it to take pointer parameters by a smart pointer.
+Taking smart pointers in such cases will only make its API more
+restrictive and the run-time cost higher.
+\bigbreak \noindent 
+ If you don’t want to share or transfer ownership, just use a raw pointer.
+
+ \pagebreak 
+ \unsect{References, universal references, a bit of a mixture}
+ \bigbreak \noindent 
+ \subsection{ What does std::move move?}
+ \bigbreak \noindent 
+ std::move doesn’t move anything. At runtime, it does nothing at all. It doesn’t even generate a single byte of executable code.
+ \bigbreak \noindent 
+ std::move is in fact just a tool to cast whatever its input is to an rvalue reference.
+ \bigbreak \noindent 
+ It returns an rvalue reference and that is a candidate for a move operation. Applying std::move to an object tells the compiler that the object is eligible to be moved from. That’s why std::move has the name it does have: to make it easy to designate objects that may be moved from.
+ \bigbreak \noindent 
+ It’s worth noting that moving from a const variable is not possible as the move constructor and the move assignment can change the object from where the move is performed. Yet if you try to move from a const object, the compiler will say nothing. No compiler warning not to say error. Move requests on const objects are silently transformed into copy operations.
+
+ \bigbreak \noindent 
+ \subsection{What does std::forward forward?}
+ \bigbreak \noindent 
+ Just like std::move doesn’t move anything, std::forward doesn’t forward anything either. Similarly, it does nothing at all at runtime. It doesn’t even generate a single byte of executable code.
+ \bigbreak \noindent 
+ std::forward is also a cast, just like std::move. But how it is used?
+ \bigbreak \noindent 
+ The most common scenario for std::forward is a function template that takes a universal reference parameter that is to be passed to another function:
+ \bigbreak \noindent 
+ It is also called perfect forwarding. It has two overloads.
+ \bigbreak \noindent 
+ One forwards lvalues as lvalues and rvalues as rvalues, while the
+ other is a conditional cast. It forwards rvalues as rvalues and
+ prohibits forwarding of rvalues as lvalues. Attempting to forward
+ an rvalue as an lvalue, is a compile-time error.
+
+ \bigbreak \noindent 
+ \subsection{What is the difference between universal and rvalue references?}
+ \bigbreak \noindent 
+ If a function template parameter has type T\&\& for a deduced type T, or if an object is declared using auto\&\&, the parameter or object is a universal reference.
+ \bigbreak \noindent 
+ \begin{cppcode}
+     template<typename T>
+     void f(T&& param);
+
+     // universal reference
+     auto&& v2 = v; // universal reference
+ \end{cppcode}
+ \bigbreak \noindent 
+ But what is a universal reference, you might ask. Universal references correspond to rvalue references if they’re initialized with rvalues. They correspond to lvalue references if they’re initialized with lvalues. They are either this or that depending on what is passed in.
+ \bigbreak \noindent 
+ If the form of the type declaration isn’t precisely type\&\&, or if type deduction does not occur - there is no auto used - we have an rvalue reference.
+ \bigbreak \noindent 
+ \begin{cppcode}
+     void f(MyClass&& param); // rvalue reference
+
+     MyClass&& var1 = MyClass(); // rvalue reference
+
+     template<typename T>
+     void f(std::vector<T>&& param); // rvalue reference
+ \end{cppcode}
+ \bigbreak \noindent 
+ The takeaway is that by knowing the differences between rvalue
+and universal references, you can read source code more accurately.
+Is this an rvalue type that can be bound only to rvalues or is this
+a universal reference that can be bound to either rvalue or lvalue
+references?
+
+
+
+
+
 
 
 
