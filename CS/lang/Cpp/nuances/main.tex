@@ -3558,6 +3558,24 @@ Using const in the return type by value is generally discouraged because it can 
     int& y = f(x); // Error: cannot drop const qualifier
 \end{cppcode}
 
+\bigbreak \noindent 
+\subsection{is\_const\_v}
+\bigbreak \noindent 
+Consider the code
+\bigbreak \noindent 
+\begin{cppcode}
+std::cout << std::is_const_v<const int *>
+              << std::is_const_v<const int [1]>
+              << std::is_const_v<const int **>
+              << std::is_const_v<const int (*)[1]>
+              << std::is_const_v<const int *[1]>
+              << std::is_const_v<const int [1][1]>;
+\end{cppcode}
+We get 010001. The output is determined by how std::is\_const checks for a top‑level const qualification. In C++, a type’s const qualification is considered "top‑level" if it applies directly to the type rather than to something the type points to or contains
+\bigbreak \noindent 
+"An array type whose elements are cv-qualified is also considered to have the same cv-qualifications as its elements." Since the array's element type is const, the array type itself is also const
+
+
 \pagebreak 
 \unsect{Mixed type references}
 \bigbreak \noindent 
@@ -3884,6 +3902,49 @@ We can manual call our operator overloads. Observe
     An uninitialized pointer contains whatever "garbage" value happens to be in that memory location, so it might point to some
 
 
+
+    \pagebreak 
+    \unsect{Notes about gotos}
+    \bigbreak \noindent 
+    \subsection{Scope}
+    \bigbreak \noindent 
+    Consider the code
+    \bigbreak \noindent 
+    \begin{cppcode}
+        class A {
+            public:
+            A() { std::cout << "a"; }
+            ~A() { std::cout << "A"; }
+        };
+        int i = 1;
+
+        int main(int argc, const char *argv[]) {
+        label:
+            A a;
+            if (i--)
+            goto label;
+            return EXIT_SUCCESS;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    We get output aAaA. In C++, the lifetime of an automatic (local) object is tied to the scope in which it’s defined. Even though the label is textually within the same function block, when the program executes the goto label; statement, it leaves the scope of the current instance of a, triggering its destructor before jumping back to the label.
+    \bigbreak \noindent 
+    The goto label; statement causes the program to exit the region where that instance of a is alive. According to C++ rules, exiting the scope of an object (even via goto) must trigger its destructor.
+
+    \pagebreak 
+    \unsect{Notes about lambdas}
+    \bigbreak \noindent 
+    \subsection{Global variables}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int a =5;
+
+    int main() {
+        cout << [](int x){return a + x;}(5); // 10
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    You may think that the global $a$ needs to be captured. However, only local variables may be captured by a lambda. a is a global variable with static storage duration and may not be captured
 
 
 

@@ -2301,6 +2301,108 @@ Is this an rvalue type that can be bound only to rvalues or is this
 a universal reference that can be bound to either rvalue or lvalue
 references?
 
+\bigbreak \noindent 
+\subsection{What is reference collapsing?}
+\bigbreak \noindent 
+Reference collapsing can happen in four different scenarios:
+\begin{itemize}
+    \item template instantiation
+    \item auto type generation
+    \item creation and use of typedefs and alias declarations
+    \item using decltype
+\end{itemize}
+\bigbreak \noindent 
+You are not allowed to declare a reference to a reference, but
+compilers may produce them in the above-listed contexts. When
+compilers generate references to references, reference collapsing
+dictates what happens next
+\bigbreak \noindent 
+There are two kinds of references (lvalue and rvalue), so there are
+four possible reference-reference combinations:
+\begin{itemize}
+    \item lvalue to lvalue
+    \item lvalue to rvalue
+    \item rvalue to lvalue
+    \item rvalue to rvalue
+\end{itemize}
+\bigbreak \noindent 
+If a reference to a reference arises in one of the four listed contexts,
+the references collapse to one single reference according to this rule:
+\bigbreak \noindent 
+\begin{quote}
+    If either reference is an lvalue reference, the result is an lvalue reference. Otherwise (i.e., if both are rvalue references) the result is an rvalue reference.
+\end{quote}
+\bigbreak \noindent 
+Universal references are considered as rvalue references in contexts
+where type deduction distinguishes lvalues from rvalues and where
+reference collapsing occurs.
+
+\bigbreak \noindent 
+\subsection{When constexpr functions are evaluated?}
+\bigbreak \noindent 
+constexpr functions might be evaluated at compile-time, but it’s
+not guaranteed. They can be executed both at runtime and at
+compile time. It often depends on the compiler version and the
+optimisation level.
+\bigbreak \noindent 
+If the value of a constexpr function is requested during compile
+time with constexpr variable, then it will be executed at compile
+time: constexpr auto foo = bar(42) where bar is a constexpr
+function.
+\bigbreak \noindent 
+Also, if a constexpr function is executed in the context of a C-array
+initialization or static assertion, it will be evaluated at compile time.
+\bigbreak \noindent 
+In case a constant is needed, but you provide only a runtime
+function, the compiler will let you know.
+\bigbreak \noindent 
+It’s not a good idea to make all functions constexpr as most
+computations are best done at run time. At the same time, it’s
+worth noting that constexpr functions will be always threadsafe
+and inlined.
+
+\bigbreak \noindent 
+\subsection{When should you declare your functions as noexcept?}
+\bigbreak \noindent 
+You should definitely put noexcept on every function written
+completely in C or in any other language without exceptions. The
+C++ Standard Library does that implicitly for all functions in the C
+Standard Library.
+\bigbreak \noindent 
+Otherwise, you should use noexcept for functions that don’t throw
+an exception, or if it throws, then you don’t mind letting the
+program crash
+\bigbreak \noindent 
+Here is a small code sample to show how to use it
+\bigbreak \noindent 
+\begin{cppcode}
+void func1() noexcept; // does not throw
+void func2() noexcept(true); // does not throw
+void func3() throw(); // does not throw
+void func4() noexcept(false); // may throw
+\end{cppcode}
+\bigbreak \noindent 
+But what does it mean that a function doesn’t throw an exception?
+It means it cannot use any other function that throws, it is declared
+as noexcept itself and it doesn’t use dynamic\_cast to a reference
+type.
+\bigbreak \noindent 
+The six generated special functions are implicitly noexcept functions.
+\bigbreak \noindent 
+If an exception is thrown in spite of noexcept specifier being
+present, std::terminate is called.
+\bigbreak \noindent 
+So you can use noexcept when it’s better to crash than actually
+handling an exception, as the Core Guidelines also indicates
+\bigbreak \noindent 
+Using noexcept can give hints both for the compiler to perform
+certain optimizations and for the developers as well that they don’t
+have to handle possible exceptions.
+
+
+\pagebreak 
+\unsect{C++20}
+
 
 
 

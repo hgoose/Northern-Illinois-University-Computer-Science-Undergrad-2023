@@ -807,6 +807,54 @@ public:
     \end{cppcode}
 
     \pagebreak 
+    \unsect{Monotonic stack}
+    \bigbreak \noindent 
+    A monotonic stack is a specialized stack data structure that maintains its elements in a sorted order—either strictly increasing or strictly decreasing. This ordering property makes it particularly effective for solving problems where you need to quickly find the next or previous element that meets a certain condition (like being greater or smaller).
+    \begin{itemize}
+        \item \textbf{Monotonic increasing stack}: Elements are arranged so that every new element is greater than or equal to the one before it. This is useful for finding the next smaller element.
+        \item \textbf{Monotonic decreasing stack}: Elements are arranged so that every new element is less than or equal to the one before it. This helps when you need to find the next larger element.
+    \end{itemize}
+    \bigbreak \noindent 
+    \subsection{Next greater element}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        vector<int> nextGreaterElement(vector<int>& nums) {
+            vector<int> res(nums.size(), -1);
+            stack<int> s;
+
+            for (int i=0; i<(int)nums.size(); ++i) {
+            while (s.size() && (nums[i] > nums[s.top()])) {
+                int index = s.top();
+                s.pop();
+                res[index] = nums[i];
+            }
+            s.push(i);
+        }
+
+        return res;
+    }
+    int main() {
+        vector<int> v{2,1,5,4,6};
+        vector<int> res = nextGreaterElement(v);
+        for (const auto& item : res) cout << item << " ";
+        // 5 5 6 6 -1
+    }
+    \end{cppcode}
+    \bigbreak \noindent 
+    The stack (monoStack) stores indices of the array elements. This allows you to keep track of positions for which the next greater element hasn't been found yet.
+    \bigbreak \noindent 
+    As you iterate over the array, if the current element (nums[i]) is greater than the element at the index on top of the stack, it means the current element is the next greater element for that index. The stack pops until the current element is not greater than the element at the new top of the stack.
+    \bigbreak \noindent 
+    Every element is pushed and popped at most once, ensuring an overall time complexity of $O(n)$.
+
+    \pagebreak 
+    \subsection{Next smaller element}
+    \bigbreak \noindent 
+    We simply flip the greater than condition in the while loop above to less than.
+
+
+
+    \pagebreak 
     \unsect{Recursion}
     \bigbreak \noindent 
     \subsection{Recursion vs iteration}
@@ -1732,7 +1780,7 @@ The leaves make up the solution set. Because there are $2^{n}$ subsets, and wors
 \end{cppcode}
 
 \pagebreak \bigbreak \noindent 
-\subsubsection{Generate permutations (Without swaps)}
+\subsection{Generate permutations (Without swaps)}
 \bigbreak \noindent 
 \begin{cppcode}
     void r_generate_perms(vector<char>& v, vector<vector<char>>& res, vector<char>& perm, vector<bool>& used, const int& k) {
@@ -1770,7 +1818,7 @@ The leaves make up the solution set. Because there are $2^{n}$ subsets, and wors
 
 \pagebreak 
 \bigbreak \noindent 
-\subsubsection{Permutations with repetition}
+\subsection{Permutations with repetition}
 \bigbreak \noindent 
 To accomplish this, we can just drop the used vector
 \bigbreak \noindent 
@@ -1822,6 +1870,47 @@ and excluding the output, it is
 \[
 O(k).
 \]
+
+\pagebreak 
+\subsection{Combinations with repetitions}
+\bigbreak \noindent 
+\begin{cppcode}
+    void _cwr(vector<vector<char>>& res, vector<char>& v, vector<char>& curr, int k, int start) {
+        if (curr.size() == k) {
+            res.push_back(curr);
+            return;
+        }
+
+        for (int i=start; i<(int)v.size(); ++i) {
+            curr.push_back(v[i]);
+            _cwr(res, v, curr, k, i);
+            curr.pop_back();
+        }
+    }
+
+    vector<vector<char>> cwr(vector<char> v, int k) {
+        vector<vector<char>> res;
+        vector<char> cur;
+        _cwr(res, v, cur, k, 0);
+        return res;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+The time and space complexity is $O\left(\binom{n+k-1}{k} \cdot k \right)$, with auxiliary space $O(k)$
+
+\pagebreak 
+\subsection{Backtracking with pruning}
+\bigbreak \noindent 
+Pruning enhances backtracking by eliminating branches of the search tree that are guaranteed not to yield a valid solution, which makes the algorithm more efficient.
+\bigbreak \noindent 
+After each addition, the algorithm checks whether the candidate solution satisfies the necessary constraints. If it does, the algorithm proceeds further; if not, it “backtracks” by removing the last element and trying a different option.
+\bigbreak \noindent 
+Pruning can drastically reduce the number of candidates the algorithm needs to consider, which is especially beneficial in problems with a vast search space (such as the N-Queens problem, Sudoku, or permutation puzzles).
+
+
+
+
+
 
 
 
@@ -7215,6 +7304,10 @@ The operation $n\&(n-1)$ compares each bit of $n$ and $n-1$. Since $n$ has a sin
 If $n $ is not a power of two, its binary representation will have more than one '1'. Subtracting 1 will not clear all the '1' bits when you perform the AND operation, so the result will be non-zero.
 \bigbreak \noindent 
 If $n =0$, $n \& (n-1)$ will be zero, but $0$ is not a power of two, so we require $n >0$.
+
+\pagebreak 
+\unsect{Number Theory}
+\bigbreak \noindent 
 
 
 \pagebreak 
