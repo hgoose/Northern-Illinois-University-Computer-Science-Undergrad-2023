@@ -347,8 +347,78 @@ to find the average complexity of a worst case sequence of operations
 
 
 
+
+
    \end{itemize}
-    
+
+   \pagebreak 
+   \unsect{Sliding window}
+   \bigbreak \noindent 
+   The sliding window technique is an efficient algorithmic approach used primarily to solve problems involving contiguous segments of a data structure (like an array or a string). It significantly reduces the time complexity by eliminating the need for nested loops when processing every possible subarray or substring.
+   \bigbreak \noindent 
+   The algorithm typically uses two pointers (or indices) that represent the boundaries of a "window." One pointer marks the beginning (left) and the other marks the end (right) of the window.
+   \bigbreak \noindent 
+   Move the right pointer to include new elements into the window, updating the necessary computation (such as a running sum or count)
+   \bigbreak \noindent 
+   Once a condition is met (for example, a target sum or unique character count), move the left pointer to shrink the window. This step helps in finding an optimal solution like the smallest or largest window that satisfies the condition.
+   \bigbreak \noindent 
+   \subsection{Types of Sliding Window Problems}
+   \bigbreak \noindent 
+   \begin{itemize}
+       \item \textbf{Fixed-Size Window:} The size of the window remains constant.
+           \bigbreak \noindent 
+           Example: Finding the maximum sum of any subarray of length k. Here, you slide the window of size k across the array, update the sum by subtracting the element that leaves and adding the new element entering, and keep track of the maximum sum.
+        \item \textbf{Variable-Size Window:} The window size can expand or contract based on the conditions of the problem.
+            \bigbreak \noindent 
+            Example: Determining the smallest subarray with a sum greater than or equal to a target value. Once the sum meets or exceeds the target, the algorithm contracts the window from the left to try and minimize its size while still meeting the condition.
+   \end{itemize}
+   \bigbreak \noindent 
+   It typically reduces the time complexity from $O(n^{2})$ to $O(n)$ because each element is processed at most twice (once when it enters the window and once when it leaves).
+
+   \bigbreak \noindent 
+   \subsection{Minimum Recolors to Get K Consecutive Black Blocks}
+   \bigbreak \noindent 
+   You are given a 0-indexed string blocks of length $n$, where $blocks[i]$ is either '$W$' or '$B$', representing the color of the $i$th block. The characters '$W$' and '$B$' denote the colors white and black, respectively.
+   \bigbreak \noindent 
+   You are also given an integer $k$, which is the desired number of consecutive black blocks.
+   \bigbreak \noindent 
+   In one operation, you can recolor a white block such that it becomes a black block.
+   \bigbreak \noindent 
+   Return the minimum number of operations needed such that there is at least one occurrence of k consecutive black blocks.
+   \bigbreak \noindent 
+   \begin{cppcode}
+       class Solution {
+           public:
+           int minimumRecolors(string blocks, int k) {
+               int window{};
+               int min = INT_MAX;
+               for (int i=0; i<k; ++i) {
+                   if (blocks[i] == 'W') ++window;
+               }
+               min = std::min(min, window);
+               for (int i=1; i<=(int)blocks.size()-k; ++i) {
+                   if (blocks[i-1] == 'W') --window; 
+                   if (blocks[i+k-1] == 'W') ++window;
+                   min=std::min(min, window);
+               }
+               return min;
+           }
+       };
+   \end{cppcode}
+   \bigbreak \noindent 
+   The code first initializes a window by counting the number of white blocks ('$W$') in the first $k$ characters of the string. This is done in the first for loop. The count is stored in the variable window.
+   \bigbreak \noindent 
+   The algorithm then "slides" the window one position at a time over the string.
+   \bigbreak \noindent 
+   It subtracts the count of the element that is leaving the window (the character at blocks[i-1]).
+   \bigbreak \noindent 
+   It adds the count for the new element entering the window (the character at blocks[i+k-1]).
+   \bigbreak \noindent 
+   The variable min is updated to keep track of the smallest number of white blocks found in any window of length $k$
+   \bigbreak \noindent 
+   Instead of recalculating the number of white blocks for each window from scratch, the algorithm efficiently updates the count in constant time for each slide. This is the hallmark of the sliding window technique.
+   \bigbreak \noindent 
+   Each iteration does a constant amount of work (checking two characters and updating the count). Thus, the total time complexity is $O(n)$.
 
 
 

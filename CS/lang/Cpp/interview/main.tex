@@ -1571,7 +1571,7 @@ int main() {
 }
 \end{cppcode}
 \bigbreak \noindent 
-Here, since A is virtually inherited, converting from A* to B* or C* requires a runtime check (dynamic_cast) instead of a simple implicit cast.
+Here, since A is virtually inherited, converting from A* to B* or C* requires a runtime check (dynamic\_cast) instead of a simple implicit cast.
 \bigbreak \noindent 
 This increases runtime overhead and makes it harder to predict the behavior of type conversions.
 
@@ -2402,10 +2402,238 @@ have to handle possible exceptions.
 
 \pagebreak 
 \unsect{C++20}
+\bigbreak \noindent 
+\subsection{What are concepts}
+\bigbreak \noindent 
+Concepts are an extension to templates. They are compile-time
+predicates that you can use to express a generic algorithm’s expectations on its template arguments.
+\bigbreak \noindent 
+Concepts allow you to formally document constraints on templates
+and have the compiler enforce them. As a bonus, you can also take
+advantage of that enforcement to improve the compile time of your
+program via concept-based overloading
+\bigbreak \noindent 
+The main uses of concepts are:
+\begin{itemize}
+    \item Introducing type-checking to template programming
+    \item Simplified compiler diagnostics for failed template instantiations
+    \item Selecting function template overloads and class template specializations based on type properties
+    \item Constraining automatic type deduction
+\end{itemize}
 
+\bigbreak \noindent 
+Here is how you can define concepts
+\bigbreak \noindent 
+\begin{cppcode}
+    template<typename T>
+    concept integral = std::is_integral<T>::value;
 
+    auto add(integral auto a, integral auto b) {
+        return a+b;
+    }
+\end{cppcode}
+\bigbreak \noindent 
+What are the advantages of concepts?
+\begin{itemize}
+    \item Requirements for templates are part of the interface.
+    \item The overloading of functions or specialisation of class templates can be based on concepts.
+    \item We get improved error messages because the compiler compares the requirements of the template parameter with the actual template arguments
+    \item You can use predefined concepts or define your own.
+    \item The usage of auto and concepts is unified. Instead of auto, you can use the conceptName auto syntax.
+    \item If a function declaration uses a concept, it automatically becomes a function template. Writing function templates is, therefore, as easy as writing a function.
+\end{itemize}
 
+\bigbreak \noindent 
+\subsubsection{Constrained Template Parameter List}
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+concept integral = std::is_integral_v<T>;
 
+template <integral T>
+void foo(T t) {
+    // ...
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Requires Clause (Pre-Declaration)}
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+requires SomeConcept<T>
+void foo(T t) {
+    // ...
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{ Abbreviated Function Template Syntax}
+\bigbreak \noindent 
+\begin{cppcode}
+void foo(SomeConcept auto t) {
+    // ...
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsubsection{Trailing Requires Clause}
+\bigbreak \noindent 
+\begin{cppcode}
+template <typename T>
+void foo(T t) requires SomeConcept<T> {
+    // ...
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{What are the available standard attributes in C++?}
+\bigbreak \noindent 
+A simple one looks like this: [[attribute]]. But it can have
+parameters ([[deprecated("because")]]) or a namespace
+([[gnu::unused]]) or both.
+
+\bigbreak \noindent 
+The first ones were introduced by C++11:
+\begin{itemize}
+    \item \relax [[noreturn]] indicates that a function does not return. It doesn’t mean that it returns a void, but that it doesn’t return. It can mean that it always throws an exception. Maybe different ones based on their input.
+    \item  \relax [[carries\_dependency]] indicates that a dependency chain in release-consume std::memory\_order propagates in and out of the function, which allows the compiler to skip unnecessary memory fence instructions.
+\end{itemize}
+
+\bigbreak \noindent 
+Then C++14 added another type of attribute with two versions:
+\begin{itemize}
+    \item \relax [[deprecated]] and [[deprecated(reason)]] indicate that the usage of that entity is discouraged. A reason can be specified as a parameter.
+\end{itemize}
+\bigbreak \noindent 
+C++17 fastened up and added three more.
+\begin{itemize}
+    \item \relax [[fallthrough]] indicates in a switch-case that a break or return is missing on purpose. The fall through from one case label to another is intentional
+    \item \relax [[nodiscard]] indicates that the return value of a function should not be discarded - in other words, it must be saved into a variable - otherwise, you’ll get a compiler warning
+    \item \relax [[maybe\_unused]] suppresses compiler warnings on unused entities, if any. For example, you’ll not get a compiler warning for an unused variable if it was declared with the [[maybe\_unused]] variable.
+\end{itemize}
+
+\bigbreak \noindent 
+C++20 added another 4 attributes:
+\begin{itemize}
+    \item \relax [[nodiscard("reason")]] it’s the same as [[nodiscard]] but with a reason specified.
+    \item \relax [[likely]] indicates to the compiler that a switch-case or an if-else branch is likely to be executed more frequently than the others and as such it lets the compiler optimize for that evaluation path.
+    \item \relax [[unlikely]] has the same concept as [[likely]], but in this case, such labelled paths are less likely to be executed than the others.
+    \item \relax [[no\_unique\_address]] indicates that this data member need not have an address distinct from all other non-static data members of its class.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{What is 3-way comparison?}
+\bigbreak \noindent 
+The three-way comparison operator is also known as the starship operator and it looks like this: lhs <=> rhs.
+\bigbreak \noindent 
+With C++20, you can simply =default the spaceship operator and it will generate all the six constexpr and noexcept operators for you and they perform lexicographical comparison.
+
+\bigbreak \noindent 
+\subsection{What are modules and what advantages do they bring?}
+\bigbreak \noindent 
+#include statements are basically textual
+inclusions. The preprocessor macro replaces the #include statement
+with the content of the file to be included.
+\bigbreak \noindent 
+Hence a simple hello world program can grow from around 100
+bytes up to 13,000. Simply because of the inclusion of <iostream>
+\bigbreak \noindent 
+All the header headers will be copied, even if you only want to use
+one small function.
+\bigbreak \noindent 
+Modules, introduced by C++20, finally bring a solution. Importing
+a module is basically free, unlike for inclusion, the order of imports
+doesn’t matter.
+\bigbreak \noindent 
+With modules, you can easily structure your libraries and with
+export qualifiers you can easily decide what you want to expose
+and what not.
+\bigbreak \noindent 
+\begin{cppcode}
+// math.cppm
+export module math;
+
+export int square(int n){
+    return n*n;
+}
+
+// main.cpp
+import math;
+int main(){
+    square(42);
+}
+\end{cppcode}
+
+\pagebreak 
+\unsect{Special function and the rules of how many?}
+\bigbreak \noindent 
+\subsection{Explain the rule of three}
+\bigbreak \noindent 
+If a class requires a user-defined destructor, a user-defined copy constructor, or a user-defined copy assignment operator, it almost certainly requires all three.
+\bigbreak \noindent 
+When you return or pass an object by value, you manipulate a container, etc., these member functions will be called. If they are not user-defined, they are generated by the compiler (since C++98)
+\bigbreak \noindent 
+Since C++98 the compiler tries to generate
+\begin{itemize}
+    \item a default constructor (T()), that calls the default constructor of each class member and base class
+    \item a copy constructor (T(const T\& other)), that calls a copy constructor on each member and base class
+    \item a copy assignment operator (T\& operator=(const T\& other)), that calls a copy assignment operator on each class member and base class
+    \item the destructor ($\sim$T()), which calls the destructor of each class member and base class. Note that this default-generated destructor is never virtual (unless it is for a class inheriting from one that has a virtual destructor).
+\end{itemize}
+\bigbreak \noindent 
+In case you have a class holding on a raw or smart pointer,
+a file descriptor, database connection, or other types managing
+resources, there is a fair chance that the generated functions would
+be incorrect and you should implement them by hand.
+\bigbreak \noindent 
+And here comes the rule of three, if you implement by hand
+either the copy constructor, the copy assignment operator or the
+destructor, the compiler will not generate those that you didn’t
+write. So if you need to write any of these three, the assumption
+is that you’ll need the rest as well
+\bigbreak \noindent 
+\subsection{Explain the rule of five}
+\bigbreak \noindent 
+ The rule of five was introduced by C++11. It’s about move semantics that was introduced by C++11. So if you
+implement by hand any of the following special functions, then
+none of the others will be generated. You have to take care of
+implementing all of them:
+\begin{itemize}
+    \item a copy constructor: T(const T\&)
+    \item a copy assignment: operator=(const T\&)
+    \item a move constructor: T(X\&\&)
+    \item a move assignment: operator=(T\&\&)
+    \item a destructor: $\sim$T()
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Explain the rule of zero}
+\bigbreak \noindent 
+If all the members have all their special functions, you’re done, you don’t need to define any, zero.
+\bigbreak \noindent 
+\begin{cppcode}
+class MyClass {
+public:
+    // ... no default operations declared
+    private:
+    std::string name;
+    std::map<int, int> rep;
+};
+
+MyClass mc; // default constructor
+MyClass mc2 {nm}; // copy constructor
+\end{cppcode}
+\bigbreak \noindent 
+As both std::map and std::string have all the special functions, none
+is needed in MyClass
+\bigbreak \noindent 
+The idea is that a class needs to declare any of the special functions,
+then it should deal exclusively with ownership and other classes
+shouldn’t declare these special functions.
+\bigbreak \noindent 
+So keep in mind, that if you need any of the special functions,
+implement all of them, but try not to need them in the first place.
 
 
 
