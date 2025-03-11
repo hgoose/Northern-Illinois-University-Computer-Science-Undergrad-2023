@@ -1928,7 +1928,7 @@
     \bigbreak \noindent 
     When a function is marked as noexcept, the compiler can generate more efficient code:
     \bigbreak \noindent 
-    If destructors could throw by default, objects in RAII (Resource Acquisition Is Initialization) and smart pointers (std::unique_ptr, std::shared_ptr) would lead to undefined behavior or terminate the program when a destructor is called during stack unwinding.
+    If destructors could throw by default, objects in RAII (Resource Acquisition Is Initialization) and smart pointers (std::unique\_ptr, std::shared\_ptr) would lead to undefined behavior or terminate the program when a destructor is called during stack unwinding.
     \bigbreak \noindent 
     \begin{cppcode}
         struct B {
@@ -3575,6 +3575,28 @@ We get 010001. The output is determined by how std::is\_const checks for a top�
 \bigbreak \noindent 
 "An array type whose elements are cv-qualified is also considered to have the same cv-qualifications as its elements." Since the array's element type is const, the array type itself is also const
 
+\bigbreak \noindent 
+\subsection{Top-level and low-level cv-qualifiers}
+\bigbreak \noindent 
+In C++, cv-qualifiers (i.e. const and volatile) are applied at two distinct levels:
+\begin{itemize}
+    \item \textbf{Top-level cv-qualifiers:} These qualify the object itself. For example, in the declaration
+        \bigbreak \noindent 
+        \begin{cppcode}
+        int* const ptr;
+        \end{cppcode}
+        \bigbreak \noindent 
+        the const is a top-level qualifier—it makes the pointer itself constant, meaning you cannot change which address ptr holds. Top-level qualifiers are typically ignored in contexts such as copying objects or function parameter passing.
+    \item \textbf{Low-level cv-qualifiers:} These qualify the type that the object points to or refers to. For example, in
+        \bigbreak \noindent 
+        \begin{cppcode}
+        const int* ptr;
+        \end{cppcode}
+        \bigbreak \noindent 
+        the const qualifies the int pointed to by ptr. This is a low-level qualifier—it tells you that the integer value pointed to cannot be modified via this pointer, even though the pointer itself can be changed.
+
+\end{itemize}
+
 
 \pagebreak 
 \unsect{Mixed type references}
@@ -3945,6 +3967,32 @@ We can manual call our operator overloads. Observe
     \end{cppcode}
     \bigbreak \noindent 
     You may think that the global $a$ needs to be captured. However, only local variables may be captured by a lambda. a is a global variable with static storage duration and may not be captured
+
+    \pagebreak 
+    \unsect{Notes about function types}
+    \bigbreak \noindent 
+    \subsection{Top-level cv-qualifiers}
+    \bigbreak \noindent 
+    The constness of parameters are not part of the function type.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::cout << std::is_same_v<
+        void(int),
+        void(const int)>; // 1
+    \end{cppcode}
+    \bigbreak \noindent 
+    The top-level cv-qualifier of the parameter is removed when considering the type of a function.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        std::cout << std::is_same_v<
+        void(int*),
+        void(const int*)>; // 0
+    \end{cppcode}
+    \bigbreak \noindent 
+    The second parameter has low-lever cv-qualification. Thus, there is no const to remove and they are different types.
+
+
+
 
 
 
