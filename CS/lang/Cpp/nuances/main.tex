@@ -3993,6 +3993,33 @@ We can manual call our operator overloads. Observe
 
 
 
+    \pagebreak 
+    \unsect{Notes about name resolution}
+    \bigbreak \noindent 
+    \begin{cppcode}
+        int foo() {
+            return 10;
+        }
+
+        struct foobar {
+            static int x;
+            static int foo() {
+                return 11;
+            }
+        };
+        int foobar::x = foo();
+
+        int main() {cout << foobar::x; } // 11
+    \end{cppcode}
+    \bigbreak \noindent 
+    First, notice that foo is not qualified by any name. So why is the foo in foobar chosen?
+    \bigbreak \noindent 
+    This behavior occurs because the out‐of‐class definition of a class member is treated as if it were within the class’s scope.
+    \bigbreak \noindent 
+    The unqualified call to foo() is looked up in the context of foobar first—even though the definition is written outside the class body. As a result, it finds the static member function foobar::foo() (which returns 11) rather than the free function ::foo() (which returns 10).
+    \bigbreak \noindent 
+    This lookup mechanism is sometimes described as unqualified name lookup in an out‐of‐class member definition, where the definition is treated as if it were in the class’s scope. This “injection” of the class scope into the member definition is what causes the resolution to favor foobar::foo() over the global foo().
+
 
 
 
