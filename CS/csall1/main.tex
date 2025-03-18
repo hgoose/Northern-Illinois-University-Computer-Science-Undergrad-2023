@@ -8028,6 +8028,7 @@ indicate which strong entity the weak entity depends upon.
                     \end{cppcode}
                     \bigbreak \noindent 
                     The remainder in this case will be stored in the even register, and the quotient in the odd register.
+                \item \textbf{Note about multiplication and division}: In multiplication, the even register can be junk. But, with division, the even reg must have extension of the sign bit of the odd register. Thus, the even register must be filled with all zeros or all ones. This is why we multiply the even register by one before we divide. 
                 \item \textbf{Defining label that does not take up storage}: 
                     \bigbreak \noindent 
                     \begin{cppcode}
@@ -8129,6 +8130,72 @@ indicate which strong entity the weak entity depends upon.
                 \begin{itemize}
                     \item \textbf{Space character}: 40
                 \end{itemize}
+            \item \textbf{LTR (load and test register)}: The LTR instruction loads into a register and sets the condition code based on its value. The CC will be 
+                \begin{enumerate}
+                    \item \textbf{Zero}: If the loaded value is zero
+                    \item \textbf{One} If the loaded value is negative.
+                    \item \textbf{Two}: If the loaded value is positive
+                    \item \textbf{Three:} If there is overflow
+                \end{enumerate}
+                Thus, we can test if a register has a value of zero with
+                \bigbreak \noindent 
+                \begin{cppcode}
+                LTR R,R
+                \end{cppcode}
+                \bigbreak \noindent 
+                Then, we can test the condition code accordingly.
+            \item \textbf{If-endif statements}: We can write an "if-endif" statement by using branches
+                \bigbreak \noindent 
+                \begin{cppcode}
+                        BC      B'bbbb', OVER
+                                ...
+                                ...
+                                ...
+                OVER    DS      0H
+                \end{cppcode}
+                \bigbreak \noindent 
+                This code branches if register 8 contains zero.
+            \item \textbf{If-else-endif statements}: Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                        BC      B'bbbb',ELSE
+                                ...
+                                ...
+                                ...
+                        BC      B'1111',ENDIF
+                ELSE    DS      0H
+                                ...
+                                ...
+                                ...
+                ENDIF   DS      0H
+                \end{cppcode}
+            \item \textbf{Extended mnemonics}: Shorten common instructions. Note that these are not real instructions, but translate to equivalent instructions. A few common ones are
+                \bigbreak \noindent 
+                \begin{cppcode}
+                BCR     B'1111',14
+                BR      14
+                \end{cppcode}
+                \bigbreak \noindent 
+                Branch non-zero:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                BC    B'0111',LABEL
+                BNZ   LABEL
+                \end{cppcode}
+                \bigbreak \noindent 
+                Branch zero:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                BC    B'1000',LABEL
+                BZ    LABEL
+                \end{cppcode}
+                \bigbreak \noindent 
+                Branch:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                BC    B'1111'LABEL
+                B     LABEL
+                \end{cppcode}
 
     \end{itemize}
 
