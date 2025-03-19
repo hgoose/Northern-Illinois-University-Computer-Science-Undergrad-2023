@@ -8042,6 +8042,154 @@ $$p(x) = x + 2x^2 - 2x^3.$$
 
      \end{itemize}
 
+     \pagebreak 
+     \subsection{Continuous least squares approximation}
+     \begin{itemize}
+         \item \textbf{Recall:} 
+             In the previous two chapters we approximated a function $f(x)$ over an interval $[a,b]$ by interpolating points $\set{(x_i,f(x_i))}_{i=0}^n$ (and possibly values of $f'$) by either a polynomial $p_n(x)$ having degree at most $n$, or by a piecewise polynomial (e.g., a cubic spline) $p(x)$.
+             \bigbreak \noindent 
+             The \textbf{error of the approximation} was measured using the \textbf{infinity-norm}:
+             $$
+             \norm{f - p}_\infty := \max_{x \in [a,b]} \abs{f(x) - p(x)}.$$
+             We found valid upper bounds on this error, such as 
+             $$\norm{f - p_n}_\infty \leq \frac{\norm{f^{(n+1)}}_\infty}{(n+1)!} \max_{x \in [a,b]} \prod_{i=0}^n \abs{x-x_i},$$
+             for the unique polynomial $p_n(x)$ having degree at most $n$ interpolating $(x_0,f(x_0)), \ldots, (x_n,f(x_n))$.
+             \bigbreak \noindent 
+             We even looked an minimizing this upper bound, which led us to studying \textbf{Chebyshev points}.
+         \item \textbf{Best approximation:} We now will look at minimizing the \textbf{approximation error} directly. 
+             Given a set of \textbf{linearly independent} functions $\set{\phi_j(x)}_{j=0}^n$, we want to find a function 
+             $$p(x) = \sum_{j=0}^n c_j \phi_j(x)$$
+             that minimizes the error $\norm{f - p}$, where $\norm{\cdot}$ is a \textbf{function norm}.
+         \item \textbf{Function norms}:
+             Let $\norm{\cdot}$ be a \textbf{norm} for $f \in C[a,b]$.
+             \bigbreak \noindent 
+             Then $\norm{\cdot}$ is a function that takes an input $f$ and returns a real number.
+             \bigbreak \noindent 
+             A norm $\norm{\cdot}$ for functions must satisfy:
+             \begin{enumerate}
+                 \item $\norm{f} \geq 0$, for all functions $f$, and $\norm{f} = 0$ if and only if $f(x) = 0$, for all $x \in [a,b]$;
+                 \item $\norm{\alpha f} = \abs{\alpha} \norm{f}$, for all $\alpha \in \mathbb{R}$;
+                 \item $\norm{f+g} \leq \norm{f} + \norm{g}$ for all $f, g \in C[a,b]$.
+             \end{enumerate}
+            \item \textbf{Examples of function norms}:
+                The $L_1$ norm of a function $f \in C[a,b]$ is defined as
+                $$\norm{f}_1 := \int_a^b \abs{f(x)} dx.$$
+                The $L_\infty$ norm of a function $f \in C[a,b]$ is defined as
+                $$\norm{f}_\infty := \max_{x \in [a,b]} \abs{f(x)}.$$
+                We will define the $L_2$ norm in terms of the inner-product.
+            \item \textbf{$L_{2}$ norm}:
+                The \textbf{inner-product} of two functions $f,g \in C[a,b]$ is defined as 
+                $$\ip{f}{g} := \int_a^b f(x) g(x)\,dx.$$
+                Note that we can use the inner-product to talk about the \textbf{angle} between functions. For example, functions $f$ and $g$ are said to be \textbf{orthogonal} if $\ip{f}{g} = 0.$
+                \bigbreak \noindent 
+                The $L_2$ norm of a function $f \in C[a,b]$ is defined as
+                $$\norm{f}_2 := \sqrt{\ip{f}{f}} = \paren{\int_a^b \brack{f(x)}^2 dx}^{\frac12}.$$
+                In this chapter, we will consider methods for minimizing $\norm{f-p}_2$, also known as the \textbf{continuous least-squares problem}.
+            \item \textbf{Solving the continuous least-squares problem}:
+                We want to find the coefficients $c_0,\ldots,c_n$ such that 
+                $$p(x) = \sum_{j=0}^n c_j \phi_j(x)$$
+                minimizes $\norm{f-p}_2$ over all functions $p \in \span\set{\phi_0,\ldots,\phi_n}$.
+                \bigbreak \noindent 
+                Equivalently, we can minimize 
+                $$
+                \begin{align}
+                    \norm{f-p}_2^2 
+& = \ip{f-p}{f-p} \\
+& = \ip{f}{f} - 2\ip{f}{p} + \ip{p}{p} \\
+& = \ip{f}{f} - 2\ip{f}{\sum_{j=0}^n c_j \phi_j} + \ip{\sum_{j=0}^n c_j \phi_j}{\sum_{j=0}^n c_j \phi_j} \\
+& = \ip{f}{f} - 2\sum_{j=0}^n c_j \ip{f}{\phi_j} + \sum_{j=0}^n \sum_{k=0}^n c_j c_k \ip{\phi_j}{\phi_k} \\
+& = \ip{f}{f} - 2b^Tc + c^T B c, \\
+                \end{align}
+                $$
+                where $B \in \mathbb{R}^{(n+1) \times (n+1)}$ and $b, c \in \mathbb{R}^{n+1}$ are defined as
+                $$
+                B := 
+                \begin{bmatrix}
+                    \ip{\phi_0}{\phi_0} & \cdots & \ip{\phi_0}{\phi_n} \\
+                    \vdots & \ddots & \vdots\\
+                    \ip{\phi_n}{\phi_0} & \cdots & \ip{\phi_n}{\phi_n} \\
+                \end{bmatrix},
+                \qquad
+                b := 
+                \begin{bmatrix}
+                    \ip{f}{\phi_0}\\
+                    \vdots\\
+                    \ip{f}{\phi_n}\\
+                \end{bmatrix},
+                \qquad
+                c := 
+                \begin{bmatrix}
+                    c_0 \\
+                    \vdots\\
+                    c_n \\
+                \end{bmatrix}.
+                $$
+            \item \textbf{The normal equations}:
+                Let $g \colon \mathbb{R}^{n+1} \to \mathbb{R}$ be defined as
+                $$g(c) = c^T B c - 2b^Tc + \ip{f}{f}.$$
+                So we want to find $c^* \in \mathbb{R}^{n+1}$ such that
+                $$g(c^*) \leq g(c), \quad \forall c \in \mathbb{R}^{n+1}.$$
+                From multivariable calculus, we know that any \textbf{local minimizer} $c^*$ much satisfy $\nabla g(c^*) = 0$.
+                \bigbreak \noindent 
+                It is not too difficult to show that 
+                $$\nabla g(c) = 2Bc - 2b.$$
+                Therefore, we just need to solve the following linear system:
+                $$Bc^* = b.$$
+                This linear system is known as the \textbf{normal equations} for the \textbf{continuous least-squares problem}.
+                \bigbreak \noindent 
+            \item \textbf{ Unique solution to the normal equations}:
+                In addition, the matrix $B$ is \textbf{symmetric} and \textbf{positive definite}. 
+                \bigbreak \noindent 
+                It is clear that $B$ is symmetric since $\ip{\phi_j}{\phi_k} = \ip{\phi_k}{\phi_j}$.
+                \bigbreak \noindent 
+                To show $B$ is positive definite, we let $c \in \mathbb{R}^{n+1}$ be nonzero, and note that 
+                $$c^T B c = \ip{p}{p} = \norm{p}_2^2,$$
+                where $p = \sum_{j=0}^n c_j \phi_j$. Since $c \neq 0$, we have that $p \neq 0$ due to the fact the functions $\phi_0,\ldots,\phi_n$ are \textbf{linearly independent}. Thus, $c^T B c = \norm{p}_2^2 > 0$.
+                \bigbreak \noindent 
+                Positive definite matrices are nonsingular, so $B$ is nonsingular.
+                \bigbreak \noindent 
+                The proof is easy. Suppose that $B$ is singular. Then there is a nonzero vector $c$ such that $Bc = 0$. Then we have
+                $$c^T B c = 0,$$
+                which contradicts the fact that $B$ is positive definite. Thus $B$ must be nonsingular.
+                Thus, there is a \textbf{unique solution} $c^*$ to the normal equations.
+            \item \textbf{ Unique global minimizer}:
+                Let $\Delta c \in \mathbb{R}^{n+1}$ be nonzero. Then,
+                $$
+                \begin{align}
+                    g(c^* + \Delta c) 
+&=  (c^* + \Delta c)^T B (c^* + \Delta c) - 2b^T (c^* + \Delta c) + \ip{f}{f}\\
+&=  \paren{c^*}^T B c^* + 2\paren{\Delta c}^T B c^* +  \paren{\Delta c}^T B \Delta c - 2b^T c^* - 2b^T \Delta c + \ip{f}{f}\\
+&= g(c^*) + 2\paren{\Delta c}^T \paren{B c^* - b} +  \paren{\Delta c}^T B \Delta c \\
+&= g(c^*) +  \paren{\Delta c}^T B \Delta c \\
+&> g(c^*). \\
+                \end{align}
+                $$
+                Therefore, $g(c^*) < g(c^* + \Delta c)$, for all $\Delta c \neq 0$, which implies that $c^*$ is the \textbf{unique global minimizer}.
+            \item \textbf{Pros and cons of using the monomial basis for continuous least squares}:
+                \textbf{Pros:}
+                \begin{enumerate}
+                    \item Simple. Over the interval $[a,b]$, we have:
+                    $$B_{ij} = \frac{(b-a)^{i+j+1}}{i+j+1}, \quad i,j = 0,\ldots,n.$$
+                    Thus, $B$ is easy to evaluate. When $[a,b] = [0,1]$, we have the famous \textbf{[Hilbert matrix](http://en.wikipedia.org/wiki/Hilbert_matrix)}:
+                    $$B = H_{n+1} =
+                    \begin{bmatrix}
+                        1 & \frac12 & \cdots & \frac{1}{n+1} \\
+                        \frac12 & \frac13 & \cdots & \frac{1}{n+2} \\
+                        \vdots & \vdots & \ddots & \vdots \\
+                        \frac{1}{n+1} & \frac{1}{n+2} & \cdots & \frac{1}{2n + 1}\\
+                    \end{bmatrix}.
+                    $$
+            \end{enumerate}
+            \textbf{Cons:}
+            \begin{enumerate}
+                \item Solving $B c = b$ can be expensive for large $n$.
+                \item The matrix $B$ is highly \textbf{ill-conditioned} which means that the computed solution $c$ is highly sensitive to errors in the right-hand-side vector $b$ and to the round-off errors that occur during the computation.
+            \end{enumerate}
+
+
+
+     \end{itemize}
+
 
 
 

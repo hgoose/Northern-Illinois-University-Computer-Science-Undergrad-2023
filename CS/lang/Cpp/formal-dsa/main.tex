@@ -2688,6 +2688,113 @@ In this case, $\text{LCA}(2,8) = 6$
 \bigbreak \noindent 
 In this case, $\text{LCA}(2,4) = 2$
 
+\pagebreak 
+\subsubsection{LCA in a BST}
+\bigbreak \noindent 
+\begin{cppcode}
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+
+typedef TreeNode* ts;
+class Solution {
+public:
+    ts lowestCommonAncestor(ts root, ts p, ts q) {
+        ts lowest = nullptr;
+        _solve(root,p,q, lowest);
+        return lowest;
+    }
+private:
+    void _solve(ts root, ts p, ts q, ts& lowest) {
+        if (!root) return; 
+
+        bool locate_p = locate(root,p);
+        bool locate_q = locate(root,q);
+
+        if (locate_p && locate_q) lowest = root;
+
+        _solve(root->left, p,q, lowest);
+        _solve(root->right, p,q, lowest);
+
+    }
+    bool locate(ts root, ts p) {
+        if (!root || !p) return false;
+
+        if (root == p) return true;
+
+        if (p->val < root->val) return locate(root->left, p);
+        else return locate(root->right, p);
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+\begin{itemize}
+    \item \textbf{Time complexity: } $O(n\lg n) $ best $O(n^{2})$ worst
+    \item \textbf{Space complexity: } $O(\lg n)$ best $O(N)$ worst
+\end{itemize}
+
+\pagebreak 
+\bigbreak \noindent 
+\subsubsection{LCA in a normal binary tree}
+\bigbreak \noindent 
+In this case, we cannot take advantage of BST properties
+\bigbreak \noindent 
+\begin{cppcode}
+struct TreeNode {
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+
+typedef TreeNode* ts;
+class Solution {
+public:
+    ts lowestCommonAncestor(ts root, ts p, ts q) {
+        ts lowest = nullptr;
+        _solve(root,p,q, lowest);
+        return lowest;
+    }
+private:
+    void _solve(ts root, ts p, ts q, ts& lowest) {
+        if (!root) return; 
+
+        auto found = locate(root, p, q);
+
+        if (found.first && found.second) lowest = root;
+
+        _solve(root->left, p,q, lowest);
+        _solve(root->right, p,q, lowest);
+
+    }
+    std::pair<bool, bool> locate(ts root, ts p, ts q) {
+        if (!root) return {0,0};
+
+        bool found_p = false, found_q = false;
+
+        if (root == p) {
+            found_p = true;
+        }
+        else if (root == q)  {
+            found_q = true;
+        }
+
+        std::pair<bool,bool> in_left = locate(root->left, p,q);
+        std::pair<bool,bool> in_right = locate(root->right, p,q);
+
+        if (in_left.first || in_right.first) found_p = 1;
+        if (in_left.second || in_right.second) found_q = 1;
+
+        return {found_p, found_q};
+    }
+};
+\end{cppcode}
+
+
+
 
 
 
