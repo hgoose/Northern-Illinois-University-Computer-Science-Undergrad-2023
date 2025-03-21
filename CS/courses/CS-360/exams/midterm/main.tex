@@ -58,5 +58,295 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+    \unsect{Facts}
+    \begin{itemize}
+        \item \textbf{Positive and negative hex numbers}: Leftmost hex digit 0-7: positive. 8-F: negative
+        \item \textbf{Instructions and their lengths}: Look at the leftmost hex digit
+            \begin{itemize}
+                \item \textbf{0,1,2,3}: 2 byte
+                \item \textbf{4-B}: 4 byte
+                \item \textbf{C-F}: 6 byte
+            \end{itemize}
+        \item \textbf{Exceptions}
+            \begin{itemize}
+                \item \textbf{S0C 1 (Operation)}: Invalid opcode / instruction
+                \item \textbf{SOC 4 (Protection)}: Accessed memory outside scope of program
+                \item \textbf{SOC 5 (Addressing)}: Invalid address
+                \item \textbf{SOC 6 (Specification)}: Operand not on FWB
+            \end{itemize}
+        \item \textbf{Which instructions require FWB operands (might cause S0C6?)}: All RX
+        \item \textbf{The byte in an SI instruction}: Given in one of four ways, a character, a two digit hex number,  an eight bit binary number, or a decimal between 0 and 255, which will be converted to hex in the encoding
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MVI   42(15),C'$'
+            MVI   42(15),X'5B'
+            MVI   42(15),B'01110110'
+            MVI   42(15),32
+            \end{cppcode}
+        \item \textbf{EQU}: EQU, or EQUates, assigns a value to a label
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label    EQU    Expression
+            \end{cppcode}
+            \bigbreak \noindent 
+            gives a label the value of the expression. Every occurrence of label will be treated as if it was the expression.
+            \bigbreak \noindent 
+            Equates are either typed above the CSECT or below the END
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LOAD  EQU  L
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, a load instruction can be written as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LOAD   3,NUM1
+            \end{cppcode}
+            \bigbreak \noindent 
+            Before assembling the code, the Assembler replaces the label of the equates with the expression.
+        \item \textbf{Carriage control}
+            \begin{itemize}
+                \item \textbf{C' '}: Single space 
+                \item \textbf{C'0'}: Double space 
+                \item \textbf{C'-'}: Triple space
+                \item \textbf{C'1'}: Top of next page
+            \end{itemize}
+        \item \textbf{Label that does not occupy storage}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label    DS    0H
+            \end{cppcode}
+        \item \textbf{Add one to register $R$}
+            \begin{cppcode}
+                LA   R,1(,R)
+            \end{cppcode}
+            \end{align*}
+        \item \textbf{Decrement register $R$}
+            \begin{cppcode}
+                BCTR R,0 
+            \end{cppcode}
+        \item \textbf{Zero out register}:
+            \begin{cppcode}
+                SR   R,R
+            \end{cppcode}
+        \item \textbf{FWB}: Rightmost hex digit 0,4,8,C
+        \item \textbf{HWB}: Rightmost hex digit 0,2,4,6,8,A,C,E
+        \item \textbf{DWB}: Rightmost hex digit 0,8
+        \item \textbf{LTORG starts on DWB}
+        \item \textbf{Max displacement}: FFF, or 4095
+        \item \textbf{Read loop}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                        XREAD RECORD,80
+                LOOP1   BC    B'0111', ENDLOOP1
+                        XPRNT DETAIL,133
+                        XREAD RECORD,80
+                        BC    B'1111',LOOP1
+                ENDLOOP1
+            \end{cppcode}
+    \end{itemize}
+
+
+
+    \unsect{Instructions}
+    \bigbreak \noindent 
+    \subsection{RR}
+    \begin{itemize}
+        \item \textbf{AR (1A)}: Sets condition code
+        \item \textbf{SR (1B)}: Sets condition code
+        \item \textbf{LR (18)}:
+        \item \textbf{CR (19)}: Sets condition code
+        \item \textbf{BCR (07)}:
+        \item \textbf{MR (1C)}:
+        \item \textbf{DR (1D)}
+        \item \textbf{LTR (12) (Load and test register)}: Sets condition code
+        \item \textbf{LCR (13) (Load complement register)}: Sets condition code
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LCR   R1,R2
+            \end{cppcode}
+            \bigbreak \noindent 
+            If R2 contains $n$, R1 will contain $-n$
+        \item \textbf{LNR (11) (Load negative register)}: Sets condition code
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LNR   R1,R2
+            \end{cppcode}
+            \bigbreak \noindent 
+            Causes the negative of the absolute value of R2 to be loaded into R1
+        \item \textbf{LPR (10) (Load positive register)}: Sets condition code
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LPR   R1,R2
+            \end{cppcode}
+            \bigbreak \noindent 
+            Causes the absolute value of R2 to be loaded into R1. Overflow will occur if R2 contains the most negative number
+        \item \textbf{BCTR (06) (Branch on count register)}: RR variant of BCT. Except, if R2 is R0, 1 is subtracted from R1, but no branch is taken
+
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{RX}
+    \begin{itemize}
+        \item \textbf{A (5A)}: Sets condition code
+        \item \textbf{S (5B)}: Sets condition code
+        \item \textbf{L (58)}
+        \item \textbf{ST (50)}
+        \item \textbf{C (59)}: Sets condition code
+        \item \textbf{BC (47)}
+        \item \textbf{M (5C)}
+        \item \textbf{D (5D)}
+        \item \textbf{LA (41)}
+        \item \textbf{BCT (07) (Branch on count)}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            BCT   R,D(X,B)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Causes contents of $R$  to be decremented by one. If after this decrement $R$ does not contain zero, a branch to the address D(X,B) is taken. If $R$ does contain zero, the branch is not taken
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{SS (Storage to storage)}
+    \begin{itemize}
+        \item \textbf{MVC (D2)}
+        \item \textbf{CLC (D5)}: Sets condition code
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{SI (Storage to immediate byte)}
+    \begin{itemize}
+        \item \textbf{MVI (92) (Move immediate)}: Replacement of the contents of the byte at D(B) with a copy of the immediate byte
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MVI   D(B),byte
+            \end{cppcode}
+        \item \textbf{CLI (95) (Compare logical immediate)}: Sets condition code
+            \bigbreak \noindent 
+            Compares the byte at D(B) with the specified byte
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{X instructions}
+    \begin{itemize}
+        \item \textbf{XDUMP}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDUMP   D(X,B),Length, Any comments, notice the comma
+            XDUMP                Dump it all
+            \end{cppcode}
+        \item \textbf{XREAD}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XREAD   D(X,B),length
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that the length is usually 80
+        \item \textbf{XDECI}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDECI   R,addr
+            \end{cppcode}
+        \item \textbf{XDECO}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDECO   R,addr
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that XDECO requires character storage of length 12 bytes
+        \item \textbf{XPRNT}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XPRNT   addr,len
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that len is usually 133
+    \end{itemize}
     
+
+    \pagebreak 
+    \unsect{Condition codes}
+    \begin{itemize}
+        \item \textbf{Numeric and character compares}
+            \begin{itemize}
+                \item \textbf{Zero} if $a = b $
+                \item \textbf{One} if $a < b $
+                \item \textbf{Two} if $a > b$
+            \end{itemize}
+        \item \textbf{LTR}
+            \begin{itemize}
+                \item \textbf{Zero}: If the loaded value is zero
+                \item \textbf{One} If the loaded value is negative.
+                \item \textbf{Two}: If the loaded value is positive
+            \end{itemize}
+        \item \textbf{LCR}
+            \begin{itemize}
+                \item \textbf{Zero}: If the loaded value is zero
+                \item \textbf{One} If the loaded value is negative.
+                \item \textbf{Two}: If the loaded value is positive
+                \item \textbf{Three:} If there is overflow
+            \end{itemize}
+        \item \textbf{LNR}
+            \begin{itemize}
+                \item \textbf{Zero}: If the loaded value is zero
+                \item \textbf{One}: If the loaded value is negative (R2 was nonzero)
+            \end{itemize}
+        \item \textbf{LPR}
+            \begin{itemize}
+                \item \textbf{Zero}: If the loaded value is zero
+                \item \textbf{Two}: If the loaded value is positive
+                \item \textbf{Three}: If overflow occurred
+            \end{itemize}
+        \item \textbf{XREAD}
+            \begin{itemize}
+                \item \textbf{Zero}: Read success
+                \item \textbf{One}: No more to read
+            \end{itemize}
+        \item \textbf{XDECI}
+            \begin{itemize}
+                \item \textbf{Zero}: Number was converted to zero
+                \item \textbf{One:} Number was converted less than zero
+                \item \textbf{Two} Number was converted greater than zero
+                \item \textbf{Three}: Tried to convert invalid number
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Encodings}
+    \begin{itemize}
+        \item \textbf{RR}
+            \begin{align*}
+                OP_{1}OP_{2}R_{1}R_{2}
+            \end{align*}
+        \item \textbf{RX}
+            \begin{align*}
+                OP_{1}OP_{2}R_{1}I_{1}B_{1}D_{1}D_{2}D_{3}
+            \end{align*}
+        \item \textbf{SS}
+            \begin{align*}
+                OP_{1}OP_{2}L_{1}L_{2}B_{1}DDDB_{2}DDD
+            \end{align*}
+            \textbf{Note:} $L_{1}L_{2}$ is the length minus 1
+        \item \textbf{SI}
+            \begin{align*}
+                OP_{1}OP_{2}I_{1}I_{2}BDDD
+            \end{align*}
+        \item \textbf{BCR B'1111',14}: Encoded as
+            \begin{align*}
+                07FE
+            \end{align*}
+    \end{itemize}
+
+
+    \pagebreak 
+    \unsect{Extended mnemonics}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/1.png}
+
+    \bigbreak \noindent 
+    \fig{.6}{./figures/2.png}
+
+
+
 \end{document}

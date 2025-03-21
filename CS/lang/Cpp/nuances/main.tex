@@ -3121,7 +3121,7 @@ Car c1(HorsePower(400));
 
 
 \pagebreak 
-\unsect{Argument dependent name lookup (Koenig lookup)}
+\unsect{Argument dependent name lookup (ADL/Koenig lookup)}
 \bigbreak \noindent 
 Consider the code
 \bigbreak \noindent 
@@ -3159,6 +3159,44 @@ If instead we have
 \end{cppcode}
 \bigbreak \noindent 
 We would get 2 as output.
+
+\bigbreak \noindent 
+Next, consider
+\bigbreak \noindent 
+\begin{cppcode}
+    template<typename T>
+    void adl(T)
+    {
+        std::cout << "T";
+    }
+
+    struct S{};
+
+    template<typename T>
+    void call_adl(T t)
+    {
+        adl(S());
+        adl(t);
+    }
+    void adl(S)
+    {
+        std::cout << "S";
+    }
+
+    call_adl(S());
+\end{cppcode}
+\bigbreak \noindent 
+We get output TS. 
+\begin{itemize}
+    \item \textbf{First Call (adl(S()) inside call_adl):} This call is non-dependent (its argument is of a fixed type, S, that does not depend on the template parameter). Name lookup for non-dependent calls is performed when the template is defined. At that point, only the template version of adl is visible (the non-template adl(S) is defined later). Thus, the call resolves to the template function, which prints "T".
+    \item \textbf{Second Call (adl(t)):} Here, t is a template parameter and the call is dependent. Its lookup is deferred until instantiation. At instantiation time, both overloads are considered. Overload resolution then selects the non-template adl(S) because it is a better match (an exact match for type S) compared to the template version. This function prints "S".
+\end{itemize}
+\bigbreak \noindent 
+Dependent calls within a template—like the call to adl(t)—are not fully resolved until the template is instantiated. In this case, instantiation happens when you call call_adl(S()). At that point, the compiler performs name lookup for adl(t) using the actual type of t (which is S), and because it’s a dependent call, it considers all overloads available at instantiation, selecting the non-template adl(S).
+\begin{itemize}
+    \item \textbf{Non-dependent call (adl(S())):} Looked up at definition time.
+    \item \textbf{Dependent call (adl(t)):} Instantiated and looked up during the template instantiation phase when call_adl is called with a specific type (here, S).
+\end{itemize}
 
 \pagebreak 
 \unsect{C vs c++ external linkage}
@@ -4144,11 +4182,6 @@ We can manual call our operator overloads. Observe
      \unsect{Do static members increase the size of a class or object?}
      \bigbreak \noindent 
      Static members are not part of the class object and as such, they are not included in the object’s layout, they don’t add up to the object’s size.
-
-
-
-
-
 
 
 

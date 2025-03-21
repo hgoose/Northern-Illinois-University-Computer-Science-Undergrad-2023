@@ -5233,7 +5233,7 @@
     \pagebreak 
     \subsection{Pencils and Angles}
     \begin{itemize}
-        \item \textbf{definition: \textit{Coterminal rays}}: Rays with the same endpoint
+        \item \textbf{Definition: \textit{Coterminal rays}}: Rays with the same endpoint
             \bigbreak \noindent 
             \begin{figure}[ht]
                 \centering
@@ -5262,7 +5262,7 @@
                 \label{fig:pencil}
             \end{figure}
             \bigbreak \noindent 
-            When $\omega < \infty$, each ray $h = \overrightarrow{AB} = A^{*}B$, so $P_{A} = P_{A^{*}} $. $h^{\prime} $ is the opposite ray to $h$, as before
+            When $\omega < \infty$, each ray $h = \overrightarrow{AB} = \overrightarrow{A^{*}B}$, so $P_{A} = P_{A^{*}} $. $h^{\prime} $ is the opposite ray to $h$, as before
             \bigbreak \noindent 
             \begin{figure}[ht]
                 \centering
@@ -5318,10 +5318,7 @@
                     \end{align*}
                 \item \textbf{Measure axioms}
                     \begin{enumerate}
-                        \item [M1]: For all coterminal rays $p,q$,
-                            \begin{align*}
-                                0 \leq pq \leq 180
-                            \end{align*}
+                        \item [M1]: For all coterminal rays $p,q$, $0 \leq pq \leq 180$
                         \item [M2]: $pq = 0 \iff p=q$
                         \item [M3]: $pq = qp$
                         \item [M4]: $pq = 180 \iff q=p^{\prime} $
@@ -8368,6 +8365,207 @@ $$p(x) = x + 2x^2 - 2x^3.$$
                 \item The matrix $B$ is highly \textbf{ill-conditioned} which means that the computed solution $c$ is highly sensitive to errors in the right-hand-side vector $b$ and to the round-off errors that occur during the computation.
             \end{enumerate}
 
+        \item \textbf{Orthogonal basis functions}:
+            It would be great if we could find a basis $\phi_0,\ldots,\phi_n$ for which solving $Bc = b$, where 
+            $$
+            B := 
+            \begin{bmatrix}
+                \ip{\phi_0}{\phi_0} & \cdots & \ip{\phi_0}{\phi_n} \\
+                \vdots & \ddots & \vdots\\
+                \ip{\phi_n}{\phi_0} & \cdots & \ip{\phi_n}{\phi_n} \\
+            \end{bmatrix},
+            \qquad
+            b := 
+            \begin{bmatrix}
+                \ip{f}{\phi_0}\\
+                \vdots\\
+                \ip{f}{\phi_n}\\
+            \end{bmatrix}.
+            $$
+            is trivial.
+            \bigbreak \noindent 
+            The best case is when $B = I$, but having $B$ \textbf{diagonal} would also be great.
+            \bigbreak \noindent 
+            We want a basis that satisfies:
+            $$\ip{\phi_i}{\phi_j} = 0, \quad i \neq j.$$
+            That is, we want $\phi_0,\ldots,\phi_n$ to be \textbf{pairwise orthognal}.
+            \bigbreak \noindent 
+            An \textbf{orthogonal basis} is a basis that is pairwise orthogonal.
+            \bigbreak \noindent 
+            If $\set{\phi_0,\ldots,\phi_n}$ is an orthogonal basis and
+            $$\ip{\phi_i}{\phi_i} = 1, \quad i = 0,\ldots,n,$$
+            we say that $\set{\phi_0,\ldots,\phi_n}$ is an \textbf{orthonormal basis}.
+            \bigbreak \noindent 
+            Note that
+            $$B_{ii} = \ip{\phi_i}{\phi_i} = \norm{\phi_i}_2^2.$$
+            Thus, to solve $Bc = b$ for an orthogonal basis $\set{\phi_0,\ldots,\phi_n}$ we simply set
+            $$ c_i = \frac{b_i}{\norm{\phi_i}_2^2}, \quad i=0,\ldots,n.$$
+            If the basis is orthonormal, then $B = I$, so we have $c = b$.
+        \item \textbf{Gram-Schmidt orthogonalization}:
+            Given a basis $\set{\psi_0,\ldots,\psi_n}$, we can create an \textbf{orthogonal basis} for 
+            $$\span\set{\psi_0,\ldots,\psi_n}$$
+            using the \textbf{Gram-Schmidt process}.
+            \bigbreak \noindent 
+            Suppose we have just two functions $\set{\psi_0,\psi_1}$. First we set 
+            $$\phi_0 := \psi_0.$$
+            Now let $p$ be the orthogonal projection of $\psi_1$ onto $\span\set{\phi_0}$.
+            \bigbreak \noindent 
+            That is, $p = c_0 \phi_0$, where $c_0$ is found by solving $Bc = b$.
+            \bigbreak \noindent 
+            Since $B = \begin{bmatrix} \ip{\phi_0}{\phi_0} \end{bmatrix}$ and $b = \begin{bmatrix} \ip{\psi_1}{\phi_0} \end{bmatrix}$, we have $c_0 = \ip{\psi_1}{\phi_0} \big/ \ip{\phi_0}{\phi_0}$, so
+            \bigbreak \noindent 
+            $$p = \frac{\ip{\psi_1}{\phi_0}}{\ip{\phi_0}{\phi_0}} \phi_0.$$
+            \bigbreak \noindent 
+            Then we let $\phi_1 = \psi_1 - p$, which is the residual of the projection of $\psi_1$ onto $\span\set{\phi_0}$.
+            \bigbreak \noindent 
+            That is,
+            $$\phi_1 := \psi_1 - \frac{\ip{\psi_1}{\phi_0}}{\ip{\phi_0}{\phi_0}} \phi_0.$$
+            Recall that the residual of an orthogonal projection is orthogonal to every basis vector.
+            \bigbreak \noindent 
+            Thus, $\ip{\phi_1}{\phi_0} = 0$, so we have an orthogonal basis. 
+            \bigbreak \noindent 
+            Additionally, it can be shown that
+            \bigbreak \noindent 
+            $$\span\set{\phi_0,\phi_1} = \span\set{\psi_0,\psi_1}.$$
+            \bigbreak \noindent 
+            Suppose after $k$ steps we have computed an orthogonal basis $\set{\phi_0,\ldots,\phi_k}$ that satisfies
+            $$\span\set{\phi_0,\ldots,\phi_k} = \span\set{\psi_0,\ldots,\psi_k}.$$
+            As before, we let $p = \sum_{j=0}^k c_j \phi_j$ be the projection of $\psi_{k+1}$ onto $\span\set{\phi_0,\ldots,\phi_k}$.
+            \bigbreak \noindent 
+            To do this, we need to solve $Bc = b$:
+            $$
+            \begin{bmatrix}
+                \ip{\phi_0}{\phi_0}\\
+&\ip{\phi_1}{\phi_1}\\
+&&\ddots\\
+&&&\ip{\phi_k}{\phi_k}\\
+            \end{bmatrix}
+            \begin{bmatrix}
+                c_0\\
+                c_1\\
+                \vdots\\
+                c_k\\
+            \end{bmatrix} = 
+            \begin{bmatrix}
+                \ip{\psi_{k+1}}{\phi_0}\\
+                \ip{\psi_{k+1}}{\phi_1}\\
+                \vdots\\
+                \ip{\psi_{k+1}}{\phi_k}\\
+            \end{bmatrix}.
+            $$
+            Therefore, we have
+            $$p = \sum_{j=0}^k c_j\phi_j = \sum_{j=0}^k \frac{\ip{\psi_{k+1}}{\phi_j}}{\ip{\phi_j}{\phi_j}} \phi_j.$$
+            \bigbreak \noindent 
+            Letting $\phi_{k+1}$ be the residual of the projection of $\psi_{k+1}$ onto $\span\set{\phi_0,\ldots,\phi_k}$ (i.e., $\phi_{k+1} = \psi_{k+1} - p$), we obtain
+            $${\displaystyle \phi_{k+1} := \psi_{k+1} - \sum_{j=0}^k \frac{\ip{\psi_{k+1}}{\phi_j}}{\ip{\phi_j}{\phi_j}} \phi_j.}$$
+            Since the residual of an orthogonal projection is orthogonal to every basis vector, we have that $\set{\phi_0,\ldots,\phi_{k+1}}$ is orthogonal.
+            \bigbreak \noindent 
+            Additionally, we can show that
+            $$\span\set{\phi_0,\ldots,\phi_{k+1}} = \span\set{\psi_0,\ldots,\psi_{k+1}}.$$
+        \item \textbf{Summary}:
+            Given a basis $\set{\psi_0,\ldots,\psi_n}$, we can create an orthogonal basis $\set{\phi_0,\ldots,\phi_n}$ that satisfies
+            $$\span\set{\phi_0,\ldots,\phi_n} = \span\set{\psi_0,\ldots,\psi_n}$$
+            using the \textbf{Gram-Schmidt process}:
+            $$ \displaystyle \phi_{k} := \psi_{k} - \sum_{j=0}^{k-1} \frac{\ip{\psi_{k}}{\phi_j}}{\ip{\phi_j}{\phi_j}} \phi_j, \quad k=0,\ldots,n. $$
+        \item \textbf{An orthonormal basis}:
+            To obtain an orthonormal basis, we just need to \textbf{normalize} each vector by dividing it by its norm:
+$$\phi_k \gets \frac{1}{\norm{\phi_k}_2}\phi_k, \quad k=0,\ldots,n.$$
+    \item \textbf{Legendre polynomial basis}:
+        The \textbf{Legendre polynomials}, named after Adrien-Marie Legendre, form an othogonal basis for the space of polynomials having degree at most $n$.
+        These polynomials are defined on the interval $[-1,1]$ and are obtained by performing the \textbf{Gram-Schmidt process} on the monomial basis $\set{1,x,x^2,\ldots,x^n}$.
+    \item \textbf{A three-term recurrence relation for Legendre polynomials}:
+        The Legendre polynomials (normalized so that $\phi_k(1) = 1$, for all $k$) can be described using the following \textbf{three-term recurrence relation}:
+        $$
+        \begin{align}
+            \phi_0(x) &= 1,\\
+            \phi_1(x) &= x,\\
+            \phi_{k+1}(x) &= \frac{2k+1}{k+1} x \phi_k(x) - \frac{k}{k+1} \phi_{k-1}(x), \quad k = 1,\ldots,n-1.\\
+        \end{align}
+        $$
+        This remarkable fact means that we only need the previous two polynomials to determine the next polynomial.
+
+    \item \textbf{Best approximation on $[a,b]$}:
+        We go between $x \in [-1,1]$ and $t \in [a,b]$ using
+        $$t = \frac12 \brack{(b-a)x + (a+b)} \quad \text{and} \quad x = \frac{2t - a -b}{b-a}.$$
+        Define 
+        $$\hat\phi_i(t) = \phi_i\paren{\frac{2t - a -b}{b-a}}.$$
+        Then it can be shown that
+        $$\ip{\hat\phi_i}{\hat\phi_j} = 
+        \begin{cases}
+            0, & i \neq j,\\\\
+            \displaystyle\frac{b-a}{2i+1}, & i=j.
+        \end{cases}
+        $$
+
+
+     \end{itemize}
+
+     \pagebreak 
+     \subsection{Numerical differentiation}
+     \begin{itemize}
+         \item \textbf{A first-order method}:
+             In Chapter 1, we experimented with the approximation
+             $$ 
+             f'(x_0) \approx \frac{f(x_0 + h) - f(x_0)}{h}
+             $$
+             and saw that the \textbf{discretization error} (a.k.a. \textbf{truncation error}) satisfies
+             $$
+             \abs{f'(x_0) - \frac{f(x_0+h)-f(x_0)}{h}} \approx \frac{h}{2}\abs{ f''(x_0) } = \mathcal{O}(h)
+             $$
+             when $h$ is small enough and $f''(x_0) \neq 0$. We say that this approximation is \textbf{first-order accurate}.
+         \item \textbf{A second-order method}:
+             We also saw in Exercise 1.2 from HW1 that 
+             $$ f'(x_0) \approx \frac{f(x_0 + h) - f(x_0 - h)}{2h} $$
+             and that the truncation error satisfies
+             $$ \abs{f'(x_0) - \frac{f(x_0 + h) - f(x_0 - h)}{2h}} \approx \frac{h^2}{6}\abs{f'''(x_0)} = \mathcal{O}(h^2) $$
+             when $h$ is small enough and $f'''(x_0) \neq 0$. Thus, this approximation is \textbf{second-order accurate}.
+        \item \textbf{Overview}:
+            In this section, we will use the \textbf{Taylor series} of $f(x)$ derive these and other formulas to approximate the first and second derivatives of a function $f(x)$.
+            \bigbreak \noindent 
+            These approximations will use the value of $f(x)$ at evenly-spaced points:
+            $$\ldots, \ x_0 - 2h, \quad x_0 - h, \quad x_0, \quad x_0 + h, \quad x_0 + 2h, \ \ldots$$
+        \item \textbf{Two-point formulas:  Forward difference approximation for $f'(x_0)$}
+            Let $f$ be twice-differentiable on an interval containing $x_0$ and $x_0 + h$. From the Taylor series, we have
+            $$f(x_0 + h) = f(x_0) + hf'(x_0) + \frac{h^2}{2}f''(\xi), \quad \text{for some $\xi \in (x_0,x_0+h).$}$$
+            Solving for $f'(x_0)$, we obtain
+            $$f'(x_0) = \frac{f(x_0+h) - f(x_0)}{h} - \frac{h}{2}f''(\xi).$$
+            Thus, the \textbf{forward} difference formula 
+            $$\displaystyle\frac{f(x_0+h) - f(x_0)}{h}$$
+            gives a first order (i.e., $\mathcal{O}(h)$) approximation of $f'(x_0)$:
+            $$\abs{f'(x_0) - \frac{f(x_0+h) - f(x_0)}{h}} = \frac{h}{2}\abs{f''(\xi)}, \quad \text{for some $\xi \in (x_0,x_0+h).$}$$
+        \item \textbf{Two point formulas: Backward difference approximation for $f'(x_0)$}: 
+            Let $f$ be twice-differentiable on an interval containing $x_0$ and $x_0-h$. From the Taylor series, we have
+            $$f(x_0 - h) = f(x_0) - hf'(x_0) + \frac{h^2}{2}f''(\xi), \quad \text{for some $\xi \in (x_0-h,x_0).$}$$
+            Use this Taylor series to obtain the \textbf{backward} difference approximation of $f'(x_0)$. Show that this approximation is also first order.
+            \bigbreak \noindent 
+            Solving for $f'(x_0)$, we obtain
+            $$f'(x_0) = \frac{f(x_0) - f(x_0-h)}{h} + \frac{h}{2}f''(\xi).$$
+            Thus, the \textbf{backward} difference formula 
+            $$\fbox{${\displaystyle\frac{f(x_0) - f(x_0-h)}{h}}$}$$
+            gives a first order (i.e., $\mathcal{O}(h)$) approximation of $f'(x_0)$:
+            $$\abs{f'(x_0) - \frac{f(x_0) - f(x_0-h)}{h}} = \frac{h}{2}\abs{f''(\xi)}, \quad \text{for some $\xi \in (x_0-h,x_0).$}$$
+        \item \textbf{Three-point formulas: Centered difference approximation for $f'(x_0)$}:
+            Let $f$ be thrice-continuously-differentiable on an interval containing $x_0-h$ and $x_0+h$. From the Taylor series, we have
+            $$
+            \begin{align}
+                f(x_0 + h) &= f(x_0) + hf'(x_0) + \frac{h^2}{2}f''(x_0) + \frac{h^3}{6}f'''(\xi_1), \quad \text{for some $\xi_1 \in (x_0,x_0+h),$} \\
+                f(x_0 - h) &= f(x_0) - hf'(x_0) + \frac{h^2}{2}f''(x_0) - \frac{h^3}{6}f'''(\xi_2), \quad \text{for some $\xi_2 \in (x_0-h,x_0).$}\\
+            \end{align}
+            $$
+            Subtracting the second from the first, we get
+            $$f(x_0 + h) - f(x_0 - h) = 2hf'(x_0) + \frac{h^3}{6}\paren{f'''(\xi_1) + f'''(\xi_2)}.$$
+            \bigbreak \noindent 
+            Since $f'''$ is continous, the Intermediate Value Theorem tells us that there exists $\xi$ strictly between $\xi_1$ and $\xi_2$ such that
+            $$f'''(\xi) = \frac12\paren{f'''(\xi_1) + f'''(\xi_2)}.$$
+            Therefore, we have
+            $$f(x_0 + h) - f(x_0 - h) = 2hf'(x_0) + \frac{h^3}{3}f'''(\xi),$$
+            and solving for $f'(x_0)$ gives us
+            $$f'(x_0) = \frac{f(x_0 + h) - f(x_0 - h)}{2h} - \frac{h^2}{6}f'''(\xi).$$
+            \bigbreak \noindent 
+            Thus, the \textbf{centered} difference formula
+            $$\displaystyle \frac{f(x_0 + h) - f(x_0 - h)}{2h}$$
+            gives a second order (i.e., $\mathcal{O}(h^2)$) approximation of $f'(x_0)$:
+            $$\abs{f'(x_0) -  \frac{f(x_0 + h) - f(x_0 - h)}{2h}} = \frac{h^2}{6}\abs{f'''(\xi)}, \quad \text{for some $\xi \in (x_0-h,x_0+h).$}$$
 
 
      \end{itemize}

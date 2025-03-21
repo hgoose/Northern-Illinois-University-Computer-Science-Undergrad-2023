@@ -6562,6 +6562,77 @@ Consider a simple example where we define a UDL for distances in meters:
 The parameter types for user-defined literal (UDL) operators aren’t chosen arbitrarily—they’re dictated by the C++ standard to ensure consistency and unambiguity when converting literal values.
 \bigbreak \noindent 
 
+\pagebreak 
+\unsect{The Curiously Recurring Template Pattern (CRTP)}
+\bigbreak \noindent 
+Is it possible to have polymorphic behaviour without the cost of virtual functions? The short answer is yes. By inheriting from a class that takes the inheriting class as a template parameter. It’s called the “Curiously Recurring Template Pattern” or “Upside Down Inheritance”
+\bigbreak \noindent 
+The general form is 
+\bigbreak \noindent 
+\begin{cppcode}
+    template <class T>
+    class Base {
+        // methods within Base can use template to access members of Derived
+    };
+
+    class Derived : public Base<Derived> { ... };
+\end{cppcode}
+\bigbreak \noindent 
+The purpose of doing this is to use the derived class in the base class.
+From the perspective of the base object, the derived object is itself
+but downcasted. Therefore the base class can access the derived
+class by static\_casting itself into the derived class.
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename T>
+    class Base {
+        public:
+        void doSomething() {
+            T& derived = static_cast<T&>(*this);
+            //use derived...
+        }
+    };
+\end{cppcode}
+\bigbreak \noindent 
+Note that contrary to typical casts to the derived class, we don’t
+use dynamic\_cast here. A dynamic\_cast is used when you want to
+make sure at run-time that the derived class you are casting into
+is the correct one. But here we don’t need this guarantee: the Base
+class is designed to be inherited from by its template parameter,
+and by nothing else. Therefore it takes this as an assumption, and
+a static\_cast is enough.
+
+\pagebreak 
+\bigbreak \noindent 
+\begin{cppcode}
+    template <typename Derived>
+    class Base {
+        public:
+        void interface() {
+            static_cast<Derived*>(this)->implementation();
+        }
+
+        void implementation() {
+            std::cout << "Base default implementation\n";
+        }
+    };
+
+    class Derived : public Base<Derived> {
+        public:
+        // Override the implementation method.
+        void implementation() {
+            std::cout << "Derived implementation\n";
+        }
+    };
+
+    int main() {
+        Derived d;
+        // This will call Derived::implementation() through the CRTP interface.
+        d.interface();
+        return 0;
+    }
+\end{cppcode}
+
 
 
 
