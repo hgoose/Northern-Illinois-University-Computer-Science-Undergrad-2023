@@ -4185,6 +4185,53 @@ We can manual call our operator overloads. Observe
 
 
 
+     \pagebreak 
+     \unsect{Note about enums}
+     \bigbreak \noindent 
+     \subsection{cv-qualifiers?}
+     \bigbreak \noindent 
+     The type-specifier-seq of an enum-base shall name an integral type; any cv-qualification is ignored.
+
+     \pagebreak 
+     \unsect{Notes about templates}
+     \bigbreak \noindent 
+     \subsection{template templates}
+     \bigbreak \noindent 
+     Consider the code
+     \bigbreak \noindent 
+     \begin{cppcode}
+         struct A {};
+         struct B {};
+
+         template<typename T = A>
+         struct X;
+
+         template<>
+         struct X<A> {
+             static void f() { std::cout << 1; }
+         };
+
+         template<>
+         struct X<B> {
+             static void f() { std::cout << 2; }
+         };
+
+         template<template<typename T = B> typename C>
+         void g() {
+             C<>::f();
+         }
+     \end{cppcode}
+     \bigbreak \noindent 
+     The syntax
+     \bigbreak \noindent 
+     \begin{cppcode}
+     template<template<typename T = B> class C>
+     \end{cppcode}
+     \bigbreak \noindent 
+     means that the function template g is parameterized by a class template C. Here, C itself is a template that takes one type parameter T with a default type of B. This implies that C must be a template that can be instantiated with a single type argument, and if none is provided, it will use B by default.
+
+
+
 
 
 

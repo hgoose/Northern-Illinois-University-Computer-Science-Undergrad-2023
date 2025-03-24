@@ -2778,6 +2778,200 @@ enumeration type, concept (since C++20) or template is allowed in
 any one translation unit. There might be multiple declarations, but
 only one definition.
 
+\bigbreak \noindent 
+\subsection{What is unspecified behaviour?}
+\bigbreak \noindent 
+The behaviour of a program is said to be unspecified when the
+standard does not specify what should happen or it specifies multiple options. The exact behaviour depends on the implementation
+and may not be completely determined upon examination of the
+program’s source code.
+\bigbreak \noindent 
+Even with the implementation, the compiler doesn’t have to document how it resolves such situations.
+\bigbreak \noindent 
+This means that different result sets can be completely valid depending on which implementation you are using.
+\bigbreak \noindent 
+But whatever will happen it’s guaranteed that the effects of the
+unspecified code are strictly limited to the commands affected. It’s
+not the case for undefined behaviour when the compiler is free to
+remove complete execution branches
+\bigbreak \noindent 
+Consider
+\bigbreak \noindent 
+\begin{cppcode}
+int x, y;
+
+cout << &x > &y;
+\end{cppcode}
+\bigbreak \noindent 
+In other words, if you take two local variables and for any reason,
+you want to compare their memory addresses, it’s completely
+unspecified whose address will be higher. There is no right or good
+answer, it depends on the implementation, but it doesn’t have to
+document it.
+\bigbreak \noindent 
+\subsection{What is implementation-defined behaviour?}
+\bigbreak \noindent 
+In many ways, implementation-defined behaviour is similar to
+unspecified behaviour. First of all, the standard doesn’t impose on
+how the concerned item should be implemented. That will depend
+on the compiler
+\bigbreak \noindent 
+It’s also true that the effects of implementation-defined behaviour
+are limited to the very commands in question. So no full execution
+branches can be removed, like in the case of undefined behaviour.
+\bigbreak \noindent 
+What differs between unspecified and implementation-defined behaviour is that the implementation must document what is a valid
+result set.
+\bigbreak \noindent 
+In C++, sizeof(int) and the size of integer types, in general, is
+implementation specified. And even the size of a byte
+
+\bigbreak \noindent 
+\subsection{What is undefined behaviour in C++?}
+\bigbreak \noindent 
+Among unspecified, implementation-defined and undefined behaviour, this latter one is the most dangerous.
+\bigbreak \noindent 
+When you implement a program invoking some behaviour that is
+undefined, it basically means that there are no requirements on
+the behaviour of your whole program. The possible effects are not
+limited to the calls whose behaviour are unspecified, the compiler
+can do anything so your software can:
+\begin{itemize}
+    \item crash with seemingly no reasons
+    \item return logically impossible results
+    \item have non-deterministic behaviour
+\end{itemize}
+\bigbreak \noindent 
+In fact, the compiler can remove whole execution paths. Let’s
+say you have a big function with one line invoking undefined
+behaviour. It’s possible that the whole function will be removed
+from the compiled code.
+\bigbreak \noindent 
+When you have undefined behaviour in your code, you break
+the rules of the language and it won’t be detected until runtime.
+Turning on as many compiler warnings as possible usually helps a
+lot in removing undefined behaviour.
+\bigbreak \noindent 
+Some examples of undefined behaviour:
+\begin{itemize}
+    \item Accessing uninitialized variables
+    \item Accessing objects after the lifetime ended
+    \item Deleting objects through base class pointers without a virtual destructor
+\end{itemize}
+\bigbreak \noindent 
+\subsection{What are the reasons behind undefined behaviour’s existence?}
+\bigbreak \noindent 
+First of all, we have to remark that the concept of undefined
+behaviour was not introduced by C++. It was already there in C.
+\bigbreak \noindent 
+And what is C after all? It’s just a high-level assembler that had to
+work on completely different platforms and architectures.
+\bigbreak \noindent 
+From the language designer’s point of view, undefined behaviour
+is a way to cope with significant differences between compilers
+and between platforms. Some even refer to that epoch as chaotic.
+Different compilers treated the language differently and to be fairly
+backwards-compatible, a lot of details (like layout, endianness)
+were not defined or specified.
+\bigbreak \noindent 
+This gave compiler writers a lot of flexibility and they could and
+still can get really creative with this freedom. They can use it
+to simplify, to shorten, to speed up the compiled code without
+violating any rules.
+
+\bigbreak \noindent 
+\subsection{What approaches to take to avoid undefined behaviour?}
+\bigbreak \noindent 
+You can listen to your compiler! Turn on whatever warnings you can (-Wall, -Wextra, -Wpedantic) and treat them as errors. They will catch a lot of undefined behaviour.
+\bigbreak \noindent 
+Use a sanitizer, both g++ and clang offer some
+\bigbreak \noindent 
+Practice contractual programming. If you want to use elements of the standard library (you should), check the contract
+it proposes, in other words, read their documentation, read
+what kind of input they expect.
+
+\bigbreak \noindent 
+\subsection{What doesn't cause iterator invalidation? }
+\bigbreak \noindent 
+insert iterators (e.g. std::back\_insert\_iterator)
+are guaranteed to remain valid as long as all insertions are
+performed through this iterator and no other independent
+iterator-invalidating event occurs. They will even remain valid if a
+container has to be reallocated as it grows (notably a std::vector).
+\bigbreak \noindent 
+Also, read-only methods never invalidate iterators or references.
+Methods that modify the contents of a container may invalidate
+iterators and/or references
+
+\pagebreak 
+\unsect{The Standard Template Library}
+\bigbreak \noindent 
+\subsection{What is the STL?}
+\bigbreak \noindent 
+STL stands for the Standard Template Library, but there is no such
+library as the STL. It is part of the C++ standard library.
+\bigbreak \noindent 
+It’s a set of template classes and functions to provide solutions for
+common problems. The elements of the STL can be divided into 4
+categories:
+\begin{enumerate}
+    \item algorithms, e.g.: std::find, std::copy
+    \item containers, e.g.: std::vector<T>, std::list<T>
+    \item function objects, e.g.: std::greater<T>, std::logical_and<T>
+    \item iterators, e.g.: std::iterator, std::back_inserter
+\end{enumerate}
+\bigbreak \noindent 
+The STL was created by Alexander Stepanov, who already had the
+idea of a generic data processing library in the 1970s, but there was
+no language support to implement his dream.
+\bigbreak \noindent 
+In the 80s, he made his first attempts in ADA, but that language
+never got widely adopted outside the defence industry.
+\bigbreak \noindent 
+A former colleague convinced him to present the idea to the C++
+Committee that he did in November 1993. Then things happened
+fast. In March 1994, Stepanov submitted the formal proposal which
+was accepted in just a mere 4 months. In August, HP - the employer
+of Stepanov - published the first implementation of the STL.
+
+\bigbreak \noindent 
+\subsection{What are the advantages of algorithms over raw loops?}
+\bigbreak \noindent 
+First, what are raw loops?
+\bigbreak \noindent 
+“A raw loop is any loop inside a function where the function serves
+a purpose larger than the algorithm. implemented by the loop.” -
+Sean Parent
+\bigbreak \noindent 
+Why should you prefer using std algorithms
+instead of such raw loops?
+\begin{itemize}
+    \item \textbf{Algorithms are virtually bug-free}: If you have to write something a thousand times, there is a fair chance that you’ll make some mistakes once in a while. It’s OK, we all make mistakes. On the other hand, if you use functions that were written before and used a million times, you won’t face any bugs
+    \item \textbf{Algorithms have a better performance (Usually)}:
+\end{itemize}
+\bigbreak \noindent 
+Algorithms are most of the time better than plain old for loops.
+\bigbreak \noindent 
+They are less error-prone than loops as they were already written
+and tested - a lot. Unless you are going for the last drops of
+performance, algorithms will provide be good enough for you and
+actually more performant than simple loops
+
+\bigbreak \noindent 
+\subsection{Do algorithms validate ranges?}
+\bigbreak \noindent 
+No, It's undefined behaviour. You might have seemingly correct
+results, like the combination of the two containers, you might get
+a timeout or a nice core dump. You have to always double-check that what you pass in is valid and
+respect the contracts imposed by the given algorithm.
+
+\bigbreak \noindent 
+\subsection{Can you combine containers of different sizes?}
+\bigbreak \noindent 
+No, it's UB, So you always have to make sure that the second input range,
+defined only by its starting point is always at least as long as the
+first one.
+
 
 
 
