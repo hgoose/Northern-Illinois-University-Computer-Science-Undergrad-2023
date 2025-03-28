@@ -4839,7 +4839,7 @@ indicate which strong entity the weak entity depends upon.
                 S5 &Adams &30 &Athens &S2& Jones &10& Paris \\
                 S1 &Smith &20 &London &S3& Blake &30& Paris \\
                 S2 &Jones &10 &Paris &S3 &Blake &30 &Paris \\
-                S3 &Blake &30 &Paris &S3 &Blake &30& &Paris \\
+                S3 &Blake &30 &Paris &S3 &Blake &30 &Paris \\
                 S4 &Clark &20 &London &S3& Blake &30 &Paris \\
                 S5 &Adams &30 &Athens &S3& Blake &30 &Paris 
             \end{tabular}
@@ -5072,7 +5072,7 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             \begin{center}
                 \begin{tabular}{c|c|c}
-                    Title &Retail &Overall &Average \\
+                    Title &Retail Overall &Average \\
                     \hline
                     The Princess Bride &39.99 &42.00  \\
                     The Life of Pi &3.14 &42.00 \\
@@ -7233,8 +7233,7 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{Subtraction of binary and hexadecimal numbers}: In the subtraction algorithm it is assumed that for $a-b$, $a \geq b$.
             \begin{enumerate}
                 \item Write the minuend above the subtrahend with the rightmost digits of these numbers aligned.
-
-                \item \begin{enumerate}[(a)]
+                \item \begin{enumerate}[label=(\alph*)]
                         \item If the rightmost digit in the minuend is greater than or equal 
                             to the corresponding digit in the subtrahend, subtract the digit in 
                             the subtrahend from the corresponding digit in the minuend and 
@@ -8226,6 +8225,591 @@ indicate which strong entity the weak entity depends upon.
             \end{cppcode}
             \bigbreak \noindent 
             Before assembling the code, the Assembler replaces the label of the equates with the expression.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Decimal arithmetic}
+    \begin{itemize}
+        \item \textbf{Intro}: We are now going to learn to do arithmetic in decimal instead of binary arithmetic using registers and fullwords in storage
+            \bigbreak \noindent 
+            To do this, we use a numeric format called packed decimal which is also referred to as "packed numbers" or simply "decimal" for short
+            \bigbreak \noindent 
+            Numbers are in storage in decimal so numbers in dumps are easier to read. We can use larger numbers – up to 31 decimal digits! 
+            \bigbreak \noindent 
+            Also, both operands are in storage so we don't need to use registers. Storage to storage arithmetic means fewer instructions to do arithmetic, i.e., no loading values into registers, storing them, etc.
+        \item \textbf{Two decimal formats}:
+            \begin{itemize}
+                \item \textbf{Zoned Decimal Format}: The number is represented in almost character format (EBCDIC), similar to what we get after an XDECO
+                    \bigbreak \noindent 
+                    Used for getting input and for formatting output
+                    \bigbreak \noindent 
+                    For example, 4-byte zoned decimal number: F1F2F8F9 = 1289$_{10}$. One zoned decimal digit per byte. Within the byte, the left hex digit is the zone digit, and the right hex digit is the numeric digit.
+                    \bigbreak \noindent 
+                    The zone digit of the rightmost byte is used to represent the sign
+                    \begin{itemize}
+                        \item If the sign digit is A, C, E or F, the number is positive.
+                        \item If the sign digit is B or D, the number is negative
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    F3F8F4F3 is equivalent to 3843. A zoned decimal number looks a lot like the character, or EBCDIC, representation of the number. The difference is the sign zone digit in the first hex digit of the last byte.
+                    \bigbreak \noindent 
+                    \textbf{Note:} You cannot do arithmetic with zoned decimal numbers! Zoned Decimal Numbers
+                \item \textbf{Packed Decimal Format}: the format used for doing arithmetic in decimal.
+            \end{itemize}
+        \item \textbf{Declaring zoned decimal numbers}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label    dc    mZLn'p'
+            \end{cppcode}
+            \bigbreak \noindent 
+            Where $n$ is the length in bytes, and $m$ is how many times to repeat (1 if left blank).
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{p{4cm}|p{4cm}}
+                    Declaration &Generates\\
+                    \hline
+                    NUM1 DC 3ZL3'123' &F1F2C3 F1F2C3 F1F2C3 \\
+                    NUM2 DC 3Z'123' &F1F2C3 F1F2C3 F1F2C3 \\
+                    NUM3 DC ZL3'-123' &F1F2D3 \\
+                    NUM4 DC ZL6'-123' &F0F0F0F1F2D3 \\
+                    NUM5 DC ZL3'1.23' &F1F2C3
+                \end{tabular}
+            \end{center}
+        \item \textbf{Packed decimal format}: Each number translates to a digit in the packed number, with the sign represented by the hex digit at the end of the representation. 
+            \bigbreak \noindent 
+            For example, $F1F2C3$ in zoned format translates to $123C$ in packed format. For the bytes leading up to the byte with the sign digit, we simply drop the zoned digit. Then, we reverse the order of the last byte (sign digit + number)
+            \bigbreak \noindent 
+            Packed decimal numbers take fewer bytes to store than zoned. Packed decimal numbers are actually stored as decimal numbers.
+            \bigbreak \noindent 
+            In a dump, packed decimal numbers appear as decimal numbers.
+            \bigbreak \noindent 
+            For example, the positive number 4657 would be 04657C. The sign digit of a packed decimal number is the last digit (highlighted in red above).
+            \bigbreak \noindent 
+            A sign digit of A, C, E or F indicates a positive packed decimal number
+            \bigbreak \noindent 
+            We often get numbers from an input data set or from some other source in a quasi-zoned decimal format like EBCDIC.
+            \bigbreak \noindent 
+            We can take the zoned decimal numbers as input and convert them to packed decimal numbers. Packed decimal allows us to do arithmetic. We can even do real number division in packed decimal!
+            \bigbreak \noindent 
+            \textbf{Note:} Leading zeros are fine, they stay.
+        \item \textbf{Declaring packed decimal variables:}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label DC mPLn'p'
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{p{4cm}|p{7cm}}
+                    Declaration &Generates \\
+                    \hline
+                    NUM1 DC 3PL3'123' &00123C 00123C 00123C \\
+                    NUM2 DC 2PL4'123' &0000123C 0000123C \\
+                    NUM3 DC PL3'-1.23' &00123D (decimal not stored!) \\
+                    NUM4 DC PL6'-123' &00000000123D \\
+                    NUM5 DC PL2'12345' &345C (truncated on left!) \\
+                \end{tabular}
+            \end{center}
+        \item \textbf{Default sign digits}:
+            \begin{itemize}
+                \item \textbf{Positive:} C
+                \item \textbf{Negative:} D
+            \end{itemize}
+        \item \textbf{Note about decimal points}: Decimal points are not stored, it is up to the developer to know where the decimal should be placed.
+        \item \textbf{EBCDIC vs zoned decimal}: As long as we have a positive number, the EBCDIC representation is the same as the zoned decimal representation.
+        \item \textbf{The case of packed decimals and extra leading zeros}: Consider the zoned decimal to packed decimal conversion
+            \begin{align*}
+                F0F0F0F3F9F7F1F2 \to 000039712F
+            .\end{align*}
+            \bigbreak \noindent 
+            Notice the extra leading zero that appeared in the packed decimal. If not for this extra added zero, there would be an odd number (9) bytes. There is no such thing as an empty halfbyte.
+        \item \textbf{Determine how many bytes of packed decimal storage you will need to declare to hold a converted zoned decimal number}: We take
+            \begin{align*}
+                \lfloor\text{len(zoned decimal bytes)}/2\rfloor + 1
+            .\end{align*}
+            \bigbreak \noindent 
+            So, to store an 8-byte (8 digit) zoned decimal number in packed decimal, you would need a minimum of 5 bytes of packed decimal storage
+            \bigbreak \noindent 
+            It is a good general rule to declare packed decimal fields no larger than is absolutely necessary
+        \item \textbf{Instructions involving packed decimals}:
+            \begin{itemize}
+                \item \textbf{Pack (F2) (SS) (Zoned to packed conversion)}: A little like XDECI, It translates numbers in character format into a format which can can be used for arithmetic
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label PACK D1(L1,B1),D2(L2,B2)
+                        label PACK label1(L1),label2(L2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    PACK converts zoned decimal numbers into packed decimal numbers. Consider the zoned decimal F1F2C3, It does the following  
+                    \begin{itemize}
+                        \item The rightmost byte of the second operand is placed in the rightmost byte of the first operand, with zone and numeric digits reversed
+                        \item The zone digits are stripped away and the remaining numeric digits from the second operand are moved to the first operand, right to left
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    If the length of the first operand, the target packed decimal field, is not long enough, the number is truncated on the left.
+                    \bigbreak \noindent 
+                    If the length of the first operand, the target packed decimal field, is too long, the number is padded on the left with zeros.
+                    \bigbreak \noindent 
+                    The maximum length for a packed decimal field is 16 bytes. 16 bytes can hold a number with 31 digits!
+                    \bigbreak \noindent 
+                    PACK does not verify that the second operand holds a valid zoned decimal number.
+                    \bigbreak \noindent 
+                    PACK does not verify that a valid sign is converted into the packed decimal field.
+                    \bigbreak \noindent 
+                    PACK does not cause a Data Exception (S0C7).
+                    \bigbreak \noindent 
+                    If you code the length on the second operand incorrectly, the resulting packed decimal number will definitely NOT have the correct sign.
+                \item \textbf{UNPK (F3) (SS) (Packed to zoned conversion)}: A little like XDECO, It translates numbers in a format which can be used for arithmetic to numbers in character format
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label UNPK D1(L1,B1),D2(L2,B2)
+                        label UNPK label1(L1),label2(L2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    UNPK converts packed decimal numbers into zoned decimal numbers. Consider the number 123C. It does the following to this number, as an example
+                    \begin{itemize}
+                        \item The rightmost byte of the second operand is placed in the rightmost byte of the first operand, with the zone (sign) and numeric digits reversed
+                        \item Zone digit F is added to the remaining digits from right to left, each now taking a byte. 
+                    \end{itemize}
+                \item \textbf{AP (FA) (SS) (Add)}: Add one packed decimal field to another
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    AP PFIELD1(5),PFIELD2(2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    adds the packed decimal number in PFIELD2 to the packed decimal number in PFIELD1. PFIELD2 is unchanged
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label AP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label AP PNUM1(L1),PNUM2(L2) Implicit addr.
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    L1 and L2 represent lengths coded on both operands, respectively, with 16 being the greatest
+                \item \textbf{SP (FB) (SS) (Subtract)}: Subtract one packed decimal field from another
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    SP PFIELD1(5),PFIELD2(2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    subtracts the packed decimal number in PFIELD2 from the packed decimal number in PFIELD1. PFIELD2 is unchanged
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label SP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label SP PNUM1(L1),PNUM2(L2) Implicit addr
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    L1 and L2 represent lengths coded on both operands, respectively, with 16 being the greatest.
+                \item \textbf{ZAP (F8) (SS) (Zero and add packed)}: Copy one packed decimal field to
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    ZAP PFIELD1(5),PFIELD2(2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    copies the packed decimal number in PFIELD2 to the packed decimal field named PFIELD1
+                    \bigbreak \noindent 
+                    In reality, PFIELD1 is zero'd out and PFIELD2 is added into PFIELD1. PFIELD2 is unchanged
+                    \bigbreak \noindent 
+                    Often used to copy a number into a larger field preparing for arithmetic.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label ZAP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label ZAP PNUM1(L1),PNUM2(L2) Implicit addr
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    L1 and L2 represent lengths coded on both operands, respectively, with 16 being the greatest.
+                \item \textbf{MP (FC) (SS) (Multiply)}: multiply one packed decimal field by another.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label MP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label MP PNUM1(L1),PNUM2(L2) Implicit addr
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    L1 and L2 represent lengths coded on both operands, respectively, with 16 being the greatest.
+                    \bigbreak \noindent 
+                    Does not set the condition code
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    MP PNUM1(6),PNUM2(3)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Where
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        PNUM1 DC PL6'12233'    00 00 00 12 23 3C
+                        PNUM2 DC PL3'15'       00 01 5C
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Becomes
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        PNUM1 DC PL6'12233'    00 00 01 83 49 5C
+                        PNUM2 DC PL3'15'       00 01 5C
+                    \end{cppcode}
+                \item \textbf{DP (FD) (SS) (Divide)}: divide one packed decimal field by another
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label DP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label DP PNUM1(L1),PNUM2(L2) Implicit addr.
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Both quotient and remainder are stored in the first operand. Also does not set the condition code.
+                    \bigbreak \noindent 
+                    \textbf{Note:} Remainder will be in the last $n$ bytes, where $n$ is the size of the second operand (divisor).
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    DP PNUM1(5),PNUM2(2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Where
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        PNUM1 DC PL5'27'   00 00 00 02 7C
+                        PNUM2 DC PL2'5'    00 5C
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Becomes
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        PNUM1 DC PL5'27'   00 00 5C 00 2C
+                        PNUM2 DC PL2'5'    00 5C
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Observe that the last two bytes (002C) is the remainder. Thus, 00005C is the quotient.
+                \item \textbf{CP (F9) (SS) (Compare)}: compare one packed decimal field with another.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label CP D1(L1,B1),D2(L2,B2) Explicit addr.
+                        label CP PNUM1(L1),PNUM2(L2) Implicit addr.
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Always use CP when comparing one packed decimal field with another and not some other compare instruction.
+                    \bigbreak \noindent 
+                    Does a numeric comparison so the value of the field is important, not the lengths of the operands.
+                    \bigbreak \noindent 
+                    Does NOT change either operand.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    CP PNUM1(5),PNUM2(2)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Where
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        PNUM1 DC PL5'27'     00 00 00 02 7C
+                        PNUM2 DC PL2'5'      00 5C
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    condition code is set to two.
+                \item \textbf{SRP (F0) (SS) (Shift and round)}: Shift a packed decimal by decimal digits left or right
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label SRP D1(L,B1),D2(B2),i Explicit addr.
+                        label SRP PNUM1(L),D2(B2),i Implicit addr.
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Used to multiply and divide packed decimal numbers by factors of 10.
+                    \bigbreak \noindent 
+                    Often used to add extra decimal places to a number preparing it for division and then to get rid of one or more decimal places and round.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    SRP PNUM2(11),4,0 
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    The first operand is the packed decimal field with the number being shifted, the second indicates a left shift by 4 digits and the third, the rounding factor, is set to 0 (rounding is unnecessary when shifting left).
+                    \bigbreak \noindent 
+                    Equivalent to multiplying PNUM2 for 11 bytes by $10^{4}$.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    SRP PNUM3(10),64-3,5
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    The first operand is the packed decimal field with the number being shifted, the second indicates a right shift by 3 digits and the third, the rounding factor, is set to 5. 5 is standard rounding. In other words, if the number being rounded off is 5, 6, 7, 8 or 9, round up by adding 1 to the digit to the left.
+                    \bigbreak \noindent 
+                    Shifting right by 3 digits with standard rounding is like dividing the packed decimal number by $10^{3}$
+                    \bigbreak \noindent 
+                    \textbf{Note:} The mainframe knows it is a shift left if the second operand is between 1 and 31 and, conversely, knows it is a shift right if the second operand is between 32 and 63.
+                    \bigbreak \noindent 
+                    The second operand of the previous example could have been coded as 61 but 64-3 is far more easy to understand and is self-documenting
+                    \bigbreak \noindent 
+                    The sign of the number shifted is not changed unless the result becomes 0, in which case a negative sign, B or D, is made positive.
+                \item \textbf{CVB (4F) (RX) (Convert to binary)}: converts a packed decimal number in a doubleword of storage on a doubleword boundary to its binary equivalent and stores it in a register
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label CVB R1,D2(X2,B2) Explicit addr.
+                        label CVB R1,DWORD Implicit addr.
+                    \end{cppcode}
+                \item \textbf{CVD (4E) (RX) (Convert to decimal)}: converts a binary number in the first operand register to its packed decimal equivalent in a doubleword on a doubleword boundary
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        label CVD R1,D2(X2,B2) Explicit addr.
+                        label CVD R1,DWORD Implicit addr
+                    \end{cppcode}
+            \end{itemize}
+        \item \textbf{More SRP examples}: Example of a left shift by 3, equivalent to a multiply by $10^{3}$
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SRP PNUM1(5),3,0
+            \end{cppcode}
+            \bigbreak \noindent 
+            Where 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PNUM1 DC PL5'3227'     00 00 03 22 7C
+            \end{cppcode}
+            \bigbreak \noindent 
+            Becomes
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PNUM1 DC PL5'3227'     00 32 27 00 0C
+            \end{cppcode}
+            \bigbreak \noindent 
+            Example of a right shift by 2, equivalent to a divide by $10^{2}$ , with standard rounding:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SRP PNUM1(5),64-2,5 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Where
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PNUM1 DC PL5'3277'     00 00 03 27 7C
+            \end{cppcode}
+            \bigbreak \noindent 
+            Becomes
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PNUM1 DC PL5'3277' 00 00 00 03 3C
+            \end{cppcode}
+        \item \textbf{Recall an important fact in arithmetic}: When multiplying two decimals, you add together the number of digits after the decimal point in each number. For example, if one number has 2 decimal places and the other has 3, the product will have 2 + 3 = 5 decimal places (ignoring any trailing zeros that might be dropped).
+            \bigbreak \noindent 
+            Dividing decimals works a bit differently. There isn’t a direct rule like "add" or "subtract" the decimal places. Instead, you often adjust the numbers by multiplying both the dividend and divisor by the same power of 10 to make the divisor a whole number, then perform the division. The number of decimal places in the quotient depends on the specific numbers and the precision you need (sometimes resulting in a terminating decimal, other times in a repeating or rounded decimal).
+        \item \textbf{Real number divide example}: Now, let's do an example of a divide pack that provides us a real number result instead of just a quotient and remainder.
+            \bigbreak \noindent 
+            Note the following fields defined in storage and their initial values:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PDEPAMT DC PL7'456929.87'    00 00 04 56 92 98 7C
+                PSHRPRC DC PL3'12.35'        01 23 5C
+                PCALCSHR DC PL10'0'          00 00 00 00 00 00 00 00 00 0C
+            \end{cppcode}
+            \bigbreak \noindent 
+            We want to divide PDEPAMT by PSHRPRC and get a result with three decimal places just like we would get if using a calculator to do the divide
+            \bigbreak \noindent 
+            But, to do so, we will have to "fake" real number division using the DP instruction which gives us only integer division results.
+            \bigbreak \noindent 
+            So, as long as the number being divided, the dividend, has the same number of decimal places as the divisor, no pre-shifting necessary
+            \bigbreak \noindent 
+            To prepare for the division, we first need to ZAP the number being divided into a larger field.
+            \bigbreak \noindent 
+            How many bytes long should that larger field be? A simple way to determine that is to add the length of the divisor to the length of the number being divided. In this case it is 7 + 3 = 10
+            \bigbreak \noindent 
+            PCALCSHR is defined as a 10-byte packed decimal field initialized to 0.
+            \bigbreak \noindent 
+            Here are the instructions to accomplish the task
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ZAP PCALCSHR(10),PDEPAMT(7) COPY TO LARGER FIELD
+                SRP PCALCSHR(10),3,0 ADD 3 FAKE DECIMAL PLACES
+                DP PCALCSHR(10),PSHRPRC(3) DIVIDE DEP BY PRC
+                SRP PCALCSHR(7),64-1,5 SHIFT AND ROUND QUOTIENT TO TWO PLACES
+            \end{cppcode}
+            \bigbreak \noindent 
+            The result is rounded to two decimal places and is in the quotient part of PCALCSHR, i.e., the first 7 bytes. We can ignore the last three bytes of PCALCSHR, the remainder
+        \item \textbf{Encoding of the SS instructions above}: We use the SS encoding format (there are three)
+            \begin{align*}
+                h_{0}h_{0}h_{L_{1}}h_{L_{2}} \quad h_{B_{1}}h_{D_{1}}h_{D_{1}}h_{D_{1}} \quad h_{B_{2}}h_{D_{2}}h_{D_{2}}h_{D_{2}}
+            .\end{align*}
+            where 
+            \begin{itemize}
+                \item \textbf{$h_{0}h_{0}$}: Specifies the opcode
+                \item \textbf{$h_{L_{1}}h_{L_{2}}$}: Specifies the length-1 of the arguments lengths
+                \item \textbf{$h_{B_{1}}h_{D_{1}}h_{D_{1}}h_{D_{1}} $}: Address of the first operand
+                \item \textbf{$h_{B_{2}}h_{D_{2}}h_{D_{2}}h_{D_{2}} $}: Address of the second operand
+            \end{itemize}
+        \item \textbf{Decker's Rules for Packed Decimal Instructions}:
+            \begin{itemize}
+                \item Begin the label, or name, of ALL packed decimal fields with the letter P, for Packed
+                \item Declare ALL packed decimal fields with a DC, a specific length in bytes and initialized to 0 (unless to some other value)
+                \item NEVER let lengths default! Code a length on every packed operand where it CAN be coded!
+            \end{itemize}
+        \item \textbf{Errors with packed decimals}:
+            \begin{itemize}
+                \item \textbf{Data Exception (S0C7)}: At least one of the operands is not a valid packed decimal representation
+                \item \textbf{Decimal-overflow Exception (S0CA)}: The result is too large for the receiving field
+            \end{itemize}
+        \item \textbf{Errors that occur with MP}:
+            \begin{itemize}
+                \item \textbf{Specification Exception (S0C6)}: – if length of second operand is greater than 8 or if length of the second operand, the multiplier, is greater than length of the first operand, the multiplicand
+                \item \textbf{Data Exception – (S0C7)}: if the first $n$ bytes of the first operand are not all zeros where $n$ is the length of the second operand or if at least one of the operands is not a valid packed decimal number
+            \end{itemize}
+        \item \textbf{Errors that occur with DP}:
+            \begin{itemize}
+                \item \textbf{Specification Exception (S0C6)}: if length of second operand is greater than 8 or if length of the second operand is greater than or equal to the length of the first operand.
+                \item \textbf{Decimal-divide Exception  (S0CB)}: if quotient will not fit in n bytes where n is the length of the first operand minus the length of the second operand.
+                \item \textbf{Data Exception (S0C7)}: if at least one of the operands is not a valid packed decimal number 
+            \end{itemize}
+        \item \textbf{Errors that occur with SRP}: 
+            \begin{itemize}
+                \item \textbf{Decimal-overflow Exception  (S0CA)}: if a left shift results in losing nonzero digits.
+            \end{itemize}
+        \item \textbf{Errors that occur with CVB}: 
+            \begin{itemize}
+                \item \textbf{Specification Exception – S0C6 –}: if the second operand is not on a doubleword boundary.
+                \item \textbf{Data Exception – S0C7 –}: if the doubleword does not hold a valid packed decimal number.
+                \item \textbf{Fixed-point Divide Exception – S0C9 –} if the packed decimal number at the D(X,B) address is too large to be represented in 32 SIGNED bits in the register.
+            \end{itemize}
+        \item \textbf{Errors that occur with CVD}: 
+            \begin{itemize}
+                \item \textbf{Specification Exception – S0C6 –}: if the second operand is not on a doubleword boundary.
+            \end{itemize}
+        \item \textbf{Packed decimal literals}: Literals can be used in the instructions, for example
+            \bigbreak \noindent 
+            \begin{cppcode}
+            AP PNUM1(5),=PL2'35'
+            \end{cppcode}
+            \bigbreak \noindent 
+            Don't let lengths default in literals either
+        \item \textbf{Formatting Numeric Output}: There are two instructions that can be used to format and print packed decimal numbers
+            \bigbreak \noindent 
+            The formatting can – as desired – include a floating dollar sign, a floating positive sign, a floating negative sign, commas between every three digits and/or a decimal point.
+            \bigbreak \noindent 
+            Two instructions can be used to accomplish this editing:
+            \begin{itemize}
+                \item ED – Edit Instruction
+                \item EDMK – Edit and Mark Instruction
+            \end{itemize}
+        \item \textbf{ED (DE) (SS) (Edit)}: converts a packed decimal number to its printable EBCDIC equivalent.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label ED D1(L1,B1),D2(B2) Explicit addr.
+                label ED ONUM1(15),PNUM1 Implicit addr.
+            \end{cppcode}
+            \bigbreak \noindent 
+            Takes the packed decimal number at D2(B2), converts it to EBCDIC and places it at D1(L1,B1) according to a pre-placed edit pattern.
+            \bigbreak \noindent 
+            Note that we do not code a length for the second operand.
+            \bigbreak \noindent 
+            It can edit the number inserting special characters as desired.
+            \bigbreak \noindent 
+            A hexadecimal edit pattern must be moved into the output field prior to executing the ED instruction.
+            \bigbreak \noindent 
+            The edit pattern can insert commas and/or a decimal point as desired.
+            \bigbreak \noindent 
+            The edit pattern can also supply a character with which we can suppress leading zeros in the number displayed in the print line.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MVC ODEPAMT(10),=X'4020206B2021204B2020'
+                ED ODEPAMT(10),PDEPAMT
+            \end{cppcode}
+            \bigbreak \noindent 
+            Consider the storage (print line)
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PDEPAMT DC PL4'9435.75' 09 43 57 5C
+                DETAIL DC C'0' DOUBLE SPACING
+                ODEPAMT DS CL10 OUTPUT SPACE FOR PDEPAMT
+                DC 122C' ' SPACES
+            \end{cppcode}
+            \bigbreak \noindent 
+            Remember that each byte consists of two hexadecimal digits, if looking at storage in hex, that is.
+            \bigbreak \noindent 
+            This edit pattern will fill 10 bytes, or columns, of the print line. 
+            \bigbreak \noindent 
+            The first character in the edit pattern is almost always a fill character.
+            \bigbreak \noindent 
+            In this example, the fill character is X'40', a space in EBCDIC.
+            \bigbreak \noindent 
+            X'20' and X'21' are digit selectors.
+            \bigbreak \noindent 
+            X'21' is a digit selector but it is different from X'20'.
+            \bigbreak \noindent 
+            X'21' sets significance on in the byte, or column, following it.
+            \bigbreak \noindent 
+            X'6B' represents a comma in EBCDIC.
+            \bigbreak \noindent 
+            X'4B' represents a decimal point in EBCDIC
+            \bigbreak \noindent 
+            The result in EBCDIC in print line: $\bar{b}\bar{b}$9,435.75 ($\bar{b} $ = a space)
+            \bigbreak \noindent 
+            If significance is off, the character to the right of the 20 will be suppressed if there are no nonzero digits to the left. This is not the case for significance on (21)
+        \item \textbf{EDMK (DF) (SS)}: Edit and Mark (EDMK) is used exactly the same as Edit (ED). The only difference is that EDMK places the address of the first
+            non-zero digit – from left to right in the output field – in register 1
+            \bigbreak \noindent 
+            If EDMK reaches a significance on digit selector (X'21') before
+            reaching a non-zero digit, the address of the byte following the X'21'
+            is placed into register 1.
+            \bigbreak \noindent 
+            The address in register 1 can then be used to place a dollar sign,
+            positive sign, negative sign or some other character to the immediate
+            left of the first non-zero digit or where significance is turned on.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MVC ODEPAMT(10),=X'4020206B2021204B2020'
+                EDMK ODEPAMT(10),PDEPAMT
+                BCTR 1,0 DECREMENT REGISTER 1 BY 1
+                MVI 0(1),C'$' PLACE THE DOLLAR SIGN
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PDEPAMT DC PL4'9435.75' 09 43 57 5C
+                PRTLINE DC C'0' DOUBLE SPACING
+                ODEPAMT DS CL10 OUTPUT SPACE FOR PDEPAMT
+                DC 122C' ' SPACES
+            \end{cppcode}
+            \bigbreak \noindent 
+            ODEPAMT after the above four instructions and XPRNT: $\bar{b}$\$9,435.75 ($\bar{b}$ = a space)
+            \bigbreak \noindent 
+            Note that, if PDEPAMT is 0, register 1 is not changed.
+            \bigbreak \noindent 
+            Therefore, we need to add a level of insurance to print \$0.00 if PDEPAMT is 0 by presetting register 1 to point to the byte immediately to the left of the decimal point byte:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA 1,ODEPAMT+6
+                MVC ODEPAMT(10),=X'4020206B2021204B2020'
+                EDMK ODEPAMT(10),PDEPAMT
+                BCTR 1,0 DECREMENT REG 1 BY 1
+                MVI 0(1),C'$' PLACE THE DOLLAR SIGN
+            \end{cppcode}
+        \item \textbf{Notes about ED and EDMK}: Digits are moved from the source field, one at a time, and from left to right.
+            \bigbreak \noindent 
+            If not enough digit selectors, the result will be truncated on the right
+            \bigbreak \noindent 
+            A Data Exception – S0C7 – can occur if the source field is not a valid packed decimal number.
+            \bigbreak \noindent 
+        \item \textbf{Packed instruction condition codes}
+            \begin{itemize}
+                \item \textbf{AP, SP, ZAP}:
+                    \begin{itemize}
+                        \item 0 = the result is zero
+                        \item 1 = the result is negative
+                        \item 2 = the result is positive
+                        \item 3 = overflow
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    \textbf{Note:} Note that overflow does not automatically occur if the first operand is shorter than the second, only when the result of the arithmetic operation does not fit into the first operand
+                \item \textbf{CP}:
+                    \begin{itemize}
+                        \item 0 = the two values compared are equal
+                        \item 1 = the first operand's value is less than the second operand's
+                        \item 2 = the first operand's value is greater than the second operand's
+                        \item 3 - not used
+                    \end{itemize}
+                \item \textbf{SRP}:
+                    \begin{itemize}
+                        \item 0 = result is zero
+                        \item 1 = result is negative
+                        \item 2 = result is positive
+                        \item 3 = overflow has occurred
+                    \end{itemize}
+                \item \textbf{ED, EDMK}:
+                    \begin{itemize}
+                        \item 0 = source field is zero 
+                        \item 1 = source field is negative 
+                        \item 2 = source field is positive
+                        \item 3 = unused
+                    \end{itemize}
+            \end{itemize}
+
+
 
 
     \end{itemize}

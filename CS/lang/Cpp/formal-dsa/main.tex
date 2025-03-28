@@ -2793,6 +2793,34 @@ private:
 };
 \end{cppcode}
 
+\pagebreak 
+\subsection{Find path to a node}
+\bigbreak \noindent 
+\begin{cppcode}
+    bool _path(node* root, node* p, vector<int>& res) {
+        if (!root) return false;
+
+        if (root == p) {
+            res.push_back(root->val);
+            return true;
+        }
+
+        if (_path(root->left, p, res) || _path(root->right, p, res)) {
+            res.push_back(root->val);
+            return true;
+        }
+
+        return false;
+    }
+
+    vector<int> retrievePath(node* root, node* p) {
+        vector<int> res;
+        _path(root, p, res);
+        std::reverse(res.begin(), res.end());
+        return res;
+    }
+\end{cppcode}
+
 
 
 
@@ -7631,6 +7659,125 @@ We see the only changes to $D$ are $D[l]$, and $D[r+1]$
     1 + 2 + 3 + \cdots
 \end{align*}
 
+
+\pagebreak 
+\unsect{Intervals}
+\bigbreak \noindent 
+Interval problems are a class of problems in data structures and algorithms that deal with ranges or segments, typically represented by start and end points. These problems often require determining relationships between intervals—such as overlapping, containment, or disjointness—and finding optimal ways to select, merge, or query these intervals.
+\bigbreak \noindent 
+Common problem types are
+\begin{itemize}
+    \item \textbf{Interval Scheduling:} Select the maximum number of non-overlapping intervals from a given set. A classic example is scheduling meetings in a conference room.
+    \item \textbf{Interval Partitioning:} Assign intervals to different resources (like classrooms or machines) such that no overlapping intervals share the same resource, while minimizing the total number of resources used.
+    \item \textbf{Merging Intervals:} Combine overlapping intervals into a single continuous interval. This is often required in scenarios like consolidating time ranges or segments.
+    \item \textbf{Interval Intersection/Union:} Find the common overlapping parts (intersection) of intervals or the total span covered by intervals (union).
+\end{itemize}
+\bigbreak \noindent 
+Data structures and techniques that are relevant are
+\begin{itemize}
+    \item \textbf{Greedy Algorithms:} For many interval scheduling problems, a greedy approach (such as selecting the interval that ends earliest) leads to an optimal solution.
+    \item \textbf{Sorting:} Many interval problems begin with sorting the intervals based on start or end times to simplify subsequent processing.
+    \item \textbf{Interval Trees:} These are balanced trees designed to hold intervals and allow efficient querying, such as finding all intervals that overlap with a given query interval.
+    \item \textbf{Segment Trees:} Useful for range queries and updates, segment trees can efficiently manage intervals when dealing with aggregated data like sums or minima/maxima over a range.
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{Merge intervals}
+\bigbreak \noindent 
+The merge intervals problem is a problem that takes overlapping intervals, and merges the ones that overlap. For example,
+\begin{align*}
+    [1,3], [2,6], [8,10], [15,18] \to [1,6], [8,10], [15,18]
+\end{align*}
+We note that intervals with common endpoints are considered to be overlapping. For example, $[1,4], [4,5]$ would be merged into $[1,5]$
+\bigbreak \noindent 
+\begin{cppcode}
+    class Solution {
+        public:
+        vector<vector<int>> merge(vector<vector<int>>& intervals) {
+            std::sort(intervals.begin(), intervals.end());
+
+            vector<vector<int>> m;
+            int curr_start = intervals[0][0];
+            int curr_end = intervals[0][1];
+
+            for (int i=1; i<(int)intervals.size(); ++i) {
+                int next_left = intervals[i][0], next_right = intervals[i][1];
+
+            if (next_left >= curr_start && next_left <= curr_end) {
+                curr_end = std::max(curr_end, next_right);
+            } else {
+                m.push_back({curr_start,curr_end});
+                curr_start = next_left, curr_end = next_right;
+            }
+        }
+        m.push_back({curr_start, curr_end});
+        return m;
+    }
+};
+
+// [[1,3],[2,6],[8,10],[15,18]] -> [[1,6],[8,10],[15,18]]
+\end{cppcode}
+\bigbreak \noindent 
+Time complexity is $O(n\lg n)$, space complexity is $O(n)$
+
+\pagebreak 
+\subsection{Line sweep (sweep line)}
+\bigbreak \noindent 
+Line Sweep (or Sweep Line) is an algorithmic technique where we sweep an imaginary line (x or y axis) and solve various problem.
+\bigbreak \noindent 
+\subsubsection{Merge intervals with line sweep}
+\bigbreak \noindent 
+\begin{cppcode}
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        map<int, int> line;
+        for (const auto& e : intervals) {
+            ++line[e[0]];
+            --line[e[1]];
+        }
+
+        int count=0, start=0;
+        vector<vector<int>> res;
+        for (auto& [key, value] : line) {
+            if (count==0) {
+                start = value;
+            }
+            count+=value;
+
+            if (count == 0) {
+                res.push_back({start, value});
+            }
+        }
+        return res;
+    }
+};
+\end{cppcode}
+\bigbreak \noindent 
+For every interval [start, end] in the input:
+\begin{itemize}
+    ++line[e[0]]; increments the count at the start point.
+    --line[e[1]]; decrements the count at the end point.
+\end{itemize}
+\bigbreak \noindent 
+This records "events" along the number line: a positive event when an interval begins and a negative event when an interval ends. The map keeps these events in sorted order by key (the coordinate).
+\begin{itemize}
+    \item \textbf{count:} Tracks how many intervals are currently active as we sweep through the line.
+    \item \textbf{ans:} Will store the resulting merged intervals.
+    \item \textbf{start:} Used to mark the beginning of a new merged interval.
+\end{itemize}
+\bigbreak \noindent 
+The for loop goes through each key-value pair in the map line in ascending order of the coordinate (since map is sorted by keys).
+\bigbreak \noindent 
+When count is 0 before processing an event, this indicates that no interval is active at that moment. The code then sets start to the current coordinate (i.first), which will be the beginning of a new merged interval.
+\bigbreak \noindent 
+count += i.second; adjusts the active interval count based on the event at that coordinate.
+\bigbreak \noindent 
+A positive count means one or more intervals are active, while a count returning to 0 means all intervals that started have now ended.
+\bigbreak \noindent 
+When count becomes 0, it indicates that a merged interval has ended at the current coordinate.
+\bigbreak \noindent 
+The code then pushes the interval [start, i.first] into ans.
 
 
 
