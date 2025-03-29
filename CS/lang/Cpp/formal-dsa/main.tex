@@ -8000,6 +8000,36 @@ If $n =0$, $n \& (n-1)$ will be zero, but $0$ is not a power of two, so we requi
 \unsect{Number Theory}
 \bigbreak \noindent 
 
+\subsection{Getting prime factors of a number}
+\bigbreak \noindent 
+\begin{cppcode}
+vector<int> prime_factors(int n) {
+    vector<int> factors;
+    for (int i=2; i<=sqrt(n); ++i) {
+        if (n % i == 0) {
+            while (n%i == 0) {
+                factors.push_back(i);
+                n/=i;
+            }
+        }
+    }
+    // If n was originally prime, it has no prime factors other than 1 and itself.
+    if (n >= 2) factors.push_back(n);
+    return factors;
+}
+
+
+int main(int argc, const char** argv) {
+    vector<int> res = prime_factors(16);
+    cout << res[0];
+    for (int i=1; i<(int)res.size();++i) cout << "*" << res[i]; 
+
+    return EXIT_SUCCESS;
+}
+\end{cppcode}
+\bigbreak \noindent 
+The algorithm works by testing every possible factor starting at 2 and moving upward. When it finds a number $i$ that divides $n$, it repeatedly divides $n$ by $i$ until $i$ no longer divides it. Because it starts with the smallest numbers (which are prime), any composite number would already have been broken down into its prime components. In other words, if a composite factor divides $n$, one of its smaller prime factors would have divided $n$ first and removed that component. Thus, only prime factors remain to be printed.
+
 
 \pagebreak 
 \unsect{STL}
