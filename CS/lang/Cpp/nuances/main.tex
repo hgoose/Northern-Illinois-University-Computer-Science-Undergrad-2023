@@ -2663,6 +2663,39 @@
     We actually get an error here: Default initialization of an object of const type 'const A' without a user provided default constructor
     \bigbreak \noindent 
     A class type T is const-default-constructible if default-initialization of T would invoke a user-provided constructor of T (not inherited from a base class)
+    \bigbreak \noindent 
+    In C++, a const object must have all of its data members fully initialized at construction time
+    \bigbreak \noindent 
+    In the code above, the default constructor is defaulted, which means it does nothing more than “default‐initialize” each member. For a built‐in type like int, default initialization leaves it with an indeterminate value. When you try to create a const object of type A
+    \bigbreak \noindent 
+    the member i would remain uninitialized, which is not allowed because a const object must be initialized completely. To make A const default constructible, you need to provide an initializer for i
+    \bigbreak \noindent 
+    \begin{cppcode}
+        // Make const default constructable
+        struct A {
+            A() { i=0; }
+            int i;
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    We can also simply do the following
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            A() = default;
+            int i{};
+        };
+    \end{cppcode}
+    \bigbreak \noindent 
+    Note that types like strings are default initialized with a determinant value, the empty string, so the following will not cause an error
+    \bigbreak \noindent 
+    \begin{cppcode}
+        struct A {
+            A() = default;
+            string s;
+        };
+    \end{cppcode}
+
 
 
     \pagebreak 
