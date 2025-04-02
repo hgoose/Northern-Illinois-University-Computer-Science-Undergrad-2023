@@ -3188,6 +3188,25 @@ The <concepts> header provides a set of predefined concepts for common use cases
      \end{cppcode}
 
 
+     \pagebreak 
+     \subsection{Mutable lambdas}
+     \bigbreak \noindent 
+     A lambda in C++ is by default a constant functor—its call operator is const, which means you cannot modify any captured-by-value variables inside it. Adding the mutable keyword makes the call operator non-const, allowing you to modify the lambda’s copies of captured variables. Note that these changes only affect the internal copies, not the original variables outside the lambda.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int x = 5;
+         int y = [=]() -> int {
+             ++x; 
+             return x;
+         }(); // Error
+
+         int x = 5;
+         int y = [=]() mutable -> int {
+             ++x; 
+             return x;
+         }(); // Ok
+     \end{cppcode}
+
 
 
 
@@ -6633,6 +6652,51 @@ a static\_cast is enough.
     }
 \end{cppcode}
 
+\pagebreak 
+\unsect{string\_view}
+\bigbreak \noindent 
+Introduced in C++17, a string view is a non-owning, read-only pointer to a char array, one that also tracks the length of the pointed array and behaves as a string. Feed it char* and you can use string operations like comparison, hashing, or substring.
+\bigbreak \noindent 
+However, the non-owning bit is quite important about string view and you might use it wrong because of it. 
+\bigbreak \noindent 
+\begin{cppcode}
+const std::string ss = "hello;world;of;harry;potter";
+std::string_view sv{ss};
+sv.remove_prefix(sv.find(';') + 1); // sv is now "world;of;harry;potter"
+sv.remove_suffix(sv.size() - sv.find_last_of(';')); // sv is now "world;of;harry"
+\end{cppcode}
+\bigbreak \noindent 
+Didn’t I say that string view is a non-owning reference? How can it change the source data? The answer is: it doesn’t. The string view only holds a pointer to the first character and size of the array. That means I can do various substring operations without ever modifying the source data. What’s better, no strings are allocated or copied during the process!
+\bigbreak \noindent 
+By "removing the prefix or suffix", all we are doing is changing the position of the internal pointer and adjusting the length accordingly, no changes to underlying char data happens.
+\bigbreak \noindent 
+I can postpone the copy to the point when I am done with the transformations and simply call:
+\bigbreak \noindent 
+\begin{cppcode}
+std::string substring = std::string(sv);
+\end{cppcode}
+\bigbreak \noindent 
+String view is so simple that it can be used for compile-time text processing:
+\bigbreak \noindent 
+\begin{cppcode}
+    consteval unsigned getLengthOfFirstWord() {
+        constexpr std::string_view sv("hello world");
+        return sv.substr(sv.find(' ') - 1).size();
+    }
+
+    constinit const unsigned LENGTH = getLengthOfFirstWord(); // Equals to 5
+\end{cppcode}
+\bigbreak \noindent 
+std::basic\_string\_view is a class template that provides a non-owning view into a sequence of characters, whereas std::string\_view is simply a type alias (a specialization) of std::basic\_string\_view for the common case of char types.
+\bigbreak \noindent 
+\begin{cppcode}
+using string_view = std::basic_string_view<char>;
+\end{cppcode}
+
+
+
+
+
 
 
 
@@ -6706,6 +6770,7 @@ a static\_cast is enough.
             \item Fold expressions
             \item static constexpr members can be initialized inside the class definition (without inline keyword)
             \item \textbf{Mandatory Elision}: Prior to C++17, copy elision was an optimization that compilers could apply. Since C++17, in certain cases (like when returning a prvalue), the standard mandates copy elision, which means the copy or move constructor does not need to be available or even accessible.
+            \item std::string\_view
         \end{itemize}
     \item \textbf{c++20}: 
         \begin{itemize}

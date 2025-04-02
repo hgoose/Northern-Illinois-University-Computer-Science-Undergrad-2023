@@ -2987,6 +2987,62 @@ construction is dangerous.
 \subsection{What is the function of the keyword mutable?}
 \bigbreak \noindent 
 mutable has two functions, two roles since C++11. Let's start with it's older meaning, mutable permits modification of the class members even if they are declared const.
+\bigbreak \noindent 
+It may appear in the declaration of a non-static class members of non-reference non-const type
+\bigbreak \noindent 
+\begin{cppcode}
+class X {
+    mutable const int* p; // OK... int is const but pointer is not
+    mutable int* const q; // ill-formed
+};
+\end{cppcode}
+\bigbreak \noindent 
+Mutable is used to specify that the member does not affect the
+externally visible state of the class (as often used for mutexes, memo
+caches, lazy evaluation, and access instrumentation).
+\bigbreak \noindent 
+This statement means that mutable members are intended for internal bookkeeping or caching—changes to them don't alter what users of the class see as its "state." In other words, even if a mutable member is modified, it doesn’t affect the externally observable behavior or identity of the object. This is why you can change it in a const method: the change is considered an implementation detail rather than a change to the logical state of the object.
+\bigbreak \noindent 
+So in case you have a const object, it’s mutable members can be modified.
+\bigbreak \noindent 
+Another way to use mutable is in case of lazy initialization. Getters
+should be generally const methods as they are only supposed to
+return class members, and not alter them.
+\bigbreak \noindent 
+But when you apply lazy initialization, the first time you call the
+getter, it will actually alter the member. It will initialize it maybe
+from the DB, via the network, etc. So you cannot make that member
+const even if its value will not change after initialization.
+\bigbreak \noindent 
+If you use the mutable keyword, you can. Just pay attention not to
+do other things to that member.
+
+\bigbreak \noindent 
+\subsection{Mutable lambda expressions}
+\bigbreak \noindent 
+If you declare a lambda mutable, then it allows the lambda to modify the objects captured by copy, and to call their non-const member functions. Otherwise, it’s not possible.
+
+\bigbreak \noindent 
+\subsection{What is the function of the keyword volatile?}
+\bigbreak \noindent 
+It is a keyword to declare that the corresponding variable is
+volatile and thereby tells the compiler that the variable can change
+externally and as such, the compiler optimization on the variable
+reference should be avoided.
+\bigbreak \noindent 
+It means that if you declare a variable volatile, you acknowledge
+that the value stored at the variable’s memory address might
+change independently.
+\bigbreak \noindent 
+It might happen because of changes introduced by hardware or by
+another thread.
+\bigbreak \noindent 
+Speaking of this latter one, while it’s possible, according to the
+C++11 ISO Standard, the volatile keyword is only meant for use
+for hardware access; do not use it for inter-thread communication.
+\bigbreak \noindent 
+For inter-thread communication, the standard library provides
+std::atomic templates.
 
 
 

@@ -9325,6 +9325,79 @@ $$\phi_k \gets \frac{1}{\norm{\phi_k}_2}\phi_k, \quad k=0,\ldots,n.$$
             $}
             $$
             for some $\xi \in (x_0 - h_0, x_0 + h_1)$.
+        \item \textbf{Roundoff error in numerical differentiation}: In the examples above we have seen that the actual error degrades when $h$ becomes too small due to roundoff error.
+            \bigbreak \noindent 
+            This is happening since, in each of the formulas we have looked at, we are subtracting values that are very nearly equal, leading to \textbf{catastrophic cancellation} and a significant loss of precision.
+            \bigbreak \noindent 
+            The error for the \textbf{centered divided difference} satisfies:
+            $$\abs{f'(x_0) -  \frac{f(x_0 + h) - f(x_0 - h)}{2h}} = \frac{h^2}{6}\abs{f'''(\xi)}, \quad \text{for some $\xi \in (x_0-h,x_0+h).$}$$
+            Thus, when $f'''(x_0) \neq 0$, we have that
+            $$\abs{f'(x_0) -  \frac{f(x_0 + h) - f(x_0 - h)}{2h}} \approx \frac{h^2}{6}\abs{f'''(x_0)}, \quad \text{for $h > 0$ small.}$$
+        \item \textbf{Analyzing the roundoff error}:
+            Let $\bar{f}(x) \equiv \fl(f(x))$, and define
+            $$
+            D_h = \frac{f(x_0 + h) - f(x_0 - h)}{2h}, \qquad 
+            \bar{D}_h = \frac{\bar{f}(x_0 + h) - \bar{f}(x_0 - h)}{2h}.
+            $$
+            Define the \textbf{roundoff error in the calculation of $f$} as
+            $$e_r(x) = \bar{f}(x) - f(x)$$
+            and suppose that $\abs{e_r(x)} \leq \varepsilon$, where $\varepsilon$ is some small multiple of the \textbf{unit-roundoff} $\eta$ (recall that $\eta \approx 1.1 \times 10^{-16}$ for `Float64`).
+            \bigbreak \noindent 
+            Also, suppose that $\abs{f'''(\xi)} \leq M$, for all $\xi \in (x_0 - h, x_0 + h)$. Thus,
+            $$\abs{f'(x_0) - D_h} = \frac{h^2}{6}\abs{f'''(\xi)} \leq  \frac{h^2M}{6}.$$
+            Then
+            $$
+            \begin{split}
+                \abs{f'(x_0) - \bar{D}_h}
+&= \abs{f'(x_0) - D_h + D_h - \bar{D}_h} \\
+&\leq \abs{f'(x_0) - D_h} + \abs{D_h - \bar{D}_h} \\
+&\leq  \frac{h^2M}{6} + \abs{D_h - \bar{D}_h}. \\
+            \end{split}
+            $$
+            \bigbreak \noindent 
+            Now let's bound $\abs{D_h - \bar{D}_h}$. We have
+            $$
+            \begin{split}
+                \abs{D_h - \bar{D}_h}
+&= \abs{ \frac{f(x_0 + h) - f(x_0 - h)}{2h} - \frac{\bar{f}(x_0 + h) - \bar{f}(x_0 - h)}{2h} } \\
+&= \frac{1}{2h}\abs{ f(x_0 + h) - f(x_0 - h) - \bar{f}(x_0 + h) + \bar{f}(x_0 - h) } \\
+&= \frac{1}{2h}\abs{ e_r(x_0 - h) - e_r(x_0 + h) } \\
+&\leq \frac{1}{2h}\paren{\abs{ e_r(x_0 - h)} + \abs{ e_r(x_0 + h) }} \\
+&\leq \frac{1}{2h} 2\varepsilon \\
+&\leq \frac{\varepsilon}{h}. \\
+            \end{split}
+            $$
+            \bigbreak \noindent 
+            Therefore,
+            $$\abs{f'(x_0) - \bar{D}_h} \leq \frac{h^2M}{6} + \frac{\varepsilon}{h}.$$
+            Initially, when $h$ is rather large, the roundoff error term $\frac{\varepsilon}{h}$ will be much smaller than the approximation error (a.k.a. \textbf{truncation error}) term $\frac{h^2M}{6}$.
+            \bigbreak \noindent 
+            However, as $h$ becomes small, $\frac{\varepsilon}{h}$ eventually becomes larger than $\frac{h^2M}{6}$.
+        \item \textbf{The "optimal" $h$ for the centered divided difference formula}:
+            Define
+            $$E(h) = \frac{h^2M}{6} + \frac{\varepsilon}{h}.$$
+            We want to find the minimum value of $E(h)$. First we solve $E'(h) = 0$ to find the critical points:
+            $$E'(h) = \frac{hM}{3} - \frac{\varepsilon}{h^2} = 0 \quad \implies \quad h^3 = \frac{3\varepsilon}{M} \quad \implies \quad h = \sqrt[3]{\frac{3\varepsilon}{M}}.$$
+            \bigbreak \noindent 
+            Next, we check if this critical point is a local minimizer or maximizer:
+            $$E''(h) = \frac{M}{3} + \frac{2\varepsilon}{h^3} \quad \implies \quad E''\paren{\sqrt[3]{\frac{3\varepsilon}{M}}} = \frac{M}{3} + \frac{2\varepsilon}{\frac{3\varepsilon}{M}} = M > 0.$$
+            Thus, the critical point $h = \sqrt[3]{\frac{3\varepsilon}{M}}$ is a local minimizer, and the local minimum is
+            $$E\paren{\sqrt[3]{\frac{3\varepsilon}{M}}} = \frac12  \sqrt[3]{M} (3\varepsilon)^{\frac{2}{3}}.$$
+        \item \textbf{Advice on choosing $h$}:
+            Since the values of $\varepsilon$ and $M$ are typically unknown, it is usually not possible to know the optimal value of $h$.
+            \bigbreak \noindent 
+            Thus, we should choose a value of $h$ that is well above the point where roundoff error begins to corrupt our calculation.
+            \bigbreak \noindent 
+            That is, we should choose $h$ so that the truncation error is much larger than the roundoff error.
+            \bigbreak \noindent 
+            In the above example, using $h$ between $10^{-5}$ and $10^{-4}$ would be best.
+            \bigbreak \noindent 
+            In general, if the order of accuracy is $q$, then choose
+            $$h > \eta^{1/(q+1)}.$$
+        \item \textbf{Numerical differentiation of noisy data}:
+            Numerical differentiation is very sensitive to small changes in the input since it is an \textbf{ill-conditioned} problem.
+            \bigbreak \noindent 
+            In the following numerical test, we will see that just a small amount of noise in the function values can create large errors in the approximation of its derivative.
 
 
 

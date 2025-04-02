@@ -4263,6 +4263,46 @@ We can manual call our operator overloads. Observe
      \bigbreak \noindent 
      means that the function template g is parameterized by a class template C. Here, C itself is a template that takes one type parameter T with a default type of B. This implies that C must be a template that can be instantiated with a single type argument, and if none is provided, it will use B by default.
 
+     \pagebreak 
+     \unsect{Pointers vs references}
+     \bigbreak \noindent 
+     \begin{itemize}
+         \item Once a reference is created, it cannot be later changed to reference another object; it cannot be reseated. On the other hand, this is often done with pointers.
+         \item References cannot be NULL/nullptr. Pointers are often pointing at the nullptr to indicate that they are not pointing to any valid thing. Though, it’s worth noting that since C++17 there is also std::optional in the standard library if we need to indicate that an object is “not there”.
+         \item A reference must be initialized when declared. There is no such restriction with pointers.
+     \end{itemize}
+     \bigbreak \noindent 
+     Due to the above limitations, references in C++ cannot be used for
+     implementing data structures like linked lists, trees, etc.
+     \bigbreak \noindent 
+     While the above restrictions prevail, at the same time references are
+     safer and easier to use:
+     \begin{itemize}
+         \item \textbf{Safer:} Since references must be initialized, wild references like wild pointers are unlikely to exist. It is still possible to have references that don’t refer to a valid location, they are called dangling references.
+         \item \textbf{Easier to use:} References don’t need the dereferencing operator (*) to access the value. They can be used like normal variables. The address of (\&) operator is needed only at the time of declaration. Also, members of an object reference can be accessed with dot operator (.), unlike pointers where arrow operator (->) is needed to access members.
+     \end{itemize}
+
+     \bigbreak \noindent 
+     \subsection{Wild pointers and dangling references}
+     \bigbreak \noindent 
+     Wild pointers in C++ are pointers that have not been properly initialized to point to a known, valid memory location. Because they contain garbage values (i.e., unpredictable addresses), dereferencing them can lead to undefined behavior, crashes, or memory corruption.
+     \bigbreak \noindent 
+     \begin{cppcode}
+     int* ptr; // wild
+     \end{cppcode}
+     \bigbreak \noindent 
+     Dangling references occur when a reference in C++ continues to refer to an object that has been destroyed or gone out of scope. Since the reference is still being used after its bound object no longer exists, any access to it results in undefined behavior.
+     \bigbreak \noindent 
+     \begin{cppcode}
+         int* p = new int(5);
+         int& ref = *p;
+
+         delete p;
+         cout << ref; // UB
+     \end{cppcode}
+
+
+
 
 
 
