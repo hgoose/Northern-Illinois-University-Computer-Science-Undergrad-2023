@@ -3044,6 +3044,82 @@ for hardware access; do not use it for inter-thread communication.
 For inter-thread communication, the standard library provides
 std::atomic templates.
 
+\bigbreak \noindent 
+\subsection{What is RVO}
+\bigbreak \noindent 
+RVO stands for return value optimization. It is a compiler optimization that involves eliminating the temporary object created to hold a function’s return value. RVO is
+particularly notable for being allowed to change the observable
+behaviour of the resulting program by the C++ standard.
+\bigbreak \noindent 
+In general, the C++ standard allows a compiler to perform any
+optimization, provided the resulting executable exhibits the same
+observable behaviour as if (i.e. pretending) all the requirements
+of the standard have been fulfilled. This is commonly referred to
+as the “as-if rule”. The term return value optimization refers to a
+special clause in the C++ standard that goes even further than the
+“as-if” rule: an implementation may omit a copy operation resulting
+from a return statement, even if the copy constructor has side
+effects.
+\bigbreak \noindent 
+\begin{cppcode}
+    struct C {
+        C() = default;
+        C(const C&) {
+            std::cout << "A copy was made." << std::endl;
+        }
+    };
+    C f() {
+        return C();
+    }
+    int main() {
+        std::cout << "Hello World!" << std::endl;
+        C obj = f();
+    }
+\end{cppcode}
+\bigbreak \noindent 
+When the compiler sees a variable in the calling function (that will
+be constructed from the return value), and a variable in the called
+function (that will be returned),it realizes it doesn’t need both
+variables. Under the covers, the compiler passes the address of the
+calling function’s variable to the called function.
+
+\bigbreak \noindent 
+\subsection{How can we ensure the compiler performs RVO?}
+\bigbreak \noindent 
+In order to have RVO applied the returned object has to be constructed on a return statement. A function can have multiple exits,
+it’s not a problem as long as the construction happens on the return
+statement
+\bigbreak \noindent 
+\begin{cppcode}
+SomeBigObject f() {
+    if (...) {
+        return SomeBigObject{...};
+    } else {
+        return SomeBigObject{...};
+    }
+}
+\end{cppcode}
+
+\bigbreak \noindent 
+\subsection{What is NRVO and when can it happen?}
+\bigbreak \noindent 
+N in NRVO stands from Named, so we speak about Named Return
+Value Optimization. Copies of temporary objects can be spared
+even if the returned object has a name and is therefore not constructed on the return statement. The requirement for an NRVO is
+to have one single object to return even if there are multiple exit
+points.
+\bigbreak \noindent 
+\begin{cppcode}
+    SomeBigObject f() {
+        SomeBigObject result{...};
+        if (...) {
+            return result;
+        }
+        //...
+        return result;
+    }
+\end{cppcode}
+
 
 
 
