@@ -40,8 +40,8 @@ PAYROLL CSECT
 *
 *
 *
-         LA    2,19
-         LA    3,19
+         LA    2,19                      Use R2 as line counter
+         LA    3,19                      Use R3 to hold the key
 *
 * Start Loop
 *
@@ -173,6 +173,85 @@ ENDLOOP1 DS    0H                           End of loop
          ED    OTEMPCT(6),PEMPCTR
          XPRNT OEMPCTR,133
 *
+* Setup for averages
+*
+         SRP   PEMPCTR(3),2,0
+*
+* Handle total and average gross pay
+*
+         LA    1,OTGRPAY+14
+         MVC   OTGRPAY(18),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OTGRPAY(18),PTGRPAY
+         BCTR  1,0
+         MVI   0(1),C'$'
+*
+         ZAP   PCALC(10),PTGRPAY(7)
+         SRP   PCALC(10),3,0
+         DP    PCALC(10),PEMPCTR(3)
+         SRP   PCALC(7),64-1,5
+         LA    1,OAGRPAY+14
+         MVC   OAGRPAY(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OAGRPAY(19),PCALC
+         BCTR  1,0
+         MVI   0(1),C'$'
+         XPRNT OTAGRPAY,133
+*
+* Handle total and average fed withholding
+         LA    1,OTFWITH+14 
+         MVC   OTFWITH(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OTFWITH(19),PTFWITH
+         BCTR  1,0
+         MVI   0(1),C'$'
+*
+         ZAP   PCALC(10),PTFWITH(7)
+         SRP   PCALC(10),3,0
+         DP    PCALC(10),PEMPCTR(3)
+         SRP   PCALC(7),64-1,5
+         LA    1,OAFWITH+14
+         MVC   OAFWITH(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OAFWITH(19),PCALC
+         BCTR  1,0
+         MVI   0(1),C'$'
+         XPRNT OFEDTOT,133
+*
+* Handle total and average state withholding
+*
+         LA    1,OTSWITH+14 
+         MVC   OTSWITH(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OTSWITH(19),PTSWITH
+         BCTR  1,0
+         MVI   0(1),C'$'
+*
+         ZAP   PCALC(10),PTSWITH(7)
+         SRP   PCALC(10),3,0
+         DP    PCALC(10),PEMPCTR(3)
+         SRP   PCALC(7),64-1,5
+         LA    1,OASWITH+14
+         MVC   OASWITH(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OASWITH(19),PCALC
+         BCTR  1,0
+         MVI   0(1),C'$'
+         XPRNT OSTTOT,133
+*
+* Handle total and average net pay
+*
+         LA    1,OTNETPAY+14 
+         MVC   OTNETPAY(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OTNETPAY(19),PTNETPAY
+         BCTR  1,0
+         MVI   0(1),C'$'
+*
+         ZAP   PCALC(10),PTNETPAY(7)
+         SRP   PCALC(10),3,0
+         DP    PCALC(10),PEMPCTR(3)
+         SRP   PCALC(7),64-1,5
+         LA    1,OANETPAY+14
+         MVC   OANETPAY(19),=X'4020206B2020206B2020206B2021204B2020'
+         EDMK  OANETPAY(19),PCALC
+         BCTR  1,0
+         MVI   0(1),C'$'
+         XPRNT ONETTOT,133
+*
 * STANDARD EXIT LINKAGE WITH RC OF 0
 *
          SR    15,15 R15 = RETURN CODE OF 0
@@ -252,7 +331,7 @@ OTITLE   DC    C' '
 *
 * Storage for column headers
 *
-OHEAD1   DC    C' '
+OHEAD1   DC    C'0'
          DC    C'EMPLOYEE'
          DC    C'   '
          DC    C'EMPLOYEE'
@@ -296,57 +375,74 @@ OTOTALS  DC    C' '
 *
 * Storage for number of employees 
 *
-OEMPCTR  DC    C'0'
+OEMPCTR  DC    CL1'0'
          DC    6C' '
-         DC    C'NUMBER OF EMPLOYEES:'
-         DC    11C' '
+         DC    CL21'NUMBER OF EMPLOYEES: '
+         DC    9C' '
 OTEMPCT  DS    CL6
          DC    90C' '
 *
 * Storage for total gross and average gross
 *
-OTGRPAY  DC    C'0'
+OTAGRPAY DC    CL1'0'
+         DC    10C' '
+         DC    CL16'TOTAL GROSS PAY: '
+         DC    C' '
+OTGRPAY  DS    CL18
+         DC    20C' '
+         DC    CL19'AVERAGE GROSS PAY: '
+OAGRPAY  DS    CL19
+         DC    29C' '
 *
 * Storage for total fed withholding and average fed withholding
 *
-OTFWITH  DC    C'0'
+OFEDTOT  DC    C'0'
+         DC    CL26'TOTAL FEDERAL WITHHOLDING: '
+OTFWITH  DS    CL19
+         DC    10C' '
+         DC    CL29'AVERAGE FEDERAL WITHHOLDING: '
+OAFWITH  DS    CL19
+         DC    29C' '
 *
 * Storage for total state withholding and average state withholding
 *
-OTSWITH  DC    C'0'
+OSTTOT  DC    C'0'
+        DC    2C' '
+        DC    CL25'TOTAL STATE WITHHOLDING: '
+OTSWITH DS    CL19
+        DC    12C' '
+        DC    CL26'AVERAGE STATE WITHHOLDING: '
+OASWITH DS    CL19
+        DC    29C' '
 *
 * Storage for total net and average net
 *
-OTNETPAY  DC   C'0'
+ONETTOT  DC   C'0'
+         DC   12C' '
+         DC   CL15'TOTAL NET PAY: '
+OTNETPAY DS   CL19
+         DC   22C' '
+         DC   CL17'AVERAGE NET PAY: '
+OANETPAY DS   CL19
+         DC   28C' '
 *
 * STORAGE FOR MAIN PRINT LINE
 *
 DETAIL   DC    C'0'
-*
 OEMPID   DS    CL10
          DC    C' '
-*
 OEMPNME  DS    29C' '
-*
 OHRPAY   DS    CL7
          DC    2C' '
-*
 OHOURS   DS    CL7
-         DC    2C' '
-*
-OGRPAY  DS    CL15
-         DC    2C' '
-*
+         DC    5C' '
+OGRPAY   DS    CL15
+         DC    5C' '
 OFEDWITH DS    CL15
-         DC    2C' '
-*
+         DC    3C' '
 OSTWITH  DS    CL15
-         DC    2C' '
-*
+         DC    3C' '
 ONETPAY  DS    CL15
-         DC    2C' '
-*
-FILL2    DC    8C' '    
          END PAYROLL
 /*
 //*

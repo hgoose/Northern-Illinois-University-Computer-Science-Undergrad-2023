@@ -48,7 +48,7 @@ LOOP1    BC    B'0111',ENDLOOP1          Branch if done
 *
          PACK  PHRPAY(3),IHRPAY(5)       Convert pay to PD
          LA    1,IHRPAY+3                Safety mark
-         MVC   OHRPAY,=X'402021204B2020' Construct the edit pattern
+         MVC   OHRPAY(7),=X'402021204B2020' Construct the edit pattern
          EDMK  OHRPAY(7),PHRPAY          Edit pay to printline
          BCTR  1,0                       Move R1 to $ position
          MVI   0(1),C'$'                 Place $
@@ -65,7 +65,7 @@ LOOP1    BC    B'0111',ENDLOOP1          Branch if done
          MP    PGRPAY(6),PHOUR(3)           Multiply pay by hours
          SRP   PGRPAY(6),64-2,5             Shift right 2 and round
          LA    1,PGRPAY+8                   Saftey mark for $
-         MVC   OGROSS,=X'402020206B2020206B2021204B2020' Construct EP
+         MVC   OGROSS(15),=X'402020206B2020206B2021204B2020' make EP
          EDMK  OGROSS(15),PGRPAY            Edit gross into printline
          BCTR  1,0                          Move R1 to $ position
          MVI   0(1),C'$'                    Place $
