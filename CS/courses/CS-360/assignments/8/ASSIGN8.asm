@@ -35,6 +35,7 @@ PAYROLL CSECT
 *
 * Preliminary XREAD to get fed and state withholding
          XREAD IFEDWITH,80               Get withholding percents
+         BC    B'0111',EMPTY
          PACK  PFWHPCT(4),IFEDWITH(6)    Convert stwith to PD
          PACK  PSWHPCT(4),ISTWITH(6)     Convert Fedwith to PD
 *
@@ -53,204 +54,206 @@ LOOP1    BC    B'0111',ENDLOOP1          Branch if done
 *
 * Handle EmpID
 *
-         PACK  PEMPID(5),IEMPID(8)            Convert EMPID to PD
-         MVC   OEMPID-1(10),=X'21202060202020202020'
-         ED    OEMPID-1(10),PEMPID
-         MVI   DETAIL,C'0'
+         PACK  PEMPID(5),IEMPID(8)       Convert EMPID to PD
+         MVC   OEMPID-1(10),=X'21202060202020202020' Created EP for ID
+         ED    OEMPID-1(10),PEMPID       Edit ID into print line 
+         MVI   DETAIL,C'0'               Replace carriage control
 *
 * Handle hourly pay
 *
-         PACK  PHRPAY(3),IHRPAY(5) 
-         LA    1,OHRPAY+3
-         MVC   OHRPAY(7),=X'402021204B2020'
-         EDMK  OHRPAY(7),PHRPAY
-         BCTR  1,0
-         MVI   0(1),C'$'
+         PACK  PHRPAY(3),IHRPAY(5)       Pack HRPAY into PD field
+         LA    1,OHRPAY+3                Safety mark for $
+         MVC   OHRPAY(7),=X'402021204B2020' Construct EP for HRPAY
+         EDMK  OHRPAY(7),PHRPAY          Edit and mark into printline
+         BCTR  1,0                       Decrement R1 by one for $ pos
+         MVI   0(1),C'$'                 Place $
 *
 * Handle Hours worked
 *
-         PACK  PHOURS(3),IHOURS(5)
-         MVC   OHOURS(7),=X'402021204B2020'
-         ED    OHOURS(7),PHOURS
+         PACK  PHOURS(3),IHOURS(5)       Pack hours into PD field
+         MVC   OHOURS(7),=X'402021204B2020' Construct EP for hours
+         ED    OHOURS(7),PHOURS          Edit hours into print line
 *
 * Handle deduction amount 
 *
-         PACK  PDEDUCT(3),IDEDUCT(5)
+         PACK  PDEDUCT(3),IDEDUCT(5)     Pack deduction amount
 *
 * Handle bonus amount
 *
-         PACK  PBONUS(3),IBONUS(5)
+         PACK  PBONUS(3),IBONUS(5)       Pack bonus amount
 *
 * Handle Name
 *
-         MVC   OEMPNME(25),RECORD+28
+         MVC   OEMPNME(25),RECORD+28     Move emp name into printline
 *
 * Handle Gross pay
 *
-         ZAP   PGRPAY(6),PHRPAY(3)
-         MP    PGRPAY(6),PHOURS(3)
-         SRP   PGRPAY(6),64-2,5
-         SP    PGRPAY(6),PDEDUCT(3)
-         AP    PGRPAY(6),PBONUS(3)
-         LA    1,OGRPAY+11                   Saftey mark for $
-         MVC   OGRPAY,=X'402020206B2020206B2021204B2020' Construct EP
-         EDMK  OGRPAY(15),PGRPAY            Edit gross into printline
-         BCTR  1,0                          Move R1 to $ position
-         MVI   0(1),C'$'                    Place $
-         AP    PTGRPAY(7),PGRPAY(6)
+         ZAP   PGRPAY(6),PHRPAY(3)       Zap hrpay into larger field
+         MP    PGRPAY(6),PHOURS(3)       Multiply hrpay by hours
+         SRP   PGRPAY(6),64-2,5          Shift right two and round
+         SP    PGRPAY(6),PDEDUCT(3)      Subtract deduction amount
+         AP    PGRPAY(6),PBONUS(3)       Add bonus amount
+         LA    1,OGRPAY+11               Saftey mark for $
+         MVC   OGRPAY(15),=X'402020206B2020206B2021204B2020' EP
+         EDMK  OGRPAY(15),PGRPAY         Edit gross into printline
+         BCTR  1,0                       Move R1 to $ position
+         MVI   0(1),C'$'                 Place $
+         AP    PTGRPAY(7),PGRPAY(6)      Add emp's gross to total
 *
 * Handle fed withholding amount
 *
-         ZAP   PCALC(10),PGRPAY(6)
-         MP    PCALC(10),PFWHPCT(4)
-         SRP   PCALC(10),64-5,5
-         ZAP   PFEDWITH(6),PCALC(10)
-         LA    1,OFEDWITH+11
-         MVC   OFEDWITH(15),=X'402020206B2020206B2021204B2020'
-         EDMK  OFEDWITH(15),PFEDWITH
-         BCTR  1,0
-         MVI   0(1),C'$'
-         AP    PTFWITH(7),PFEDWITH(6)
+         ZAP   PCALC(10),PGRPAY(6)       Zap gross into larger field
+         MP    PCALC(10),PFWHPCT(4)      Multiply gross by fed percent
+         SRP   PCALC(10),64-5,5          Shift right 5 and round
+         ZAP   PFEDWITH(6),PCALC(10)     Zap into result field
+         LA    1,OFEDWITH+11             Saftey mark for $
+         MVC   OFEDWITH(15),=X'402020206B2020206B2021204B2020' Make EP
+         EDMK  OFEDWITH(15),PFEDWITH     Edit fedwith into print line
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         AP    PTFWITH(7),PFEDWITH(6)    Add to total
 *
 * Handle State withholding amount
 *
-         ZAP   PCALC(10),PGRPAY(6)
-         MP    PCALC(10),PSWHPCT(4)
-         SRP   PCALC(10),64-5,5
-         ZAP   PSTWITH(6),PCALC(10)
-         LA    1,OSTWITH+11
-         MVC   OSTWITH(15),=X'402020206B2020206B2021204B2020'
-         EDMK  OSTWITH(15),PSTWITH
-         BCTR  1,0
-         MVI   0(1),C'$'
-         AP    PTSWITH(7),PSTWITH(6)
+         ZAP   PCALC(10),PGRPAY(6)       Zap gross into larger field
+         MP    PCALC(10),PSWHPCT(4)      Multiply gross by state pcnt
+         SRP   PCALC(10),64-5,5          Shift right 5 and round
+         ZAP   PSTWITH(6),PCALC(10)      Zap into result field
+         LA    1,OSTWITH+11              Safety mark
+         MVC   OSTWITH(15),=X'402020206B2020206B2021204B2020' Make EP
+         EDMK  OSTWITH(15),PSTWITH       Edit into print line
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place 4
+         AP    PTSWITH(7),PSTWITH(6)     Add to total
 *
 * Handle Net Pay
 *
-         ZAP   PNETPAY(6),PGRPAY(6)     
-         SP    PNETPAY(6),PFEDWITH(6)
-         SP    PNETPAY(6),PSTWITH(6)
-         LA    1,ONETPAY+11
-         MVC   ONETPAY(15),=X'402020206B2020206B2021204B2020' 
-         EDMK  ONETPAY(15),PNETPAY
-         BCTR  1,0
-         MVI   0(1),C'$'
-         AP    PTNETPAY(7),PNETPAY(6)
+         ZAP   PNETPAY(6),PGRPAY(6)      Zap gross into result field
+         SP    PNETPAY(6),PFEDWITH(6)    Subtract off fed withholding
+         SP    PNETPAY(6),PSTWITH(6)     Subtract off state withholding
+         LA    1,ONETPAY+11              Safety mark for $
+         MVC   ONETPAY(15),=X'402020206B2020206B2021204B2020' Make EP
+         EDMK  ONETPAY(15),PNETPAY       Edit into print line
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         AP    PTNETPAY(7),PNETPAY(6)    Add to total
 *
 * PRINT, READ, BRANCH  
 *
-         CR    2,3
-         BC    B'0111',NOPRINT
-         LA    2,0
-         AP    PPAGECTR(2),=PL1'1'
-         MVC   OPAGENM(4),=X'40202120'
-         ED    OPAGENM(4),PPAGECTR
-         XPRNT ONMEPAGE,133
-         XPRNT OTITLE,133
-         XPRNT OHEAD1,133
-         XPRNT OHEAD2,133
-         XPRNT OHEAD3,133
+         CR    2,3                       Check if time for headers
+         BC    B'0111',NOPRINT           Branch if not
+         LA    2,0                       Reset line counter
+         AP    PPAGECTR(2),=PL1'1'       Add one to page count
+         MVC   OPAGENM(4),=X'40202120'   EP for current page no.
+         ED    OPAGENM(4),PPAGECTR       Edit page number to PL 
+         XPRNT ONMEPAGE,133              Print company name and page
+         XPRNT OTITLE,133                Print title
+         XPRNT OHEAD1,133                Print first header line
+         XPRNT OHEAD2,133                Second header line
+         XPRNT OHEAD3,133                Third header line
 NOPRINT  DS    0H
 *
-         XPRNT DETAIL,133                   Print the line
-         AP    PEMPCTR(3),=PL1'1'
-         LA    2,1(,2)
-         XREAD RECORD,80                    Read the next record
-         BC    B'1111',LOOP1                Branch to check
-ENDLOOP1 DS    0H                           End of loop
+         XPRNT DETAIL,133                Print the line
+         AP    PEMPCTR(3),=PL1'1'        Add one to emp count
+         LA    2,1(,2)                   Increase line count by one
+         XREAD RECORD,80                 Read the next record
+         BC    B'1111',LOOP1             Branch to check
+ENDLOOP1 DS    0H                        End of loop
 *
 * Print Totals page headers
-         AP    PPAGECTR(2),=PL1'1'
-         MVC   OPAGENM(4),=X'40202120'
-         ED    OPAGENM(4),PPAGECTR
-         XPRNT ONMEPAGE,133
-         XPRNT OTITLE,133
-         XPRNT OTOTALS,133
+         AP    PPAGECTR(2),=PL1'1'       Increase page count to final
+         MVC   OPAGENM(4),=X'40202120'   Ep for final page count
+         ED    OPAGENM(4),PPAGECTR       Edit page count to PL
+         XPRNT ONMEPAGE,133              Print company name and page
+         XPRNT OTITLE,133                Print title line
+         XPRNT OTOTALS,133               Print totals line
 *
 * Handle total number of employees
 *
-         MVC   OTEMPCT(6),=X'402020202120' 
-         ED    OTEMPCT(6),PEMPCTR
-         XPRNT OEMPCTR,133
+         MVC   OTEMPCT(6),=X'402020202120' Ep for total emp count
+         ED    OTEMPCT(6),PEMPCTR          Edit into printline
+         XPRNT OEMPCTR,133                 Print total emp count
 *
 * Setup for averages
 *
-         SRP   PEMPCTR(3),2,0
+         SRP   PEMPCTR(3),2,0             Shift emp count for divide
 *
 * Handle total and average gross pay
 *
-         LA    1,OTGRPAY+14
-         MVC   OTGRPAY(18),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OTGRPAY(18),PTGRPAY
-         BCTR  1,0
-         MVI   0(1),C'$'
+         LA    1,OTGRPAY+14              Safety mark for $
+         MVC   OTGRPAY(18),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OTGRPAY(18),PTGRPAY       Edit total gross to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
 *
-         ZAP   PCALC(10),PTGRPAY(7)
-         SRP   PCALC(10),3,0
-         DP    PCALC(10),PEMPCTR(3)
-         SRP   PCALC(7),64-1,5
-         LA    1,OAGRPAY+14
-         MVC   OAGRPAY(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OAGRPAY(19),PCALC
-         BCTR  1,0
-         MVI   0(1),C'$'
-         XPRNT OTAGRPAY,133
+         ZAP   PCALC(10),PTGRPAY(7)      Zap total gross to calc field
+         SRP   PCALC(10),3,0             Add three fake decimal places
+         DP    PCALC(10),PEMPCTR(3)    Divide total gross by emp count
+         SRP   PCALC(7),64-1,5           Round to two decimal places
+         LA    1,OAGRPAY+14              Safety mark for $
+         MVC   OAGRPAY(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OAGRPAY(19),PCALC         Edit average gross into PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         XPRNT OTAGRPAY,133              Print total and avg gross
 *
 * Handle total and average fed withholding
-         LA    1,OTFWITH+14 
-         MVC   OTFWITH(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OTFWITH(19),PTFWITH
-         BCTR  1,0
-         MVI   0(1),C'$'
+         LA    1,OTFWITH+14              Saftey mark for $
+         MVC   OTFWITH(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OTFWITH(19),PTFWITH       Edit total fed withholding 
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
 *
-         ZAP   PCALC(10),PTFWITH(7)
-         SRP   PCALC(10),3,0
-         DP    PCALC(10),PEMPCTR(3)
-         SRP   PCALC(7),64-1,5
-         LA    1,OAFWITH+14
-         MVC   OAFWITH(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OAFWITH(19),PCALC
-         BCTR  1,0
-         MVI   0(1),C'$'
-         XPRNT OFEDTOT,133
+         ZAP   PCALC(10),PTFWITH(7)      Move total fedwith to calc fld
+         SRP   PCALC(10),3,0             Add three fake decimal places
+         DP    PCALC(10),PEMPCTR(3)      Divide total fedwith by emp ct
+         SRP   PCALC(7),64-1,5           Round to two decimal places
+         LA    1,OAFWITH+14              Safety mark
+         MVC   OAFWITH(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OAFWITH(19),PCALC         Edit avg fed with to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         XPRNT OFEDTOT,133               Print total and avg fed with
 *
 * Handle total and average state withholding
 *
-         LA    1,OTSWITH+14 
-         MVC   OTSWITH(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OTSWITH(19),PTSWITH
-         BCTR  1,0
-         MVI   0(1),C'$'
+         LA    1,OTSWITH+14              Safety mark
+         MVC   OTSWITH(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OTSWITH(19),PTSWITH       Edit total st with to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
 *
-         ZAP   PCALC(10),PTSWITH(7)
-         SRP   PCALC(10),3,0
-         DP    PCALC(10),PEMPCTR(3)
-         SRP   PCALC(7),64-1,5
-         LA    1,OASWITH+14
-         MVC   OASWITH(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OASWITH(19),PCALC
-         BCTR  1,0
-         MVI   0(1),C'$'
-         XPRNT OSTTOT,133
+         ZAP   PCALC(10),PTSWITH(7)      Zap total st with to calc fld
+         SRP   PCALC(10),3,0             Add three fake decimal places
+         DP    PCALC(10),PEMPCTR(3)      Divide total st with by emp ct
+         SRP   PCALC(7),64-1,5           Round to two decimal places
+         LA    1,OASWITH+14              Safety mark for $
+         MVC   OASWITH(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OASWITH(19),PCALC         Edit avg st with to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         XPRNT OSTTOT,133                Print total and avg st with
 *
 * Handle total and average net pay
 *
-         LA    1,OTNETPAY+14 
-         MVC   OTNETPAY(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OTNETPAY(19),PTNETPAY
-         BCTR  1,0
-         MVI   0(1),C'$'
+         LA    1,OTNETPAY+14             Saftey mark for $
+         MVC   OTNETPAY(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OTNETPAY(19),PTNETPAY     Move total net pay to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
 *
-         ZAP   PCALC(10),PTNETPAY(7)
-         SRP   PCALC(10),3,0
-         DP    PCALC(10),PEMPCTR(3)
-         SRP   PCALC(7),64-1,5
-         LA    1,OANETPAY+14
-         MVC   OANETPAY(19),=X'4020206B2020206B2020206B2021204B2020'
-         EDMK  OANETPAY(19),PCALC
-         BCTR  1,0
-         MVI   0(1),C'$'
-         XPRNT ONETTOT,133
+         ZAP   PCALC(10),PTNETPAY(7)     Zap total net into calc field
+         SRP   PCALC(10),3,0             Add three fake decimal places
+         DP    PCALC(10),PEMPCTR(3)      Divide total net by emp count
+         SRP   PCALC(7),64-1,5           Round to two decimal places
+         LA    1,OANETPAY+14             Safety mark for $
+         MVC   OANETPAY(19),=X'4020206B2020206B2020206B2021204B2020' EP
+         EDMK  OANETPAY(19),PCALC        Edit avg net pay to PL
+         BCTR  1,0                       Decrement R1
+         MVI   0(1),C'$'                 Place $
+         XPRNT ONETTOT,133               Print total and avg net pay
+*
+EMPTY    DS    0H            We branch here if input file is empty
 *
 * STANDARD EXIT LINKAGE WITH RC OF 0
 *
@@ -315,62 +318,78 @@ PTNETPAY DC    PL7'0' PACKED TOTAL NET EMPLOYEE PAY
 *
 * STORAGE FOR COMPANY NAME AND PAGE NUMBER
 *
-ONMEPAGE DC    C'1'
+ONMEPAGE DC    CL1'1'
          DC    52C' '
-         DC    C'CHICAGO SOFTWARE COMPANY, INC.'
+         DC    CL30'CHICAGO SOFTWARE COMPANY, INC.'
          DC    40C' '
-         DC    C'PAGE: '
+         DC    CL6'PAGE: '
 OPAGENM  DC    4C' '
 *
 * STORAGE FOR TITLE
 *
-OTITLE   DC    C' '
+OTITLE   DC    CL1' '
          DC    54C' '
-         DC    C'EMPLOYEE PAYROLL REPORT' 
+         DC    CL23'EMPLOYEE PAYROLL REPORT' 
          DC    55C' '
 *
 * Storage for column headers
 *
-OHEAD1   DC    C'0'
-         DC    C'EMPLOYEE'
-         DC    C'   '
-         DC    C'EMPLOYEE'
-         DC    C'                     '
-         DC    C'HOURLY'
-         DC    C'     '
-         DC    C'HOURS'
-         DC    C'            '
-         DC    C'EMPLOYEE'
-         DC    C'    '
-         DC    C'EMPLOYEE FEDERAL'
-         DC    C'    '
+OHEAD1   DC    CL1'0'
+         DC    CL8'EMPLOYEE'
+         DC    3C' '
+         DC    CL8'EMPLOYEE'
+         DC    21C' '
+         DC    CL6'HOURLY'
+         DC    5C' '
+         DC    CL5'HOURS'
+         DC    12C' '
+         DC    CL8'EMPLOYEE'
+         DC    4C' '
+         DC    CL16'EMPLOYEE FEDERAL'
+         DC    4C' '
          DC    C'EMPLOYEE STATE'
-         DC    C'          '
-         DC    C'EMPLOYEE'
+         DC    10C' '
+         DC    CL8'EMPLOYEE'
+*
 OHEAD2   DC    C' '
-         DC    C'ID         '
-         DC    C'NAME                            '
-         DC    C'PAY    '
-         DC    C'WORKED           '
-         DC    C'GROSS PAY         '
-         DC    C'WITHHOLDING       '
-         DC    C'WITHHOLDING           '
-         DC    C'NET PAY'
-OHEAD3   DC    C' '
-         DC    C'---------  '
-         DC    C'-------------------------   '
-         DC    C'-------   '
-         DC    C'-------     '
-         DC    C'---------------    '
-         DC    C'----------------    '
-         DC    C'--------------   '
-         DC    C'---------------'
+         DC    CL2'ID'
+         DC    9C' '
+         DC    CL4'NAME'
+         DC    28C' '
+         DC    CL3'PAY'
+         DC    4C' '
+         DC    CL6'WORKED'
+         DC    11C' '
+         DC    CL9'GROSS PAY'
+         DC    9C' '
+         DC    CL11'WITHHOLDING'
+         DC    7C' '
+         DC    CL11'WITHHOLDING'
+         DC    11C' '
+         DC    CL7'NET PAY'
+*
+OHEAD3   DC    CL1' '
+         DC    9C'-'
+         DC    2C' '
+         DC    25C'-'
+         DC    3C' '
+         DC    7C'-'
+         DC    3C' '
+         DC    7C'-'
+         DC    5C' '
+         DC    15C'-'
+         DC    4C' '
+         DC    16C'-'
+         DC    4C' '
+         DC    14C'-'
+         DC    3C' '
+         DC    15C'-'
 *
 * Storage For TOTALS line
 *
-OTOTALS  DC    C' '
+OTOTALS  DC    CL1' '
          DC    62C' '
-         DC    C'TOTALS'
+         DC    CL6'TOTALS'
          DC    64C' '
 *
 * Storage for number of employees 
@@ -387,7 +406,7 @@ OTEMPCT  DS    CL6
 OTAGRPAY DC    CL1'0'
          DC    10C' '
          DC    CL16'TOTAL GROSS PAY: '
-         DC    C' '
+         DC    CL1' '
 OTGRPAY  DS    CL18
          DC    20C' '
          DC    CL19'AVERAGE GROSS PAY: '
@@ -396,7 +415,7 @@ OAGRPAY  DS    CL19
 *
 * Storage for total fed withholding and average fed withholding
 *
-OFEDTOT  DC    C'0'
+OFEDTOT  DC    CL1'0'
          DC    CL26'TOTAL FEDERAL WITHHOLDING: '
 OTFWITH  DS    CL19
          DC    10C' '
@@ -406,7 +425,7 @@ OAFWITH  DS    CL19
 *
 * Storage for total state withholding and average state withholding
 *
-OSTTOT  DC    C'0'
+OSTTOT  DC    CL1'0'
         DC    2C' '
         DC    CL25'TOTAL STATE WITHHOLDING: '
 OTSWITH DS    CL19
@@ -417,7 +436,7 @@ OASWITH DS    CL19
 *
 * Storage for total net and average net
 *
-ONETTOT  DC   C'0'
+ONETTOT  DC   CL1'0'
          DC   12C' '
          DC   CL15'TOTAL NET PAY: '
 OTNETPAY DS   CL19
@@ -428,9 +447,9 @@ OANETPAY DS   CL19
 *
 * STORAGE FOR MAIN PRINT LINE
 *
-DETAIL   DC    C'0'
+DETAIL   DC    CL1'0'
 OEMPID   DS    CL10
-         DC    C' '
+         DC    CL1' '
 OEMPNME  DS    29C' '
 OHRPAY   DS    CL7
          DC    2C' '
