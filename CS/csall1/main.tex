@@ -8808,9 +8808,171 @@ indicate which strong entity the weak entity depends upon.
                         \item 3 = unused
                     \end{itemize}
             \end{itemize}
+    \end{itemize}
 
-
-
+    \pagebreak 
+    \subsection{Internal Subroutines}
+    \begin{itemize}
+        \item \textbf{STM (90) (RS) (Store Multiple) Instruction}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label STM R1,R2,D(B)
+            \end{cppcode}
+            Stores all registers from R1 through R2 to contiguous fullwords in that order in storage starting at D(B).
+            \bigbreak \noindent 
+            If R2 is less than R1 , then R1 through register 15 and register 0 through R2 are stored in that order in storage starting at D(B).
+        \item \textbf{LM (98) (RS) (Load Multiple) Instruction}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label LM R1,R2,D(B)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Loads all registers from R1 through R2 from contiguous fullwords in that order from storage starting at D(B).
+            \bigbreak \noindent 
+            If R2 is less than R1 , then R1 through register 15 and register 0 through R2 are loaded in that order from storage starting at D(B)
+        \item \textbf{RS instructions and encodings}: RS instructions are registers to storage, they have the form
+            \bigbreak \noindent 
+            \begin{cppcode}
+            NAME   R1,R2,D(B)
+            \end{cppcode}
+            \bigbreak \noindent 
+            With encoding
+            \bigbreak \noindent 
+            \begin{align*}
+                h_{0}h_{0}h_{r_{1}}h_{r_{2}}h_{B}h_{D}h_{D}h_{D}
+            .\end{align*}
+        \item \textbf{Why subroutines?}: subdividing our programs into functions makes a complicated program easier to understand, enhance and debug. They reduce the amount of inline repeated code; we can put that repeated code in a subroutine and simply call and execute that subroutine when the code is needed again.
+        \item \textbf{Internal vs external subroutines}: An internal subroutine in Assembler is one that is located within a single control section, or CSECT.
+            \bigbreak \noindent 
+            \textbf{External subroutines}
+            \begin{itemize}
+                \item It is located outside of the caller's CSECT.
+                \item It has its own CSECT.
+                \item Is actually a subprogram (although it's often referred to as a subroutine).
+                \item External subprograms can be written in C++, Java, etc., on the mainframe
+            \end{itemize}
+        \item \textbf{Notes about internal subroutines}: There are specific standards that Assembler programmers worldwide must follow to call subroutines and subprograms.
+        \item \textbf{Internal subroutine standards}:
+            \begin{itemize}
+                \item On entrance to a subroutine, register 1 holds the address of a parameter list (if parameters need to be passed in)
+                \item On entrance to a subroutine, the initial value in any register that will be altered by the subroutine should be saved using ST and/or STM as necessary
+                \item Before exiting a subroutine, the initial value in any register that was altered by the subroutine should be restored using L and/or LM as necessary
+            \end{itemize}
+        \item \textbf{Defining an Internal Subroutine}: The following puts a label in storage without moving the location counter or actually declaring storage:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rtnName DS 0H
+            \end{cppcode}
+            Note that the name of the subroutine can also be placed on the subroutine's first instruction.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rtnName STM 3,7,SUBSAVE
+            \end{cppcode}
+        \item \textbf{Parameter list}: Standards dictate that a parameter list must be declared in a very specific manner in Assembler.
+            \bigbreak \noindent 
+            Parameters are only passed by reference in Assembler and NEVER by value.
+            \bigbreak \noindent 
+            A parameter list is a set of contiguous fullwords, each containing the address of a parameter, or variable, to be passed.
+            \bigbreak \noindent 
+            To declare a parameter list that allows the addresses in the fullwords in the parameter list to be virtual, we use Address Constants, or ADCONs, defined as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label DC A(expression)
+            \end{cppcode}
+            \bigbreak \noindent 
+            If \textbf{expression} is a non-negative integer, the generated fullword will contain the binary representation of that integer, which is the same as declaring
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label DC F'expression'
+            \end{cppcode}
+            \bigbreak \noindent 
+            If expression is a $label$ or $label+n$, the generated fullword will contain the address of label or $label+n$.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARM DC A(5)
+            \end{cppcode}
+            \bigbreak \noindent 
+            declares a fullword at label PARM in storage as:
+            \bigbreak \noindent 
+            \begin{center}
+                00000005
+            \end{center}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARMLIST DC A(FIELD1)
+            \end{cppcode}
+            \bigbreak \noindent 
+            declares a fullword at label PARMLIST in storage as: 00000148, if FIELD1 is declared in storage and is at location counter value 000148 after assembly
+            \bigbreak \noindent 
+            \begin{cppcode}
+            000148 FIELD1 DC F'34220'
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARMLIST DC A(45,FIELD2)
+            \end{cppcode}
+            declares two fullwords at label PARMLIST in storage as:
+            \bigbreak \noindent 
+            \begin{center}
+                0000002D00000274
+            \end{center}
+            if the following is declared in storage and is at location counter value 000274 after assembly
+            \bigbreak \noindent 
+            \begin{cppcode}
+            000274 FIELD2 DC F'2301.00'
+            \end{cppcode}
+            \bigbreak \noindent 
+            Another example declaration:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PARMLIST DC A(FIELD3)
+                         DC A(34)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Standards dictate that, if the internal subroutine needs parameters passed into it, set up the parameter list similarly to what is shown immediately above
+            \bigbreak \noindent 
+            Then load the address of PARM or PARMLIST into register 1 before calling the subroutine.
+            \bigbreak \noindent 
+            By the way, it's the same for passing parameters to external subprograms!
+            
+        \item \textbf{BAL (45) (RX) (Branch and Link) Instruction}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label BAL R1,D2(X2,B2)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Would be more appropriately named the Link and Branch Instruction.
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{Link Part of the Instruction:} Puts the last three bytes of the PSW into register R1 and zeros out the first byte of R1 . Why?
+                \bigbreak \noindent 
+                Remember that the last three bytes of the PSW hold the address of the next instruction, i.e., where to return to after the subroutine.
+                \item \textbf{Branch Part of the Instruction:} After the link part described immediately above, the BAL instruction then takes an unconditional branch to the D(X,B) address, i.e., the address of the subroutine.
+            \end{itemize}
+        \item \textbf{Passing control to subroutine}: Here is the sequence of instructions calling an internal subroutine using a parameter lis
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA 1,PARMLIST POINT R1 AT PARMLIST
+                BAL 11,SUBRTN BRANCH AND LINK TO SUBRTN
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, when the subroutine is finished, branch back to the instruction in the caller immediately following the call, or BAL:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            BR 11 RETURN TO CALLER
+            \end{cppcode}
+        \item \textbf{Using parameters}: In the subroutine, after we save the caller's registers, we dereference the parms
+            \bigbreak \noindent 
+            \begin{cppcode}
+                STM   2,4,SAVEREGS   STORE REGS TO BE USED
+                LM    2,4,0(1)
+            \end{cppcode}
+        \item \textbf{Returning control to caller}: When the subroutine completes its task and is ready to return to the caller, it must:
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Restore the caller's registers using either a Load (L) if only a single register needs to be restored or Load Multiple (LM) if more than one
+                \item Return to the caller using: BR 11
+            \end{itemize}
 
     \end{itemize}
 
