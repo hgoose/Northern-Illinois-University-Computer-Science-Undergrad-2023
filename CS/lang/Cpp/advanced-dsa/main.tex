@@ -280,6 +280,9 @@
     \end{align*}
 
 
+
+
+
     \pagebreak 
     \unsect{Intervals}
     \bigbreak \noindent 
@@ -401,10 +404,175 @@ The code then pushes the interval [start, i.first] into ans.
 
 
 
+    \pagebreak 
+    \unsect{Bitwise operations (and tricks)}
+    \subsection{Bitwise power of two}
+    \bigbreak \noindent 
+    To check if a positive integer $n$ is a power of two. That is, $n = 2^{x}$ for some $x\in\mathbb{N}$, we check
+    \bigbreak \noindent 
+    \begin{cppcode}
+        if (n & n-1 == 0) {
+            // n is a power of two
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    If $n$ is a power of two, it can be written as $2^{k}$ . Its binary form will have a single '1' followed by $k$ zeros
+    \bigbreak \noindent 
+    When you subtract 1 from a power of two, the binary representation becomes a sequence of $k$ ones.
+    \bigbreak \noindent 
+    Consider $1000 - 0001$. We can convert $0001$ to its twos complement representation, and change the subtraction to addition. $0001$ in its two complement representation is $1110$. Thus, we have
+    \begin{align*}
+        \begin{array}{ccccc} &1&0&0&0 \\ -&0&0&0&1 \\ \hline \end{array} = \begin{array}{ccccc} 1 & 0 & & & \\ & 1 & 0 & 0 & 0 \\ +&1&1&1&1 \\ \hline &0&1&1&1 \end{array}
+    \end{align*}
+    \bigbreak \noindent 
+    The operation $n\&(n-1)$ compares each bit of $n$ and $n-1$. Since $n$ has a single '1' in a position where $n-1$ has a '0' (and vice versa for all lower bits), none of the corresponding bits are '1' at the same time. Therefore, the result is 0.
+    \bigbreak \noindent 
+    If $n $ is not a power of two, its binary representation will have more than one '1'. Subtracting 1 will not clear all the '1' bits when you perform the AND operation, so the result will be non-zero.
+    \bigbreak \noindent 
+    If $n =0$, $n \& (n-1)$ will be zero, but $0$ is not a power of two, so we require $n >0$.
 
+    \subsection{Bitwise parity check}
+    \bigbreak \noindent 
+    We can check the parity of a number by observing if the rightmost bit is set. If the rightmost bit is one, then the number is odd, if its zero, then the number is even.
+    \bigbreak \noindent 
+    \begin{cppcode}
+        bool parity(int n) {
+            // Equivalent result: return n % 2
+            return n & 1;
+        }
+    \end{cppcode}
+    \bigbreak \noindent 
+    As an example, consider $4\ \&\ 1$... That is, $0100\ \&\ 0001$, we see
+    \begin{align*}
+        \begin{array}{ccccc}
+           &0&1&0&0 \\
+           &0&0&0&1 \\
+           \hline
+            \& & 0 &0&0&0
+        \end{array}
+    .\end{align*}
+    And for $4\ \& \ 1 = 0101\ \& \ 0001$, we have
+    \begin{align*}
+        \begin{array}{ccccc}
+           & 0&1&0&1 \\
+           &0&0&0&1 \\
+           \hline 
+            \& & 0 & 0 & 0& 1
+        \end{array}
+    .\end{align*}
 
+    \bigbreak \noindent 
+    \subsection{Bitwise divide and multiply by two}
+    \bigbreak \noindent 
+    For this we can use left and right shifts (by one). To multiply a number by 2, we shift left by one. For a divide by two, we shift right by one
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int x = 50
+    cout << (x << 1) << endl; // 100
+    cout << (x >> 1) << endl; // 25
+    \end{cppcode}
 
+    \pagebreak 
+    \unsect{Math related things}
+    \bigbreak \noindent 
+    \subsection{Floors and Ceils}
+    \bigbreak \noindent 
+    \subsubsection{Defining the notation}
+    \bigbreak \noindent 
+    We have
+    \begin{align*}
+        \lfloor x \rfloor &= \text{Max}\{n:\ n\in \mathbb{Z},\ n \leq x \} \\
+        \lceil x \rceil  &= \text{Min}\{n:\ n \in \mathbb{Z},\ n \geq x\}
+    .\end{align*}
+    \bigbreak \noindent 
+    \subsubsection{Equating ceils and floors}
+    \bigbreak \noindent 
+    We two integers $a,b$, we have the property
+    \begin{align*}
+        \left\lceil \frac{a}{b} \right\rceil = \left\lfloor \frac{a+b-1}{b} \right\rfloor
+    .\end{align*}
+    \bigbreak \noindent 
+    We have that
+    \begin{align*}
+        a = bq + r \quad 0 \leq r < b
+    .\end{align*}
+    where $q$ is the integer quotient $q = \right\lfloor \frac{a}{b} \right\rfloor$ and $r$ is the remainder
+    \bigbreak \noindent 
+    The ceil $ \left\lceil \frac{a}{b} \right\rceil $ is therefore
+    \begin{align*}
+        \left\lceil \frac{a}{b} \right\rceil = \begin{cases}
+            q & \text{ if } r=0 \\
+            q +1 & \text{ if } r>0
+        \end{cases}
+    .\end{align*}
+    To ensure that we round up when there is a nonzero remainder, we add $b-1$ to $a$, this yields
+    \begin{align*}
+        a + b-1 = bq + r + b-1 = b(q+1) + (r-1)
+    .\end{align*}
+    So, if $r = 0$, we have that
+    \begin{align*}
+    \left\lfloor a+b-1 \right\rfloor &= \left\lfloor b(q+1) - 1 \right\rfloor \\
+\implies \left\lfloor \frac{a+b-1}{b} \right\rfloor &= \left\lfloor  q+1 -\frac{1}{b}\right\rfloor \\
+                                                     &= \left\lfloor  q + \frac{b-1}{b} \right\rfloor
+    .\end{align*}
+    Since $\frac{b-1}{b} < 1$, so
+    \begin{align*}
+        \left\lfloor \frac{a+b-1}{b} \right\rfloor &= q
+    .\end{align*}
+    \bigbreak \noindent 
+    When $r > 0$, we have
+    \begin{align*}
+        \left\lfloor a+b-1 \right\rfloor &= \left\lfloor  b(q+1) + (r-1) \right\rfloor \\
+        \implies \left\lfloor \frac{a+b-1}{b} \right\rfloor &= \left\lfloor q+1 + \frac{r-1}{b}  \right\rfloor
+    .\end{align*}
+    and since $0 < r < b$, $ \frac{r-1}{b} < 1 $, so
+    \begin{align*}
+        \left\lfloor \frac{a+b-1}{b} \right\rfloor &= q + 1
+    .\end{align*}
+    \bigbreak \noindent 
+    So, we can use this property in algorithms to replace a call to a ceil function, and instead use integer division. Consider the following example, suppose we need to compute
+    \begin{align*}
+       \left\lceil \frac{n}{2} \right\rceil
+    .\end{align*}
+    Then, we have
+    \begin{align*}
+       \left\lceil \frac{n}{2} \right\rceil  = \left\lfloor \frac{n+2-1}{2} \right\rfloor = \left\lfloor \frac{n+1}{2} \right\rfloor
+    .\end{align*}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int n = 15 
+    cout << ceil((double)n/2) << endl;
+    cout << (n+1)/2 << endl; // Equivalent
+    \end{cppcode}
 
+    \bigbreak \noindent 
+    \subsection{Another useful property}
+    \bigbreak \noindent 
+    For an integer $n$, we have that
+    \begin{align*}
+        \left\lfloor \frac{n}{2} \right\rfloor + \left\lceil \frac{n}{2} \right\rceil = n
+    .\end{align*}
+    \bigbreak \noindent 
+    If $n$ even, then $n = 2k$ for some integer $k$, then
+    \begin{align*}
+        \left\lfloor \frac{n}{2} \right\rfloor + \left\lceil \frac{n}{2} \right\rceil &= \left\lfloor \frac{2k}{2} \right\rfloor + \left\lceil \frac{2k}{2} \right\rceil \\
+        &= \left\lfloor k \right\rfloor + \left\lceil k \right\rceil = 2k = n
+    .\end{align*}
+    If $n$ is odd, then $ n = 2k+1$ for some integer $k$, and 
+    \begin{align*}
+        \left\lfloor \frac{n}{2} \right\rfloor + \left\lceil \frac{n}{2} \right\rceil &= \left\lfloor \frac{2k+1}{2} \right\rfloor + \left\lceil \frac{2k+1}{2} \right\rceil \\
+                                                                                      &= \left\lfloor k + \frac{1}{2} \right\rfloor + \left\lceil k + \frac{1}{2} \right\rceil = k + (k+1) = 2k + 1  =n
+    .\end{align*}
+    Thus, 
+    \begin{align*}
+        \left\lceil \frac{n}{2} \right\rceil = n - \left\lfloor \frac{n}{2} \right\rfloor
+    .\end{align*}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    int n = 25;
+    cout << (ceil((double)n/2)) << endl;
+    cout << (n - n/2) << endl; // Equivalent
+    \end{cppcode}
 
 
 
@@ -591,30 +759,27 @@ This method efficiently computes $a^{b}$ using the following rules:
 \end{cppcode}
 
 \pagebreak 
-\subsection{Bitwise power of two}
+\subsection{Fast modular exponentiation}
 \bigbreak \noindent 
-To check if a positive integer $n$ is a power of two. That is, $n = 2^{x}$ for some $x\in\mathbb{N}$, we check
+Fast modular exponentiation, also known as binary exponentiation or exponentiation by squaring, is an algorithm used to efficiently compute $a^{b} \mod m $ without directly calculating $a^{b}$ (which can be very large)
+\bigbreak \noindent 
+It works similar to the \textit{fast exponentiation} algorithm above, but takes mods along the way.
 \bigbreak \noindent 
 \begin{cppcode}
-    if (n & n-1 == 0) {
-        // n is a power of two
+    #define ll long long
+    ll modExp(ll a, ll b, ll mod) {
+        ll result = 1;
+        a %= mod;
+        while (b > 0) {
+            if (b & 1)
+            result = (result * a) % mod;
+            a = (a * a) % mod;
+            b >>= 1;
+        }
+        return result;
     }
 \end{cppcode}
-\bigbreak \noindent 
-If $n$ is a power of two, it can be written as $2^{k}$ . Its binary form will have a single '1' followed by $k$ zeros
-\bigbreak \noindent 
-When you subtract 1 from a power of two, the binary representation becomes a sequence of $k$ ones.
-\bigbreak \noindent 
-Consider $1000 - 0001$. We can convert $0001$ to its twos complement representation, and change the subtraction to addition. $0001$ in its two complement representation is $1110$. Thus, we have
-\begin{align*}
-    \begin{array}{ccccc} &1&0&0&0 \\ -&0&0&0&1 \\ \hline \end{array} = \begin{array}{ccccc} 1 & 0 & & & \\ & 1 & 0 & 0 & 0 \\ +&1&1&1&1 \\ \hline &0&1&1&1 \end{array}
-\end{align*}
-\bigbreak \noindent 
-The operation $n\&(n-1)$ compares each bit of $n$ and $n-1$. Since $n$ has a single '1' in a position where $n-1$ has a '0' (and vice versa for all lower bits), none of the corresponding bits are '1' at the same time. Therefore, the result is 0.
-\bigbreak \noindent 
-If $n $ is not a power of two, its binary representation will have more than one '1'. Subtracting 1 will not clear all the '1' bits when you perform the AND operation, so the result will be non-zero.
-\bigbreak \noindent 
-If $n =0$, $n \& (n-1)$ will be zero, but $0$ is not a power of two, so we require $n >0$.
+
 
 \pagebreak 
 \unsect{Number Theory}
