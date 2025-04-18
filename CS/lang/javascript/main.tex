@@ -1137,6 +1137,780 @@
         \item \textbf{screen.pixelDepth}: Similar to colorDepth, representing the actual color resolution.
     \end{itemize}
 
+    \bigbreak \noindent 
+    \subsection{The DOM}
+    \bigbreak \noindent 
+    The DOM is actually not very complicated to understand. It is a way of displaying the structure of an HTML document as a logical tree
+    \bigbreak \noindent 
+    We can inspect the DOM in a similar fashion as we did the others. We execute
+    the following command in the console of our website (again, the document object
+    is globally accessible, so accessing it through the window object is possible but not
+    necessary):
+    \bigbreak \noindent 
+    \begin{jscode}
+        console.dir(document)
+    \end{jscode}
+
+    \bigbreak \noindent 
+    \subsubsection{Selecting page elements}
+    \bigbreak \noindent 
+    The document object contains many properties and methods. In order to work with elements on the page, you'll first have to find them. If you need to change the value of a certain paragraph, you'll have to grab this paragraph first. We call this selecting the paragraph. After selecting, we can start changing it.
+    \bigbreak \noindent 
+    To select page elements to use within your JavaScript code and in order to manipulate elements, you can use either the querySelector() or querySelectorAll() method. Both of these can be used to select page elements either by tag name, ID, or class
+    \bigbreak \noindent 
+    The document.querySelector() method will return the first element within the document that matches the specified selectors. If no matching page elements are found, the result null is returned. To return multiple matching elements, you can use the method document.querySelectorAll().
+    \bigbreak \noindent 
+    The querySelectorAll() method will return a static NodeList, which represents a list of the document's elements that match the specified group of selectors. We will demonstrate the usage of both querySelector() and querySelectorAll() with the following HTML snippet:
+    \bigbreak \noindent 
+    \begin{htmlcode}
+        <!doctype html>
+        <html>
+            <head>
+                <title>JS Tester</title>
+            </head>
+            <body>
+                <h1 class="output">Hello World</h1>
+                <div class="output">Test</div>
+            </body>
+        </html>
+    \end{htmlcode}
+    \bigbreak \noindent 
+    We are going to select the h1 element with querySelector(). Therefore, if there is more than one, it will just grab the first
+    \bigbreak \noindent 
+    \begin{jscode}
+        const ele1 = document.querySelector("h1");
+        console.dir(ele1);
+    \end{jscod}
+    \bigbreak \noindent 
+    If you want to select multiple elements, you can use querySelectorAll(). This
+    method is going to return all the elements that match the selector in an array. In this
+    example, we are going to look for instances of the output class, which is done by
+    prepending the class name with a dot.
+    \bigbreak \noindent 
+    \begin{jscode}
+    const eles = document.querySelectorAll(".output");
+    console.log(eles);
+    \end{jscode}
+    \bigbreak \noindent 
+    After selecting, you can start using the dynamic features of the DOM: you can manipulate the elements using JavaScript. Content can be changed in the same way a variable's contents can be, elements can be removed or added, and styles can be adjusted. This can all be done with JavaScript and the way the user interacts with the page can affect this. We have seen the two most common methods to select in the DOM here, querySelector() and querySelectorAll(). You can actually select any element you might need with these
+
+    \bigbreak \noindent 
+    \subsubsection{Basic DOM traversing}
+    \bigbreak \noindent
+    We can traverse the DOM using the document object that we saw in the previous chapter. This document object contains all the HTML and is a representation of the web page. Traversing over these elements can get you to the element you need in order to manipulate it
+    \bigbreak \noindent 
+    Even for a simple HTML piece there are already multiple ways to traverse the DOM
+    \bigbreak \noindent 
+    \begin{htmlcode}
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <h1>Let's find the treasure</h1>
+                <div id="forest">
+                    <div id="tree1">
+                        <div id="squirrel"></div>
+                        <div id="flower"></div>
+                    </div>
+                    <div id="tree2">
+                        <div id="shrubbery">
+                            <div id="treasure"></div>
+                        </div>
+                        <div id="mushroom">
+                            <div id="bug"></div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+        </html>
+    \end{htmlcode}
+    \bigbreak \noindent 
+    We now want to traverse the DOM of this snippet to find the treasure. We can do this by stepping into the document object and navigating our way from there onwards
+    \bigbreak \noindent 
+    We can start by using the body property from the document. This contains everything that's inside the body element
+    \bigbreak \noindent 
+    \begin{jscode}
+    console.dir(document.body);
+    \end{jscode}
+    \bigbreak \noindent 
+    We should get a really long object. There are a few ways from this object to get to our treasure. To do so, let's discuss the children and childNodes property.
+    \bigbreak \noindent 
+    To get to the treasure using children you would have to use:
+    \bigbreak \noindent 
+    \begin{jscode}
+    console.dir(document.body.children.forest.children.tree2.children. shrubbery.children.treasure);
+    \end{jscode}
+    \bigbreak \noindent 
+    As you can see, on every element we select, we have to select the children again. So, first, we grab the children from the body, then we select forest from these children. Then from forest, we want to grab its children again, and from these children we want to select tree2. From tree2 we want to grab the children again, from these children we need shrubbery. And then finally, we can grab the children from shrubbery and select treasure.
+    \bigbreak \noindent 
+    To get to the treasure using childNodes you would have to use your console a lot
+    because text and comment nodes are also in there. childNodes is an array, so you will
+    have to select the right index to select the right child. There is one advantage here: it
+    is a lot shorter because you won't need to select the name separately.
+    \bigbreak \noindent 
+    \begin{jscode}
+    console.dir(document.body.childNodes[3].childNodes[3].childNodes[1]. childNodes[1]);
+    \end{jscode}
+    \bigbreak \noindent 
+    You could also combine them:
+    \bigbreak \noindent 
+    \begin{jscode}
+    console.dir(document.body.childNodes[3].childNodes[3].childNodes[1]. children.treasure);
+    \end{jscode}
+    \bigbreak \noindent 
+    So far, we have seen how we can move down the DOM, but we can also move up. Every element knows its parent. We can use the parentElement property to move back up. For example, if we use the treasure HTML sample and type this into the console:
+    \begin{jscode}
+        document.body.children.forest.children.tree2.parentElement;
+    \end{jscode}
+    \bigbreak \noindent 
+    We are back at forest, since that is the parent element of tree2. This can be very
+useful, in particular when combined with functions such as getElementById(),
+which we will see later in more detail
+\bigbreak \noindent 
+Not only can we move up and down, we can also move sideways. For example, if
+we select tree2 like this:
+\begin{jscode}
+    document.body.children.forest.children.tree2;
+\end{jscode}
+\bigbreak \noindent 
+We can get to tree1 using:
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.forest.children.tree2.previousElementSibling;
+\end{jscode}
+\bigbreak \noindent 
+And from tree1 we can get to tree2 using:
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.forest.children.tree1.nextElementSibling;
+\end{jscode}
+\bigbreak \noindent 
+As an alternative to nextElementSibling, which returns the next node that is an
+element, you could use nextSibling, which will return the next node of any type.
+
+\bigbreak \noindent 
+\subsubsection{Selecting elements as objects}
+\bigbreak \noindent 
+Now we know how to traverse the DOM, we can make changes to the elements.
+Instead of using console.dir(), we can just type in the path to the element we want
+to change. We now have the element as a JavaScript object, and we can make changes
+to all its properties. Let's use a simpler HTML page for this one
+\bigbreak \noindent 
+\begin{htmlcode}
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <h1>Welcome page</h1>
+            <p id="greeting"> Hi! </p>
+        </body>
+    </html>
+\end{htmlcode}
+\bigbreak \noindent 
+We can traverse to the $p$ element, for example, by using this code:
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.greeting;
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Changing innerText}
+\bigbreak \noindent 
+The innerText property focuses on the text between the opening and closing of the element, like so:
+\bigbreak \noindent 
+\begin{htmlcode}
+<element>here</element>
+\end{htmlcode}
+\bigbreak \noindent 
+The retrieved value would be here as plain text. For example, if we go to the console and we type
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.greeting.innerText = "Bye!";
+\end{jscode}
+\bigbreak \noindent 
+The message that is displayed on the page changes from Hi! to Bye! immediately.
+innerText returns the content of the element as plain text, which is not a problem in
+this case because there is only text in there. However, if there is any HTML inside
+the element you need to select, or if you want to add HTML, you cannot use this
+method. It will interpret the HTML as text and just output it on the screen. So if we
+executed this:
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.greeting.innerText = "<p>Bye!</p>";
+\end{jscode}
+\bigbreak \noindent 
+It will output to the screen <p>Bye!</p>, with the HTML around it, as if it was intended as a text string. To get around this, you need to use innerHTML.
+
+\bigbreak \noindent 
+\subsubsection{Changing innerHTML}
+\bigbreak \noindent 
+If you did not only want to work with plain text, or perhaps specify some HTML
+formatting with your value, you could use the innerHTML property instead. This
+property doesn't just process be plain text, it can also be inner HTML elements
+\bigbreak \noindent 
+\begin{jscode}
+document.body.children.greeting.innerHTML = "<b>Bye!</b>";
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Accessing elements in the DOM}
+\bigbreak \noindent 
+There are multiple methods to select elements from the DOM. After getting the
+elements, we are able to modify them. In the following sections, we will discuss how
+to get elements by their ID, tag name, and class name, and by CSS selector.
+\bigbreak \noindent 
+Instead of traversing it step by step as we just did, we are going to use built-in
+methods that can go through the DOM and return the elements that match the
+specifications
+\bigbreak \noindent 
+Consider 
+\bigbreak \noindent 
+\begin{htmlcode}
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <h1>Just an example</h1>
+            <div id="one" class="example">Hi!</div>
+            <div id="two" class="example">Hi!</div>
+            <div id="three" class="something">Hi!</div>
+        </body>
+    </html>
+\end{htmlcode}
+\bigbreak \noindent 
+Let's start by accessing elements by ID.
+\bigbreak \noindent 
+\subsubsection{Accessing elements by ID}
+\bigbreak \noindent 
+We can grab elements by ID with the getElementById() method. This returns one
+element with the specified ID. IDs should be unique, as only one result will be
+returned from the HTML document
+\bigbreak \noindent 
+If we want to select the element with an ID of two right away, we could use:
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementById("two");
+\end{jscode}
+\bigbreak \noindent 
+This would return the full HTML element:
+\bigbreak \noindent 
+\begin{htmlcode}
+<div id="two" class="example">Hi!</div>
+\end{htmlcode}
+\bigbreak \noindent 
+To reiterate, if you have more than one element with the same ID, it will just give
+you back the first one it encounters. You should avoid this situation in your code
+though.
+\bigbreak \noindent 
+\subsubsection{Accessing elements by tag name}
+\bigbreak \noindent 
+If we ask for elements by tag name, we get an array as a result. This is because there
+could be more than one element with the same tag name. It will be a collection of
+HTML elements, or HTMLCollection, which is a special JavaScript object. It's basically
+just a list of nodes
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementsByTagName("div");
+\end{jscode}
+\bigbreak \noindent 
+It returns
+\bigbreak \noindent 
+\begin{jscode}
+// HTMLCollection(3) [div#one.example, div#two.example, div#three. something, one: div#one.example, two: div#two.example, three: div#three.something]
+\end{jscode}
+\bigbreak \noindent 
+As you can see, all the elements in the DOM with the div tag are returned. You
+can read what the ID is and what the class is from the syntax. The first ones in the
+collection are the objects: div is the name, # specifies the ID, and . specifies the class.
+If there are multiple dots, there are multiple classes. Then you can see the elements
+again (namedItems), this time as key-value pairs with their ID as the key
+\bigbreak \noindent 
+We can access them using the item() method to access them by index, like this:
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementsByTagName("div").item(1);
+\end{jscode}
+\bigbreak \noindent 
+This will return:
+\bigbreak \noindent 
+\begin{jscode}
+<div id="two" class="example">Hi!</div>
+\end{jscode}
+\bigbreak \noindent 
+We can also access them by name, using the namedItem() method, like this:
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementsByTagName("div").namedItem("one");
+\end{jscode}
+\bigbreak \noindent 
+And this will return:
+\bigbreak \noindent 
+\begin{jscode}
+<div id="one" class="example">Hi!</div>
+\end{jscode}
+\bigbreak \noindent 
+When there is only one match, it will still return an HTMLCollection. There is only
+one h1 tag, so let's demonstrate this behavior:
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementsByTagName("h1");
+\end{jscode}
+\bigbreak \noindent 
+This will output:
+\bigbreak \noindent 
+\begin{jscode}
+// HTMLCollection [h1]
+\end{jscode}
+\bigbreak \noindent 
+Since h1 doesn't have an ID or class, it is only h1. And since it doesn't have an ID, it
+is not a namedItem and is only in there once.
+
+\bigbreak \noindent 
+\subsubsection{Accessing elements by class name}
+\bigbreak \noindent 
+We can do something very similar for class names. In our example HTML, we have
+two different class names: example and something. If you get elements by class name,
+it gives back an HTMLCollection containing the results. The following will get all
+the elements with the class example:
+\bigbreak \noindent 
+\begin{jscode}
+    document.getElementsByClassName("example");
+\end{jscode}
+\bigbreak \noindent 
+This returns:
+\bigbreak \noindent 
+\begin{jscode}
+// HTMLCollection(2) [div#one.example, div#two.example, one: div#one. example, two: div#two.example]
+\end{jscode}
+\bigbreak \noindent 
+As you can see, it only returned the div tags with the example class. It left out the div with the something class.
+\bigbreak \noindent 
+\subsubsection{Accessing elements with a CSS selector}
+\bigbreak \noindent 
+We can also access elements using a CSS selector. We do this with querySelector()
+and querySelectorAll(). We then give the CSS selector as an argument, and this
+will filter the items in the HTML document and only return the ones that satisfy the
+CSS selector.
+\bigbreak \noindent 
+The CSS selector might look a bit different than you might think at first. Instead of
+looking for a certain layout, we use the same syntax as we use when we want to
+specify a layout for certain elements. We haven't discussed this yet, so we will cover
+it here briefly.
+\bigbreak \noindent 
+If we state $p$ as a CSS selector, it means all the elements with tag $p$. This would look like this:
+\bigbreak \noindent 
+\begin{jscode}
+document.querySelectorAll("p");
+\end{jscode}
+\bigbreak \noindent 
+If we say p.example, it means all the p tag elements with example as the class. They can also have other classes; as long as example is in there, it will match. We can also say #one, which means select all with an ID of one.
+\bigbreak \noindent 
+This method is the same result as getElementById(). Which one to use is a matter
+of taste when all you really need to do is select by ID—this is great input for a
+discussion with another developer. querySelector() allows for more complicated
+queries, and some developers will state that getElementById() is more readable.
+Others will claim that you might as well use querySelector() everywhere for
+consistency. It doesn't really matter at this point, but try to be consistent.
+\bigbreak \noindent 
+\subsubsection{Using querySelectorAll()}
+\bigbreak \noindent 
+Sometimes it is not enough to return only the first instance, but you want to select all
+the elements that match the query. For example when you need to get all the input
+boxes and empty them. This can be done with querySelectorAll():
+\bigbreak \noindent 
+\begin{jscode}
+document.querySelectorAll("div");
+\end{jscode}
+\bigbreak \noindent 
+This returns
+\bigbreak \noindent 
+\begin{jscode}
+// NodeList(3) [div#one.example, div#two.example, div#three.something]
+\end{jscode}
+\bigbreak \noindent 
+As you can see, it is of object type NodeList. It contains all the nodes that match the
+CSS selector. With the item() method we can get them by index, just as we did for
+the HTMLCollection
+
+\bigbreak \noindent 
+\subsubsection{Element click handler}
+\bigbreak \noindent 
+HTML elements can do something when they are clicked. This is because a
+JavaScript function can be connected to an HTML element. Here is one snippet in
+which the JavaScript function associated with the element is specified in the HTML
+\bigbreak \noindent 
+\begin{jscode}
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <div id="one" onclick="alert('Ouch! Stop it!')">Don't click here! </div>
+        </body>
+    </html>
+\end{jscode}
+\bigbreak \noindent 
+The onclick attribute is an HTML attribute used to attach JavaScript code to an element.  While the alert itself is a JavaScript function, the onclick attribute is an HTML event handler that embeds JavaScript code.
+\bigbreak \noindent 
+This method of linking HTML and JavaScript is known as using an "inline event handler." Although it's common and simple for small snippets, in larger applications it’s often recommended to separate JavaScript from HTML (for example, using the addEventListener method in JavaScript) for better maintainability and code organization.
+\bigbreak \noindent 
+Other HTML event handlers are
+\begin{itemize}
+    \item \textbf{ondblclick:} Fires when an element is double-clicked.
+    \item \textbf{onmouseover:} Triggers when the mouse pointer moves over an element.
+    \item \textbf{onmouseout:} Occurs when the mouse pointer moves off an element.
+    \item \textbf{onmousedown:} Executes when a mouse button is pressed down over an element.
+    \item \textbf{onmouseup:} Runs when a mouse button is released over an element.
+    \item \textbf{onmousemove:} Fires as the mouse pointer moves within an element.
+    \item \textbf{onkeydown:} Activates when the user presses a key down.
+    \item \textbf{onkeyup:} Triggers when a key is released.
+    \item \textbf{onkeypress:} Similar to onkeydown, but fires for keys that produce a character value (though it’s generally less recommended than the keydown/keyup events).
+    \item \textbf{oninput:} Fires every time the value of an input or textarea changes—ideal for capturing real-time changes.
+    \item \textbf{onchange:} Occurs when the value of an element (such as an input, select, or textarea) has been altered and the element loses focus.
+    \item \textbf{onfocus:} Fires when an element, like an input field, gains focus (such as when clicked or tabbed into).
+    \item \textbf{onblur:} Triggers when an element loses focus.
+    \item \textbf{onload:} Executes when an object (often the window or an image) has completely loaded.
+    \item \textbf{onunload:} Occurs when the user leaves the document (commonly used to clean up or save state).
+    \item \textbf{onsubmit:} Specifically used with forms, triggering when the form is submitted.
+    \item \textbf{onresize:} Fires when the document or an element is resized (this is typically applied to the window)
+\end{itemize}
+
+\bigbreak \noindent 
+Next, consider the html code
+\bigbreak \noindent 
+\begin{htmlcode}
+ <div id="one">Don't click here!</div>
+\end{htmlcode}
+\bigbreak \noindent 
+This code is at the moment not doing anything if you click it. If we want to
+dynamically add a click handler to the div element, we can select it and specify the
+property via the console
+\bigbreak \noindent 
+\begin{jscode}
+    document.getElementById("one").onclick = function () {
+        alert("Auch! Stop!");
+    }
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{This and the DOM}
+\bigbreak \noindent 
+The this keyword always has a relative meaning; it depends on the exact context
+it is in. In the DOM, the special this keyword refers to the element of the DOM it
+belongs to. If we specify an onclick to send this in as an argument, it will send in
+the element the onclick is in.
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" onclick="console.log(this)"> Don't click me </div>
+\end{jscode}
+\bigbreak \noindent 
+logs in the console
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" onclick="console.log(this)"> Don't click me </div>
+\end{jscode}
+\bigbreak \noindent 
+If we instead did the log via a function
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" onclick="f()"> Don't click me </div>
+
+    <script>
+        function f() {
+            console.log(this);
+        }
+    </script>
+\end{jscode}
+\bigbreak \noindent 
+We just get the \textit{window} object.
+\bigbreak \noindent 
+We instead need to pass \textit{this} to the function
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" onclick="f(this)"> Don't click me </div>
+    <script> 
+        function f(el) {
+            console.log(el);
+        }
+    </script>
+\end{jscode}
+\bigbreak \noindent 
+So, the this keyword is referring to the element, and from this element we can
+traverse the DOM like we just learned. This can be very useful, for example, when
+you need to get the value of an input box. If you send this, then you can read and
+modify the properties of the element that triggered the function.
+
+\bigbreak \noindent 
+\subsubsection{Manipulating element style}
+\bigbreak \noindent 
+After selecting the right element from the DOM, we can change the CSS style that
+applies to it. We can do this using the style property.
+\bigbreak \noindent 
+We are going to make a button that will toggle the appearing and disappearing of
+a line of text. To hide something using CSS, we can set the display property of the
+element to none.
+\bigbreak \noindent 
+\begin{htmlcode}
+    <div class="ysm" id="someDiv" onclick="f()"> Don't click me </div>
+    <script> 
+        function f() {
+            let div = document.getElementById("someDiv");
+            if (div.style.display === "none") {
+                div.style.display = "block";
+            } else {
+                div.style.display = "none";
+            }
+    }
+    </script>
+\end{htmlcode}
+
+\bigbreak \noindent 
+\subsubsection{Changing the classes of an element}
+\bigbreak \noindent 
+HTML elements can have classes, and as we have seen, we can select elements by the
+name of the class. As you may remember, classes are used a lot for giving elements a
+certain layout using CSS
+\bigbreak \noindent 
+With JavaScript, we can change the classes of HTML elements, and this might trigger
+a certain layout that is associated with that class in CSS. We are going to have a look
+at adding classes, removing classes, and toggling classes.
+
+\bigbreak \noindent 
+\subsubsection{Adding and removing classes to elements}
+\bigbreak \noindent 
+we use the classList property with the .add(classname) method.
+\bigbreak \noindent 
+\begin{jscode}
+    <style> .big { transform: scale(2); } </style>
+
+    <div class="ysm" id="someDiv" onclick="f()"> Click to make big </div>
+    <script> 
+    function f() {
+        let p = document.querySelector("#someDiv").classList.add("big");
+    }
+    </script>
+\end{jscode}
+\bigbreak \noindent 
+To remove, we use .remove(classname)
+\bigbreak \noindent 
+\begin{jscode}
+    <style> .big { transform: scale(2); } </style>
+
+    <div class="ysm" id="someDiv" onclick="f()"> Click to make big </div>
+    <script> 
+        function f() {
+            let p = document.querySelector("#someDiv").classList.toggle("big");
+        }
+    </script>
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Toggling classes}
+\bigbreak \noindent 
+We can streamline the above system by using the .toggle method, which adds a class if it doesn't have it, and removes it if it does.
+\bigbreak \noindent 
+\begin{jscode}
+    <style> .big { transform: scale(2); } </style>
+
+    <div class="ysm" id="someDiv" onclick="f()"> Click to make big </div>
+    <script> 
+        function f() {
+            let p = document.querySelector("#someDiv").classList.toggle("big");
+        }
+    </script>
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Manipulating attributes}
+\bigbreak \noindent 
+With the setAttribute() method, we can add or change attributes on an element.
+This will change the HTML of the page
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" id="someDiv">  
+        <input id="button" type="button" onclick="f()">
+    </div>
+    <script> 
+        function f() {
+            let el = document.querySelector("#button");
+            el.setAttribute("type", "text");
+        }
+    </script>
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Event listeners on elements}
+\bigbreak \noindent 
+Events are things that happen on a web page, like clicking on something, moving the
+mouse over an element, changing an element, and there are many more. We have
+seen how to add an onclick event handler already. In the same way, you can add an
+onchange handler, or an onmouseover handler. There is one special condition, though;
+one element can only have one event handler as an HTML attribute. So, if it has an
+onclick handler, it cannot have an onmouseover handler as well. At this point, we
+have only seen how to add event listeners using HTML attributes
+\bigbreak \noindent 
+There is a way to register event handlers using JavaScript as well. We call these event
+listeners. Using event listeners, we can add multiple events to one element. This way,
+JavaScript is constantly checking, or listening, for certain events to the elements on
+the page. Adding event listeners is a two-step process:
+\begin{enumerate}
+    \item Select the element you want to add an event to
+    \item Use the addEventListener("event", function) syntax to add the event
+\end{enumerate}
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" id="someDiv">  
+        <input id="button" type="button">
+    </div>
+    <script> 
+        document.getElementById("button").addEventListener("click", change);
+
+        function change() {
+            this.setAttribute("type", "text");
+        }
+    </script>
+\end{jscode}
+
+\bigbreak \noindent 
+\subsubsection{Creating new elements}
+\bigbreak \noindent 
+We use createElement(), then use appendChild() to add to the document tree.
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" id="someDiv">  
+        <input id="button" type="button">
+    </div>
+    <script> 
+        window.onload = function() {
+            document.getElementById("button").addEventListener("click", change);
+        }
+
+        function change() {
+            let other = document.createElement("p");
+            other.innerText = "Hello world";
+            document.body.appendChild(other);
+        }
+    </script>
+\end{jscode}
+
+
+\pagebreak 
+\unsect{Interactive Content and Event Listeners}
+\bigbreak \noindent 
+\subsection{Specifying events with JavaScript}
+\bigbreak \noindent 
+Here is the first way to do it using JavaScript.
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementById("unique").onclick = function() { magic(); };
+\end{jscode}
+
+\bigbreak \noindent 
+\subsection{Specifying events with event listeners}
+\bigbreak \noindent 
+The last method is using the addEventListener() method to add an event to an
+element. With this, we can specify multiple functions for the same event, for
+example, when an element gets clicked.
+\bigbreak \noindent 
+\begin{jscode}
+document.getElementById("unique").addEventListener("click", magic);
+\end{jscode}
+
+\bigbreak \noindent 
+\subsection{The onload event handler}
+\bigbreak \noindent 
+We briefly saw this event handler in the previous chapter. The onload event gets
+fired after a certain element is loaded. This can be useful for a number of reasons. For
+example, if you want to select an element using getElementById, you'll have to be
+sure this element is loaded in the DOM already. This event is most commonly used
+on the window object, but it can be used on any element. When you use it on window,
+this event gets started when the window object is done loading
+\bigbreak \noindent 
+\begin{jscode}
+    window.onload = function() {
+        // whatever needs to happen after the page loads goes here
+    }
+\end{jscode}
+\bigbreak \noindent 
+onload is similar, but it's different for the window and document objects. The
+difference depends on the web browser you are using. The load event fires at the
+end of the document loading process. Therefore, you will find that all the objects
+in the document are in the DOM and the assets have finished loading
+\bigbreak \noindent 
+You can also use the addEventListener() method on any element to handle any
+event. And it can also be used for the event that all the content in the DOM is loaded.
+There is a special built-in event for this: DOMContentLoaded(). This event can be used
+to handle the event of the DOM loading, which will get fired immediately after the
+DOM for the page has been constructed when the event is set. Here is how to set it:
+\bigbreak \noindent 
+\begin{jscode}
+    document.addEventListener("DOMContentLoaded", (e) => {
+        console.log(e);
+    });
+\end{jscode}
+\bigbreak \noindent 
+This will log to the console when all the DOM content has been loaded. As an
+alternative, you will also often see it in the body tag
+\bigbreak \noindent 
+\begin{jscode}
+<body onload="unique()"></body>
+\end{jscode}
+\bigbreak \noindent 
+This is assigning a function called unique() to the body, and it will fire off when
+the body is done loading. You cannot combine addEventListener() and the HTML
+by using them together. One will overwrite the other, depending on the order of
+the web page. If you need two events to happen when the DOM is loaded, you will
+need two addEventListener() calls in your JavaScript.
+\bigbreak \noindent 
+\subsection{Mouse event handlers}
+\bigbreak \noindent 
+There are different mouse event handlers. Mouse events are actions of the mouse.
+These are the ones we have
+\begin{itemize}
+    \item \textbf{ondblclick:} when the mouse is double-clicked
+    \item \textbf{onmousedown:} when the mouse clicks on top of an element without the click being released
+    \item \textbf{onmouseup:} when the mouse click on top of an element is released
+    \item \textbf{onmouseenter:} when the mouse moves onto an element
+    \item \textbf{onmouseleave:} when the mouse leaves an element and all of its children
+    \item \textbf{onmousemove:} when the mouse moves over an element
+    \item \textbf{onmouseout:} when the mouse leaves an individual element
+    \item \textbf{onmouseover:} when the mouse hovers over an element
+\end{itemize}
+
+\bigbreak \noindent 
+\subsection{The event target property}
+\bigbreak \noindent 
+Whenever an event gets fired, an event variable becomes available. It has many
+properties, and you can check it out by using this command in the function that
+gets fired for the event
+\bigbreak \noindent 
+This will show many properties. One of the most interesting properties for now is the
+target property. The target is the HTML element that fired the event. So, we can use
+it to get information from a web page
+\bigbreak \noindent 
+\begin{jscode}
+    <div class="ysm" id="someDiv">  
+        <input id="button" type="button">
+    </div>
+    <script> 
+        window.onload = function() {
+            document.getElementById("button").addEventListener("click", change);
+        }
+
+        function change() {
+            let p = document.createElement("p");
+            p.innerText = "Hello world";
+            // event.target is <input id="button" type="button">
+            // parent->parent is document
+            event.target.parentNode.parentNode.appendChild(p);
+
+        }
+    </script>
+\end{jscode}
+
+\bigbreak \noindent 
+\subsection{DOM event flow}
+\bigbreak \noindent 
+
+
+
+
+
 
 
 

@@ -6085,6 +6085,34 @@
                 \beta = \angle BYC > \angle BXY = 180 - \alpha
             .\end{align*}
             Which, implies $ \alpha + \beta > 180$. But, at $B$, $ \alpha + \beta < \angle ABC < 180$, a contradiction
+        \item \textbf{Proposition 15.6}: If $AB < \frac{\omega}{2}$, and $ BC \leq \frac{\omega}{2}$ in $ \triangle ABC$, then $AB + BC > AC$
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Suppose toward a contradiction that $AB + BC \leq AC$. Then, $0 < BC \leq AC - AB$. So, $AB < AC$
+            \bigbreak \noindent 
+            By Ax.RR, there is a point $X$ on $\overrightarrow{AC}$ with $AX = AB$, hence $ A\text{-}X\text{-}C $
+            \bigbreak \noindent 
+            \fig{.6}{./figures/g21.png}
+            \bigbreak \noindent 
+            Pons asinorum for $ \triangle ABX $ implies $ \angle ABX = \angle BXA$ ($\alpha $).
+            \bigbreak \noindent 
+            $AX + BC = AC$ implies $ XC = AC - AX = AC - AB \geq BC$ 
+            \bigbreak \noindent 
+            \textbf{Case 1)} Suppose that $XC = BC$. Pons asinorum for $ \triangle BCX$ implies $ \angle XBC  = \angle BXC$ ($\beta$)
+            \bigbreak \noindent 
+            \fig{.6}{./figures/g22.png}
+            \bigbreak \noindent 
+            $ A\text{-}X\text{-}C$ and Ax.C implies $ \overrightarrow{BA}\text{-}\overrightarrow{BX}\text{-}\overrightarrow{BC} $, which implies $ \angle ABC = \alpha + \beta = \angle AXB + \angle BXC = 180$ (Thm 14.1)
+            \bigbreak \noindent 
+            But, $A,B,C$ not collinear, implies $ \underline{\angle ABC}$ is proper, which implies $ \angle ABC \ne 180$ by Ax. M4, a contradiction.
+            \bigbreak \noindent 
+            \textbf{Case 2)} Suppose that $ XC > BC$. Ax.RR for $\overrightarrow{CX}$ implies there is a point $Y$ on $\overrightarrow{CX}$ with $CY = BC$. Then, $CY < CX$ implies $ C\text{-}Y\text{-} X$ by definition of $\overrightarrow{CX}$, which implies $  X\text{-}Y\text{-}C$. 
+            \bigbreak \noindent 
+            Let $M$ be the midpoint of $\overline{XY}$. $BA < \frac{\omega}{2}, BC \leq \frac{\omega}{2}$ (by hypothesis) so Theorem 15.1 implies $ BX,BM,BY < \frac{\omega}{2}$
+            \bigbreak \noindent 
+            \fig{.6}{./figures/g23.png}
+            \bigbreak \noindent 
+            $XM = MY = \frac{1}{2}XY < \frac{\omega}{2}$, so $ \triangle BMX, \triangle BMY$ are small.
+
 
 
     \end{itemize}
@@ -10088,6 +10116,83 @@ $$\phi_k \gets \frac{1}{\norm{\phi_k}_2}\phi_k, \quad k=0,\ldots,n.$$
             $$\int_a^b f(x)\, dx = \sum_{k=1}^r \sum_{i=0}^n b_i f(t_{k,i}) + \frac{(b - a)((n+1)!)^4}{(2n+3)!((2n+2)!)^2} f^{(2n+2)}(\xi) h^{2n+2},$$
             for some $\xi \in [a,b]$.
             Thus, we have an accuracy of $\mathcal{O}(h^{2n+2})$ and the number of function evaluations is $r(n+1)$.
+        \item \textbf{Adaptive quadrature}: 
+            Let 
+            $$f(x) = e^{-3x} \sin 4x$$
+            and suppose we need to calculate $\int_0^4 f(x)\,dx$.
+            \bigbreak \noindent 
+            $f(x)$ varies dramatically for $x < 1$ and then has very small variation for $x > 1$.
+            It would be better to divide the interval $[0,4]$ into many smaller subintervals in the region $[0,1]$ and fewer subintervals in the region $[1,4]$.
+            \bigbreak \noindent 
+            We will do this subdivision \textbf{adaptively}, only when it helps improve the accuracy of numerical integration.
+            \bigbreak \noindent 
+            To do this, we need to obtain a good estimate of the error.
+        \item \textbf{Computing an error estimate via Richardson extrapolation}: 
+            Let $I_f = \int_a^b f(x) \,dx$ and consider the \textbf{Simpson rule} 
+            $$S(a,b) = \frac{h}{3} \brack{f(a) + 4f(a+h) + f(b)},$$
+            where $h = (b - a)/2$. 
+            \bigbreak \noindent 
+            Let $S_1 = S(a,b)$.
+            \bigbreak \noindent 
+            Since the composite Simpson rule is a \textbf{fourth-order accurate} method, we have
+            $$I_f = S_1 + Kh^4 + \mathcal{O}(h^5).$$
+            Now consider using the \textbf{composite Simpson rule} with a step-size of $h/2$ on the subintervals $[a,a+h]$ and $[a+h,b]$:
+            \begin{align*}
+                S(a,a+h) &= \frac{h}{6}\left[f(a) + 4f(a + h/2) + f(a + h)\right],\\
+                \\
+            S(a+h,b) &= \frac{h}{6}\left[f(a+h) + 4f(a + 3h/2) + f(b)\right].\\
+            \end{align*}
+            Let $S_2 = S(a,a+h) + S(a+h,b)$.
+            \bigbreak \noindent 
+            Then we have
+            $$I_f = S_2 + K\paren{\frac{h}{2}}^4 + \mathcal{O}(h^5).$$
+            \bigbreak \noindent 
+            Now consider using the \textbf{composite Simpson rule} with a step-size of $h/2$ on the subintervals $[a,a+h]$ and $[a+h,b]$:
+            \begin{align*}
+                S(a,a+h) &= \frac{h}{6}\left[f(a) + 4f(a + h/2) + f(a + h)\right],\\
+                \\
+                S(a+h,b) &= \frac{h}{6}\left[f(a+h) + 4f(a + 3h/2) + f(b)\right].\\
+            \end{align*}
+            Let $S_2 = S(a,a+h) + S(a+h,b)$.
+            \bigbreak \noindent 
+            Then we have
+            $$I_f = S_2 + K\paren{\frac{h}{2}}^4 + \mathcal{O}(h^5).$$
+            \bigbreak \noindent 
+            Therefore,
+            $$S_1 + Kh^4 + \mathcal{O}(h^5) = S_2 + K\paren{\frac{h}{2}}^4 + \mathcal{O}(h^5).$$
+            Then we solve for the error term $Kh^4$:
+            $$Kh^4 = \frac{16}{15}\brack{S_2 - S_1} + \mathcal{O}(h^5).$$
+            \bigbreak \noindent 
+            From this we conclude that
+            \begin{align*}
+                I_f - S_1 &= \frac{16}{15}\left[S_2 - S_1\right] + \mathcal{O}(h^5),\\
+                \\
+                I_f - S_2 &= \frac{1}{15}\left[S_2 - S_1\right] + \mathcal{O}(h^5).\\
+            \end{align*}
+        \item \textbf{Divide-and-conquer}: We now describe a \textbf{divide-and-conquer} approach to obtain a quadrature approximation $Q_f$ of $I_f = \int_a^b f(x)\,dx$ such that
+            $$\abs{Q_f - I_f} < \mathtt{tol},$$
+            where $\mathtt{tol}$ is some user-specified tolerance.
+            \bigbreak \noindent 
+            The idea is to do an \textbf{adaptive local refinement} of the grid of points on which we perform the composite Simpson rule (or any other quadrature rule):
+            $$a = t_0 < t_1 < \cdots < t_r = b.$$
+            Over each subinterval $[t_{i-1}, t_i]$, we compute $Q_i \approx I_i = \int_{t_{i-1}}^{t_i} f(x)\,dx$ such that
+            $$\abs{Q_i - I_i} < \frac{h_i}{b-a}\mathtt{tol},$$
+            where $h_i = t_i - t_{i-1}$, and then let
+            $$Q_f = \sum_{i=1}^r Q_i.$$
+            Then,
+            \begin{align*}
+                \abs{Q_f - I_f}
+                &= \abs{\sum_{i=1}^r Q_i - \sum_{i=1}^r I_i} \\
+                &= \abs{\sum_{i=1}^r (Q_i - I_i)} \\
+                &\leq \sum_{i=1}^r \abs{ Q_i - I_i} \qquad \text{(by the Triangle Inequality)}\\
+                &< \sum_{i=1}^r \frac{h_i}{b - a} \mathtt{tol} \\
+                &= \frac{\mathtt{tol}}{b - a}  \sum_{i=1}^r h_i \\
+                &= \mathtt{tol}.
+            .\end{align*}
+            \bigbreak \noindent 
+            Thus, we just need to check that our error estimate for the current subinterval is small enough.
+            \bigbreak \noindent 
+            If the error estimate is not small enough, we divide the current subinterval into two equal pieces and repeat (recursively).
     \end{itemize}
 
 
