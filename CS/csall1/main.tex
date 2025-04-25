@@ -8976,6 +8976,138 @@ indicate which strong entity the weak entity depends upon.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsection{Standard linkage and external subroutines}
+    \begin{itemize}
+        \item \textbf{External subprograms}: Subprograms are similar to internal subroutines but they are outside, or external, to our program. 
+            \bigbreak \noindent 
+            In Assembler, they have their own CSECT
+            \bigbreak \noindent 
+            An external subprogram is a type of subroutine but
+            \begin{itemize}
+                \item It is located outside of the caller's CSECT.
+                \item It has its own CSECT.
+                \item Is actually a subprogram (although it's often mistakenly referred to as a subroutine).
+                \item External subprograms can be written in COBOL, C, C++, Metal C, Java, etc., on the mainframe
+            \end{itemize}
+            \bigbreak \noindent 
+            Just like defining internal subroutines, there are standards and conventions that must be followed.
+            \bigbreak \noindent 
+            In ASSIST, subprograms are not really "external". Simulated by adding a new CSECT below the storage of the CSECT above
+            \bigbreak \noindent 
+            Must have full standard entry and exit linkage. One END statement refers to first CSECT at the top of the file
+            \bigbreak \noindent 
+            Standards dictate that a parameter list must be declared in a very specific manner in Assembler. Parameters are only passed by reference in Assembler and NEVER by value.  A parameter list is a set of contiguous fullwords, each containing the address of a parameter, or variable, to be passed.
+            \bigbreak \noindent 
+            Here is the sequence of instructions calling an external subprogram using a parameter list:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA   1,PARMLIST    POINT R1 AT PARMLIST
+                L    15,=V(SUBPGM) LOAD 15 WITH ADDR OF SUBPGM
+                BALR 14,15         BRANCH AND LINK TO SUBRTN
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, when the subprogram is finished, branch back to the instruction in the caller immediately following the call, or BALR:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            BR 14 RETURN TO CALLER 
+            \end{cppcode}
+            When the subprogram is completes its task and is ready to return to the caller, it must:
+            \begin{enumerate}
+                \item The standard exit linkage restores the caller's registers
+                \item Return to the caller using: BR 14
+            \end{enumerate}
+        \item \textbf{DROP Statement}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DROP R
+            \end{cppcode}
+            \bigbreak \noindent 
+            Or
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DROP R1,R2,...,RN
+            \end{cppcode}
+            \bigbreak \noindent 
+            It ends the "domain" of a USING statement. The DROP informs the Assembler that register R or registers R1,R2,...,Rn are no longer to be associated with label.
+            \bigbreak \noindent 
+            Or, that the specified register is no longer (for instructions below) supposed to be used to convert implicit addresses to explicit addresses for encoding instructions.
+        \item \textbf{Dummy SECTions, or DSECTs}: A dummy section is used to specify a format that can be associated with a particular area in storage without producing any object code.
+            \bigbreak \noindent 
+            The end of a dummy section is signaled by the occurrence of a CSECT statement, another DSECT statement or an END statement
+            \bigbreak \noindent 
+            An example DSECT definition:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                $TABELEM DSECT
+                $STCKNUM DS    F
+                $ARTIST  DS    CL24
+                $TITLE   DS    CL24
+                $INSTOCK DS    F
+                $PRICE   DS    F
+            \end{cppcode}
+            \bigbreak \noindent 
+            specifies the format of a table element. The labels \$STCKNUM, \$ARTIST, etc., can be used rather than displacements into the element itself.
+            \bigbreak \noindent 
+            Note the convention to use the \$ to denote the name of a DSECT and its fields
+            \bigbreak \noindent 
+            Before a DSECT can be used, a USING statement must be coded
+            \bigbreak \noindent 
+            \begin{cppcode}
+            USING $TABELEM,3
+            \end{cppcode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Tables}
+    \begin{itemize}
+        \item \textbf{Tables}: tables in assembler are like arrays in higher-level languages. Like arrays, Assembler tables are defined in storage – and given a name – to store related data items.
+            \bigbreak \noindent 
+            Examples of "related" data items or data items of "similar character"
+            \begin{itemize}
+                \item the ages of each each individual student in class
+                \item the account balances of checking accounts of bank customers
+                \item the daily average temperature in New York City for the calendar year
+                \item the names of the students in an Assembler class
+            \end{itemize}
+            \bigbreak \noindent 
+            In an array, we call the storage for an individual data item an element. In Assembler, this storage is called an entry. In arrays, we can only store one data item per element and, unless an array of objects, all data items must be of the same primitive data type. In Assembler tables, we have complete freedom to store any combination of data items and types in a single entry of a table.
+            \bigbreak \noindent 
+            In Assembler, we can define a table in storage using any storage class. We only need to be sure that the table is big enough in bytes to hold all of the data we need it to hold.
+            \bigbreak \noindent 
+            Here is an example of an Assembler table definition that can hold integer test scores for up to 50 students
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SCORES DC 50F'0'
+            \end{cppcode}
+            \bigbreak \noindent 
+            Each of the 50 fullwords can hold a single student's test score
+            \bigbreak \noindent 
+            We could store the grades and then process the table like an array to calculate an average and/or find the minimum and maximum scores.
+            \bigbreak \noindent 
+            With the table declared on the previous slide, the following slide displays the code for a read loop that reads records from a file with up to 50 records
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA 2,SCORES R2 -> SCORES TABLE (OUR TABLE POINTER)
+                SR 3,3 R3 = 0 (OUR COUNT OF FILLED TABLE ENTRIES)
+                *
+                XREAD RECORD,80 READ FIRST RECORD
+                *
+            LOOP1 BNZ ENDLOOP1 BRANCH TO ENDLOOP1 IF NO MORE RECORDS
+                *
+                LA 3,1(,3) ADD 1 TO FILLED ENTRY COUNTER
+                XDECI 4,RECORD GET SCORE FROM RECORD
+                ST 4,0(2) STORE SCORE INTO TABLE ENTRY
+                *
+                LA 2,4(,2) R2 -> NEXT FULLWORD TABLE ENTRY
+                *
+                XREAD RECORD,80 READ NEXT RECORD
+                B LOOP1 BRANCH BACK TO TOP OF LOOP1
+                *
+                ENDLOOP1 DS 0H
+            \end{cppcode}
+    \end{itemize}
+
 
 
 
