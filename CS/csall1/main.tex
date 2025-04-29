@@ -9056,6 +9056,101 @@ indicate which strong entity the weak entity depends upon.
             \begin{cppcode}
             USING $TABELEM,3
             \end{cppcode}
+        \item \textbf{Standard Entry and Exit Linkage Conventions}:
+            \begin{itemize}
+                \item Conventions about how to call a subprogram and return from it were standardized many years ago by a group of Assembler developers. What follows is a description of those conventions.
+                \item Standards dictate that, when control is passed to an external subprogram, register 15 contains the address of the subprogram.
+                \item Standards dictate that register 14 contains the address of the next instruction to execute in the caller program, i.e., the one following the call to the subprogram, i.e., the instruction.
+                \item Standards dictate that register 13 contains the address of an 18-fullword save area in the caller's storage in which its own registers will be saved by a called subprogram(!).
+                \item Just as was presented in the previous chapter when calling internal subroutines, parameters are passed to an external subprogram in exactly the same manner. Standards dictate that register 1 contains the address of the beginning fullword of the parameter list if parameters are passed.
+                \item Return codes are passed back to the caller in register 15.
+                \item A simple calculated value can be passed back to the caller in register 0 (rare, and should be avoided).
+                \item As hinted above while talking about register 13, the subprogram is responsible for storing the contents of the caller's registers upon entry to the routine and restoring those values before returning control to the caller.
+            \end{itemize}
+        \item \textbf{Format of 18F save area}
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{p{4cm}}
+                    Unused \\
+                    Backward Pointer \\
+                    Forward pointer \\
+                    R14 \\
+                    R15 \\
+                    R1\\
+                    R2\\
+                    R3\\
+                    R4\\
+                    R5\\
+                    R6\\
+                    R7\\
+                    R8\\
+                    R9\\
+                    R10\\
+                    R11\\
+                    R12
+                \end{tabular}
+            \end{center}
+            \bigbreak \noindent 
+            Notice that we do not include R13
+        \item \textbf{Standard entry linkage}: The following code should be included as the first lines of each CSECT
+            \bigbreak \noindent 
+            \begin{cppcode}
+            pgmName    CSECT
+                       STM   14,12,12(13)
+                       LR    12,15
+                       USING pgmName,12
+                       LA    14,name_of_18F_save_area_in_pgmName
+                       ST    13,4(,14)
+                       ST    14,8(,13)
+                       LR    13,14
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            STM   14,12,12(13) 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Saves all of the caller's registers, except for register 13, in the caller's 18-fullword register save area.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LR    12,15
+            Using pgmName,12
+            \end{cppcode}
+            Puts the address of pgmName in R12, then establishes R12 as the base register for pgmName
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LA    14,name_of_18F_save_area_in_pgmName
+            \end{cppcode}
+            points register 14 to an 18-fullword register save area in the current program, pgmName's, storage where its own registers will be saved if it calls a subprogram itself.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ST    13,4(,14)
+            \end{cppcode}
+            \bigbreak \noindent 
+            stores the address of the caller's 18-fullword register save area in the current program, pgmName's, own 18- fullword register save area. This value in register 13 is known as the \textbf{backward pointer.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ST    14,8(,13)
+            \end{cppcode}
+            stores the address of the current program, pgmName's, 18-fullword register save area in the caller's 18- fullword register save area. This value in register 14 is known as the \textbf{forward pointer}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LR    13,14
+            \end{cppcode}
+            \bigbreak \noindent 
+            now points register 13 to the current program, pgmName's, 18-fullword register save area in case it calls a subprogram itself.
+        \item \textbf{Standard Exit Linkage}: The following code should be included as the last lines of executable code in each CSECT if no return code is being passed back in register 15 (and no calculated value is being returned in register 0:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            L    13,4(,13)     
+            LM   14,12,12(13)
+            BR   14
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            L    13,4(,13)
+            \end{cppcode}
+            
+
     \end{itemize}
 
     \pagebreak 
