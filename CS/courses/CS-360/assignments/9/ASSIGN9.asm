@@ -189,6 +189,7 @@ NOPRINT  DS    0H
 ENDLOOP2 DS    0H
 *
 * Print Totals page headers
+*
          AP    PPAGECTR(2),=PL1'1'       Increase page count to final
          MVC   OPAGENM(4),=X'40202120'   Ep for final page count
          ED    OPAGENM(4),PPAGECTR       Edit page count to PL
