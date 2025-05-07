@@ -120,7 +120,6 @@
             \begin{cppcode}
                 LA   R,1(,R)
             \end{cppcode}
-            \end{align*}
         \item \textbf{Decrement register $R$}
             \begin{cppcode}
                 BCTR R,0 
@@ -142,7 +141,368 @@
                         XPRNT DETAIL,133
                         XREAD RECORD,80
                         BC    B'1111',LOOP1
-                ENDLOOP1
+                        ENDLOOP1
+                    \end{cppcode}
+        \item \textbf{Default sign digits}:
+            \begin{itemize}
+                \item \textbf{Positive:} C
+                \item \textbf{Negative:} D
+            \end{itemize}
+        \item \textbf{Determine how many bytes of packed decimal storage you will need to declare to hold a converted zoned decimal number}: We take
+            \begin{align*}
+                \lfloor\text{len(zoned decimal bytes)}/2\rfloor + 1
+            .\end{align*}
+
+        \item \textbf{SRP syntax}:
+            \bigbreak \noindent 
+            \textbf{Left shift}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                SRP PNUM2(11),4,0 
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Right shift}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                SRP PNUM3(10),64-3,5
+            \end{cppcode}
+        \item \textbf{Decker's Rules for Packed Decimal Instructions}:
+            \begin{itemize}
+                \item Begin the label, or name, of ALL packed decimal fields with the letter P, for Packed
+                \item Declare ALL packed decimal fields with a DC, a specific length in bytes and initialized to 0 (unless to some other value)
+                \item NEVER let lengths default! Code a length on every packed operand where it CAN be coded!
+            \end{itemize}
+        \item \textbf{Errors with packed decimals}:
+            \begin{itemize}
+                \item \textbf{Data Exception (S0C7)}: At least one of the operands is not a valid packed decimal representation
+                \item \textbf{Decimal-overflow Exception (S0CA)}: The result is too large for the receiving field
+            \end{itemize}
+        \item \textbf{Errors that occur with MP}:
+            \begin{itemize}
+                \item \textbf{Specification Exception (S0C6)}: – if length of second operand is greater than 8 or if length of the second operand, the multiplier, is greater than length of the first operand, the multiplicand
+                \item \textbf{Data Exception – (S0C7)}: if the first $n$ bytes of the first operand are not all zeros where $n$ is the length of the second operand or if at least one of the operands is not a valid packed decimal number
+            \end{itemize}
+        \item \textbf{Errors that occur with DP}:
+            \begin{itemize}
+                \item \textbf{Specification Exception (S0C6)}: if length of second operand is greater than 8 or if length of the second operand is greater than or equal to the length of the first operand.
+                \item \textbf{Decimal-divide Exception  (S0CB)}: if quotient will not fit in n bytes where n is the length of the first operand minus the length of the second operand.
+                \item \textbf{Data Exception (S0C7)}: if at least one of the operands is not a valid packed decimal number 
+            \end{itemize}
+        \item \textbf{Errors that occur with SRP}: 
+            \begin{itemize}
+                \item \textbf{Decimal-overflow Exception  (S0CA)}: if a left shift results in losing nonzero digits.
+            \end{itemize}
+        \item \textbf{Errors that occur with CVB}: 
+            \begin{itemize}
+                \item \textbf{Specification Exception – S0C6 –}: if the second operand is not on a doubleword boundary.
+                \item \textbf{Data Exception – S0C7 –}: if the doubleword does not hold a valid packed decimal number.
+                \item \textbf{Fixed-point Divide Exception – S0C9 –} if the packed decimal number at the D(X,B) address is too large to be represented in 32 SIGNED bits in the register.
+            \end{itemize}
+        \item \textbf{Errors that occur with CVD}: 
+            \begin{itemize}
+                \item \textbf{Specification Exception – S0C6 –}: if the second operand is not on a doubleword boundary.
+            \end{itemize}
+        \item \textbf{Notes about ED and EDMK}: Digits are moved from the source field, one at a time, and from left to right.
+            \bigbreak \noindent 
+            If not enough digit selectors, the result will be truncated on the right
+            \bigbreak \noindent 
+            A Data Exception – S0C7 – can occur if the source field is not a valid packed decimal number.
+        \item \textbf{RS instructions}: RS instructions are registers to storage, they have the form
+            \bigbreak \noindent 
+            \begin{cppcode}
+            NAME   R1,R2,D(B)
+            \end{cppcode}
+        \item \textbf{Internal vs external subroutines}: An internal subroutine in Assembler is one that is located within a single control section, or CSECT.
+            \bigbreak \noindent 
+            \textbf{External subroutines}
+            \begin{itemize}
+                \item It is located outside of the caller's CSECT.
+                \item It has its own CSECT.
+                \item Is actually a subprogram (although it's often referred to as a subroutine).
+                \item External subprograms can be written in C++, Java, etc., on the mainframe
+            \end{itemize}
+        \item \textbf{Notes about internal subroutines}: There are specific standards that Assembler programmers worldwide must follow to call subroutines and subprograms.
+        \item \textbf{Internal subroutine standards}:
+            \begin{itemize}
+                \item On entrance to a subroutine, register 1 holds the address of a parameter list (if parameters need to be passed in)
+                \item On entrance to a subroutine, the initial value in any register that will be altered by the subroutine should be saved using ST and/or STM as necessary
+                \item Before exiting a subroutine, the initial value in any register that was altered by the subroutine should be restored using L and/or LM as necessary
+            \end{itemize}
+        \item \textbf{Defining an Internal Subroutine}: The following puts a label in storage without moving the location counter or actually declaring storage:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rtnName DS 0H
+            \end{cppcode}
+            Note that the name of the subroutine can also be placed on the subroutine's first instruction.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rtnName STM 3,7,SUBSAVE
+            \end{cppcode}
+        \item \textbf{Parameter list}: Standards dictate that a parameter list must be declared in a very specific manner in Assembler.
+            \bigbreak \noindent 
+            Parameters are only passed by reference in Assembler and NEVER by value.
+            \bigbreak \noindent 
+            A parameter list is a set of contiguous fullwords, each containing the address of a parameter, or variable, to be passed.
+            \bigbreak \noindent 
+            To declare a parameter list that allows the addresses in the fullwords in the parameter list to be virtual, we use Address Constants, or ADCONs, defined as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label DC A(expression)
+            \end{cppcode}
+            \bigbreak \noindent 
+            If \textbf{expression} is a non-negative integer, the generated fullword will contain the binary representation of that integer, which is the same as declaring
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label DC F'expression'
+            \end{cppcode}
+            \bigbreak \noindent 
+            If expression is a $label$ or $label+n$, the generated fullword will contain the address of label or $label+n$.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARM DC A(5)
+            \end{cppcode}
+            \bigbreak \noindent 
+            declares a fullword at label PARM in storage as:
+            \bigbreak \noindent 
+            \begin{center}
+                00000005
+            \end{center}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARMLIST DC A(FIELD1)
+            \end{cppcode}
+            \bigbreak \noindent 
+            declares a fullword at label PARMLIST in storage as: 00000148, if FIELD1 is declared in storage and is at location counter value 000148 after assembly
+            \bigbreak \noindent 
+            \begin{cppcode}
+            000148 FIELD1 DC F'34220'
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PARMLIST DC A(45,FIELD2)
+            \end{cppcode}
+            declares two fullwords at label PARMLIST in storage as:
+            \bigbreak \noindent 
+            \begin{center}
+                0000002D00000274
+            \end{center}
+            if the following is declared in storage and is at location counter value 000274 after assembly
+            \bigbreak \noindent 
+            \begin{cppcode}
+            000274 FIELD2 DC F'2301.00'
+            \end{cppcode}
+            \bigbreak \noindent 
+            Another example declaration:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PARMLIST DC A(FIELD3)
+                         DC A(34)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Standards dictate that, if the internal subroutine needs parameters passed into it, set up the parameter list similarly to what is shown immediately above
+            \bigbreak \noindent 
+            Then load the address of PARM or PARMLIST into register 1 before calling the subroutine.
+            \bigbreak \noindent 
+            By the way, it's the same for passing parameters to external subprograms!
+        \item \textbf{Passing control to subroutine}: Here is the sequence of instructions calling an internal subroutine using a parameter lis
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA 1,PARMLIST POINT R1 AT PARMLIST
+                BAL 11,SUBRTN BRANCH AND LINK TO SUBRTN
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, when the subroutine is finished, branch back to the instruction in the caller immediately following the call, or BAL:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            BR 11 RETURN TO CALLER
+            \end{cppcode}
+        \item \textbf{Using parameters}: In the subroutine, after we save the caller's registers, we dereference the parms
+            \bigbreak \noindent 
+            \begin{cppcode}
+                STM   2,4,SAVEREGS   STORE REGS TO BE USED
+                LM    2,4,0(1)
+            \end{cppcode}
+        \item \textbf{Returning control to caller}: When the subroutine completes its task and is ready to return to the caller, it must:
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Restore the caller's registers using either a Load (L) if only a single register needs to be restored or Load Multiple (LM) if more than one
+                \item Return to the caller using: BR 11
+            \end{itemize}
+        \item \textbf{External subprograms}: Subprograms are similar to internal subroutines but they are outside, or external, to our program. 
+            \bigbreak \noindent 
+            In Assembler, they have their own CSECT
+            \bigbreak \noindent 
+            An external subprogram is a type of subroutine but
+            \begin{itemize}
+                \item It is located outside of the caller's CSECT.
+                \item It has its own CSECT.
+                \item Is actually a subprogram (although it's often mistakenly referred to as a subroutine).
+                \item External subprograms can be written in COBOL, C, C++, Metal C, Java, etc., on the mainframe
+            \end{itemize}
+        \item \textbf{Calling a external subroutine}:
+            Here is the sequence of instructions calling an external subprogram using a parameter list:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LA   1,PARMLIST    POINT R1 AT PARMLIST
+                L    15,=V(SUBPGM) LOAD 15 WITH ADDR OF SUBPGM
+                BALR 14,15         BRANCH AND LINK TO SUBRTN
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, when the subprogram is finished, branch back to the instruction in the caller immediately following the call, or BALR:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BR 14 RETURN TO CALLER 
+            \end{cppcode}
+        \item \textbf{DROP Statement}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DROP R
+            \end{cppcode}
+            \bigbreak \noindent 
+            Or
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DROP R1,R2,...,RN
+            \end{cppcode}
+            \bigbreak \noindent 
+            It ends the "domain" of a USING statement. The DROP informs the Assembler that register R or registers R1,R2,...,Rn are no longer to be associated with label.
+            \bigbreak \noindent 
+            Or, that the specified register is no longer (for instructions below) supposed to be used to convert implicit addresses to explicit addresses for encoding instructions.
+        \item \textbf{Dummy SECTions, or DSECTs}: A dummy section is used to specify a format that can be associated with a particular area in storage without producing any object code.
+            \bigbreak \noindent 
+            The end of a dummy section is signaled by the occurrence of a CSECT statement, another DSECT statement or an END statement
+            \bigbreak \noindent 
+            An example DSECT definition:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                $TABELEM DSECT
+                $STCKNUM DS    F
+                $ARTIST  DS    CL24
+                $TITLE   DS    CL24
+                $INSTOCK DS    F
+                $PRICE   DS    F
+            \end{cppcode}
+            \bigbreak \noindent 
+            specifies the format of a table element. The labels \$STCKNUM, \$ARTIST, etc., can be used rather than displacements into the element itself.
+            \bigbreak \noindent 
+            Note the convention to use the \$ to denote the name of a DSECT and its fields
+            \bigbreak \noindent 
+            Before a DSECT can be used, a USING statement must be coded
+            \bigbreak \noindent 
+            \begin{cppcode}
+            USING $TABELEM,3
+            \end{cppcode}
+        \item \textbf{Standard Entry and Exit Linkage Conventions}:
+            \begin{itemize}
+                \item Conventions about how to call a subprogram and return from it were standardized many years ago by a group of Assembler developers. What follows is a description of those conventions.
+                \item Standards dictate that, when control is passed to an external subprogram, register 15 contains the address of the subprogram.
+                \item Standards dictate that register 14 contains the address of the next instruction to execute in the caller program, i.e., the one following the call to the subprogram, i.e., the instruction.
+                \item Standards dictate that register 13 contains the address of an 18-fullword save area in the caller's storage in which its own registers will be saved by a called subprogram(!).
+                \item Just as was presented in the previous chapter when calling internal subroutines, parameters are passed to an external subprogram in exactly the same manner. Standards dictate that register 1 contains the address of the beginning fullword of the parameter list if parameters are passed.
+                \item Return codes are passed back to the caller in register 15.
+                \item A simple calculated value can be passed back to the caller in register 0 (rare, and should be avoided).
+                \item As hinted above while talking about register 13, the subprogram is responsible for storing the contents of the caller's registers upon entry to the routine and restoring those values before returning control to the caller.
+            \end{itemize}
+        \item \textbf{Format of 18F save area}
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{p{4cm}}
+                    Unused \\
+                    Backward Pointer \\
+                    Forward pointer \\
+                    R14 \\
+                    R15 \\
+                    R1\\
+                    R2\\
+                    R3\\
+                    R4\\
+                    R5\\
+                    R6\\
+                    R7\\
+                    R8\\
+                    R9\\
+                    R10\\
+                    R11\\
+                    R12
+                \end{tabular}
+            \end{center}
+            \bigbreak \noindent 
+            Notice that we do not include R13
+        \item \textbf{Standard entry linkage}: The following code should be included as the first lines of each CSECT
+            \bigbreak \noindent 
+            \begin{cppcode}
+            pgmName    CSECT
+                       STM   14,12,12(13)
+                       LR    12,15
+                       USING pgmName,12
+                       LA    14,name_of_18F_save_area_in_pgmName
+                       ST    13,4(,14)
+                       ST    14,8(,13)
+                       LR    13,14
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            STM   14,12,12(13) 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Saves all of the caller's registers, except for register 13, in the caller's 18-fullword register save area.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LR    12,15
+            Using pgmName,12
+            \end{cppcode}
+            Puts the address of pgmName in R12, then establishes R12 as the base register for pgmName
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LA    14,name_of_18F_save_area_in_pgmName
+            \end{cppcode}
+            points register 14 to an 18-fullword register save area in the current program, pgmName's, storage where its own registers will be saved if it calls a subprogram itself.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ST    13,4(,14)
+            \end{cppcode}
+            \bigbreak \noindent 
+            stores the address of the caller's 18-fullword register save area in the current program, pgmName's, own 18- fullword register save area. This value in register 13 is known as the \textbf{backward pointer.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ST    14,8(,13)
+            \end{cppcode}
+            stores the address of the current program, pgmName's, 18-fullword register save area in the caller's 18- fullword register save area. This value in register 14 is known as the \textbf{forward pointer}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LR    13,14
+            \end{cppcode}
+            \bigbreak \noindent 
+            now points register 13 to the current program, pgmName's, 18-fullword register save area in case it calls a subprogram itself.
+        \item \textbf{Standard Exit Linkage}: The following code should be included as the last lines of executable code in each CSECT if no return code is being passed back in register 15 (and no calculated value is being returned in register 0:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            L    13,4(,13)     
+            LM   14,12,12(13)
+            BR   14
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            L    13,4(,13)
+            \end{cppcode}
+        \item \textbf{Tables}: tables in assembler are like arrays in higher-level languages. Like arrays, Assembler tables are defined in storage – and given a name – to store related data items.
+            \bigbreak \noindent 
+            Examples of "related" data items or data items of "similar character"
+            \begin{itemize}
+                \item the ages of each each individual student in class
+                \item the account balances of checking accounts of bank customers
+                \item the daily average temperature in New York City for the calendar year
+                \item the names of the students in an Assembler class
+            \end{itemize}
+            \bigbreak \noindent 
+            In an array, we call the storage for an individual data item an element. In Assembler, this storage is called an entry. In arrays, we can only store one data item per element and, unless an array of objects, all data items must be of the same primitive data type. In Assembler tables, we have complete freedom to store any combination of data items and types in a single entry of a table.
+            \bigbreak \noindent 
+            In Assembler, we can define a table in storage using any storage class. We only need to be sure that the table is big enough in bytes to hold all of the data we need it to hold.
+            \bigbreak \noindent 
+            Here is an example of an Assembler table definition that can hold integer test scores for up to 50 students
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SCORES DC 50F'0'
             \end{cppcode}
     \end{itemize}
 
@@ -201,9 +561,35 @@
             \bigbreak \noindent 
             \begin{cppcode}
             BCT   R,D(X,B)
+        \end{cppcode}
+        \bigbreak \noindent 
+        Causes contents of $R$  to be decremented by one. If after this decrement $R$ does not contain zero, a branch to the address D(X,B) is taken. If $R$ does contain zero, the branch is not taken
+    \item \textbf{CVB (4F) (RX) (Convert to binary)}: converts a packed decimal number in a doubleword of storage on a doubleword boundary to its binary equivalent and stores it in a register
+        \bigbreak \noindent 
+        \begin{cppcode}
+            label CVB R1,D2(X2,B2) Explicit addr.
+            label CVB R1,DWORD Implicit addr.
+        \end{cppcode}
+    \item \textbf{CVD (4E) (RX) (Convert to decimal)}: converts a binary number in the first operand register to its packed decimal equivalent in a doubleword on a doubleword boundary
+        \bigbreak \noindent 
+        \begin{cppcode}
+            label CVD R1,D2(X2,B2) Explicit addr.
+            label CVD R1,DWORD Implicit addr
+        \end{cppcode}
+        \item \textbf{BAL (45) (RX) (Branch and Link) Instruction}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            label BAL R1,D2(X2,B2)
             \end{cppcode}
             \bigbreak \noindent 
-            Causes contents of $R$  to be decremented by one. If after this decrement $R$ does not contain zero, a branch to the address D(X,B) is taken. If $R$ does contain zero, the branch is not taken
+            \begin{itemize}
+                \item \textbf{Link Part of the Instruction:} Puts the last three bytes of the PSW into register R1 and zeros out the first byte of R1 . Why?
+                \bigbreak \noindent 
+                Remember that the last three bytes of the PSW hold the address of the next instruction, i.e., where to return to after the subroutine.
+                \item \textbf{Branch Part of the Instruction:} After the link part described immediately above, the BAL instruction then takes an unconditional branch to the D(X,B) address, i.e., the address of the subroutine.
+            \end{itemize}
+
+
     \end{itemize}
 
     \bigbreak \noindent 
@@ -211,6 +597,75 @@
     \begin{itemize}
         \item \textbf{MVC (D2)}
         \item \textbf{CLC (D5)}: Sets condition code
+        \item \textbf{Pack (F2) (SS) (Zoned to packed conversion)}: A little like XDECI, It translates numbers in character format into a format which can can be used for arithmetic
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label PACK D1(L1,B1),D2(L2,B2)
+                label PACK label1(L1),label2(L2)
+            \end{cppcode}
+            \bigbreak \noindent 
+            PACK converts zoned decimal numbers into packed decimal numbers. Consider the zoned decimal F1F2C3, It does the following  
+            \begin{itemize}
+                \item The rightmost byte of the second operand is placed in the rightmost byte of the first operand, with zone and numeric digits reversed
+                \item The zone digits are stripped away and the remaining numeric digits from the second operand are moved to the first operand, right to left
+            \end{itemize}
+        \item \textbf{UNPK (F3) (SS) (Packed to zoned conversion)}: A little like XDECO, It translates numbers in a format which can be used for arithmetic to numbers in character format
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label UNPK D1(L1,B1),D2(L2,B2)
+                label UNPK label1(L1),label2(L2)
+            \end{cppcode}
+        \item \textbf{AP (FA) (SS) (Add)}: Add one packed decimal field to another
+            \bigbreak \noindent 
+            \begin{cppcode}
+                AP PFIELD1(5),PFIELD2(2)
+            \end{cppcode}
+        \item \textbf{SP (FB) (SS) (Subtract)}: Subtract one packed decimal field from another
+            \bigbreak \noindent 
+            \begin{cppcode}
+                SP PFIELD1(5),PFIELD2(2)
+            \end{cppcode}
+        \item \textbf{ZAP (F8) (SS) (Zero and add packed)}: Copy one packed decimal field to
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ZAP PFIELD1(5),PFIELD2(2)
+            \end{cppcode}
+        \item \textbf{MP (FC) (SS) (Multiply)}: multiply one packed decimal field by another.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label MP D1(L1,B1),D2(L2,B2) Explicit addr.
+                label MP PNUM1(L1),PNUM2(L2) Implicit addr
+            \end{cppcode}
+        \item \textbf{DP (FD) (SS) (Divide)}: divide one packed decimal field by another
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label DP D1(L1,B1),D2(L2,B2) Explicit addr.
+                label DP PNUM1(L1),PNUM2(L2) Implicit addr.
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both quotient and remainder are stored in the first operand. Also does not set the condition code.
+            \bigbreak \noindent 
+            \textbf{Note:} Remainder will be in the last $n$ bytes, where $n$ is the size of the second operand (divisor).
+        \item \textbf{CP (F9) (SS) (Compare)}: compare one packed decimal field with another.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label CP D1(L1,B1),D2(L2,B2) Explicit addr.
+                label CP PNUM1(L1),PNUM2(L2) Implicit addr.
+            \end{cppcode}
+        \item \textbf{SRP (F0) (SS) (Shift and round)}: Shift a packed decimal by decimal digits left or right
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label SRP D1(L,B1),D2(B2),i Explicit addr.
+                label SRP PNUM1(L),D2(B2),i Implicit addr.
+            \end{cppcode}
+        \item \textbf{ED (DE) (SS) (Edit)}: converts a packed decimal number to its printable EBCDIC equivalent.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label ED D1(L1,B1),D2(B2) Explicit addr.
+                label ED ONUM1(15),PNUM1 Implicit addr.
+            \end{cppcode}
+        \item \textbf{EDMK (DF) (SS)}: Edit and Mark (EDMK) is used exactly the same as Edit (ED). The only difference is that EDMK places the address of the first
+
     \end{itemize}
 
     \bigbreak \noindent 
@@ -224,6 +679,29 @@
         \item \textbf{CLI (95) (Compare logical immediate)}: Sets condition code
             \bigbreak \noindent 
             Compares the byte at D(B) with the specified byte
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{RS (Register to storage)}
+    \begin{itemize}
+        \item \textbf{STM (90) (RS) (Store Multiple) Instruction}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label STM R1,R2,D(B)
+            \end{cppcode}
+            Stores all registers from R1 through R2 to contiguous fullwords in that order in storage starting at D(B).
+            \bigbreak \noindent 
+            If R2 is less than R1 , then R1 through register 15 and register 0 through R2 are stored in that order in storage starting at D(B).
+        \item \textbf{LM (98) (RS) (Load Multiple) Instruction}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                label LM R1,R2,D(B)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Loads all registers from R1 through R2 from contiguous fullwords in that order from storage starting at D(B).
+            \bigbreak \noindent 
+            If R2 is less than R1 , then R1 through register 15 and register 0 through R2 are loaded in that order from storage starting at D(B)
+
     \end{itemize}
 
     \bigbreak \noindent 
@@ -261,6 +739,7 @@
             \end{cppcode}
             \bigbreak \noindent 
             Note that len is usually 133
+
     \end{itemize}
     
 
@@ -309,7 +788,39 @@
                 \item \textbf{Two} Number was converted greater than zero
                 \item \textbf{Three}: Tried to convert invalid number
             \end{itemize}
-
+        \item \textbf{Packed instruction condition codes}
+            \begin{itemize}
+                \item \textbf{AP, SP, ZAP}:
+                    \begin{itemize}
+                        \item 0 = the result is zero
+                        \item 1 = the result is negative
+                        \item 2 = the result is positive
+                        \item 3 = overflow
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    \textbf{Note:} Note that overflow does not automatically occur if the first operand is shorter than the second, only when the result of the arithmetic operation does not fit into the first operand
+                \item \textbf{CP}:
+                    \begin{itemize}
+                        \item 0 = the two values compared are equal
+                        \item 1 = the first operand's value is less than the second operand's
+                        \item 2 = the first operand's value is greater than the second operand's
+                        \item 3 - not used
+                    \end{itemize}
+                \item \textbf{SRP}:
+                    \begin{itemize}
+                        \item 0 = result is zero
+                        \item 1 = result is negative
+                        \item 2 = result is positive
+                        \item 3 = overflow has occurred
+                    \end{itemize}
+                \item \textbf{ED, EDMK}:
+                    \begin{itemize}
+                        \item 0 = source field is zero 
+                        \item 1 = source field is negative 
+                        \item 2 = source field is positive
+                        \item 3 = unused
+                    \end{itemize}
+            \end{itemize}
     \end{itemize}
 
     \pagebreak 
@@ -323,11 +834,29 @@
             \begin{align*}
                 OP_{1}OP_{2}R_{1}I_{1}B_{1}D_{1}D_{2}D_{3}
             \end{align*}
-        \item \textbf{SS}
+        \item \textbf{RS}:
+            \begin{align*}
+                h_{0}h_{0}h_{r_{1}}h_{r_{2}}h_{B}h_{D}h_{D}h_{D}
+            .\end{align*}
+
+
+        \item \textbf{SS (Type 3)}
             \begin{align*}
                 OP_{1}OP_{2}L_{1}L_{2}B_{1}DDDB_{2}DDD
             \end{align*}
             \textbf{Note:} $L_{1}L_{2}$ is the length minus 1
+        \item \textbf{SS (Type 2)}:
+            \begin{align*}
+                h_{0}h_{0}h_{L_{1}}h_{L_{2}} \quad h_{B_{1}}h_{D_{1}}h_{D_{1}}h_{D_{1}} \quad h_{B_{2}}h_{D_{2}}h_{D_{2}}h_{D_{2}}
+            .\end{align*}
+            where 
+            \begin{itemize}
+                \item \textbf{$h_{0}h_{0}$}: Specifies the opcode
+                \item \textbf{$h_{L_{1}}h_{L_{2}}$}: Specifies the length-1 of the arguments lengths
+                \item \textbf{$h_{B_{1}}h_{D_{1}}h_{D_{1}}h_{D_{1}} $}: Address of the first operand
+                \item \textbf{$h_{B_{2}}h_{D_{2}}h_{D_{2}}h_{D_{2}} $}: Address of the second operand
+            \end{itemize}
+
         \item \textbf{SI}
             \begin{align*}
                 OP_{1}OP_{2}I_{1}I_{2}BDDD
