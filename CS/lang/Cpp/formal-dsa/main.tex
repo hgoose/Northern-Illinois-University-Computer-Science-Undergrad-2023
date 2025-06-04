@@ -7140,6 +7140,60 @@ struct graph {
 \end{cppcode}
 
 \pagebreak \bigbreak \noindent 
+\subsection{DFS Topological sort with cycle detection}
+\bigbreak \noindent 
+To detect a cycle in your DFS‐based topological sort, you need to distinguish between
+\begin{itemize}
+    \item Nodes that have never been seen (white)
+    \item Nodes that are on the current recursion path (gray)
+    \item Nodes that have been fully explored (black)
+\end{itemize}
+\bigbreak \noindent 
+A back‐edge from a gray node to another gray node means you’ve found a cycle.
+
+\bigbreak \noindent 
+\begin{cppcode}
+typedef std::unordered_map<int, vector<int>> List;
+enum color : short {WHITE = 0, GRAY = 1, BLACK = 2};
+
+bool dfs(List& list, vector<color>& visited, stack<int>& s, int curr) {
+    visited[curr] = GRAY; // Mark in progress
+
+    for (auto& neighbor : list[curr]) {
+        if (visited[neighbor] == WHITE) {
+            if (!dfs(list, visited, s, neighbor)) return false;
+        } else if (visited[neighbor] == GRAY) {
+            return false;
+        }
+    }
+
+    visited[curr] = BLACK; // Mark done
+    s.push(curr);
+    return true;
+}
+
+vector<int> toposort(List& list) {
+    vector<color> visited(list.size(), WHITE);
+    stack<int> s;
+    vector<int> order;
+
+    for (auto& [node, _] : list) {
+        if (visited[node] == WHITE) {
+            if (!dfs(list, visited, s, node)) return {};
+        }
+    }
+
+    while (s.size()) {
+        order.push_back(s.top());
+        s.pop();
+    }
+    return order;
+}
+\end{cppcode}
+
+
+
+\pagebreak \bigbreak \noindent 
 \subsection{Union-Find Data Structure (Disjoint Set Union - DSU)}
 \bigbreak \noindent 
 The Union-Find data structure, also known as Disjoint Set Union (DSU), is used to efficiently handle dynamic connectivity queries. It is particularly useful in applications such as Kruskal's algorithm for finding the Minimum Spanning Tree (MST) and cycle detection in graphs.
