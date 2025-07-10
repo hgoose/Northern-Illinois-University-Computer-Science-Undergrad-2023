@@ -102,4 +102,145 @@
         \item \textbf{hasNextShort()}	
     \end{itemize}
 
+    \pagebreak 
+    \unsect{Arrays}
+    \bigbreak \noindent 
+    \subsection{Important methods}
+    \bigbreak \noindent 
+    These static methods are found in \texttt{java.util.Arrays}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Arrays.fill()}: Fills all elements of the specified array with the specified value.
+        \item \textbf{Arrays.equals()}: Returns a Boolean true value if both arrays are of the same type and all of the elements within the arrays are equal to each other. 
+        \item \textbf{Arrays.copyOf()}: Copies the specified array, truncating or padding with default values if necessary so the copy has the specified length.
+        \item \textbf{Arrays.copyOfRange()}: Copies the specified range from the index1 element up to, but not including, the index2 element of the specified array into a new array
+        \item \textbf{Arrays.sort()}
+        \item \textbf{Arrays.binarySearch}
+    \end{itemize}
+
+    \bigbreak \noindent 
+    \subsection{Sorting}
+    \bigbreak \noindent 
+    \subsection{The Comparable Interface}
+    \bigbreak \noindent 
+    In Java, the \texttt{Comparable<T>} interface (in java.lang) lets a class define its natural ordering by implementing a single method:
+    \bigbreak \noindent 
+    \begin{javacode}
+    public interface Comparable<T> {
+        int compareTo(T other);
+    }
+    \end{javacode}
+    \bigbreak \noindent 
+    Enables objects to be sorted (e.g. by Collections.sort() or Arrays.sort()), or used in sorted collections (e.g. TreeSet, TreeMap).
+    \bigbreak \noindent 
+    \textbf{Contract}:
+    \begin{itemize}
+        \item \textbf{this.compareTo(other) < 0} means this precedes other
+        \item \textbf{== 0} means they’re considered equal in ordering
+        \item \textbf{> 0} means this follows other
+    \end{itemize}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{javacode}
+        import java.util.Scanner;
+        import java.util.Collections;
+        import java.util.ArrayList;
+        import java.util.List;
+
+        public class t1 implements Comparable<t1> {
+            public int x,y;
+
+            public t1(int x, int y) { this.x = x; this.y = y; }
+
+            @Override
+            // Ascending
+            public int compareTo(t1 other) {
+                if (this.x == other.x) return 0; 
+                else if (this.x > other.x) return 1;
+                else return -1;
+            }
+
+            @Override
+            // Descending
+            public int compareTo(t1 other) {
+                if (this.x == other.x) return 0; 
+                else if (this.x > other.x) return -1;
+                else return 1;
+            }
+
+            public static void main(String[] args) {
+                ArrayList<t1> arr = new ArrayList<>(List.of(new t1(4,2), new t1(2,6), new t1(1,8), new t1(9,18), new t1(5,0)));
+
+                Collections.sort(arr);
+
+                for (t1 item : arr) {
+                    System.out.println("(" + item.x + "," + item.y + ")");
+                }
+            }
+        }
+    \end{javacode}
+
+    \pagebreak 
+    \subsection{Comparator}
+    \bigbreak \noindent 
+    The Comparator<T> interface (in java.util) defines a custom ordering for objects—even if the class itself doesn’t implement Comparable. It has one primary method
+    \bigbreak \noindent 
+    \begin{javacode}
+        public interface Comparator<T> {
+            /**
+            * Compares its two arguments for order.
+            *
+            * @param o1 the first object to be compared.
+            * @param o2 the second object to be compared.
+            * @return a negative integer if o1 <  o2,
+            *         zero                if o1 == o2,
+            *         a positive integer if o1 >  o2.
+            */
+            int compare(T o1, T o2);
+
+        }
+    \end{javacode}
+    \bigbreak \noindent 
+    We can use it to define an ordering for objects without implementing the Comparable interface
+    \bigbreak \noindent 
+    \begin{javacode}
+        import java.util.Collections;
+        import java.util.Comparator;
+        import java.util.ArrayList;
+        import java.util.List;
+
+        public class t1 {
+            public int x, y;
+
+            public t1(int x, int y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            public static void main(String[] args) {
+                List<t1> arr = new ArrayList<>(List.of( new t1(4,2), new t1(2,6), new t1(1,8), new t1(9,18), new t1(5,0)));
+
+                // 1) Create a Comparator that compares by x:
+                Comparator<t1> byX = new Comparator<>() {
+                    @Override
+                    public int compare(t1 a, t1 b) {
+                        // Integer.compare handles a.x < b.x, ==, >
+                        return Integer.compare(a.x, b.x);
+                    }
+                };
+
+                // 2) Sort using that Comparator:
+                Collections.sort(arr, byX);
+
+                // 3) Print out:
+                for (t1 item : arr) {
+                    System.out.println("(" + item.x + "," + item.y + ")");
+                }
+            }
+        }
+    \end{javacode}
+
+
+
+
 \end{document}
