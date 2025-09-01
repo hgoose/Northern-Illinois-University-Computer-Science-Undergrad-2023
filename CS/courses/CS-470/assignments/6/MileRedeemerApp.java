@@ -1,12 +1,12 @@
 /**********************************************************
 * *
-* CSCI 470/502 Assignment 4 summer 2025 *
+* CSCI 470/502 Assignment 6 summer 2025 *
 * *
 * Developer(s): Nate Warner *
 * *
-* Due Date: 07/18/2025 *
+* Due Date: 08/1/2025 *
 * *
-* Purpose: Console-based Java application with which a travel agent could
+* Purpose: gui-based Java application with which a travel agent could
             miles
             present options for travel destinations to a client who wants to redeem his or her accumulated frequent flyer
 * *
@@ -18,7 +18,7 @@ import java.io.IOException;
 
 /**********************************************************
 * *
-* CSCI 470/502 Assignment 4 summer 25 *
+* CSCI 470/502 Assignment 6 summer 25 *
 * *
 * Class Name: MileRedeemerApp
 * *
@@ -46,25 +46,6 @@ public class MileRedeemerApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-
-        // //create a file chooser
-        // FileChooser f = new FileChooser();
-        // //set the title
-        // f.setTitle("Opening the location..");
-        // //open the dialog box
-        // f.showOpenDialog(stage);
-        // HBox r = new HBox();
-        // r.setSpacing(20);
-        // //create scene
-        // Scene sc = new Scene(r,350,100);
-        //
-        // //set the scene
-        // stage.setScene(sc);
-        // //set title
-        // stage.setTitle("Sample file chooser");
-        // //display the result
-        // stage.show();
-
         Parent root = FXMLLoader.load(getClass().getResource("MileRedeemer.fxml"));
         Scene scene = new Scene(root); // attach scene graph to scene
         stage.setTitle("Mile Redeemer"); //displayed in window's title

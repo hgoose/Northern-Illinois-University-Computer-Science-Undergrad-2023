@@ -1,12 +1,12 @@
 /**********************************************************
 * *
-* CSCI 470/502 Assignment 4 summer 2025 *
+* CSCI 470/502 Assignment 6 summer 2025 *
 * *
 * Developer(s): Nate Warner *
 * *
-* Due Date: 07/18/2025 *
+* Due Date: 08/1/2025 *
 * *
-* Purpose: Console-based Java application with which a travel agent could
+* Purpose: gui-based Java application with which a travel agent could
             present options for travel destinations to a client who wants to redeem his or her accumulated frequent flyer
             miles
 * *
@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 /**********************************************************
 * *
-* CSCI 470/502 Assignment 4 summer 25 *
+* CSCI 470/502 Assignment 6 summer 25 *
 * *
 * Class Name: MileRedeemer
 * *
