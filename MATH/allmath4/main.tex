@@ -1,0 +1,549 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Math 4}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Math 4: Numerical Linear Algebra}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Numerical Linear Algebra}
+    \bigbreak \noindent 
+    \subsection{Introduction}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Matrix Notation}: For a matrix $A \in \mathbb{R}^{m\times n} $, we say
+            \begin{align*}
+                A = (a_{ij}) = \begin{bmatrix}
+                    a_{11} & a_{12} & \cdots & a_{1n} \\
+                    a_{21} & a_{22} & \cdots & a_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    a_{m1} & a_{m2} & \cdots & a_{mn}
+                \end{bmatrix}
+            \end{align*}
+            with $a_{ij} \in \mathbb{R} $.
+        \item \textbf{Vector notation}: For a vector $x \in \mathbb{R}^{n} $ (or $\mathbb{R}^{n\times 1} $), we have
+            \begin{align*}
+                x = \begin{bmatrix}
+                    x_{1} \\ x_{2} \\ \vdots \\ x_{n}
+                \end{bmatrix}
+            \end{align*}
+            for $x_{i} \in \mathbb{R} $.
+
+        \item \textbf{Submatrix notation (rows)}: 
+            \[
+                A(i,:) \in \mathbb{R}^{1 \times n} \;\;\Longleftrightarrow\;\;
+                A(i,:) = \bigl[\, a_{i1} \; a_{i2} \; \cdots \; a_{in} \,\bigr].
+            \]
+        \item \textbf{Submatrix notation (columns)}: 
+            \[
+                A(:,j) \in \mathbb{R}^{m \times 1} \;\;\Longleftrightarrow\;\;
+                A(:,j) =
+                \begin{bmatrix}
+                    a_{1j} \\
+                    a_{2j} \\
+                    \vdots \\
+                    a_{mj}
+                \end{bmatrix}.
+            \]
+        \item \textbf{Sparse Matrix}: A sparse matrix or sparse array is a matrix in which most of the elements are zero. There is no strict definition regarding the proportion of zero-value elements for a matrix to qualify as sparse but a common criterion is that the number of non-zero elements is roughly equal to the number of rows or columns.
+        \item \textbf{Dense Matrix}: if most of the elements are non-zero, the matrix is considered dense
+        \item \textbf{Sparsity}: The number of zero-valued elements divided by the total number of elements is sometimes referred to as the sparsity of the matrix.
+        \item \textbf{Band Matrix}: a band matrix or banded matrix is a sparse matrix whose non-zero entries are confined to a diagonal band, comprising the main diagonal and zero or more diagonals on either side.
+            \bigbreak \noindent 
+            \[
+                A(i_{1}:i_{2},:) \in \mathbb{R}^{(i_{2}-i_{1}+1) \times n}
+                \;\;\Longleftrightarrow\;\;
+                A(i_{1}:i_{2},:) =
+                \begin{bmatrix}
+                    a_{i_{1}1} & a_{i_{1}2} & \cdots & a_{i_{1}n} \\
+                    a_{i_{1}+1,1} & a_{i_{1}+1,2} & \cdots & a_{i_{1}+1,n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    a_{i_{2}1} & a_{i_{2}2} & \cdots & a_{i_{2}n}
+                \end{bmatrix}.
+            \]
+
+            \[
+                A(:,j_{1}:j_{2}) \in \mathbb{R}^{m \times (j_{2}-j_{1}+1)}
+                \;\;\Longleftrightarrow\;\;
+                A(:,j_{1}:j_{2}) =
+                \begin{bmatrix}
+                    a_{1j_{1}} & a_{1,j_{1}+1} & \cdots & a_{1j_{2}} \\
+                    a_{2j_{1}} & a_{2,j_{1}+1} & \cdots & a_{2j_{2}} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    a_{mj_{1}} & a_{m,j_{1}+1} & \cdots & a_{mj_{2}}
+                \end{bmatrix}.
+            \]
+            Where
+            \[
+                \begin{aligned}
+                    A(i_{1}:i_{2},:) &:\;\; \text{all rows between } i_{1} \text{ and } i_{2}, \;\text{across all columns}, \\[6pt]
+                    A(:,j_{1}:j_{2}) &:\;\; \text{all columns between } j_{1} \text{ and } j_{2}, \;\text{across all rows}.
+                \end{aligned}
+            \]
+        \item \textbf{Transposition}: $\mathbb{R}^{m\times n} \to \mathbb{R}^{m\times n} $
+            \begin{align*}
+                C = A^{\top} \iff c_{ij} = a_{ji}
+            .\end{align*}
+        \item \textbf{Addition} $\quad (\mathbb{R}^{m \times n} \times \mathbb{R}^{m \times n} \;\to\; \mathbb{R}^{m \times n})$
+            \[
+                C = A + B 
+                \;\;\Longrightarrow\;\; 
+                c_{ij} = a_{ij} + b_{ij}.
+            \]
+
+        \item \textbf{Scalar-matrix Multiplication: } $\quad (\mathbb{R} \times \mathbb{R}^{m \times n} \;\to\; \mathbb{R}^{m \times n})$
+            \[
+                C = \alpha A 
+                \;\;\Longrightarrow\;\; 
+                c_{ij} = \alpha a_{ij}.
+            \]
+
+        \item \textbf{Matrix-matrix Multiplication: } $\quad (\mathbb{R}^{m \times p} \times \mathbb{R}^{p \times n} \;\to\; \mathbb{R}^{m \times n})$
+            \[
+                C = AB 
+                \;\;\Longrightarrow\;\; 
+                c_{ij} = \sum_{k=1}^{p} a_{ik} b_{kj}.
+            \]
+        \item \textbf{Matrix-vector Multiplication: } $\quad (\mathbb{R}^{m \times n} \times \mathbb{R}^n \;\to\; \mathbb{R}^m)$
+            \[
+                y = Ax 
+                \;\;\Longrightarrow\;\; 
+                y_i = \sum_{j=1}^{n} a_{ij} x_j.
+            \]
+
+        \item \textbf{Inner product (or dot product): } $\quad (\mathbb{R}^n \times \mathbb{R}^n \;\to\; \mathbb{R})$
+            \[
+                c = x^T y 
+                \;\;\Longrightarrow\;\; 
+                c = \sum_{i=1}^{n} x_i y_i.
+            \]
+
+            \item \textbf{Outer product: } $\quad (\mathbb{R}^m \times \mathbb{R}^n \;\to\; \mathbb{R}^{m \times n})$
+            \[
+                C = x y^T 
+                \;\;\Longrightarrow\;\; 
+                c_{ij} = x_i y_j.
+            \]
+        \item \textbf{Flops}: A flop is a floating-point operation between numbers stored in a floating-point format on a computer.
+            \bigbreak \noindent 
+            If $x$ and $y$ are numbers stored in a floating point format, then the following operations are each one flop
+            \begin{align*}
+                x + y \quad x - y \quad xy \quad x / y
+            .\end{align*}
+
+
+
+
+
+
+
+    \end{itemize}
+
+
+
+    \pagebreak \bigbreak \noindent 
+    \subsection{Gaussian Elimination and its variants}
+    \bigbreak \noindent 
+    \subsubsection{Matrix Multiplication}
+    \bigbreak \noindent 
+    \begin{itemize}
+        \item \textbf{Matrix Multiplication}:        
+            In general, if $A$ is a real matrix with $m$ rows and $n$ columns, and $x$ is a real vector with $n$ entries, then
+            \[
+                A = 
+                \begin{bmatrix}
+                    a_{11} & \cdots & a_{1n} \\
+                    \vdots & \ddots & \vdots \\
+                    a_{m1} & \cdots & a_{mn}
+                \end{bmatrix}
+                \in \mathbb{R}^{m \times n}
+                \quad \text{and} \quad
+                x =
+                \begin{bmatrix}
+                    x_{1} \\
+                    \vdots \\
+                    x_{n}
+                \end{bmatrix}
+                \in \mathbb{R}^n.
+            \]
+            If $b = Ax$, then $b \in \mathbb{R}^m$ and
+            \[
+                b_i = \sum_{j=1}^n a_{ij} x_j
+                = a_{i1}x_1 + \cdots + a_{in}x_n, 
+                \quad i = 1, \ldots, m.
+            \]
+            Thus, $b_i$ is the \textbf{inner-product} between the $i$-row of $A$, 
+            \[
+                A(i,:) = [a_{i1} \;\; \cdots \;\; a_{in}], \quad (i = 1, \ldots, m)
+            \]
+            and the vector $x$.
+            \bigbreak \noindent 
+            Also,
+            \[
+                b = A(:,1) x_1 + \cdots + A(:,n)x_n,
+            \]
+            so $b$ is a \textbf{linear combination} of the columns of $A$, i.e.,
+            \[
+                A(:,j) = 
+                \begin{bmatrix}
+                    a_{1j} \\
+                    a_{2j} \\
+                    \vdots \\
+                    a_{mj}
+                \end{bmatrix},
+                \quad j = 1, \ldots, n.
+            \]
+        \item \textbf{Matrix-Matrix Multiplication}:
+            Let $A \in \mathbb{R}^{m \times n}$ and $X \in \mathbb{R}^{n \times p}$.
+            \bigbreak \noindent 
+            If $B = AX$ then $B \in \mathbb{R}^{m \times p}$ and
+            \[
+                b_{ij} = \sum_{k=1}^n a_{ik} x_{kj}, \quad i = 1, \ldots, m, \;\; j = 1, \ldots, p.
+            \]
+            That is, $b_{ij}$ is the inner-product between row $i$ of $A$ and column $j$ of $X$.
+            \bigbreak \noindent 
+            Also, each column of $B$ is a linear combination of the columns of $A$.
+            \bigbreak \noindent 
+            Total flops required for matrix multiplication is
+            \[
+                \sum_{i=1}^m \sum_{j=1}^p \sum_{k=1}^n 2 = 2mnp.
+            \]
+            If $A, X \in \mathbb{R}^{n \times n}$, then computing $B = AX$ requires $2n^3 = O(n^3)$ flops.
+        \item \textbf{Block Matrices}:
+            Partition $A \in \mathbb{R}^{m \times n}$ and $X \in \mathbb{R}^{n \times p}$ into blocks:
+            \[
+                A =
+                \begin{blockarray}{ccc}
+   & n_1 & n_2 \\
+   \begin{block}{c[cc]}
+       m_1 & A_{11} & A_{12} \\
+       m_2 & A_{21} & A_{22} \\
+   \end{block}
+                \end{blockarray}
+                \quad,\qquad
+                X =
+                \begin{blockarray}{ccc}
+   & p_1 & p_2 \\
+   \begin{block}{c[cc]}
+       n_1 & X_{11} & X_{12} \\
+       n_2 & X_{21} & X_{22} \\
+   \end{block}
+                \end{blockarray}
+            \]
+                    where $n = n_1 + n_2$, $m = m_1 + m_2$, and $p = p_1 + p_2$.
+                    \bigbreak \noindent 
+                    If $B = AX$, and 
+                    \begin{align*}
+                        B = 
+                        \begin{blockarray}{ccc}
+                            & p_{1} & p_{2} \\
+                            \begin{block}{c[cc]}
+                                m_{1} & B_{11} & B_{12} \\
+                                m_{2} & B_{21} & B_{22} \\
+                            \end{block}
+                        \end{blockarray}
+                    ,\end{align*}
+                    then
+                    \[
+                        \begin{blockarray}{cc}
+  &  \\
+  \begin{block}{[cc]}
+      B_{11} & B_{12} \\
+      B_{21} & B_{22} \\
+  \end{block}
+                        \end{blockarray}
+                        =
+                        B = AX =
+                        \begin{blockarray}{cc}
+  &  \\
+  \begin{block}{[cc]}
+      A_{11} & A_{12} \\
+      A_{21} & A_{22} \\
+  \end{block}
+                        \end{blockarray}
+                        \begin{blockarray}{cc}
+  &  \\
+  \begin{block}{[cc]}
+      X_{11} & X_{12} \\
+      X_{21} & X_{22} \\
+  \end{block}
+                        \end{blockarray}
+                    \]
+
+                    \[
+                        =
+                        \begin{blockarray}{cc}
+  &  \\
+  \begin{block}{[cc]}
+      A_{11}X_{11} + A_{12}X_{21} & A_{11}X_{12} + A_{12}X_{22} \\
+      A_{21}X_{11} + A_{22}X_{21} & A_{21}X_{12} + A_{22}X_{22} \\
+  \end{block}
+                        \end{blockarray}
+                    \]
+
+                    That is,
+                    \[
+                        B_{ij} = \sum_{k=1}^2 A_{ik} X_{kj}, 
+                        \qquad i,j = 1,2.
+                    \]
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Systems of Linear Equations}
+    \begin{itemize}
+        \item \textbf{Systems of linear equations}: Let $A \in \mathbb{R}^{n\times n},\ b \in \mathbb{R}^{m}$, our goal is to find $x \in \mathbb{R}^{m}$ such that $Ax = b$
+        \item \textbf{Singularity}: A \textbf{singular matrix} is a square matrix that does not have an inverse.
+            \bigbreak \noindent 
+            A \textbf{nonsingular} matrix is a square matrix that does have an inverse.
+            \bigbreak \noindent 
+            The following are equivalent
+            \begin{itemize}
+                \item $Ax = b$ has a unique solution
+                \item $\det(A)\ne 0$
+                \item $A^{-1}$ exists
+                \item There is no nonzero vector $y \in \mathbb{R}^{m}$ such that $Ay=0 $
+            \end{itemize}
+            If any one of the following are true, they all are true, and $A$ is non-singular
+        \item \textbf{Solution to $Ax = b$}: If $A$ is nonsingular, then $A^{-1}$ exists, and
+            \begin{align*}
+                x = A^{-1}b
+            .\end{align*}
+            Which is the unique solution to $Ax=b$
+            \bigbreak \noindent 
+            \textbf{Note:} Practically, it is not wise to compute $A^{-1}$, as this can be expensive.
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Triangular systems}
+    \begin{itemize}
+        \item \textbf{Upper triangular}: A square matrix $A = U$ of the form 
+            \begin{align*}
+                A = U = \begin{bmatrix}
+                    u_{11} & u_{12} & \cdots & u_{1n} \\
+                    0 & u_{22} & \cdots & u_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    0 & 0 & \cdots & u_{nn}
+                \end{bmatrix}
+            \end{align*}
+            is called \textbf{upper triangular}
+        \item \textbf{Lower triangular}: A square matrix $A = L$
+            \begin{align*}
+                A = L = \begin{bmatrix}
+                    \ell_{11} & 0 & \cdots & 0 \\
+                    \ell_{21} & \ell_{22} & \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    \ell_{n1} & \ell_{n2} & \cdots & \ell_{nn}
+                \end{bmatrix}
+            \end{align*}
+            is called \textbf{lower triangular}
+        \item \textbf{Solutions to triangular systems}: Consider the system
+            \begin{align*}
+               \begin{bmatrix}
+                    \ell_{11} & 0 & \cdots & 0 \\
+                    \ell_{21} & \ell_{22} & \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    \ell_{n1} & \ell_{n2} & \cdots & \ell_{nn}
+                \end{bmatrix} \begin{bmatrix}
+                    x_{1} \\ x_{2} \\ \vdots \\ x_{n}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    b_{1} \\ b_{2} \\ \vdots \\ b_{n}
+                \end{bmatrix}
+            .\end{align*}
+            So,
+            \begin{align*}
+                \ell_{11}x_{1} &= b_{1} \\
+                \ell_{21}x_{1} + \ell_{22}x_{2} &= b_{2} \\
+                \vdots \\
+                \ell_{n1}x_{1} + \ell_{n2}x_{2} + \cdots + \ell_{nn}x_{n} &= b_{n}
+            .\end{align*}
+            Then,
+            \begin{align*}
+                x_{1} &= \frac{b_{1}}{\ell_{11}}
+            \end{align*}
+            and,
+            \begin{align*}
+                \ell_{22}x_{2} &= b_{2} - \ell_{21}x_{1} \\
+                \implies x_{2} &= \frac{b_{2}-\ell_{21}x_{1}}{\ell_{22}}
+            .\end{align*}
+            In general, we have
+            \begin{align*}
+                x_{i} = \frac{b_{i} - \sum_{j=1}^{i-1}\ell_{ij}x_{j}}{\ell_{ii}}
+            \end{align*}
+            for $i =1,2,...,n $. This method is called \textbf{Forward Substitution}.
+            \bigbreak \noindent 
+            A similar process is used on upper triangular matrices and is called \textbf{Backward Substitution}.
+        \item \textbf{Counting flops for the forward substitution method}: We have 
+                \begin{jlcode}
+                for i = 1:n
+                    for j=1:i-1
+                        b[i] = b[i] - ell[i,j]b[j]
+                    end
+                    b[i] = b[i] / ell[i,i]
+                end
+                \end{jlcode}
+            Thus, the count of flops is
+            \begin{align*}
+                n+\sum_{i=1}^{n}2(i-1) &= n+2 \sum_{i=1}^{n}(i-1) = n+2 \left( \sum_{i=1}^{n}i - \sum_{i=1}^{n} 1\right)  \\
+                   &= n + 2 \left(\sum_{i=1}^{n}i - n\right) = n+ 2 \left(\frac{n(n+1)}{2}-n\right) \\
+                   &=n + n^{2} - n = n^{2}
+            \end{align*}
+            So, forward substitution is $\mathcal{O}(n^{2})$
+        \item \textbf{Column oriented forward substitution}: Suppose we have $Lx = b$ when $L$ is lower triangular, we split the matrix into the following blocks
+            \begin{align*}
+                \begin{bmatrix}
+                    \ell_{11} & 0 \\
+                    \hat{\ell} & \hat{L}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    x_{1} \\ \hat{x} 
+                \end{bmatrix}
+                = \begin{bmatrix}
+                    b_{1} \\ \hat{b}
+                \end{bmatrix}
+            .\end{align*}
+            With $\hat{\ell} \in \mathbb{R}^{n-1}$, $\hat{L} \in \mathbb{R}^{n-1 \times n-1} $, $\hat{x} \in \mathbb{R}^{n-1}$, $\ell_{11}, x_{1}, b_{1} \in \mathbb{R}$. Note that $\hat{L}$ is also lower triangular.
+            \bigbreak \noindent 
+            We have
+            \begin{align*}
+                \ell_{11}x_{1} &= b_{1} \implies x_{1} = \frac{b_{1}}{\ell_{11}} \\
+                \hat{\ell}x_{1} + \hat{L}\hat{x} &= \hat{b} \implies \hat{L}\hat{x} = \hat{b} - \hat{\ell}x_{1}
+            \end{align*}
+            Thus, we reduced the dimension by one. We repeat this process for the remaining $x_{i}$. The process is 
+            \begin{enumerate}
+                \item Compute $x_{1} = \frac{b_{1}}{\ell_{11}} $
+                \item Compute $\hat{b} - \hat{\ell}x_{1} = \tilde{b} \in \mathbb{R}^{n-1} $
+                \item Find $\hat{L}x = \tilde{b} $
+            \end{enumerate}
+        \item \textbf{Counting flops for column oriented forward substitution}: Let $f_{n}$ be the flop count, we have
+            \begin{align*}
+                f_{n} = 1 + 2(n-1) + f_{n-1}
+            .\end{align*}
+            With
+            \begin{align*}
+                f_{n-1} = 1 + 2(n-2) + f_{n-2}
+            .\end{align*}
+            Until
+            \begin{align*}
+                f_{1} = 1 + 2 + f_{0}
+            \end{align*}
+            with $f_{0} = 0 $
+            \bigbreak \noindent 
+            So, 
+            \begin{align*}
+                f_{n} &= 1 + 2(n-1) + 1 + 2(n-2) + ... + 1 + 2(n-(n-1)) \\
+                &= \sum_{i=1}^{n-1} 1 + 2(n-1) = n + 2n^{2} - 2\sum_{i=1}^{n}i \\
+                &=...=n^{2}
+            .\end{align*}
+            Thus, column oriented forward substitution is also $\mathcal{O}(n^{2})$
+
+
+            
+
+
+            
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Julia}
+    \bigbreak \noindent 
+    \subsection{Types}
+    \bigbreak \noindent 
+    \fig{.5}{./figures/tree.png}
+    \begin{itemize}
+        \item \textbf{Subtype constraint <:} $A$ <: $B$ means $A$ is a subtype of $B$
+            \bigbreak \noindent 
+            \begin{jlcode}
+            Int <: Number #true
+            \end{jlcode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Functions}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Linear Algebra}
+    \bigbreak \noindent 
+    \subsubsection{Matrix creation and operations}
+    \begin{itemize}
+        \item \textbf{Array constructors}:
+            \begin{itemize}
+                \item Array\{T\}(undef, dims...)
+                \item Vector\{T\}(undef, n)
+                \item Matrix\{T\}(undef, m, n)
+            \end{itemize}
+        \item \textbf{Zeros/ones/fills}
+            \begin{itemize}
+                \item zeros(n), zeros(m,n)
+                \item ones(n), ones(m,n)
+                \item fill(x, dims...)
+            \end{itemize}
+        \item \textbf{Uniform ranges}:
+            \begin{itemize}
+                \item collect(1:n) $\to$ vector
+                \item collect(1:m, 1:n) $\to$ matrix (grid)
+            \end{itemize}
+    \end{itemize}
+
+    
+\end{document}
