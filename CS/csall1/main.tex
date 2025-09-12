@@ -9546,7 +9546,7 @@ indicate which strong entity the weak entity depends upon.
                 &=xy + (x \oplus y)c
             \end{align*}
         \item \textbf{Ripple-Carry Adder}: 
-            Full adders can be connected in a series. The carry bit “ripples” from one adder to the next; hence, this circuit is called a ripple-carry adder.
+            Full adders can be connected in a series. The carry bit "ripples" from one adder to the next; hence, this circuit is called a ripple-carry adder.
             \bigbreak \noindent 
             \fig{.5}{./figures/rca.png}
             \bigbreak \noindent 
@@ -9597,6 +9597,153 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{Shifter}: This shifter moves the bits of a nibble one position to the left or right.
             \bigbreak \noindent 
             If $S = 1$, we have a right shift. Output $O_{2}$ comes from input $I_{3} $ .
+            \bigbreak \noindent 
+            \fig{.5}{./figures/mane.png}
+            \bigbreak \noindent 
+            \begin{align*}
+                G_{1} &= I_{3}S\\
+                G_{2} &= I_{2}\bar{S}\\
+                G_{3} &= I_{2}S\\
+                G_{4} &= I_{1}\bar{S}\\
+                G_{5} &= I_{1}S\\
+                G_{6} &= I_{0}\bar{S}\\
+                G_{7} &= G_{1} + G_{4} = I_{3}S + I_{1}\bar{S} \\
+                G_{8} &= G_{3} + G_{6} = I_{2}S + I_{3}S
+            \end{align*}
+        \item \textbf{Two bit ALU}: The ALU, or arithmetic-logic unit, is a core part of the CPU that handles arithmetic and logic
+            \bigbreak \noindent 
+            We can use the combinational circuits we have learned to build an ALU. Our sample ALU will handle four operations - AND, OR, NOT and addition - for two-bit numbers.
+            \bigbreak \noindent 
+            The inputs are $A_{1}A_{0}$ and $B_{1}B_{0}$. The output is $C_{1}C_{0} $.
+            \bigbreak \noindent 
+            The control lines $I_{0}I_{1}$ determine which operation will be done
+            \begin{itemize}
+                \item 00 = Addition
+                \item 01 = Not
+                \item 10 = Or 
+                \item 11 = And
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/alu.png}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Sequential Circuits}
+    \begin{itemize}
+        \item \textbf{Intro}: Combinational logic circuits are perfect for situations when we require the immediate application of a Boolean function to a set of inputs
+            \bigbreak \noindent 
+            There are other times, however, when we need a circuit to change its value with consideration to its current state as well as its inputs.
+            \bigbreak \noindent 
+            These circuits have to "remember" their current state.
+            \bigbreak \noindent 
+            \textit{Sequential logic circuits} provide this functionality for us.
+        \item \textbf{Sequential circuits}: As the name implies, sequential logic circuits require a means by which events can be sequenced.
+            \bigbreak \noindent 
+            State changes are controlled by clocks.
+        \item \textbf{Clock}: A "clock" is a special circuit that sends electrical pulses through a circuit.
+            \bigbreak \noindent 
+            Clocks produce electrical waveforms such as the one shown below
+            \bigbreak \noindent 
+            \fig{.5}{./figures/clock.png}
+        \item \textbf{State changes}: State changes occur in sequential circuits only when the clock ticks
+            \bigbreak \noindent 
+            Circuits can change state on the rising edge, falling edge, or when the clock pulse reaches its highest voltage
+            \bigbreak \noindent 
+            \fig{.5}{./figures/100.png}
+            \bigbreak \noindent 
+            Circuits that change state on the rising edge, or falling edge of the clock pulse are called edge-triggered
+            \bigbreak \noindent 
+            Level-triggered circuits change state when the clock voltage reaches its highest or lowest level.
+            \bigbreak \noindent 
+            In general, the circuits that we will look at will get their inputs on the rising edge.
+            \bigbreak \noindent 
+             By the time of the falling edge, the output will be stable and we can use it.
+        \item \textbf{Feedback}: To retain their state values, sequential circuits rely on feedback.
+            \bigbreak \noindent 
+            Feedback in digital circuits occurs when an output is looped back to the input
+            \bigbreak \noindent 
+            A simple example of this concept is shown below.
+        \item \textbf{SR flipflop (Set/Reset)}; You can see how feedback works by examining the most basic sequential logic components, the SR flipflop
+            \bigbreak \noindent 
+            The block diagram for an SR flipflop is shown below along with its characteristic table.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/sr.png}
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{cc|c}
+                    $S$&$R$&$Q(t+1)$ \\ 
+                    \hline
+                    0 & 0 & $Q(t)$ (no change) \\
+                    0 & 1 & 0 (reset to 0)\\ 
+                    1 & 0 & 1 (set to 1)\\
+                    1 & 1 & undefined
+                \end{tabular}
+            \end{center}
+            \bigbreak \noindent 
+            The characteristic table describes its behavior. 
+            \bigbreak \noindent 
+            $Q(t)$ means the value of the output at time $t$. $Q(t+1)$ is the value of $Q$ after the next clock pulse.
+            \bigbreak \noindent 
+            The internals are
+            \bigbreak \noindent 
+            \fig{.5}{./figures/sr2.png}
+            \bigbreak \noindent 
+            \textbf{Note:} To understand basic computer architecture, we can consider flipflops as fundamental units, just as we treat gates, i.e., we don’t need to know their internals.
+            \bigbreak \noindent 
+            The SR flipflop actually has three inputs: $S$, $R $, and its current output, $Q$.
+            \bigbreak \noindent 
+            Thus, we can construct a truth table for this circuit, as shown at the right.
+            \bigbreak \noindent 
+            Notice the two undefined values. When both $S$ and $R$ are 1, the SR flipflop is unstable
+            \bigbreak \noindent 
+            \[
+                \begin{array}{|c|c|c||c|}
+                    \hline
+                    \textbf{S} & \textbf{R} & \textbf{Q(t)} & \textbf{Q(t+1)} \\
+                    \hline
+                    0 & 0 & 0 & 0 \\
+                    0 & 0 & 1 & 1 \\
+                    0 & 1 & 0 & 0 \\
+                    0 & 1 & 1 & 0 \\
+                    1 & 0 & 0 & 1 \\
+                    1 & 0 & 1 & 1 \\
+                    1 & 1 & 0 & \text{undefined} \\
+                    1 & 1 & 1 & \text{undefined} \\
+                    \hline
+                \end{array}
+            \]
+        \item \textbf{JK Flipflop}: If we can be sure that the inputs to an SR flipflop will never both be 1, we will never have an unstable circuit
+            \bigbreak \noindent 
+            The SR flipflop can be modified to provide a stable state when both inputs are 1.
+            \bigbreak \noindent 
+             This modified flipflop is called a JK flipflop, shown at the right.
+             \bigbreak \noindent 
+             \textbf{Note:} The "JK" is named after \textit{Jack Kilby.}
+             \bigbreak \noindent 
+             \fig{.7}{./figures/jk.png}
+             \bigbreak \noindent 
+             At the right, we see how an SR flipflop can be modified to create a JK flipflop
+             \bigbreak \noindent 
+             \fig{.7}{./figures/jk2.png}
+             \bigbreak \noindent 
+             The characteristic table indicates that the flipflop is stable.
+             \bigbreak \noindent 
+             \begin{center}
+                 \begin{tabular}{cc|c}
+                     $J$&$K$&$Q(t+1)$  \\
+                     \hline
+                     0 & 0 & $Q(t)$ \\
+                     0 & 1 & 0 \\
+                     0 & 0  & 1\\
+                     1 & 1 & \bar{Q}(t)
+                 \end{tabular}
+             \end{center}
+             \bigbreak \noindent 
+             When $J$ and $K$ are both 1, the JK flipflop changes its output from the preceding value.
+
+
+
+
 
     \end{itemize}
 
@@ -10199,7 +10346,7 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             A screen with low density has fewer pixels in the same area, so things look larger but less sharp.
             \bigbreak \noindent 
-            Android groups devices into “density buckets” so developers don’t have to manually calculate for every possible screen:
+            Android groups devices into "density buckets" so developers don’t have to manually calculate for every possible screen:
             \bigbreak \noindent 
             \begin{itemize}
                 \item \textbf{ldpi (low)}: $\sim$120 dpi
