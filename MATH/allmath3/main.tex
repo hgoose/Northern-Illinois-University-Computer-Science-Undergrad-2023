@@ -7005,6 +7005,98 @@
                 r_{ii} &= \sqrt{a_{ii} - \sum_{k=1}^{i-1}r_{ki}^{2}} \quad i = 1,2,...,n \\
                 r_{ij} &= \frac{a_{ij} - \sum_{k=1}^{i-1}r_{ki}r_{kj}}{r_{ii}} \quad j = i+1,...,n
             \end{align*}
+        \item \textbf{Recursive column oriented method to find the Cholesky factor $R$ (Outer product method)}: Let $A \in \mathbb{R}^{n\times n}$. Assume that $A$ is positive definite, so $A = A^{\top}$, and $A = R^{\top}R$ for a unique upper triangular matrix $R$. We have,
+            \begin{align*}
+                A &= \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
+                \begin{bmatrix}
+                    r_{11} & 0  & \cdots & 0\\
+                    r_{12} & r_{22}  &  \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots\\
+                    r_{1n} & r_{2n} & \cdots & r_{nn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    r_{11} & r_{12} & \cdots & r_{1n} \\
+                    0 & r_{22} & \cdots & r_{2n} \\
+                    0 & 0 & \ddots & \vdots \\
+                    0 & 0  & \cdots & r_{nn}
+                \end{bmatrix}
+            \end{align*}
+            We then perform a matrix decomposition 
+            \begin{align*}
+                \begin{bmatrix}
+                    a_{11} & a^{\top} \\
+                    a & \hat{A}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    r_{11} & 0^{\top} \\
+                    r & \hat{R}^{\top}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    r_{11} & r^{\top} \\
+                    0 & \hat{R}
+                \end{bmatrix}
+            .\end{align*}
+            Where $\hat{A} = \hat{A}^{\top} \in \mathbb{R}^{n-1 \times n-1}$, $a \in \mathbb{R}^{n-1}$, $\hat{R}^{\top} \in \mathbb{R}^{n-1\times n-1}$ lower triangular, and $\hat{R} \in \mathbb{R}^{n-1\times n-1}$ upper triangular. Further,
+            \begin{align*}
+                \hat{A} &= \begin{bmatrix} a_{22} & \cdots & a_{2n} \\ \vdots & \ddots & \vdots \\ a_{n2} & \cdots & a_{nn} \end{bmatrix},\; a = \begin{pmatrix} a_{21} \\ a_{31} \\ \vdots \\ a_{n1} \end{pmatrix}, \\
+                \hat{R} &= \begin{bmatrix} r_{22} &  \cdots & r_{2n} \\ 0 & \ddots & \vdots \\ 0  & \cdots & r_{nn} \end{bmatrix},\; r = \begin{pmatrix} r_{12} \\ r_{13} \\ \vdots \\ r_{1n} \end{pmatrix} 
+            .\end{align*}
+            So, given this decomposition, we see that 
+            \begin{align*}
+                a_{11} &= r_{11}^{2} \implies r_{11} &= \sqrt{a_{11}}
+            .\end{align*}
+            Recall that in the definition of the Cholesky factor $R$, $r_{ii} > 0$ for $i = 1,2,...,n  $
+            \bigbreak \noindent 
+            Continuing the matrix multiplication, we have that
+            \begin{align*}
+                a &= r_{11}r \implies r = \frac{a}{r_{11}}
+            \end{align*}
+            and, 
+            \begin{align*}
+                \hat{A} &=rr^{\top} + \hat{R}\hat{R}^{\top} \implies \hat{R}^{\top}\hat{R} = \hat{A} - rr^{\top} = \tilde{A}
+            \end{align*}
+            \bigbreak \noindent 
+            Thus, the recursive column oriented algorithm to compute the Cholesky factor $R$ is given by the following steps
+            \begin{enumerate}
+                \item $r_{11} = \sqrt{a_{11}}$
+                \item $r = \frac{a}{r_{11}} $
+                \item $\tilde{A} = \hat{A} - rr^{\top} $
+                \item $\text{Alg}(\tilde{A}) = \hat{R} $
+            \end{enumerate}
+        \item \textbf{Counting flops for the recursive algorithm above}:
+            \begin{enumerate}
+                \item (Step 1): One flop
+                \item (Step 2): $n-1$ flops
+                \item (Step 3): $(n-1)^{2}$ flops. Notice that $r \in \mathbb{R}^{n-1},\; r^{\top} \in \mathbb{R}^{n-1}$, and the outer product
+                    \begin{align*}
+                        rr^{\top} \in \mathbb{R}^{n-1\times n-1}
+                    \end{align*}
+                    and requires $(n-1)^{2}$ flops.
+                    \bigbreak \noindent 
+                    Since $\hat{A} \in \mathbb{R}^{n-1\times n-1}$, $ \hat{A} - rr^{\top}$ requires an addition $(n-1)^{2}$ flops. So, step 3 requires $2(n-1)^{2}$ flops
+            \end{enumerate}
+            \bigbreak \noindent 
+            Thus, 
+            \begin{align*}
+                f_{n} &= 1 + (n-1) + 2(n-1)^{2} + f_{n-1} \\
+                &=n + 2(n-1)^{2} + f_{n-1}
+            .\end{align*}
+            Where
+            \begin{align*}
+                f_{n-1} &= 1 + (n-2) + 2(n-2)^{2} + f_{n-2} = n-1 + 2(n-2)^{2} + f_{n-2} \\
+                        &\vdots \\
+                f_{n-(n-1)}  &= f_{1} = 1 + 0 + 0 + f_{0} 
+            .\end{align*}
+            Note that $f_{0} = 0$. So, $f_{1} = 1$. In total, we have
+            \begin{align*}
+                f_{n} &= n + 2(n-1)^{2} + n-1 + 2(n-2)^{2} + n-2 + 2(n-3)^{2} + ... + 1 \\
+                      &= \sum_{k=n}^{1} k + 2(k-1)^{2}
+            \end{align*}
+
+
+
+
 
 
     \end{itemize*}
