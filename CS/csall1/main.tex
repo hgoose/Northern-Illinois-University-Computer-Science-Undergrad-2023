@@ -9280,7 +9280,7 @@ indicate which strong entity the weak entity depends upon.
             .\end{align*}
             are used, they will always be listed in that order.
             \bigbreak \noindent 
-            To convert a function to sum-ofproducts form, we start with its truth table
+            To convert a function to sum-of products form, we start with its truth table
             \bigbreak \noindent 
             Every row that results in a 1 contains a combination of values of variables that makes the function true.
             \bigbreak \noindent 
@@ -9640,6 +9640,12 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{Sequential circuits}: As the name implies, sequential logic circuits require a means by which events can be sequenced.
             \bigbreak \noindent 
             State changes are controlled by clocks.
+            \bigbreak \noindent 
+            Sequential circuits are used anytime that we have a "stateful" application.
+            \bigbreak \noindent 
+            A stateful application is one where the next state of the machine depends on the current state of the machine and the input
+            \bigbreak \noindent 
+            A stateful application requires both combinational and sequential logic.
         \item \textbf{Clock}: A "clock" is a special circuit that sends electrical pulses through a circuit.
             \bigbreak \noindent 
             Clocks produce electrical waveforms such as the one shown below
@@ -9740,6 +9746,106 @@ indicate which strong entity the weak entity depends upon.
              \end{center}
              \bigbreak \noindent 
              When $J$ and $K$ are both 1, the JK flipflop changes its output from the preceding value.
+
+            \item \textbf{D Flipflop}: The output of the D flipflop remains the same during subsequent clock pulses. The output changes only when the value of $D$ changes.
+                \bigbreak \noindent 
+                A $D$ flipflop is built by sending $D$ and $D^{\prime}$ into the $S$ and $R$ inputs of an SR flipflop.
+                \bigbreak \noindent 
+                The characteristic table is 
+                \bigbreak \noindent 
+                \begin{center}
+                    \begin{tabular}{c|c}
+                         $D$&$Q(t+1)$ \\ 
+                        \hline
+                         0 & 0 \\ 
+                         1 & 1
+                    \end{tabular}
+                \end{center}
+                \bigbreak \noindent 
+                With externals
+                \bigbreak \noindent 
+                \fig{.5}{./figures/d.png}
+                \bigbreak \noindent 
+                Since its value is constant unless the input changes, the $D$ flipflop is the fundamental circuit of computer memory.
+                1br
+                $D$ flipflops are usually illustrated using the block diagram shown below.
+                \bigbreak \noindent 
+                 In addition to $D$, the clock input is needed as for any sequential circuit.
+                 \bigbreak \noindent 
+                 It is convenient but not required to output both $Q$ and $Q^{\prime} $.
+                 \bigbreak \noindent 
+                 \fig{.5}{./figures/d2.png}
+            \item \textbf{Register}: This illustration shows a 4-bit register consisting of $D$ flipflops. You will usually see its block diagram (below) instead.
+                \bigbreak \noindent 
+                \fig{.5}{./figures/reg.png}
+                \bigbreak \noindent 
+                \fig{.5}{./figures/reg2.png}
+                \bigbreak \noindent 
+                This register maintains its state as the clock ticks because the value of $\text{In}_{n}$ is equal to the value of $\text{out}_{n}$ .
+            \item \textbf{Memory}: The following image represents four words of memory. Each word has 3 bits, represented in one column
+                \bigbreak \noindent 
+                A 4-word memory needs 2 selector lines to address the four words. We need to know which word the data is going to or from
+                \bigbreak \noindent 
+                Note that $S_{1}$ is the high-order bit even though it’s shown on the right. Look carefully at the AND gates $S_{0}$ and $S_{1}$ feed into
+                \bigbreak \noindent 
+                When data is being written into memory, it comes from the 3 input bits on the left.
+                \bigbreak \noindent 
+                $\text{In}_{0}$ is connected to bit 0 of each word, but the update only happens if the corresponding selector line is 1 (and the write enable bit is 1) when the clock ticks.
+                \bigbreak \noindent 
+                \fig{.5}{./figures/memory.png}
+            \item \textbf{Memory read}: When data is being read from memory (i.e., output), it goes into the 3 output bits on the right.
+                \bigbreak \noindent 
+                Each output bit contains the ‘OR’ of the corresponding output bits from the four words.
+                \bigbreak \noindent 
+                Only one of those bits can be true at any one time. That’s the output bit from the word that is selected, i.e., the word whose number (address) is represented by the selector lines.
+                \bigbreak \noindent 
+                Memory read (i.e., output) does not require a clock tick. The output is always there. To get the data from the $Q$ signals for each memory cell to Out only requires combinational logic. The clock isn't needed for combinational logic.
+            \item \textbf{Memory Read example}: We will use bit 0 as an example again. Bit 0 of each word is AND-ed to the selector for that word number
+                \bigbreak \noindent 
+                So bit 0 of a given word is only output from the $D$ flipflop it’s stored in when the selector for that word is on.
+                \bigbreak \noindent 
+                All of the bit 0’s from the different words are OR’d together to form output bit $\text{Out}_{0}$ , but only one of them (the one from the selected word) will have a 1 in it.
+                \bigbreak \noindent 
+                So the value of $\text{Out}_{0}$ will contain the value of bit 0 of the selected word, i.e., whatever is in the $D$ flipflop. If the word had been updated during this clock cycle. $\text{Out}_{0} $ will contain the new value. Otherwise it will contain the old value. Again, that’s what we expect from a computer memory.
+            \item \textbf{Memory write}
+                \bigbreak \noindent 
+                memory update (i.e., input) only happens when the clock ticks. That’s the only time the clock bit in the lower left is on. Input is sampled on the rising edge and the output is stable by the time of the falling edge.
+                \bigbreak \noindent 
+                Also, memory update (i.e., input) only happens when the write enable bit is on.
+                \bigbreak \noindent 
+                Memory can only be updated when the “write enable” bit is on. There is a write enable line that is AND-ed with the clock
+                \bigbreak \noindent 
+                The clock ticks regularly, and there is always some value on the input lines (every bit is either 0 or 1), but we don’t want to update memory every time the clock ticks.
+                \bigbreak \noindent 
+                So we only turn the write enable bit on when we want to update memory
+            \item \textbf{Memory write example}: We will use bit 0 as an example. All 3 bits act the same way
+                \bigbreak \noindent 
+                Input $\text{In}_{0}$ is connected to bit 0 of each of the words, but the data in bit $\text{In}_{0}$ does not flow to bit 0 of each word. It only flows to the word represented by the selector.
+                \bigbreak \noindent 
+                Furthermore, the new value from $\text{In}_{0}$ is only written when the clock ticks and write enable is on. (You can see the clock line and the write enable line AND-ed together, and that result AND-ed together with the selector line for the column.)
+                \bigbreak \noindent 
+                If write enable is off or the particular word is not selected, the data in the memory remains the same. That’s how a $D$ flipflop works, and it’s also what you’d expect from a computer memory. We want values to be stable unless updated.
+
+
+
+            \item \textbf{Implementing $y=x$}: Which is \texttt{LOAD $x$; STORE $y$}
+                \bigbreak \noindent 
+                First,  read the value of $x$ from memory:
+                \begin{enumerate}
+                    \item Load the address of $x$ on the selector lines
+                    \item Now the value of $x$ will be available on the Out lines.
+                \end{enumerate}
+                Then, write the value of $y$ into memory:
+                \begin{enumerate}
+                    \item Load the address of $y$ on the selector lines
+                    \item Load the new value of $y$ (i.e., the value of $x$) on the In lines.
+                    \item Turn on the write enable bit
+                    \item The next time the clock ticks, the new value of $y$ will be loaded into the cells pointed to by the address of $y$
+                \end{enumerate}
+
+                \bigbreak \noindent 
+                \textbf{Note:} To implement something like $y=x+1$, we basically do the same thing as above, but between outputting the value of $x$ and loading that value int $y$, we feed the output of $x$ into an ALU to get $x+1 $
+
 
 
 
@@ -10327,7 +10433,14 @@ indicate which strong entity the weak entity depends upon.
     \bigbreak \noindent 
     \subsubsection{Includes}
     \begin{itemize}
-        
+        \item androidx.appcompat.app.AppCompatActivity;
+        \item android.os.Bundle;
+        \item android.util.Log;
+        \item android.view.View;
+        \item android.widget.EditText;
+        \item android.widget.TextView;
+        \item java.text.NumberFormat;
+        \item \textbf{android.text}: TextWatcher interface
     \end{itemize}
 
     \pagebreak 
@@ -10411,6 +10524,42 @@ indicate which strong entity the weak entity depends upon.
             \begin{javacode}
             EditText billEditText = (EditText)findViewById(R.id.amount_bill);
             \end{javacode}
+            \bigbreak \noindent 
+            findViewById returns the View that is part of the layout xml file that was inflated in method onCreate() of the Activity class.
+            \bigbreak \noindent 
+            If we expect to retrieve a TextView and we want to assign the View retrieved to a TextView, we need to cast the View returned by method findViewById() to a TextView:
+        \item \textbf{View Event handling with XML (only onClick)}: To set up a click event on a View, we use the android:onClick attribute of the View and assign to it a method using the form:
+            \bigbreak \noindent 
+            \begin{xmlcode}
+            android:onClick="methodName"
+            \end{xmlcode}
+            \bigbreak \noindent 
+            The event will be handled inside that method, which must have the following API
+            \bigbreak \noindent 
+            \begin{javacode}
+            public void methodName(View v) 
+            \end{javacode}
+            \bigbreak \noindent 
+            $v$ is the View where the event happened.
+            \bigbreak \noindent 
+            When the user clicks on the button, we execute inside calculate, and its View parameter is the Button; if we have the following statement inside calculate
+            \bigbreak \noindent 
+            \begin{javacode}
+            Log.w("MainActivity", "v = " + v);
+            \end{javacode}
+            \bigbreak \noindent 
+            Inside LogCat, we have something like:
+            \bigbreak \noindent 
+            \begin{javacode}
+            v=android.widget.Button@425a2e60
+            \end{javacode}
+            \bigbreak \noindent 
+            The value above identifies the Button
+        \item \textbf{IME}: It’s the software keyboard or other input system (like voice typing, handwriting, predictive text) that allows users to enter text into your app.
+            \bigbreak \noindent 
+            Every EditText communicates with the IME through the Input Method Framework (IMF) in Android.
+            \bigbreak \noindent 
+            When you tap into an EditText, the IME pops up (usually the on-screen keyboard).
     \end{itemize}
 
     \pagebreak 
@@ -10746,7 +10895,7 @@ indicate which strong entity the weak entity depends upon.
     \pagebreak 
     \subsubsection{Events}
     \begin{itemize}
-        \item \textbf{Button}
+        \item \textbf{View (XML)}
             \begin{itemize}
                 \item \textbf{android:onClick}: name of a method in your Activity that gets called when the button is clicked
             \end{itemize}
@@ -10754,6 +10903,196 @@ indicate which strong entity the weak entity depends upon.
 
 
     \pagebreak 
+    \subsubsection{Class methods and properties (Non event listeners)}
+    \begin{itemize}
+        \item \textbf{View}:
+            \begin{itemize}
+                \item \textbf{int getId()}: Returns the unique ID of this view, if one was assigned in XML or code.
+                \item \textbf{void setId(int id)}: Assigns a unique ID to this view so it can be referenced in code or layouts.
+                \item \textbf{Context getContext()}: Returns the Context the view is running in (e.g., the Activity).
+                \item \textbf{Resources getResources()}: Returns the Resources object to access strings, layouts, drawables, etc.
+                \item \textbf{String toString()}: Returns a string representation of the view (useful for debugging).
+                \item \textbf{int getWidth(), int getHeight()}: Return the current width and height of the view as drawn on screen.
+                \item \textbf{int getLeft(), int getTop(), int getRight(), int getBottom()}: Return the position of the view’s edges relative to its parent.
+                \item \textbf{void layout(int l, int t, int r, int b)}: Positions the view within its parent using the given left, top, right, and bottom coordinates.
+                \item \textbf{void measure(int widthMeasureSpec, int heightMeasureSpec)}: Measures the view and its content to determine its width and height.
+                \item \textbf{int getMeasuredWidth(), int getMeasuredHeight()}: Return the measured width and height after \texttt{measure()} is called.
+                \item \textbf{LayoutParams getLayoutParams()}: Returns the layout parameters associated with this view (e.g., width/height rules).
+                \item \textbf{void setLayoutParams(ViewGroup.LayoutParams params)}: Updates the layout parameters for this view.
+                \item \textbf{void setVisibility(int visibility)}: Changes whether the view is visible, invisible, or removed from layout (VISIBLE, INVISIBLE, GONE).
+                \item \textbf{int getVisibility()}: Returns the current visibility state of the view.
+                \item \textbf{boolean isShown()}: Returns true if the view and all its parents are visible on screen.
+                \item \textbf{float getX(), float getY()}: Return the view’s visual x/y position on the screen.
+                \item \textbf{void setX(float x), void setY(float y)}: Sets the visual x/y position of the view.
+                \item \textbf{void scrollTo(int x, int y)}: Instantly scrolls the view’s content to the given x/y position.
+                \item \textbf{void scrollBy(int dx, int dy)}: Scrolls the view’s content by a relative offset in x/y.
+                \item \textbf{void invalidate() → request redraw}: Marks the view as needing to be redrawn in the next UI cycle.
+                \item \textbf{void postInvalidate() → redraw from non-UI thread}: Safely requests a redraw of the view from a background thread.
+                \item \textbf{void draw(Canvas canvas)}: Draws the view’s content onto the provided Canvas (used in custom views).
+                \item \textbf{void setBackground(Drawable background)}: Sets the background image or shape for the view.
+                \item \textbf{Drawable getBackground()}: Returns the background drawable, if one is set.
+                \item \textbf{boolean requestFocus()}: Requests keyboard/input focus for this view.
+                \item \textbf{void clearFocus()}: Removes focus from this view.
+                \item \textbf{boolean isFocused()}: Returns true if the view currently has input focus.
+                \item \textbf{void setFocusable(boolean focusable)}: Sets whether the view can receive focus.
+                \item \textbf{void setFocusableInTouchMode(boolean focusableInTouchMode)}: Sets whether the view can receive focus in touch mode.
+                \item \textbf{boolean onKeyDown(int keyCode, KeyEvent event)}: Handles a key press event when the view is focused.
+                \item \textbf{boolean onKeyUp(int keyCode, KeyEvent event)}: Handles a key release event when the view is focused.
+                \item \textbf{boolean onTouchEvent(MotionEvent event)}: Handles touch screen events (tap, swipe, etc.).
+                \item \textbf{boolean onGenericMotionEvent(MotionEvent event)}: Handles generic motion input (e.g., mouse, joystick).
+                \item \textbf{boolean onKeyPreIme(int keyCode, KeyEvent event)}: Handles key events before they are passed to the input method (IME).
+                \item \textbf{boolean onTrackballEvent(MotionEvent event)}: Handles trackball motion events (legacy input).
+                \item \textbf{boolean dispatchTouchEvent(MotionEvent event)}: Dispatches a touch event to this view and possibly its children.
+                \item \textbf{CharSequence getContentDescription()}: Returns the content description used for accessibility (screen readers).
+                \item \textbf{void setContentDescription(CharSequence contentDescription)}: Sets the accessibility description for the view.
+                \item \textbf{boolean isClickable(), void setClickable(boolean clickable)}: Gets or sets whether the view can be clicked.
+                \item \textbf{boolean isEnabled(), void setEnabled(boolean enabled)}: Gets or sets whether the view is enabled for interaction.
+                \item \textbf{boolean isPressed(), void setPressed(boolean pressed)}: Gets or sets whether the view is in the pressed state.
+                \item \textbf{int getPaddingLeft(), getPaddingTop(), getPaddingRight(), getPaddingBottom()}: Return the padding values around the view’s content.
+                \item \textbf{void setPadding(int left, int top, int right, int bottom)}: Sets the padding values around the view’s content.
+            \end{itemize}
+        \item \textbf{TextView}:
+            \begin{itemize}
+                \item \textbf{CharSequence getText()}: Returns the current text content displayed by the TextView.
+                \item \textbf{void setText(CharSequence text)}: Sets the text content of the TextView programmatically.
+                \item \textbf{void setText(int resId) (from string resources)}: Sets the text using a string resource ID (from \texttt{res/values/strings.xml}).
+                \item \textbf{void append(CharSequence text)}: Appends additional text to the existing content of the TextView.
+                \item \textbf{void setHint(CharSequence hint)}: Sets the hint text (placeholder) shown when the field is empty (common in EditText).
+                \item \textbf{CharSequence getHint()}: Returns the current hint text if one is set.
+                \item \textbf{void setTextColor(int color)}: Changes the color of the text using an integer color value.
+                \item \textbf{ColorStateList getTextColors()}: Returns the current text color(s), possibly defined as a ColorStateList for different states.
+                \item \textbf{void setTextSize(float size)}: Sets the font size of the text in scaled pixels (sp).
+                \item \textbf{void setTypeface(Typeface tf)}: Changes the font family or style (e.g., bold, italic) of the text.
+                \item \textbf{void setAllCaps(boolean allCaps)}: If true, forces all characters in the text to be displayed in uppercase.
+                \item \textbf{void setEllipsize(TextUtils.TruncateAt where)}: Defines how overflowing text is truncated (e.g., with \texttt{...} at the end).
+                \item \textbf{void setSingleLine(boolean singleLine)}: Restricts the text to a single line if set to true.
+                \item \textbf{void setMaxLines(int maxLines)}: Limits the maximum number of lines of text that can be displayed.
+                \item \textbf{int getLineCount()}: Returns the number of text lines currently being displayed.
+                \item \textbf{void setInputType(int type)}: Specifies the kind of input expected (e.g., number, password, email) when used with EditText.
+                \item \textbf{void setImeOptions(int imeOptions)}: Configures keyboard action buttons (e.g., Done, Next, Search) shown on the soft keyboard.
+                \item \textbf{void setSelection(int start, int stop)}: Selects the text between the given start and stop character positions.
+                \item \textbf{int getSelectionStart()}: Returns the starting index of the current selection or cursor position.
+                \item \textbf{int getSelectionEnd()}: Returns the ending index of the current selection or cursor position.
+                \item \textbf{void selectAll()}: Selects all the text inside the TextView/EditText.
+                \item \textbf{void setMovementMethod(MovementMethod m)}: Defines how the text can be interacted with (e.g., make links clickable with \texttt{LinkMovementMethod}).
+                \item \textbf{void setScroller(Scroller s)}: Attaches a Scroller object to provide smooth scrolling behavior for text.
+                \item \textbf{void setHorizontallyScrolling(boolean)}: Controls whether the text should scroll horizontally instead of wrapping to the next line.
+                \item \textbf{void setEllipsize(TextUtils.TruncateAt where)}: (Duplicate above) Sets where ellipses (\texttt{...}) should appear when the text is too long (start, middle, or end).
+            \end{itemize}
+        \item \textbf{EditText}:
+            \begin{itemize}
+                \item \textbf{void setInputType(int type)}: Sets the type of input expected (e.g., InputType.TYPE\_CLASS\_TEXT, TYPE\_CLASS\_NUMBER, TYPE\_TEXT\_VARIATION\_PASSWORD).
+                \item \textbf{int getInputType()}: Returns the current input type.
+                \item \textbf{void setImeOptions(int imeOptions)}: Configures action button on the soft keyboard (e.g., Done, Next, Go, Search).
+                \item \textbf{int getImeOptions()}: Returns the IME options.
+                \item \textbf{void setImeActionLabel(CharSequence label, int actionId)}: Sets a custom label and action ID for the IME action button.
+                \item \textbf{CharSequence getImeActionLabel()}: Gets the label for the IME action button.
+                \item \textbf{int getImeActionId()}: Returns the ID associated with the IME action.
+                \item \textbf{Editable getText()}: Returns the text as an Editable object (instead of just CharSequence), so you can modify it.
+                \item \textbf{void setText(CharSequence text, BufferType type)}: Sets the text content with a specific buffer type (e.g., NORMAL, SPANNABLE, EDITABLE).
+                \item \textbf{void setSelection(int start, int stop)}: Changes the selection/cursor position.
+                \item \textbf{void selectAll()}: Selects all the text.
+                \item \textbf{void extendSelection(int index)}: Extends the current selection to the specified index.
+                \item \textbf{void setError(CharSequence error)}: Displays an error message below the EditText.
+                \item \textbf{void setError(CharSequence error, Drawable icon)}: Displays an error message with a custom error icon.
+                \item \textbf{CharSequence getError()}: Returns the error message if one is set.
+                \item \textbf{void setFilters(InputFilter[] filters)}: Sets an array of input filters (e.g., character limits, input restrictions).
+                \item \textbf{InputFilter[] getFilters()}: Returns the currently set input filters.
+            \end{itemize}
+        \item \textbf{Button:} Subclass of TextView, which is a subclass of View, so all the ones listed above
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Java event listeners}
+    \begin{itemize}
+        \item \textbf{Views:}
+            \begin{itemize}
+                \item \textbf{void setOnClickListener(OnClickListener l)}: Registers a listener to be invoked when the view is clicked (short tap).
+                \item \textbf{void setOnLongClickListener(OnLongClickListener l)}: Registers a listener to be invoked when the view is long-pressed.
+                \item \textbf{void setOnFocusChangeListener(OnFocusChangeListener l)}: Sets a listener that is called whenever the view gains or loses input focus.
+                \item \textbf{void setOnTouchListener(OnTouchListener l)}: Sets a listener to receive touch events (e.g., finger down, move, lift) before they are processed by \texttt{onTouchEvent()}.
+                \item \textbf{void setOnKeyListener(OnKeyListener l)}: Sets a listener to receive key events (e.g., hardware button presses) before they are passed to \texttt{onKeyDown()} or \texttt{onKeyUp()}.
+                \item \textbf{boolean onKeyDown(int keyCode, KeyEvent event)}: Called when a hardware key is pressed down while the view has focus.
+                \item \textbf{boolean onKeyUp(int keyCode, KeyEvent event)}: Called when a hardware key is released while the view has focus.
+                \item \textbf{boolean onTouchEvent(MotionEvent event)}: Handles touch screen interaction with the view (default implementation supports clicks, scrolls, etc.).
+                \item \textbf{boolean onGenericMotionEvent(MotionEvent event)}: Handles non-touch input events such as mouse, joystick, or stylus actions.
+                \item \textbf{boolean onKeyPreIme(int keyCode, KeyEvent event)}: Called when a key event occurs before it reaches the input method (useful for intercepting Back button presses while an IME is visible).
+                \item \textbf{boolean onTrackballEvent(MotionEvent event)}: Handles trackball events (legacy input for older devices).
+            \end{itemize}
+        \item \textbf{TextView} 
+            \begin{itemize}
+                \item \textbf{void addTextChangedListener(TextWatcher watcher)}: Registers a TextWatcher to receive callbacks when the text changes (before, during, or after editing).
+                \item \textbf{void removeTextChangedListener(TextWatcher watcher)}: Unregisters a previously added TextWatcher so it no longer receives callbacks.
+                \item \textbf{void setOnEditorActionListener(TextView.OnEditorActionListener l)}: Sets a listener to handle editor actions from the soft keyboard (e.g., pressing "Done", "Next", or "Search").
+                \item \textbf{void setOnClickListener(View.OnClickListener l)}: Assigns a listener to handle click events when the view is tapped.
+                \item \textbf{void setOnLongClickListener(View.OnLongClickListener l)}: Assigns a listener to handle long-click (press-and-hold) events on the view.
+                \item \textbf{void setOnFocusChangeListener(View.OnFocusChangeListener l)}: Sets a listener that is triggered when the view gains or loses input focus.
+            \end{itemize}
+        \item \textbf{EditText}:
+            \begin{itemize}
+                \item \textbf{void addTextChangedListener(TextWatcher watcher)}: Registers a listener for text changes.
+                \item \textbf{void removeTextChangedListener(TextWatcher watcher)}: Unregisters a text change listener.
+                \item \textbf{void setOnEditorActionListener(TextView.OnEditorActionListener l)}: Sets a listener for handling IME action events (e.g., pressing Enter, Done, Search).
+            \end{itemize}
+        \item \textbf{Button:} Subclass of TextView, which is a subclass of View, so all the ones listed above
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Java event listeners (2)}
+    \begin{itemize}
+        \item \textbf{TextWatcher}: The \texttt{TextWatcher} interface, from the android.text package, provides three methods to handle key events.
+            \bigbreak \noindent 
+            You can attach a TextWatcher to any view that implements Editable text content — meaning subclasses of TextView that allow editing.
+            \bigbreak \noindent 
+            \begin{javacode}
+                private class TextChangeHandler implements TextWatcher {
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after )
+
+                    public void onTextChanged(CharSequence s, int start, int before, int after)
+
+                    public void afterTextChanged(Editable e)
+                }
+            \end{javacode}
+            Where (\texttt{beforeTextChanged})
+            \begin{itemize}
+                \item \textbf{CharSequence s}: The text before the change.
+                \item \textbf{int start}: The position (index) in the text where the change will begin.
+                \item \textbf{int count}: How many characters are about to be replaced (i.e., how many will be removed).
+                \item \textbf{int after}: How many characters will replace the old ones (i.e., how many will be added).
+            \end{itemize}
+            and (onTextChanged)
+            \begin{itemize}
+                \item \textbf{CharSequence s}: The text after the change (current state).
+                \item \textbf{int start}: The position in the text where the change happened.
+                \item \textbf{int before}: Number of characters that were replaced (removed).
+                \item \textbf{int count}: Number of new characters added.
+            \end{itemize}
+            \bigbreak \noindent 
+            Instantiate an instance of the class and attach it to a view with \texttt{addBeforeTextChanged}, \texttt{addAfterTextChanged}, or \texttt{addTextChangedListener}
+
+        \item \textbf{onClick listener}: Create a private inner class that implements View.OnClickListener, and overrides the function onClick with signature
+            \bigbreak \noindent 
+            \begin{javacode}
+            public void onClick(View v)
+            \end{javacode}
+            \bigbreak \noindent 
+            Create an instance of the inner class and use the function \texttt{setOnClickListener()} to add it to a view.
+            \bigbreak \noindent 
+            Or, use an anonymous inner class
+            \bigbreak \noindent 
+            \begin{javacode}
+                myView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ...
+                    }
+                });
+            \end{javacode}
+
+    \end{itemize}
+
+
+\pagebreak 
     \subsubsection{Code examples}
     \begin{itemize}
         \item \textbf{Minimum code for controller}:

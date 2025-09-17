@@ -6540,6 +6540,24 @@
                         \qquad i,j = 1,2.
                     \]
 
+                \item \textbf{Transpose of block matrices}: Let $A \in \mathbb{R}^{n\times n}$, with
+                    \begin{align*}
+                        A  = \begin{bmatrix} A_{11} & a_{12} \\ A_{21} & a_{22} \end{bmatrix}
+                    .\end{align*}
+                    Then, 
+                    \begin{align*}
+                        A^{\top} = \begin{bmatrix}
+                            A_{11}^{\top} & A_{21}^{\top} \\ A_{12}^{\top} & A_{22}^{\top}
+                        \end{bmatrix}
+                    \end{align*}
+                \item \textbf{Transpose of a block vector}: Similarly, if $ x \in \mathbb{R}^{n}$ is decomposed into blocks
+                    \begin{align*}
+                        \begin{pmatrix} x_{1} \\ x_{2} \end{pmatrix}
+                    ,\end{align*}
+                    with $x_{1} \in \mathbb{R}^{n_{1}} ,\; x_{2} \in \mathbb{R}^{n_{2}},\; n = n_{1} + n_{2}$, then
+                    \begin{align*}
+                        x^{\top} = \begin{pmatrix} x_{1}^{\top} & x_{2}^{\top} \end{pmatrix}
+                    \end{align*}
 
 
 
@@ -7099,9 +7117,159 @@
             \end{align*}
             \bigbreak \noindent 
             So, the recursive algorithm is $\mathcal{O}(n^{3})$
+        \item \textbf{Consequence of proof n.1.2:} If $A$ has any $a_{ii} \leq 0$, $A$ is not positive definite.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Banded Matrices}
+    \begin{itemize}
+        \item \textbf{Cholesky factor $R$ in a diagonal matrix}: If $A = D = \begin{bmatrix}
+                a_{11} & 0 & \cdots & 0 \\
+                0 & a_{22} & \cdots & 0 \\
+                \vdots & \vdots & \ddots & \vdots \\
+                0 & 0 & \cdots & a_{nn} 
+        \end{bmatrix}$ then
+        \begin{align*}
+            R = \begin{bmatrix}
+                \sqrt{a_{11}} & 0 & \cdots & 0 \\
+                0 & \sqrt{a_{22}} & \cdots & 0 \\
+                \vdots & \vdots & \ddots & \vdots \\
+                0 & 0 & \cdots & \sqrt{a_{nn}}
+            \end{bmatrix}
+        \end{align*}
+        \item \textbf{banded matrix}: A banded matrix is a sparse matrix whose nonzero entries are confined to a diagonal band, consisting of the main diagonal and a fixed number of diagonals on either side of it.
+            \bigbreak \noindent 
+                Let $A \in \mathbb{R}^{m \times n}$.  
+                Then $A$ is called a \textbf{banded matrix} if there exist nonnegative integers $p, q$ (called the \emph{lower} and \emph{upper bandwidths}) such that
+                \[
+                    a_{ij} = 0 \quad \text{whenever } i - j > p \text{ or } j - i > q.
+                \]
+
+                \begin{itemize}
+                    \item The \emph{lower bandwidth} $p$ is the number of subdiagonals (below the main diagonal) that may contain nonzero entries.
+                    \item The \emph{upper bandwidth} $q$ is the number of superdiagonals (above the main diagonal) that may contain nonzero entries.
+                \end{itemize}
+
+                The \emph{total bandwidth} is sometimes defined as $p + q + 1$, counting the main diagonal as well.
+
+                A tridiagonal matrix has lower bandwidth $p=1$ and upper bandwidth $q=1$:
+                \[
+                    A =
+                    \begin{bmatrix}
+                        a_{11} & a_{12} & 0      & 0      \\
+                        a_{21} & a_{22} & a_{23} & 0      \\
+                        0      & a_{32} & a_{33} & a_{34} \\
+                        0      & 0      & a_{43} & a_{44}
+                    \end{bmatrix}.
+                \]
+                The total bandwidth here is $1 + 1 + 1 = 3$.
+
+        \item \textbf{Common envelope}: The common envelope of $A $ is the set of indices $(i,j)$ in the upper triangular part of $A$ (including the main diagonal). Define
+            \begin{align*}
+            \text{colenv}\{A\} = \{(i,j)\} :\; i \leq j \text{ and } a_{kj} \ne 0 \text{ for } k \leq i
+            \end{align*}
+        \item \textbf{Theorem}: Let $A$ be p.d, if $R$ is the Cholesky factor of $A$, then
+            \begin{align*}
+                \text{colenv}\{R\}  = \text{colenv}\{A\}
+            \end{align*}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Proofs}
+    \bigbreak \noindent 
+    \subsubsection{Positive definite (1)}
+    \begin{itemize}
+        \item \textbf{Theorem n.1.1}: Let $A\in \mathbb{R}^{n\times n}$, $ A = \begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix} $ be a positive definite matrix. Then $A_{11}, \; A_{22}$ are positive definite.
+            \bigbreak \noindent 
+            Note that $A_{11} \in \mathbb{R}^{n_{1} \times n_{1}}$, $A_{12} \in \mathbb{R}^{n_{1} \times n_{2}}$, $A_{21} \in \mathbb{R}^{n_{2} \times n_{1}}$, and $A_{22} \in \mathbb{R}^{n_{2} \times n_{2}}$. So, $n = n_{1} + n_{2} $
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Assume $A \in \mathbb{R}^{n\times n}$, $A = \begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix} $, $A$ positive definite.
+            \bigbreak \noindent
+            First, we show that $A_{11} = A_{11}^{\top}$, and $A_{22} = A_{22}^{\top}$. Since $A$ p.d, 
+            \begin{align*}
+                A = A^{\top} \implies \begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix} = \begin{bmatrix} A_{11}^{\top} & A_{21}^{\top} \\ A_{12}^{\top} & A_{22}^{\top} \end{bmatrix}
+            .\end{align*}
+            So, we see that
+            \begin{align*}
+                A_{11} &= A_{11}^{\top}, \\
+                A_{22} &= A_{22}^{\top}
+            .\end{align*}
+            \bigbreak \noindent 
+            Next, we show that $x^{\top}A_{11}x >0$, for $x \in \mathbb{R}^{n_{1}}$, $x\ne 0$ and $x^{\top}A_{22} x > 0$ for $x \in \mathbb{R}^{n_{2}} $, $x \ne 0 $
+            \bigbreak \noindent 
+            Let $ \bar{x} \in \mathbb{R}^{n_{1}}$, $ \bar{x} = \begin{pmatrix} x_{1} \\ 0 \end{pmatrix} $, $x_{1} \ne 0 $. Note that $ \bar{x}^{\top} = \begin{pmatrix} x_{1}^{\top} & 0\end{pmatrix} $. We observe
+            \begin{align*}
+                0 < \bar{x}^{\top} A x &= \begin{pmatrix} x_{1}^{\top} & 0 \end{pmatrix} \begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix} \begin{pmatrix} x_{1} \\ 0 \end{pmatrix} \\
+                    &= x_{1}^{\top}A_{11}x_{1} > 0
+            .\end{align*}
+            Similarly, $ \bar{x} \in \mathbb{R}^{n}$, $ \bar{x} = \begin{pmatrix} 0 \\ x_{2} \end{pmatrix} $, $ x_{2} \ne 0 \in \mathbb{R}^{n_{2}}$ reveals $x_{2}^{\top}A_{22}x_{2} > 0$.
+            \bigbreak \noindent 
+            Therefore, $A_{11},\; A_{22}$ are positive definite. $\endpf$
+        \item \textbf{Theorem n.1.2}: Let $A \in \mathbb{R}^{n\times n}$ be a positive definite matrix, then $a_{ii} > 0$ for $i = 1,2,...,n $
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Assume that $A \in \mathbb{R}^{n\times n}$ is a positive definite matrix. Define $e_{i}$ as the set of vectors with all zeros except for a one at the $i^{\text{th}}$ position. Since $A$ is positive definite,
+            \begin{align}
+                e_{i}^{\top} A e_{i} = a_{ii} > 0
+            \end{align}
+            for $i = 1,2,...,n$ $ \endpf $
+            \bigbreak \noindent 
+        \item \textbf{Theorem n.1.3}: Let $A \in \mathbb{R}^{n \times n}$ be a positive definite matrix and $X \in \mathbb{R}^{n\times n}$ be non-singular. Then, $B = X^{\top}AX$ is positive definite.
+            \bigbreak \noindent 
+            \begin{remark}
+                If $A,B,C$ are matrices, then     
+                \begin{align*}
+                    (ABC)^{\top} = C^{\top}B^{\top}A^{\top}
+                \end{align*}
+            \end{remark}
+            \textbf{\textit{Proof.}} Assume that $A \in \mathbb{R}^{n\times n}$ is positive definite, $X\in \mathbb{R}^{n\times n}$ non-singular, and $B = X^{\top}AX$. 
+            \bigbreak \noindent 
+            First, we show that $B = B^{\top}$. We have
+            \begin{align*}
+                B^{\top} &= (X^{\top}AX)^{\top} = X^{\top}A^{\top}(X^{\top})^{\top} \\
+                &= X^{\top}A^{\top}X
+            .\end{align*}
+            But, $A$ is positive definite, and is therefore symmetric. So,
+            \begin{align*}
+                B^{\top} &= X^{\top}AX = B
+            .\end{align*}
+            Thus, $B$ is symmetric.
+            \bigbreak \noindent 
+            Next, we show that $x^{\top}Bx >0$, for $x \in \mathbb{R}^{n}$, $x\ne 0$. We have
+            \begin{align*}
+                x^{\top}Bx &= x^{\top}(X^{\top}AX)x = (x^{\top}X^{\top})A(Xx) \\
+                &= (Xx)^{\top}A(Xx)
+            \end{align*}
+            Let $y = Xx$. Thus,
+            \begin{align*}
+                (Xx)^{\top}A(Xx) = y^{\top}Ay
+            \end{align*}
+            \bigbreak \noindent 
+            Note that since $ x \ne 0 $, and $X$ non-singular, $y = Xx \ne 0$. Since $y \ne 0$, and $A$ p.d, $y^{\top}Ay >0$. 
+            \bigbreak \noindent 
+            Therefore, $B$ is positive definite. $\endpf $
+        \item \textbf{Theorem n.1.4}: Let $A$ be positive definite. Then, $\det(A) > 0$
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Assume $A$ is a positive definite matrix.
+            \bigbreak \noindent 
+            Since $A$ p.d,  $A = R^{\top}R$ for a unique upper triangular matrix $R$. Further, $r_{ii} >0$. We have
+            \begin{align*}
+                A &= R^{\top}R \\
+                \implies \det(A) &= \det(R^{\top}R) \\
+                                 &= \det(R^{\top})\det(R) \\
+                                 &= \det(R)\det(R) \\
+                                 &= \det(R)^{2} \\
+                                 &= (r_{11}\cdot r_{12}\cdot \cdots \cdot r_{1n})^{2} \\
+                                 &= r_{11}^{2}\cdot r_{12}^{2}\cdot \cdots \cdot r_{1n}^{2} > 0 \\
+            .\end{align*}
+            Therefore $\det(A)  > 0$ $\endpf $
 
 
-    \end{itemize*}
+
+
+    \end{itemize}
+
+
 
     \pagebreak 
     \unsect{Julia}
