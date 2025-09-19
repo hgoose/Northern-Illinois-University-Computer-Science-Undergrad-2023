@@ -7176,6 +7176,238 @@
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{Gaussian Elimination and LU Decompositions}
+    \begin{itemize}
+        \item \textbf{Intro to $LU$ decomposition}: Consider a matrix $A \in \mathbb{R}^{n\times n} $. If we can factor $A$ as $A = LU$, for $L$ lower triangular, $U$ upper triangular, then the system $Ax = b$, for vectors $x,b \in \mathbb{R}^{n}$ turns into
+            \begin{align*}
+                LUx = b
+            .\end{align*}
+            We can then split this system as follows
+            \begin{align*}
+                \begin{cases}
+                    Ly &= b \\
+                    Ux &= y
+                \end{cases}
+            \end{align*}
+            First, we solve $Ly = b$ with forward substitution to find $y$. We can then solve $Ux = y$ with backward substitution to find the target $x$.
+            \bigbreak \noindent 
+            Recall that the forward and backward substitution methods for solving linear systems requires $\mathcal{O}(n^{2})$ flops.
+        \item \textbf{Elementary operations on systems that do not change the solution set}. We have the operations
+            \begin{enumerate}
+                \item Interchange rows.
+                \item Multiply an equation by a nonzero constant.
+                \item Add a multiple of one equation to another equation.
+            \end{enumerate}
+            We show that these elementary operations (E.O) leave the solution set unchanged. Let the original system be $S$ and the modified system be $S^{\prime}$. To show that the solution set is unchanged is to show that if a vector $x$ is a solution to $S$ then it is also a solution to $S^{\prime}$, and vice versa.
+            \bigbreak \noindent 
+            Consider the system $S$, $Ax = b$ for $A \in \mathbb{R}^{n\times n}$, $x,b \in \mathbb{R}^{n}$. So, the system is
+            \begin{align*}
+                a_{11}x_{1} + a_{12}x_{2} + ... + a_{1n}x_{n} &= b_{1},\\
+                a_{21}x_{1} + a_{22}x_{2} + ... + a_{2n}x_{n} &= b_{2},\\
+                                                              &\vdots\\
+                a_{n1}x_{1} + a_{n2}x_{2} +  ... + a_{nn}x_{n} &= b_{n}
+            .\end{align*}
+            \bigbreak \noindent 
+            \textbf{\textit{Proof (2).}} Multiply an arbitrary equation by a nonzero scalar $k$, suppose we choose the second equation. $S^{\prime}$ is then
+             \begin{align*}
+                a_{11}x_{1} + a_{12}x_{2} + ... + a_{1n}x_{n} &= b_{1},\\
+                k(a_{21}x_{1} + a_{22}x_{2} + ... + a_{2n}x_{n}) &= k(b_{2}),\\
+                                                              &\vdots\\
+                a_{n1}x_{1} + a_{n2}x_{2} +  ... + a_{nn}x_{n} &= b_{n}
+            .\end{align*}
+            Let $(c_{1}, c_{2},...,c_{n})$ be a solution to the original system $S$. That is, it satisfies all equations. Let's look at the second equation
+            \begin{align*}
+                a_{21}c_{1} + a_{22}c_{2} + ... + a_{2n}c_{n} &= b_{2}\\
+            \end{align*}
+            If we multiply by $k$, we get
+            \begin{align*}
+                k(a_{21}c_{1} + a_{22}c_{2} + ... + a_{2n}c_{n}) &= k(b_{2})
+            .\end{align*}
+            Which means $(c_{1}, c_{2}, ..., c_{n}) $ also satisfies the second equation in $S^{\prime}$. Since all other equations were left unchanged, $(c_{1}, c_{2},...,c_{n}) $ satisfies those equations as well. So, the solution set is the same for both systems.
+            \bigbreak \noindent 
+            \textbf{Note}: If $k=0$, the second equation would collapse to $0=0$, which would enlarge the solution set. In this case, a constraint would be removed from the  system $S^{\prime}$. The second equation is now tautological, it imposes no restriction. The solution set would be
+            \begin{align*}
+                \{x\in \mathbb{R}^{n}:\ Ax = b \text{ for all rows except row two}\}
+            \end{align*}
+            \bigbreak \noindent 
+            Every solution of $S$ is also a solution of $S^{\prime}$, but the converse need not hold: $S^{\prime}$ could have solutions that don’t satisfy the second original equation. 
+            \bigbreak \noindent 
+            So $S^{\prime}$ has at least as many solutions, and possibly more. If the second equation was independent of the others, then yes - you've enlarged the solution set.
+            \bigbreak \noindent 
+            \textbf{\textit{Proof (3).}} Add an arbitrary equation to a different equation. Suppose we add the first equation to the second equation. Note that we leave the first unchanged. $S^{\prime}$ is then
+             \begin{align*}
+                a_{11}x_{1} + a_{12}x_{2} + ... + a_{1n}x_{n} &= b_{1},\\
+                (a_{21}+a_{11})x_{1} + (a_{22}+a_{12})x_{2} + ... + (a_{2n} + a_{1n})x_{n}) &= b_{2} + b_{1},\\
+                                                                                            &\vdots\\
+                a_{n1}x_{1} + a_{n2}x_{2} +  ... + a_{nn}x_{n} &= b_{n}
+            .\end{align*}
+            Let $c = (c_{1}, c_{2}, ..., c_{n}) $ be a solution to $S$, so $c$ is a solution to the first, second, and the remaining equations. That is, 
+            \begin{align*}
+                a_{11}c_{1} + a_{12}c_{2} + ... + a_{1n}c_{n} &= b_{1},\\
+                a_{21}c_{1} + a_{22}c_{2} + ... + a_{2n}c_{n} &= b_{2},\\
+                                                              &\vdots\\
+                a_{n1}c_{1} + a_{n2}c_{2} +  ... + a_{nn}c_{n} &= b_{n}
+            .\end{align*}
+            Add the first equation to the second, we get
+             \begin{align*}
+                a_{11}c_{1} + a_{12}c_{2} + ... + a_{1n}c_{n} &= b_{1},\\
+                (a_{21}+a_{11})c_{1} + (a_{22}+a_{12})c_{2} + ... + (a_{2n} + a_{1n})c_{n}) &= b_{2} + b_{1},\\
+                                                                                            &\vdots\\
+                a_{n1}c_{1} + a_{n2}c_{2} +  ... + a_{nn}c_{n} &= b_{n}
+            \end{align*}
+            which is precisely $S^{\prime}$, so $c$ satisfies $ S^{\prime}$. Next, let $c = (c_{1}, c_{2}, ..., c_{n}) $ be a solution to $S^{\prime}$. So,
+             \begin{align*}
+                a_{11}c_{1} + a_{12}c_{2} + ... + a_{1n}c_{n} &= b_{1},\\
+                (a_{21}+a_{11})c_{1} + (a_{22}+a_{12})c_{2} + ... + (a_{2n} + a_{1n})c_{n}) &= b_{2} + b_{1},\\
+                                                                                            &\vdots\\
+                a_{n1}c_{1} + a_{n2}c_{2} +  ... + a_{nn}c_{n} &= b_{n}
+            \end{align*}
+            Subtract the first equation from the second, and we get back $S$. So, the solution set remains unchanged.
+        \item \textbf{Elimination matrix $E$}: An elimination matrix is just a special matrix that performs a single step of Gaussian elimination when you multiply it by another matrix.
+            \begin{itemize}
+                \item Suppose you want to eliminate the entry in row $i$, column $j$ of $A$.
+                \item In elimination, you would replace row $i$ by
+                    \[
+                        \text{row}_{i} - m \cdot \text{row}_{j},
+                    \]
+                    where $m = \tfrac{a_{ij}}{a_{jj}}$.
+            \end{itemize}
+
+            The \textbf{elimination matrix} $E$ is the identity matrix, except in position $(i,j)$, where it has $-m$.
+
+            So:
+            \[
+                E = I - m e_i e_j^{\top},
+            \]
+            where $e_i$ and $e_j$ are standard basis vectors (all zeros except a one at the $i^{\text{th}}$ or $j^{\text{th}} $ position).
+            \bigbreak \noindent 
+            Multiplying $E$ by $A$ from the left actually performs that row operation:
+            \[
+                EA = A \quad \text{with entry $(i,j)$ zeroed out.}
+            \]
+            Let
+            \[
+                A = \begin{bmatrix}
+                    2 & 1 \\
+                    4 & 3
+                \end{bmatrix}.
+            \]
+            We want to eliminate the entry in the bottom-left.  
+            \bigbreak \noindent 
+            The multiplier is
+            \[
+                m = \frac{4}{2} = 2.
+            \]
+            The elimination matrix is
+            \[
+                E = \begin{bmatrix}
+                    1 & 0 \\
+                    -2 & 1
+                \end{bmatrix}.
+            \]
+            Now check:
+            \[
+                EA =
+                \begin{bmatrix}
+                    1 & 0 \\
+                    -2 & 1
+                \end{bmatrix}
+                \begin{bmatrix}
+                    2 & 1 \\
+                    4 & 3
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    2 & 1 \\
+                    0 & 1
+                \end{bmatrix},
+            \]
+
+        \item \textbf{LU Factorization without E.O (1)}: We perform Gaussian Elimination on the augmented system $[A|b] $ to yield a new system $[U|y]$.
+            \bigbreak \noindent 
+        We move down the main diagonal selecting $a_{ii}$ as the \textbf{pivot element}, and row $i$ as the \textbf{pivot row}. We do this for $i = 1,2,...,n$. For each pivot element, we get the elements $a_{ki} = 0$ for $k=i+1,i+2,...,n$ we can accomplish this without interchanging rows so long as the pivot elements are nonzero.
+        \bigbreak \noindent 
+        We perform elementary operations of the form
+        \begin{align*}
+            -m_{ki}r_{i} + r_{k} \to r_{k}^{\prime} \quad \text{ for } k = i+1,i+2,...,n
+        \end{align*}
+        where $r_{i}$ is the $i^{\text{th}}$ row, $r_{k}$ is the $k^{\text{th}}$ row, and $m_{ki}$ is the \textbf{multiplier} $m_{ki} = \frac{a_{ki}}{a_{ii}} $
+        \bigbreak \noindent 
+        Upon completion of the Gaussian elimination, the collected multipliers together with ones in the main diagonal and zeros in the entries above the main diagonal form the matrix $L$.
+        \bigbreak \noindent 
+        \textbf{Additional information:} We perform Gaussian elimination on the augmented matrix $[A|b] \to [U|y]$. Note that after we achieve $U$, we have the system $Ux = y$ with the same solution set as $Ax = b$. 
+        \bigbreak \noindent 
+        Notice that each step has its own elimination matrix $E_{1},E_{2},... $. If we apply them in sequence,
+        \begin{align*}
+            E_{k} \cdots E_{2}E_{1}A = U
+        \end{align*}
+        Where $U$ is the final upper triangular matrix. It follows that 
+        \begin{align*}
+            A = (E_{k} \cdots E_{2}E_{1})^{-1}U
+        \end{align*}
+        Define 
+        \begin{align*}
+            (E_{k} \cdots E_{2}E_{1})^{-1} = L
+        \end{align*}
+        It’s lower triangular because each elimination matrix is lower triangular, and the inverse of a lower triangular matrix is also lower triangular.
+        \bigbreak \noindent 
+
+        \bigbreak \noindent 
+        For example, consider the system
+        \begin{align*}
+            \begin{bmatrix}
+                \begin{array}{ccc|c}
+                    2 & 1 & 1 & 7 \\
+                    2 & 2 & -1 & 3 \\
+                    4 & -1 & 6 & 20
+               \end{array}
+            \end{bmatrix}
+        \end{align*}
+        We start with $a_{11} = 2$ as the pivot element, and row one as the pivot row. We perform elementary operations of the form above to get $a_{21} = a_{31} = 0$. To get $a_{21} = 0$, we have the operation
+        \begin{align*}
+            -1r_{1} + r_{2} \to r_{2}^{\prime}, \quad m_{21} = 1
+        \end{align*}
+        To get $a_{31} = 0$, we perform the operation
+        \begin{align*}
+            -2r_{1} + r_{3} \to r_{3}^{\prime}, \quad m_{31} = 2
+        \end{align*}
+        After the two operations, we have
+        \begin{align*}
+            \begin{bmatrix}
+                \begin{array}{ccc|c}
+                    2 & 1 & 1 & 7 \\
+                    0 & 1 & -2 & -4 \\
+                    0 & -3 & 4 & 6
+                \end{array}
+            \end{bmatrix}
+        \end{align*}
+        We move to the next pivot element $a_{22} = 1$. To get $a_{32} = 0$, we perform the operation
+        \begin{align*}
+            -(-3)r_{2} + r_{3} \to r_{3}^{\prime},\quad m_{32} = -3
+        \end{align*}
+        So after the last operation we have
+        \begin{align*}
+            \begin{bmatrix}
+                \begin{array}{ccc|c}
+                    2 & 1 & 1 & 7 \\
+                    0 & 1 & -2 & -4 \\
+                    0 & 0 & -2 & -6
+                \end{array}
+            \end{bmatrix}
+        \end{align*}
+    \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be non-singular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principle sub-matrices of $A$ are non-singular.
+
+
+
+
+
+            
+
+
+    \end{itemize}
+
+
+    \pagebreak 
     \subsection{Proofs}
     \bigbreak \noindent 
     \subsubsection{Positive definite (1)}
