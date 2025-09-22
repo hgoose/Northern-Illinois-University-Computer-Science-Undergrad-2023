@@ -9846,6 +9846,41 @@ indicate which strong entity the weak entity depends upon.
                 \bigbreak \noindent 
                 \textbf{Note:} To implement something like $y=x+1$, we basically do the same thing as above, but between outputting the value of $x$ and loading that value int $y$, we feed the output of $x$ into an ALU to get $x+1 $
 
+            \item \textbf{Counter}: A binary counter is another a sequential circuit. Among other things, it can be used to keep track of how many cycles the clock has ticked.
+                \bigbreak \noindent 
+                This is a 4-bit counter. It represents the 4-bit binary number $B_{3}B_{2}B_{1}B_{0}$.  
+                \bigbreak \noindent 
+                \fig{.5}{./figures/78.png}
+                \bigbreak \noindent 
+                It counts $B'0000'$, $B'0001'$, etc. Note that the high-order bits are at the bottom of the diagram.  
+                \bigbreak \noindent 
+                After it hits $B'1111'$, it returns to $B'0000'$. Now it can count forever.
+                \bigbreak \noindent 
+                When the count enable line is on, a pulse is produced every time the clock ticks.
+                \bigbreak \noindent 
+                The input is sampled on the rising clock edge and the output is stable at the time of the falling clock edge.
+                \bigbreak \noindent 
+                The count enable line feeds into both $J$ and $K$ of the top flip-flop.  
+                \bigbreak \noindent 
+                When $J = 1$ and $K = 1$ at a clock tick, the JK flip-flop changes state, i.e., the output is the inverse of the previous output. Assuming the original value of $B_{0}$ was $0$, it is now $1$. The value of $B_{0}$ is also sent to the AND gate below it. So $B_{3}B_{2}B_{1}B_{0}$ now equals $B'0001'$.
+                \bigbreak \noindent 
+                When will $B_{1}$ flip to $1$?  On the next clock pulse, the $J = 1$, $K = 1$ input causes $B_{0}$ to flip from $1$ to $0$. At the same time, the $1$ from $B_{0}$ is AND-ed with the $1$ from the count enable line and sent to $B_{1}$, causing it to flip from $0$ to $1$. So $B_{3}B_{2}B_{1}B_{0}$ now equals $B'0010'$.
+                \bigbreak \noindent 
+                When will $B_{2}$ flip to $1$?  Its input comes from an AND gate. One of the inputs is $B_{1}$, and the other is the AND of the clock enable line and $B_{0}$.  
+                \bigbreak \noindent 
+                The clock enable is $1$ during counting, so the relevant part is $B_{0}$.  
+                \bigbreak \noindent 
+                In other words, $B_{2}$ will become $1$ when $B_{1} = 1$ and $B_{0} = 1$, as we expect from a counter. So the value after $B'0010'$ is $B'0011'$, and the following value is $B'0100'$.
+                \bigbreak \noindent 
+                When $B_{3}B_{2}B_{1}B_{0} = B'1111'$, the largest value that the counter can hold has been reached.  
+                \bigbreak \noindent 
+                The next cycle will reset $B_{3}B_{2}B_{1}B_{0}$ to $B'0000'$ (i.e., all four bits will flip).  
+                \bigbreak \noindent 
+                You can use a combinational circuit to add $1$ to a number, but you need a sequential circuit, i.e., one that knows its previous value, to implement a counter.
+
+
+
+
 
 
 
