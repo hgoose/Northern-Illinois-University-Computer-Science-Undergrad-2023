@@ -10463,6 +10463,7 @@ indicate which strong entity the weak entity depends upon.
             \end{xmlcode}
     \end{itemize}
 
+
     \pagebreak 
     \subsection{Reference}
     \bigbreak \noindent 
@@ -10476,6 +10477,12 @@ indicate which strong entity the weak entity depends upon.
         \item android.widget.TextView;
         \item java.text.NumberFormat;
         \item \textbf{android.text}: TextWatcher interface
+        \item android.graphics.Point;
+        \item android.widget.Button;
+        \item android.widget.GridLayout;
+        \item androidx.constraintlayout.widget.ConstraintLayout;
+        \item androidx.constraintlayout.widget.ConstraintSet;
+        \item android.view.ViewGroup;
     \end{itemize}
 
     \pagebreak 
@@ -10520,6 +10527,18 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             So your 20dp button will look like the same size button whether it's on a cheap low-res phone or a modern super high-res one.
         \item \textbf{Layout Params}: Generally, a layout class like ConstraintLayout or RelativeLayout contains a static inner class that contains XML attributes that allow us to arrange the components within the layout. This static inner class is often named \textbf{LayoutParams}
+            \bigbreak \noindent 
+            Every child view inside a ViewGroup needs layout parameters (LayoutParams).
+            \bigbreak \noindent 
+            These tell the parent how big the child should be and how it should be positioned.
+            \bigbreak \noindent 
+            Different ViewGroups define their own rules:
+            \begin{itemize}
+                
+                \item \textbf{LinearLayout.LayoutParams}: weight, gravity
+                \item \textbf{FrameLayout.LayoutParams}: gravity
+                \item \textbf{ConstraintLayout.LayoutParams}: constraints like topToBottom, leftToLeft, etc.
+            \end{itemize}
         \item \textbf{Positioning components inside ConstraintLayout}: We will use the attributes of ConstraintLayout.LayoutParams to position the XML elements on the screen
         \item \textbf{Ids}: The android:id attribute allows us to give an id to an XML element
             \bigbreak \noindent 
@@ -10595,6 +10614,59 @@ indicate which strong entity the weak entity depends upon.
             Every EditText communicates with the IME through the Input Method Framework (IMF) in Android.
             \bigbreak \noindent 
             When you tap into an EditText, the IME pops up (usually the on-screen keyboard).
+        \item \textbf{Get size of screen}: 
+            \bigbreak \noindent 
+            \begin{javacode}
+                import android.graphics.Point;
+
+                Point size = new Point();
+                getWindowManager().getDefaultDisplay().getSize(size);
+            \end{javacode}
+        \item \textbf{Create grid layout in java (controller)}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                GridLayout gridLayout = new GridLayout(this);
+                gridLayout.setRowCount(int m);
+                gridLayout.setColumnCount(int n);
+            \end{javacode}
+        \item \textbf{Adding views to GridLayout}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                gridLayout.addView(view, w, h);
+
+            \end{javacode}
+        \item \textbf{setContentView}: the method setContentView(...) is used inside an Activity to specify which layout file (XML) should be used as the UI for that screen.
+            \bigbreak \noindent 
+            Calling \texttt{setContentView(R.layout.some\_layout)} tells the activity:
+            \begin{center}
+                "Use the layout resource some\_layout.xml from the \textit{res/layout} folder as the UI for this screen."
+            \end{center}
+            \bigbreak \noindent 
+            If you’re using programmatic UI (creating Views in Java instead of XML), you can pass a View object directly,
+        \item \textbf{ViewGroup}:
+            In Android, everything you see on screen is either a View or a ViewGroup.
+            \bigbreak \noindent 
+            A View is a basic UI element — e.g. Button, TextView, EditText, ImageView.
+            \bigbreak \noindent 
+            A ViewGroup is a container that holds other Views (and even other ViewGroups). 
+            \bigbreak \noindent 
+            So, a ViewGroup is essentially a layout manager. It defines how child views are positioned, sized, and arranged inside it.
+            \begin{itemize}
+                \item \textbf{LinearLayout}: places children in a row or column.
+                \item \textbf{RelativeLayout (older, mostly replaced by ConstraintLayout)}: places children relative to each other.
+                \item \textbf{ConstraintLayout}: a flexible, modern layout system.
+                \item \textbf{FrameLayout}: stacks children on top of each other.
+                \item \textbf{RecyclerView}: a powerful scrolling container for lists/grids.
+            \end{itemize}
+            \textbf{Note:} A ViewGroup is a subclass of View.
+        \item \textbf{Giving id to view in java}: We can use
+            \bigbreak \noindent 
+            \begin{javacode}
+            View.generateViewId()
+            \end{javacode}
+            as an argument to \texttt{view.setId()}. The method \texttt{generateViewId()} is a static method in the View class. It creates a unique integer ID at runtime that’s guaranteed not to collide with other view IDs.
+
+
     \end{itemize}
 
     \pagebreak 
@@ -11157,6 +11229,96 @@ indicate which strong entity the weak entity depends upon.
                 </style>
             \end{xmlcode}
     \end{itemize}
+
+    \pagebreak 
+    \subsection{Java reference}
+    \bigbreak \noindent 
+    \subsubsection{Constraint layout in java (and ConstraintSet)}
+    \begin{itemize}
+        \item \textbf{Needed includes}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                import androidx.constraintlayout.widget.ConstraintLayout;
+                import androidx.constraintlayout.widget.ConstraintSet;
+                import android.view.ViewGroup;
+            \end{javacode}
+        \item \textbf{Create ConstraintLayout}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                ConstraintLayout layout = new ConstraintLayout(this);
+            \end{javacode}
+            The argument \textit{this} is the \textbf{context}, which in this case is the activity.
+        \item \textbf{ConstraintLayout.LayoutParams}: Has constructor
+            \bigbreak \noindent 
+            \begin{javacode}
+            ConstraintLayout.LayoutParams(int width, int height)
+            \end{javacode}
+            Lets you define width and height (MATCH\_PARENT, WRAP\_CONTENT, or px).
+            \bigbreak \noindent 
+            For example,
+            \bigbreak \noindent 
+            \begin{javacode}
+                ConstraintLayout.LayoutParams lp =
+                    new ConstraintLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+            \end{javacode}
+            Then, we can add constraints, Each field takes an ID of another view (or PARENT_ID):
+            \begin{itemize}
+                \item \textbf{leftToLeft}: Align the left edge of this view to the left edge of another view (or parent).
+                \item \textbf{leftToRight}: Align the left edge of this view to the right edge of another view.
+                \item \textbf{rightToLeft}: Align the right edge of this view to the left edge of another view.
+                \item \textbf{rightToRight}: Align the right edge of this view to the right edge of another view.
+                \item \textbf{topToTop}: Align the top edge of this view to the top edge of another view.
+                \item \textbf{topToBottom}: Align the top edge of this view to the bottom edge of another view.
+                \item \textbf{bottomToTop}: Align the bottom edge of this view to the top edge of another view.
+                \item \textbf{bottomToBottom}: Align the bottom edge of this view to the bottom edge of another view.
+                \item \textbf{startToStart}: Align the start edge of this view to the start edge of another view.
+                \item \textbf{startToEnd}: Align the start edge of this view to the end edge of another view.
+                \item \textbf{endToStart}: Align the end edge of this view to the start edge of another view.
+                \item \textbf{endToEnd}: Align the end edge of this view to the end edge of another view.
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Note:}
+            \begin{itemize}
+                \item left/right = physical edges (always left/right of the screen).
+                \item start/end = logical edges (switch meaning in RTL layouts).
+            \end{itemize}
+            \bigbreak \noindent 
+            For example,
+            \bigbreak \noindent 
+            \begin{javacode}
+            lp.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+            \end{javacode}
+            \bigbreak \noindent 
+            We also have chains, for arranging multiple views in a line with flexible spacing:
+            \begin{itemize}
+                \item horizontalChainStyle
+                    \begin{itemize}
+                        \item CHAIN\_SPREAD
+                        \item CHAIN\_SPREAD\_INSIDE
+                        \item CHAIN\_PACKED
+                    \end{itemize}
+                \item verticalChainStyle
+                    \begin{itemize}
+                        \item same values as above.
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{.setId()}
+                \item \textbf{.setLayoutParmas()}
+                \item \textbf{.addView()}
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Grid layout in java}
+    \begin{itemize}
+        
+    \end{itemize}
+
 
 
 

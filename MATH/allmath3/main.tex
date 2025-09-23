@@ -7166,7 +7166,7 @@
                 \]
                 The total bandwidth here is $1 + 1 + 1 = 3$.
 
-        \item \textbf{Common envelope}: The common envelope of $A $ is the set of indices $(i,j)$ in the upper triangular part of $A$ (including the main diagonal). Define
+        \item \textbf{Column envelope}: The column envelope of $A $ is the set of indices $(i,j)$ in the upper triangular part of $A$ (including the main diagonal). Define
             \begin{align*}
             \text{colenv}\{A\} = \{(i,j)\} :\; i \leq j \text{ and } a_{kj} \ne 0 \text{ for } k \leq i
             \end{align*}
@@ -7535,13 +7535,176 @@
         \[
             b_{ij} = \sum_{k=1}^{m} a_{ik} x_{kj}.
         \]
+    \item \textbf{Triangular matrix}:
+        A matrix $G = (g_{ij})$ is \textit{lower triangular} if $g_{ij} = 0$ whenever $i < j$. 
+        Thus a lower-triangular matrix has the form
+        \[
+            G =
+            \begin{bmatrix}
+                g_{11} & 0      & 0      & \cdots & 0 \\
+                g_{21} & g_{22} & 0      & \cdots & 0 \\
+                g_{31} & g_{32} & g_{33} & \cdots & \vdots \\
+                \vdots & \vdots & \vdots & \ddots & 0 \\
+                g_{n1} & g_{n2} & g_{n3} & \cdots & g_{nn}
+            \end{bmatrix}.
+        \]
+        Similarly, an \textit{upper triangular} matrix is one for which $g_{ij} = 0$ whenever $i > j$. 
+        A \textit{triangular} matrix is one that is either upper or lower triangular.
+    \item \textbf{Positive definite matrix}: A square matrix $A$ is positive definite provided it satisfies
+        \begin{enumerate}
+            \item $A = A^{\top} $
+            \item $x^{\top}Ax > 0$ for all $x\in \mathbb{R}^{n}$, $x\ne 0$
+        \end{enumerate}
+    \item \textbf{Column envelope}: The envelope of a sparse matrix is the set of positions around the diagonal that “must be included” when storing or working with the matrix in a compressed way.
+        \bigbreak \noindent 
+        It essentially captures the profile of where the nonzeros start (or stop) in each column.
+        \bigbreak \noindent 
+        Let $A  = (a_{ij})$. Define for each column $j$
+        \begin{align*}
+            q(j) = \text{min}\{i:\ a_{ij} \ne 0\}
+        \end{align*}
+        I.e the first nonzero entry in column $j$. Then, the column envelope of column $j$ is 
+        \begin{align*}
+            \{(i,j):\ q(j) \leq i \leq j\}
+        \end{align*}
+        So, for column $j$, you start at the first nonzero entry $q(j)$ and include all positions down to the diagonal ( $i=j$), whether or not some of them are explicitly zero.
+        \bigbreak \noindent 
+        The column envelope of the matrix $A$ is the union over all columns:
+        \begin{align*}
+            \text{colenv}\{A\} = \bigcup_{j=1}^{n}\{(i,j):\ q(j) \leq i \leq j\}
+        \end{align*}
+        with 
+        \begin{align*}
+            q(j) = \text{min}\{i:\ a_{ij} \ne 0\}
+        \end{align*}
+    \item \textbf{Row envelope}: For each row $i$ find the first nonzero entry
+        \begin{align*}
+            p(i) = \text{min}\{j:\ a_{ij} \ne 0\}.
+        \end{align*}
+        Then, the row envelope of row $i$ is 
+        \begin{align*}
+            \{(i,j):\ p(i) \leq j \leq i\}
+        \end{align*}
+        So, the row envelope is in the lower triangular part ($j \leq i $)
+        \bigbreak \noindent 
+        The row envelope of $A$ is then
+        \begin{align*}
+            \text{rowenv}\{A\} = \bigcup_{i=1}^{m}\{(i,j):\ p(i) \leq j \leq i\}
+        \end{align*}
+    \item \textbf{Envelope}: The envelope is the union of both envelopes. That is,
+        \begin{align*}
+            \text{env}\{A\} = &\text{rowenv}\{A\} = \bigcup_{i=1}^{m}\{(i,j):\ p(i) \leq j \leq i\}  \\
+            \cup &\text{colenv}\{A\} = \bigcup_{j=1}^{n}\{(i,j):\ q(j) \leq i \leq j\}
+        \end{align*}
+    \item \textbf{Elementary operations on systems}:
+        \begin{enumerate}
+            \item Interchange rows.
+            \item Multiply an equation by a nonzero constant.
+            \item Add a multiple of one equation to another equation.
+        \end{enumerate}
+
+
+
+
 
     \end{itemize}
 
     \pagebreak \bigbreak \noindent 
     \subsubsection{Theorems}
     \begin{itemize}
-        
+        \item \textbf{Theorem 1.1.19}: 
+            Let $A \in \mathbb{R}^{m\times n}$ ,$X\in \mathbb{n\times p}$ and $B \in \mathbb{R}^{m \times p}$ be partitioned as follows
+            \begin{align*}
+                A &= \begin{blockarray}{ccc} & m_{1} & m_{2} \\ \begin{block}{c[cc]} n_{1} & A_{11} & A_{12} \\ n_{2} & A_{21} & A_{22} \end{block} \end{blockarray},\quad 
+                \begin{cases}
+                    m_{1} + m_{2} &= m \\
+                    n_{1} + n_{2} &= n
+                \end{cases} \\
+                X &= \begin{blockarray}{ccc} & p_{1} & p_{2} \\ \begin{block}{c[cc]} n_{1} & X_{11} & X_{12} \\ n_{2} & X_{21} & X_{22} \end{block} \end{blockarray}, \quad \begin{cases} p_{1} + p_{2} &= p \\ n_{1} + n_{2} &= n \end{cases} \\
+                B &= \begin{blockarray}{ccc} & p_{1} & p_{2} \\ \begin{block}{c[cc]} m_{1} & B_{11} & B_{12} \\ m_{2} & B_{21} & B_{22} \end{block} \end{blockarray}, \quad \begin{cases} p_{1} + p_{2} &= p \\ m_{1} + m_{2} &= m \end{cases} \\
+            \end{align*}
+            Then $AX = B$ if and only if 
+            \begin{align*}
+                A_{i1}X_{1j} = B_{ij} \quad \text{ for } i,j=1,2
+            \end{align*}
+        \item \textbf{Theorem 1.1.24}:  
+            Make a finer partition of $A$ into $r$ block rows and $s$ block columns.
+            \[
+                A =
+                \begin{bmatrix}
+                    A_{11} & \cdots & A_{1s} \\
+                    \vdots & \ddots & \vdots \\
+                    A_{r1} & \cdots & A_{rs}
+                \end{bmatrix}, \quad
+                \begin{array}{l}
+                    n_1 + \cdots + n_r = n \\
+                    m_1 + \cdots + m_s = m
+                \end{array}
+            \]
+            Then partition $X$ \emph{conformably} with $A$; that is, make the block row structure of
+            $X$ identical to the block column structure of $A$.
+
+            \[
+                X =
+                \begin{bmatrix}
+                    X_{11} & \cdots & X_{1t} \\
+                    \vdots & \ddots & \vdots \\
+                    X_{s1} & \cdots & X_{st}
+                \end{bmatrix}, \quad
+                \begin{array}{l}
+                    m_1 + \cdots + m_s = m \\
+                    p_1 + \cdots + p_t = p
+                \end{array}
+            \]
+            Finally, partition the product $B$ conformably with both $A$ and $X$.
+            \[
+                B =
+                \begin{bmatrix}
+                    B_{11} & \cdots & B_{1t} \\
+                    \vdots & \ddots & \vdots \\
+                    B_{r1} & \cdots & B_{rt}
+                \end{bmatrix}, \quad
+                \begin{array}{l}
+                    n_1 + \cdots + n_r = n \\
+                    p_1 + \cdots + p_t = p
+                \end{array}
+            \]
+            \bigbreak \noindent 
+            \textbf{Theorem}: Let $A,X$ and $B$ be partitioned like they are above. Then, $AX = B$ if and only if 
+            \begin{align*}
+                B_{ij} = \sum_{k=1}^{s}A_{ik}X_{kj} \quad i=1,...,r,\; j=1,...,t
+            \end{align*}
+        \item \textbf{Theorem 1.2.3}: Let $A$ be a square matrix. The following six conditions are equivalent; 
+            that is, if any one holds, they all hold.
+            \begin{enumerate}[(a)]
+                \item $A^{-1}$ exists.
+                \item There is no nonzero $y$ such that $Ay = 0$.
+                \item The columns of $A$ are linearly independent.
+                \item The rows of $A$ are linearly independent.
+                \item $\det(A) \neq 0$.
+                \item Given any vector $b$, there is exactly one vector $x$ such that $Ax = b$.
+            \end{enumerate}
+        \item \textbf{Theorem 1.3.1}: Let $G$ be a triangular matrix. Then $G$ is \textbf{nonsingular} if and only if
+            $g_{ij} \ne 0$ for $i=1,...,n $
+        \item \textbf{Theorem 1.4.2}: If $A$ is positive definite, then $A$ is nonsingular
+        \item \textbf{Corollary 1.4.3}: If $A$ is positive definite, the linear system $Ax = b$ has exactly one solution.
+        \item \textbf{Theorem 1.4.4}: Let $M$ be any $n \times n$ nonsingular matrix, and let $A = M^{\top}M$. Then $A$ is positive definite.
+        \item \textbf{Theorem 1.4.7 (\textit{Cholesky Decomposition Theorem})}: Let $A$ be positive definite. Then $A$ can be decomposed in exactly one way into a product
+            \begin{align*}
+                A = R^{\top}R
+            \end{align*}
+            such that $R$ is upper triangular and has all main diagonal entries $r_{ii}$ positive. $R$ is called the Cholesky factor of $A$.
+            \bigbreak \noindent 
+            We have
+            \begin{align*}
+                r_{ii} &= +\sqrt{a_{ii} - \sum_{k=1}^{i-1}r_{ki}^{2}}, \\
+                r_{ij} &= \frac{\left(a_{ij} - \sum_{k=1}^{i-1}r_{ki}r_{kj}\right)}{r_{ii}} \quad j=i+1,...,n
+            \end{align*}
+            \textbf{Note:} $R$ is upper triangular, so we do not have to calculate entries $r_{ij}$ for $i > j $
+        \item \textbf{Theorem 1.5.7}: Let $A$ be positive definite, and let $R$ be the Cholesky factor of A. Then $R$ and $A$ have the same envelope.
+
+
+
     \end{itemize}
 
     \pagebreak \bigbreak \noindent 
@@ -7553,12 +7716,23 @@
             \[
                 b = \sum_{j=1}^{m} A_{j} x_{j}.
             \]
+        \item \textbf{Proposition 1.4.51}: If $A$ is positive definite, then $a_{ii} > 0$ for $i = 1,2,..,n$
+        \item  \textbf{Proposition 1.4.53}: Let $A$ be positive definite, and consider a partition
+            \begin{align*}
+                A = \begin{bmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{bmatrix}
+            \end{align*}
+            in which $A_{11}$ and $A_{22} $ are square. Then $A_{11}$ and $A_{22}$ are positive definite.
+        \item \textbf{Proposition 1.4.55} If $A$ and $X$ are $n\times n$, $A$ is positive definite, and $X$ is nonsingular then the matrix $B = X^{\top}AX$ is also positive definite.
+        \item \textbf{Proposition 1.7.1}: If $\hat{A}x = \hat{b}$ is obtained from $Ax = b$ by an elementary operation of type 1,2, or 3, then the systems $Ax = b$ and $\hat{A}x = \hat{b}$ are equivalent.
+        \item \textbf{Proposition 1.7.3}:  Suppose $\hat{A}$ is obtained from $A$ by an elementary row operation of
+            type 1, 2, or 3. Then $\hat{A}$ is nonsingular if and only if $A$ is.
     \end{itemize}
 
     \pagebreak \bigbreak \noindent 
     \subsubsection{Algorithm complexities}
     \begin{itemize}
-        \item \textbf{Matrix multiplication}
+        \item \textbf{Matrix multiplication}: $\mathcal{O}(n^{3}) $
+        \item \textbf{Cholesky's algorithm}: Cholesky's algorithm  applied to an $n \times n$ matrix performs about $\frac{n^{3}}{3} $
     \end{itemize}
 
 
