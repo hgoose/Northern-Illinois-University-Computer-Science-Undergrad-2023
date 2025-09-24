@@ -7397,15 +7397,106 @@
             \end{bmatrix}
         \end{align*}
     \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be non-singular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principle sub-matrices of $A$ are non-singular.
+        % \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$, $A$ can be factored as $A = LU$, for $L \in \mathbb{R}^{n\times n}$ unit lower triangular, $U \in \mathbb{R}^{n\times n}$ upper triangular if and only if all leading principle submatrices of $A$ are nonsingular.
+        \begin{theorem}
+            Let $A \in \mathbb{R}^{n \times n}$. Then $A$ admits an LU factorization
+            \[
+                A = LU,
+            \]
+            where $L \in \mathbb{R}^{n \times n}$ is unit lower triangular and 
+            $U \in \mathbb{R}^{n \times n}$ is upper triangular, 
+            \textbf{without row interchanges}, if and only if all leading principal 
+            submatrices of $A$ are nonsingular.
+        \end{theorem}
+
+    \item \textbf{Row oriented algorithm to find $LU$ factorization}: Let $A \in \mathbb{R}^{n\times n}$. If $A$ can be factored into products $LU$, for $U \in \mathbb{R}^{n\times n}$ upper triangular, $L \in \mathbb{R}^{n\times n}$ unit lower triangular, then
+        \begin{align*}
+            A &= LU  
+        \end{align*}
+        implies
+        \begin{align*}
+              \begin{bmatrix}
+                a_{11} & a_{12} & a_{13} & \cdots & a_{1n} \\
+                a_{21} & a_{22} & a_{23} & \cdots & a_{2n} \\
+                a_{31} & a_{32} & a_{33} & \cdots & a_{3n} \\
+                \vdots & \vdots & \vdots & \ddots & \vdots \\
+                a_{n1} & a_{n2} & a_{n3} & \cdots & a_{nn} \\
+            \end{bmatrix}
+             = \begin{bmatrix}
+                 1 & 0 & 0 & \cdots & 0 \\
+                 \ell_{21} & 1 & 0 & \cdots & 0 \\
+                 \ell_{31} & \ell_{32} & 1 & \cdots & 0 \\
+                 \vdots & \vdots & \vdots & \ddots & \vdots \\
+                 \ell_{n1} & \ell_{n2} & \ell_{n3} & \cdots & 1
+             \end{bmatrix}
+             \begin{bmatrix}
+                 u_{11} & u_{12} & u_{13} & \cdots & u_{1n} \\
+                 0  & u_{22} & u_{23} & \cdots & u_{1n} \\
+                 0& 0& u_{33} & \cdots & u_{3n} \\
+                 \vdots & \vdots & \vdots & \ddots & \vdots \\
+                 0 & 0 & 0 & \cdots & u_{nn}
+             \end{bmatrix}
+        .\end{align*}
+        Let's first examine the formula for $u_{ij}$ by solving for each row in $U$
+        \begin{enumerate}
+            \item \textbf{Row 1}: for $j=1,\dots,n$
+                \[
+                    u_{1j} = a_{1j}.
+                \]
+
+            \item \textbf{Row 2}: for $j=2,\dots,n$
+                \[
+                    u_{2j} = a_{2j} - \ell_{21}\,u_{1j}.
+                \]
+
+            \item \textbf{Row 3}: for $j=3,\dots,n$
+                \[
+                    u_{3j} = a_{3j} - \ell_{31}\,u_{1j} - \ell_{32}\,u_{2j}.
+                \]
+
+            \item \textbf{Row $i$}: for $j=i,\dots,n$
+                \[
+                    u_{ij} = a_{ij} - \sum_{k=1}^{i-1} \ell_{ik}\,u_{kj}.
+                \]
+
+            \item \textbf{Row $n$}: (just the diagonal entry)
+                \[
+                    u_{nn} = a_{nn} - \sum_{k=1}^{n-1} \ell_{nk}\,u_{kn}.
+                \]
+        \end{enumerate}
+        Next, we look at the formula for $\ell_{ij}$ by solving for each column in $L$
+        \begin{enumerate}
+            \item \textbf{Column 1}: for $i=2,\dots,n$
+                \[
+                    \ell_{i1} \;=\; \frac{a_{i1}}{u_{11}}.
+                \]
+            \item \textbf{Column 2}: for $i=3,\dots,n$
+                \[
+                    \ell_{i2} \;=\; \frac{a_{i2} - \ell_{i1}u_{12}}{u_{22}}.
+                \]
+            \item \textbf{Column 3}: for $i=4,\dots,n$
+                \[
+                    \ell_{i3} \;=\; \frac{a_{i3} - \ell_{i1}u_{13} - \ell_{i2}u_{23}}{u_{33}}.
+                \]
+            \item \textbf{Column $j$}: for $i=j+1,\dots,n$
+                \[
+                    \ell_{ij} \;=\; \frac{a_{ij} - \sum_{k=1}^{j-1}\ell_{ik}u_{kj}}{u_{jj}}.
+                \]
+            \item \textbf{Column $n$}: (no entries below the diagonal to compute if $j=n$)
+                \[
+                    \text{Only } \ell_{nn}=1 \text{ (by unit lower convention).}
+                \]
+        \end{enumerate}
+        So, we see that
+        \begin{align*}
+            u_{ij} &= a_{ij} - \sum_{k=1}^{i-1}\ell_{ik}u_{kj} \quad j=i,i+1,...,n \tag{1} \\
+            \ell_{ij} &= \frac{a_{ij} - \sum_{k=1}^{j-1}\ell_{ik}u_{kj}}{u_{jj}} \quad i=j+1,j+2,...,n \tag{2}
+        \end{align*}
+        \bigbreak \noindent 
+        To use these formulas to find each $u_{ij}$ we first need to plug $i=1$ into $(1)$, then after we get the first row of $U$, we can plug in $j=1$ into $(2)$ to get the first column of $L$, and so on.
 
 
-
-
-
-            
-
-
-    \end{itemize}
+\end{itemize}
 
 
     \pagebreak 
