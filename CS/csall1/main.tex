@@ -9878,15 +9878,242 @@ indicate which strong entity the weak entity depends upon.
                 \bigbreak \noindent 
                 You can use a combinational circuit to add $1$ to a number, but you need a sequential circuit, i.e., one that knows its previous value, to implement a counter.
 
-
-
-
-
-
-
-
-
     \end{itemize}
+    
+    \pagebreak 
+    \subsection{Chapter 2}
+    \bigbreak \noindent 
+    \subsubsection{Binary Fractions}
+    \begin{itemize}
+        \item \textbf{Intro}: Fractions do not necessarily have exact representations in all bases, i.e., with a fixed number of digits.
+            \bigbreak \noindent 
+            In base 10, if the denominator contains powers of 2 and/or 5, the fraction can be exactly represented.
+            \bigbreak \noindent 
+            If a fraction cannot be exactly represented, it can always be represented by a fixed part plus a repeating part
+            \bigbreak \noindent 
+            In binary, only sums of powers of 2 can be exactly represented.
+            \begin{align*}
+                \frac{1}{2} &= 0b.1\\
+                \frac{1}{4} &= 0b.01 \\
+                \frac{1}{8} &= 0b.001 \\
+                \frac{3}{4} &= \frac{1}{2} + \frac{1}{4} = 0b.11 \\
+                \frac{1}{2^{20}} &= 0b.00000000000000000001
+            \end{align*}
+            And here are some fractions that can’t be exactly represented:
+            \begin{align*}
+                \frac{1}{3} &= 0b.010101...
+                \frac{1}{12} &= 0b.00010101...
+                \frac{1}{5} &= 0b.00110011...
+                \frac{1}{10} &= 0b.000110011...
+            \end{align*}
+            Again, there is a repeating part, possibly preceded by a non-repeating part.
+            \bigbreak \noindent 
+            The fact that most fractions can’t be exactly represented in a given number of bits is extremely important in computer science.
+        \item \textbf{Truncation error}:  Since any field has a finite width, we need to round off or truncate after that width is reached.
+            \bigbreak \noindent 
+            Usually we truncate, since that is easier for computer systems to do
+            \bigbreak \noindent 
+            That means that binary fractions are dangerous for representing money, for example, where we need an exact representation
+            \bigbreak \noindent 
+            For non-financial systems, we generally just need to know what the maximum possible error is.
+        \item \textbf{Fractional representation}: Digits to the right of the radix point represent negative powers of the radix.
+            \bigbreak \noindent 
+            The radix point is called the decimal point or binary point in decimal and binary, respectively.
+            \bigbreak \noindent 
+            In base 10,
+            \begin{align*}
+                0.47_{10} = 4 \times 10^{-1} + 7 \times 10^{-2}
+            \end{align*}
+            In base 2,
+            \begin{align*}
+                0.11_{2} &= 1 \times 2^{-1} + 1 \times 2^{-2} \\
+                         &= \frac{1}{2} + \frac{1}{4} = 0.75
+            \end{align*}
+        \item \textbf{Decimal fractions to binary (subtraction method)}: For converting decimal fractions to binary, there is a subtraction method and a multiplication method.
+            \bigbreak \noindent 
+            We always start with the largest value first, $2^{-1}$ , which is .5. Then we subtract $2^{-2} $, which is .25, etc
+            \bigbreak \noindent 
+            For example, suppose we want to convert $0.8125$ to binary. We subtract $\frac{1}{2}$, then $\frac{1}{4}$, etc. If the number is too small to subtract the current fraction, that bit gets a zero.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/101.png}
+            \bigbreak \noindent 
+            Our result, reading from top to bottom is
+            \begin{align*}
+                0.8125_{10} = 0.1101_{2}
+            \end{align*}
+            \bigbreak \noindent 
+            We stop when we reach 0, or when we reach the desired number of bits.
+            \bigbreak \noindent 
+            For example, if we were converting .8126 to a binary number with a width of 4 bits, we’d still get $0b.1101$, with an error term of $.0001_{10}$ (because there would be a 1 instead of a 0 at the end.)
+            \bigbreak \noindent 
+            \textbf{Note:} The subtraction method is not always convenient because it requires a table of negative powers of 2: .5, .25, etc.
+        \item \textbf{Inverses of powers of two (first 8)}
+            \begin{align*}
+                2^{-1} &=  \frac{1}{2} = 0.5 = 0b.1\\
+                2^{-2} &= \frac{1}{4} = 0.25 = 0b.01\\
+                2^{-3} &= \frac{1}{8} = 0.125 = 0b.001\\
+                2^{-4} &= \frac{1}{16} = 0.0625 = 0b.0001\\
+                2^{-5} &= \frac{1}{32} = 0.03125 = 0b.00001\\
+                2^{-6} &= \frac{1}{64} = 0.015625 = 0b.000001\\
+                2^{-7} &= \frac{1}{128} = 0.0078125 = 0b.0000001\\
+                2^{-8} &= \frac{1}{256} = 0.00390625 = 0b.00000001\\
+            \end{align*}
+        \item \textbf{Number of output bits}: To know the number of output bits, you must look at the desired output data structure
+            \bigbreak \noindent 
+            Number of bits requested to the right of the point is often required to be a multiple of 2, 4 (nibble) or 8 (byte).
+            \bigbreak \noindent 
+            You can add as many 0’s to the right as desired.
+        \item \textbf{Decimal fractions to binary (multiplication method)}: In this method, we repeatedly multiply by 2
+            \bigbreak \noindent 
+            Suppose we again want to convert decimal $0.8125$, we begin by multiply by two.
+            \begin{align*}
+                0.8125 \times 2 = 1.6250
+            \end{align*}
+            Whenever we get a part that’s no longer a fraction (like the 1 in the example), we have finished converting that part, so we drop it from our calculation and save it for the binary result
+            \bigbreak \noindent 
+            continue multiplying each fractional part by 2.
+            \bigbreak \noindent 
+            We drop the 1, then multiply the remaining fraction (.6250) by 2.
+            \bigbreak \noindent 
+            \fig{.8}{./figures/102.png}
+            \bigbreak \noindent 
+            We are finished when the remaining piece of the input is zero, as in this example, or until we have reached the desired number of binary places.
+            \bigbreak \noindent 
+            Our result, reading from top to bottom is
+            \begin{align*}
+                0.8125_{10} = 0b.1101
+            \end{align*}
+        \item \textbf{Decimal fraction to hex}: Convert it to a binary fraction with the desired number of bits
+            \bigbreak \noindent 
+            Even if the conversion terminates earlier, fill out the binary fraction on the right with 0’s to a full number of bytes.
+            \bigbreak \noindent 
+            Convert each nibble to hex
+            \bigbreak \noindent 
+            For example, $\frac{7}{8} = 0b.11100000  = 0x.e0$
+        \item \textbf{Converting binary fractions to decimal}:
+            Converting binary fractions to decimal is a two-step process:
+            \begin{enumerate}
+                \item Convert the binary number to the right of the point to decimal.
+                \item Divide it by the appropriate power of 2
+            \end{enumerate}
+            For example, if we wanted to convert $0b.1101$ to decimal, $1101 = 13$, and there are four bits after the binary point, so the denominator is $2^{4}$. So, the result is $\frac{13}{2^{4}} =\frac{13}{16}$
+        \item \textbf{Hex fractions to decimal}: Hex fractions can be converted to decimal in the same way
+            \bigbreak \noindent 
+            For example, $0x.d1$, $0xd1 = 209$, and there are two hex digits after the decimal, so we divide by $16^{-2} $
+            \bigbreak \noindent 
+            You can also convert the hex fraction to binary first
+        
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Twos complement}
+    \begin{itemize}
+        \item \textbf{Signed integers}: The conversions we have so far presented have involved only positive numbers.
+            \bigbreak \noindent 
+            There are three representation systems for signed integers:
+            \begin{enumerate}
+                \item Signed magnitude
+                \item One’s complement
+                \item Two’s complement
+            \end{enumerate}
+            We only use the last one. We only look at the first two to show their disadvantages.
+            \bigbreak \noindent 
+            For signed numbers, it is essential to know the width of the field, e.g., 8, 16, 32 or 64 bits. Other widths are occasionally used.
+        \item \textbf{Signed magnitude}: The signed magnitude system uses the highorder bit to indicate the sign of a value.
+            \bigbreak \noindent 
+            The high-order bit is the leftmost bit in a byte.
+            \bigbreak \noindent 
+            It is also called the most significant bit (MSB) because in an unsigned number, it represents the largest value.
+            \bigbreak \noindent 
+            We will occasionally also use the term LSB, least significant bit, for the rightmost bit, or the bit in the 1’s position.
+            \bigbreak \noindent 
+            An 8-bit signed magnitude number contains:
+            \begin{itemize}
+                \item \textbf{bit 1:} sign bit (leftmost bit)
+                \item \textbf{bits 2-8:} absolute value of the number (7 bits)
+            \end{itemize}
+            \bigbreak \noindent 
+            For example, in 8-bit signed magnitude,
+            \begin{align*}
+                3 &= 0000 \;\; 0011 \\
+                -3 &= 1000 \;\; 0011 
+            \end{align*}
+            \bigbreak \noindent 
+            Signed magnitude has two significant disadvantages.
+            \begin{itemize}
+                \item It requires multiple rules to do arithmetic with signed magnitude numbers.
+                \item There are two different reps. for zero, e.g., 0000 0000 and 1000 0000 in an 8-bit system.
+                    \bigbreak \noindent 
+                    But we want each number to have a unique representation so we can do comparisons.
+            \end{itemize}
+            For these reasons many computer systems employ complement systems to represent numeric values.
+        \item \textbf{One's complement}: To calculate the one’s complement of a number, we flip each bit.
+            \bigbreak \noindent 
+            For example, in 8-bit one’s complement:
+            \begin{align*}
+                +3 &= 0000 \;\; 0011 \\
+                -3 &= 1111 \;\; 1100
+            \end{align*}
+            In an 8-bit one’s complement system, the largest absolute value uses 7 bits.
+            \begin{align*}
+                +127 &= 0111 \;\; 1111 \quad \text{(Largest)} \\
+                -127 &= 1000 \;\; 0000 \quad \text{(Smallest)}
+            \end{align*}
+            The high-order bit is the sign bit. As in the examples above, it identifies the sign and is not part of the magnitude.
+            \begin{itemize}
+                \item Positive numbers always have a 0.
+                \item Negative numbers always have a 1.
+            \end{itemize}
+        \item \textbf{Propagating the sign bit}: Again, notice the importance of the field width. In 8-bit one’s complement:
+            \begin{align*}
+                +3 &= 0000 0011 \\
+                -3 &= 1111 1100
+            \end{align*}
+            In 16-bit one’s complement:
+            \begin{align*}
+                +3 &= 0000 0000 0000 0011 \\
+                -3 &= 1111 1111 1111 1100
+            \end{align*}
+            So you can’t left fill a negative number with 0’s to move it to a larger field. You have to left fill negative numbers with 1’s. This is called propagating the sign bit
+        \item \textbf{Bit flipping}: Suppose you have a number $b$ in binary, flipping all the bits of $b$ is equivalent to computing
+            \begin{align*}
+                (2^{N} - 1) - b
+            \end{align*}
+            \bigbreak \noindent 
+            For an $N$ bit binary number, the maximum value is $2^{N}-1$, which would be all $N$ bits set to one. Take each bit of $b$
+            \begin{itemize}
+                \item If the bit is 0, subtracting it from a 1 leaves 1.
+                \item If the bit is 1, subtracting it from a 1 leaves 0.
+            \end{itemize}
+            That's exactly bit flipping
+        \item \textbf{One's complement addition}:  In one’s complement addition, the carry bit is “carried around” and added to the sum.
+            \bigbreak \noindent 
+            \fig{.8}{./figures/103.png}
+        \item \textbf{Why does end-around carry work?}: 
+            Suppose $a$ and $b$ are positive numbers. How would you add $a + (-b)$? You would calculate $a-b$
+            \bigbreak \noindent 
+            Now suppose $b $ is represented in one’s complement as $(2^{N}-1) - b$.
+            \bigbreak \noindent 
+            Then doing unsigned arithmentic would give $a + (2^{N}-1 - b) = 2^{N}-1 + (a-b)$.
+            \bigbreak \noindent 
+            But the correct value is $2^{N} + (a-b)$, so we need to add 1
+            \bigbreak \noindent 
+            Although end-around carry adds some complexity, one’s complement addition is simpler to implement than signed magnitude.
+            \bigbreak \noindent 
+            But it still has the disadvantage of having two different representations for zero:
+            \begin{align*}
+                0000 0000 &= +0 \\
+                1111 1111 &= -0
+            \end{align*}
+            Two’s complement solves this problem.
+        \item \textbf{Two's complement}: To express a value in two’s complement:
+            \begin{itemize}
+                \item If the number is positive, just convert it to binary.
+                \item If the number is negative, find the one’s complement of the number and then add 1.
+            \end{itemize}
+            With two’s complement arithmetic, we can add binary numbers directly. We discard any carries emitted from the high order bit.
+    \end{itemize}
+
 
 
     \pagebreak 
@@ -10483,6 +10710,7 @@ indicate which strong entity the weak entity depends upon.
         \item androidx.constraintlayout.widget.ConstraintLayout;
         \item androidx.constraintlayout.widget.ConstraintSet;
         \item android.view.ViewGroup;
+        \item android.content.Context;
     \end{itemize}
 
     \pagebreak 
@@ -11233,6 +11461,36 @@ indicate which strong entity the weak entity depends upon.
     \pagebreak 
     \subsection{Java reference}
     \bigbreak \noindent 
+    \subsubsection{android.content.Context}
+    \begin{itemize}
+        \item \textbf{What is it}: Context is an interface to global information about your application environment. It gives you access to:
+            \begin{itemize}
+                \item App resources (colors, strings, layouts, drawables, etc.)
+                \item System services (e.g. LayoutInflater, PowerManager, NotificationManager, etc.)
+                \item Permissions
+                \item Starting new Activities, Services, etc.
+            \end{itemize}
+            \bigbreak \noindent 
+            When you create a View in code:
+            \bigbreak \noindent 
+            \begin{javacode}
+                Button btn = new Button(this);
+                GridLayout grid = new GridLayout(this);
+            \end{javacode}
+            \bigbreak \noindent 
+            That this is a Context. In an Activity, this works because Activity is a subclass of Context.
+            \bigbreak \noindent 
+            The View needs a Context to:
+            \begin{itemize}
+                \item Know which theme/style to apply
+                \item Access resources (e.g., strings, colors, dimensions)
+                \item Hook into the Android system for rendering
+            \end{itemize}
+            Without a Context, a View has no “connection” to the running Android app environment.
+    \end{itemize}
+
+
+    \pagebreak \bigbreak \noindent 
     \subsubsection{Constraint layout in java (and ConstraintSet)}
     \begin{itemize}
         \item \textbf{Needed includes}:
@@ -11315,8 +11573,117 @@ indicate which strong entity the weak entity depends upon.
 
     \pagebreak 
     \subsubsection{Grid layout in java}
+    \bigbreak \noindent 
+    GridLayout is a type of ViewGroup that arranges its children in a grid of rows and columns.
+    \bigbreak \noindent 
+    Each child view is placed into a “cell” defined by its row and column. You can make a child span multiple rows or columns. It’s similar to a table layout but more flexible (alignments, spans, etc.).
     \begin{itemize}
-        
+        \item \textbf{Needed Includes}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                import android.content.Context;
+                import android.view.ViewGroup;
+                import android.widget.GridLayout;
+            \end{javacode}
+        \item \textbf{Create GridLayout}: You can make a GridLayout in code just like any other layout:
+            \bigbreak \noindent 
+            \begin{javacode}
+                GridLayout grid = new GridLayout(this);   // "this" = Context, usually Activity
+                grid.setRowCount(3);                      // number of rows
+                grid.setColumnCount(3);                   // number of columns
+            \end{javacode}
+        \item \textbf{Setting LayoutParams for GridLayout}: We use ViewGroup.LayoutParams to set the layout params for the entire grid container.
+            \bigbreak \noindent 
+            \begin{javacode}
+                grid.setLayoutParams(
+                    new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                );
+            \end{javacode}
+            
+        \item \textbf{GridLayout.LayoutParams}: You need GridLayout.LayoutParams for child views placed inside a GridLayout. GridLayout.LayoutParams is the special layout parameter class that children of a GridLayout must use.
+            \bigbreak \noindent 
+         It tells the GridLayout parent:
+            \begin{itemize}
+                \item Which row and column this child belongs to
+                \item How many cells to span
+                \item How to align inside those cells
+                \item How much margin space it should have
+            \end{itemize}
+            For example,
+            \bigbreak \noindent 
+            \begin{javacode}
+                Button btn = new Button(this);
+                btn.setText("Hi");
+
+                GridLayout.LayoutParams btnLp = new GridLayout.LayoutParams(
+                        GridLayout.spec(0),  // row 0
+                        GridLayout.spec(1)   // column 1
+                );
+                btnLp.width = GridLayout.LayoutParams.WRAP_CONTENT;
+                btnLp.height = GridLayout.LayoutParams.WRAP_CONTENT;
+
+                btn.setLayoutParams(btnLp);
+                grid.addView(btn);
+            \end{javacode}
+            \bigbreak \noindent 
+            \texttt{GridLayout.spec(int index)} creates a Spec object. A Spec describes a position in either rows or columns. Here, GridLayout.spec(0) means row 0 (the first row), and GridLayout.spec(1) means the first column.
+        \item \textbf{Rule of thumb}: 
+            Use ViewGroup.LayoutParams when sizing a container relative to its parent.
+            \bigbreak \noindent 
+            Use the container’s own LayoutParams subclass (GridLayout.LayoutParams, LinearLayout.LayoutParams, etc.) when adding children inside that container.
+        \item \textbf{GridLayout.LayoutParams constructors}:
+            \begin{center}
+                \begin{tabular}{p{8cm}|p{4cm}}
+                    Constructor	&Purpose \\
+                    \hline
+                    GridLayout.LayoutParams()	&Empty, set later \\
+                    GridLayout.LayoutParams(ViewGroup.LayoutParams)	&Basic width/height \\
+                    GridLayout.LayoutParams(ViewGroup.MarginLayoutParams)	&Width/height + margins \\
+                    GridLayout.LayoutParams(GridLayout.LayoutParams)	&Copy another one\\
+                    GridLayout.LayoutParams(GridLayout.Spec row, GridLayout.Spec col)	&Full control over row/column
+                \end{tabular}
+            \end{center}
+        \item \textbf{Using MarginLayoutParams on GridLayout.setLayoutParams}: This affects the GridLayout as a whole, not its children.
+            \bigbreak \noindent 
+            For example, 
+            \bigbreak \noindent 
+            \begin{javacode}
+                ViewGroup.MarginLayoutParams lp =
+                new ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+
+                lp.setMargins(20, 40, 20, 40); // left, top, right, bottom in px
+
+                grid.setLayoutParams(lp);
+            \end{javacode}
+        \item \textbf{Known methods for GridLayout.LayoutParams}:
+            \begin{itemize}
+                \item width 
+                    \begin{itemize}
+                        \item GridLayout.LayoutParams.WRAP\_CONTENT
+                        \item GridLayout.LayoutParams.MATCH\_PARENT
+                        \item absolute size
+                    \end{itemize}
+                \item height 
+                    \begin{itemize}
+                        \item GridLayout.LayoutParams.WRAP\_CONTENT
+                        \item GridLayout.LayoutParams.MATCH\_PARENT
+                        \item absolute size
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Known methods for GridLayout}:
+            \begin{itemize}
+                \item setRowCount(int m)
+                \item setColumnCount(int n)
+                \item setLayoutParams
+                \item addView
+            \end{itemize}
+
     \end{itemize}
 
 
