@@ -7495,6 +7495,85 @@
         \bigbreak \noindent 
         To use these formulas to find each $u_{ij}$ we first need to plug $i=1$ into $(1)$, then after we get the first row of $U$, we can plug in $j=1$ into $(2)$ to get the first column of $L$, and so on.
 
+        \item \textbf{Column oriented recursive algorithm to find the $LU$ factorization}: Assume $A \in \mathbb{R}^{n\times n }$ admits an $LU$ factorization for $L\in \mathbb{R}^{n\times n}$ unit lower triangular, $U$ upper triangular. Then,
+            \begin{align*}
+                A = LU
+            \end{align*}
+            implies
+            \begin{align*}
+                \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
+                \begin{bmatrix} 1 & 0 & \cdots & 0 \\ \ell_{21} & \ell_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ \ell_{n1} & \ell_{n2} & \cdots & 1 \end{bmatrix}
+                \begin{bmatrix} u_{11} & u_{12} & \cdots & u_{1n} \\ 0 & u_{22} & \cdots & u_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & u_{nn} \end{bmatrix}
+            .\end{align*}
+            Decompose $A = LU$ into the blocks
+            \begin{align*}
+                \begin{bmatrix}
+                    a_{11} & b^{\top} \\
+                    a & \hat{A}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    1 & 0^{\top} \\
+                    \ell & \hat{L}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    u_{11} & u^{\top} \\
+                    0 & \hat{U}
+                \end{bmatrix}
+            .\end{align*}
+            We see that
+            \begin{align*}
+                a_{11} &= u_{11}, \\
+                b^{\top} &= u^{\top}, \\
+                \ell u_{11} &= a \implies \ell = \frac{a}{u_{11}}, \\
+                \hat{A} &= \ell u^{\top} + \hat{L}\hat{U} \implies \hat{L}\hat{U} = \hat{A} - \ell u^{\top}
+            .\end{align*}
+            Define $\tilde{A} = \hat{A} - \ell u^{\top}$. 
+            The recursive algorithm is then defined by the following steps.
+            \begin{enumerate}
+                \item $u_{11} = a_{11} $ (zero flops)
+                \item $u^{\top} = b^{\top} $ (zero flops)
+                \item $\ell = \frac{a}{u_{11}} $ ($n-1$ flops) 
+                \item $\tilde{A} = \hat{L}\hat{U} = \hat{A} - \ell u^{\top} $ ($2(n-1)^{2}$ flops)
+                \item $\text{Alg}(\tilde{A})$
+            \end{enumerate}
+            Let $f(n)$ be the flop count for the above algorithm. We have
+            \begin{align*}
+                f(n) &= 0 + 0  + (n-1) + 2(n-1)^{2} + f_{n-1} = (n-1) + 2(n-1)^{2} + f_{n-1}\\
+                f(n-1) &= ((n-1) - 1) + 2((n-1)-1)^{2} + f_{n-2} \\
+                       &\vdots \\
+                f(n-(n-2)) &= f_{2} = ((n-(n-2))-1) + 2((n-(n-2))-1)^{2} + f_{n-(n-1)} \\
+                f_{n-(n-1)} &= f_{1} = 0 
+            \end{align*}
+            So, the total number of flops is given by the sum
+            \begin{align*}
+                \sum_{k=2}^{n} (k-1) + 2(k-1)^{2}
+            .\end{align*}
+            Let $ i = k-1 $. When  $k=2$, $i = 1$. When $k=n$, $i = n-1$. So, the sum becomes
+            \begin{align*}
+                \sum_{i=1}^{n-1} 2i^{2} + i
+            \end{align*}
+            \begin{remark}
+                We have the summation rules
+                \begin{align*}
+                    \sum_{i=1}^{n} i = \frac{n(n+1)}{2}, \quad \sum_{i=1}^{n} i^{2} = \frac{n(n+1)(2n+1)}{6}
+                \end{align*}
+                Plug in $n-1$ for each,
+                \begin{align*}
+                   \sum_{i=1}^{n} i = \frac{(n-1)n}{2}, \quad \sum_{i=1}^{n} i^{2} = \frac{(n-1)n(2n-1)}{6} 
+                \end{align*}
+            \end{remark}
+            So,
+            \begin{align*}
+                \sum_{i=1}^{n-1} 2i^{2} + i &= 2\left(\frac{(n-1)n(2n-1)}{6}\right) + \frac{(n-1)n}{2} \\
+                                            &= \frac{2}{3}n^{2} -\frac{1}{2}n^{2} - \frac{1}{6}n = \frac{2}{3}n^{3} + \mathcal{O}(n^{2})
+            \end{align*}
+            Therefore, the number of flops required for the recursive outer product method to find the $LU$ factorization is $\frac{2}{3}n^{3} + \mathcal{O}(n^{2}) $
+
+
+            
+
+
 
 \end{itemize}
 
@@ -8111,6 +8190,42 @@
         \end{align*}
         \bigbreak \noindent 
         To use these formulas to find each $u_{ij}$ we first need to plug $i=1$ into $(1)$, then after we get the first row of $U$, we can plug in $j=1$ into $(2)$ to get the first column of $L$, and so on.
+        \item \textbf{Column oriented recursive algorithm to find the $LU$ factorization}: Assume $A \in \mathbb{R}^{n\times n }$ admits an $LU$ factorization for $L\in \mathbb{R}^{n\times n}$ unit lower triangular, $U$ upper triangular. Then,
+            \begin{align*}
+                A = LU
+            \end{align*}
+            implies
+            \begin{align*}
+                \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
+                \begin{bmatrix} 1 & 0 & \cdots & 0 \\ \ell_{21} & \ell_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ \ell_{n1} & \ell_{n2} & \cdots & 1 \end{bmatrix}
+                \begin{bmatrix} u_{11} & u_{12} & \cdots & u_{1n} \\ 0 & u_{22} & \cdots & u_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & u_{nn} \end{bmatrix}
+            .\end{align*}
+            Decompose $A = LU$ into the blocks
+            \begin{align*}
+                \begin{bmatrix}
+                    a_{11} & b^{\top} \\
+                    a & \hat{A}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    1 & 0^{\top} \\
+                    \ell & \hat{L}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    u_{11} & u^{\top} \\
+                    0 & \hat{U}
+                \end{bmatrix}
+            .\end{align*}
+            The recursive algorithm is defined by the following steps.
+            \begin{enumerate}
+                \item $u_{11} = a_{11} $ (zero flops)
+                \item $u^{\top} = b^{\top} $ (zero flops)
+                \item $\ell = \frac{a}{u_{11}} $ ($n-1$ flops) 
+                \item $\tilde{A} = \hat{L}\hat{U} = \hat{A} - \ell u^{\top} $ ($2(n-1)^{2}$ flops)
+                \item $\text{Alg}(\tilde{A})$
+            \end{enumerate}
+            The number of flops required for the recursive outer product method to find the $LU$ factorization is $\frac{2}{3}n^{3} + \mathcal{O}(n^{2}) $
+
 
 
     \end{itemize}
