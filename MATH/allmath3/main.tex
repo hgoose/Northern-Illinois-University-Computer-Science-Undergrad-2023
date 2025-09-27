@@ -6770,8 +6770,65 @@
             .\end{align*}
             In general, we have that
             \begin{align*}
-                x_{i} &= \frac{b_{i} - \sum_{j=i+1}^{n}a_{ij}x_{j}}{a_{ii}}, \quad i=1,2,...,n
+                x_{i} &= \frac{b_{i} - \sum_{j=i+1}^{n}a_{ij}x_{j}}{a_{ii}}, \quad i=n,n-1,...,1
             \end{align*}
+        \item \textbf{Column-oriented backward substitution}:
+            Let $U \in \mathbb{R}^{n\times n}$ be upper triangular, $x \in \mathbb{R}^{n}$, and $ b \in \mathbb{R}^{n}$ which gives the system
+            \begin{align*}
+                \begin{bmatrix}
+                    u_{11} & u_{12} & \cdots & u_{1n} \\
+                    0 & u_{22} & \cdots & u_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    0 & 0 & \cdots & u_{nn}
+                \end{bmatrix} 
+                \begin{bmatrix}
+                    x_{1} \\ x_{2} \\ \vdots \\ x_{n}
+                \end{bmatrix}
+                = 
+                \begin{bmatrix}
+                    b_{1} \\ b_{2} \\ \vdots \\ b_{n}
+                \end{bmatrix}
+            \end{align*}
+            Split the system into the following block decomposition
+            \begin{align*}
+                \begin{bmatrix}
+                    \hat{U} & u \\
+                    0^{\top} & u_{nn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    \hat{x} \\ x_{n}
+                \end{bmatrix}
+                = 
+                \begin{bmatrix}
+                    \hat{b} \\ b_{n}
+                \end{bmatrix}
+            \end{align*}
+            Then,
+            \begin{align*}
+                \hat{U}\hat{x} + ux_{n} &= \hat{b} \implies \hat{U}\hat{x} = \hat{b} - ux_{n} = \tilde{b}, \\
+                u_{nn}x_{n} &= b_{n} \implies x_{n} = \frac{b_{n}}{u_{nn}}
+            \end{align*}
+            Thus, the column-oriented backward substitution algorithm is defined by the following steps
+            \begin{enumerate}
+                \item Compute $x_{n} = \frac{b_{n}}{u_{nn}} $
+                \item Compute $\tilde{b} = \hat{b} - ux_{n} $
+                \item Run the algorithm on $\hat{U}, \tilde{b}$. That is, $\text{Alg}(\hat{U}, \tilde{b})$
+            \end{enumerate}
+            \bigbreak \noindent 
+            The non-recursive pseudocode in the spirit of 1.3.5 and 1.3.13 is
+            \bigbreak \noindent 
+            \begin{jlcode}
+                for |$i=n,...,1$|
+                if |$U[i,i] = 0$|, set error flag, exit
+
+                |$b[i] = b[i] / U[i,i]$|
+
+                for |$j = i-1,...,1$|
+                |$b[j] = b[j] - U[j,i] \cdot b[i]$|
+                end
+                end
+            \end{jlcode}
+
         \item \textbf{Counting flops for the above backward substitution algorithm}: The general expression for $x_{i}$ can be expressed as
             \bigbreak \noindent 
             \begin{jlcode}
@@ -7122,6 +7179,55 @@
             \bigbreak \noindent 
             So, the recursive algorithm is $\mathcal{O}(n^{3})$
         \item \textbf{Consequence of proof n.1.2:} If $A$ has any $a_{ii} \leq 0$, $A$ is not positive definite.
+        \item \textbf{Bordered form of Choleskys method}: Suppose $A \in \mathbb{R}^{n\times n}$ is positive definite. Then, $A$ admits a decomposition $A = R^{\top}R$, for a unique upper triangular matrix $R$ called the Cholesky factor, with $r_{ii} > 0$ for $i =1,2,...,n$. So,
+            \begin{align*}
+                        A &= \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
+                \begin{bmatrix}
+                    r_{11} & 0  & \cdots & 0\\
+                    r_{12} & r_{22}  &  \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots\\
+                    r_{1n} & r_{2n} & \cdots & r_{nn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    r_{11} & r_{12} & \cdots & r_{1n} \\
+                    0 & r_{22} & \cdots & r_{2n} \\
+                    0 & 0 & \ddots & \vdots \\
+                    0 & 0  & \cdots & r_{nn}
+                \end{bmatrix}
+            \end{align*}
+        \end{align*}
+        We then perform a matrix decomposition 
+        \begin{align*}
+            \begin{bmatrix}
+                \hat{A} & a \\
+                a^{\top} & a_{nn}
+            \end{bmatrix}
+             =
+             \begin{bmatrix}
+                 \hat{R}^{\top} & 0 \\
+                 r^{\top} & r_{nn}
+             \end{bmatrix}
+             \begin{bmatrix}
+                 \hat{R} & r \\
+                 0 & r_{nn}
+             \end{bmatrix}
+        .\end{align*}
+        So, 
+        \begin{align*}
+            \hat{A} &= \hat{R}^{\top}\hat{R}, \\
+            a &= \hat{R}^{\top}r, \\
+            a_{nn} &= r^{\top}r + r_{nn}^{2} \implies r_{nn} = \sqrt{a_{nn} - r^{\top}r}
+        .\end{align*}
+        So, the steps for the algorithm are 
+        \begin{enumerate}
+            \item Recurse $\hat{A}$ until $A \in \mathbb{R}^{1\times 1}$
+            \item Solve the lower triangular system $\hat{R}^{\top}r = a$ by forward substitution
+            \item Compute $r_{nn} = \sqrt{a_{nn} - r^{\top}r} $
+            \item Return the step two on the previous call
+        \end{enumerate}
+        The above algorithm is postorder recursion and requires $\mathcal{O}(n^{3})$ flops.
+
+
 
     \end{itemize}
 
@@ -8121,7 +8227,8 @@
             for $i =1,2,...,n $. This method is called \textbf{Forward Substitution}.
             \bigbreak \noindent 
             The row oriented forward substitution algorithm requires $\mathcal{O}(n^{2})$ flops.
-        \item \textbf{Column oriented forward substitution (recursive algorithm)}: Suppose we have $Lx = b$ when $L$ is lower triangular, we split the matrix into the following blocks
+        \item \textbf{Column oriented forward substitution (recursive algorithm)}: 
+            Suppose we have $Lx = b$ when $L$ is lower triangular, we split the matrix into the following blocks
             \begin{align*}
                 \begin{bmatrix}
                     \ell_{11} & 0 \\
@@ -8160,16 +8267,75 @@
             .\end{align*}
             In general, we have that
             \begin{align*}
-                x_{i} &= \frac{b_{i} - \sum_{j=i+1}^{n}a_{ij}x_{j}}{a_{ii}}, \quad i=1,2,...,n
+                x_{i} &= \frac{b_{i} - \sum_{j=i+1}^{n}a_{ij}x_{j}}{a_{ii}}, \quad i=n,n-1,...,1
             \end{align*}
             The row oriented backward substitution algorithm requires $\mathcal{O}(n^{2})$ flops.
+        \item \textbf{Column-oriented backward substitution}:
+            Let $U \in \mathbb{R}^{n\times n}$ be upper triangular, $x \in \mathbb{R}^{n}$, and $ b \in \mathbb{R}^{n}$ which gives the system
+            \begin{align*}
+                \begin{bmatrix}
+                    u_{11} & u_{12} & \cdots & u_{1n} \\
+                    0 & u_{22} & \cdots & u_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    0 & 0 & \cdots & u_{nn}
+                \end{bmatrix} 
+                \begin{bmatrix}
+                    x_{1} \\ x_{2} \\ \vdots \\ x_{n}
+                \end{bmatrix}
+                = 
+                \begin{bmatrix}
+                    b_{1} \\ b_{2} \\ \vdots \\ b_{n}
+                \end{bmatrix}
+            \end{align*}
+            Split the system into the following block decomposition
+            \begin{align*}
+                \begin{bmatrix}
+                    \hat{U} & u \\
+                    0^{\top} & u_{nn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    \hat{x} \\ x_{n}
+                \end{bmatrix}
+                = 
+                \begin{bmatrix}
+                    \hat{b} \\ b_{n}
+                \end{bmatrix}
+            \end{align*}
+            Then,
+            \begin{align*}
+                \hat{U}\hat{x} + ux_{n} &= \hat{b} \implies \hat{U}\hat{x} = \hat{b} - ux_{n} = \tilde{b}, \\
+                u_{nn}x_{n} &= b_{n} \implies x_{n} = \frac{b_{n}}{u_{nn}}
+            \end{align*}
+            Thus, the column-oriented backward substitution algorithm is defined by the following steps
+            \begin{enumerate}
+                \item Compute $x_{n} = \frac{b_{n}}{u_{nn}} $
+                \item Compute $\tilde{b} = \hat{b} - ux_{n} $
+                \item Run the algorithm on $\hat{U}, \tilde{b}$. That is, $\text{Alg}(\hat{U}, \tilde{b})$
+            \end{enumerate}
+            \bigbreak \noindent 
+            The non-recursive pseudocode in the spirit of 1.3.5 and 1.3.13 is
+            \bigbreak \noindent 
+            \begin{jlcode}
+                for |$i=n,...,1$|
+                if |$U[i,i] = 0$|, set error flag, exit
+
+                |$b[i] = b[i] / U[i,i]$|
+
+                for |$j = i-1,...,1$|
+                |$b[j] = b[j] - U[j,i] \cdot b[i]$|
+                end
+                end
+            \end{jlcode}
+            \bigbreak \noindent 
+            Requires $\mathcal{O}(n^{2})$ flops.
+
         \item \textbf{Inner product formulas to compute $R$ (Cholesky factor)}: We have the formulas
             \begin{align*}
                 r_{ii} &= \sqrt{a_{ii} - \sum_{k=1}^{i-1}r_{ki}^{2}} \quad i = 1,2,...,n \\
                 r_{ij} &= \frac{a_{ij} - \sum_{k=1}^{i-1}r_{ki}r_{kj}}{r_{ii}} \quad j = i+1,...,n
             \end{align*}
             \bigbreak \noindent 
-            The inner product formulas to computer $R$ requires $\mathcal{O}(n^{3})$ flops.
+            The inner product formulas to compute $R$ requires $\mathcal{O}(n^{3})$ flops.
         \item \textbf{Recursive column oriented method to find the Cholesky factor $R$ (Outer product method)}: Let $A \in \mathbb{R}^{n\times n}$. Assume that $A$ is positive definite, so $A = A^{\top}$, and $A = R^{\top}R$ for a unique upper triangular matrix $R$. We have,
             \begin{align*}
                 A &= \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
@@ -8214,6 +8380,54 @@
             \bigbreak \noindent 
             The recursive column oriented algorithm to compute the Cholesky factor $R$ requires $\mathcal{O}(n^{3})$ flops.
         \item \textbf{Cholesky's algorithm}: Cholesky's algorithm  applied to an $n \times n$ matrix performs about $\frac{n^{3}}{3} $
+        \item \textbf{Bordered form of Choleskys method}: Suppose $A \in \mathbb{R}^{n\times n}$ is positive definite. Then, $A$ admits a decomposition $A = R^{\top}R$, for a unique upper triangular matrix $R$ called the Cholesky factor, with $r_{ii} > 0$ for $i =1,2,...,n$. So,
+            \begin{align*}
+                        A &= \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
+                \begin{bmatrix}
+                    r_{11} & 0  & \cdots & 0\\
+                    r_{12} & r_{22}  &  \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots\\
+                    r_{1n} & r_{2n} & \cdots & r_{nn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    r_{11} & r_{12} & \cdots & r_{1n} \\
+                    0 & r_{22} & \cdots & r_{2n} \\
+                    0 & 0 & \ddots & \vdots \\
+                    0 & 0  & \cdots & r_{nn}
+                \end{bmatrix}
+            \end{align*}
+        \end{align*}
+        We then perform a matrix decomposition 
+        \begin{align*}
+            \begin{bmatrix}
+                \hat{A} & a \\
+                a^{\top} & a_{nn}
+            \end{bmatrix}
+             =
+             \begin{bmatrix}
+                 \hat{R}^{\top} & 0 \\
+                 r^{\top} & r_{nn}
+             \end{bmatrix}
+             \begin{bmatrix}
+                 \hat{R} & r \\
+                 0 & r_{nn}
+             \end{bmatrix}
+        .\end{align*}
+        So, 
+        \begin{align*}
+            \hat{A} &= \hat{R}^{\top}\hat{R}, \\
+            a &= \hat{R}^{\top}r, \\
+            a_{nn} &= r^{\top}r + r_{nn}^{2} \implies r_{nn} = \sqrt{a_{nn} - r^{\top}r}
+        .\end{align*}
+        So, the steps for the algorithm are 
+        \begin{enumerate}
+            \item Recurse $\hat{A}$ until $A \in \mathbb{R}^{1\times 1}$
+            \item Solve the lower triangular system $\hat{R}^{\top}r = a$ by forward substitution
+            \item Compute $r_{nn} = \sqrt{a_{nn} - r^{\top}r} $
+            \item Return the step two on the previous call
+        \end{enumerate}
+        The above algorithm is postorder recursion and requires $\mathcal{O}(n^{3})$ flops.
+
         \item \textbf{Row oriented algorithm to compute $LU $ factorization}:
             Let $A \in \mathbb{R}^{n\times n}$. If $A$ can be factored into products $LU$, for $U \in \mathbb{R}^{n\times n}$ upper triangular, $L \in \mathbb{R}^{n\times n}$ unit lower triangular, then
             \begin{align*}
@@ -8286,42 +8500,6 @@
             \end{enumerate}
             The number of flops required for the recursive outer product method to find the $LU$ factorization is $\frac{2}{3}n^{3} + \mathcal{O}(n^{2}) $
         \item \textbf{Bordered form $LU$ decomposition algorithm}:
-            Assume $A \in \mathbb{R}^{n\times n }$ admits an $LU$ factorization for $L\in \mathbb{R}^{n\times n}$ unit lower triangular, $U$ upper triangular. Then,
-            \begin{align*}
-                A = LU
-            \end{align*}
-            implies
-            \begin{align*}
-                \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix} = 
-                \begin{bmatrix} 1 & 0 & \cdots & 0 \\ \ell_{21} & \ell_{22} & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ \ell_{n1} & \ell_{n2} & \cdots & 1 \end{bmatrix}
-                \begin{bmatrix} u_{11} & u_{12} & \cdots & u_{1n} \\ 0 & u_{22} & \cdots & u_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & u_{nn} \end{bmatrix}
-            .\end{align*}
-            Decompose $A = LU$ into the blocks
-            \begin{align*}
-                \begin{bmatrix}
-                    \hat{A} & b \\
-                    a^{\top} & a_{nn}
-                \end{bmatrix}
-                = 
-                \begin{bmatrix}
-                    \hat{L} & 0 \\
-                    \ell^{\top} & 1
-                \end{bmatrix}
-                \begin{bmatrix}
-                    \hat{U} & u \\
-                    0^{\top} & u_{nn}
-                \end{bmatrix}
-            \end{align*}
-            Where $\hat{A}, \haht{L}, \hat{U}$ are the $(n-1)^{\text{th}}$ leading principle submatrices of $A,L,U$.
-            \bigbreak \noindent 
-            Then, 
-            \begin{align*}
-                \hat{A} &= \hat{L}\hat{U} \\
-                \hat{L}U &= b  \\
-                \ell^{\top} \hat{U} &= a^{\top} \implies \hat{U}^{\top}\ell = a \\
-                u_{nn} &= a_{nn} - \ell^{\top}u^{\top}
-            \end{align*}
-
 
 
 
