@@ -10700,6 +10700,8 @@ indicate which strong entity the weak entity depends upon.
         \item android.os.Bundle;
         \item android.util.Log;
         \item android.view.View;
+        \item android.view.Gravity;
+        \item android.graphics.Color;
         \item android.widget.EditText;
         \item android.widget.TextView;
         \item java.text.NumberFormat;
@@ -10711,6 +10713,8 @@ indicate which strong entity the weak entity depends upon.
         \item androidx.constraintlayout.widget.ConstraintSet;
         \item android.view.ViewGroup;
         \item android.content.Context;
+        \item android.content.DialogInterface;
+        \item androidx.appcompat.app.AlertDialog;
     \end{itemize}
 
     \pagebreak 
@@ -10893,7 +10897,11 @@ indicate which strong entity the weak entity depends upon.
             View.generateViewId()
             \end{javacode}
             as an argument to \texttt{view.setId()}. The method \texttt{generateViewId()} is a static method in the View class. It creates a unique integer ID at runtime that’s guaranteed not to collide with other view IDs.
-
+        \item \textbf{The finish() method}: finish() is a method of the Activity class. It tells Android:
+            \begin{quote}
+             "I’m done with this Activity, please close it and remove it from the back stack."
+            \end{quote}
+            So if you call finish() inside an Activity, that activity will end and control will go back to the previous one (or exit the app if it was the only activity).
 
     \end{itemize}
 
@@ -11630,6 +11638,23 @@ indicate which strong entity the weak entity depends upon.
             \end{javacode}
             \bigbreak \noindent 
             \texttt{GridLayout.spec(int index)} creates a Spec object. A Spec describes a position in either rows or columns. Here, GridLayout.spec(0) means row 0 (the first row), and GridLayout.spec(1) means the first column.
+        \item \textbf{GridLayout.spec overloads}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                GridLayout.spec(int index) // Single index, default span=1, default alignment = UNDEFINED
+                GridLayout.spec(int index, int size) // Index + span
+                GridLayout.spec(int index, Alignment align) // Index + alignment
+                GridLayout.spec(int index, int size, Alignment align) // Index + span + alignment
+            \end{javacode}
+            You can pass these alignment constants:
+            \begin{itemize}
+                \item \textbf{GridLayout.START}: align to start (left or top).
+                \item \textbf{GridLayout.END}: align to end (right or bottom).
+                \item \textbf{GridLayout.CENTER}: center inside the cell.
+                \item \textbf{GridLayout.FILL}: expand to fill the cell.
+            \end{itemize}
+            (BASELINE exists for aligning text baselines in rows.)
+
         \item \textbf{Rule of thumb}: 
             Use ViewGroup.LayoutParams when sizing a container relative to its parent.
             \bigbreak \noindent 
@@ -11681,12 +11706,227 @@ indicate which strong entity the weak entity depends upon.
                 \item setRowCount(int m)
                 \item setColumnCount(int n)
                 \item setLayoutParams
-                \item addView
+                \item addView(View v)
+                \item setOrientation(int orientation) 
+                    \begin{itemize}
+                        \item GridLayout.HORIZONTAL (0)
+                        \item GridLayout.VERTICAL (1)
+                    \end{itemize}
+                \item getOrientation()
+                \item setRowOrderPreserved(boolean preserve)
+                \item isRowOrderPreserved()
+                \item setColumnOrderPreserved(boolean preserve)
+                \item isColumnOrderPreserved()
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Buttons in java}
+    \begin{itemize}
+        \item \textbf{Subclass}: Buttons are a subclass of TextView, which is a subclass of View 
+        \item \textbf{Creating buttons}: There are basically 3 parts:
+            \begin{enumerate}
+                \item Construct the Button (needs a Context)
+                \item Customize it (text, size, colors, etc.)
+                \item Add it to a parent layout (like GridLayout, LinearLayout, etc.) with proper LayoutParams.
+            \end{enumerate}
+            To create the button,
+            \bigbreak \noindent 
+            \begin{javacode}
+            Button myButton = new Button(context);
+            \end{javacode}
+        \item \textbf{Button methods}:
+            \begin{itemize}
+                \item setTextSize(int size)
+                \item setOnClickListener(listener)
+                \item setEnabled(boolean status)
+                \item setText(string text)
+                \item setLayoutParams(lp)
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{TextView and EditText}
+    \begin{itemize}
+        \item \textbf{Creating TextView}: TextView is a subclass of View
+            \bigbreak \noindent 
+            \begin{javacode}
+            TextView textView = new TextView(context);
+            \end{javacode}
+        \item \textbf{TextView methods}:
+            \begin{itemize}
+                \item setWidth(int w)
+                \item setHeight(int h)
+                \item setGravity(Gravity g)
+                \item setBackgroundColor(Color c)
+                \item setTextSize(int size)
+                \item setText(string text)
+                \item setBackgroundColor(Color c)
+                \item setLayoutParams(lp)
+            \end{itemize}
+        \item \textbf{Creating EditText}: EditText is a subclass of TextView, which is a subclass of View
+            \bigbreak \noindent 
+            \begin{javacode}
+            EditText editText = new EditText(context);
+            \end{javacode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{android.graphics.Color}
+    \begin{itemize}
+        \item \textbf{Color constants}: This class defines color constants and helper methods for working with colors.
+            \bigbreak \noindent 
+            \begin{javacode}
+            Color.RED
+            Color.BLUE
+            Color.BLACK
+            Color.WHITE
+            \end{javacode}
+            \bigbreak \noindent 
+            These are just integer values representing ARGB colors.
+        \item \textbf{Create colors}:
+            \begin{itemize}
+                \item ARGB values (alpha, red, green, blue):
+                \bigbreak \noindent 
+                \begin{javacode}
+                int myColor = Color.argb(255, 100, 200, 150);
+                \end{javacode}
+                \bigbreak \noindent 
+                Here, 255 = fully opaque.
+            \item RGB values (no alpha, alpha = 255):
+                \bigbreak \noindent 
+                \begin{javacode}
+                int myColor = Color.rgb(100, 200, 150);
+                \end{javacode}
+            \item Parse from string:
+                \bigbreak \noindent 
+                \begin{javacode}
+                int myColor = Color.parseColor("#FF5722");  // hex code
+                \end{javacode}
             \end{itemize}
 
     \end{itemize}
 
 
+
+    \pagebreak 
+    \subsection{android.view.Gravity}
+    \begin{itemize}
+        \item \textbf{Intro}: This class defines constants used to position or align content inside a View.
+            \bigbreak \noindent 
+            It doesn’t move the view itself — it controls how the content inside a view (like text in a TextView) or a child inside a parent layout is aligned.
+            \begin{itemize}
+                \item Gravity.LEFT / Gravity.RIGHT
+                \item Gravity.TOP / Gravity.BOTTOM
+                \item Gravity.CENTER (both horizontally + vertically)
+                \item Gravity.CENTER\_HORIZONTAL
+                \item Gravity.CENTER\_VERTICAL
+                \item Gravity.FILL (stretch to fill)
+            \end{itemize}
+            Use bitwise OR (|) to combine:
+            \bigbreak \noindent 
+            \begin{javacode}
+            textView.setGravity(Gravity.CENTER | Gravity.BOTTOM);
+            \end{javacode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{DiaglogInterface and AlertDialog}
+    \begin{itemize}
+        \item \textbf{AlertDialog}: A subclass of Dialog. Used to show a modal pop-up window on top of the activity — typically for alerts, confirmations, or choices
+            It can have:
+            \begin{itemize}
+                \item A title
+                \item A message
+                \item Optional icon
+                \item Up to 3 buttons (Positive, Negative, Neutral)
+                \item Custom layouts (if you want more than just text)
+            \end{itemize}
+        \item \textbf{Create an alert}:
+            \bigbreak \noindent 
+            \begin{javacode}
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            ...
+            AlertDialog dialog = alert.create();
+            dialog.show();
+            \end{javacode}
+        \item \textbf{AlertDialog.builder methods}
+            \begin{itemize}
+                \item alert.setTitle(string title);
+                \item alert.setMessage(string message);
+                \item alert.setPositiveButton(string buttonText, DialogInterface.onClickListener);
+                \item alert.setNegativeButton(string buttonText, DialogInterface.onClickListener);
+                \item alert.show();
+            \end{itemize}
+        \item \textbf{DialogInterface}: This is just an interface. Many dialog-related classes (including AlertDialog) implement it.
+            \bigbreak \noindent 
+            \begin{javacode}
+                public interface DialogInterface {
+                    void cancel();
+                    void dismiss();
+
+                    interface OnCancelListener {
+                        void onCancel(DialogInterface dialog);
+                    }
+
+                    interface OnDismissListener {
+                        void onDismiss(DialogInterface dialog);
+                    }
+
+                    interface OnClickListener {
+                        void onClick(DialogInterface dialog, int which);
+                    }
+
+                    // ... and others like OnKeyListener, OnMultiChoiceClickListener
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            It gives you common methods to control the dialog:
+            \begin{itemize}
+                \item \textbf{dismiss()}: close the dialog
+                \item \textbf{cancel()}: cancel the dialog (triggers onCancel() callback)
+            \end{itemize}
+            It’s also used in listeners for button clicks.
+        \item \textbf{DialogInterface.OnClickListener}: We can use this interface to show the alert when something is clicked.
+            \bigbreak \noindent 
+            \begin{javacode}
+                private class MyDialog implements DialogInterface.OnClickListener
+                {
+
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        
+                    }
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            The which parameter in listeners
+            \begin{itemize}
+                \item DialogInterface.BUTTON\_POSITIVE (-1)
+                \item DialogInterface.BUTTON\_NEGATIVE (-2)
+                \item DialogInterface.BUTTON\_NEUTRAL (-3)
+            \end{itemize}
+            So you know which button was pressed.
+            \bigbreak \noindent 
+            The dialog parameter is a reference to the dialog that triggered the click. Its type is the interface DialogInterface, but in practice it will usually be an instance of a concrete class like AlertDialog.
+            You can use this reference to control the dialog inside the callback:
+            \begin{itemize}
+                \item \textbf{dialog.dismiss()}: close the dialog immediately.
+                \item \textbf{dialog.cancel()}: cancel the dialog (triggers OnCancelListener if one is set).
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{javacode}
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // dialog is the AlertDialog, typed as DialogInterface
+                        dialog.dismiss();   // closes it
+                    }
+                });
+            \end{javacode}
+
+    \end{itemize}
 
 
 
