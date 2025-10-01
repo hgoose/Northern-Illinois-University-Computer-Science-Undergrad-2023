@@ -9813,7 +9813,7 @@ indicate which strong entity the weak entity depends upon.
                 \bigbreak \noindent 
                 Also, memory update (i.e., input) only happens when the write enable bit is on.
                 \bigbreak \noindent 
-                Memory can only be updated when the “write enable” bit is on. There is a write enable line that is AND-ed with the clock
+                Memory can only be updated when the "write enable" bit is on. There is a write enable line that is AND-ed with the clock
                 \bigbreak \noindent 
                 The clock ticks regularly, and there is always some value on the input lines (every bit is either 0 or 1), but we don’t want to update memory every time the clock ticks.
                 \bigbreak \noindent 
@@ -10086,7 +10086,7 @@ indicate which strong entity the weak entity depends upon.
                 \item If the bit is 1, subtracting it from a 1 leaves 0.
             \end{itemize}
             That's exactly bit flipping
-        \item \textbf{One's complement addition}:  In one’s complement addition, the carry bit is “carried around” and added to the sum.
+        \item \textbf{One's complement addition}:  In one’s complement addition, the carry bit is "carried around" and added to the sum.
             \bigbreak \noindent 
             \fig{.8}{./figures/103.png}
         \item \textbf{Why does end-around carry work?}: 
@@ -10112,6 +10112,75 @@ indicate which strong entity the weak entity depends upon.
                 \item If the number is negative, find the one’s complement of the number and then add 1.
             \end{itemize}
             With two’s complement arithmetic, we can add binary numbers directly. We discard any carries emitted from the high order bit.
+        \item \textbf{MSB in two's complement}: 
+            \begin{itemize}
+                \item \textbf{Non-negative number:} MSB = 0 
+                \item \textbf{Negative number:} MSB = 1
+            \end{itemize}
+        \item \textbf{Range of signed (two's complement) numbers}:  For an $N$ bit number, where $n = N-1$, the range is
+            \begin{align*}
+                \text{Range} &= -2^{N-1} \text{ to } 2^{N-1}-1 \\
+                             &= -2^{n} \text{ to } 2^{n} - 1
+            .\end{align*}
+            For example, the range of an $8-bit$ number is $-2^{7} \text{ to } 2^{7} - 1 = -128 \text{ to } 127$. Thus, $127 + 128 + 1 =  256$ possible numbers. Observe that we add one to include the value zero.
+            \bigbreak \noindent 
+            \textbf{Note:} The asymmetry is the price of having a unique zero.
+        \item \textbf{Some representations (8-bit)}:
+            \begin{itemize}
+                \item $0$ and $-0$: $00000000$
+                \item $-1$: $11111111$
+                \item $+127$: $01111111$
+                \item $-127$: $10000001 $
+                \item $-128$: $10000000 $
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Overflow}
+    \begin{itemize}
+        \item \textbf{Intro}: What happens when the result of a calcuation doesn’t fit in the given field width?
+            \bigbreak \noindent 
+            When we detect overflow, we can compensate for it and/or notify the user.
+            \bigbreak \noindent 
+            In complement arithmetic, an overflow condition is easy to detect
+        \item \textbf{Rule for detecting signed two’s complement overflow}: When the "carry in" and the "carry out" of the sign bit differ, overflow has occurred.
+            \bigbreak \noindent 
+            Adding two numbers of opposite sign never causes overflow.
+        \item \textbf{Twos complement to decimal}: To convert from two’s complement to decimal:
+            \begin{itemize}
+                \item \textbf{If the sign bit is zero}: Just convert to decimal the unsigned way.
+                \item \textbf{If the sign bit is one}: There are two methods
+                    \begin{enumerate}
+                        \item Subtract one, flip bits, convert to decimal, add minus sign
+                        \item Flip bits, add one, convert to decimal, add minus sign
+                    \end{enumerate}
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Binary math}
+    \begin{itemize}
+        \item \textbf{Binary multiplication}: 
+            Can do binary multiplication the way people multiply by hand.
+            \bigbreak \noindent 
+            Easy to do in hardware because the algorithm is made up of adds and shifts.
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1001.png}
+        \item \textbf{Binary multiplication with Booth's algorithm}:
+            Research into finding better arithmetic algorithms has continued for over 50 years.
+            \bigbreak \noindent 
+            The methods we use by hand are not the most efficient possible.
+            \bigbreak \noindent 
+            Booth’s algorithm carries out multiplication faster and more accurately than our usual algorithm.
+            \bigbreak \noindent 
+            The general idea is to replace arithmetic operations with bit shifting to the extent possible.
+            \bigbreak \noindent 
+            Booth's algorithm is based on this idea:
+            \begin{align*}
+                n \times 1001 &= n \times (1000 + 1) \\
+                n \times 999 &= n \times (1000 - 1)
+            .\end{align*}
+            In binary, this involves thinking of 1111 in the middle of a number as $10000 - 1$ in the correct position.
     \end{itemize}
 
 
@@ -11494,7 +11563,7 @@ indicate which strong entity the weak entity depends upon.
                 \item Access resources (e.g., strings, colors, dimensions)
                 \item Hook into the Android system for rendering
             \end{itemize}
-            Without a Context, a View has no “connection” to the running Android app environment.
+            Without a Context, a View has no "connection" to the running Android app environment.
     \end{itemize}
 
 
@@ -11584,7 +11653,7 @@ indicate which strong entity the weak entity depends upon.
     \bigbreak \noindent 
     GridLayout is a type of ViewGroup that arranges its children in a grid of rows and columns.
     \bigbreak \noindent 
-    Each child view is placed into a “cell” defined by its row and column. You can make a child span multiple rows or columns. It’s similar to a table layout but more flexible (alignments, spans, etc.).
+    Each child view is placed into a "cell" defined by its row and column. You can make a child span multiple rows or columns. It’s similar to a table layout but more flexible (alignments, spans, etc.).
     \begin{itemize}
         \item \textbf{Needed Includes}:
             \bigbreak \noindent 
