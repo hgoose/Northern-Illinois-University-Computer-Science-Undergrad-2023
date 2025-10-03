@@ -7770,13 +7770,137 @@
             \bigbreak \noindent 
             If we select the largest element in the $k^{\text{th}}$ column (at step $k$), then we can guarantee $m \leq 1$.
         \item \textbf{Partial pivoting}: At iteration $k$ of Gaussian Elimination, we swap row $k$ with some row below so that the new $a_{kk}$ has the largest absolute value compared to all entries below in column $k$.
-
-
+        \item \textbf{Permutation matrix}: A permutation matrix is a special kind of square matrix that represents a permutation of elements. Formally:
+            It is obtained from the identity matrix by rearranging its rows (or equivalently, its columns).
+            \bigbreak \noindent 
+            Each row and each column has exactly one entry equal to 1, and all other entries are 0.
+            \bigbreak \noindent 
+            Multiplying a vector (or another matrix) by a permutation matrix reorders its entries.
+            \bigbreak \noindent 
+            Suppose $P$ is formed by taking $I$ and interchanging rows one and two. Then,
+            \begin{align*}
+                P = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}
+            .\end{align*}
+            Then, 
+            \begin{align*}
+                P\begin{pmatrix} a \\ b \\ c \end{pmatrix} = \begin{pmatrix} b \\ a \\ c \end{pmatrix}
+            .\end{align*}
+            So, it swaps the first two entries.
+    \item \textbf{Gaussian elimination with partial pivoting}:
+        Eliminates entries below the pivots to produce an upper triangular system.
+        \bigbreak \noindent 
+        At each step, you swap the current row with one below it to bring the largest (by absolute value) element in the pivot column into the pivot position. This improves numerical stability.
+    \item \textbf{$LU$ factorization with partial pivoting}: We we partial pivot rows in Gaussian Elimination (while building $L,U$), we make the same swap in $P$ (and in $L$ unless $A$ is used to store $L$ during Gaussian Elimination).
+        \bigbreak \noindent 
+        At the end, we get
+        \begin{align*}
+            PA = LU
+        .\end{align*}
+        Then, we also see that
+        \begin{align*}
+            A = P^{-1}LU = P^{T}LU
+        .\end{align*}
+        We can use this fact to solve systems $Ax = b$. We have
+        \begin{align*}
+            Ax &= b \\
+            \implies PAx &= Pb \\
+            \implies LUx &= Pb
+        .\end{align*}
+        Just like in standard $LU$ decomposition, we split the system in two triangular systems that can both be solved by substitution in $n^{2}$ flops. We have
+        \begin{align*}
+            \begin{cases}
+                Ly &= Pb  \quad \text{(Lower triangular)}\\
+                Ux &= y \quad \text{(Upper triangular)}
+            \end{cases}
+        .\end{align*}
             
 
 
 
 \end{itemize}
+
+    \pagebreak 
+    \subsection{Numerical error}
+    \begin{itemize}
+        \item \textbf{Numerical error when solving systems}: 
+            Suppose we want to solve a linear system $Ax = b$. 
+            In practice, due to floating-point roundoff and the large number of flops required for a big system, 
+            the computed solution $\bar{x}$ will generally not satisfy $Ax = b$ exactly. 
+            \bigbreak \noindent 
+            We define the \textbf{residual} as
+            \[
+                r = b - A\bar{x},
+            \]
+            which measures how far $\bar{x}$ is from being an exact solution. 
+            If $\bar{x}$ is a good approximation, then $r \approx 0$. 
+            \bigbreak \noindent 
+            If $\bar{x}$ is not sufficiently accurate, we can attempt to improve it. 
+            Notice that
+            \[
+                A\bar{x} + r = b,
+            \]
+            so the residual can be used to correct the solution. 
+            If $\bar{\bar{x}}$ denotes an improved approximation, then we want
+            \[
+                A\bar{\bar{x}} = b = A\bar{x} + r.
+            \]
+            \bigbreak \noindent 
+            This motivates the following iterative refinement process:
+            \begin{enumerate}
+                \item Compute an approximate solution $\bar{x}$ to $Ax = b$.
+                \item Compute the residual $r = b - A\bar{x}$.
+                \item Solve the \emph{correction system} $A\delta = r$ for $\delta$.
+                \item Update the solution: $\bar{x} \leftarrow \bar{x} + \delta$.
+                \item Repeat until the residual is sufficiently small.
+            \end{enumerate}
+            \bigbreak \noindent 
+            If we define a better solution $\bar{\bar{x}}$ as our computed solution plus $\delta$,
+            \begin{align*}
+                \bar{\bar{x}} = \bar{x} + \delta
+            .\end{align*}
+            We want
+            \begin{align*}
+                A\bar{\bar{x}} &= b, \\
+                \implies A(\bar{x} + \delta ) &= b, \\
+                \implies A\bar{x} + A\delta &= b
+            .\end{align*}
+            But, the residual is defined as $r = b - A\bar{x}$, so $A\bar{x} + r =b$. Thus, we have
+            \begin{align*}
+                A\bar{x} + A\delta &= A\bar{x} + r
+            .\end{align*}
+            Which we see implies that $A\delta = r $. So, we solve the new system $A\delta = r$ for delta, then update
+            \begin{align*}
+                \bar{x} \leftarrow \bar{x}  + \delta
+            \end{align*}
+            and repeat if necessary. 
+            \bigbreak \noindent 
+            \textbf{Note}: If we instead solve
+            \begin{align*}
+                A\bar{\bar{x}} = A\bar{x} + r
+            \end{align*}
+            directly, we will find that our computed $\bar{\bar{x}}$ is equal to $\bar{x} + \delta$.
+        % \item \textbf{Numerical error when solving systems}: Suppose we have a system $Ax = b$, if the matrix is large and many flops occur, then the solution to the system will not be the solution. In general, we have if that $Ax = b$ produces $\bar{x}$, then the \textbf{residual} is defined as
+        %     \begin{align*}
+        %         r = b-A\bar{x},
+        %     \end{align*}
+        %     which is likely nonzero. If $\bar{x}$ is a good approximation, then $r \approx 0$
+        %     \bigbreak \noindent 
+        %     Suppose $\bar{x}$ is not a good solution, how could we find a better solution $\bar{\bar{x}} $ using $\bar{x}$?
+        %     \bigbreak \noindent 
+        %     We have that $r = b - A\bar{x} $, so $A\bar{x} + r = b$. If $\bar{\bar{x}}$ is another solution for $Ax = b$, then 
+        %     \begin{align*}
+        %         A\bar{\bar{x}} = b = A\bar{x} + r
+        %     .\end{align*}
+        %     The general process is 
+        %     \begin{enumerate}
+        %         \item Solve $Ax = b$ to get $\bar{x}$ and $r$
+        %         \item Solve $Ax = A\bar{x} + r$ to get a new $\bar{x}$ and $r$
+        %         \item Repeat the process and hope the error shrinks.
+        %     \end{enumerate}
+
+
+
+    \end{itemize}
 
 
     \pagebreak 
@@ -8062,6 +8186,22 @@
             large, if $x$ is the solution to $Ax = b$, and $\bar{x}$ is the solution to the system with $\bar{A}$ and $\bar{b}$.
             \bigbreak \noindent 
             If the problem is \textbf{well-conditioned}, $\bar{x} -x$ is also tiny.
+        \item \textbf{Permutation matrix}: A permutation matrix is a special kind of square matrix that represents a permutation of elements. Formally:
+            It is obtained from the identity matrix by rearranging its rows (or equivalently, its columns).
+            \bigbreak \noindent 
+            Each row and each column has exactly one entry equal to 1, and all other entries are 0.
+            \bigbreak \noindent 
+            Multiplying a vector (or another matrix) by a permutation matrix reorders its entries.
+            \bigbreak \noindent 
+            Suppose $P$ is formed by taking $I$ and interchanging rows one and two. Then,
+            \begin{align*}
+                P = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}
+            .\end{align*}
+            Then, 
+            \begin{align*}
+                P\begin{pmatrix} a \\ b \\ c \end{pmatrix} = \begin{pmatrix} b \\ a \\ c \end{pmatrix}
+            .\end{align*}
+            So, it swaps the first two entries.
 
 
     \end{itemize}
@@ -8129,6 +8269,20 @@
             \end{bmatrix}
         \end{align*}
     \item \textbf{$LU$ factorization in a symmetric matrix}: 
+    \item \textbf{Properties of a permutation matrix}:
+        \begin{enumerate}
+            \item \textbf{Orthogonal:} $P^{T} = P^{-1} $
+            \item \textbf{Determinant:}: $\det(P)=\pm 1$, depending on whether the permutation is even or odd.
+            \item \textbf{Action on vectors:}: $Px$ permutes the coordinates of $x$
+            \item \textbf{Action on matrices:} Left multiplication permutes rows; right multiplication permutes columns.
+        \end{enumerate}
+    \item \textbf{Norms}: $\norm{\cdot}$ is a norm if and only if the following properties are satisfied
+        \begin{enumerate}
+            \item $\norm{0} = 0 $ 
+            \item $ \norm{\alpha x} = \left\lvert \alpha \right\rvert \norm{x}$
+            \item $\norm{x+y} \leq \norm{x} + \norm{y} $ (triangle inequality)
+        \end{enumerate}
+
 
 
 
