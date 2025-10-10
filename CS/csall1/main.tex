@@ -11242,6 +11242,8 @@ indicate which strong entity the weak entity depends upon.
         \item android.widget.GridLayout;
         \item androidx.constraintlayout.widget.ConstraintLayout;
         \item androidx.constraintlayout.widget.ConstraintSet;
+        \item androidx.constraintlayout.widget.Guideline
+        \item import androidx.constraintlayout.widget.Barrier;
         \item android.view.ViewGroup;
         \item android.content.Context;
         \item android.content.DialogInterface;
@@ -11434,7 +11436,15 @@ indicate which strong entity the weak entity depends upon.
              "I’m done with this Activity, please close it and remove it from the back stack."
             \end{quote}
             So if you call finish() inside an Activity, that activity will end and control will go back to the previous one (or exit the app if it was the only activity).
+        \item \textbf{Converting px to dp in java}: In Android, px (pixels) and dp (density-independent pixels) are not the same thing. You almost always want to work in dp because it scales properly across different screen densities.
+            \bigbreak \noindent 
+            \begin{javacode}
+                float dp = px / context.getResources().getDisplayMetrics().density; // px to dp
 
+                float px = dp * context.getResources().getDisplayMetrics().density; // dp to px
+            \end{javacode}
+            \bigbreak \noindent 
+            when a Java function in Android Studio takes an int representing a dimension (like width, height, margin, radius, stroke width, etc.), it is almost always in raw pixels (px) — not dp.
     \end{itemize}
 
     \pagebreak 
@@ -12060,6 +12070,328 @@ indicate which strong entity the weak entity depends upon.
                 ConstraintLayout layout = new ConstraintLayout(this);
             \end{javacode}
             The argument \textit{this} is the \textbf{context}, which in this case is the activity.
+        \item \textbf{Constraints}: Constraints are essentially sets of rules that dictate the way in which a widget is aligned and distanced in relation to other widgets. The sides of the containing ConstraintLayout and special elements are called \textbf{guidelines}.
+            \bigbreak \noindent 
+            Constraints also dictate how the user interface layout of an activity will respond to changes in device orientation, or when displayed on devices of differing screen sizes. In order to be adequately configured, a widget must have sufficient constraint connections such that it’s position can be resolved by the ConstraintLayout layout engine in both the horizontal and vertical planes.
+        \item \textbf{Margins}: A margin is a form of constraint that specifies a fixed distance. 
+        \item \textbf{Opposing Constraints}: Two constraints operating along the same axis on a single widget are referred to as opposing constraints. In other words, a widget with constraints on both its left and right-hand sides is considered to have horizontally opposing constraints. 
+            \bigbreak \noindent 
+            The key point to understand here is that once opposing constraints are implemented on a particular axis, the positioning of the widget is now based on percentages of the overall dimensions of the ConstraintLayout rather than coordinate based.
+            \bigbreak \noindent 
+            \fig{.9}{./figures/1008.png}
+            \bigbreak \noindent 
+            Instead of being fixed at 20dp from the top of the layout, for example, the widget is now positioned at a point 30\% from the top of the layout, regardless of the physical dimensions of the container, or parent layout.
+            \bigbreak \noindent 
+            In different orientations and when running on larger or smaller screens, the Button will always be in the same location relative to the dimensions of the parent layout.
+        \item \textbf{Constraint Bias}: By default, opposing constraints are equal, resulting in the corresponding widget being centered along the axis of opposition. 
+            \bigbreak \noindent 
+            To allow for the adjustment of widget position in the case of opposing constraints, the ConstraintLayout implements a feature known as constraint bias. Constraint bias allows the positioning of a widget along the axis of opposition to be biased by a specified percentage in favor of one constraint.
+            \bigbreak \noindent 
+            \fig{.9}{./figures/1009.png}
+            \bigbreak \noindent 
+            Figure 2b-4, for example, shows the previous constraint layout with a 75\% horizontal bias and 10\% vertical bias:
+        \item \textbf{Chains}: ConstraintLayout chains provide a way for the layout behavior of two or more widgets to be defined as a group.
+            \bigbreak \noindent 
+            Chains can be declared in either the vertical or horizontal axis and configured to define how the widgets in the chain are spaced and sized. Widgets are chained when connected together by bi-directional constraints.
+            \bigbreak \noindent 
+            \fig{.9}{./figures/1010.png}
+            \bigbreak \noindent 
+            Figure 2b-5, for example, illustrates three widgets chained in this way
+            \bigbreak \noindent 
+            The first element in the chain is the chain head which translates to the top widget in a vertical chain or, in the case of a horizontal chain, the left-most widget.
+            \bigbreak \noindent 
+            The layout behavior of the entire chain is primarily configured by setting attributes on the chain head widget.
+        \item \textbf{Chain Styles}: The layout behavior of a ConstraintLayout chain is dictated by the chain style setting applied to the chain head widget; these are as described next.
+            \begin{itemize}
+                \item \textbf{Spread Chain}: The widgets contained within the chain are distributed evenly across the available space which is the default behavior for chains.
+                    \bigbreak \noindent 
+                    \fig{.8}{./figures/1011.png}
+                \item \textbf{Spread Inside Chain}: The widgets contained within the chain are spread evenly between the chain head and the last widget in the chain. The head and last widgets are not included in the distribution of spacing
+                    \fig{.8}{./figures/1012.png}
+                \item \textbf{Weighted Chain}: Allows the space taken up by each widget in the chain to be defined via weighting properties.
+                    \fig{.8}{./figures/1013.png}
+                \item \textbf{Packed Chain}: The widgets that make up the chain are packed together without any spacing. A bias may be applied to control the horizontal or vertical positioning of the chain in relation to the parent container.
+                    \fig{.8}{./figures/1014.png}
+            \end{itemize}
+
+
+        \item \textbf{Creating chains with java code}: You do it by manually setting constraints directly on each view’s ConstraintLayout.LayoutParams, using the leftToRight, rightToLeft, topToBottom, etc. fields.
+            \bigbreak \noindent 
+            Suppose we have three buttons in a ConstraintLayout, 
+            \bigbreak \noindent 
+            \begin{javacode}
+                // --- Button 1 constraints ---
+                ConstraintLayout.LayoutParams lp1 = new ConstraintLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp1.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp1.rightToLeft = btn2.getId();    // Chain with Button 2
+                lp1.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp1.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp1.horizontalChainStyle = ConstraintLayout.LayoutParams.CHAIN_SPREAD;
+                btn1.setLayoutParams(lp1);
+
+                // --- Button 2 constraints ---
+                ConstraintLayout.LayoutParams lp2 = new ConstraintLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp2.leftToRight = btn1.getId();
+                lp2.rightToLeft = btn3.getId();
+                lp2.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp2.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+                btn2.setLayoutParams(lp2);
+
+                // --- Button 3 constraints ---
+                ConstraintLayout.LayoutParams lp3 = new ConstraintLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp3.leftToRight = btn2.getId();
+                lp3.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp3.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp3.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+                btn3.setLayoutParams(lp3);
+            \end{javacode}
+        \item \textbf{Chain styles in java}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                ConstraintLayout.LayoutParams.CHAIN_SPREAD
+                ConstraintLayout.LayoutParams.CHAIN_SPREAD_INSIDE
+                ConstraintLayout.LayoutParams.CHAIN_PACKED
+            \end{javacode}
+            \bigbreak \noindent 
+            Notice that in the above example, we give \texttt{ConstraintLayout.LayoutParams.CHAIN\_SPREAD} to the head button in the chain.
+        \item \textbf{Weighted chain in java}: To make a weighted chain, you must:
+            \begin{enumerate}
+                \item Use \texttt{MATCH\_CONSTRAINT} (0dp) for the dimension you want to weight (width in a horizontal chain, height in a vertical one).
+                \item Assign a weight to each view using layoutParams.horizontalWeight or layoutParams.verticalWeight.
+                \item Use either \texttt{CHAIN\_SPREAD} or \texttt{CHAIN\_SPREAD\_INSIDE} style.
+            \end{enumerate}
+            \bigbreak \noindent 
+            For example, consider again those three buttons
+            \bigbreak \noindent 
+            \begin{javacode}
+                // ---- Button 1 ----
+                ConstraintLayout.LayoutParams lp1 = new ConstraintLayout.LayoutParams(
+                        0,  // MATCH_CONSTRAINT for weighted width
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp1.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp1.rightToLeft = btn2.getId();
+                lp1.horizontalWeight = 1f; // weight = 1
+                lp1.horizontalChainStyle = ConstraintLayout.LayoutParams.CHAIN_SPREAD;
+                btn1.setLayoutParams(lp1);
+
+                // ---- Button 2 ----
+                ConstraintLayout.LayoutParams lp2 = new ConstraintLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp2.leftToRight = btn1.getId();
+                lp2.rightToLeft = btn3.getId();
+                lp2.horizontalWeight = 2f; // weight = 2
+                btn2.setLayoutParams(lp2);
+
+                // ---- Button 3 ----
+                ConstraintLayout.LayoutParams lp3 = new ConstraintLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                lp3.leftToRight = btn2.getId();
+                lp3.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
+                lp3.horizontalWeight = 1f; // weight = 1
+                btn3.setLayoutParams(lp3);
+            \end{javacode}
+        \item \textbf{MATCH\_CONSTRAINT}: Let’s break down what MATCH\_CONSTRAINT means, how it differs from WRAP\_CONTENT and MATCH\_PARENT, and when you use it.
+            \bigbreak \noindent 
+            MATCH\_CONSTRAINT is a special size mode in ConstraintLayout that tells a view:
+            \bigbreak \noindent 
+            \begin{center}
+                "Size yourself dynamically based on your constraints, rather than fixed content or parent size."
+            \end{center}
+            \bigbreak \noindent 
+            In Java, it’s specified by setting the dimension (width or height) to 0 in the layout params:
+            \bigbreak \noindent 
+            \begin{javacode}
+                ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(0, WRAP_CONTENT);
+            \end{javacode}
+            \bigbreak \noindent 
+            View size is flexible and determined by the constraints and optionally by weights or ratios
+        \item \textbf{Baseline Alignment}: So far,  we have only  referred to constraints that dictate alignment relative to the sides of a widget (typically referred to as side constraints).
+            \bigbreak \noindent 
+            A common requirement, however, is for a widget to be aligned relative to the content that it displays rather than the boundaries of the widget itself. To address this need, ConstraintLayout provides baseline alignment support.
+            \bigbreak \noindent 
+            Every view that displays text (e.g. TextView, EditText, Button) has a \textbf{text baseline} - the imaginary horizontal line upon which the text "sits."
+            \bigbreak \noindent 
+            Baseline alignment means you’re aligning two or more views based on that text baseline, instead of their tops or bottoms.
+            \bigbreak \noindent 
+            Suppose we require a TextView widget to be positioned 40dp to the left of the Button. 
+            \bigbreak \noindent 
+            In this case, the TextView needs to be baseline aligned with the Button view.
+            \bigbreak \noindent 
+            This means that the text within the Button needs to be vertically aligned with the text within the TextView.
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1015.png}
+            \bigbreak \noindent 
+            The TextView is now aligned vertically along the baseline of the Button and positioned 40dp horizontally from the Button object’s left-hand edge.
+            \bigbreak \noindent 
+            In Java, you connect one view’s baseline to another view’s baseline using:
+            \bigbreak \noindent 
+            \begin{javacode}
+            params.baselineToBaseline = otherView.getId();
+            \end{javacode}
+            \bigbreak \noindent 
+            You can combine this with other constraints like leftToLeft, topToTop, etc.
+        \item \textbf{Working with Guidelines}: Guidelines are special elements available within the ConstraintLayout that provide an additional target to which constraints may be connected.
+            \bigbreak \noindent 
+            Multiple guidelines may be added to a ConstraintLayout instance which may, in turn, be configured in horizontal or vertical orientations.
+            \bigbreak \noindent 
+            Once added, constraint connections may be established from widgets in the layout to the guidelines. This is particularly useful when multiple widgets need to be aligned along an axis. 
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1016.png}
+        \item \textbf{Guidelines in java}: First we create a \texttt{Guideline} object, then configure \texttt{ConstraintLayout.LayoutParams} for it.
+            \bigbreak \noindent 
+            \begin{javacode}
+                import androidx.constraintlayout.widget.Guideline 
+
+                // 1) Make the guideline
+                Guideline vGuide = new Guideline(this);
+                vGuide.setId(View.generateViewId());
+
+                ConstraintLayout.LayoutParams vgLP = new ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                vgLP.orientation = ConstraintLayout.LayoutParams.VERTICAL;
+                // Choose ONE of these three ways to position it:
+                vgLP.guidePercent = 0.30f;   // 30% from the left (0..1)
+                // vgLP.guideBegin  = 120;    // 120px from the left
+                // vgLP.guideEnd    = 16;     // 16px from the right
+
+                vGuide.setLayoutParams(vgLP);
+                layout.addView(vGuide);
+
+                // 2) Constrain a view to the guideline
+                TextView tv = new TextView(this);
+                tv.setId(View.generateViewId());
+                tv.setText("Hello");
+                ConstraintLayout.LayoutParams tvLP = new ConstraintLayout.LayoutParams(
+                0,  // MATCH_CONSTRAINT width so it can expand between guideline and parent
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                tvLP.leftToRight = vGuide.getId();                       // to the right of guideline
+                tvLP.rightToRight = ConstraintLayout.LayoutParams.PARENT_ID;
+                tvLP.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+
+                tv.setLayoutParams(tvLP);
+                layout.addView(tv);
+
+                setContentView(layout);
+            \end{javacode}
+            \bigbreak \noindent 
+            \textbf{Note:} \texttt{ConstraintLayout.LayoutParams.orientation} is a property that only applies to Guidelines, not to regular Views.
+            \bigbreak \noindent 
+            \texttt{ConstraintLayout.LayoutParams.orientation} tells the ConstraintLayout whether a Guideline is:
+            \begin{itemize}
+                \item \textbf{Vertical}: divides the layout left $\leftrightarrow $ right
+                \item \textbf{Horizontal}: divides the layout top $\leftrightarrow$ bottom
+            \end{itemize}
+        \item \textbf{Working with Barriers}: Rather like guidelines, barriers are virtual views that can be used to constrain views within a layout
+            \bigbreak \noindent 
+            As with guidelines, a barrier can be vertical or horizontal and one or more views may be constrained to it (to avoid confusion, these will be referred to as constrained views).
+            \bigbreak \noindent 
+            Unlike guidelines where the guideline remains at a fixed position within the layout, however, the position of a barrier is defined by a set of so called reference views.
+            \bigbreak \noindent 
+            Barriers were introduced to address an issue that occurs with some frequency involving overlapping views.
+            \bigbreak \noindent 
+            Consider the following example
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1017.png}
+            \bigbreak \noindent 
+            The key points to note about the above layout is that the width of View 3 is set to match constraint mode, and the left-hand edge of the view is connected to the right hand edge of View 1.
+            \bigbreak \noindent 
+            As currently implemented, an increase in width of View 1 will have the desired effect of reducing the width of View 3:
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1018.png}
+            \bigbreak \noindent 
+            A problem arises, however, if View 2 increases in width instead of View 1:
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1019.png}
+            \bigbreak \noindent 
+            Clearly because View 3 is only constrained by View 1, it does not resize to accommodate the increase in width of View 2 causing the views to overlap.
+            \bigbreak \noindent 
+            A solution to this problem is to add a vertical barrier and assign Views 1 and 2 as the barrier’s reference views so that they control the barrier position.
+            \bigbreak \noindent 
+            The left-hand edge of View 3 will then be constrained in relation to the barrier, making it a constrained view.
+            \bigbreak \noindent 
+            Now when either View 1 or View 2 increase in width, the barrier will move to accommodate the widest of the two views, causing the width of View 3 change in relation to the new barrier position:
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1020.png}
+            \bigbreak \noindent 
+            When working with barriers there is no limit to the number of reference views and constrained views that can be associated with a single barrier.
+        \item \textbf{Barriers in java}: A Barrier is a virtual helper object in ConstraintLayout that positions itself dynamically based on the position of other views. It’s like a movable guideline that automatically adjusts to the furthest edge of a group of views.
+            \bigbreak \noindent 
+            Assume we have two TextViews
+            \bigbreak \noindent 
+            \begin{javacode}
+                import androidx.constraintlayout.widget.Barrier;
+
+                // --- Create a barrier ---
+                Barrier barrier = new Barrier(this);
+                barrier.setId(View.generateViewId());
+                barrier.setType(Barrier.END); // or LEFT, RIGHT, START, TOP, BOTTOM
+                barrier.setReferencedIds(new int[]{label1.getId(), label2.getId()});
+                layout.addView(barrier);
+
+                // Create a button that stays to the right of both text views
+                Button btn = new Button(this);
+                btn.setId(View.generateViewId());
+                btn.setText("Aligned with longest");
+                ConstraintLayout.LayoutParams lp3 = new ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                );
+                lp3.startToEnd = barrier.getId(); // use barrier directly
+                lp3.topToTop = t1.getId();       // align top with first label
+                lp3.leftMargin = 16;
+                btn.setLayoutParams(lp3);
+
+                layout.addView(btn);
+
+                ...
+            \end{javacode}
+
+        \item \textbf{Barrier types}: Barrier types you can use:
+            \begin{itemize}
+                \item Barrier.START
+                \item Barrier.END
+                \item Barrier.LEFT
+                \item Barrier.RIGHT
+                \item Barrier.TOP
+                \item Barrier.BOTTOM
+            \end{itemize}
+            Which are explained in the following table
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabular}{p{4cm}|p{3cm}|p{2cm}|p{3cm}}
+                    Constant	&Tracks the...	&Moves toward...	&Typical Use \\
+                    \hline \\
+                    Barrier.START	&Start edges (left in LTR, right in RTL)	&Start side	&Keep something to the left of the leftmost view \\ && \\
+                    Barrier.END	End &edges (right in LTR, left in RTL)	&End side	&Keep something to the right of the rightmost view \\&& \\ 
+                    Barrier.LEFT	&Left edges (absolute)	&Left side	&Same as START but ignores layout direction \\ && \\
+                    Barrier.RIGHT	&Right edges (absolute)	&Right side	&Same as END but ignores layout direction \\ && \\
+                    Barrier.TOP	&Top edges	&Upward	&Keep something below the topmost/tallest view \\ && \\
+                    Barrier.BOTTOM	&Bottom edges	&Downward	&Keep something below the lowest/bottommost view 
+                \end{tabular}
+            \end{center}
+
+
+
+
+
+
         \item \textbf{ConstraintLayout.LayoutParams}: Has constructor
             \bigbreak \noindent 
             \begin{javacode}
@@ -12107,18 +12439,6 @@ indicate which strong entity the weak entity depends upon.
             \end{javacode}
             \bigbreak \noindent 
             We also have chains, for arranging multiple views in a line with flexible spacing:
-            \begin{itemize}
-                \item horizontalChainStyle
-                    \begin{itemize}
-                        \item CHAIN\_SPREAD
-                        \item CHAIN\_SPREAD\_INSIDE
-                        \item CHAIN\_PACKED
-                    \end{itemize}
-                \item verticalChainStyle
-                    \begin{itemize}
-                        \item same values as above.
-                    \end{itemize}
-            \end{itemize}
         \item \textbf{Retrieve and update LayoutParams}:
             \bigbreak \noindent 
             \begin{javacode}
@@ -12126,7 +12446,11 @@ indicate which strong entity the weak entity depends upon.
             ...
             view.setLayoutParams(lp);
             \end{javacode}
-        \item \textbf{Methods}
+        \item \textbf{ConstraintLayout.LayoutParams methods}
+            \begin{itemize}
+                \item .setMargins(int left, int top, int right, int bottom)
+            \end{itemize}
+        \item \textbf{ConstraintLayout Methods}
             \begin{itemize}
                 \item \textbf{.setId()}
                 \item \textbf{.setLayoutParmas()}
@@ -12561,7 +12885,7 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsection{android.graphics.Typeface}
+    \subsubsection{android.graphics.Typeface}
     \begin{itemize}
         \item \textbf{Typeface class}: the Typeface class in Android is the foundation for all text styling related to fonts and weight (bold, italic, etc.). It represents the font face used to render text on screen — in a TextView, Canvas, or anywhere text is drawn.
             \bigbreak \noindent 
