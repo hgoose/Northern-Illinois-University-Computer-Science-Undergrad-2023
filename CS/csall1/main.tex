@@ -10636,12 +10636,136 @@ indicate which strong entity the weak entity depends upon.
             \begin{enumerate}
                 \item \textbf{Accumulator, AC}: a 16-bit register that holds a conditional operator (e.g., "less than") or one operand of a two-operand instruction.
                 \item \textbf{Memory buffer register, MBR}: a 16-bit register that holds the data after its retrieval from, or before its placement in memory.
+                \item \textbf{Instruction register, IR}: a 16-bit register which holds an instruction immediately preceding its execution.
                 \item \textbf{Memory address register, MAR}: a 12-bit register that holds the memory address of an instruction or the operand of an instruction.
                 \item \textbf{Program counter, PC}: a 12-bit register that holds the address of the next program instruction to be executed
-                \item \textbf{Instruction register, IR}: a 12-bit register which holds an instruction immediately preceding its execution.
                 \item \textbf{Input register, InREG}: an 8-bit register that holds data read from an input device.
                 \item \textbf{Output register, OutREG}: an 8-bit register, that holds data that is ready for the output device.
             \end{enumerate}
+        \item \textbf{Marie architecture graphic}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1021.png}
+            \bigbreak \noindent 
+            The registers are interconnected, and connected with main memory through a common data bus.
+            \bigbreak \noindent 
+            Each device on the bus is identified by a unique number that is set on the control lines whenever that device is required to carry out an operation.
+            \bigbreak \noindent 
+            Separate connections are also provided between the accumulator and the memory buffer register, and the ALU and the accumulator and memory buffer register.
+            \bigbreak \noindent 
+            This permits data transfer between these devices without use of the main data bus.
+        \item \textbf{Bus addresses}:
+            \bigbreak \noindent 
+            The bus address refers to the address lines on the address bus — the part of the bus system that carries the memory address from the CPU to main memory.
+            \bigbreak \noindent 
+            MARIE uses a single shared 16-bit bus for both data and addresses (time-multiplexed). That means:
+            \begin{itemize}
+                \item The same 16 wires carry either addresses or data at different times.
+                \item Control signals decide what’s currently being sent.
+            \end{itemize}
+            Each "Bus Address" (0–7) identifies which device (register or memory) is connected to that bus line.
+            \bigbreak \noindent 
+            When one component needs to send or receive data:
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item The Control Unit activates that device’s bus address line.
+                \item That component either places data on the bus (output) or reads from it (input).
+            \end{itemize}
+            So "Bus Address 3" doesn’t mean memory address 3 — it means "the bus line connected to the MBR."
+
+        \item \textbf{Marie data path}:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1022.png}
+            \bigbreak \noindent 
+            All the bits of the control bus enter and leave each component. The bus address on the diagram shows which bit configuration needs to be represented (e.g., 1 = 001, 2 = 010, etc.) in order for that component to know that it is being spoken to.
+        \item \textbf{Marie instruction set (ISA)}:
+            A computer’s instruction set architecture (ISA) specifies the format of its instructions and the primitive operations that the machine can perform.
+            \bigbreak \noindent 
+            The ISA is an interface between a computer’s hardware and its software. Some ISAs include hundreds of different instructions for processing data and controlling program execution.
+            \bigbreak \noindent 
+            The MARIE ISA has only thirteen instructions
+        \item \textbf{Instruction format}:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1023.png}
+        \item \textbf{Fundamental instructions}:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1024.png}
+        \item \textbf{Marie RTL}: Each of our instructions actually consists of a sequence of smaller instructions called \textbf{microoperations}.
+            \bigbreak \noindent 
+            The exact sequence of microoperations that are carried out by an instruction can be specified using register transfer language (RTL)
+            \bigbreak \noindent 
+            In the MARIE RTL, we use the notation $M[X]$ to indicate the actual data value stored in memory location $X$, and $\leftarrow $ to indicate the transfer of bytes to a register or memory location
+        \item \textbf{RTL for LOAD}:  The RTL for the LOAD instruction is:
+            \bigbreak \noindent 
+            \begin{align*}
+                \text{MAR} &\leftarrow X \\
+                \text{MBR} &\leftarrow M[\text{MAR}] \\
+                \text{AC} &\leftarrow \text{MBR}
+            .\end{align*}
+        \item \textbf{RTL for STORE $X$}: The RTL for the STORE instruction is 
+            \begin{align*}
+                \text{MAR} &\leftarrow X \\
+                \text{MBR} &\leftarrow \text{AC}
+                M[\text{MAR}] &\leftarrow \text{MBR}
+            .\end{align*}
+        \item \textbf{RTL for ADD $X$}: Similarly, the RTL for the ADD instruction is
+            \begin{align*}
+                \text{MAR} &\leftarrow X \\
+                \text{MBR} &\leftarrow M[\text{MAR}] \\
+                \text{AC} &\leftarrow \text{AC} + \text{MBR}
+            .\end{align*}
+        \item \textbf{RTL for SUBT $X$}:
+            \begin{align*}
+                \text{MAR} &\leftarrow X \\
+                \text{MBR} &\leftarrow M[\text{MAR}] \\
+                \text{AC} &\leftarrow \text{AC} - \text{MBR}
+            .\end{align*}
+        \item \textbf{RTL for INPUT}:
+            \begin{align*}
+                \text{AC} &\leftarrow \text{inREG}
+            .\end{align*}
+        \item \textbf{RTL for OUTPUT}:
+            \begin{align*}
+                \text{outREG} &\leftarrow AC
+            .\end{align*}
+        \item \textbf{RTL for HALT}: No operations needed, no RTL
+        \item \textbf{RTL for JUMP $X$}:
+            \begin{align*}
+                \text{PC} &\leftarrow \text{IR}[11-0]
+            .\end{align*}
+
+
+        \item \textbf{Instruction Processing}: The fetch-decode-execute cycle is the series of steps that a computer carries out when it runs a program.
+            \bigbreak \noindent 
+            \begin{enumerate}
+                \item We first have to fetch an instruction from memory, and place it into the IR.
+                \item Once in the IR, it is decoded to determine what needs to be done next.
+                \item If a memory value (operand) is involved in the operation, it is retrieved and placed into the MBR
+                \item With everything in place, the instruction is executed.
+            \end{enumerate}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1025.png}
+            \bigbreak \noindent 
+            \textbf{Note:} The fetch-decode-execute cycle is sometimes called the fetch-decode-fetch-execute cycle.
+        \item \textbf{Example program}: Consider the simple MARIE program given below. We show a set of mnemonic instructions stored at addresses 100 - 106 (hex):
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1026.png}
+            \bigbreak \noindent 
+            Let’s look at what happens inside the computer when our program runs. This is the LOAD 104 instruction.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1027.png}
+            \bigbreak \noindent 
+            The line in parentheses means that the RTN "branches" according to which instruction was decoded. That line needs no RTN because it uses combinational logic That instruction will be executed in the execute step
+            \bigbreak \noindent 
+            Our second instruction is ADD 105.
+            \bigbreak \noindent 
+            The fetch, decode and "get operand" (i.e., fetch the data) steps are the same. The only thing that is different is the execute, since the instruction is 'add' instead of 'load'.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1028.png}
+            \bigbreak \noindent 
+            The AC now has the value of AC + MBR. Remember that MARIE has 2’s complement addition.
+        \item \textbf{Register transfer notation (RTL)}: RTN = register transfer notation, a synonym for RTL.
+        \item \textbf{Decoding}: A computer’s control unit ensures that each instruction is executed in sequence, making sure that data flows to the correct components as each instruction is executed
+
     \end{itemize}
 
 
@@ -12962,9 +13086,33 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsection{android.view.Display}
+    \subsubsection{Relative layout}
     \begin{itemize}
-        
+        \item 
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Linear layout}
+    \begin{itemize}
+        \item 
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{android.view.Display}
+    \begin{itemize}
+        \item  
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{android.view.KeyEvent}
+    \begin{itemize}
+        \item 
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Relative layout}
+    \begin{itemize}
+        \item 
     \end{itemize}
 
 
