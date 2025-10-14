@@ -10704,7 +10704,7 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{RTL for STORE $X$}: The RTL for the STORE instruction is 
             \begin{align*}
                 \text{MAR} &\leftarrow X \\
-                \text{MBR} &\leftarrow \text{AC}
+                \text{MBR} &\leftarrow \text{AC} \\
                 M[\text{MAR}] &\leftarrow \text{MBR}
             .\end{align*}
         \item \textbf{RTL for ADD $X$}: Similarly, the RTL for the ADD instruction is
@@ -13100,7 +13100,113 @@ indicate which strong entity the weak entity depends upon.
     \pagebreak 
     \subsubsection{android.view.Display}
     \begin{itemize}
-        \item  
+        \item \textbf{Display class}: The android.view.Display class represents a physical screen or display device that your app’s UI can be shown on. It provides detailed information about the screen your app is running on — such as its size, refresh rate, orientation, and pixel density.
+            \bigbreak \noindent 
+            It is useful when adapting layouts, scaling graphics, or handling multi-screen setups
+        \item \textbf{Getting a display object}: You usually don’t create Display yourself. Instead, you retrieve it from a system service like \texttt{WindowManager}
+            \bigbreak \noindent 
+            \begin{javacode}
+                WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                Display display = wm.getDefaultDisplay();
+            \end{javacode}
+            \bigbreak \noindent 
+            Or, with
+            \bigbreak \noindent 
+            \begin{javacode}
+            Display display = getWindowManager().getDefaultDisplay();
+            \end{javacode}
+            \bigbreak \noindent 
+            or, in newer Android versions (API 30+):
+            \bigbreak \noindent 
+            \begin{javacode}
+            Display display = getDisplay();  // available from any Activity or View
+            \end{javacode}
+            \bigbreak \noindent 
+            If you’re in a non-Activity class (like a helper or controller class), you can get it through a Context:
+            \bigbreak \noindent 
+            \begin{javacode}
+                WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+                Display display = wm.getDefaultDisplay();
+            \end{javacode}
+
+        \item \textbf{Getting display size}: To get the size of the usable screen in pixels:
+            \bigbreak \noindent 
+            \begin{javacode}
+                Display display = getWindowManager().getDefaultDisplay();
+
+                Point size = new Point();
+                display.getSize(size);
+
+                int width = size.x;
+                int height = size.y;
+            \end{javacode}
+        \item \textbf{Getting Real Screen Size}: To include everything (status bar, navigation bar):
+            \bigbreak \noindent 
+            \begin{javacode}
+                Point realSize = new Point();
+                display.getRealSize(realSize);
+            \end{javacode}
+        \item \textbf{Getting Refresh Rate}: Returns how many times per second the screen updates:
+            \bigbreak \noindent 
+            \begin{javacode}
+                float refreshRate = display.getRefreshRate();
+            \end{javacode}
+        \item \textbf{Getting Display Rotation}: Tells you how the screen is currently rotated relative to its “natural” orientation:
+            \bigbreak \noindent 
+            \begin{javacode}
+            int rotation = display.getRotation();
+            \end{javacode}
+            \bigbreak \noindent 
+            where the possible values are
+            \begin{itemize}
+                \item \textbf{Surface.ROTATION\_0}:  natural orientation
+                \item \textbf{Surface.ROTATION\_90}:  rotated right
+                \item \textbf{Surface.ROTATION\_180}:  upside down
+                \item \textbf{Surface.ROTATION\_270}:  rotated left
+            \end{itemize}
+        \item \textbf{Getting Display Metrics}: To obtain screen density and scaling info:
+            \bigbreak \noindent 
+            \begin{javacode}
+                DisplayMetrics metrics = new DisplayMetrics();
+                display.getMetrics(metrics);
+
+                int densityDpi = metrics.densityDpi;
+                float density = metrics.density;  // Scale factor for dp → px
+                float scaledDensity = metrics.scaledDensity;  // Scale for sp → px
+            \end{javacode}
+        \item \textbf{In Multi-Display or External Display Scenarios}: Starting from Android 4.2+, a device can have multiple displays (like casting to a TV or projector). You can access all of them with:
+            \bigbreak \noindent 
+            \begin{javacode}
+                DisplayManager dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
+                Display[] displays = dm.getDisplays();
+            \end{javacode}
+        \item \textbf{Methods}:
+            \begin{itemize}
+                \item \textbf{getSize(Point)}:	Gets the app-usable screen size (in pixels).
+                \item \textbf{getRealSize(Point)}:	Gets the full physical display size.
+                \item \textbf{getRotation()}:	Returns the screen rotation (0, 90, 180, 270).
+                \item \textbf{getRefreshRate()}:	Returns display refresh rate in Hz.
+                \item \textbf{getMetrics(DisplayMetrics)}:	Returns logical density and scaling info.
+                \item \textbf{getName()}:	Returns display name (useful in multi-display setups).
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{android.hardware.display.DisplayManager}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{android.view.WindowManager}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{android.util.DisplayMetrics}
+    \begin{itemize}
+        
     \end{itemize}
 
     \pagebreak 
