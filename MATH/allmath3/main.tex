@@ -6590,7 +6590,7 @@
                 \item The rows of $A$ are linearly independent
                 \item Given any vector $b$, there is exactly one vector $x$ such that $Ax=b$
             \end{itemize}
-            If any one of the following are true, they all are true, and $A$ is non-singular
+            If any one of the following are true, they all are true, and $A$ is nonsingular
         \item \textbf{Solution to $Ax = b$}: If $A$ is nonsingular, then $A^{-1}$ exists, and
             \begin{align*}
                 x = A^{-1}b
@@ -6898,10 +6898,10 @@
 
         \item \textbf{Properties of positive definite (p.d) matrices}:
             \begin{enumerate}
-                \item If $A$ is p.d then $A$ is \textit{non-singular}
+                \item If $A$ is p.d then $A$ is \textit{nonsingular}
                     \bigbreak \noindent 
-                    \textbf{Note:} Since $A$ is non-singular there is no $y \in \mathbb{R}^{n}$, $y\ne 0$ such that $Ay = 0$
-                \item If $A = M^{\top}M$ for some $M$ non-singular than $A$ is p.d
+                    \textbf{Note:} Since $A$ is nonsingular there is no $y \in \mathbb{R}^{n}$, $y\ne 0$ such that $Ay = 0$
+                \item If $A = M^{\top}M$ for some $M$ nonsingular than $A$ is p.d
                 \item $A$ is p.d if and only if all eigenvalues of $A$ are positive
                     \bigbreak \noindent 
                     Recall that $\lambda$ is an eigenvalue of $A$ if there exists $x_{\lambda} \ne 0$ such that $Ax_{\lambda}  = \lambda x_{\lambda}$
@@ -6916,9 +6916,9 @@
             \bigbreak \noindent 
             Since $Ay = 0$, $y\ne 0$, then $y^{\top}Ay=0$ when $y\ne 0$, so $A$ is not p.d.
             \bigbreak \noindent 
-            Therefore if $A$ is p.d, then $A$ is non-singular $\endpf$
+            Therefore if $A$ is p.d, then $A$ is nonsingular $\endpf$
             \bigbreak \noindent 
-            \textbf{\textit{Proof of (2)}}: Assume that $A  = M^{\top}M$ for some $M$ non-singular. Then,
+            \textbf{\textit{Proof of (2)}}: Assume that $A  = M^{\top}M$ for some $M$ nonsingular. Then,
             \begin{align*}
                 A^{\top} = (M^{\top}M)^{\top} = M^{\top}(M^{\top})^{\top} = M^{\top}M = A
             \end{align*}
@@ -7510,7 +7510,7 @@
             \end{bmatrix}
         \end{align*}
         % \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$, $A$ can be factored as $A = LU$, for $L \in \mathbb{R}^{n\times n}$ unit lower triangular, $U \in \mathbb{R}^{n\times n}$ upper triangular if and only if all leading principal submatrices of $A$ are nonsingular.
-    \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be non-singular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principal sub-matrices of $A$ are non-singular.
+    \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be nonsingular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principal sub-matrices of $A$ are nonsingular.
     \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n \times n}$. Then $A$ admits an LU factorization
             \[
                 A = LU,
@@ -8154,7 +8154,7 @@
                 \kappa(A^{-1}) = \norm{\left(A^{-1}\right)^{-1}}\norm{A^{-1}} = \norm{A^{-1}} \norm{A} = \kappa(A)
             .\end{align*}
             $\endpf$
-        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be non-singular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
+        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be nonsingular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
             \begin{align*}
                 \frac{\norm{ \delta  x}}{\norm{ x}} \leq \kappa(A) \frac{\norm{\delta  b }}{\norm{ b}}
             \end{align*}
@@ -8325,6 +8325,97 @@
         \bigbreak \noindent 
         This means the algorithm’s result may not correspond meaningfully to the 
         original system at all.
+    \item \textbf{Perturbing $A$ but not $b$}: Suppose $A$ nonsingular, and $Ax = b$ yields a numerical solution $\hat{x}$. Then, $\hat{x}$ solves $\hat{A}\hat{x} = b$, where 
+        \begin{align*}
+            \hat{A} = A + \delta  A
+        .\end{align*}
+        But, this is only when $\hat{A}$ nonsingular. Let's suppose for a moment that $\hat{A}$ is singular. Then, there exists a $y\ne 0$ such that
+        \begin{align*}
+            (A + \delta  A)y = 0
+        .\end{align*}
+        This implies
+        \begin{align*}
+            Ay + \delta Ay &= 0 \\
+            \implies Ay &= - \delta Ay \\
+            \implies y &= -A^{-1} \delta  A y \\
+            \implies \norm{y} &= \norm{-A^{-1}\delta  Ay} \\
+                              &= \left\lvert -1 \right\rvert \norm{A^{-1}\delta  A y} \\
+                              &= \norm{A^{-1} \delta Ay} \\
+                              & \leq \norm{A^{-1}} \norm{\delta  Ay} \\
+                              & \leq \norm{A^{-1}}\norm{\delta  A}\norm{y} \\
+            \implies 1 &\leq \norm{A^{-1}}\norm{\delta A}\\
+            \implies \norm{A}& \leq \norm{A}\norm{A^{-1}}\norm{\delta A}\\
+            \implies \norm{A} & \leq \kappa(A) \norm{\delta  A} \\
+            \implies \frac{\norm{\delta A}}{\norm{A}} & \geq \frac{1}{\kappa(A)}
+        .\end{align*}
+        So, we have the following theorem
+    \item \textbf{Theorem (\textit{Singularity of perturbed $A$})}: If
+        \begin{align*}
+            \frac{\norm{\delta A}}{\norm{A}} < \frac{1}{\kappa(A)}
+        \end{align*}
+        then $A + \delta  A$ is nonsingular.
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item A large $\kappa(A)$ means $A$ is \textbf{ill-conditioned} — even small perturbations can make it singular.
+            \item A small $\kappa(A)$ (close to $1$) means $A$ is \textbf{well-conditioned} — it can tolerate relatively large perturbations without becoming singular.
+        \end{itemize}
+        If $\kappa(A) = 1$, then
+        \begin{align*}
+            \frac{\norm{\delta  A}}{\norm{ A}} < 1,
+        \end{align*}
+        meaning the perturbation can be as large as the matrix itself before singularity is possible.
+        \bigbreak \noindent 
+        This inequality defines a \textbf{ball in matrix space} with center $A$ and radius $\norm{A} / \kappa(A)$, consistency of nonsingular matrices. The inequality tells us that all matrices within that ball are guaranteed to be nonsingular. All matrices outside that ball (and on the boundary) are singular.
+        \bigbreak \noindent 
+        This ball is called a \textbf{matrix norm ball} (or \textbf{ball in matrix space}), and is the set
+        \begin{align*}
+            \mathcal{B}(A,r) = \{A + \delta  A:\; \norm{\delta A} < r\},
+        \end{align*}
+        where $r = \frac{\norm{A}}{\kappa(A)} $. We can call this specific ball the \textbf{Ball of guaranteed nonsingularity}, or the \textbf{Neighborhood of nonsingularity}.
+        \bigbreak \noindent 
+        \textbf{\textit{Proof.}} See argument above, the converse reveals the theorem.
+    \item \textbf{Theorem \textit{(Relative error bound II)}}: Let $A$ be nonsingular, $b\ne 0$, and $Ax=b$. If $(A + \delta A)(x + \delta x) = b$, and 
+        \begin{align*}
+            \frac{\norm{\delta  A}}{\norm{A}} < \frac{1}{\kappa(A)},
+        \end{align*}
+        then
+        \begin{align*}
+            \frac{\norm{\delta x}}{\norm{x}} \leq \frac{\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}{1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}
+        .\end{align*}
+        \bigbreak \noindent 
+        \textbf{\textit{Proof}}. Suppose for a moment that $A$ nonsingular, $b \ne 0$,  $ Ax = b$, and $(A + \delta A)(x + \delta  x) = b$. Then, it's easy to see that
+        \begin{align*}
+            (A + \delta A)(x + \delta x) &= b \\
+            \implies Ax + A\delta x + \delta  A x + \delta A \delta x &= b \\
+            \implies A \delta x + \delta A x + \delta A \delta x &=0 \\
+            \implies A \delta x &= - \left(\delta Ax + \delta A \delta x\right) \\
+            \implies A \delta x &= - \delta A(x + \delta x) \\
+            \implies \delta x &= -A^{-1}\delta A(x + \delta x) \\
+            \implies \norm{\delta x} &= \norm{-A^{-1}\delta A(x + \delta x)} \\
+                                     &=\norm{A^{-1}\delta A(x + \delta x)} \\
+            \implies \norm{\delta x} &\leq \norm{A^{-1}}\norm{\delta A}\norm{x + \delta x} \quad \text{(Cauchy-Schwarz)} \\
+                                     &\leq \norm{A^{-1}}\norm{\delta  A}\left(\norm{x} + \norm{\delta x}\right) \quad \text{(Triangle inequality)} \\
+                                     &\leq \norm{A^{-1}}\norm{\delta A}\norm{x} + \norm{A^{-1}}\norm{\delta A}\norm{\delta x} \\
+            \implies \norm{\delta x} - \norm{A^{-1}}\norm{\delta A}\norm{\delta x} & \leq \norm{A^{-1}}\norm{\delta A}\norm{x} \\ 
+            \implies \norm{\delta x}\left(1-\norm{A^{-1}}\norm{\delta A}\right) & \leq \norm{A^{-1}}\norm{\delta A}\norm{x} \\
+            \implies \frac{\norm{A}}{\norm{A}}\norm{\delta x}\left(1-\norm{A^{-1}}\norm{\delta A}\right) & \leq \frac{\norm{A}}{\norm{A}}\norm{A^{-1}}\norm{\delta A}\norm{x} \\
+            \implies \norm{\delta x}\left(1-\frac{\norm{A}}{\norm{A}}\norm{A^{-1}}\norm{\delta A}\right) & \leq \norm{A}\norm{A^{-1}} \frac{\norm{\delta A}}{\norm{A}}\norm{x} \\
+            \implies \norm{\delta x}\left(1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}\right) & \leq \kappa(A) \frac{\norm{\delta A}}{\norm{A}} \norm{x} \\
+            \therefore \frac{\norm{\delta x}}{\norm{x}} & \leq \frac{\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}{1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}
+        \end{align*}
+        as desired. $\endpf $
+
+
+
+    \item \textbf{Theorem \textit{(Relative error bound III)}}:  Let $A$ be nonsingular, $b\ne 0$, and $Ax=b$. If $(A + \delta A)(x + \delta x) = b + \delta  b$, and 
+        \begin{align*}
+            \frac{\norm{\delta  A}}{\norm{A}} < \frac{1}{\kappa(A)},
+        \end{align*}
+        then
+        \begin{align*}
+            \frac{\norm{\delta x}}{\norm{x}} \leq \frac{\kappa(A)\left(\frac{\norm{\delta A}}{\norm{A}} + \frac{\norm{\delta b}}{\norm{b}}\right)}{1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}
+        .\end{align*}
+
 
 
     \end{itemize}
@@ -8369,7 +8460,7 @@
             \end{align}
             for $i = 1,2,...,n$ $ \endpf $
             \bigbreak \noindent 
-        \item \textbf{Theorem n.1.3}: Let $A \in \mathbb{R}^{n \times n}$ be a positive definite matrix and $X \in \mathbb{R}^{n\times n}$ be non-singular. Then, $B = X^{\top}AX$ is positive definite.
+        \item \textbf{Theorem n.1.3}: Let $A \in \mathbb{R}^{n \times n}$ be a positive definite matrix and $X \in \mathbb{R}^{n\times n}$ be nonsingular. Then, $B = X^{\top}AX$ is positive definite.
             \bigbreak \noindent 
             \begin{remark}
                 If $A,B,C$ are matrices, then     
@@ -8377,7 +8468,7 @@
                     (ABC)^{\top} = C^{\top}B^{\top}A^{\top}
                 \end{align*}
             \end{remark}
-            \textbf{\textit{Proof.}} Assume that $A \in \mathbb{R}^{n\times n}$ is positive definite, $X\in \mathbb{R}^{n\times n}$ non-singular, and $B = X^{\top}AX$. 
+            \textbf{\textit{Proof.}} Assume that $A \in \mathbb{R}^{n\times n}$ is positive definite, $X\in \mathbb{R}^{n\times n}$ nonsingular, and $B = X^{\top}AX$. 
             \bigbreak \noindent 
             First, we show that $B = B^{\top}$. We have
             \begin{align*}
@@ -8400,7 +8491,7 @@
                 (Xx)^{\top}A(Xx) = y^{\top}Ay
             \end{align*}
             \bigbreak \noindent 
-            Note that since $ x \ne 0 $, and $X$ non-singular, $y = Xx \ne 0$. Since $y \ne 0$, and $A$ p.d, $y^{\top}Ay >0$. 
+            Note that since $ x \ne 0 $, and $X$ nonsingular, $y = Xx \ne 0$. Since $y \ne 0$, and $A$ p.d, $y^{\top}Ay >0$. 
             \bigbreak \noindent 
             Therefore, $B$ is positive definite. $\endpf $
         \item \textbf{Theorem n.1.4}: Let $A$ be positive definite. Then, $\det(A) > 0$
@@ -8625,13 +8716,13 @@
                 \item The rows of $A$ are linearly independent
                 \item Given any vector $b$, there is exactly one vector $x$ such that $Ax=b$
             \end{itemize}
-            If any one of the following are true, they all are true, and $A$ is non-singular
-        \item \textbf{More properties of non-singular matrices}:
+            If any one of the following are true, they all are true, and $A$ is nonsingular
+        \item \textbf{More properties of nonsingular matrices}:
             \begin{enumerate}
-                \item The product of non-singular matrices is non-singular.
-                \item The inverse of a non-singular matrix is non-singular (obvious)
-                \item The sum of two non-singular matrices \textbf{may not be} non-singular
-                \item A non-singular matrix scaled by a nonzero scalar is non-singular
+                \item The product of nonsingular matrices is nonsingular.
+                \item The inverse of a nonsingular matrix is nonsingular (obvious)
+                \item The sum of two nonsingular matrices \textbf{may not be} nonsingular
+                \item A nonsingular matrix scaled by a nonzero scalar is nonsingular
             \end{enumerate}
         \item \textbf{Triangular matrices}: 
             Triangular matrices are invariant under multiplication, transposition, and inversion
@@ -8644,10 +8735,10 @@
             \end{itemize}
         \item \textbf{Properties of positive definite (p.d) matrices}:
             \begin{enumerate}
-                \item If $A$ is p.d then $A$ is \textit{non-singular}
+                \item If $A$ is p.d then $A$ is \textit{nonsingular}
                     \bigbreak \noindent 
-                    \textbf{Note:} Since $A$ is non-singular there is no $y \in \mathbb{R}^{n}$, $y\ne 0$ such that $Ay = 0$
-                \item If $A = M^{\top}M$ for some $M$ non-singular than $A$ is p.d
+                    \textbf{Note:} Since $A$ is nonsingular there is no $y \in \mathbb{R}^{n}$, $y\ne 0$ such that $Ay = 0$
+                \item If $A = M^{\top}M$ for some $M$ nonsingular than $A$ is p.d
                 \item If $A$ is p.d than $\det(A) > 0$
                 \item If $A$ is p.d then all principal submatrices are p.d
                 \item If $A$ is p.d then $a_{ii}>0$ for $i=1,2,...,n$. So, if any $a_{ii} \leq 0$, $A$ is not p.d.
@@ -8808,7 +8899,7 @@
             \begin{align*}
                 \text{colenv}\{R\}  = \text{colenv}\{A\}
             \end{align*}
-    \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be non-singular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principal sub-matrices of $A$ are non-singular.
+    \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n\times n}$ be nonsingular. Then, we can solve the system $Ax = b$, $b \in \mathbb{R}^{n}$ using Gaussian Elimination without row interchanges if and only if all landing principal sub-matrices of $A$ are nonsingular.
     \item \textbf{Theorem}: Let $A \in \mathbb{R}^{n \times n}$. Then $A$ admits an LU factorization
             \[
                 A = LU,
@@ -9311,10 +9402,24 @@
             \begin{align*}
                 \norm{I}_{F} = \sqrt{n} \ne 1    
             .\end{align*}
-        \item \textbf{Induced (operator) matrix norms}: For all $A\in \mathbb{R}^{n\times m}$, we define
+        \item \textbf{Induced (operator) matrix norms}:     Induced (or operator) matrix norms tell us exactly how much a matrix can stretch a vector under a given vector norm.
+            Given a vector norm  $\|\cdot\|$ on $\mathbb{R}^n$, the induced matrix norm of 
+            $A \in \mathbb{R}^{n \times n}$ is defined as
             \begin{align*}
-                \norm{A}_{p} := \max_{x\in\mathbb{R}^{n} \setminus \{0\}} \frac{\norm{Ax}_{p}}{\norm{x}_{p}}
+                \|A\| := \max_{x \neq 0} \frac{\|Ax\|}{\|x\|} = \max_{\|x\| = 1} \|Ax\|.
             .\end{align*}
+            So it’s the \textbf{largest possible magnification factor} of the matrix $A$ acting as a linear transformation.
+            \bigbreak \noindent 
+            We know $A$ is a map that sends vectors to new vectors.  Each vector $x$ has a direction and a length:
+            \begin{itemize}
+                \item $\|x\|$ = its original length.
+                \item $\|Ax\|$ = its new length after transformation.
+            \end{itemize}
+            The ratio $\dfrac{\|Ax\|}{\|x\|}$ tells you \textbf{how much} $A$ stretches or shrinks that vector.
+            \bigbreak \noindent 
+            The induced norm picks out the \textbf{maximum stretching} over all possible directions.  
+            So $\|A\|$ represents the largest factor by which $A$ can stretch any vector.
+       
         \item \textbf{Induced matrix norms special cases}:
             \begin{center}
                 \begin{tabular}{p{1cm}|p{5cm}|p{5cm}}
@@ -9339,6 +9444,15 @@
             \begin{align*}
                 \hat{A} &= A + \delta A, \\
                 \hat{b} &= b + \delta  b
+            .\end{align*}
+            \textbf{Note:} When we say $\delta A$ or $\delta  b$, we do not mean some constant $\delta$ times some matrix $A$ or some vector $b$, They represent changes (perturbations), we have
+            \begin{align*}
+                \delta A &= \hat{A} - A, \\
+                \delta b &= \hat{b} - b
+            .\end{align*}
+            They are differences, not scaled versions. If $\hat{A}$ is a perturbed $A$, then $\delta A$ is simply the matrix of entrywise differences:
+            \begin{align*}
+                \left(\delta A\right)_{ij} = \hat{a}_{ij} - a_{ij}
             .\end{align*}
         \item \textbf{Condition number $\kappa(A)$}: The condition number of a matrix $A$ measures how sensitive the solution of a linear system $A x = b$ is to small changes in $b$ (or in $A$).
             \begin{align*}
@@ -9382,6 +9496,11 @@
         \bigbreak \noindent 
         This means the algorithm’s result may not correspond meaningfully to the 
         original system at all.
+        \item \textbf{Ball of guaranteed nonsingularity (neigborhood of nonsingularity)}: The ball in matrix space with center $A$ and radius $r = \norm{A} / \kappa(A)$ is
+        \begin{align*}
+            \mathcal{B}(A,r) = \{A + \delta  A:\; \norm{\delta A} < r\},
+        \end{align*}
+        where $r = \frac{\norm{A}}{\kappa(A)} $. Any matrix within the ball is nonsingular, and any matrix outside the ball or on the boundary is singular.
 
 
 
@@ -9407,6 +9526,11 @@
                 \item $\norm{\alpha A} = \left\lvert \alpha \right\rvert \norm{A} $
                 \item $\norm{A + B} \leq \norm{A} + \norm{B} $ (Triangle inequality)
             \end{enumerate}
+       
+        \item \textbf{Additional properties of matrix norms};
+            \begin{enumerate}
+                \item $\norm{A} < \infty$ for any finite matrix $A$
+            \end{enumerate}
 
         \item \textbf{Properties of induced matrix norms}
             \begin{itemize}
@@ -9414,6 +9538,14 @@
                 \item \textbf{Consistency}: $\norm{Ax}_{p} \leq \norm{A}_{p}\norm{x}_{p} $
                 \item \textbf{Normalization}: $\norm{I}_{p} = 1 $
             \end{itemize}
+        \item \textbf{Additional induced matrix norm properties}
+            \begin{enumerate}
+                \item If $A$ is singular, then $A^{-1}$ does not exists, we define
+                    \begin{align*}
+                        \norm{A^{-1}} = \infty
+                    .\end{align*}
+
+            \end{enumerate}
         \item \textbf{Additional property of matrix norms}: For $A \in \mathbb{R}^{n\times n}$, we have
             \begin{align*}
                 \norm{A} &= \max_{x\ne 0} \frac{\norm{Ax}}{\norm{x}} \geq \frac{\norm{Ax}}{\norm{x}} \\
@@ -9426,6 +9558,22 @@
                 \item $\kappa(A) = \kappa(A^{-1}) $
             \end{enumerate}
         \item \textbf{Well-conditioned and ill-conditioned in terms of $\kappa(A)$}: If $\kappa(A)$ is large, then $(P)$ is ill-conditioned. If $\kappa(A)$ is small (close to one), then $(P)$ is well-conditioned.
+        \item \textbf{The condition number also measures how close $A$ is to singularity}: The condition number
+            \begin{align*}
+                \kappa(A) = \norm{A^{-1}}\norm{A}
+            \end{align*}
+            measures how close a matrix $A $ is to being \textbf{singular}. If $A$ is singular, then $A^{-1}$ does not exist, meaning that
+            \[
+                \norm{A^{-1}} = \infty.
+            \]
+            Therefore,
+            \[
+                \kappa(A) = \infty 
+                \quad \text{if and only if} \quad 
+                A \text{ is singular},
+            \]
+            and $\kappa(A) \to \infty$ as $A$ approaches singularity.
+
 
 
     \end{itemize}
@@ -9433,11 +9581,34 @@
     \pagebreak 
     \subsubsection{Theorems}
     \begin{itemize}
-        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be non-singular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
+        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be nonsingular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
             \begin{align*}
                 \frac{\norm{ \delta  x}}{\norm{ x}} \leq \kappa(A) \frac{\norm{\delta  b }}{\norm{ b}}
             \end{align*}
             where $\kappa(A) = \norm{A^{-1}}\norm{A}$.
+        \item \textbf{Theorem (\textit{Singularity of perturbed $A$})}: If
+            \begin{align*}
+                \frac{\norm{\delta A}}{\norm{A}} < \frac{1}{\kappa(A)}
+            \end{align*}
+            then $A + \delta  A$ is nonsingular.
+        \item \textbf{Theorem \textit{(Relative error bound II)}}: Let $A$ be nonsingular, $b\ne 0$, and $Ax=b$. If $(A + \delta A)(x + \delta x) = b$, and 
+            \begin{align*}
+                \frac{\norm{\delta  A}}{\norm{A}} < \frac{1}{\kappa(A)},
+            \end{align*}
+            then
+            \begin{align*}
+                \frac{\norm{\delta x}}{\norm{x}} \leq \frac{\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}{1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}
+            .\end{align*}
+        \item \textbf{Theorem \textit{(Relative error bound III)}}:  Let $A$ be nonsingular, $b\ne 0$, and $Ax=b$. If $(A + \delta A)(x + \delta x) = b + \delta  b$, and 
+            \begin{align*}
+                \frac{\norm{\delta  A}}{\norm{A}} < \frac{1}{\kappa(A)},
+            \end{align*}
+            then
+            \begin{align*}
+                \frac{\norm{\delta x}}{\norm{x}} \leq \frac{\kappa(A)\left(\frac{\norm{\delta A}}{\norm{A}} + \frac{\norm{\delta b}}{\norm{b}}\right)}{1-\kappa(A)\frac{\norm{\delta A}}{\norm{A}}}
+            .\end{align*}
+
+
     \end{itemize}
 
     \pagebreak 
