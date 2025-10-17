@@ -10694,6 +10694,27 @@ indicate which strong entity the weak entity depends upon.
             The exact sequence of microoperations that are carried out by an instruction can be specified using register transfer language (RTL)
             \bigbreak \noindent 
             In the MARIE RTL, we use the notation $M[X]$ to indicate the actual data value stored in memory location $X$, and $\leftarrow $ to indicate the transfer of bytes to a register or memory location
+        \item \textbf{Skipcond}: Skipcond allows us to skip the next instruction bases on the value of the accumulator. Recall that if a Marie instruction requires an operand, the rightmost 12 bits are the operand. In Skipcond, if we allowed say an address as an operand, then there would be no room for the condition. Thus, we do not have an address as an operand, instead we decide to use bits 10 and 11 as the condition. If the rightmost 12 bits of the skipcond operand are
+            \begin{align*}
+                b_{11}b_{10}b_{9}b_{8} \quad ... \quad b_{1}b_{0}
+            \end{align*}
+            then we evaluate skipcond as follows
+            \begin{itemize}
+                \item If $b_{11}b_{10} = 00$, skip the next instruction if the $AC$ is negative. (\texttt{skipcond 000)
+                \item If $b_{11}b_{10} = 01$, skip the next instruction if the $AC$ is zero. (\texttt{skipcond 400})
+                \item If $b_{11}b_{10} = 10$, skip the next instruction if the $AC$ is positive. (\texttt{skipcond 800})
+            \end{itemize}
+            So, if we wanted to skip the next instruction if the $AC$ is zero, our instruction would be
+            \begin{align*}
+                1000 \quad 0100 \quad 0000 \quad 0000
+            .\end{align*}
+            Which, is
+            \begin{align*}
+                8400
+            \end{align*}
+            in Hex, or \texttt{skipcond 1024}.
+
+
         \item \textbf{RTL for LOAD}:  The RTL for the LOAD instruction is:
             \bigbreak \noindent 
             \begin{align*}
@@ -10728,6 +10749,26 @@ indicate which strong entity the weak entity depends upon.
                 \text{outREG} &\leftarrow AC
             .\end{align*}
         \item \textbf{RTL for HALT}: No operations needed, no RTL
+        \item \textbf{RTL for SKIPCOND}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if |$IR[11-10] = 00$| then
+                    if |$AC < 0$| then 
+                        |$PC \leftarrow PC + 1$|
+                    endif
+
+                else if |$IR[11-10] = 01$|
+                    if |$AC = 0$| then
+                        |$PC \leftarrow PC + 1$|
+                    endif
+
+                else if |$IR[11-10] = 10$| then
+                    if |$AC > 0$| then
+                        |$PC \leftarrow PC + 1$|
+                    endif
+                endif
+
+            \end{cppcode}
         \item \textbf{RTL for JUMP $X$}:
             \begin{align*}
                 \text{PC} &\leftarrow \text{IR}[11-0]
