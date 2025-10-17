@@ -33,7 +33,7 @@
        \begin{center}
            \vspace*{1cm}
     
-           \textbf{Undergraduate Topics in Mathematics (4)} \\
+           \textbf{Undergraduate Topics in Mathematics 3} \\
            Proof writing, The theory of sets, Axiomatic geometry, Numerical analysis
     
            \vspace{0.5cm}
@@ -8049,7 +8049,282 @@
                 \implies \left\lvert x^{T}y \right\rvert &\leq \norm{x}_{2}\norm{y}_{2}
             .\end{align*}
 
+    \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Condition number}
+    \begin{itemize}
+        \item \textbf{Intro to measuring solutions}: Consider a problem $(P)$, where
+            \begin{align*}
+                (P):\; Ax = b
+            .\end{align*}
+            Numerical techniques yields a solution $\hat{x}$, which may or may not be the true solution to $(P)$. Let $x$ be the true solution to the system. So, $x$ solves $Ax = b$. 
+            \bigbreak \noindent 
+            We want to measure the distance between the numerical solution $\hat{x} $ and the true solution $x$, we hope that the numerical solution $\hat{x}$ is close to $x$. If the distance is small, then $\hat{x}$ is a good solution.
+        \item \textbf{Relative error}: The relative error in $\hat{x}$ is given by
+            \begin{align*}
+                \frac{\norm{\hat{x} - x}}{\norm{x}} = \frac{\norm{\delta x}}{\norm{x}}
+            \end{align*}
+            where $\hat{x} = x + \delta  x $, which implies $x = \hat{x} - \delta  x $.
+        \item \textbf{Perturbation}: If numerical methods to solve a linear system $Ax = b$ yields $\hat{x}$, then $\hat{x}$ solves $\hat{A}\hat{x} = \hat{b}$. Note that it is possible for $\hat{A} = A$ or $\hat{b} = b $. If both $\hat{A} = A$ and $\hat{b} = b$, then $\hat{x} = x$.
+            \bigbreak \noindent 
+            $\hat{A}$ and $\hat{b}$ are called perturbed if they are modified versions of the original. If $\hat{A}$ is a perturbed matrix $A$, and $\hat{b}$ is a perturbed vector $b$, then
+            \begin{align*}
+                \hat{A} &= A + \delta A, \\
+                \hat{b} &= b + \delta  b
+            .\end{align*}
+        \item \textbf{Perturbing $b$}: We can perturb $b$, but not $A$ such that $\hat{x}$ solves $A\hat{x} = \hat{b}$.
+            \bigbreak \noindent 
+            Recall that the residual vector is $\hat{r} = b - A\hat{x} $. If $\hat{b} = A\hat{x}$, then
+            \begin{align*}
+                \hat{b} = A\hat{x} = A\hat{x} - b + b = b - b + A\hat{x} = b - (b - A\hat{x}) = b - \hat{r}
+            .\end{align*}
+            Note that in this cases, $\hat{A} = A$. We can quantify the change in $b$ by observing that since $\hat{b} = b + \delta b$, and $\hat{b} = b - \hat{r}$, we have
+            \begin{align*}
+                b - \hat{r} &= b + \delta b\\
+                \implies -\hat{r} &= \delta b 
+            .\end{align*}
+            \begin{align*}
+                \frac{\norm{\delta x}}{\norm{x}} \leq \kappa \frac{\norm{\delta  b}}{\norm{b}}
+            .\end{align*}
+        \item \textbf{Condition number}: We wish to find an upper bound for the relative error in $x$, $\frac{\norm{\delta  x}}{\norm{ x}} $. We have the two systems,
+            \begin{align*}
+                Ax = b, \quad A\hat{x} = \hat{b}
+            .\end{align*}
+            Thus, we have
+            \begin{align*}
+                Ax &= b\; \tag{1}, \\
+                A(x + \delta  x) &= b + \delta  b \; \tag{2}
+            .\end{align*}
+            Looking at $(1)$, we see
+            \begin{align*}
+                Ax &= b \implies \norm{b} = \norm{Ax}
+            .\end{align*}
+            But, by the Cauchy Schwarz inequality, $\norm{b} \leq \norm{A}\norm{x}$. So,
+            \begin{align*}
+                \norm{b} \leq \norm{A}\norm{x} \tag{1}
+            .\end{align*}
+            Looking at $(2) $, we see
+            \begin{align*}
+                A(x + \delta  x) &= b + \delta  b \\
+                \implies Ax + A \delta x &= b + \delta  b \\
+                \implies A \delta  x &= \delta  b  \\
+                \implies \delta x &= A^{-1} \delta  b  \\
+                \implies \norm{\delta  x} &= \norm{A^{-1} \delta  b} \\
+                \implies \norm{ \delta  x} &\leq \norm{A^{-1}} \norm{\delta  b} \tag{2}
+            .\end{align*}
+            Notice that we can setup $(1)$ so that dividing $(2)$ by $(1)$ gives the relative error in $x$ on the left, and relative error of $b$ on the right. So,
+            \begin{align*}
+                \frac{1}{\norm{x}} \leq \frac{\norm{A}}{\norm{b}}
+            .\end{align*}
+            Now, we divide $(2)$ by $(1)$, we have
+            \begin{align*}
+                \frac{\norm{\delta x}}{\norm{x}} \leq \norm{A^{-1}}\norm{A} \frac{\norm{ \delta  b}}{\norm{b}}
+            .\end{align*}
+            We know have the relative error in the numerical solution bounded above by the relative error of $b$ times some constant $\norm{A^{-1}}\norm{A}$, we call this constant the condition number $\kappa(A)$. That is,
+            \begin{align*}
+                \kappa(A) = \norm{A^{-1}}\norm{A}
+            .\end{align*}
+            The condition number of a matrix $A$ measures how sensitive the solution of a linear system $A x = b$ is to small changes in $b$ (or in $A$).
+            \bigbreak \noindent 
+            We see that as $\kappa(A) \to \infty$, the relative error in $x$ grows without bound.
+        \item \textbf{Properties of the condition number}: Let $A$ be a matrix, and $\kappa(A)$ be the condition number that measures the system $Ax = b$. The following two properties hold
+            \begin{enumerate}
+                \item $\kappa(A) \geq 1$
+                \item $\kappa(I) = 1$
+                \item $\kappa(A) = \kappa(A^{-1}) $
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{\textit{Proof (1)}}: $\kappa(A) = \norm{A^{-1}}\norm{A}$. By Cauchy Schwarz,
+            \begin{align*}
+                \norm{A^{-1}A} \leq \norm{A^{-1}} \norm{A} \\
+                \implies \norm{I} \leq \norm{A^{-1}}\norm{A} \\
+                \implies 1 \leq \norm{A^{-1}}\norm{A} = \kappa(A) 
+            .\end{align*}
+            $\endpf $
+            \bigbreak \noindent 
+            \textbf{\textit{Proof (2)}}:
+            \begin{align*}
+                \kappa(I) = \norm{I^{-1}}\norm{I} = \norm{I} \norm{I} = 1 \cdot  1 = 1
+            .\end{align*}
+            $\endpf$
+            \bigbreak \noindent 
+            \textbf{\textit{Proof (3)}}:
+            \begin{align*}
+                \kappa(A^{-1}) = \norm{\left(A^{-1}\right)^{-1}}\norm{A^{-1}} = \norm{A^{-1}} \norm{A} = \kappa(A)
+            .\end{align*}
+            $\endpf$
+        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be non-singular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
+            \begin{align*}
+                \frac{\norm{ \delta  x}}{\norm{ x}} \leq \kappa(A) \frac{\norm{\delta  b }}{\norm{ b}}
+            \end{align*}
+            where $\kappa(A) = \norm{A^{-1}}\norm{A}$.
+            \bigbreak \noindent 
+            \textbf{Consequences.}
+            \begin{enumerate}
+                \item If $\kappa(A)$ small, the relative error in $x$ is small.
+                \item If $\kappa(A)$ is large, then it is possible to have the relative error in $b$ small, but the relative error in $x$ large.
+            \end{enumerate}
+        \item \textbf{Well-conditioned and ill-conditioned in terms of $\kappa(A)$}: If $\kappa(A)$ is large, then $(P)$ is ill-conditioned. If $\kappa(A)$ is small (close to one), then $(P)$ is well-conditioned.
+        \item \textbf{Pre-conditioned system (preconditioner)}: If the system
+            \begin{align*}
+                Ax =b
+            .\end{align*}
+            has a large condition number $\kappa(A)$, the system is ill-conditioned, meaning small perturbations in $b$ cause large changes in $x$.
+            \bigbreak \noindent 
+            To improve this, we introduce a preconditioner $B$ (sometimes written $M^{-1}$) such that $B \approx A^{-1}$ but is much easier to compute or apply.
+            \bigbreak \noindent 
+            We then multiply the equation by $B$ on the left
+            \begin{align*}
+                BAx = Bb
+            .\end{align*}
+            Define
+            \begin{align*}
+                \tilde{A} = BA, \quad \tilde{b} = Bb
+            .\end{align*}
+            This gives the \textbf{preconditioned system}
+            \begin{align*}
+                \tilde{A}x = \tilde{b}
+            .\end{align*}
+            We want to choose $B$ so that
+            \begin{enumerate}
+                \item $\kappa(\tilde{A}) = \kappa(BA) \ll \kappa(A) $, i.e., the new system is better conditioned,
+                \item Solving $Bz = y $ is cheap 
+            \end{enumerate}
+            We don't usually form $BA$ explicitly, it usually destroys the structure and sparsity that make the original system efficient to handle.
+            \bigbreak \noindent 
+            If $A$ and $B$ are large sparse matrices (which they almost always are in practice), explicitly multiplying them gives a dense matrix $BA$
+            \bigbreak \noindent 
+            That means:
+            \begin{enumerate}
+                \item much higher memory usage,
+                \item much slower matrix–vector products,
+                \item and loss of efficiency in iterative methods.
+            \end{enumerate}
+            Forming $BA$ explicitly also introduces round-off errors, especially when $B$ approximates $A^{-1}$ You end up multiplying two ill-conditioned matrices, potentially worsening accuracy before solving anything.
+            \bigbreak \noindent 
+            If:
+            \begin{itemize}
+                \item $A$ is \textbf{moderate in size} (not huge, maybe $n \lesssim 10^{3}$),
+                \item $A$ and $B$ are \textbf{dense} anyway (so sparsity isn’t being destroyed), and
+                \item you can \textbf{compute or approximate $B$} reliably and cheaply,
+            \end{itemize}
+            then \textbf{explicitly forming} $BA$ may sometimes be beneficial.
+            \bigbreak \noindent 
+            For example:
+            \begin{itemize}
+                \item in small to medium dense problems (common in computational linear algebra, not large PDEs),
+                \item or when using \textbf{direct solvers} (like LU or QR), where forming $BA$ once is acceptable,
+                \item or when $B$ comes from a \textbf{stabilizing transformation} (e.g., scaling rows or columns).
+            \end{itemize}
+            In such cases, if $BA$ has a much smaller condition number than $A$,
+            \[
+                \kappa(BA) \ll \kappa(A),
+            \]
+            then solving 
+            \[
+                BAx = Bb
+            \]
+            can indeed give a \textbf{more accurate and stable solution} than directly solving 
+            \[
+                Ax = b.
+            \]
+            Usually, in \textbf{large or iterative} problems:
+            \begin{itemize}
+                \item Forming $BA$ destroys \textbf{structure} (sparsity, bandedness, symmetry).
+                \item You have to store an entire new matrix (cost $O(n^2)$ memory).
+                \item The cost of computing $BA$ can exceed the cost of solving $Ax = b$ itself.
+                \item Rounding errors during multiplication can \textbf{degrade} the benefits of preconditioning.
+            \end{itemize}
+            In these cases, applying $B$ as an \textbf{operator} (by solving $Bz = y$ inside each iteration)
+            gives the same effect with \textbf{less cost and better numerical behavior}.
+            \bigbreak \noindent 
+            If we let $B = A^{-1}$, then the system becomes
+            \begin{align*}
+                Ix = A^{-1}b
+            \end{align*}
+            where  $\tilde{A} = A^{-1}A = I$, $\tilde{b} = A^{-1}b = x$, and $\kappa(\tilde{A}) = \kappa(I) = 1$. If $\tilde{A} = I$, then
+            \begin{enumerate}
+                \item \textbf{The condition number is ideal:}
+                    \[
+                        \kappa(\tilde{A}) = \kappa(I) = 1.
+                    \]
+                    This is the \textit{best possible conditioning}—there is no amplification of errors at all.
+                \item \textbf{The system becomes trivial:}
+                    \[
+                        I x = x = \tilde{b}.
+                    \]
+                    You have effectively solved the problem in one step.
+                    \bigbreak \noindent 
+                \item \textbf{Interpretation:}
+                    \begin{itemize}
+                        \item $B = A^{-1}$ is the \textit{perfect preconditioner}.
+                        \item In practice, we cannot use it, because computing $A^{-1}$ explicitly 
+                            is just as expensive (and less stable) than solving $A x = b$ directly.
+                    \end{itemize}
+                \item \textbf{Practical takeaway:} 
+                    Preconditioning aims to \textbf{approximate this ideal case}:
+                    \[
+                        B \approx A^{-1},
+                    \]
+                    such that
+                    \[
+                        B A \approx I, \qquad \text{and hence} \qquad \kappa(B A) \approx 1,
+                    \]
+                    but without the full cost of inverting $A$.
+            \end{enumerate}
+            When we say
+            \[
+                \kappa(A) \gg 1,
+            \]
+            we mean the \textbf{mathematical problem} $A x = b$ is \textit{ill-conditioned}—small perturbations in $b$ cause large changes in $x$.
+            \bigbreak \noindent 
+            If we form
+            \[
+                \tilde{A} = A^{-1} A = I,
+            \]
+            then the \textbf{preconditioned system} has
+            \[
+                \kappa(\tilde{A}) = 1,
+            \]
+            so that transformed system is \textit{perfectly conditioned}. However, to achieve this we would have to 
+            \textbf{compute $A^{-1}$ numerically}, and that step is where the \textit{instability} arises.
+        \item \textbf{Numerical stability vs conditioning}
+            \begin{itemize}
+                \item \textbf{Conditioning}
+                \begin{itemize}
+                    \item A property of the \textbf{mathematical problem} itself.
+                    \item Measures the \textbf{sensitivity} of the true solution to small input changes.
+                    \item Example: if $A x = b$, then
+                        \[
+                            \frac{\|\delta x\|}{\|x\|} \le \kappa(A) \frac{\|\delta b\|}{\|b\|}.
+                        \]
+                        A large $\kappa(A)$ indicates an \textbf{ill-conditioned problem}.
+                \end{itemize}
+            \item \textbf{Numerical Stability}
+                \begin{itemize}
+                    \item A property of the \textbf{algorithm} used to solve the problem.
+                    \item Measures how much \textbf{round-off and truncation errors} the algorithm introduces or amplifies.
+                    \item A \textbf{stable algorithm} gives the exact solution to a \textit{nearby problem}:
+                        \[
+                            (A + \delta A)\hat{x} = b + \delta  b , \quad \|\delta A\|,\; \| \delta b\| \text{ small.}
+                        \]
+                \end{itemize}
+        \end{itemize}
+        \textbf{Note:} If an algorithm is \textbf{numerically unstable}, then the perturbations 
+        $\delta A$ and/or $\delta b$ required to explain its result might be \textbf{large}:
+        \[
+            \|(A + \delta A) - A\| \text{ is not small.}
+        \]
+        Hence, the computed $\hat{x}$ is the exact solution to a \textit{far-away problem}:
+        \[
+            (A + \delta A)\hat{x} = b + \delta b,
+        \]
+        where $\|\delta A\|$ or $\|\delta b\|$ are no longer small compared to 
+        $\|A\|$ or $\|b\|$.
+        \bigbreak \noindent 
+        This means the algorithm’s result may not correspond meaningfully to the 
+        original system at all.
 
 
     \end{itemize}
@@ -9055,6 +9330,59 @@
                     \bottomrule
                 \end{tabular}
             \end{center}
+        \item \textbf{Relative error}: The relative error in $\hat{x}$ is given by
+            \begin{align*}
+                \frac{\norm{\hat{x} - x}}{\norm{x}} = \frac{\norm{\delta x}}{\norm{x}}
+            \end{align*}
+            where $\hat{x} = x + \delta  x $, which implies $x = \hat{x} - \delta  x $.
+        \item \textbf{Perturbation}: $\hat{A}$ and $\hat{b}$ are called perturbed if they are modified versions of the original. If $\hat{A}$ is a perturbed matrix $A$, and $\hat{b}$ is a perturbed vector $b$, then
+            \begin{align*}
+                \hat{A} &= A + \delta A, \\
+                \hat{b} &= b + \delta  b
+            .\end{align*}
+        \item \textbf{Condition number $\kappa(A)$}: The condition number of a matrix $A$ measures how sensitive the solution of a linear system $A x = b$ is to small changes in $b$ (or in $A$).
+            \begin{align*}
+                \kappa(A) = \norm{A^{-1}}\norm{A}
+            .\end{align*}
+            \bigbreak \noindent 
+            We see that as $\kappa(A) \to \infty$, the relative error in $x$ grows without bound.
+        \item \textbf{Numerical stability vs conditioning}
+            \begin{itemize}
+                \item \textbf{Conditioning}
+                \begin{itemize}
+                    \item A property of the \textbf{mathematical problem} itself.
+                    \item Measures the \textbf{sensitivity} of the true solution to small input changes.
+                    \item Example: if $A x = b$, then
+                        \[
+                            \frac{\|\delta x\|}{\|x\|} \le \kappa(A) \frac{\|\delta b\|}{\|b\|}.
+                        \]
+                        A large $\kappa(A)$ indicates an \textbf{ill-conditioned problem}.
+                \end{itemize}
+            \item \textbf{Numerical Stability}
+                \begin{itemize}
+                    \item A property of the \textbf{algorithm} used to solve the problem.
+                    \item Measures how much \textbf{round-off and truncation errors} the algorithm introduces or amplifies.
+                    \item A \textbf{stable algorithm} gives the exact solution to a \textit{nearby problem}:
+                        \[
+                            (A + \delta A)\hat{x} = b + \delta  b , \quad \|\delta A\|,\; \| \delta b\| \text{ small.}
+                        \]
+                \end{itemize}
+        \end{itemize}
+        \textbf{Note:} If an algorithm is \textbf{numerically unstable}, then the perturbations 
+        $\delta A$ and/or $\delta b$ required to explain its result might be \textbf{large}:
+        \[
+            \|(A + \delta A) - A\| \text{ is not small.}
+        \]
+        Hence, the computed $\hat{x}$ is the exact solution to a \textit{far-away problem}:
+        \[
+            (A + \delta A)\hat{x} = b + \delta b,
+        \]
+        where $\|\delta A\|$ or $\|\delta b\|$ are no longer small compared to 
+        $\|A\|$ or $\|b\|$.
+        \bigbreak \noindent 
+        This means the algorithm’s result may not correspond meaningfully to the 
+        original system at all.
+
 
 
 
@@ -9091,6 +9419,13 @@
                 \norm{A} &= \max_{x\ne 0} \frac{\norm{Ax}}{\norm{x}} \geq \frac{\norm{Ax}}{\norm{x}} \\
                          &\implies \norm{Ax} \leq \norm{A}\norm{x}
             .\end{align*}
+        \item \textbf{Properties of the condition number}: Let $A$ be a matrix, and $\kappa(A)$ be the condition number that measures the system $Ax = b$. The following two properties hold
+            \begin{enumerate}
+                \item $\kappa(A) \geq 1$
+                \item $\kappa(I) = 1$
+                \item $\kappa(A) = \kappa(A^{-1}) $
+            \end{enumerate}
+        \item \textbf{Well-conditioned and ill-conditioned in terms of $\kappa(A)$}: If $\kappa(A)$ is large, then $(P)$ is ill-conditioned. If $\kappa(A)$ is small (close to one), then $(P)$ is well-conditioned.
 
 
     \end{itemize}
@@ -9098,7 +9433,11 @@
     \pagebreak 
     \subsubsection{Theorems}
     \begin{itemize}
-        \item \relax   
+        \item \textbf{Theorem \textit{(Relative Error Bound I)}}: Let $A$ be non-singular, $b \ne 0$, and $Ax = b$. If $A(x + \delta  x) = b + \delta  b$, then
+            \begin{align*}
+                \frac{\norm{ \delta  x}}{\norm{ x}} \leq \kappa(A) \frac{\norm{\delta  b }}{\norm{ b}}
+            \end{align*}
+            where $\kappa(A) = \norm{A^{-1}}\norm{A}$.
     \end{itemize}
 
     \pagebreak 
