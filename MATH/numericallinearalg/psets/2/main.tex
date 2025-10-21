@@ -378,12 +378,12 @@
                 For example, when $i > j$, $M$ has the form
                 \[
                     M = \begin{bmatrix}
-                        1 &        &        &        &   \\
-                          & \ddots &        &        &   \\
-                          &        & 1      &        &   \\
-                          &        & m      & 1      &   \\
-                          &        &        &        & \ddots \\
-                          &        &        &        &        1
+                        1 &        &        &        &  & \\
+                          & \ddots &        &        &  & \\
+                          &        & 1      &        &  & \\
+                          &        & m      & 1      &  & \\
+                          &        &        &        & \ddots& \\
+                          &        &        &        &       & 1
                     \end{bmatrix}.
                 \]
                 Notice that this is the matrix obtained by applying the type 1 row operation 
@@ -397,8 +397,69 @@
                 To which elementary operation does it correspond?
         \end{enumerate}
     \end{mdframed}
-
+    \begin{remark}
+     Let $A \in \mathbb{R}^{n\times n}$, let $e_{i}$ be the $i^{\text{th}}$ standard basis vector in $\mathbb{R}^{n}$. That is, a vector of size $n$ with a one in the $i^{\text{th}}$ position, and zeros everywhere else. Then,
+    \begin{align*}
+        \text{col}_{j}(A) = Ae_{j}
+    .\end{align*}
     \bigbreak \noindent 
+    If we take the transpose of both sides,
+    \begin{align*}
+        \left(\text{col}_{j}(A)\right)^{T} = e_{j}^{T}A^{T},
+    \end{align*}
+    which implies that
+    \begin{align*}
+        \left(\text{col}_{j}(A^{T})\right)^{T} = e_{j}^{T}A,
+    .\end{align*}
+    But, we know that $\text{row}_{j}(A) = (\text{ col}_{j}(A^{T}))^{T} $, and $\text{col}_{j}(A) = (\text{row}_{j}(A^{T}))^{T} $. Thus,
+    \begin{align*}
+        \left(\text{col}_{j}(A^{T})\right)^{T} = e_{j}^{T}A \\
+        \implies \text{row}_{j}(A) = e_{j}^{T}A
+    .\end{align*}
+    \end{remark} 
+    \bigbreak \noindent 
+    a.) In $\tilde{A}$, we have
+    \begin{align*}
+        &\text{If } k \ne i,\; \text{row}_{k}(\tilde{A}) = \text{ row}_{k}(A), \\ 
+        &\text{If } k = i,\; \text{row}_{k}(\tilde{A}) = \text{ row}_{k}(A) + m\cdot \text{row}_{j}(A)
+    .\end{align*}
+    \bigbreak \noindent 
+    Let $E_{ij}$ be the zero matrix except for a one at $e_{ij}$. Thus, 
+    \begin{align*}
+        M &= I + mE_{ij}
+    .\end{align*}
+    Observe that $E_{ij} = e_{i}e_{j}^{T}$, so
+    \begin{align*}
+        M &= I + me_{i}e_{j}^{T}
+    .\end{align*}
+    From this fact, we have
+    \begin{align*}
+        MA &= (I + me_{i}e_{j}^{T})A = A + me_{i}(e_{j}^{T}A)
+    .\end{align*}
+    Recall that $e_{j}^{T}A$ is the $j^{\text{th}} $ row of $A$, so
+    \begin{align*}
+        MA &= A + me_{i} \cdot  \text{row}_{j}(A)
+    .\end{align*}
+    Further observe that $e_{i} \cdot \text{row}_{j}(A)$ is a matrix of size $n\times n$, where the $i^{\text{th}} $ row is $\text{row}_{j}(A)$, and all other rows are zero.
+    \bigbreak \noindent 
+    So, we see that 
+    \begin{align*}
+        &\text{If } k \ne i,\; \text{row}_{k}(E_{ij}A) = 0, \; \text{ so } \text{row}_{k}(MA) = \text{ row}_{k}(A), \\
+        &\text{If } k = i,\; \text{row}_{k}(E_{ij}A) = \text{row}_{j}(A), \; \text{ so } \text{row}_{k}(MA) = \text{row}_{i}(A) + m \cdot  \text{row}_{j}(A)
+    .\end{align*}
+    Thus, $\tilde{A} = MA$
+    \bigbreak \noindent 
+    b.) Since $M$ is triangular, the determinant is
+    \begin{align*}
+        \det(M) = \prod_{i=1}^{n} m_{ii}
+    .\end{align*}
+    But, $m_{ii} = 1$ for $i=1,2,...,n$. Thus, $\det(M) = 1$. The determinant of $\tilde{A}$ is 
+    \begin{align*}
+        \det(\tilde{A}) = \det(MA)= \det(M)\det(A) = 1\det(A) = \det(A)
+    .\end{align*}
+
+
+            \bigbreak \noindent 
     \begin{mdframed}
         1.7.36. Suppose $\tilde{A}$ is obtained from $A$ by multiplying the $i$th row by the nonzero constant $c$.
         \begin{enumerate}[(a)]
@@ -412,7 +473,7 @@
         \end{enumerate}
     \end{mdframed}
 
-    \bigbreak \noindent 
+    \pagebreak \bigbreak \noindent 
     \begin{mdframed}
         1.8.4. Let 
         \[
@@ -432,27 +493,338 @@
         \]
         Use Gaussian elimination with partial pivoting (by hand) to find matrices $L$ and $U$ such that $U$ is upper triangular, $L$ is unit lower triangular with $|l_{ij}| \leq 1$ for all $i > j$, and $LU = \tilde{A}$, where $\tilde{A}$ can be obtained from $A$ by making row interchanges. Use your $LU$ decomposition to solve the system $Ax = b$.
     \end{mdframed}
+    \bigbreak \noindent 
+    We begin by initializing our permutation matrix $P$ as the identity matrix $I$. That is, $P = I$. We set row one as the pivot row, and $a_{11}$ as the pivot element. We look to the first column of $A$ and see that $a_{11}$ has the maximum absolute value, so no partial pivoting at this stage.
+    \bigbreak \noindent 
+    Let $r_{i}$ denote the $i^{\text{th}}$ row of $A$. We perform the operations
+    \begin{align*}
+        &r_{2} \rto r_{2} - m_{21}r_{1}, \quad m_{21} = \frac{1}{2}, \\
+        &r_{3} \rto r_{3} - m_{31}r_{1}, \quad m_{31} = \frac{1}{2}
+    .\end{align*}
+    Thus,
+    \begin{align*}
+        \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                1 & 1 & 5 & -2 \\
+                1 & 3 & 6 & -5
+            \end{array}
+        \end{bmatrix}
+        \sim
+        \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                \boxed{\frac{1}{2}} & 0 & 7 & -7 \\
+                \boxed{\frac{1}{2}}& 2 & 8 & -10
+           \end{array}
+        \end{bmatrix}
+    .\end{align*}
+    Note that the boxed numbers are entries of $L$. Next, row two is the pivot row, and $a_{22}$ is the pivot element. Using partial pivoting, we swap rows two and three. We make the same swap in $P$. So,
+    \begin{align*}
+        \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                \boxed{\frac{1}{2}} & 0 & 7 & -7 \\
+                \boxed{\frac{1}{2}}& 2 & 8 & -10
+            \end{array}
+        \end{bmatrix}
+        \sim
+        \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                \boxed{\frac{1}{2}}& 2 & 8 & -10 \\
+                \boxed{\frac{1}{2}} & 0 & 7 & -7 
+            \end{array}
+        \end{bmatrix}
+        ,\quad
+        P = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0 \end{pmatrix}
+    .\end{align*}
+    Next, we perform the operation
+    \begin{align*}
+        r_{3} \rto r_{3} - 0r_{2}
+    .\end{align*}
+    So,
+    \begin{align*}
+        \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                \boxed{\frac{1}{2}}& 2 & 8 & -10 \\
+                \boxed{\frac{1}{2}} & 0 & 7 & -7 
+            \end{array}
+        \end{bmatrix}
+        \sim
+                \begin{bmatrix}
+            \begin{array}{ccc|c}
+                2 & 2 & -4 & 10 \\
+                \boxed{\frac{1}{2}}& 2 & 8 & -10 \\
+                \boxed{\frac{1}{2}} & \boxed{0} & 7 & -7 
+            \end{array}
+        \end{bmatrix}
+    .\end{align*}
+    Thus,
+    \begin{align*}
+        L &= \begin{bmatrix}
+            1 & 0 & 0 \\
+            \frac{1}{2} & 1 & 0 \\
+            \frac{1}{2} & 0  & 1
+        \end{bmatrix},\;
+        U = 
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            0 & 2 & 8 \\
+            0 & 0 & 7
+        \end{bmatrix},\;
+            y = \begin{pmatrix} 10 \\ -10 \\ -7 \end{pmatrix},\;
+            P = \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & 0 & 1 \\
+                0 & 1 & 0
+            \end{bmatrix}, 
+    \end{align*}
+    and
+    \begin{align*}
+        Pb = \begin{pmatrix} 10 \\ -5 \\ -2 \end{pmatrix}
+    .\end{align*}
+    We solve the system $Ax = b$, by splitting into two triangular systems
+    \begin{align*}
+        Ax = b \implies PAx = Pb \implies \tilde{A} = Pb &\implies LUx = Pb \\
+                                                         &\implies 
+        \begin{cases}
+            Ly &= Pb \\
+            Ux &= y 
+        \end{cases}
+    .\end{align*}
+    So, we solve $Ux = y$ with backward substitution
+    \begin{align*}
+        Ux &= y \implies 
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            0 & 2 & 8 \\
+            0 & 0 & 7
+        \end{bmatrix}
+        \begin{pmatrix} x_{1} \\ x_{2} \\ x_{3} \end{pmatrix}
+        = \begin{pmatrix} 10 \\ -10 \\ -7 \end{pmatrix}
+    .\end{align*}
+    Which, implies that
+    \begin{align*}
+        7x_{3} &= - 7 \implies x_{3} = -1, \\
+        2x_{2} + 8x_{3} &= -10 \implies x_{2} = \frac{-10 - 2(-1)}{2} = -1, \\
+        2x_{1} + 2x_{2} - 4x_{3} &= 10 \implies x_{1} = \frac{10+4(-1)-2(-1)}{2} = 4
+    .\end{align*}
+    So,
+    \begin{align*}
+        x = \begin{pmatrix} 4 \\ -1 \\ -1 \end{pmatrix}
+    .\end{align*}
+    We can verify this solution by checking that $Ax = b$, we have
+    \begin{align*}
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            1 & 1 & 5 \\
+            1 & 3 & 6
+        \end{bmatrix}
+        \begin{pmatrix} 4 \\ -1 \\ -1 \end{pmatrix}
+        =
+        \begin{pmatrix} 8 - 2 + 4 \\ 4-1 -5 \\ 4-3-6 \end{pmatrix} = \begin{pmatrix} 10 \\ -2 \\ -5 \end{pmatrix}
+    .\end{align*}
+    Therefore the solution is verified.
 
     \bigbreak \noindent 
     \begin{mdframed}
         1.8.9. Let $A$ be the matrix in Exercise 1.8.4. Determine matrices $P$, $L$, and $U$ with the properties stated in Theorem 1.8.8, such that $A = P^{T}LU$
     \end{mdframed}
+    \bigbreak \noindent 
+    The matrices $P,L,U$ are precisely the matrices obtained in the previous exercise, since $A$ is unchanged. The matrices are
+    \begin{align*}
+        P &= \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 0 & 1 \\
+            0 & 1 & 0
+        \end{bmatrix},\;
+        L = \begin{bmatrix}
+            1 & 0 & 0 \\
+            \frac{1}{2} & 1 & 0 \\
+            \frac{1}{2} & 0  & 1
+        \end{bmatrix},\;
+        U = 
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            0 & 2 & 8 \\
+            0 & 0 & 7
+        \end{bmatrix}
+    .\end{align*}
+    We have
+    \begin{align*}
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 0 &  1 \\
+            0 & 1 & 0 
+        \end{bmatrix}
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            \frac{1}{2} & 1 & 0 \\
+            \frac{1}{2} & 0 & 1
+        \end{bmatrix}
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            0 & 2 & 8 \\
+            0 & 0 & 7 
+        \end{bmatrix}
+        &= 
+        \begin{bmatrix}
+            1 & 0 & 0 \\
+            0 & 0 & 1 \\
+            0 & 1 & 0
+        \end{bmatrix}
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            \frac{1}{2}(2) & \frac{1}{2}(2) + 2 & \frac{1}{2}(-4) + 8 \\
+            \frac{1}{2}(2) & \frac{1}{2}(2)  &\frac{1}{2}(-4) + 7 
+        \end{bmatrix} \\
+        &=
+        \begin{bmatrix}
+        1 & 0 & 0 \\
+        0 & 0 & 1\\
+        0 & 1 & 0
+        \end{bmatrix}
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            1 & 3 & 6 \\
+            1 & 1 & 5
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            2 & 2 & -4 \\
+            1 & 1 & 5 \\
+            1 & 3 & 6 
+        \end{bmatrix} = A
+    .\end{align*}
 
     \bigbreak \noindent 
     \begin{mdframed}
         1.8.12. Write an algorithm that implements Gaussian elimination with partial pivoting. Store $L$ and $U$ over $A$, and save a record of the row interchanges. 
     \end{mdframed}
+    \bigbreak \noindent 
+    \begin{cppcode}
+    proc row_swap(|$A$|, |$i$|, |$k$|)
+        if (|$i = k$|) return
+        for |$\ell = 1,...,n$|
+            tmp = |$a_{i\ell}$|  
+            |$a_{i\ell} = a_{k\ell}$|
+            |$a_{k\ell} = tmp$|
+        end
+    endproc
+
+    proc partial_pivot(|$A$|, |$P$|, |$K$|)
+        max = |$\lvert a_{kk} \rvert $|, max_i = |$k$|
+        for |$i=k+1,...,n$|
+            if (|$\lvert a_{ik}\rvert > \text{max}$|)
+                max = |$\lvert a_{ik} \rvert $|, max_i = |$i$|
+            end
+        end
+
+        if (|$\text{max} = 0$|) set error flag, exit
+
+        row_swap(|$A,k$|, max_i)
+        row_swap(|$P,k$|, max_i)
+    endproc
+
+    proc gaussian(|$A$|)
+        |$P = I$|
+        for |$k=1,...,n$|
+            partial_pivot(|$A,P,k$|)
+            for |$i=k+1,...,n$|
+                |$m = a_{ik} / a_{kk}$|
+                for |$j=k,...,n$|
+                    |$a_{ij} = a_{ij} - m \cdot a_{kj}$|
+                end
+                |$a_{ik} = m$|
+            end
+        end
+        
+        return |$P$|
+    endproc
+    \end{cppcode}
 
     \bigbreak \noindent 
     \begin{mdframed}
         2.1.10. Prove that the 1-norm is a norm. 
     \end{mdframed}
+    \bigbreak \noindent 
+    \begin{remark}
+        $\norm{\cdot}$ is a norm if and only if the following properties are satisfied
+        \begin{enumerate}
+            \item $\norm{x} \geq 0 \text{ and } \norm{x} = 0 \iff x= 0 $ 
+            \item $ \norm{\alpha x} = \left\lvert \alpha \right\rvert \norm{x}$
+            \item $\norm{x+y} \leq \norm{x} + \norm{y} $ (triangle inequality)
+        \end{enumerate}
+    \end{remark}
+    \bigbreak \noindent 
+    The 1-norm for a vector $x \in \mathbb{R}^{n}$ is $\norm{x}_{1} = \sum_{i=1}^{n}\left\lvert x_{i} \right\rvert $.
+    \bigbreak \noindent 
+    1.) Suppose $\norm{x}_1 = 0$, then
+    \begin{align*}
+        \sum_{i=1}^{n}\left\lvert x_{i} \right\rvert &= 0 \implies \left\lvert x_{1} \right\rvert + \left\lvert x_{2} \right\rvert + ... + \left\lvert x_{n} \right\rvert = 0 \\
+        \implies x_{1} &= x_{2} = ... = x_{n} = 0
+    .\end{align*}
+    Suppose $x=0$, then $x_{1} = x_{2} = ... = x_{n}= 0$, and
+    \begin{align*}
+        \sum_{i=1}^{n} \left\lvert x_{i} \right\rvert = \sum_{i=1}^{n} 0 = 0 + 0 + ... + 0  = 0
+    .\end{align*}
+    2.) 
+    \begin{align*}
+        \norm{\alpha x}_1 &= \sum_{i=1}^{n}\left\lvert \alpha x_{i} \right\rvert = \left\lvert \alpha x_{1} \right\rvert + \left\lvert \alpha x_{2} \right\rvert + ... + \left\lvert \alpha x_{n} \right\rvert \\
+                        &= \left\lvert \alpha \right\rvert \left\lvert x_{1} \right\rvert + \left\lvert \alpha \right\rvert \left\lvert x_{2} \right\rvert + ... + \left\lvert \alpha \right\rvert \left\lvert x_{n} \right\rvert \\
+                        &= \left\lvert \alpha \right\rvert \left(\left\lvert x_{1} \right\rvert + \left\lvert x_{2} \right\rvert + ... + \left\lvert x_{n} \right\rvert\right) = \left\lvert \alpha \right\rvert \norm{x}_1
+    .\end{align*}
+    3.) We can use the triangular inequality for absolute value,
+    \begin{align*}
+        \norm{x + y}_1 &= \sum_{i=1}^{n} \left\lvert x_{i} + y_{i} \right\rvert \\
+                     &= \left\lvert x_{1} + y_{1} \right\rvert + \left\lvert x_{2} + y_{2} \right\rvert + ... + \left\lvert x_{n} + y_{n} \right\rvert \\
+                     &\leq \left\lvert x_{1} \right\rvert + \left\lvert y_{1} \right\rvert + \left\lvert x_{2} \right\rvert + \left\lvert y_{2} \right\rvert + ... + \left\lvert x_{n} \right\rvert + \left\lvert y_{n} \right\rvert \\
+                     &= \left\lvert x_{1} \right\rvert + \left\lvert x_{2} \right\rvert + ... + \left\lvert x_{n} \right\rvert + \left\lvert y_{1} \right\rvert + \left\lvert y_{2} \right\rvert + ... + \left\lvert y_{n} \right\rvert \\
+                     &= \norm{x}_1 + \norm{y}_1
+    .\end{align*}
+    $\endpf$
+
+    
 
 
     \bigbreak \noindent 
     \begin{mdframed}
         2.1.13.  Prove that the $\infty$-norm is a norm.
     \end{mdframed}
+    \bigbreak \noindent 
+    The $\infty$-norm for a vector $x\in \mathbb{R}$ is $\norm{x}_{\infty} = \max_{i=1}^{n}\left\lvert x_{i} \right\rvert  $
+    \bigbreak \noindent 
+    1.) Suppose $\norm{x} = 0$, then
+    \begin{align*}
+        \text{max}_{i=1}^{n} \left\lvert x_{i} \right\rvert = 0 
+    \end{align*}
+    implies that $x_{1} = x_{2} = ... = x_{n} = 0$, since $\left\lvert x_{i} \right\rvert \geq 0$ for all $i$. Next, suppose that $x=0$, then 
+    \begin{align*}
+       \text{max}_{i=1}^{n} 0  = \text{max}\{0,0,...,0\}  = 0
+    .\end{align*}
+    Thus $\norm{x} = 0 \iff x = 0$ holds for the $\infty$-norm.
+    \bigbreak \noindent 
+    2.) 
+    \begin{align*}
+        \norm{\alpha x} = \max\{\left\lvert \alpha x_{1} \right\rvert, \left\lvert \alpha x_{2} \right\rvert, ..., \left\lvert \alpha x_{n} \right\rvert\} = \left\lvert \alpha \right\rvert \max \{\left\lvert x_{1} \right\rvert, \left\lvert x_{2} \right\rvert, ..., \left\lvert x_{n} \right\rvert\}
+    .\end{align*}
+    This follows from the fact that if $\left\lvert \alpha x_{\ell} \right\rvert \geq \left\lvert \alpha x_{i} \right\rvert$, for all $i\ne \ell$, then 
+    \begin{align*}
+        \left\lvert \alpha \right\rvert \left\lvert x_{\ell} \right\rvert &\geq \left\lvert \alpha \right\rvert \left\lvert x_{i} \right\rvert \\
+        \implies \left\lvert x_{\ell} \right\rvert \geq \left\lvert x_{i} \right\rvert
+    .\end{align*}
+    3.) If 
+    \begin{align*}
+        \norm{x + y} = \left\lvert x_{\ell} + y_{\ell} \right\rvert
+    .\end{align*}
+    Then, it follows from the triangle inequality for absolute value that
+    \begin{align*}
+        \left\lvert x_{\ell} + y_{\ell} \right\rvert \leq \left\lvert x_{\ell} \right\rvert + \left\lvert y_{\ell} \right\rvert = \max_{i=1}^{n}\left\lvert x_{i} \right\rvert + \max_{i=1}^{n}\left\lvert y_{i} \right\rvert = \norm{x} + \norm{y}
+    .\end{align*}
+    Therefore, the $\infty$-norm is a norm. $\endpf $
+
 
     \bigbreak \noindent 
     \begin{mdframed}
@@ -476,6 +848,12 @@
             \item Show that for any nonzero scalar $c$, $\kappa(cA) = \kappa(A)$
         \end{enumerate}
     \end{mdframed}
+    \bigbreak \noindent 
+    a.)
+    \begin{align*}
+        \kappa(A) &= \norm{A}\norm{A^{-1}}, \\
+        \kappa(A^{-1}) &= \norm{A^{-1}}\norm{\left(A^{-1}\right)^{-1}} = \norm{A^{-1}}\norm{A} = \norm{A}\norm{A^{-1}} = \kappa(A)
+    .\end{align*}
 
     \bigbreak \noindent 
     \begin{mdframed}

@@ -1,0 +1,38 @@
+    proc row_swap(|$A$|, |$i$|, |$k$|)
+        if (|$i = k$|) return
+        for |$\ell = 1,...,n$|
+            tmp = |$a_{i\ell}$|
+            |$a_{i\ell} = a_{k\ell}$|
+            |$a_{k\ell} = tmp$|
+        end
+    endproc
+
+    proc partial_pivot(|$A$|, |$P$|, |$K$|)
+        max = |$\lvert a_{kk} \rvert $|, max_i = |$k$|
+        for |$i=k+1,...,n$|
+            if (|$\lvert a_{ik}\rvert > \text{max}$|)
+                max = |$\lvert a_{ik} \rvert $|, max_i = |$i$|
+            end
+        end
+
+        if (|$\text{max} = 0$|) set error flag, exit
+
+        row_swap(|$A,k$|, max_i)
+        row_swap(|$P,k$|, max_i)
+    endproc
+
+    proc gaussian(|$A$|)
+        |$P = I$|
+        for |$k=1,...,n$|
+            partial_pivot(|$A,P,k$|)
+            for |$i=k+1,...,n$|
+                |$m = a_{ik} / a_{kk}$|
+                for |$j=k,...,n$|
+                    |$a_{ij} = a_{ij} - m \cdot a_{kj}$|
+                end
+                |$a_{ik} = m$|
+            end
+        end
+
+        return |$P$|
+    endproc

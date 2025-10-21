@@ -7436,7 +7436,37 @@
                     0 & 1
                 \end{bmatrix},
             \]
-
+        \item \textbf{Type three elementary operations using left matrix multiplication}: Suppose we have $A \in \mathbb{R}^{n\times n}$, and we want to add a multiple of the $j^{\text{th}}$ row to the $i^{\text{th}}$ row, call $\tilde{A}$ the matrix obtained after this elementary operation
+            \begin{align*}
+                &\text{If } k \ne i,\; \text{row}_{k}(\tilde{A}) = \text{ row}_{k}(A), \\ 
+                &\text{If } k = i,\; \text{row}_{k}(\tilde{A}) = \text{ row}_{k}(A) + m\cdot \text{row}_{j}(A)
+            .\end{align*}
+            We assert that $\tilde{A} = MA$, where $M \in \mathbb{R}^{n\times n}$ is the identity matrix, except for $m$ at position $i,j$. If $i > j$, $M$ is lower triangular, and if $i < j $, $M$ is upper triangular. If we use this fact during Gaussian elimination, $M$ will always be lower triangular, since we only care about zeroing out the lower triangular part of $A$.
+            \bigbreak \noindent 
+            Let $E_{ij}$ be the zero matrix except for a one at $e_{ij}$. Thus, 
+            \begin{align*}
+                M &= I + mE_{ij}
+            .\end{align*}
+            Observe that $E_{ij} = e_{i}e_{j}^{T}$, so
+            \begin{align*}
+                M &= I + me_{i}e_{j}^{T}
+            .\end{align*}
+            From this fact, we have
+            \begin{align*}
+                MA &= (I + me_{i}e_{j}^{T})A = A + me_{i}(e_{j}^{T}A)
+            .\end{align*}
+            Recall that $e_{j}^{T}A$ is the $j^{\text{th}} $ row of $A$, so
+            \begin{align*}
+                MA &= A + me_{i} \cdot  \text{row}_{j}(A)
+            .\end{align*}
+            Further observe that $e_{i} \cdot \text{row}_{j}(A)$ is a matrix of size $n\times n$, where the $i^{\text{th}} $ row is $\text{row}_{j}(A)$, and all other rows are zero.
+            \bigbreak \noindent 
+            So, we see that 
+            \begin{align*}
+                &\text{If } k \ne i,\; \text{row}_{k}(E_{ij}A) = 0, \; \text{ so } \text{row}_{k}(MA) = \text{ row}_{k}(A), \\
+                &\text{If } k = i,\; \text{row}_{k}(E_{ij}A) = \text{row}_{j}(A), \; \text{ so } \text{row}_{k}(MA) = \text{row}_{i}(A) + m \cdot  \text{row}_{j}(A)
+            .\end{align*}
+            Thus, $\tilde{A} = MA$ $\endpf$
         \item \textbf{LU Factorization without E.O (1)}: We perform Gaussian Elimination on the augmented system $[A|b] $ to yield a new system $[U|y]$.
             \bigbreak \noindent 
         We move down the main diagonal selecting $a_{ii}$ as the \textbf{pivot element}, and row $i$ as the \textbf{pivot row}. We do this for $i = 1,2,...,n$. For each pivot element, we get the elements $a_{ki} = 0$ for $k=i+1,i+2,...,n$ we can accomplish this without interchanging rows so long as the pivot elements are nonzero.
@@ -7796,7 +7826,7 @@
         Eliminates entries below the pivots to produce an upper triangular system.
         \bigbreak \noindent 
         At each step, you swap the current row with one below it to bring the largest (by absolute value) element in the pivot column into the pivot position. This improves numerical stability.
-    \item \textbf{$LU$ factorization with partial pivoting}: We we partial pivot rows in Gaussian Elimination (while building $L,U$), we make the same swap in $P$ (and in $L$ unless $A$ is used to store $L$ during Gaussian Elimination).
+    \item \textbf{$LU$ factorization with partial pivoting}: We we partial pivot rows in Gaussian Elimination (while building $L,U$), we make the same swap in $P$. If $L$ is not being stored in $A$ during the process, then we also need to swap the rows of $L$, but keep the main diagonal the same. The main diagonal of $L$ is always remains ones, and the upper triangular part is always zero. 
         \bigbreak \noindent 
         At the end, we get
         \begin{align*}
@@ -7910,7 +7940,7 @@
 
 
     \pagebreak 
-    \subsubsection{Outer Products and transposition tricks}
+    \subsubsection{Outer Products, inner products, and transposition tricks}
     \begin{itemize}
         \item \textbf{Build an $m\times n$ matrix from $n$ vectors in $\mathbb{R}^{m}$}: Suppose we have vectors $x_{1}, x_{2}, x_{3}, ..., x_{n} \in \mathbb{R}^{m}$, and we wish to construct the matrix formed by combining each vector $x_{k}$ for $k=1,2,3,...,n$. Algebraically, we have
             \begin{align*}
@@ -7929,6 +7959,52 @@
                A = me_{i}e_{j}^{\top}
             \end{align*}
             Where $e_{i}$ is the $i^{\text{th}} $ standard basis vector in $\mathbb{R}^{m}$, and $e_{j}$ is the $j^{\text{th}}$ standard basis vector in $\mathbb{R}^{n}$.
+        \item \textbf{Matrix multiplication in terms of column}: For $A,B \in \mathbb{R}^{n\times n}$, and $C = AB \in \mathbb{R}^{n\times n}$, we have that
+            \begin{align*}
+                \text{col}_{j}(C) = A\text{col}_{j}(B)
+            .\end{align*}
+            Thus, $C=AB$, where $A,B \in \mathbb{R}^{n\times n}$ requires solving $n$ linear systems.
+        \item \textbf{Matrix multiplication in terms of rows}: Let $A,B\in \mathbb{R}^{n\times n} $, and $C = AB$. Since $C = AB$, $C^{T} = B^{T}A^{T}$, and using the fact above, we see
+            \begin{align*}
+                \text{col}_{j}(C^{T}) = B^{T}\text{col}_{j}(A^{T})        
+            .\end{align*}
+            But, $\text{col}_{j}(C^{T}) = (\text{ row}_{j}(C))^{T}$, and $\text{col}_{j}(A^{T}) = (\text{ row}_{j}(A))^{T} $. So,
+            \begin{align*}
+                \text{col}_{j}(C^{T}) &= B^{T}\text{col}_{j}(A^{T})         \\
+                \implies \left(\text{row}_{j}(C)\right)^{T} &= B^{T}\left(\text{row}_{j}(A)\right)^{T}
+            .\end{align*}
+            Taking the transposition of both sides gives
+            \begin{align*}
+                \text{row}_{j}(C) &= \text{ row}_{j}(A)B
+            .\end{align*}
+            Therefore, changing the name of index, we get the result
+            \begin{align*}
+                \text{row}_{i}(C) &= \text{ row}_{i}(A)B
+            .\end{align*}
+        \item \textbf{Getting the rows and columns of a matrix algebraically}: Let $A \in \mathbb{R}^{n\times n}$, let $e_{i}$ be the $i^{\text{th}}$ standard basis vector in $\mathbb{R}^{n}$. That is, a vector of size $n$ with a one in the $i^{\text{th}}$ position, and zeros everywhere else. Then,
+            \begin{align*}
+                \text{col}_{j}(A) = Ae_{j}
+            .\end{align*}
+            This comes directly from how matrix–vector multiplication works in linear algebra.
+            Multiplying a matrix $A$ by a standard basis vector $e_{j} $ picks out the $j$-th column of $A$, because the 1 in position $j$ selects that column while all other zeros eliminate the rest.
+            \bigbreak \noindent 
+            If we take the transpose of both sides,
+            \begin{align*}
+                \left(\text{col}_{j}(A)\right)^{T} = e_{j}^{T}A^{T},
+            \end{align*}
+            which implies that
+            \begin{align*}
+                \left(\text{col}_{j}(A^{T})\right)^{T} = e_{j}^{T}A,
+            .\end{align*}
+            But, we know that $\text{row}_{j}(A) = (\text{ col}_{j}(A^{T}))^{T} $, and $\text{col}_{j}(A) = (\text{row}_{j}(A^{T}))^{T} $. Thus,
+            \begin{align*}
+                \left(\text{col}_{j}(A^{T})\right)^{T} = e_{j}^{T}A \\
+                \implies \text{row}_{j}(A) = e_{j}^{T}A
+            .\end{align*}
+            
+            
+
+                
 
     \end{itemize}
 
@@ -9559,9 +9635,10 @@
     \pagebreak 
     \subsubsection{Properties}
     \begin{itemize}
-        \item \textbf{Norms}: $\norm{\cdot}$ is a norm if and only if the following properties are satisfied
+        \item \textbf{Norms}: 
+            $\norm{\cdot}$ is a norm if and only if the following properties are satisfied
             \begin{enumerate}
-                \item $\norm{0} = 0 $ 
+                \item $\norm{x} = 0 \iff x= 0 $ 
                 \item $ \norm{\alpha x} = \left\lvert \alpha \right\rvert \norm{x}$
                 \item $\norm{x+y} \leq \norm{x} + \norm{y} $ (triangle inequality)
             \end{enumerate}
