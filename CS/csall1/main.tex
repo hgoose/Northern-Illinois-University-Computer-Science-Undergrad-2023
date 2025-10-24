@@ -9288,7 +9288,7 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             Lawsuits over whether Atanasoff or Mauchly and Eckert should get credit for inventing the computer
             \bigbreak \noindent 
-            The ENIAC wasn’t the first machine ever, but it was the first large-scale electronic digital machine officially named a "computer." Before ENIAC, the term “computer” referred to people who did calculations by hand.
+            The ENIAC wasn’t the first machine ever, but it was the first large-scale electronic digital machine officially named a "computer." Before ENIAC, the term "computer" referred to people who did calculations by hand.
             \bigbreak \noindent 
             The ENIAC was the first general-purpose computer, it had 17000 vacuum tubes which made up two large rooms (one for air-conditioning). It weighed roughly 30 tons. A few vacuum tubes burnt out every day
             \bigbreak \noindent 
@@ -11005,6 +11005,227 @@ indicate which strong entity the weak entity depends upon.
             \end{cppcode}
             \bigbreak \noindent 
             Strictly because of the fact that JNS NAME jumps to the location NAME+1.
+        \item \textbf{The control unit}: A computer’s control unit ensures that each instruction is executed in sequence, making sure that data flows to the correct components as each instruction is executed..
+            \bigbreak \noindent 
+            There are two general ways in which a control unit can be implemented: hardwired control and microprogrammed control.
+            \begin{enumerate}
+                \item In a hardwired machine, digital logic components are used to select the "from" and "to" components and ensure that data flows to them at the correct time.
+                \item A microprogrammed machine contains a small program in a piece of read-only memory in a component called the microcontroller. The microprogram contains the RTL for each instruction. In order to execute an instruction, the microcontroller interprets the corresponding piece of this program.
+            \end{enumerate}
+        \item \textbf{Marie is a hardwired machine}: The operation of MARIE’s control unit is defined by the RTL for each instruction..
+            \bigbreak \noindent 
+            Each line of RTL is implemented with digital logic components that cause the appropriate data to flow from the component on the right-hand side of the RTL line to the left-hand side..
+            \bigbreak \noindent 
+            For example, the RTL for the ADD instruction is:
+            \begin{align*}
+                \text{MAR} &\leftarrow x \\
+                \text{MBR} &\leftarrow M[\text{MAR}] \\
+                \text{AC} &\leftarrow \text{AC} + \text{MBR}
+            .\end{align*}
+            We will soon see how each line of RTL is implemented.
+        \item \textbf{Logical component}: When we call something a logical component, we mean it’s a functional part of the CPU — defined by what it does, not necessarily by where it physically sits.
+            \begin{itemize}
+                \item The Arithmetic Logic Unit (ALU) is the logical component that performs arithmetic and logic.
+                \item The Control Unit (CU) is the logical component that issues control signals and manages sequencing.
+                \item The Registers (like MAR, PC, AC, IR) are logical components that store data or addresses.
+            \end{itemize}
+        \item \textbf{More on Marie's control unit (CU)}: In MARIE, the Control Unit (CU) is part of the CPU, and its main role is to generate and coordinate the control signals that tell the rest of the system what to do during each phase of the fetch–decode–execute cycle.
+            \bigbreak \noindent 
+            It’s a logical component (a section of the CPU) responsible for directing the operation of the processor. It interprets the instruction currently in the Instruction Register (IR) and activates the correct control signals in the right sequence. These control signals go to components like the ALU, registers (AC, MAR, MBR, PC, IR), and the bus, ensuring data moves and operations occur correctly.
+            \bigbreak \noindent 
+            It’s not just a “storage area” that contains control signals — control signals are generated dynamically by the CU’s logic circuits, not stored like data. It doesn’t hold data like registers or memory do. Instead, it’s composed of decoding and timing logic that responds to the current instruction and clock cycle
+            \bigbreak \noindent 
+            When we say the control unit generates control signals, we mean it produces specific voltage patterns on wires (control lines) inside the CPU. Each instruction (like LOAD or ADD) has a unique combination of these voltage signals that tell different hardware components what to do that clock cycle.
+            \bigbreak \noindent 
+            Each control line is literally a wire connecting the control unit to some component (registers, ALU, memory interface, etc.).
+        \item \textbf{Bus address signals}: Each of MARIE’s registers has a unique address along the datapath, the addresses take the form of signals issued by the control unit. MARIE needs 3 lines to identify addresses 0 - 7 on the bus.
+            \bigbreak \noindent 
+            Many machines would use 8 signals, one of which would be high at any given time.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1029.png}
+            \bigbreak \noindent 
+            The MARIE CPU contains two sets of three signals. $P_{2}$, $P_{1}$, and $P_{0}$ determine which component data will be read from. $P_{5}$, $P_{4}$, and $P_{3}$ determine which component data will be written to
+            \bigbreak \noindent 
+            For example, the MBR has address 3. Since the MBR is a 12-bit register, we can build it as a set of 12 D flipflops. We add gates implementing $P_{3}$ AND $P_{4}$ AND NOT $P_{5}$ before the input to these flipflops so that data will only flow into the MBR (i.e., writing to the MBR) when address 3 is activated.
+            \bigbreak \noindent 
+            Similarly, we add gates implementing $P_{0}$ AND $P_{1}$ AND NOT $P_{2}$ after the output of these flipflops so that data will only flow out of the MBR (i.e., reading from the MBR) to the bus when those signals are activated.
+        \item \textbf{The MBR}:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1030.png}
+        \item \textbf{First line of ADD RTL}: Let’s look again at the first line of the RTL for ADD:
+            \begin{align*}
+                \text{MAR} &\leftarrow x
+            .\end{align*}
+            After an ADD instruction is fetched, the address field, $x$, is in the rightmost 12 bits of the IR. The IR has a datapath address of 7.
+            According to this line of RTL, $x$ must be copied to the MAR. The MAR has a datapath address of 1.
+            Thus, we need to raise signals $P_{2}$, $P_{1}$, and $P_{0}$ to read from the IR, and signal $P_{3}$ to write to the MAR.
+            \bigbreak \noindent 
+            When the high order bits of the IR contain the opcode for ADD, these signals must be set high to implement the first line of the RTL. In succeeding clock ticks, the remaining lines of the RTL for ADD will be implemented.
+        \item \textbf{Timing signals}: Most instructions need multiple clock ticks, one for each line of RTL. A binary counter is used to identify which line of RTL is being executed.
+            \bigbreak \noindent 
+            MARIE has a maximum of 3 lines of RTL for an instruction (7 if you include the advanced instructions). Therefore 4 timing signals (8 including the advanced instructions) are needed, one to indicate each line of RTL and one to reset the counter for the next instruction. These timing signals are named
+            \begin{align*}
+                T_{0}, T_{1}, T_{2}, ..., T_{7}
+            .\end{align*}
+            The $C_{r}$ signal is used to reset the counter.
+            \bigbreak \noindent 
+            Theoretically, we could use combinations of two timing signals to obtain 4 clock times, or combine 3 timing signals to get 8 clock times, but we won’t do it that way
+        \item \textbf{ALU signals}: Looking at the RTL chart, we can see that the ALU has only three operations: add, subtract, and clear.
+            \bigbreak \noindent 
+            We have four ALU signals, $A_{0}$ through $A_{3}$, available to indicate these operations. We will use
+            \begin{align*}
+                A_{0} = \text{ add}, \quad A_{1} = \text{ subtract}, \quad A_{2} = \text{ clear}
+            .\end{align*}
+            We could use $A_{3}=$ no operation, but we won't. Another design alternative would be to use combinations of two signals to generate four values When we want to signal an ALU instruction, we raise the corresponding signal.
+            \bigbreak \noindent 
+            \textbf{Note:} These signals don’t need to match the ALU control values
+        \item \textbf{Marie's control signals}: The entire set of MARIE’s control signals contains
+            \begin{itemize}
+                \item Register controls $P_{0}$ through $P_{5}$
+                \item ALU controls $A_{0} $ through $A_{3}$
+                \item Timing signals $T_{0} $ through $T_{7} $ and counter reset $C_{r} $
+            \end{itemize}
+            All of the RTL lines needed for MARIE’s instructions can be implemented by ensuring that the correct register and/or ALU control signals are raised during the correct clock ticks for a specific instruction.
+            \bigbreak \noindent 
+            Here is the full signal sequence for ADD. It shows which control signals must be set high at each clock tick
+            \begin{align*}
+                P_{2}\; P_{1}\; P_{0}\; P_{3}\; T_{0}&:\; \text{MAR} \leftarrow x \\
+                P_{4}\; P_{3}\; T_{1}&:\; MBR \leftarrow M[MAR] \\
+                A_{0}\; P_{1}\; P_{0}\; P_{5}\; T_{2}&:\; AC \leftarrow AC + MBR \\
+                C_{r}\; T_{3}&:\; [Reset counter]
+            .\end{align*}
+            \begin{itemize}
+                \item \textbf{Line 1:} input is address 7 (low order bits of the IR) and output is address 1 (MAR).
+                \item \textbf{Line 2:} input is address 0 (main memory) and output is address 3 (MBR).
+                \item \textbf{Line 3:} input is address 3 (MBR), output is address 4 (AC), and the operation happening inside the ALU (i.e., what happens to the AC) is addition.
+            \end{itemize}
+        \item \textbf{Timing diagram}: This diagram is called a timing diagram ($P_{4}$ is not shown). You can see which signals, including the timing signals, are high at each clock tick. This instruction has 4 clock ticks, $C_{0} - C_{3}$.
+            \begin{align*}
+                P_{0}\; P_{1}\; P_{2}\; P_{3}\; T_{0}\; \text{ are high at } C_{0}\; \\
+                P_{0}\; P_{2}\; T_{1}\; \text{ are high at } C_{1}\; \\
+                A_{0}\; P_{0}\; P_{1}\; P_{5}\; T_{2}\; \text{ are high at } C_{2}\; \\
+                C_{r}\; T_{3}\; \text{ are high at } C_{3}\;
+            .\end{align*}
+        \item \textbf{More on the control unit}:
+            The RTL and the control signals are the same whether the machine is hardwired or microprogrammed. 
+            \bigbreak \noindent 
+            In hardwired control, the bit pattern of an instruction feeds directly into the combinational logic of the control unit.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1031.png}
+        \item \textbf{Control unit circuit (only shows the ADD instruction portion)}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1032.png}
+        \item \textbf{ROM}:
+            \begin{itemize}
+                \item A non-volatile memory chip — it keeps its contents even when power is off.
+                \item Stores fixed data or instructions that rarely (or never) change.
+                \item The CPU can read from it but normally can’t write to it.
+                \item Used to hold essential low-level code like a bootloader or microprogram for the control unit.
+            \end{itemize}
+            Think of ROM as permanent storage for instructions the hardware needs to start or operate.
+        \item \textbf{Firmware}:
+            \begin{itemize}
+                \item The software stored in ROM (or Flash) that controls the hardware.
+                \item It’s the middle layer between hardware and higher-level software (OS, apps).
+                \item Examples: BIOS/UEFI in PCs, router firmware, or the microcode inside a CPU.
+            \end{itemize}
+        \item \textbf{PROM (Programmable read only memory)}:
+            \begin{itemize}
+                \item Stands for Programmable ROM.
+                \item It’s manufactured blank, and you can program it once using a special device called a PROM programmer (it literally burns tiny fuses inside).
+                \item After that, it’s permanent — can only be read, not erased or re-written.
+            \end{itemize}
+            \begin{align*}
+                \text{PROM } = \text{ one-time programmable ROM.}
+            .\end{align*}
+        \item \textbf{Intro to microprogramming}: Now we switch to looking at microprogramming. In microprogrammed control, execution of microcode instructions produces control signal changes. The microprogram converts each microcode instruction into control signals.
+            \bigbreak \noindent 
+            The microprogram is stored in firmware, which is a small piece of read-only memory also called the control store. One microcode instruction is retrieved during each clock cycle.
+            \bigbreak \noindent 
+            in a microprogrammed CPU, the microprogram replaces (or substitutes for) the hardwired control circuit. However, it doesn’t remove the control unit entirely — it changes its implementation.
+            \bigbreak \noindent 
+            So instead of a big network of AND/OR gates and flip-flops generating control signals directly, you have:
+            \begin{itemize}
+                \item A small, special-purpose memory (the control store) containing microinstructions.
+                \item A microsequencer that fetches, decodes, and executes those microinstructions — just like the CPU itself fetches and executes regular instructions.
+            \end{itemize}
+            \begin{center}
+                \begin{tabular}{p{6cm}|p{6cm}}
+                    Hardwired Control	&Microprogrammed Control \\
+                    \hline \\[0.01cm]
+                    Uses combinational logic (gates, decoders, timing signals) to generate control signals directly.	&Uses microinstructions stored in memory to specify which control signals go high each cycle. \\&\\
+                    Faster, but less flexible — to change instruction behavior, you must redesign the logic.	&Slower, but more flexible — you can change or extend the instruction set by modifying the microcode. \\&\\
+                    Example: MARIE’s control unit circuit with AND/OR gates.	&Example: A microprogram stored in ROM that defines each instruction’s control steps 
+                \end{tabular}
+            \end{center}
+        \item \textbf{Generic microprogrammed control unit}:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1033.png}
+        \item \textbf{Microinstruction format}: If MARIE were microprogrammed, the microinstruction format might look like this:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1034.png}
+            \bigbreak \noindent 
+            We see that a microinstruction is 18 bits long. 
+            \begin{itemize}
+                \item \textbf{Opcodes}: 5 bits
+                \item \textbf{Jump bit}: 1 bit
+                \item \textbf{Dest}: 7 bits
+            \end{itemize}
+            Thus, addresses are 7 bits.
+            \bigbreak \noindent 
+            MicroOp1 and MicroOp2 contain binary codes for each instruction. Jump is a single bit indicating that the value in the Dest field is an address that should be placed in the microsequencer, indicating which microprogram instruction should be executed next
+        \item \textbf{Marie micro opcodes}: The table below contains MARIE’s micro-opcodes along with their corresponding RTL:
+            \bigbreak \noindent 
+            \begin{tabular}{|c|l||c|l|}
+                \hline
+                \textbf{MicroOp Code} & \textbf{Microoperation} & \textbf{MicroOp Code} & \textbf{Microoperation} \\
+                \hline
+                00000 & NOP & 01100 & MBR $\leftarrow$ M[MAR] \\
+                00001 & AC $\leftarrow 0$ & 01101 & OutREG $\leftarrow$ AC \\
+                00010 & AC $\leftarrow$ AC $-$ MBR & 01110 & PC $\leftarrow$ IR[11–0] \\
+                00011 & AC $\leftarrow$ AC + MBR & 01111 & PC $\leftarrow$ MBR \\
+                00100 & AC $\leftarrow$ InREG & 10000 & PC $\leftarrow$ PC + 1 \\
+                00101 & IR $\leftarrow$ M[MAR] & 10001 & If AC = 00 \\
+                00110 & M[MAR] $\leftarrow$ MBR & 10010 & If AC $>$ 0 \\
+                00111 & MAR $\leftarrow$ IR[11–0] & 10011 & If AC $<$ 0 \\
+                01000 & MAR $\leftarrow$ MBR & 10100 & If IR[11–10] = 00 \\
+                01001 & MAR $\leftarrow$ PC & 10101 & If IR[11–10] = 01 \\
+                01010 & MAR $\leftarrow$ X & 10110 & If IR[11–10] = 10 \\
+                01011 & MBR $\leftarrow$ AC & 10111 & If IR[15–12] = MicroOp2[4–1] \\
+                11000 &MBR $\leftarrow$ PC &11001 &MBR $\leftarrow$ $X$ \\
+                11010 &AC $\leftarrow$ 1 &11011 &PC $\leftarrow$ AC \\
+                11100 &AC $\leftarrow$ MBR & &  \\
+                \hline
+            \end{tabular}
+        \item \textbf{First lines of Marie's microprogram}:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1035.png}
+            \bigbreak \noindent 
+            The first four lines contain the fetch (first 3 lines) and decode (line 4) steps of the execution cycle. The remaining lines are the beginning of a jump table.
+            \bigbreak \noindent 
+            The jump table entries indicate that if the high order bits of the IR (i.e., the opcode) have a given value, the microprogram will jump to the address where the remaining microoperations for that opcode will be found.
+            \bigbreak \noindent 
+            For example, LOAD has opcode 1. Looking through the jump table, we can see that a LOAD instruction will cause the microcode processor to jump to 010 0111.
+            \bigbreak \noindent 
+            At that address, it will find the fetch operand step for that instruction (if required) followed by the execute step, i.e., the RTL in microcode format:
+            \begin{align*}
+                010\; 0111\; \text{MAR} &\leftarrow X \text{ NOP}\; 0\; 000\; 0000 \\
+                010\; 1000\; \text{MBR} &\leftarrow M[\text{MAR}]\; \text{NOP}\; 0\; 000\; 0000 \\
+                010\; 1001\; \text{AC} &\leftarrow \text{MBR}\; \text{NOP}\; 1\; 000\; 0000
+            .\end{align*}
+            The last step of the encoded RTL will have a 1 in the JUMP field with a DEST of 000 0000. That will cause the system to jump to 000 0000, i.e., the beginning of the fetch cycle for the next operation.
+            \bigbreak \noindent 
+            The chart above shows the microcode in RTL for convenience, but we could also show it in binary.
+            \begin{align*}
+                010\; 0111\; 01010\; 00000\; 0\; 000\; 0000\\
+                010\; 1000\; 01100\; 00000\; 0\; 000\; 0000\\
+                010\; 1001\; 11100\; 00000\; 1\; 000\; 0000
+            .\end{align*}
+        \item \textbf{Microprogramming}:
+            A microprogrammed control unit works like a system-in-miniature. Microinstructions are fetched, decoded, and executed just like regular instructions. This extra level of interpretation makes microprogrammed control slower than hardwired, but this is not important since computers are getting faster every day.
+            \bigbreak \noindent 
+            The advantage of microprogrammed control is that only the microprogram needs to be changed if the instruction set changes. In fact, all modern machines are microcoded. We study hardwired machines first just to make it easier to understand the microcode architecture.
+
 
     \end{itemize}
 
@@ -13375,7 +13596,7 @@ indicate which strong entity the weak entity depends upon.
             \begin{javacode}
                 float refreshRate = display.getRefreshRate();
             \end{javacode}
-        \item \textbf{Getting Display Rotation}: Tells you how the screen is currently rotated relative to its “natural” orientation:
+        \item \textbf{Getting Display Rotation}: Tells you how the screen is currently rotated relative to its "natural" orientation:
             \bigbreak \noindent 
             \begin{javacode}
             int rotation = display.getRotation();
