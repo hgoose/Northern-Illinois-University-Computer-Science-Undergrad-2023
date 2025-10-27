@@ -12056,6 +12056,7 @@ indicate which strong entity the weak entity depends upon.
             \end{javacode}
             \bigbreak \noindent 
             We pass in a \textbf{dp} values, and it gets converted to px.
+        \item \textbf{Animation directory}: In order to create and use animations in our apps, we need to create a \textbf{Android Resource Directory} in the \textbf{res} directory with resource type \textbf{anim}. Then, we can define animations in XML (one animation per XML file).
     \end{itemize}
 
     \pagebreak 
@@ -12433,6 +12434,26 @@ indicate which strong entity the weak entity depends upon.
                 \item \textbf{android:width}:	Width of the gradient shape. 
                 \item \textbf{android:width}:	Width of the gradient shape's stroke. 
             \end{itemize}
+        \item \textbf{Animation}:
+            \begin{itemize}
+                \item \textbf{android:backdropColor}:	Special option for window animations: whether the window's background should be used as a background to the animation. 
+                \item \textbf{android:detachWallpaper}:	Special option for window animations: if this window is on top of a wallpaper, don't animate the wallpaper with it. 
+                \item \textbf{android:duration}:	Amount of time (in milliseconds) for the animation to run. 
+                \item \textbf{android:fillAfter}:	When set to true, the animation transformation is applied after the animation is over. 
+                \item \textbf{android:fillBefore}:	When set to true or when fillEnabled is not set to true, the animation transformation is applied before the animation has started. 
+                \item \textbf{android:fillEnabled}:	When set to true, the value of fillBefore is taken into account. 
+                \item \textbf{android:interpolator}:	Defines the interpolator used to smooth the animation movement in time. 
+                \item \textbf{android:repeatCount}:	Defines how many times the animation should repeat. 
+                \item \textbf{android:repeatMode}:	Defines the animation behavior when it reaches the end and the repeat count is greater than 0 or infinite. 
+                \item \textbf{android:showBackdrop}:	Special option for window animations: whether to show a background behind the animating windows. 
+                \item \textbf{android:startOffset}:	Delay in milliseconds before the animation runs, once start time is reached. 
+                \item \textbf{android:zAdjustment}:	Allows for an adjustment of the Z ordering of the content being animated for the duration of the animation. 
+            \end{itemize}
+        \item \textbf{set (AnimationSet)}: Only inherited from Animation
+        \item \textbf{alpha (AlphaAnimation)}: Only inherited from Animation
+        \item \textbf{rotate (RotateAnimation)}: Only inherited from Animation
+        \item \textbf{scale (ScaleAnimation)}: Only inherited from Animation
+        \item \textbf{translate (TranslateAnimation)}: Only inherited from Animation
     \end{itemize}
 
     \pagebreak 
@@ -12696,7 +12717,55 @@ indicate which strong entity the weak entity depends upon.
 
     \pagebreak 
     \subsection{Java reference}
-    \bigbreak \noindent 
+    \subsubsection{Activity}
+    \begin{itemize}
+        \item \textbf{Lifecycle methods}
+            \begin{itemize}
+                \item \textbf{onCreate(Bundle)}:	Initialize activity (UI layout, variables, listeners). Most important one.
+                \item \textbf{onStart()}:	Activity is becoming visible.
+                \item \textbf{onResume()}:	Activity is now in the foreground and interactive.
+                \item \textbf{onPause()}:	Partially visible — pause resources, stop animations. called when Android starts or resumes another
+                \item \textbf{onStop()}:	No longer visible — release resources.
+                \item \textbf{onRestart()}:	Called before restarting after being stopped.
+                \item \textbf{onDestroy()}:	Final cleanup before activity is removed from memory.
+            \end{itemize}
+        \item  \textbf{UI and layout management}
+            \begin{itemize}
+                \item \textbf{setContentView(int layoutResId)}:	Sets the XML layout for the Activity.
+                \item \textbf{findViewById(int id)}:	Get references to UI elements.
+            \end{itemize}
+        \item \textbf{Navigation and intents}
+            \begin{itemize}
+                \item \textbf{startActivity(Intent)}:	Launch another Activity.
+                \item \textbf{startActivityForResult(Intent, int)}:	Launch an Activity and get returned data. (Deprecated in favor of ActivityResult API, but still widely used.)
+                \item \textbf{finish()}:	Close the current Activity.
+                \item \textbf{getIntent()}:	Retrieve the Intent that started the Activity.
+            \end{itemize}
+        \item \textbf{State Preservation}: When configuration changes happen (like screen rotation):
+            \begin{itemize}
+                \item \textbf{onSaveInstanceState(Bundle)}:	Save UI state before destruction.
+                \item \textbf{onRestoreInstanceState(Bundle)}:	Restore saved state after recreation.
+            \end{itemize}
+        \item \textbf{Menu / UI controls}
+            \begin{itemize}
+                \item \textbf{onCreateOptionsMenu(Menu)}:	Initialize menu options.
+                \item \textbf{onOptionsItemSelected(MenuItem)}:	Handle menu selections.
+            \end{itemize}
+        \item \textbf{Context-provided Methods}
+            \begin{itemize}
+                \item \textbf{getApplicationContext()}:	Access app-level context.
+                \item \textbf{getSystemService(String)}:	Access system services (e.g., LOCATION\_SERVICE).
+                \item \textbf{getSharedPreferences(name, mode)}:	App storage for small data.
+            \end{itemize}
+        \item \textbf{Dialogs, toasts, and interaction}
+            \begin{itemize}
+                \item \textbf{runOnUiThread(Runnable)}:	Update UI from a background thread.
+                \item \textbf{requestPermissions(String[], int)}:	Ask for runtime permissions.
+                \item \textbf{onRequestPermissionsResult(...)}:	Handle permission results.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
     \subsubsection{android.content.Context}
     \begin{itemize}
         \item \textbf{What is it}: Context is an interface to global information about your application environment. It gives you access to:
@@ -13784,6 +13853,14 @@ indicate which strong entity the weak entity depends upon.
             \begin{javacode}
                 String name = getIntent().getStringExtra("username");
                 int age = getIntent().getIntExtra("age", 0);
+            \end{javacode}
+        \item \textbf{Updating AndroidManifest}: When we add an activity to an app, we need to add a corresponding activity element to the AndroidManifest.xml file
+            \bigbreak \noindent 
+            \begin{javacode}
+                <activity
+                    android:name=".classname"
+                    android:screenOrientation="portrait">
+                </activity>
             \end{javacode}
     \end{itemize}
 
@@ -17040,6 +17117,261 @@ indicate which strong entity the weak entity depends upon.
             \end{itemize}
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Animation}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.animation.Animation
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.Animation
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                Animation()
+                Animation(Context context, AttributeSet attrs)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{cancel()}: Cancel the animation.
+                \item \textbf{computeDurationHint()}: Compute a hint at how long the entire animation may last, in milliseconds.
+                \item \textbf{getBackdropColor()}: Returns the background color to show behind the animating windows.
+                \item \textbf{getBackgroundColor()}: \textit{Deprecated in API level 30.} None of window animations are running with background color.
+                \item \textbf{getDetachWallpaper()}: \textit{Deprecated in API level 29.} All window animations are running with detached wallpaper.
+                \item \textbf{getDuration()}: How long this animation should last.
+                \item \textbf{getFillAfter()}: If fillAfter is true, this animation will apply its transformation after the end time.
+                \item \textbf{getFillBefore()}: If fillBefore is true, this animation will apply its transformation before the start time.
+                \item \textbf{getInterpolator()}: Gets the acceleration curve type for this animation.
+                \item \textbf{getRepeatCount()}: Defines how many times the animation should repeat.
+                \item \textbf{getRepeatMode()}: Defines what this animation should do when it reaches the end.
+                \item \textbf{getShowBackdrop()}: If true, animation will show the backdrop behind window animations.
+                \item \textbf{getStartOffset()}: When this animation should start relative to StartTime.
+                \item \textbf{getStartTime()}: When this animation should start.
+                \item \textbf{getTransformation(long, Transformation, float)}: Gets the transformation at a specified point in time.
+                \item \textbf{getTransformation(long, Transformation)}: Gets the transformation at a specified point in time.
+                \item \textbf{getZAdjustment()}: Returns the Z ordering mode while running the animation.
+                \item \textbf{hasEnded()}: Indicates whether this animation has ended.
+                \item \textbf{hasStarted()}: Indicates whether this animation has started.
+                \item \textbf{initialize(int, int, int, int)}: Initialize animation with view and parent dimensions.
+                \item \textbf{isFillEnabled()}: If true, animation applies the value of fillBefore.
+                \item \textbf{isInitialized()}: Whether the animation has been initialized.
+                \item \textbf{reset()}: Reset the initialization state of this animation.
+                \item \textbf{restrictDuration(long)}: Ensure the duration is not longer than durationMillis.
+                \item \textbf{scaleCurrentDuration(float)}: Scale the duration by the given factor.
+                \item \textbf{setAnimationListener(Animation.AnimationListener)}: Bind an animation listener to this animation.
+                \item \textbf{setBackdropColor(int)}: Set the backdrop color behind animating windows.
+                \item \textbf{setBackgroundColor(int)}: \textit{Deprecated in API level 30.}
+                \item \textbf{setDetachWallpaper(boolean)}: \textit{Deprecated in API level 29.}
+                \item \textbf{setDuration(long)}: Set how long this animation should last.
+                \item \textbf{setFillAfter(boolean)}: If true, the transformation persists after animation finishes.
+                \item \textbf{setFillBefore(boolean)}: If true, apply transformation before animation start.
+                \item \textbf{setFillEnabled(boolean)}: If true, animation applies the value of fillBefore.
+                \item \textbf{setInterpolator(Interpolator)}: Sets the acceleration curve for the animation.
+                \item \textbf{setInterpolator(Context, int)}: Sets acceleration curve using resources.
+                \item \textbf{setRepeatCount(int)}: Sets how many times animation repeats.
+                \item \textbf{setRepeatMode(int)}: Defines behavior when animation reaches the end.
+                \item \textbf{setShowBackdrop(boolean)}: Enable backdrop animation behind windows.
+                \item \textbf{setStartOffset(long)}: When animation should start relative to start time.
+                \item \textbf{setStartTime(long)}: When animation should start.
+                \item \textbf{setZAdjustment(int)}: Set Z ordering mode while running the animation.
+                \item \textbf{start()}: Start the animation the first time getTransformation is invoked.
+                \item \textbf{startNow()}: Start the animation at the current system time.
+                \item \textbf{willChangeBounds()}: Indicates if animation affects bounds of animated view.
+                \item \textbf{willChangeTransformationMatrix()}: Indicates if animation affects transformation matrix.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{applyTransformation(float interpolatedTime, Transformation t)}: Helper for getTransformation.
+                \item \textbf{clone()}: Creates and returns a copy of this object.
+                \item \textbf{ensureInterpolator()}: Guarantees that this animation has an interpolator.
+                \item \textbf{finalize()}: Called by the garbage collector when there are no more references to the object.
+                \item \textbf{getScaleFactor()}: Returns the scale factor set by the call to getTransformation.
+                \item \textbf{resolveSize(int type, float value, int size, int parentSize)}: Convert size description to an actual dimension.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{applyTransformation(float interpolatedTime, Transformation t)}: Helper for getTransformation.
+                \item \textbf{clone()}: Creates and returns a copy of this object.
+                \item \textbf{ensureInterpolator()}: Guarantees that this animation has an interpolator.
+                \item \textbf{finalize()}: Called by the garbage collector when there are no more references to the object.
+                \item \textbf{getScaleFactor()}: Returns the scale factor set by the call to getTransformation.
+                \item \textbf{resolveSize(int type, float value, int size, int parentSize)}: Convert size description to an actual dimension.
+            \end{itemize}
+
+    \end{itemize}
+
+
+    \pagebreak 
+    \subsubsection{AnimationSet}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+               java.lang.Object $\to$	android.view.animation.Animation $\to$	android.view.animation.AnimationSet
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.AnimationSet
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                AnimationSet(Context context, AttributeSet attrs)
+                AnimationSet(boolean shareInterpolator)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{addAnimation(Animation a)}: Add a child animation to this animation set.
+                \item \textbf{computeDurationHint()}: Duration hint is the maximum duration hint of all child animations.
+                \item \textbf{getAnimations()}: Returns the list of child animations.
+                \item \textbf{getDuration()}: Duration is defined as the duration of the longest child animation.
+                \item \textbf{getStartTime()}: When this animation should start.
+                \item \textbf{getTransformation(long currentTime, Transformation t)}: Transformation is the concatenation of all component animations.
+                \item \textbf{initialize(int width, int height, int parentWidth, int parentHeight)}: Initialize with the dimensions of the object and its parent.
+                \item \textbf{reset()}: Reset the initialization state of this animation.
+                \item \textbf{restrictDuration(long durationMillis)}: Ensure duration does not exceed durationMillis.
+                \item \textbf{scaleCurrentDuration(float scale)}: Scale the duration by the specified factor.
+                \item \textbf{setDuration(long durationMillis)}: Sets the duration for every child animation.
+                \item \textbf{setFillAfter(boolean fillAfter)}: If true, transformation persists after animation ends.
+                \item \textbf{setFillBefore(boolean fillBefore)}: If true, apply transformation before animation starts.
+                \item \textbf{setRepeatMode(int repeatMode)}: Defines what happens when animation reaches the end.
+                \item \textbf{setStartOffset(long startOffset)}: When this animation should start relative to start time.
+                \item \textbf{setStartTime(long startTimeMillis)}: Sets start time for this animation and all child animations.
+                \item \textbf{willChangeBounds()}: Indicates whether this animation affects bounds of the animated view.
+                \item \textbf{willChangeTransformationMatrix()}: Indicates whether this animation affects the transformation matrix.
+            \end{itemize}
+
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{AnimationSet	clone()}: Creates and returns a copy of this object.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{AlphaAnimation}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.animation.Animation $\to$	android.view.animation.AlphaAnimation
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.AlphaAnimation
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                AlphaAnimation(Context context, AttributeSet attrs)
+                AlphaAnimation(float fromAlpha, float toAlpha)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{boolean	willChangeBounds()}: Indicates whether or not this animation will affect the bounds of the animated view.
+                \item \textbf{boolean	willChangeTransformationMatrix()}: Indicates whether or not this animation will affect the transformation matrix.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{void	applyTransformation(float interpolatedTime, Transformation t)}: Changes the alpha property of the supplied Transformation
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{RotateAnimation}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.animation.Animation $\to$	android.view.animation.RotateAnimation
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.RotateAnimation
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                RotateAnimation(Context context, AttributeSet attrs)
+                RotateAnimation(float fromDegrees, float toDegrees)
+                RotateAnimation(float fromDegrees, float toDegrees, float pivotX, float pivotY)
+                RotateAnimation(float fromDegrees, float toDegrees, int pivotXType, float pivotXValue, int pivotYType, float pivotYValue)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	initialize(int width, int height, int parentWidth, int parentHeight)}: Initialize this animation with the dimensions of the object being animated as well as the objects parents.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{void	applyTransformation(float interpolatedTime, Transformation t)}: Helper for getTransformation.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{ScaleAnimation}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.animation.Animation $\to$	android.view.animation.ScaleAnimation
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.ScaleAnimation
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                ScaleAnimation(Context context, AttributeSet attrs)
+                ScaleAnimation(float fromX, float toX, float fromY, float toY)
+                ScaleAnimation(float fromX, float toX, float fromY, float toY, float pivotX, float pivotY)
+                ScaleAnimation(float fromX, float toX, float fromY, float toY, int pivotXType, float pivotXValue, int pivotYType, float pivotYValue)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	initialize(int width, int height, int parentWidth, int parentHeight)}: Initialize this animation with the dimensions of the object being animated as well as the objects parents.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{void	applyTransformation(float interpolatedTime, Transformation t)}: Helper for getTransformation.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{TranslateAnimation}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.animation.Animation $\to$	android.view.animation.TranslateAnimation
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.animation.TranslateAnimation
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                TranslateAnimation(Context context, AttributeSet attrs)
+                TranslateAnimation(float fromXDelta, float toXDelta, float fromYDelta, float toYDelta)
+                TranslateAnimation(int fromXType, float fromXValue, int toXType, float toXValue, int fromYType, float fromYValue, int toYType, float toYValue)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	initialize(int width, int height, int parentWidth, int parentHeight)}: Initialize this animation with the dimensions of the object being animated as well as the objects parents.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{void	applyTransformation(float interpolatedTime, Transformation t)}: Helper for getTransformation.
+            \end{itemize}
+
+    \end{itemize}
 
     \pagebreak 
     \subsection{Styling widgets with java}
