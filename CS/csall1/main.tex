@@ -12057,6 +12057,42 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             We pass in a \textbf{dp} values, and it gets converted to px.
         \item \textbf{Animation directory}: In order to create and use animations in our apps, we need to create a \textbf{Android Resource Directory} in the \textbf{res} directory with resource type \textbf{anim}. Then, we can define animations in XML (one animation per XML file).
+        \item \textbf{Action bar}
+            \bigbreak \noindent 
+            \begin{javacode}
+                <resources>
+                  <!-- Base application theme. -->
+                  <style name="Theme.MusicStore" parent="Theme.AppCompat.Light.DarkActionBar">
+                    <!-- Customize your theme here. -->
+                    <item name="android:textSize">15sp</item>
+                    <item name="colorPrimary">@color/colorPrimary</item>
+                  </style>
+                  
+                </resources> 
+            \end{javacode}
+        \item \textbf{No action bar}
+            \bigbreak \noindent 
+            \begin{javacode}
+                <resources xmlns:tools="http://schemas.android.com/tools">
+                    <!-- Base application theme. -->
+                    <style name="Base.Theme.MusicStore" parent="Theme.Material3.DayNight.NoActionBar">
+                        <!-- Customize your light theme here. -->
+                        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+                    </style>
+
+                    <style name="Theme.MusicStore" parent="Base.Theme.MusicStore" />
+                </resources>
+            \end{javacode}
+        \item \textbf{Menus}: Menus in Android Studio (and Android apps generally) are UI components that let users interact with common actions — similar to menus in desktop apps, but adapted for mobile.
+            \bigbreak \noindent 
+            A menu is a set of action items your app displays in:
+            \begin{itemize}
+                \item The top App Bar (toolbar)
+                \item A vertical overflow menu (three-dot icon)
+                \item A contextual action bar
+                \item Popup menus inside a view
+            \end{itemize}
+            Menus are defined in \texttt{res/menu}
     \end{itemize}
 
     \pagebreak 
@@ -12457,6 +12493,179 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{Menus}
+    \begin{itemize}
+        \item \textbf{Menu Resource directory}: Menus are defined in \texttt{res/menu}
+        \item \textbf{Menu types}
+            \begin{itemize}
+                \item \textbf{Options menu}: Defined in the action bar / app bar, or in the overflow menu if there's no room.
+                \item \textbf{Context menu}: Appears when the user long-presses an item. Appears next to the pressed item OR as a floating context bar
+                \item \textbf{Popup menu}: A tiny menu that pops up anchored to a button, Triggered by tapping a specific UI element (not long-press)
+            \end{itemize}
+        \item \textbf{Options menu}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1037.png}
+            \bigbreak \noindent 
+            We need to override the \texttt{onCreateOptionsMenu} method
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onCreateOptionsMenu(Menu menu) {
+                    getMenuInflater().inflate(R.menu.menu_main, menu);
+                    return true;
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            The menu parameter is an empty Menu object created by Android. It represents the Action Bar options menu that will be shown to the user.
+            \bigbreak \noindent 
+            Your job in this method is to add items into this menu, usually done by inflating XML into it
+            \bigbreak \noindent 
+            Returning true means yes, we successfully created and want to show this menu.
+            \bigbreak \noindent 
+            To handle clicks, we override
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onOptionsItemSelected(MenuItem item) {
+                    if (item.getItemId() == R.id.action_settings) {
+                        // action here
+                        return true;
+                    }
+                    return super.onOptionsItemSelected(item);
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            Calling the super version lets the default Android behavior run when your code doesn’t handle the menu click. If it’s not your menu item, let the Android system decide what to do.
+
+        \item \textbf{Context Menu}: We first need to register the view
+            \bigbreak \noindent 
+            \begin{javacode}
+                registerForContextMenu(myView);
+            \end{javacode}
+            \bigbreak \noindent 
+            Then, override
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v,
+                ContextMenu.ContextMenuInfo menuInfo) {
+                    getMenuInflater().inflate(R.menu.context_menu, menu);
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            To handle clicks, override
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onContextItemSelected(MenuItem item) {
+                    if (item.getItemId() == R.id.action_delete) {
+                        // do delete
+                        return true;
+                    }
+                    return super.onContextItemSelected(item);
+                }
+            \end{javacode}
+
+
+        \item \textbf{Popup menu}: First, create in code where needed
+            \bigbreak \noindent 
+            \begin{javacode}
+                PopupMenu popup = new PopupMenu(this, myButton);
+                popup.getMenuInflater().inflate(R.menu.popup_menu, popup.getMenu());
+                popup.show();
+            \end{javacode}
+            \bigbreak \noindent 
+            Handle clicks using a listener
+            \bigbreak \noindent 
+            \begin{javacode}
+                popup.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == R.id.action_share) {
+                        // do share
+                        return true;
+                    }
+                    return false;
+                });
+
+            \end{javacode}
+    
+        \item \textbf{Menu attributes}
+            \begin{itemize}
+                \item \textbf{android:id="Resource ID"}:. A unique resource ID. To create a new resource ID for this item, use the form: "@+id/name". The plus symbol indicates that this is created as a new ID.
+                \item \textbf{android:title="String resource"}:. The menu title as a string resource or raw string.
+                \item \textbf{android:titleCondensed="String resource"}:. A condensed title as a string resource or a raw string. This title is used for situations in which the normal title is too long.
+                \item \textbf{android:icon="Drawable resource"}:. An image to be used as the menu item icon.
+                \item \textbf{android:onClick="Method name"}:. The method to call when this menu item is clicked. The method must be declared in the activity as public. It accepts a MenuItem as its only parameter, which indicates the item clicked. This method takes precedence over the standard callback to onOptionsItemSelected(). See the example at the end of this page.
+                \item \textbf{android:showAsAction="Keyword."}: When and how this item appears as an action item in the app bar. A menu item can appear as an action item only when the activity includes an app bar. Valid values:
+                    \begin{itemize}
+                        \item \textbf{ifRoom}:	Only place this item in the app bar if there is room for it. If there isn't room for all the items marked "ifRoom", the items with the lowest orderInCategory values are displayed as actions, and the remaining items are displayed in the overflow menu.
+                        \item \textbf{withText}:	Also include the title text (defined by android:title) with the action item. You can include this value along with one of the others as a flag set by separating them with a pipe |.
+                        \item \textbf{never}:	Never place this item in the app bar. Instead, list the item in the app bar's overflow menu.
+                        \item \textbf{always}:	Always place this item in the app bar. Avoid using this unless it's critical that the item always appear in the action bar. Setting multiple items to always appear as action items can result in them overlapping with other UI in the app bar.
+                        \item \textbf{collapseActionView}:	The action view associated with this action item (as declared by android:actionLayout or android:actionViewClass) is collapsible. Introduced in API level 14.
+                    \end{itemize}
+                \item \textbf{android:actionLayout="Layout resource"}:. A layout to use as the action view.
+                \item \textbf{android:actionViewClass="Class name"}:. A fully-qualified class name for the View to use as the action view. For example, "android.widget.SearchView" to use SearchView as an action view.
+                \item \textbf{android:actionProviderClass="Class name"}:. A fully qualified class name for the ActionProvider to use in place of the action item. For example, "android.widget.ShareActionProvider" to use ShareActionProvider.
+                \item \textbf{android:alphabeticShortcut="Char."}: A character for the alphabetic shortcut key.
+                \item \textbf{android:numericShortcut="Integer."}: A number for the numeric shortcut key.
+                \item \textbf{android:alphabeticModifiers="Keyword."}: A modifier for the menu item's alphabetic shortcut. The default value corresponds to the Control key. Valid values:
+                    \begin{itemize}
+                        \item \textbf{META}:	Corresponds to the Meta meta key.
+                        \item \textbf{CTRL}:	Corresponds to the Control meta key.
+                        \item \textbf{ALT}:	Corresponds to the Alt meta key.
+                        \item \textbf{SHIFT}:	Corresponds to the Shift meta key.
+                        \item \textbf{SYM}:	Corresponds to the Sym meta key.
+                        \item \textbf{FUNCTION}:	Corresponds to the Function meta key.
+                    \end{itemize}
+                    You can use the setAlphabeticShortcut() method to set the attribute values programmatically. For more information about the alphabeticModifier attribute
+                \item \textbf{android:numericModifiers="Keyword"}:. A modifier for the menu item's numeric shortcut. The default value corresponds to the Control key. Valid values:
+                    \begin{itemize}
+                        \item \textbf{META}:	Corresponds to the Meta meta key.
+                        \item \textbf{CTRL}:	Corresponds to the Control meta key.
+                        \item \textbf{ALT}:	Corresponds to the Alt meta key.
+                        \item \textbf{SHIFT}:	Corresponds to the Shift meta key.
+                        \item \textbf{SYM}:	Corresponds to the Sym meta key.
+                        \item \textbf{FUNCTION}:	Corresponds to the Function meta key.
+                    \end{itemize}
+                    You can use the setNumericShortcut() method to set the attribute values programmatically. For more information about the numericModifier attribute
+                \item \textbf{android:checkable="Boolean"}:. True if the item is checkable.
+                \item \textbf{android:checked="Boolean"}:. True if the item is checked by default.
+                \item \textbf{android:visible="Boolean"}:. True if the item is visible by default.
+                \item \textbf{android:enabled="Boolean"}:. True if the item is enabled by default.
+                \item \textbf{android:menuCategory="Keyword"}:. Value corresponding to the Menu CATEGORY\_* constants, which define the item's priority. Valid values:
+                    \begin{itemize}
+                        \item \textbf{container}:	For items that are part of a container.
+                        \item \textbf{system}:	For items that are provided by the system.
+                        \item \textbf{secondary}:	For items that are user-supplied secondary (infrequently used) options.
+                        \item \textbf{alternative}:	For items that are alternative actions on the data that is currently displayed.  
+                    \end{itemize}
+                \item \textbf{android:orderInCategory="Integer"}:. The order of importance of the item within a group.
+            \end{itemize}
+        \item \textbf{<group>}: A menu group, to create a collection of items that share traits, such as whether they are visible, enabled, or selectable. Contains one or more <item> elements. Must be a child of a <menu> element.
+        \item \textbf{<group> attributes}:
+            \begin{itemize}
+                \item \textbf{android:id="Resource ID"}: A unique resource ID. To create a new resource ID for this item, use the form: "@+id/name". The plus symbol indicates that this is created as a new ID.
+                \item \textbf{android:checkableBehavior="Keyword"}:. The type of selectable behavior for the group. Valid values:
+                    \begin{itemize}
+                        \item \textbf{none}:	Not selectable.
+                        \item \textbf{all}:	All items can be selected (use checkboxes).
+                        \item \textbf{single}:	Only one item can be selected (use radio buttons).
+                    \end{itemize}
+                \item \textbf{android:visible="Boolean"}:. True if the group is visible.
+                \item \textbf{android:enabled="Boolean"}:. True if the group is enabled.
+                \item \textbf{android:menuCategory="Keyword"}:. Value corresponding to the Menu CATEGORY\_* constants, which define the group's priority. Valid values:
+                    \begin{itemize}
+                        \item \textbf{container}:	For groups that are part of a container.
+                        \item \textbf{system}:	For groups that are provided by the system.
+                        \item \textbf{secondary}:	For groups that are user-supplied secondary (infrequently used) options.
+                        \item \textbf{alternative}:	For groups that are alternative actions on the data that is currently displayed.
+                    \end{itemize}
+                \item \textbf{android:orderInCategory}: Integer. The default order of the items within the category.
+            \end{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
     \subsubsection{Styles}
     \begin{itemize}
         \item \textbf{How to style}: We can use many attributes to specify how a UI component will look. For example, we can specify the background color of a component.
@@ -12728,6 +12937,21 @@ indicate which strong entity the weak entity depends upon.
                 \item \textbf{onStop()}:	No longer visible — release resources.
                 \item \textbf{onRestart()}:	Called before restarting after being stopped.
                 \item \textbf{onDestroy()}:	Final cleanup before activity is removed from memory.
+            \end{itemize}
+        \item \textbf{Transitions}
+            \begin{itemize}
+                \item \textbf{overridePendingTransition(int enterAnim, int exitAnim)}:	Overrides the default transition right after calling startActivity() or finish()
+                \item \textbf{finishAfterTransition()}: 	Finishes the Activity after shared-element transitions complete
+                \item \textbf{postponeEnterTransition()}: 	Waits before running transition (useful while loading images)
+                \item \textbf{startPostponedEnterTransition()}: 	Resumes the delayed enter transition
+                \item \textbf{setEnterSharedElementCallback(SharedElementCallback)}: 	Customize shared element mapping during enter transition
+                \item \textbf{setExitSharedElementCallback(SharedElementCallback)}: 	Same as above, but for exit transitions
+            \end{itemize}
+        \item \textbf{Transition constants}
+            \begin{itemize}
+                \item \textbf{TRANSITION\_NONE}:	No animation
+                \item \textbf{TRANSITION\_OPEN}:	When an Activity is opened
+                \item \textbf{TRANSITION\_CLOSE}:	When an Activity is closed
             \end{itemize}
         \item  \textbf{UI and layout management}
             \begin{itemize}
@@ -14172,10 +14396,108 @@ indicate which strong entity the weak entity depends upon.
                 \item \textbf{Flags}:	FLAG\_LONG\_PRESS, FLAG\_SOFT\_KEYBOARD, etc.
             \end{itemize}
 
+    \end{itemize}
+    
+    \pagebreak 
+    \subsubsection{Animations}
+    \begin{itemize}
+        \item \textbf{Create AnimationSet}:
+            \bigbreak \noindent 
+            \begin{javacode}
+            AnimationSet animation = new AnimationSet(boolean shareInterpolator)
+            \end{javacode}
+            \bigbreak \noindent 
+            An Interpolator controls the animation speed pattern over time:
+            \begin{itemize}
+                \item \textbf{true}: (default)	All animations inside AnimationSet use the same interpolator (the one set on the AnimationSet itself)
+                \item \textbf{false}:	Each animation can define its own interpolator
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{javacode}
+                AnimationSet set = new AnimationSet(true); // true = share interpolator
 
+                // Fade-in animation
+                AlphaAnimation alpha = new AlphaAnimation(0f, 1f);
+                alpha.setDuration(1000);
 
+                // Move-up animation
+                TranslateAnimation move = new TranslateAnimation(
+                0, 0,
+                50f, 0f
+                );
+                move.setDuration(1000);
+
+                // Add animations to set
+                set.addAnimation(alpha);
+                set.addAnimation(move);
+
+                // Start the animation
+                view.startAnimation(set);
+            \end{javacode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{SharedPreferences, SharedPreferences.Editor, and PreferencesManager}
+    \begin{itemize}
+        \item \textbf{Get a SharedPreferences object}
+            \bigbreak \noindent 
+            \begin{javacode}
+                SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            \end{javacode}
+            \begin{itemize}
+                \item \textbf{"MyPrefs"}: the filename to store in
+                \item \textbf{MODE\_PRIVATE}: → only your app can access it
+            \end{itemize}
+        \item \textbf{Write / save data}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("username", "Nate");
+                editor.putBoolean("isDarkMode", true);
+                editor.apply(); // async (recommended)
+            \end{javacode}
+            \begin{itemize}
+                \item \textbf{.apply()}: saves in the background
+                \item \textbf{.commit()}: saves immediately but blocks the thread — only use if you must know the result instantly
+            \end{itemize}
+        \item \textbf{Read data}
+            \bigbreak \noindent 
+            \begin{javacode}
+                String username = prefs.getString("username", "Guest");
+                boolean darkMode = prefs.getBoolean("isDarkMode", false);
+            \end{javacode}
+            \bigbreak \noindent 
+            The second argument is the default value if the key does not exist
+        \item \textbf{Remove data}
+            \bigbreak \noindent 
+            \begin{javacode}
+                prefs.edit().remove("username").apply();
+            \end{javacode}
+        \item \textbf{Wipe everything}
+            \bigbreak \noindent 
+            \begin{javacode}
+                prefs.edit().clear().apply();
+            \end{javacode}
+        \item \textbf{Where is the data stored}: SharedPreferences saves to:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                /data/data/<your package name>/shared_prefs/MyPrefs.xml
+            \end{bashcode}
 
     \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Menu}
+
+    \pagebreak 
+    \subsubsection{MenuItem}
+
+    \pagebreak 
+    \subsubsection{ContextMenu}
+
+    \pagebreak 
+    \subsubsection{PopupMenu}
+
 
     \pagebreak 
     \subsection{Java Documentation}
@@ -17372,6 +17694,110 @@ indicate which strong entity the weak entity depends upon.
             \end{itemize}
 
     \end{itemize}
+
+    \pagebreak 
+    \subsubsection{PreferenceManager}
+    \begin{itemize}
+        \item \textbf{Include}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.preference.PreferenceManager
+            \end{javacode}
+        \item \textbf{Nested interfaces}
+            \begin{itemize}
+                \item \textbf{interface	PreferenceManager.OnActivityDestroyListener}: This interface was deprecated in API level 29. Use the AndroidX Preference Library for consistent behavior across all devices. For more information on using the AndroidX Preference Library see Settings. 
+                \item \textbf{interface	PreferenceManager.OnActivityResultListener}: This interface was deprecated in API level 29. Use the AndroidX Preference Library for consistent behavior across all devices. For more information on using the AndroidX Preference Library see Settings. 
+                \item \textbf{interface	PreferenceManager.OnActivityStopListener}: This interface was deprecated in API level 29. Use the AndroidX Preference Library for consistent behavior across all devices. For more information on using the AndroidX Preference Library see Settings. 
+            \end{itemize}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{PreferenceScreen	createPreferenceScreen(Context context)}:
+                \item \textbf{Preference	findPreference(CharSequence key)}: Finds a Preference based on its key.
+                \item \textbf{static SharedPreferences	getDefaultSharedPreferences(Context context)}: Gets a SharedPreferences instance that points to the default file that is used by the preference framework in the given context.
+                \item \textbf{static String	getDefaultSharedPreferencesName(Context context)}: Returns the name used for storing default shared preferences.
+                \item \textbf{PreferenceDataStore	getPreferenceDataStore()}: Returns the PreferenceDataStore associated with this manager or null if the default SharedPreferences are used instead.
+                \item \textbf{SharedPreferences	getSharedPreferences()}: Gets a SharedPreferences instance that preferences managed by this will use.
+                \item \textbf{int	getSharedPreferencesMode()}: Returns the current mode of the SharedPreferences file that preferences managed by this will use.
+                \item \textbf{String	getSharedPreferencesName()}: Returns the current name of the SharedPreferences file that preferences managed by this will use.
+                \item \textbf{boolean	isStorageDefault()}: Indicates if the storage location used internally by this class is the default provided by the hosting Context.
+                \item \textbf{boolean	isStorageDeviceProtected()}: Indicates if the storage location used internally by this class is backed by device-protected storage.
+                \item \textbf{static void	setDefaultValues(Context context, String sharedPreferencesName, int sharedPreferencesMode, int resId, boolean readAgain)}: Similar to setDefaultValues(android.content.Context, int, boolean) but allows the client to provide the filename and mode of the shared preferences file.
+                \item \textbf{static void	setDefaultValues(Context context, int resId, boolean readAgain)}: Sets the default values from an XML preference file by reading the values defined by each Preference item's android:defaultValue attribute.
+                \item \textbf{void	setPreferenceDataStore(PreferenceDataStore dataStore)}: Sets a PreferenceDataStore to be used by all Preferences associated with this manager that don't have a custom PreferenceDataStore assigned via Preference.setPreferenceDataStore(PreferenceDataStore).
+                \item \textbf{void	setSharedPreferencesMode(int sharedPreferencesMode)}: Sets the mode of the SharedPreferences file that preferences managed by this will use.
+                \item \textbf{void	setSharedPreferencesName(String sharedPreferencesName)}: Sets the name of the SharedPreferences file that preferences managed by this will use.
+                \item \textbf{void	setStorageDefault()}: Sets the storage location used internally by this class to be the default provided by the hosting Context.
+                \item \textbf{void	setStorageDeviceProtected()}: Explicitly set the storage location used internally by this class to be device-protected storage.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{String	KEY\_HAS\_SET\_DEFAULT\_VALUES}:
+                \item \textbf{String	METADATA\_KEY\_PREFERENCES}: The Activity meta-data key for its XML preference hierarchy.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{SharedPreferences}
+    \begin{itemize}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.content.SharedPreferences
+            \end{javacode}
+        \item \textbf{Nested interfaces}
+            \begin{itemize}
+                \item \textbf{interface	SharedPreferences.Editor}: Interface used for modifying values in a SharedPreferences object. 
+                \item \textbf{interface	SharedPreferences.OnSharedPreferenceChangeListener}: Interface definition for a callback to be invoked when a shared preference is changed. 
+            \end{itemize}
+        \item \textbf{Abstract methods}
+            \begin{itemize}
+                \item \textbf{abstract boolean	contains(String key)}: Checks whether the preferences contains a preference.
+                \item \textbf{abstract SharedPreferences.Editor	edit()}: Create a new Editor for these preferences, through which you can make modifications to the data in the preferences and atomically commit those changes back to the SharedPreferences object.
+                \item \textbf{abstract Map<String, ?>	getAll()}: Retrieve all values from the preferences.
+                \item \textbf{abstract boolean	getBoolean(String key, boolean defValue)}: Retrieve a boolean value from the preferences.
+                \item \textbf{abstract float	getFloat(String key, float defValue)}: Retrieve a float value from the preferences.
+                \item \textbf{abstract int	getInt(String key, int defValue)}: Retrieve an int value from the preferences.
+                \item \textbf{abstract long	getLong(String key, long defValue)}: Retrieve a long value from the preferences.
+                \item \textbf{abstract String	getString(String key, String defValue)}: Retrieve a String value from the preferences.
+                \item \textbf{abstract Set<String>	getStringSet(String key, Set<String> defValues)}: Retrieve a set of String values from the preferences.
+                \item \textbf{abstract void	registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener)}: Registers a callback to be invoked when a change happens to a preference.
+                \item \textbf{abstract void	unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener)}: Unregisters a previous callback.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{SharedPreferences.Editor}
+    \begin{itemize}
+        \item \textbf{Description}: Interface used for modifying values in a SharedPreferences object. All changes you make in an editor are batched, and not copied back to the original SharedPreferences until you call commit() or apply()
+        \item \textbf{Abstract methods}:
+            \begin{itemize}
+                \item \textbf{abstract void	apply()}: Commit your preferences changes back from this Editor to the SharedPreferences object it is editing.
+                \item \textbf{abstract SharedPreferences.Editor	clear()}: Mark in the editor to remove all values from the preferences.
+                \item \textbf{abstract boolean	commit()}: Commit your preferences changes back from this Editor to the SharedPreferences object it is editing.
+                \item \textbf{abstract SharedPreferences.Editor	putBoolean(String key, boolean value)}: Set a boolean value in the preferences editor, to be written back once commit() or apply() are called.
+                \item \textbf{abstract SharedPreferences.Editor	putFloat(String key, float value)}: Set a float value in the preferences editor, to be written back once commit() or apply() are called.
+                \item \textbf{abstract SharedPreferences.Editor	putInt(String key, int value)}: Set an int value in the preferences editor, to be written back once commit() or apply() are called.
+                \item \textbf{abstract SharedPreferences.Editor	putLong(String key, long value)}: Set a long value in the preferences editor, to be written back once commit() or apply() are called.
+                \item \textbf{abstract SharedPreferences.Editor	putString(String key, String value)}: Set a String value in the preferences editor, to be written back once commit() or apply() are called.
+                \item \textbf{abstract SharedPreferences.Editor	putStringSet(String key, Set<String> values)}: Set a set of String values in the preferences editor, to be written back once commit() or apply() is called.
+                \item \textbf{abstract SharedPreferences.Editor	remove(String key)}: Mark in the editor that a preference value should be removed, which will be done in the actual preferences once commit() is called.
+            \end{itemize}
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Menu}
+
+    \pagebreak 
+    \subsubsection{MenuItem}
+
+    \pagebreak 
+    \subsubsection{ContextMenu}
+
+    \pagebreak 
+    \subsubsection{PopupMenu}
 
     \pagebreak 
     \subsection{Styling widgets with java}
