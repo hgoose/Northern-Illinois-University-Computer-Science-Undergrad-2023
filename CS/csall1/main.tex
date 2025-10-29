@@ -10207,7 +10207,7 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
     
     \pagebreak 
-    \subsection{Chapter 2}
+    \subsection{Chapter 2: Data representation, integer and fixed point}
     \bigbreak \noindent 
     \subsubsection{Binary Fractions}
     \begin{itemize}
@@ -10511,7 +10511,7 @@ indicate which strong entity the weak entity depends upon.
 
 
     \pagebreak 
-    \subsection{Chapter 4}
+    \subsection{Chapter 4: Overview of computer architecture}
     \bigbreak \noindent 
     \subsubsection{The Von Neumann Model}
     \begin{itemize}
@@ -11226,6 +11226,103 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             The advantage of microprogrammed control is that only the microprogram needs to be changed if the instruction set changes. In fact, all modern machines are microcoded. We study hardwired machines first just to make it easier to understand the microcode architecture.
 
+
+    \end{itemize}
+    
+    \pagebreak 
+    \subsection{Chapter 5: Instruction set architecture}
+    \subsubsection{Pipelining}
+    \begin{itemize}
+        \item \textbf{Instruction-level pipelining}: Most CPUs today divide the fetch-decode-execute cycle into smaller steps. These smaller steps can often be executed in parallel to increase throughput, such parallel execution is called \textbf{instruction-level pipelining}
+            \bigbreak \noindent 
+            \textbf{Note:} Throughput is the amount of material or items passing through a system or process.
+        \item \textbf{Example}: Suppose a fetch-decode-execute cycle were broken into the following smaller steps:
+            \begin{enumerate}
+                \item Fetch instruction. 
+                \item Decode opcode. 
+                \item Calculate effective address of operands 
+                \item Fetch operands.
+                \item Execute instruction.
+                \item Store result.
+            \end{enumerate}
+            Then a circuit could be built so that each stage is complete before the next one starts, creating a sixstage pipeline. $s_{1}$ fetches the instruction, $S_{2}$ decodes it, $S_{3}$ determines the address of the operands, $S_{4}$ fetches them, $S_{5}$ executes the instruction, and $S_{6}$ stores the result.
+            \bigbreak \noindent 
+             For every clock cycle, one small step is carried out, and the stages are overlapped.
+             \bigbreak \noindent 
+             \fig{.6}{./figures/1038.png}
+             \bigbreak \noindent 
+             With
+             \begin{itemize}
+                 \item S1. Fetch instruction. 
+                 \item S2. Decode opcode. 
+                 \item S3. Calculate effective address of operands
+                 \item S4. Fetch operands.
+                 \item S5. Execute.
+                 \item S6. Store result.
+             \end{itemize}
+        \item \textbf{No pipelining vs pipelining}:
+            \begin{itemize}
+                \item \textbf{No pipeline}: Suppose each of the stages below takes one clock cycle. If there is no pipelining, the processing time for an instruction is 6 cycles.
+                    \bigbreak \noindent 
+                    Suppose the machine speed is 10 ns/cycle with no pipeline
+                    \begin{align*}
+                        6 \frac{\text{cycles}}{\text{instruction}} \times 10 \frac{\text{ns}}{\text{cycle}} = 60 \frac{\text{ns}}{\text{instruction}}
+                    .\end{align*}
+                    So,
+                    \begin{align*}
+                        \left(\frac{1}{60} \times 10^{9}\right) \text{inst} / \text{sec}
+                    .\end{align*}
+                \item \textbf{Full pipeline}: If pipelining is supported and the pipeline can be kept full, six instructions can be processed at once (in different stages), so the machine can run six times as fast.
+                    \bigbreak \noindent 
+                    In fact, one instruction will emerge from the pipeline every cycle. Suppose machine speed is 10 ns with full pipeline:
+                    \begin{align*}
+                        1 \text{cycle}/\text{instr} * 10\; \text{ns}/\text{cycle} = 10\; \text{ns}/\text{instr}
+                    .\end{align*}
+                    So,
+                    \begin{align*}
+                        \left(\frac{1}{10} \times 10^{9}\right) \text{inst}/\text{sec} = \left(100 \times 10^{6}\right) \text{inst} / \text{sec}
+                    .\end{align*}
+            \end{itemize}
+            \textbf{Note:} We conventionally use multiples of 3 for the powers of 10, e.g., 106 mips = 106 million instr/sec
+        \item \textbf{Steps of different lengths}: Suppose $S_{4}$ takes 2 cycles and $S_{5}$ takes 4 cycles. The total time for an instruction to pass through the pipeline is
+            \begin{align*}
+                1 + 1 + 1 + 2 + 4 + 1 = 10\; \text{cycles}
+            .\end{align*}
+            The slowest step (i.e., the step with the maximum time) determines the speed of the pipeline, so one instruction emerges every 4 cycles. In other words, we get 4 cycles/instr instead of 10 cycles/instr with no pipeline.
+            \bigbreak \noindent 
+            At 10 ns/cycle with full pipeline, 
+            \begin{align*}
+                4 \text{cycle}/\text{instr} \times 10 \text{ns}/\text{cycle} = 40 \text{ns}/\text{instr}
+            .\end{align*}
+            So,
+            \begin{align*}
+                \left(\frac{1}{40} \times 10^{9}\right)\; \text{inst} / \text{sec} = \left(25 \times 10^{6}\right)\; \text{inst} / \text{sec}
+            .\end{align*}
+        \item \textbf{Multiple copies of a step}: Suppose we still have that $S_{5}$ takes 4 cycles per instruction. We could speed up the process by adding a second copy of the circuit for that step.
+            Then the slowest step would take 2 cycles/instr, since instructions can alternate going through the left-hand copy or the right-hand copy of S5.
+        \item \textbf{two copies of a step, but duplication doesn’t double the speed}: Remember that total time is determined by the slowest step, which is not necessarily the duplicated step.
+            \bigbreak \noindent 
+            Suppose S4 takes 3 cycles and S5 takes 4. Duplicating S5 means that S5 effectively takes 2 cycles/sec. But duplicating S5 won’t double the instructions per second because S4 is now the slowest step.
+            In this case, total time = 11 cycles/instr. The slowest step is 3 cycles/sec.
+        \item \textbf{Pipeline stalling}: Stalling means that the pipeline is no longer full because one instruction took more cycles than expected
+        \item \textbf{Pipeline flushing}: Flushing the pipeline means that no new instructions can enter the pipeline until the given instruction is finished.
+        \item \textbf{Pipeline hazards}: These calculations takes a number of things for granted. First, we have to assume that the architecture supports fetching instructions and data in parallel.
+            Second, we assume that the pipeline can be kept filled at all times. This is not always the case. Pipeline hazards arise that cause pipeline conflicts and stalls
+            \bigbreak \noindent 
+            An instruction pipeline may stall or be flushed for any of the following reasons
+            \begin{enumerate}
+                \item \textbf{Resource conflicts}: When an instruction needs a resource, such as a register, that a previous instruction still in the pipeline is still using
+                \item \textbf{Data dependencies}: When an instruction needs the result of a previous instruction still in the pipeline
+                \item \textbf{Conditional branching}: When a branch statement such as “if a then go to b else go to c” occurs in the pipeline, and b or c occur soon after this statement. Neither b nor c can enter the pipeline until the result of the branch is determined, because we do not know whether they will ever be executed at all.
+            \end{enumerate}
+            When any of these pipeline hazards occurs, the later instruction cannot enter or continue along the pipeline until the conflict is resolved
+            \bigbreak \noindent 
+            Measures can be taken at the software level as well as at the hardware level to reduce the effects of these hazards, but they cannot be totally eliminated
+            \bigbreak \noindent 
+            When generating code one statement at a time, it is easy to get redundant instructions like STORE R1, X as the last step of one instruction followed by LOAD R1, X as the first step of the next. An optimizing compiler can remove these.
+            \bigbreak \noindent 
+            An optimizing compiler can also use different registers for operations we may want to execute in parallel
+        % \item \textbf{The pipeline bottleneck problem}: Suppose you have $n$ doors labeled $d_{1}, d_{2}, ..., d_{i}, ..., d_{n}$, where each door takes $t_{i}$ time to get through. If each door can handle one person at a time, and people move through each doors $1$ through $n$ sequentially before finishing, how many seconds does it take to see somebody exit door $n$.
 
     \end{itemize}
 
@@ -14487,16 +14584,236 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsubsection{Menu}
+    \subsubsection{Menu and MenuItem}
+    \begin{itemize}
+        \item \textbf{Which menu type?}: We use the Menu and MenuItem class to create an \textbf{Options Menu}.
+        \item \textbf{Creating an options menu}: We override \texttt{onCreateOptionsMenu()}. Android automatically calls this when the Activity starts. Here, you’ll use the Menu object (passed as a parameter) to add items manually.
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onCreateOptionsMenu(Menu menu) {
+                    // groupId, itemId, order, title
+                    menu.add(0, 101, 0, "Settings");
+                    menu.add(0, 102, 1, "Help");
+                    menu.add(0, 103, 2, "Exit");
+
+                    // You can also configure each item after adding it
+                    MenuItem settingsItem = menu.findItem(101);
+                    settingsItem.setIcon(android.R.drawable.ic_menu_preferences);
+                    settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+                    return true;  // tells Android to display this menu
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            menu is the Menu interface object, menu.add(...) returns a MenuItem object. You can customize each MenuItem afterward.
+        \item \textbf{Handle clicks}: When the user taps a menu item, Android passes a MenuItem object representing what was clicked.
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onOptionsItemSelected(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case 101:
+                        Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show();
+                        return true;
+                        case 102:
+                        Toast.makeText(this, "Help clicked", Toast.LENGTH_SHORT).show();
+                        return true;
+                        case 103:
+                        finish(); // close app
+                        return true;
+                        default:
+                        return super.onOptionsItemSelected(item);
+                    }
+                }
+            \end{javacode}
+
+
+
+    \end{itemize}
 
     \pagebreak 
-    \subsubsection{MenuItem}
+    \subsubsection{SubMenu}
+    \begin{itemize}
+        \item \textbf{What is a SubMenu}: A SubMenu is basically a menu nested inside another menu item. SubMenu is an interface that extends Menu, you don’t instantiate it directly — instead, you get it from a Menu object using addSubMenu()
+            \bigbreak \noindent 
+        \item \textbf{Example, creating SubMenu}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onCreateOptionsMenu(Menu menu) {
+                    // Create a regular menu item
+                    menu.add(0, 1, 0, "Settings");
+
+                    // Create a submenu under "File"
+                    SubMenu fileSubMenu = menu.addSubMenu("File");
+
+                    // Add items to that submenu
+                    fileSubMenu.add(0, 2, 0, "New");
+                    fileSubMenu.add(0, 3, 1, "Open");
+                    fileSubMenu.add(0, 4, 2, "Save");
+
+                    // Another normal menu item
+                    menu.add(0, 5, 3, "Help");
+
+                    return true;
+                }
+            \end{javacode}
+        \item \textbf{Handle clicks}: You handle clicks the same way as normal menu items:
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onOptionsItemSelected(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case 1:
+                            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 2:
+                            Toast.makeText(this, "New clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 3:
+                            Toast.makeText(this, "Open clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 4:
+                            Toast.makeText(this, "Save clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 5:
+                            Toast.makeText(this, "Help clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                    }
+                    return super.onOptionsItemSelected(item);
+                }
+            \end{javacode}
+        \item \textbf{SubMenus in XML}: Example,
+            \bigbreak \noindent 
+            \begin{xmlcode}
+                <menu xmlns:android="http://schemas.android.com/apk/res/android">
+                    <item android:title="File">
+                        <menu>
+                            <item android:id="@+id/action_new" android:title="New" />
+                            <item android:id="@+id/action_open" android:title="Open" />
+                            <item android:id="@+id/action_save" android:title="Save" />
+                        </menu>
+                    </item>
+                    <item android:id="@+id/action_help" android:title="Help" />
+                </menu>
+            \end{xmlcode}
+            \bigbreak \noindent 
+            Same structure; you just nest a <menu> inside an <item>.
+    \end{itemize}
 
     \pagebreak 
     \subsubsection{ContextMenu}
+    \begin{itemize}
+        \item \textbf{What is it}: Context menus appear when you long-press a View — like text, a button, or a list item. They’re used for actions specific to that item, not the whole Activity.
+        \item \textbf{Register a view for a Context Menu}: We use \texttt{registerForContextMenu(view v)}
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    setContentView(R.layout.activity_main);
+
+                    TextView myTextView = findViewById(R.id.myTextView);
+
+                    // Tell Android this view should show a context menu on long-press
+                    registerForContextMenu(myTextView);
+                }
+            \end{javacode}
+        \item \textbf{Override onCreateContextMenu}: This method is called automatically when the user long-presses the registered view. Here you use the Menu interface to build the menu in code.
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public void onCreateContextMenu(ContextMenu menu, View v,
+                                                ContextMenu.ContextMenuInfo menuInfo) {
+                    super.onCreateContextMenu(menu, v, menuInfo);
+
+                    // You can set a header or title
+                    menu.setHeaderTitle("Choose an action");
+
+                    // Add items programmatically
+                    menu.add(0, 101, 0, "Edit");
+                    menu.add(0, 102, 1, "Share");
+                    menu.add(0, 103, 2, "Delete");
+                }
+            \end{javacode}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{ContextMenu Menu}: This is the menu object that you fill with items.
+                \item \textbf{View v}: The view that was long pressed
+                \item \textbf{ContextMenu.ContextMenuInfo menuInfo}: Provides extra context information about the view that was pressed. It’s often null unless the view supports structured data — e.g., a ListView or RecyclerView.
+                    \bigbreak \noindent 
+                    For lists, it contains which row was long-pressed:
+            \end{itemize}
+            You call super to allow the parent class (AppCompatActivity) to perform its own setup logic before or after you modify the menu.
+        \item \textbf{Handle clicks}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                @Override
+                public boolean onContextItemSelected(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case 101:
+                            Toast.makeText(this, "Edit clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 102:
+                            Toast.makeText(this, "Share clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        case 103:
+                            Toast.makeText(this, "Delete clicked", Toast.LENGTH_SHORT).show();
+                            return true;
+                        default:
+                            return super.onContextItemSelected(item);
+                    }
+                }
+            \end{javacode}
+    \end{itemize}
 
     \pagebreak 
     \subsubsection{PopupMenu}
+    \begin{itemize}
+        \item \textbf{What is it}: A PopupMenu is a small floating menu that appears anchored to a specific View — for example, when you tap a button with “$\vdots$” or “More options.”
+            It’s a temporary dropdown menu used for quick actions — not tied to the Action Bar or long-press events.
+            \bigbreak \noindent 
+        \item \textbf{Example}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                Button button = findViewById(R.id.myButton);
+
+                button.setOnClickListener(v -> {
+                    // Create the popup menu, anchored to the button
+                    PopupMenu popup = new PopupMenu(MainActivity.this, v);
+
+                    // Get the Menu object inside the popup
+                    Menu menu = popup.getMenu();
+
+                    // Add items manually
+                    menu.add(0, 101, 0, "Edit");
+                    menu.add(0, 102, 1, "Share");
+                    menu.add(0, 103, 2, "Delete");
+
+                    // Handle clicks on the popup items
+                    popup.setOnMenuItemClickListener(item -> {
+                        switch (item.getItemId()) {
+                            case 101:
+                                Toast.makeText(MainActivity.this, "Edit clicked", Toast.LENGTH_SHORT).show();
+                                return true;
+                            case 102:
+                                Toast.makeText(MainActivity.this, "Share clicked", Toast.LENGTH_SHORT).show();
+                                return true;
+                            case 103:
+                                Toast.makeText(MainActivity.this, "Delete clicked", Toast.LENGTH_SHORT).show();
+                                return true;
+                            default:
+                                return false;
+                        }
+                    });
+
+                    // Finally, show the popup
+                    popup.show();
+                });
+            \end{javacode}
+            
+    \end{itemize}
 
 
     \pagebreak 
@@ -17738,7 +18055,7 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsubsection{SharedPreferences}
+    \subsubsection{SharedPreferences (interface)}
     \begin{itemize}
         \item \textbf{Include}
             \bigbreak \noindent 
@@ -17767,7 +18084,7 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsubsection{SharedPreferences.Editor}
+    \subsubsection{SharedPreferences.Editor (Interface)}
     \begin{itemize}
         \item \textbf{Description}: Interface used for modifying values in a SharedPreferences object. All changes you make in an editor are batched, and not copied back to the original SharedPreferences until you call commit() or apply()
         \item \textbf{Abstract methods}:
@@ -17788,16 +18105,239 @@ indicate which strong entity the weak entity depends upon.
     \end{itemize}
 
     \pagebreak 
-    \subsubsection{Menu}
+    \subsubsection{Menu (Interface)}
+    \begin{itemize}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.Menu
+            \end{javacode}
+        \item \textbf{Public abstract methods}
+            \begin{itemize}
+                \item \textbf{abstract MenuItem	add(int groupId, int itemId, int order, CharSequence title)}: Add a new item to the menu.
+                \item \textbf{abstract MenuItem	add(int titleRes)}: Add a new item to the menu.
+                \item \textbf{abstract MenuItem	add(CharSequence title)}: Add a new item to the menu.
+                \item \textbf{abstract MenuItem	add(int groupId, int itemId, int order, int titleRes)}: Variation on add(int, int, int, java.lang.CharSequence) that takes a string resource identifier instead of the string itself.
+                \item \textbf{abstract int	addIntentOptions(int groupId, int itemId, int order, ComponentName caller, Intent[] specifics, Intent intent, int flags, MenuItem[] outSpecificItems)}: Add a group of menu items corresponding to actions that can be performed for a particular Intent.
+                \item \textbf{abstract SubMenu	addSubMenu(CharSequence title)}: Add a new sub-menu to the menu.
+                \item \textbf{abstract SubMenu	addSubMenu(int groupId, int itemId, int order, int titleRes)}: Variation on addSubMenu(int, int, int, java.lang.CharSequence) that takes a string resource identifier for the title instead of the string itself.
+                \item \textbf{abstract SubMenu	addSubMenu(int groupId, int itemId, int order, CharSequence title)}: Add a new sub-menu to the menu.
+                \item \textbf{abstract SubMenu	addSubMenu(int titleRes)}: Add a new sub-menu to the menu.
+                \item \textbf{abstract void	clear()}: Remove all existing items from the menu, leaving it empty as if it had just been created.
+                \item \textbf{abstract void	close()}: Closes the menu, if open.
+                \item \textbf{abstract MenuItem	findItem(int id)}: Return the menu item with a particular identifier.
+                \item \textbf{abstract MenuItem	getItem(int index)}: Gets the menu item at the given index.
+                \item \textbf{abstract boolean	hasVisibleItems()}: Return whether the menu currently has item items that are visible.
+                \item \textbf{abstract boolean	isShortcutKey(int keyCode, KeyEvent event)}: Is a keypress one of the defined shortcut keys for this window.
+                \item \textbf{abstract boolean	performIdentifierAction(int id, int flags)}: Execute the menu item action associated with the given menu identifier.
+                \item \textbf{abstract boolean	performShortcut(int keyCode, KeyEvent event, int flags)}: Execute the menu item action associated with the given shortcut character.
+                \item \textbf{abstract void	removeGroup(int groupId)}: Remove all items in the given group.
+                \item \textbf{abstract void	removeItem(int id)}: Remove the item with the given identifier.
+                \item \textbf{abstract void	setGroupCheckable(int group, boolean checkable, boolean exclusive)}: Control whether a particular group of items can show a check mark.
+                \item \textbf{default void	setGroupDividerEnabled(boolean groupDividerEnabled)}: Enable or disable the group dividers.
+                \item \textbf{abstract void	setGroupEnabled(int group, boolean enabled)}: Enable or disable all menu items that are in the given group.
+                \item \textbf{abstract void	setGroupVisible(int group, boolean visible)}: Show or hide all menu items that are in the given group.
+                \item \textbf{abstract void	setQwertyMode(boolean isQwerty)}: Control whether the menu should be running in qwerty mode (alphabetic shortcuts) or 12-key mode (numeric shortcuts).
+                \item \textbf{abstract int	size()}: Get the number of items in the menu.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	CATEGORY\_ALTERNATIVE}: Category code for the order integer for items/groups that are alternative actions on the data that is currently displayed -- or/add this with your base value.
+                \item \textbf{int	CATEGORY\_CONTAINER}: Category code for the order integer for items/groups that are part of a container -- or/add this with your base value.
+                \item \textbf{int	CATEGORY\_SECONDARY}: Category code for the order integer for items/groups that are user-supplied secondary (infrequently used) options -- or/add this with your base value.
+                \item \textbf{int	CATEGORY\_SYSTEM}: Category code for the order integer for items/groups that are provided by the system -- or/add this with your base value.
+                \item \textbf{int	FIRST}: First value for group and item identifier integers.
+                \item \textbf{int	FLAG\_ALWAYS\_PERFORM\_CLOSE}: Flag for performShortcut(int, android.view.KeyEvent, int): if set, always close the menu after executing the shortcut.
+                \item \textbf{int	FLAG\_APPEND\_TO\_GROUP}: Flag for addIntentOptions(int, int, int, ComponentName, Intent, Intent, int, MenuItem): if set, do not automatically remove any existing menu items in the same group.
+                \item \textbf{int	FLAG\_PERFORM\_NO\_CLOSE}: Flag for performShortcut(int, KeyEvent, int): if set, do not close the menu after executing the shortcut.
+                \item \textbf{int	NONE}: Value to use for group and item identifier integers when you don't care about them.
+                \item \textbf{int	SUPPORTED\_MODIFIERS\_MASK}: A mask of all supported modifiers for MenuItem's keyboard shortcuts
+    \end{itemize}
 
     \pagebreak 
-    \subsubsection{MenuItem}
+    \subsubsection{MenuItem (Interface)}
+    \begin{itemize}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.MenuItem
+            \end{javacode}
+        \item \textbf{Public abstract methods}:
+            \begin{itemize}
+                \item \textbf{abstract boolean	collapseActionView()}: Collapse the action view associated with this menu item.
+                \item \textbf{abstract boolean	expandActionView()}: Expand the action view associated with this menu item.
+                \item \textbf{abstract ActionProvider	getActionProvider()}: Gets the ActionProvider.
+                \item \textbf{abstract View	getActionView()}: Returns the currently set action view for this menu item.
+                \item \textbf{default int	getAlphabeticModifiers()}: Return the modifier for this menu item's alphabetic shortcut.
+                \item \textbf{abstract char	getAlphabeticShortcut()}: Return the char for this menu item's alphabetic shortcut.
+                \item \textbf{default CharSequence	getContentDescription()}: Retrieve the content description associated with this menu item.
+                \item \textbf{abstract int	getGroupId()}: Return the group identifier that this menu item is part of.
+                \item \textbf{abstract Drawable	getIcon()}: Returns the icon for this item as a Drawable (getting it from resources if it hasn't been loaded before).
+                \item \textbf{default BlendMode	getIconTintBlendMode()}: Returns the blending mode used to apply the tint to this item's icon, if specified.
+                \item \textbf{default ColorStateList	getIconTintList()}: default PorterDuff.Mode	getIconTintMode()
+                \item \textbf{abstract Intent	getIntent()}: Return the Intent associated with this item.
+                \item \textbf{abstract int	getItemId()}: Return the identifier for this menu item.
+                \item \textbf{abstract ContextMenu.ContextMenuInfo	getMenuInfo()}: Gets the extra information linked to this menu item.
+                \item \textbf{default int	getNumericModifiers()}: Return the modifiers for this menu item's numeric (12-key) shortcut.
+                \item \textbf{abstract char	getNumericShortcut()}: Return the char for this menu item's numeric (12-key) shortcut.
+                \item \textbf{abstract int	getOrder()}: Return the category and order within the category of this item.
+                \item \textbf{abstract SubMenu	getSubMenu()}: Get the sub-menu to be invoked when this item is selected, if it has one.
+                \item \textbf{abstract CharSequence	getTitle()}: Retrieve the current title of the item.
+                \item \textbf{abstract CharSequence	getTitleCondensed()}: Retrieve the current condensed title of the item.
+                \item \textbf{default CharSequence	getTooltipText()}: Retrieve the tooltip text associated with this menu item.
+                \item \textbf{abstract boolean	hasSubMenu()}: Check whether this item has an associated sub-menu.
+                \item \textbf{abstract boolean	isActionViewExpanded()}: Returns true if this menu item's action view has been expanded.
+                \item \textbf{abstract boolean	isCheckable()}: Return whether the item can currently display a check mark.
+                \item \textbf{abstract boolean	isChecked()}: Return whether the item is currently displaying a check mark.
+                \item \textbf{abstract boolean	isEnabled()}: Return the enabled state of the menu item.
+                \item \textbf{abstract boolean	isVisible()}: Return the visibility of the menu item.
+                \item \textbf{abstract MenuItem	setActionProvider(ActionProvider actionProvider)}: Sets the ActionProvider responsible for creating an action view if the item is placed on the action bar.
+                \item \textbf{abstract MenuItem	setActionView(int resId)}: Set an action view for this menu item.
+                \item \textbf{abstract MenuItem	setActionView(View view)}: Set an action view for this menu item.
+                \item \textbf{abstract MenuItem	setAlphabeticShortcut(char alphaChar)}: Change the alphabetic shortcut associated with this item.
+                \item \textbf{default MenuItem	setAlphabeticShortcut(char alphaChar, int alphaModifiers)}: Change the alphabetic shortcut associated with this item.
+                \item \textbf{abstract MenuItem	setCheckable(boolean checkable)}: Control whether this item can display a check mark.
+                \item \textbf{abstract MenuItem	setChecked(boolean checked)}: Control whether this item is shown with a check mark.
+                \item \textbf{default MenuItem	setContentDescription(CharSequence contentDescription)}: Change the content description associated with this menu item.
+                \item \textbf{abstract MenuItem	setEnabled(boolean enabled)}: Sets whether the menu item is enabled.
+                \item \textbf{abstract MenuItem	setIcon(Drawable icon)}: Change the icon associated with this item.
+                \item \textbf{abstract MenuItem	setIcon(int iconRes)}: Change the icon associated with this item.
+                \item \textbf{default MenuItem	setIconTintBlendMode(BlendMode blendMode)}: Specifies the blending mode used to apply the tint specified by setIconTintList(android.content.res.ColorStateList) to this item's icon.
+                \item \textbf{default MenuItem	setIconTintList(ColorStateList tint)}: Applies a tint to this item's icon.
+                \item \textbf{default MenuItem	setIconTintMode(PorterDuff.Mode tintMode)}: Specifies the blending mode used to apply the tint specified by setIconTintList(android.content.res.ColorStateList) to this item's icon.
+                \item \textbf{abstract MenuItem	setIntent(Intent intent)}: Change the Intent associated with this item.
+                \item \textbf{default MenuItem	setNumericShortcut(char numericChar, int numericModifiers)}: Change the numeric shortcut and modifiers associated with this item.
+                \item \textbf{abstract MenuItem	setNumericShortcut(char numericChar)}: Change the numeric shortcut associated with this item.
+                \item \textbf{abstract MenuItem	setOnActionExpandListener(MenuItem.OnActionExpandListener listener)}: Set an OnActionExpandListener on this menu item to be notified when the associated action view is expanded or collapsed.
+                \item \textbf{abstract MenuItem	setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener menuItemClickListener)}: Set a custom listener for invocation of this menu item.
+                \item \textbf{abstract MenuItem	setShortcut(char numericChar, char alphaChar)}: Change both the numeric and alphabetic shortcut associated with this item.
+                \item \textbf{default MenuItem	setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers)}: Change both the numeric and alphabetic shortcut associated with this item.
+                \item \textbf{abstract void	setShowAsAction(int actionEnum)}: Sets how this item should display in the presence of an Action Bar.
+                \item \textbf{abstract MenuItem	setShowAsActionFlags(int actionEnum)}: Sets how this item should display in the presence of an Action Bar.
+                \item \textbf{abstract MenuItem	setTitle(CharSequence title)}: Change the title associated with this item.
+                \item \textbf{abstract MenuItem	setTitle(int title)}: Change the title associated with this item.
+                \item \textbf{abstract MenuItem	setTitleCondensed(CharSequence title)}: Change the condensed title associated with this item.
+                \item \textbf{default MenuItem	setTooltipText(CharSequence tooltipText)}: Change the tooltip text associated with this menu item.
+                \item \textbf{abstract MenuItem	setVisible(boolean visible)}: Sets the visibility of the menu item.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	SHOW\_AS\_ACTION\_ALWAYS}: Always show this item as a button in an Action Bar.
+                \item \textbf{int	SHOW\_AS\_ACTION\_COLLAPSE\_ACTION\_VIEW}: This item's action view collapses to a normal menu item.
+                \item \textbf{int	SHOW\_AS\_ACTION\_IF\_ROOM}: Show this item as a button in an Action Bar if the system decides there is room for it.
+                \item \textbf{int	SHOW\_AS\_ACTION\_NEVER}: Never show this item as a button in an Action Bar.
+                \item \textbf{int	SHOW\_AS\_ACTION\_WITH\_TEXT}: When this item is in the action bar, always show it with a text label even if it also has an icon specified.
+            \end{itemize}
+    \end{itemize}
 
     \pagebreak 
-    \subsubsection{ContextMenu}
+    \subsubsection{ContextMenu (interface)}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                android.view.Menu $\to$ android.view.ContextMenu
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.ContextMenu 
+            \end{javacode}
+        \item \textbf{Public abstract methods}
+            \begin{itemize}
+                \item \textbf{abstract void	clearHeader()}: Clears the header of the context menu.
+                \item \textbf{abstract ContextMenu	setHeaderIcon(int iconRes)}: Sets the context menu header's icon to the icon given in iconRes resource id.
+                \item \textbf{abstract ContextMenu	setHeaderIcon(Drawable icon)}: Sets the context menu header's icon to the icon given in icon Drawable.
+                \item \textbf{abstract ContextMenu	setHeaderTitle(int titleRes)}: Sets the context menu header's title to the title given in titleRes resource identifier.
+                \item \textbf{abstract ContextMenu	setHeaderTitle(CharSequence title)}: Sets the context menu header's title to the title given in title.
+                \item \textbf{abstract ContextMenu	setHeaderView(View view)}: Sets the header of the context menu to the View given in view.
+    \end{itemize}
 
     \pagebreak 
     \subsubsection{PopupMenu}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$ android.widget.PopupMenu
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+            android.widget.PopupMenu
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                PopupMenu(Context context, View anchor)
+                PopupMenu(Context context, View anchor, int gravity)
+                PopupMenu(Context context, View anchor, int gravity, int popupStyleAttr, int popupStyleRes)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	dismiss()}: Dismiss the menu popup.
+                \item \textbf{View.OnTouchListener	getDragToOpenListener()}: Returns an OnTouchListener that can be added to the anchor view to implement drag-to-open behavior.
+                \item \textbf{int	getGravity()}:
+                \item \textbf{Menu	getMenu()}: Returns the Menu associated with this popup.
+                \item \textbf{MenuInflater	getMenuInflater()}:
+                \item \textbf{void	inflate(int menuRes)}: Inflate a menu resource into this PopupMenu.
+                \item \textbf{void	setForceShowIcon(boolean forceShowIcon)}: Sets whether the popup menu's adapter is forced to show icons in the menu item views.
+                \item \textbf{void	setGravity(int gravity)}: Sets the gravity used to align the popup window to its anchor view.
+                \item \textbf{void	setOnDismissListener(PopupMenu.OnDismissListener listener)}: Sets a listener that will be notified when this menu is dismissed.
+                \item \textbf{void	setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener listener)}: Sets a listener that will be notified when the user selects an item from the menu.
+                \item \textbf{void	show()}: Show the menu popup anchored to the view specified during construction.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{SubMenu (interface)}
+    \begin{itemize}
+        \item \textbf{Signature}
+            \bigbreak \noindent 
+            \begin{javacode}
+                public interface SubMenu implements Menu
+            \end{javacode}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+            android.view.SubMenu
+            \end{javacode}
+        \item \textbf{Public abstract methods}
+            \begin{itemize}
+                \item \textbf{abstract void	clearHeader()}: Clears the header of the submenu.
+                \item \textbf{abstract MenuItem	getItem()}: Gets the MenuItem that represents this submenu in the parent menu.
+                \item \textbf{abstract SubMenu	setHeaderIcon(int iconRes)}: Sets the submenu header's icon to the icon given in iconRes resource id.
+                \item \textbf{abstract SubMenu	setHeaderIcon(Drawable icon)}: Sets the submenu header's icon to the icon given in icon Drawable.
+                \item \textbf{abstract SubMenu	setHeaderTitle(int titleRes)}: Sets the submenu header's title to the title given in titleRes resource identifier.
+                \item \textbf{abstract SubMenu	setHeaderTitle(CharSequence title)}: Sets the submenu header's title to the title given in title.
+                \item \textbf{abstract SubMenu	setHeaderView(View view)}: Sets the header of the submenu to the View given in view.
+                \item \textbf{abstract SubMenu	setIcon(Drawable icon)}: Change the icon associated with this submenu's item in its parent menu.
+                \item \textbf{abstract SubMenu	setIcon(int iconRes)}: Change the icon associated with this submenu's item in its parent menu.
+            \end{itemize}
+    \end{itemize}
+
+
+    \pagebreak 
+    \subsubsection{MenuInflator}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.MenuInflater
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.MenuInflater
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                MenuInflater(Context context) 
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	inflate(int menuRes, Menu menu)}: Inflate a menu hierarchy from the specified XML resource.
+            \end{itemize}
+    \end{itemize}
 
     \pagebreak 
     \subsection{Styling widgets with java}
