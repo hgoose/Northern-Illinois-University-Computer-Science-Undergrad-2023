@@ -11326,6 +11326,147 @@ indicate which strong entity the weak entity depends upon.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Instruction set architecture (ISA)}
+    \begin{itemize}
+        \item \textbf{ISA intro}:
+            The instruction set (ISA) of an architecture is the set of instructions that the CPU can handle. The ISA is usually defined by a manual such as the IBM mainframe Principles of Operation. To conform to principles of good hardware and software design, the ISA is usually highly organized. It is not just a random set of instructions.
+            \bigbreak \noindent 
+            A key fact about an ISA is the number of bits per instruction. This can be fixed or variable. A second key fact about an ISA is the basic operating model of the CPU. We will study three models
+            \begin{enumerate}
+                \item Stack-based
+                \item Accumulator-based
+                \item Register-based. Also called GPR (general purpose register).
+            \end{enumerate}
+            Another key fact about an ISA is the set of instruction types that it contains. Instructions can be characterized by
+            \begin{itemize}
+                \item Number of operands per instruction
+                \item Size of operands
+                \item Type of operands, e.g., memory or register
+            \end{itemize}
+        \item \textbf{IBM GPR design}: The IBM mainframe (a GPR design) includes the following types of instructions:
+            \begin{itemize}
+                \item \textbf{Two-byte instructions (1 or 2 addresses)}:
+                    \begin{itemize}
+                        \item \textbf{SI (storage-immediate)}: one operand is in memory, the other is given in the instruction (i.e., as a constant)
+                        \item \textbf{RR}: register to register
+                    \end{itemize}
+                \item \textbf{Four-byte instructions (2 or 3 addresses)}:
+                    \begin{itemize}
+                        \item \textbf{RS}: register to memory
+                        \item \textbf{RX}: register to memory, with another register as an index register
+                    \end{itemize}
+                \item \textbf{Six-byte instructions (3 addresses)}:
+                    \begin{itemize}
+                        \item \textbf{SS (storage-to-storage)}: multiple operands are memory addresses
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Comparing ISAs}: Although there is no way to say that one ISA is “better” than another, some metrics that can be applied to an ISA include:
+            \begin{itemize}
+                \item Amount of memory required to implement a specific algorithm
+                \item Instruction complexity
+                \item Average instruction length (in bits)
+                \item Total number of instructions in the instruction set
+            \end{itemize}
+        \item \textbf{Designing an ISA}: Some factors to take into account in designing an ISA include
+            \begin{itemize}
+                \item Instruction length: short, long, or variable
+                \item Number of operands needed
+                \item Number of addressable registers
+                \item Memory organization: byte- or word addressable
+                \item Addressing modes. any or all of direct, indirect or indexed
+            \end{itemize}
+            ISA and hardware have to be designed together, the factors above are determined by basic features of the CPU
+        \item \textbf{CPU operating models}: There are three main options
+            \begin{enumerate}
+                \item Stack architecture
+                \item Accumulator architecture
+                \item General purpose register (GPR) architecture
+            \end{enumerate}
+            In choosing one over the other, the basic tradeoff is simplicity (and cost) of hardware design vs. ease of use
+            \bigbreak \noindent 
+            As machines become faster and software becomes more sophisticated, these differences become less important, the Assembler can make up for lack of options in the ISA, the compiler usually hides these differences from user
+        \item \textbf{Stack architecture}: In a stack architecture, the stack is an implicit operand of every operation, only the top element (or elements) of the stack can be accessed
+            \bigbreak \noindent 
+            In an accumulator architecture, the accumulator is an implicit operand of every binary operation, the other operand is in memory, creating lots of bus traffic
+            \bigbreak \noindent 
+            In a general purpose register (GPR) architecture, registers can be used instead of memory
+            \begin{itemize}
+                \item Faster than accumulator architecture
+                \item Efficient implementation for compilers
+                \item Results in longer instructions because all operands need to be explicitly specified (no implicit use of stack or accumulator)
+            \end{itemize}
+        \item \textbf{GPR systems}: GPR systems are very common today. There are three types
+            \begin{enumerate}
+                \item Memory-memory where two or three operands may be in memory
+                \item Register-memory where at least one operand of an instruction must be in a register
+                \item Load-store where no operands may be in memory except for the LOAD and STORE instructions
+            \end{enumerate}
+            The number of operands in an instruction and the number of available registers both affect instruction length
+        \item \textbf{IBM mainframe}: IBM mainframe is a prime example of a GPR system. Its design was a savvy business decision in two ways
+            \begin{enumerate}
+                \item \textbf{Upgrade path}: From the beginning, IBM planned to offer a series of machines with different architectures but the same ISA
+                \item \textbf{Features for multiple kinds of users}: Provided decimal for business users, floating point for scientific users, and binary integers for everyone
+            \end{enumerate}
+        \item \textbf{Infix notation}: Infix notation is the common way we write mathematical expressions, where the operator is placed between two operands.
+            \begin{itemize}
+                \item Operators appear in the middle (between operands).
+                \item It often requires parentheses to clarify order of operations.
+                \item It's the standard notation used in everyday math and programming.
+            \end{itemize}
+            For example, $a+b$ or $(a + b) \cdot (c + d)$.
+        \item \textbf{Postfix notation (reverse polish notation)}: Reverse Polish notation is a way of writing expressions where the operator comes after the operands, with no need for parentheses. You write the operands first, then the operator. Operations are evaluated as soon as the operator appears, using the most recent operands.
+        \item \textbf{Infix to postfix conversion}:
+            \begin{enumerate}
+                \item Put parentheses around each binary operation that doesn’t already have them. Follow the normal order of operations
+                \item Starting at the innermost level, move each binary operator to follow its operands.
+                \item Repeat at the next level up of parentheses
+                \item Continue until all operators follow their operands.
+                \item Remove all the parentheses
+            \end{enumerate}
+            For example, 
+            \begin{align*}
+                a \cdot b + c / d &= \left((a \cdot b) + (c/d)\right) \\
+                                  &\to \left((ab\cdot ) + (cd /)\right) \\
+                                  &\to \left((ab\cdot )(cd /) +\right) \\
+                                  &=ab \cdot c d / +
+            .\end{align*}
+            The principal advantage of postfix notation is that parentheses are not needed
+        \item \textbf{Stack machines}: Stack machines use zero- and one-operand instructions.
+            \begin{enumerate}
+                \item \textbf{LOAD and STORE} instructions require a single operand in memory to indicate where the data is being loaded from or stored to
+                \item The \textbf{POP}: operation involves only the top element of the stack
+                \item Binary instructions (e.g., \textbf{ADD}, \textbf{MULT}) use the top two items on the stack and place the result on the stack. In our examples, we will use the convention that the top of the stack is the rightmost operand.
+            \end{enumerate}
+            In a stack ISA, the postfix expression
+            \begin{align*}
+                z = x\; y\; \times\; w\; u\; \times\; +
+            .\end{align*}
+            Is implemented as
+            \begin{align*}
+                &\text{PUSH } x \\
+                &\text{PUSH } y \\
+                &\text{MULT } \\
+                &\text{PUSH } w \\
+                &\text{PUSH } u \\
+                &\text{MULT } \\
+                &\text{ADD } \\
+                &\text{STORE } z \\
+                &\text{POP}
+            .\end{align*}
+            When a binary operation is executed:
+            \begin{enumerate}
+                \item The two operands are popped off the stack.
+                \item (*) \textbf{The top one (the last one pushed) is on the right side of the operation}
+                \item The operation is executed and the inputs are popped
+                \item The result is pushed onto the stack.
+            \end{enumerate}
+            \textbf{Note:} \texttt{STORE} doesn’t pop its input, so you need to.
+
+
+
+    \end{itemize}
+
 
 
 
