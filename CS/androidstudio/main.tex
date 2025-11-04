@@ -617,6 +617,12 @@
                 \item \textbf{@android:color/magenta}: \#FFFF00FF
                 \item \textbf{@android:color/transparent}: \#00000000 (fully transparent)
             \end{itemize}
+            \bigbreak \noindent 
+            We can get access to these default colors in java using
+            \bigbreak \noindent 
+            \begin{javacode}
+                int color = context.getResources().getColor(android.R.color.colorname)
+            \end{javacode}
         \item \textbf{ConstraintLayout Enable Autoconnection to Parent}: When you enable it, every new view you drag into the ConstraintLayout will automatically get constraints to its closest edges of the parent (top, bottom, start, end).
         \item \textbf{Styles vs Themes}: A style relates to a UI component or a View. A theme relates to an activity; it can even relate to the whole app.
             \bigbreak \noindent 
@@ -820,6 +826,43 @@
                 \item \textbf{@android:drawable/ic\_dialog\_alert}:	Alert or warning dialog 
                 \item \textbf{@android:drawable/ic\_dialog\_info}:	Info dialog icon
             \end{itemize}
+        \item \textbf{Get height of the action bar}
+            \bigbreak \noindent 
+            \begin{javacode}
+                import android.util.TypedValue;
+                ...
+
+                TypedValue typedValue = new TypedValue();
+                if (getTheme().resolveAttribute(android.R.attr.actionBarSize, typedValue, true)) {
+                    int actionBarHeight = TypedValue.complexToDimensionPixelSize(
+                    typedValue.data, getResources().getDisplayMetrics());
+                }
+            \end{javacode}
+        \item \textbf{Move root layout under the actionbar}: For example, if a GridLayout is the root layout
+            \bigbreak \noindent 
+            \begin{javacode}
+            ViewGroup.MarginLayoutParams mlp = new ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            mlp.setMargins(0,actionBarHeight*2,0,0);
+            \end{javacode}
+        \item \textbf{Dynamic resource names}: If your drawable image files are named like:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                res/drawable/u1.png  
+                res/drawable/u2.png  
+                res/drawable/u3.png  
+                ...
+                res/drawable/u9.png
+            \end{bashcode}
+            \bigbreak \noindent 
+            Then you can load them like this:
+            \bigbreak \noindent 
+            \begin{javacode}
+                String imageName = "u" + i; // creates u1, u2, ..., u9
+                int resID = getResources().getIdentifier(imageName, "drawable", getPackageName());
+            \end{javacode}
     \end{itemize}
 
     \pagebreak 
@@ -1101,6 +1144,7 @@
                 \item \textbf{android:tint}:	The tinting color for the image. 
                 \item \textbf{android:tintMode}:	Blending mode used to apply the image tint. 
             \end{itemize}
+        \item \textbf{ImageButton}: Only inherited from View and ImageView
         \item \textbf{CompoundButton}:
             \begin{itemize}
                 \item \textbf{android:button}:	Drawable used for the button graphic (for example, checkbox and radio button). 
@@ -2212,7 +2256,7 @@
             \bigbreak \noindent 
             Now when either View 1 or View 2 increase in width, the barrier will move to accommodate the widest of the two views, causing the width of View 3 change in relation to the new barrier position:
             \bigbreak \noindent 
-            \fig{.8}{./figures/1020.png}
+            \fig{.6}{./figures/1020.png}
             \bigbreak \noindent 
             When working with barriers there is no limit to the number of reference views and constrained views that can be associated with a single barrier.
         \item \textbf{Barriers in java}: A Barrier is a virtual helper object in ConstraintLayout that positions itself dynamically based on the position of other views. It’s like a movable guideline that automatically adjusts to the furthest edge of a group of views.
@@ -4459,6 +4503,91 @@
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{ViewGroup.LayoutParams}
+    \begin{itemize}
+        \item \textbf{Hierarchy} 
+            \begin{center}
+                java.lang.Object $\to $	android.view.ViewGroup.LayoutParams
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.ViewGroup.LayoutParams
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                LayoutParams(Context c, AttributeSet attrs)
+                LayoutParams(ViewGroup.LayoutParams source)
+                LayoutParams(int width, int height)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{void	resolveLayoutDirection(int layoutDirection)}: Resolve layout parameters depending on the layout direction.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{void	setBaseAttributes(TypedArray a, int widthAttr, int heightAttr)}: Extracts the layout parameters from the supplied attributes.
+            \end{itemize}
+        \item \textbf{Fields}
+            \begin{itemize}
+                \item \textbf{public int	height}: Information about how tall the view wants to be.
+                \item \textbf{public LayoutAnimationController.AnimationParameters	layoutAnimationParameters}: Used to animate layouts.
+                \item \textbf{public int	width}: Information about how wide the view wants to be.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	FILL\_PARENT}: Special value for the height or width requested by a View.
+                \item \textbf{int	MATCH\_PARENT}: Special value for the height or width requested by a View.
+                \item \textbf{int	WRAP\_CONTENT}: Special value for the height or width requested by a View.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{ViewGroup.MarginLayoutParams}
+    \begin{itemize}
+         \item \textbf{Hierarchy} 
+            \begin{center}
+                java.lang.Object $\to $	android.view.ViewGroup.LayoutParams $\to$ android.view.ViewGroup.MarginLayoutParams
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.view.ViewGroup.MarginLayoutParams
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                MarginLayoutParams(Context c, AttributeSet attrs)
+                MarginLayoutParams(ViewGroup.LayoutParams source)
+                MarginLayoutParams(ViewGroup.MarginLayoutParams source)
+                MarginLayoutParams(int width, int height)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{int	getLayoutDirection()}: Retuns the layout direction.
+                \item \textbf{int	getMarginEnd()}: Returns the end margin in pixels.
+                \item \textbf{int	getMarginStart()}: Returns the start margin in pixels.
+                \item \textbf{boolean	isMarginRelative()}: Check if margins are relative.
+                \item \textbf{void	resolveLayoutDirection(int layoutDirection)}: This will be called by View.requestLayout().
+                \item \textbf{void	setLayoutDirection(int layoutDirection)}: Set the layout direction
+                \item \textbf{void	setMarginEnd(int end)}: Sets the relative end margin.
+                \item \textbf{void	setMarginStart(int start)}: Sets the relative start margin.
+                \item \textbf{void	setMargins(int left, int top, int right, int bottom)}: Sets the margins, in pixels.
+            \end{itemize}
+        \item \textbf{Fields}
+            \begin{itemize}
+                \item \textbf{public int	bottomMargin}: The bottom margin in pixels of the child.
+                \item \textbf{public int	leftMargin}: The left margin in pixels of the child.
+                \item \textbf{public int	rightMargin}: The right margin in pixels of the child.
+                \item \textbf{public int	topMargin}: The top margin in pixels of the child.
+            \end{itemize}
+
+       
+    \end{itemize}
+
+    \pagebreak 
     \subsubsection{Context}
     \begin{itemize}
          \item \textbf{Hierarchy} 
@@ -5834,6 +5963,63 @@
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{InputType (Interface)}
+    \begin{itemize}
+        \item \textbf{Signature}
+            \bigbreak \noindent 
+            \begin{javacode}
+            public interface InputType
+            \end{javacode}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+            android.text.InputType
+            \end{javacode}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	TYPE\_CLASS\_DATETIME}: Class for dates and times.
+                \item \textbf{int	TYPE\_CLASS\_NUMBER}: Class for numeric text.
+                \item \textbf{int	TYPE\_CLASS\_PHONE}: Class for a phone number.
+                \item \textbf{int	TYPE\_CLASS\_TEXT}: Class for normal text.
+                \item \textbf{int	TYPE\_DATETIME\_VARIATION\_DATE}: Default variation of TYPE\_CLASS\_DATETIME: allows entering only a date.
+                \item \textbf{int	TYPE\_DATETIME\_VARIATION\_NORMAL}: Default variation of TYPE\_CLASS\_DATETIME: allows entering both a date and time.
+                \item \textbf{int	TYPE\_DATETIME\_VARIATION\_TIME}: Default variation of TYPE\_CLASS\_DATETIME: allows entering only a time.
+                \item \textbf{int	TYPE\_MASK\_CLASS}: Mask of bits that determine the overall class of text being given.
+                \item \textbf{int	TYPE\_MASK\_FLAGS}: Mask of bits that provide addition bit flags of options.
+                \item \textbf{int	TYPE\_MASK\_VARIATION}: Mask of bits that determine the variation of the base content class.
+                \item \textbf{int	TYPE\_NULL}: Special content type for when no explicit type has been specified.
+                \item \textbf{int	TYPE\_NUMBER\_FLAG\_DECIMAL}: Flag of TYPE\_CLASS\_NUMBER: the number is decimal, allowing a decimal point to provide fractional values.
+                \item \textbf{int	TYPE\_NUMBER\_FLAG\_SIGNED}: Flag of TYPE\_CLASS\_NUMBER: the number is signed, allowing a positive or negative sign at the start.
+                \item \textbf{int	TYPE\_NUMBER\_VARIATION\_NORMAL}: Default variation of TYPE\_CLASS\_NUMBER: plain normal numeric text.
+                \item \textbf{int	TYPE\_NUMBER\_VARIATION\_PASSWORD}: Variation of TYPE\_CLASS\_NUMBER: entering a numeric password.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_AUTO\_COMPLETE}: Flag for TYPE\_CLASS\_TEXT: the text editor (which means the application) is performing auto-completion of the text being entered based on its own semantics, which it will present to the user as they type.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_AUTO\_CORRECT}: Flag for TYPE\_CLASS\_TEXT: the user is entering free-form text that should have auto-correction applied to it.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_CAP\_CHARACTERS}: Flag for TYPE\_CLASS\_TEXT: capitalize all characters.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_CAP\_SENTENCES}: Flag for TYPE\_CLASS\_TEXT: capitalize the first character of each sentence.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_CAP\_WORDS}: Flag for TYPE\_CLASS\_TEXT: capitalize the first character of every word.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_ENABLE\_TEXT\_CONVERSION\_SUGGESTIONS}: Flag for TYPE\_CLASS\_TEXT: Let the IME know the text conversion suggestions are required by the application.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_IME\_MULTI\_LINE}: Flag for TYPE\_CLASS\_TEXT: the regular text view associated with this should not be multi-line, but when a fullscreen input method is providing text it should use multiple lines if it can.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_MULTI\_LINE}: Flag for TYPE\_CLASS\_TEXT: multiple lines of text can be entered into the field.
+                \item \textbf{int	TYPE\_TEXT\_FLAG\_NO\_SUGGESTIONS}: Flag for TYPE\_CLASS\_TEXT: the input method does not need to display any dictionary-based candidates.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_EMAIL\_ADDRESS}: Variation of TYPE\_CLASS\_TEXT: entering an e-mail address.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_EMAIL\_SUBJECT}: Variation of TYPE\_CLASS\_TEXT: entering the subject line of an e-mail.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_FILTER}: Variation of TYPE\_CLASS\_TEXT: entering text to filter contents of a list etc.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_LONG\_MESSAGE}: Variation of TYPE\_CLASS\_TEXT: entering the content of a long, possibly formal message such as the body of an e-mail.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_NORMAL}: Default variation of TYPE\_CLASS\_TEXT: plain old normal text.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_PASSWORD}: Variation of TYPE\_CLASS\_TEXT: entering a password.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_PERSON\_NAME}: Variation of TYPE\_CLASS\_TEXT: entering the name of a person.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_PHONETIC}: Variation of TYPE\_CLASS\_TEXT: entering text for phonetic pronunciation, such as a phonetic name field in contacts.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_POSTAL\_ADDRESS}: Variation of TYPE\_CLASS\_TEXT: entering a postal mailing address.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_SHORT\_MESSAGE}: Variation of TYPE\_CLASS\_TEXT: entering a short, possibly informal message such as an instant message or a text message.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_URI}: Variation of TYPE\_CLASS\_TEXT: entering a URI.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_VISIBLE\_PASSWORD}: Variation of TYPE\_CLASS\_TEXT: entering a password, which should be visible to the user.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_WEB\_EDIT\_TEXT}: Variation of TYPE\_CLASS\_TEXT: entering text inside of a web form.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_WEB\_EMAIL\_ADDRESS}: Variation of TYPE\_CLASS\_TEXT: entering e-mail address inside of a web form.
+                \item \textbf{int	TYPE\_TEXT\_VARIATION\_WEB\_PASSWORD}: Variation of TYPE\_CLASS\_TEXT: entering password inside of a web form.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
     \subsubsection{Button}
     \begin{itemize}
         \item \textbf{Hierarchy} 
@@ -5946,6 +6132,37 @@
                 \item \textbf{boolean verifyDrawable(Drawable dr)}: Returns true if the view is displaying the given drawable; subclasses should override when managing their own drawables.
             \end{itemize}
 
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{ImageButton}
+    \begin{itemize}
+        \item \textbf{Hierarchy}
+            \begin{center}
+                java.lang.Object $\to$	android.view.View $\to$	android.widget.ImageView $\to$	android.widget.ImageButton
+            \end{center}
+        \item \textbf{Include}
+            \bigbreak \noindent 
+            \begin{javacode}
+                android.widget.ImageButton
+            \end{javacode}
+        \item \textbf{Constructors}
+            \bigbreak \noindent 
+            \begin{javacode}
+                ImageButton(Context context)
+                ImageButton(Context context, AttributeSet attrs)
+                ImageButton(Context context, AttributeSet attrs, int defStyleAttr)
+                ImageButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes)
+            \end{javacode}
+        \item \textbf{Public methods}
+            \begin{itemize}
+                \item \textbf{CharSequence	getAccessibilityClassName()}: Return the class name of this object to be used for accessibility purposes.
+                \item \textbf{PointerIcon	onResolvePointerIcon(MotionEvent event, int pointerIndex)}: Resolve the pointer icon that should be used for specified pointer in the motion event.
+            \end{itemize}
+        \item \textbf{Protected methods}
+            \begin{itemize}
+                \item \textbf{boolean	onSetAlpha(int alpha)}: Invoked if there is a Transform that involves alpha.
+            \end{itemize}
     \end{itemize}
 
     \pagebreak 
@@ -8081,92 +8298,414 @@
 
 
     \pagebreak 
-    \subsection{Used API}
+    \subsection{Used Methods, constants, and fields}
+    \subsubsection{Activity}
+    \begin{itemize}
+        \item \textbf{setContentView(int view)} 
+    \end{itemize}
+
+    \bigbreak \noindent \pagebreak \noindent
     \subsubsection{View}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{setVisibility(int) / getVisibility()}:	Show, hide (INVISIBLE), or remove (GONE) a view.
+                \item \textbf{findViewById(int)}:	Get a view inside another view or layout.
+                \item \textbf{getId() / setId(int)}:	Get or assign a unique view ID.
+                \item \textbf{setOnClickListener(...)}:	Handle click actions.
+                \item \textbf{setEnabled(boolean) / isEnabled()}:	Enable/disable a view.
+                \item \textbf{setAlpha(float)}:	Adjust transparency.
+                \item \textbf{getX(), getY()}:	View’s position relative to its parent.
+                \item \textbf{setX(), setY()}:	Move a view.
+                \item \textbf{getWidth(), getHeight()}:	View’s measured width/height.
+                \item \textbf{setLayoutParams(ViewGroup.LayoutParams)}:	Change width, height, margins programmatically.
+                \item \textbf{getLayoutParams()}:	Access current layout parameters.
+                \item \textbf{requestLayout()}:	Ask parent to re-measure and re-layout (after size change).
+                \item \textbf{setTranslationX/Y(float)}:	Move view without changing layout.
+                \item \textbf{setScaleX/Y(float)}:	Scale the view.
+                \item \textbf{setRotation(float)}:	Rotate the view.
+            \end{itemize}
+    \end{itemize}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{ViewGroup}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{addView(View) / addView(View, int) / addView(View, LayoutParams)}: Add children quickly.
+                \item \textbf{removeView(View) / removeViewAt(int) / removeAllViews()}: Remove children.
+                \item \textbf{removeAllViewsInLayout()}: Called by a ViewGroup subclass to remove child views from itself
+                \item \textbf{getChildCount(), getChildAt(int), indexOfChild(View)}: Inspect/manage children.
+            \end{itemize}
+    \end{itemize}
 
     \pagebreak 
+    \subsubsection{ViewGroup.LayoutParams}
+    \begin{itemize}
+        \item \textbf{Fields} 
+            \begin{itemize}
+                \item \textbf{public int	height}: Information about how tall the view wants to be.
+                \item \textbf{public int	width}: Information about how wide the view wants to be.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	FILL\_PARENT}: Special value for the height or width requested by a View.
+                \item \textbf{int	MATCH\_PARENT}: Special value for the height or width requested by a View.
+                \item \textbf{int	WRAP\_CONTENT}: Special value for the height or width requested by a View.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{ViewGroup.MarginLayoutParams}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{int	getLayoutDirection()}: Retuns the layout direction.
+                \item \textbf{int	getMarginEnd()}: Returns the end margin in pixels.
+                \item \textbf{int	getMarginStart()}: Returns the start margin in pixels.
+                \item \textbf{void	setLayoutDirection(int layoutDirection)}: Set the layout direction
+                \item \textbf{void	setMarginEnd(int end)}: Sets the relative end margin.
+                \item \textbf{void	setMarginStart(int start)}: Sets the relative start margin.
+                \item \textbf{void	setMargins(int left, int top, int right, int bottom)}: Sets the margins, in pixels.
+            \end{itemize}
+        \item \textbf{Fields}
+            \begin{itemize}
+                \item \textbf{public int	bottomMargin}: The bottom margin in pixels of the child.
+                \item \textbf{public int	leftMargin}: The left margin in pixels of the child.
+                \item \textbf{public int	rightMargin}: The right margin in pixels of the child.
+                \item \textbf{public int	topMargin}: The top margin in pixels of the child.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak \noindent
     \subsubsection{Context}
 
-    \pagebreak 
+
+
+    \pagebreak \noindent
     \subsubsection{ConstraintLayout}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{ConstraintLayout.LayoutParams}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{RelativeLayout}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{RelativeLayout.LayoutParams}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{LinearLayout}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{LinearLayout.LayoutParams}
 
-    \pagebreak 
-    \subsubsection{GridLayout}
 
-    \pagebreak 
+    \pagebreak \noindent
+    \subsubsection{GridLayout}
+    \begin{itemize}
+        \item \textbf{Methods} 
+            \begin{itemize}
+                \item \textbf{setRowCount(int rows)}
+                \item \textbf{setColumnCount(int cols)}
+            \end{itemize}
+    \end{itemize}
+
+
+    \pagebreak \noindent
     \subsubsection{GridLayout.LayoutParams}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{TableLayout}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{TableLayout.LayoutParams}
 
-    \pagebreak 
+
+    \pagebreak \noindent
+    \subsubsection{TableRow}
+
+
+    \pagebreak \noindent
     \subsubsection{FrameLayout}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{FrameLayout.LayoutParams}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{ListView}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{TextView}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{void	setInputType(int type)}: Set the type of the content with a constant as defined for EditorInfo.inputType.
+                \item \textbf{int	getInputType()}: Get the type of the editable content.
+            \end{itemize}
+    \end{itemize}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{EditText}
+    \begin{itemize}
+        \item \textbf{Methods}
+    \end{itemize}
 
     \pagebreak 
+    \subsubsection{InputType}
+    \begin{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{TYPE\_CLASS\_TEXT}:	Plain text input.
+                \item \textbf{TYPE\_CLASS\_NUMBER}:	Numeric input (digits 0-9).
+                \item \textbf{TYPE\_CLASS\_PHONE}:	Phone number input.
+                \item \textbf{TYPE\_CLASS\_DATETIME}:	Date/time input field.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_NORMAL}:	Default plain text.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_PASSWORD}:	Password (hidden input).
+                \item \textbf{TYPE\_TEXT\_VARIATION\_VISIBLE\_PASSWORD}:	Password but visible.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_EMAIL\_ADDRESS}:	Email input.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_PERSON\_NAME}:	Person’s name.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_URI}:	URL/website.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_POSTAL\_ADDRESS}:	Mailing address.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_SHORT\_MESSAGE}:	SMS/chat message.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_LONG\_MESSAGE}:	Long message or email body.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_WEB\_EMAIL\_ADDRESS}:	Email in web form.
+                \item \textbf{TYPE\_TEXT\_VARIATION\_WEB\_PASSWORD}:	Web password field.
+                \item \textbf{TYPE\_TEXT\_FLAG\_CAP\_SENTENCES}:	Capitalize first letter of sentences.
+                \item \textbf{TYPE\_TEXT\_FLAG\_CAP\_WORDS}:	Capitalize first letter of words.
+                \item \textbf{TYPE\_TEXT\_FLAG\_CAP\_CHARACTERS}:	All caps.
+                \item \textbf{TYPE\_TEXT\_FLAG\_MULTI\_LINE}:	Allows multiple lines.
+                \item \textbf{TYPE\_TEXT\_FLAG\_NO\_SUGGESTIONS}:	Disable suggestions/autocorrect.
+                \item \textbf{TYPE\_TEXT\_FLAG\_AUTO\_COMPLETE}:	Enable auto-complete.
+                \item \textbf{TYPE\_TEXT\_FLAG\_AUTO\_CORRECT}:	Enable auto-correct.
+                \item \textbf{TYPE\_NUMBER\_FLAG\_DECIMAL}:	Allows decimal point (e.g., 3.14).
+                \item \textbf{TYPE\_NUMBER\_FLAG\_SIGNED}:	Allows + or – at start.
+                \item \textbf{TYPE\_NUMBER\_VARIATION\_NORMAL}:	Normal number input.
+                \item \textbf{TYPE\_NUMBER\_VARIATION\_PASSWORD}:	Number password (hidden).
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_NORMAL}:	Default date & time.
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_DATE}:	Only date input.
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_TIME}:	Only time input.
+                \item \textbf{TYPE\_TEXT\_FLAG\_MULTI\_LINE}:	Allows multiple lines.
+                \item \textbf{TYPE\_TEXT\_FLAG\_NO\_SUGGESTIONS}:	Disable suggestions/autocorrect.
+                \item \textbf{TYPE\_TEXT\_FLAG\_AUTO\_COMPLETE}:	Enable auto-complete.
+                \item \textbf{TYPE\_TEXT\_FLAG\_AUTO\_CORRECT}:	Enable auto-correct.
+                \item \textbf{TYPE\_NUMBER\_FLAG\_DECIMAL}:	Allows decimal point (e.g., 3.14).
+                \item \textbf{TYPE\_NUMBER\_FLAG\_SIGNED}:	Allows + or – at start.
+                \item \textbf{TYPE\_NUMBER\_VARIATION\_NORMAL}:	Normal number input.
+                \item \textbf{TYPE\_NUMBER\_VARIATION\_PASSWORD}:	Number password (hidden).
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_NORMAL}:	Default date & time.
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_DATE}:	Only date input.
+                \item \textbf{TYPE\_DATETIME\_VARIATION\_TIME}:	Only time input.
+                \item \textbf{TYPE\_NULL}:	No input type specified.
+                \item \textbf{TYPE\_MASK\_CLASS}:	Mask to extract base class (text/number/etc.).
+                \item \textbf{TYPE\_MASK\_FLAGS}:	Mask to extract all flags.
+                \item \textbf{TYPE\_MASK\_VARIATION}:	Mask to extract variation (like email/password).
+            \end{itemize}
+    \end{itemize}
+
+
+    \pagebreak \noindent
     \subsubsection{Button}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{ImageView}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{setImageResource(int resource)}
+            \end{itemize}
+    \end{itemize}
 
     \pagebreak 
+    \subsubsection{ImageButton}
+    \begin{itemize}
+        
+    \end{itemize}
+
+
+    \pagebreak \noindent
     \subsubsection{CompoundButton}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{CheckBox}
 
-    \pagebreak 
+
+    \pagebreak \noindent
+    \subsubsection{RadioGroup}
+
+
+    \pagebreak \noindent
+    \subsubsection{RadioGroup.LayoutParams}
+
+
+    \pagebreak \noindent
     \subsubsection{RadioButton}
 
-    \pagebreak 
+
+    \pagebreak \noindent
+    \subsubsection{AbsSpinner}
+
+
+    \pagebreak \noindent
     \subsubsection{Spinner}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{Progessbar}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{AbsSeekBar}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{SeekBar}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{Drawable}
 
-    \pagebreak 
+
+    \pagebreak \noindent
     \subsubsection{GradientDrawable}
+
+
+    \pagebreak \noindent
+    \subsubsection{Intent}
+
+
+    \pagebreak \noindent
+    \subsubsection{Animation}
+
+
+    \pagebreak \noindent
+    \subsubsection{AnimationSet}
+
+
+    \pagebreak \noindent
+    \subsubsection{AlphaAnimation}
+
+
+    \pagebreak \noindent
+    \subsubsection{RotateAnimation}
+
+
+    \pagebreak \noindent
+    \subsubsection{ScaleAnimation}
+
+
+    \pagebreak \noindent
+    \subsubsection{TranslateAnimation}
+
+
+    \pagebreak \noindent
+    \subsubsection{PreferenceManager}
+
+
+    \pagebreak \noindent
+    \subsubsection{SharedPreferences (interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{SharedPreferences.Editor (Interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{Menu (Interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{MenuItem (Interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{ContextMenu (interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{PopupMenu}
+
+
+    \pagebreak \noindent
+    \subsubsection{SubMenu (interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{MenuInflator}
+
+
+    \pagebreak \noindent
+    \subsubsection{Toast}
+
+
+    \pagebreak \noindent
+    \subsubsection{LayoutInflator (Abstract class)}
+
+
+    \pagebreak \noindent
+    \subsubsection{SQLiteDatabase}
+
+
+    \pagebreak \noindent
+    \subsubsection{Cursor (Interface)}
+
+
+    \pagebreak \noindent
+    \subsubsection{ScrollView}
+
+
+    \pagebreak \noindent
+    \subsubsection{HorizontalScrollView}
+
+    \pagebreak 
+    \subsection{Activity overloads}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Event response}
+    \begin{itemize}
+        \item \textbf{View.OnClickListener} 
+            \bigbreak \noindent 
+            \begin{javacode}
+                private class ButtonHandler implements View.OnClickListener {
+                    public void onClick(View v) {
+                        ...
+                    }
+                }
+
+            \end{javacode}
+        \item \textbf{RadioGroup.OnCheckedChangeListener}
+            \bigbreak \noindent 
+            \begin{javacode}
+                private class RadioButtonHandler implements RadioGroup.OnCheckedChangeListener {
+                    public void onCheckedChanged(RadioGroup group, int checkedId) {
+                        ...
+                    }
+                }
+            \end{javacode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Transitions}
+    \begin{itemize}
+        
+    \end{itemize}
 
 
 
