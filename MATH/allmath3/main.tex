@@ -8960,7 +8960,7 @@
         \item \textbf{Theorem}: If $Q \in \mathbb{R}^{n\times n}$ is orthogonal, then
             \begin{enumerate}
                 \item $\left\langle Qx, Qy \right\rangle  = \left\langle x,y \right\rangle$
-                \item $\norm{Qx}_{2} = \norm{x} $
+                \item $\norm{Qx}_{2} = \norm{x}_{2} $
             \end{enumerate}
             \bigbreak \noindent 
             \textbf{\textit{Proof.}} (1). Let $x,y \in \mathbb{R}^{n}$,
@@ -8972,6 +8972,89 @@
                 \norm{Qx}_{2}^{2} &= \left\langle Qx, Qx \right\rangle^{2} = \left\langle x,x \right\rangle = \norm{x}^{2}_{2}
             .\end{align*}
             Thus, $\norm{Qx}_{2} = \norm{x}_{2} $ $\endpf $
+            \bigbreak \noindent 
+            \textbf{Note:} Because of the second property $(\norm{Qx}_{2} = \norm{x}_{2})$, orthogonal matrices preserve length. Thus, they represent a \textbf{rotation} or a \textbf{reflection}.
+        \item \textbf{Solving the discrete least squares problem (LSP) with the $QR$ factorization}: The LSP has us finding
+            \begin{align*}
+                \min_{x\in\mathbb{R}^{n}} \norm{b - Ax}_{2}^{2}
+            .\end{align*}
+            If we find the $QR$ decomposition $A = QR$, then
+            \begin{align*}
+                \norm{b - Ax}_{2}^{2} = \norm{b-QRx}_{2}^{2} = \norm{QQ^{T}b - QRx}_{2}^{2} = \norm{Q(Q^{T}b - Rx)}_{2}^{2}
+            .\end{align*}
+            Recall that 
+            \begin{align*}
+                A \in \mathbb{R}^{m\times n},\; Q \in \mathbb{R}^{m\times m},\; R \in \mathbb{R}^{m\times n},\; x \in \mathbb{R}^{n},\; b \in \mathbb{R}^{m},
+            \end{align*}
+            so $Q^{T}b \in \mathbb{R}^{m}$, $Rx \in \mathbb{R}^{m}$, and $Q^{T}b - Rx \in \mathbb{R}^{m}$. Thus,
+            \begin{align*}
+                \norm{Q(Q^{T}b - Rx)}_{2}^{2} &= \norm{Q^{T}b - Rx}_{2}^{2}
+            .\end{align*}
+            Since 
+            \begin{align*}
+                R &= \begin{bmatrix} \hat{R} \\ 0 \end{bmatrix}, \quad \hat{R} \in \mathbb{R}^{n\times n}
+            ,\end{align*}
+            we have that 
+            \begin{align*}
+                Rx &= \begin{bmatrix} \hat{R}x \\ 0 \end{bmatrix},\quad \hat{R}x \in \mathbb{R}^{n}
+            .\end{align*}
+            Let $c = Q^{T}b \in \mathbb{R}^{m}$. Divide $c$ into blocks
+            \begin{align*}
+                c &= \begin{bmatrix} \hat{c} \\ \bar{c} \end{bmatrix}, \quad \hat{c} \in \mathbb{R}^{n},\; \bar{c} \in \mathbb{R}^{m-n}
+            .\end{align*}
+            So,
+            \begin{align*}
+                \norm{Q^{T}b - Rx}_{2}^{2} &= \left\lvert \left\lvert \begin{bmatrix} \hat{c} - \hat{R}x \\ \bar{c} \end{bmatrix} \right\rvert \right\rvert_{2}^{2}
+            .\end{align*}
+            \begin{remark}
+               Let $x \in \mathbb{R}^{n + m}$, where  
+               \begin{align*}
+                   x &= \begin{pmatrix} \hat{x} \\ \bar{x} \end{pmatrix},\quad \hat{x} \in \mathbb{R}^{n},\; \bar{x} \in \mathbb{R}^{m}
+               .\end{align*}
+               Then,
+               \begin{align*}
+                   \norm{x}_{2}^{2} = \norm{\hat{x}}_{2}^{2} + \norm{\bar{x}}_{2}^{2}
+               .\end{align*}
+               \textbf{\textit{Proof.}}
+               \begin{align*}
+                   \norm{x}_{2}^{2} = \sum_{i=1}^{m+n}\left\lvert x_{i} \right\rvert^{2} = \sum_{i=1}^{n}\left\lvert x_{i} \right\rvert^{2} + \sum_{i=n+1}^{n+m} \left\lvert x_{i} \right\rvert^{2} = \norm{\hat{x}}_{2}^{2} + \norm{\bar{x}}_{2}^{2}
+               .\end{align*}
+               $\endpf$
+            \end{remark}
+            \bigbreak \noindent 
+            Thus,
+            \begin{align*}
+                \min_{x\in\mathbb{R}^{n}}\norm{b - Ax}_{2}^{2} = \min_{x\in \mathbb{R}^{n}}\left\lvert \left\lvert \begin{bmatrix} \hat{c} - \hat{R}x \\ \bar{c} \end{bmatrix} \right\rvert \right\rvert_{2}^{2} = \min_{x\in\mathbb{R}^{n}} \norm{\hat{c} - \hat{R}x}_{2}^{2} + \norm{\bar{c}}_{2}^{2}
+            .\end{align*}
+            Notice that $\norm{\bar{c}}_{2}^{2}$ does not depend on $x$, so we don't need to consider it when finding the minimizer. Second, notice that $\norm{\hat{c} - \hat{R}x}_{2}^{2}$ is minimized when its equal to zero, and since $\norm{\hat{c} - \hat{R}x}_{2}^{2} = 0 \iff \hat{c} - \hat{R}x = 0$, we find the minimizer by solving for $x$ when $\hat{c} - \hat{R}x = 0$, which gives the system
+            \begin{align*}
+                \hat{R}x = \hat{c}
+            .\end{align*}
+            Therefore,
+            \begin{align*}
+                \min_{x\in\mathbb{R}^{n}}\norm{b-Ax}_{2}^{2} \iff \hat{R}x = \hat{c}
+            .\end{align*}
+            \textbf{Note:} We have
+            \begin{align*}
+                \min_{x \in \mathbb{R}^{n}} \norm{b - Ax}_{2}^{2} = \min_{x\in \mathbb{R}^{n}} \norm{\hat{c} - \hat{R}x}_{2}^{2} + \norm{\bar{c}}_{2}^{2}
+            .\end{align*}
+            But, the minimum is achieved when $\hat{c} - \hat{R}x = 0$, so $\norm{\hat{c} - \hat{R}x}_{2}^{2} = 0 $, and thus
+            \begin{align*}
+                \min_{x\in \mathbb{R}^{n}} \norm{b- Ax} = \min_{x\in \mathbb{R}^{n}} \norm{\hat{c} - \hat{R}x}_{2}^{2} + \norm{\bar{c}}_{2}^{2} = 0 + \norm{\bar{c}}_{2}^{2}  
+            .\end{align*}
+            So, $x$ is found by solving the system $\hat{R}x = \hat{c}$, and the square of the norm of the residual is precisely $\norm{\bar{c}}_{2}^{2}$. So, $\bar{c}$ represents the residual
+        \item \textbf{The discrete LSP algorithm}: Let $A \in \mathbb{R}^{m\times n}$, for $m > n$. Define
+            \begin{align*}
+                (P):\; \min_{x\in \mathbb{R}^{n}}\norm{x-Ax}_{2}^{2}
+            .\end{align*}
+            \bigbreak \noindent 
+            To solve discrete least squares, we take the following steps
+            \begin{enumerate}
+                \item $c = Q^{T}b = \begin{bmatrix} \hat{c} \\ \bar{c} \end{bmatrix} $, $c \in \mathbb{R}^{m}$, $\hat{c} \in \mathbb{R}^{n}$, $\bar{c} \in \mathbb{R}^{m-n} $
+                \item Solve $(\hat{P}):\; \hat{R}x = \hat{c}$, solution of $ (\hat{P})$ is the solution of $(P)$.
+                \item $\min_{x\in \mathbb{R}^{n}}\norm{b-Ax}_{2}^{2} = \norm{\bar{c}}_{2}^{2} $
+            \end{enumerate}
+            
     \end{itemize}
 
 
