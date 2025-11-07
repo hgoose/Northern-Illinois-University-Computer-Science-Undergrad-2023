@@ -9043,6 +9043,44 @@
                 \min_{x\in \mathbb{R}^{n}} \norm{b- Ax} = \min_{x\in \mathbb{R}^{n}} \norm{\hat{c} - \hat{R}x}_{2}^{2} + \norm{\bar{c}}_{2}^{2} = 0 + \norm{\bar{c}}_{2}^{2}  
             .\end{align*}
             So, $x$ is found by solving the system $\hat{R}x = \hat{c}$, and the square of the norm of the residual is precisely $\norm{\bar{c}}_{2}^{2}$. So, $\bar{c}$ represents the residual
+        \item \textbf{The residual in the discrete LSP}: Let $A \in \mathbb{R}^{m\times n}$, $m > n$, and $b \in \mathbb{R}^{m}$. If $x^{*}$ solves the discrete least squares problem,
+            \begin{align*}
+                x^{*} &= \arg\min_{x\in\mathbb{R}^{n}}\norm{b-Ax}_{2}^{2}
+            ,\end{align*}
+            then the residual vector is given by $r = b - Ax^{*}$. Applying $Q^{T}$ gives
+            \begin{align*}
+                Q^{T}r &= Q^{T}b -Q^{T}Ax^{*} = Q^{T}b - Q^{T}QRx^{*} = Q^{T} b - Rx^{*} = c - Rx^{*}\\
+                       &= \begin{bmatrix} \hat{c} \\ \bar{c} \end{bmatrix} - \begin{bmatrix} \hat{R}\\0 \end{bmatrix}x^{*} = \begin{bmatrix} \hat{c} - \hat{R}x^{*} \\ \bar{c} \end{bmatrix}
+            .\end{align*}
+            But, $x^{*}$ solves $\hat{R}x = \hat{c}$, so $\hat{c} - \hat{R}x^{*}  = 0 $, so
+            \begin{align*}
+                Q^{T}r &= \begin{bmatrix} \hat{c} - \hat{R}x^{*} \\ \bar{c} \end{bmatrix}  = \begin{bmatrix} 0 \\ \bar{c} \end{bmatrix}
+            .\end{align*}
+            Applying $Q$ gives
+            \begin{align*}
+                r &= Q \begin{bmatrix} 0 \\ \bar{c} \end{bmatrix}, \quad Q\in \mathbb{R}^{m\times m},\; 0 \in \mathbb{R}^{n},\; \bar{c} \in \mathbb{R}^{m-n}
+            .\end{align*}
+            If we partition $Q$ as 
+            \begin{align*}
+                Q = \begin{bmatrix} Q_{1} & Q_{2} \end{bmatrix}, \quad Q_{1} \in \mathbb{R}^{m\times n},\; Q_{2} \in \mathbb{R}^{m\times (m-n)}
+            ,\end{align*}
+            then
+            \begin{align*}
+                r &= \begin{bmatrix} Q_{1} & Q_{2} \end{bmatrix} \begin{bmatrix} 0 \\ \bar{c} \end{bmatrix} = Q_{2}\bar{c}
+            .\end{align*}
+            Therefore, the norm of the residual is
+            \begin{align*}
+                \norm{r}_{2} = \norm{Q_{2}\bar{c}}_{2} = \norm{\bar{c}}_{2}
+            \end{align*}
+            as expected.
+            \bigbreak \noindent 
+            If $Ax = b$ has a unique solution, then $Ax = b$, which implies
+            \begin{align*}
+                QRx = b &\implies Rx = Q^{T}b = c \\
+                        &\implies \begin{bmatrix} \hat{R} \\ 0 \end{bmatrix}x = \begin{bmatrix} \hat{c} \\ \bar{c} \end{bmatrix} \\
+                        &\implies \bar{c} = 0
+            .\end{align*}
+            Thus, $\norm{r} = \norm{\bar{c}} = \norm{0} = 0$, as expected.
         \item \textbf{The discrete LSP algorithm}: Let $A \in \mathbb{R}^{m\times n}$, for $m > n$. Define
             \begin{align*}
                 (P):\; \min_{x\in \mathbb{R}^{n}}\norm{x-Ax}_{2}^{2}
@@ -9054,7 +9092,204 @@
                 \item Solve $(\hat{P}):\; \hat{R}x = \hat{c}$, solution of $ (\hat{P})$ is the solution of $(P)$.
                 \item $\min_{x\in \mathbb{R}^{n}}\norm{b-Ax}_{2}^{2} = \norm{\bar{c}}_{2}^{2} $
             \end{enumerate}
-            
+        \item \textbf{$QR$ factorization of a square matrix}: Let $A \in \mathbb{R}^{n\times n}$, then $Q \in \mathbb{R}^{n\times n}$, $R = \hat{R} \in \mathbb{R}^{n\times n}$, $Q^{T}b = c = \hat{c}$, and
+            \begin{align*}
+                Ax = b \implies QRx = b \implies Rx = Q^{T}b \implies \hat{R}x = Q^{T}b = \hat{c}
+            .\end{align*}
+            So, since $\hat{R}$ is upper triangular, we can solve the system using backward substitution.
+        \item \textbf{Finding $Q$ and $R$, $2\times 2$ example}: Suppose in $\mathbb{R}^{2\times 2} $, 
+            \begin{align*}
+                A = \begin{bmatrix} x_{1} & x_{3} \\ x_{2} & x_{4} \end{bmatrix}
+            .\end{align*}
+            $A = QR$, so $Q^{T}A = R$. Recall that $R$ is upper triangular, and $Q$ is orthogonal. Since $Q$ is orthogonal, it must represent a rotation (or reflection). Let's first focus on the first column of $A$, which yields the first column of $R$, we have
+            \begin{align*}
+                Q^{T}A  = \begin{bmatrix} \alpha & \beta \\ \gamma & \delta \end{bmatrix} \begin{bmatrix} x_{1} & * \\ x_{2} & * \end{bmatrix} = \begin{bmatrix} y_{1} & * \\ 0 & * \end{bmatrix} = R
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                Q^{T}\text{col}_{1}(A) &= \text{col}_{1}(R) \implies \begin{bmatrix} \alpha & \beta \\ \gamma & \delta   \end{bmatrix} \begin{pmatrix} x_{1} \\ x_{2} \end{pmatrix} = \begin{pmatrix} y_{1} \\ 0 \end{pmatrix}
+            .\end{align*}
+            So,
+            \begin{align*}
+                \alpha x_{1} + \beta x_{2} &= y_{1} \tag{1} \\
+                \gamma x_{1} + \delta x_{2} &= 0 \tag{2}
+            .\end{align*}
+            Applying $Q^{T}$ to $\text{col}_{1}(A)$ preserves length, so $\norm{Q^{T}\text{col}_{1}(A)} = \norm{\text{col}_{1}(A)} = \norm{\text{col}_{1}(R)}$. Thus,
+            \begin{align*}
+                y_{1} &= \sqrt{x_{1}^{2} + x_{2}^{2}} = \norm{x}_{2}
+            .\end{align*}
+            \bigbreak \noindent 
+                \begin{figure}[ht]
+                    \centering
+                    \incfig{norm1}
+                    \label{fig:norm1}
+                \end{figure}
+            \bigbreak \noindent 
+            Notice we have that
+            \begin{align*}
+                \sin{\left(\theta \right)} &= \frac{x_{2}}{\norm{x}} = \frac{x_{2}}{y_{1}}, \\
+                \cos{\left(\theta \right)} &= \frac{x_{1}}{\norm{x}} = \frac{x_{1}}{y_{1}}
+            .\end{align*}
+            From (1), we have
+            \begin{align*}
+                \alpha \frac{x_{1}}{y_{1}} + \beta \frac{x_{2}}{y_{1}} = 1 &\implies \alpha \cos{\left(\theta \right)} + \beta \sin{\left(\theta \right)} = 1 \\
+                                                                       &\implies \alpha = \cos{\left(\theta \right)},\; \beta = \sin{\left(\theta \right)}
+            .\end{align*}
+            From (2),
+            \begin{align*}
+                \gamma x_{1} + \delta x_{2} = 0  &\implies \gamma y_{1}\cos{\left(\theta \right)} + \delta y_{1}\sin{\left(\theta \right)} = 0 \\
+                                                &\implies \gamma \cos{\left(\theta \right)} + \delta \sin{\left(\theta \right)} = 0 \\
+                                                &\implies \gamma = -\sin{\left(\theta \right)},\; \delta = \cos{\left(\theta \right)}
+            .\end{align*}
+            So, 
+            \begin{align*}
+                Q^{T} &= \begin{pmatrix} \cos{\left(\theta \right)} & \sin{\left(\theta \right)} \\ -\sin{\left(\theta \right)} & \cos{\left(\theta \right)} \end{pmatrix} = \begin{pmatrix} \frac{x_{1}}{y_{1}} & \frac{x_{2}}{y_{1}} \\ -\frac{x_{2}}{y_{1}} & \frac{x_{1}}{y_{1}} \end{pmatrix}
+            .\end{align*}
+            Now that we have $Q^{T}$, we can get the second column of $R$ with $\text{col}_{2}(R) = Q^{T}\text{col}_{2}(A) $.
+            \bigbreak \noindent 
+            So, in the $2\times 2$ case, we got $Q^{T}$ from the first column of $A$, since we know where the first column should map to under $Q^{T}$s transformation. Then, after we found $Q^{T}$, finding  the second column of $R$ is simple.
+            \bigbreak \noindent 
+            \textbf{Example}: Let $A \in \mathbb{R}^{2\times 2}$, 
+            \begin{align*}
+                A = \begin{pmatrix} 1 & 2 \\ 1 & 3 \end{pmatrix}
+            .\end{align*}
+            We have
+            \begin{align*}
+                y_{1} &= \sqrt{1^{2} + 1^{2}} = \sqrt{2}, \\
+                \cos{\left(\theta \right)} &= \frac{1}{\sqrt{2}} = \frac{\sqrt{2}}{2}, \\
+                \sin{\left(\theta \right)} &= \frac{1}{\sqrt{2}} = \frac{\sqrt{2}}{2}
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                Q^{T} = \begin{pmatrix} \frac{\sqrt{2}}{2} & \frac{\sqrt{2}}{2} \\ -\frac{\sqrt{2}}{2} & \frac{\sqrt{2}}{2} \end{pmatrix} = \frac{\sqrt{2}}{2}\begin{pmatrix} 1 & 1 \\ -1 & 1 \end{pmatrix}
+            .\end{align*}
+            So, $\text{col}_{1}(R) = \begin{pmatrix} y_{1} & 0 \end{pmatrix}^{T} = \begin{pmatrix} \sqrt{2} & 0 \end{pmatrix}^{T} $, and
+            \begin{align*}
+                \text{col}_{2}(R) &= Q^{T}\text{col}_{1}(A) = \frac{\sqrt{2}}{2} \begin{pmatrix} 1  & 1 \\ -1 & 1 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} = \begin{pmatrix} \frac{5\sqrt{2}}{2} \\ \frac{\sqrt{2}}{2} \end{pmatrix} = \sqrt{2}\begin{pmatrix} \frac{5}{2} \\ \frac{1}{2}\end{pmatrix}
+            .\end{align*}
+            Now we have $Q$ and $R$,
+            \begin{align*}
+                Q^{T} = \frac{\sqrt{2}}{2}\begin{pmatrix} 1 & 1 \\ -1 & 1 \end{pmatrix},\; R = \sqrt{2}\begin{pmatrix} 1 & \frac{5}{2} \\ 0 & \frac{1}{2} \end{pmatrix}
+            .\end{align*}
+            Suppose that $b = \begin{pmatrix} -1 & -2 \end{pmatrix}^{T} \in \mathbb{R}^{2}$. Then,
+            \begin{align*}
+                Ax = b \iff QRx = b \iff Rx = Q^{T}b
+            .\end{align*}
+            So, we can solve the system for $x$ by solving the upper triangular system $Rx = Q^{T} b$
+        \item \textbf{General process for finding $Q$ and $R$}: We use the fact that for $x \in \mathbb{R}^{m}$, 
+            \begin{align*}
+                \begin{pmatrix} \vdots \\ x_{i} \\ \vdots \\ x_{j} \\ \vdots \end{pmatrix} \mapsto \begin{pmatrix} \vdots \\ y_{i} \\ \vdots \\ 0 \\ \vdots \end{pmatrix}
+            .\end{align*}
+            Under the transformation
+            \begin{align*}
+                (Q_{\ell}^{T})_{ii} &= \cos{\left(\theta \right)},\; (Q_{\ell}^{T})_{ij} = \sin{\left(\theta \right)} \\
+                (Q_{\ell}^{T})_{ji} &= -\sin{\left(\theta \right)},\; (Q_{\ell}^{T})_{jj} = \cos{\left(\theta \right)} 
+            ,\end{align*}
+            and with
+            \begin{align*}
+                \cos{\left(\theta \right)} &= \frac{x_{i}}{y_{i}},\; \sin{\left(\theta \right)} =\frac{x_{j}}{y_{i}},\; y_{i} = \sqrt{x_{i}^{2} + x_{j}^{2}}
+            .\end{align*}
+            \bigbreak \noindent 
+            For $Q_{k} \in \mathbb{R}^{m\times m} = I$, except for at the positions above. 
+            \bigbreak \noindent 
+            In the $2\times 2$ example we only needed to apply one rotation to build $Q^{T}$, but for bigger matrices we will need to apply many rotations under we are able to fully build the matrix $\hat{R} \in \mathbb{R}^{n\times n}$. At the end, we will have
+            \begin{align*}
+                Q^{T}A = Q_{k}^{T}Q_{k-1}^{T} \cdots Q_{2}^{T}Q_{1}^{T}A  = R
+            .\end{align*}
+            So, 
+            \begin{align*}
+                Q^{T} = Q_{k}^{T}Q_{k-1}^{T} \cdots Q_{2}^{T}Q_{1}^{T}
+            .\end{align*}
+            We build these matrices in the same way as Gaussian elimination, top to bottom, left to right, choosing two indices at a time, until we have built $R$.
+            \bigbreak \noindent 
+            For example, suppose $A \in \mathbb{R}^{3\times 2}$, 
+            \begin{align*}
+                A = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \\ a_{31} & a_{32} \\ a_{41} & a_{42} \end{pmatrix}
+            .\end{align*}
+            So,
+            \begin{align*}
+                Q^T \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \\ a_{31} & a_{32} \\ a_{41} & a_{42} \end{pmatrix} = \begin{pmatrix} r_{11} & r_{12} \\ 0 & r_{22} \\ 0 & 0 \\ 0 & 0 \end{pmatrix}
+            .\end{align*}
+            We work top to bottom left to right. Looking at the structure of $R$ in this example, our first transformation will map
+            \begin{align*}
+                Q_{1}^{T}\begin{pmatrix} a_{11} \\ a_{21} \\ a_{31} \\ a_{41} \end{pmatrix} \mapsto \begin{pmatrix} y_{1} \\ 0 \\ a_{31} \\ a_{41} \end{pmatrix}
+            .\end{align*}
+            Where 
+            \begin{align*}
+                Q^{T} = 
+                \begin{pmatrix} 
+                    \cos{\left(\theta \right)}  & \sin{\left(\theta \right)} & 0  & 0 \\
+                    -\sin{\left(\theta \right)} & \cos{\left(\theta \right)} & 0 & 0 \\
+                    0 & 0 & 1 & 0 \\
+                    0 & 0 & 0 & 1
+                \end{pmatrix}
+            .\end{align*}
+            Notice connection between the targets in $A$, and the matrix $Q$, which uses the fact described above. After we have $Q_{\ell}^{T}$, we can use the following. Eventually, we will have performed enough transformations, and $R_{k} = R$.
+            \bigbreak \noindent 
+            Let $R_{1} = A$, then $Q_{\ell}^{T}R_{\ell} = R_{\ell+1} $. So, after the first step,
+            \begin{align*}
+                R_{2} &= Q_{1}^{T}R_{1} = \begin{pmatrix} y_{1} & * \\ 0  & * \\ a_{31} & *  \\ a_{41} & * \end{pmatrix}
+            ,\end{align*}
+            with
+            \begin{align*}
+                \begin{pmatrix} * \\ * \\ * \\ *  \end{pmatrix} = Q_{1}^{T}\text{col}_{2}(R_{1})
+            .\end{align*}
+            In the second step, we target $y_{1}$, and $a_{31}$, we want
+            \begin{align*}
+                Q_{2}^{T}\begin{pmatrix} y_{1} \\ 0 \\ a_{31} \\ a_{41} \end{pmatrix} \mapsto \begin{pmatrix} y_{2} \\ 0 \\ 0 \\ a_{41} \end{pmatrix}
+            ,\end{align*}
+            so
+            \begin{align*}
+                Q_{2}^{T} = 
+                \begin{pmatrix} 
+                    \cos{\left(\theta \right)} & 0 & \sin{\left(\theta \right)} & 0 \\
+                    0 & 1 & 0 & 0 \\
+                    -\sin{\left(\theta \right)} & 0 & \cos{\left(\theta \right)} & 0 \\
+                    0 & 0 & 0 & 1
+                \end{pmatrix}
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                R_{3} &= Q_{2}^{T}R_{2} = Q_{2}^{T}(Q_{1}^{T}A)
+            ,\end{align*}
+            with
+            \begin{align*}
+                R_{3} &= \begin{pmatrix} y_{2} & *  \\ 0  & * \\ 0  & * \\ a_{41} & * \end{pmatrix}
+            .\end{align*}
+            Notice how we are slowly building the structure of $R$, similar to how we build the structure of $U$ using Gaussian elimination.
+            \bigbreak \noindent 
+            To finish off the first column of $R$, we will have
+            \begin{align*}
+                R_{4} &= Q_{3}^{T}R_{3} = Q_{3}^{T}(Q_{2}^{T}(Q_{1}^{T}A))
+            ,\end{align*}
+            with
+            \begin{align*}
+                R_{4} = \begin{pmatrix} y_{3} & * \\ 0 & * \\ 0 & * \\ 0 & * \end{pmatrix}
+            .\end{align*}
+            Now, we proceed to the second column, we need the structure to be
+            \begin{align*}
+                \begin{pmatrix} r_{12} \\ r_{22} \\ 0 \\ 0 \end{pmatrix}
+            .\end{align*}
+            So, we start by selecting the second and third element of the second column of  $R_{4}$, so that we can get the third element zero.
+            \bigbreak \noindent 
+            Note that as we are working on the second column, the nonzero elements in the columns before will change, but the zero elements are safe, so the structure that we have already built will be preserved.
+        \item \textbf{Transposition of the product of $n$ matrices}: Let $A_{1}, A_{2}, ..., A_{n-2},A_{n-1},A_{n} \in \mathbb{R}^{n\times n}$, then
+            \begin{align*}
+                \left(A_{1}A_{2} \cdots A_{n-2}A_{n-1}A_{n}\right)^{T} = A_{n}^{T}A_{n-1}^{T}A_{n-2}^{T} \cdots A_{2}^{T}A_{1}^{T}
+            .\end{align*}
+            \textbf{\textit{Proof.}}
+            \begin{align*}
+                \left(A_{1}A_{2} \cdots A_{n-2}A_{n-1}A_{n}\right)^{T} &= A_{n}^{T}\left(A_{1}A_{2} \cdots A_{n-2}A_{n-1}\right)^{T} \\
+                                                                       &= A_{n}^{T}A_{n-1}^{T}\left(A_{1}A_{2} \cdots A_{n-2}A_{n-1}\right)^{T} \\
+                                                                       &=A_{n}^{T}A_{n-1}^{T}A_{n-2}^{T}\left(A_{1}A_{2} \cdots\right)^{T} \\
+                                                                       &=\ldots \\
+                                                                       &= A_{n}^{T}A_{n-1}^{T}A_{n-2}^{T} \cdots A_{2}^{T}A_{1}^{T}
+            .\end{align*}
+            $\endpf $
+
+
+
+
     \end{itemize}
 
 
@@ -10324,6 +10559,17 @@
                 \item $\norm{q_{i}} = 1$ for $i = 1,2,...,n $
                 \item $\left\langle q_{i}, q_{j} \right\rangle = 0$ if $i \ne j $
             \end{enumerate}
+        \item \textbf{The discrete LSP with $QR$}
+            \begin{align*}
+                \min_{x\in \mathbb{R}^{n}}\norm{b- Ax}_{2}^{2} = \min_{x\in \mathbb{R}^{n}}\norm{\hat{c}-\hat{R}x}_{2}^{2} + \norm{\bar{c}}_{2}^{2},\\
+            .\end{align*}
+            $x$ is found by solving the system $\hat{R}x = \hat{c}$, and the residual is $\norm{\bar{c}}_{2}^{2}$
+        \item \textbf{$QR$ factorization of a square matrix}: Let $A \in \mathbb{R}^{n\times n}$, then $Q \in \mathbb{R}^{n\times n}$, $R = \hat{R} \in \mathbb{R}^{n\times n}$, $Q^{T}b = c = \hat{c}$, and
+            \begin{align*}
+                Ax = b \implies QRx = b \implies Rx = Q^{T}b \implies \hat{R}x = Q^{T}b = \hat{c}
+            .\end{align*}
+            So, since $\hat{R}$ is upper triangular, we can solve the system using backward substitution.
+
 
     \end{itemize}
 
@@ -10363,7 +10609,17 @@
     \pagebreak 
     \subsubsection{Algorithms and complexities}
     \begin{itemize}
-        \item \relax
+        \item \textbf{The discrete LSP algorithm}: Let $A \in \mathbb{R}^{m\times n}$, for $m > n$. Define
+            \begin{align*}
+                (P):\; \min_{x\in \mathbb{R}^{n}}\norm{x-Ax}_{2}^{2}
+            .\end{align*}
+            \bigbreak \noindent 
+            To solve discrete least squares, we take the following steps
+            \begin{enumerate}
+                \item $c = Q^{T}b = \begin{bmatrix} \hat{c} \\ \bar{c} \end{bmatrix} $, $c \in \mathbb{R}^{m}$, $\hat{c} \in \mathbb{R}^{n}$, $\bar{c} \in \mathbb{R}^{m-n} $
+                \item Solve $(\hat{P}):\; \hat{R}x = \hat{c}$, solution of $ (\hat{P})$ is the solution of $(P)$.
+                \item $\min_{x\in \mathbb{R}^{n}}\norm{b-Ax}_{2}^{2} = \norm{\bar{c}}_{2}^{2} $
+            \end{enumerate}
     \end{itemize}
 
 
