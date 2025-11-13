@@ -128,7 +128,7 @@
         \item \textit{What is RTL? What is a microoperation? Which steps in the execution cycle (fetch, decode, fetch operand, execute) use the same RTL for every instruction? What does the RTL for fetch do? the RTL for fetch operand? the RTL for execute? Why does the decode step not need any RTL?}: \textbf{Each instruction is made up of a sequence of smaller  instructions called microoperations. The microoperations are specified using the register-transfer language (RTL). Fetch, decode, fetch operand use the same RTL for every instruction}
         \item \textit{How many bus addresses does MARIE have?}: \textbf{7}
         \item \textit{What are the parts of a MARIE instruction? How many bits does each part have? Why?}: The opcode (4 bits), MARIE has 12 instructions, need 4 bits = $2^{4} = 16$ possible opcodes. and the address operand (12-bits)
-        \item \textit{Make sure you understand why the RTL for each instruction works. For example, why does the RTL for JUMP load the operand into the PC? Why does SKIPCOND not contain an address to skip to?}:
+        \item \textit{Make sure you understand why the RTL for each instruction works. For example, why does the RTL for JUMP load the operand into the PC? Why does SKIPCOND not contain an address to skip to?}: \textbf{Only 12-bits for the operand. Since addreses are 12-bits, if we supplied an address to jump to , there would be no room for the condition. We use bits 10 and 11 for the condition}
 \end{itemize}
 
 
@@ -153,15 +153,89 @@
 \unsect{Hardwired implementation}
 \begin{itemize}
     \item \textit{What is hardwired control? What is microprogramming? What is the difference between them?}:  \textbf{In hardwired, circuits (digital logic components) are used to generate the control signals. In Microprogramming , execution of microcode instructions produces control signal changes.}
-    \item \textit{What is a signal line? What is a datapath address? How many signal lines (input and output) does a machine need if there are 2n addresses on the datapath? What is a timing signal? How many timing signals are needed to handle all the instructions, including the indirect addressing instructions and the other advanced ones in section 4e (i.e., all the instructions on the MARIE summary sheet? Why do some instructions need more timing signals than others? What does the counter reset signal do? When is it triggered? What would happen if we didn’t have a counter reset signal? Do these terms refer to a hardwired machine or a microprogrammed machine?}:
+    \item \textit{What is a signal line? What is a datapath address? How many signal lines (input and output) does a machine need if there are $2^{n}$ addresses on the datapath? What is a timing signal? How many timing signals are needed to handle all the instructions, including the indirect addressing instructions and the other advanced ones in section 4e (i.e., all the instructions on the MARIE summary sheet? Why do some instructions need more timing signals than others? What does the counter reset signal do? When is it triggered? What would happen if we didn’t have a counter reset signal? Do these terms refer to a hardwired machine or a microprogrammed machine?}: \textbf{A signal line is a wire used to carry a control signal (bit). A datapath address is the bus address of a register or main memory, each register and main memory has a unique address along the datapath. If there are $2^{n}$ address along the datapath, we need $n$ signal lines for the input, and $n$ for the output. A timing signal is a control signal used to indicate the clock tick number, used to determine which line of RTL we need to execute. A MARIE instruction has at most 7 lines of RTL, so we have 7 timing signals. Some instructions require more timing signals because they require more lines of RTL. An instruction only needs enough timing signals for each line of RTL (one per line). The counter reset signal resets the binary counter that produces the timing signals (back to zero), it is triggered after the execute step of the instruction. If we did not have counter reset, the counter would not be reset for the next instruction, and incorrect timing signals would be produced. These concepts refer to a hardwired machine}
     \item \textit{What do the following symbols represent: P0-P5, T0-T7, A0-A3, Cr?}: address signals, timing signals, ALU signals, counter reset
 \end{itemize}
 
 \pagebreak 
 \unsect{Microcode implementation}
 \begin{itemize}
-    \item \textit{What is firmware? How often are microcode instructions retrieved from the firmware? Why do MARIE microinstructions have space for two microoperations? What goes in the second one if it’s not used in a given microinstruction? What are the Jump and Dest fields and how are they used?}:
-    \item \textit{Which steps of the fetch-decode-execute cycle are located before the jump table in MARIE’s microcode? Which lines of the microcode implement fetch? decode? fetch operand? execute? What does the jump table contain? What is at the addresses jumped to by the jump table? Why does the last line of each of the jumped-to sections have the jump flag set? Where does each of these lines jump to?}:
+    \item \textit{What is firmware? How often are microcode instructions retrieved from the firmware? Why do MARIE microinstructions have space for two microoperations? What goes in the second one if it’s not used in a given microinstruction? What are the Jump and Dest fields and how are they used?}: \textbf{Firmware is the software stored in ROM that controls the hardware, one microcode instruction is retrieved during each clock cycle}
+        \bigbreak \noindent 
+        \textbf{Marie microinstructions have space for two microoperations, the first one is the opcode for the microinstruction, and the second is used to hold the opcode of the MARIE instruction, in some microinstructions we compare the microopcode to the MARIE opcode, so that we know which microoperation to go to to start executing the MARIE instruction. If the microinstruction is not a comparision, we put NOP as the second microoperation.
+            The jump bit is either one or zero, if its set to one, we jump to the address in the destination field. The dest field is the address that we jump to if the jump bit is on. After the first four microinstructions (fetch and decode) are executed, we go through the jump table, and find the microinstruction that has the same opcode as the marie instruction. That instruction will have the jump bit set on, and the dest field has the address of the start of the execute step for that instruction.
+        }
+    \item \textit{Which steps of the fetch-decode-execute cycle are located before the jump table in MARIE’s microcode? Which lines of the microcode implement fetch? decode? fetch operand? execute? What does the jump table contain? What is at the addresses jumped to by the jump table? Why does the last line of each of the jumped-to sections have the jump flag set? Where does each of these lines jump to?}: \textbf{Fetch and decode are before the jump table, lines 1-3 implement fetch, line 4 implements decode. The lines of microcode that implement fetch-operand and execute are found at the jump address. The jump table contains microinstructions that compare the rightmost 4 bits of the IR (MARIE instruction opcode) to microopcodes, it also contains the jump dest address, which is the address of the start of the execute step for the instruction found in microOp2. The last line has the jump flag set, and jumps to address zero, which is the beginning of the microprogram (fetch-decode-...)}.
+\end{itemize}
+
+\pagebreak \bigbreak \noindent 
+\unsect{Important information}
+\begin{itemize}
+    \item \textbf{V.N bottleneck}: Single datapath between CPU and memorn may 
+    \item \textbf{CPU}: Fetches, decodes, and executes program instructions
+    \item \textbf{Two principal parts of thheh CPU}
+        \begin{enumerate}
+            \item \textbf{Datapath}: Consists of ALU and storage units (registers), connected by a data bus that is also connected to memory.
+            \item \textbf{Control unit}: Produces control signals that tell the CPU components which operations to perform
+        \end{enumerate}
+    \item \textbf{Bus}: Set of wires (lines) that convey signal bits across each line.
+        \begin{itemize}
+            \item \textbf{Point to point bus}: Only two devices are connected to the bus
+            \item \textbf{Multipoint bus}: Many devices are connected to the bus
+        \end{itemize}
+    \item \textbf{MARIE bus}:
+        MARIE uses a single shared 16-bit bus for both data and addresses (time-multiplexed).
+        \bigbreak \noindent 
+        That means:
+        \begin{itemize}
+            \item The same 16 wires carry either addresses or data at different times.
+            \item Control signals decide what’s currently being sent.
+    \end{itemize}
+    \item \textbf{Send and receive data through the bus}: 
+        When one component needs to send or receive data:
+        \begin{itemize}
+            \item The Control Unit activates that device’s bus address line.
+            \item That component either places data on the bus (output) or reads from it (input).
+        \end{itemize}
+    \item \textbf{ISA}:  A computer’s instruction set architecture (ISA) specifies the format of its instructions and the primitive operations that the machine can perform.
+        The ISA is an interface between a computer’s hardware and its software. Some ISAs include hundreds of different instructions for processing data and controlling program execution.
+        \bigbreak \noindent 
+        The MARIE ISA has only thirteen instructions
+    \item \textbf{Control unit}: Ensures that each instruction is executed in sequence, making sure that data flows to the correct components as each instruction is executed.
+        \begin{itemize}
+            \item \textbf{Hardwired control unit}: Digit logic components are used to select the to and from components and ensure that data flows to them at the correct time
+            \item \textbf{Microprogrammed control}: Machine contains a small program in ROM in a component called the microcontroller. The microprogram contains RTL for each instruction. To execute an instruction, the microcontroller interprets the corresponding piece of the microprogram
+                \bigbreak \noindent 
+                The microcontroller (microprogram control unit) is the hardware that fetches, decodes, and executes microinstructions... just like the CPU.
+                \bigbreak \noindent 
+                Microprogrammed machines have the same control lines,  the patterns for the control lines are stored as data in the control store.
+        \end{itemize}
+    \item \textbf{Microprogramming}: Execution of microcode instructions produces control signal changes. The microprogram converts each microcode instruction into control signals.
+        \bigbreak \noindent 
+        Microprogram stored in firmware. The piece of ROM that holds the microprogram is called the control store. One microinstruction retrieved during each clock cycle.
+        \bigbreak \noindent 
+        Doesn't remove the control unit, changes its implementation. Instead of AND/OR gates and flip-flops generating control signals, you have
+        \begin{itemize}
+            \item The microinstructions in the control store.
+            \item Microsequencer (microcontroller / microprogram control unit) that fetches, decodes, and executes the microinstructions
+        \end{itemize}
+        \bigbreak \noindent 
+        \textbf{Note:} A microprogrammed control unit still requires circuits.
+        \begin{center}
+            \begin{tabularx}{\textwidth}{@{}lXX@{}}
+                \toprule
+                \textbf{Aspect} &	\textbf{Hardwired Control}&	\textbf{Microprogrammed Control} \\
+                \midrule
+                Control logic	& Implemented entirely by fixed logic circuits	& Implemented mostly as data stored in the control store (ROM or PLA) \\[2ex]
+                Still needs circuits?	 & Yes (for all control signals and timing)	& Yes (for the control store, microinstruction register, sequencing logic, etc.) \\
+                \bottomrule
+            \end{tabularx}
+        \end{center}
+        So the microprogrammed control unit is still a circuit, but one that reads control words from memory instead of generating them entirely through logic.
+    \item \textbf{Generic microsequencer}:
+        \begin{enumerate}
+            \item IR $\to$ microinstruction address generator $\to$ control store $\to$ microinstruction buffer $\to$ microinstruction decoder $\to$ control signals
+        \end{enumerate}
 \end{itemize}
 
 
