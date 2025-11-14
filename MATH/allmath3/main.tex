@@ -6589,9 +6589,13 @@
             \begin{align*}
                \text{proj}_{a}(x) = \frac{a^{T}x}{\norm{a}_{2}} \frac{a}{\norm{a}_{2}}  = \frac{\norm{a}_{2}\norm{x}_{2}}{\norm{a}_{2}} \frac{x}{\norm{x}_{2}} = x
             .\end{align*}
-            Hence, the projection is the same in both cases.
+            Hence, the projection is the same in both cases. In the raw dot product, notice that 
+            \begin{align*}
+                a^{T}x = \norm{a}_{2}\norm{x}_{2}\cos{\left(\theta \right)} = \pm \norm{a}_{2}\norm{x}_{2}
+            .\end{align*}
+            So, if $a$ and $x$ lie on the same line, then the projection of $x$ onto $a$ has length $\norm{x}_{2}$. If they are in opposite directions, $a^{T}x < 0$, and if they point in the same direction, $a^{T}x > 0$.
 
-        % \item \textbf{Describing dot product in words}: Suppose that $a,x\in \mathbb{R}^{n}$. If $a^{T}x = b$, then we say that the projection of $x$ onto $a$ has length $\frac{b}{\norm{a}} $.
+            % \item \textbf{Describing dot product in words}: Suppose that $a,x\in \mathbb{R}^{n}$. If $a^{T}x = b$, then we say that the projection of $x$ onto $a$ has length $\frac{b}{\norm{a}} $.
         \item \textbf{Describing dot product in words}: 
             Suppose that $a, x \in \mathbb{R}^n$. 
             The quantity $a^T x$ measures how much of $x$ lies in the direction of $a$. 
@@ -6602,6 +6606,7 @@
                 \item If $a^T x > 0$, then $x$ has a component in the same direction as $a$.
                 \item If $a^T x < 0$, then $x$ has a component in the direction opposite to $a$.
             \end{itemize}
+
 
 
 
@@ -9513,16 +9518,33 @@
             \begin{align*}
                 0 + td = td \in S 
             .\end{align*}
-        \item \textbf{Affine sets}: An affine set is a translation of a linear subspace
-            \begin{align*}
-                S = S_{0} + x_{0}
-            .\end{align*}
-            $x_{0}$ is the translation of the subspace so that it now passes through $x_{0}$ instead of the origin.
+        \item \textbf{Linear subspace}: A linear subspace (often called simply a subspace) $S \subseteq V$ is a subset of a vector space $V$ (the ambient space) that is itself a vector space under the same operations (vector addition and scalar multiplication).
             \bigbreak \noindent 
-            The direction vectors of $S$ are the elements of $S_{0}$. If $d \in S_{0}$, and $x_{0} \in S$, then
+            $S$ is a subspace iff it satisfies:
             \begin{align*}
-                x_{0} + td \in S_0 + x_{0} = S
+                \forall u,v \in S,;\ \forall \alpha, \beta \in \mathbb{R},\; \alpha u + \beta v \in S
             .\end{align*}
+            This property is called the closure under linear combinations. Notice that if $\alpha,\beta = 0$, then $0 \in S$ is a requirement. Thus, there are three key properties for a subset $S \subseteq V$ to be a linear subspace
+            \begin{enumerate}
+                \item $0 \in S $
+                \item $u,v \in S \implies u + v \in S$
+                \item $u\in S,\; \alpha \in \mathbb{R} \implies \alpha u\in S$
+            \end{enumerate}
+            If we wanted to be more general, we could swap $\mathbb{R}$ with any field $F$. I.e the scalars must live in some field $F$.
+        \item \textbf{Affine subspaces}: An affine set is a translation of a linear subspace. A set $A \subseteq V$ is an affine subspace of the ambient set $V$ if it can be written as
+            \begin{align*}
+                A = S + v = \{s + v:\; s \in S\}
+            ,\end{align*}
+            where $S$ is a linear subspace of the ambient space $V$ ($S \subseteq V$), and $v$ is a fixed member of the ambient space $V$
+            \begin{itemize}
+                \item $S$ is called the direction subspace or associated subspace of $A$
+                \item $v$ is any base point through which the affine subspace passes.
+            \end{itemize}
+            \textbf{Note:} So, $a \in A$ implies that $a = s + v = td + v$, for  $t \in \mathbb{R}, d \in \mathbb{S}$. Since $S$ is linear $td \in S$. So, every vector $s \in S$ is a direction vector for $A$.
+            
+
+
+
         \item \textbf{Orientation}: The direction it “points” in — how it’s aligned relative to coordinate axes, changes if you rotate or reflect it
             \bigbreak \noindent 
             So “orientation” answers questions like:
@@ -9540,7 +9562,7 @@
                 S = S_{0} + x_{0}
             .\end{align*}
             $S_{0}$ gives the orientation (the directions it extends in), so the affine subspace has the same orientation as its linear part $S_{0}$, translating doesn't affect orientation.
-        \item \textbf{Hyperplanes}: In $\mathbb{R}^{n}$ , a hyperplane is an $(n-1)$-dimensional affine subspace defined by a linear equation of the form:
+        \item \textbf{Intro to Hyperplanes}: In $\mathbb{R}^{n}$ , a hyperplane is an $(n-1)$-dimensional affine subspace defined by a linear equation of the form:
             \begin{align*}
                 H = \{x \in \mathbb{R}^{n}:\; a^{T}x = b\}
             ,\end{align*}
@@ -9636,6 +9658,28 @@
                 a^{T}x = a^{T}(x_{0} + tn) = a^{T}x_{0} + a^{T}tn = a^{T}x_{0} + ta^{T}n = b + t \cdot 0 = b
             .\end{align*}
             Notice that our vector generator $x = x_{0} + tn$ generates all vectors $x \in \mathbb{R}^{n}$ such that $a^{T}x = b$, and $x_{0} + tn$ is precisely the vector equation for a line. Thus, the hyperplane orthogonal to $a$ (the hyperplane with normal $a$), for $a \in \mathbb{R}^{2}$ is a 1D line.
+        \item \textbf{Hyperplanes}: Let $\mathbb{R}^{n}$ be the ambient space. Let $a$ be a member in the ambient space. The space orthogonal to $a$ is a hyperplane. That is,
+            \begin{align*}
+                H = \{x \in \mathbb{R}^{n}:\; a^{T}x = b\}
+            .\end{align*}
+            Observe that the vectors $x$ in the hyperplane are not orthogonal to $a$ if $b\ne 0$, since their dot product is nonzero. Instead, the direction vectors in $H$ are orthogonal to $a$. This is why we say the hyperplanes orientation is orthogonal to $a$.
+            \bigbreak \noindent 
+            If $b  = 0$, the hyperplane is a linear subspace of $\mathbb{R}^{n}$. If $b\ne 0$, the hyperplane is an affine subspace of $\mathbb{R}^{n}$. 
+            \bigbreak \noindent 
+            We know that $H = H_{0} + v$, for $v$ in the ambient space. So, $H = \{s + v:\; s \in \mathbb{H}_{0}\} $. Thus,
+            \begin{align*}
+                x \in H \implies x = s + v = td + v
+            ,\end{align*}
+            for $t \in \mathbb{R}$, $d \in H_{0} $. So, any member of $H_{0}$ is a direction vector for $H$. Let $x \in H$ be written as $x = x_{0} + s$, for $x_{0} \in H$, and $s \in H_{0}$. We have
+            \begin{align*}
+                a^{T}x = a^{T}(x_{0} + s) = a^{T}x_{0} + a^{T}s = b + 0 = b
+            ,\end{align*}
+            and 
+            \begin{align*}
+                a^{T}s = 0
+            .\end{align*}
+            Thus, the direction of $H$ is orthogonal to $a$, but the members are not.
+
             
 
 
@@ -9677,9 +9721,161 @@
                        &= I - 4uu^{T} + 4u(u^{T}u)u^{T} = I - 4uu^{T} + 4(u^{T}u)uu^{T}\\
                        &= I - 4uu^{T} + 4\norm{u}_{2}uu^{T} = I - 4uu^{T} + 4uu^{T} = I
             .\end{align*}
+        \item \textbf{$QR$ with Householder reflectors}: Let $A \in \mathbb{R}^{m\times n}$, where
+            \begin{align*}
+                A =
+                \begin{bmatrix}
+                    \mid & \mid & \cdots & \mid \\
+                    x^{1} & x^{2} & \cdots & x^{n} \\
+                    \mid & \mid & \cdots & \mid
+                \end{bmatrix}                
+            ,\end{align*}
+            where $x^{j}$ denotes the $j^{\text{th}}$ column of $A$. For each column $j$ of $A$, we have the following steps
+            \begin{enumerate}
+                \item $\tau_{j} = \text{sgn}(x_{1})\norm{x^{j}}_{2}$ 
+                \item $\gamma_{j} = \frac{\tau_{j} + x_{1}}{\tau_{j}} $
+                \item $u_{j} = \begin{pmatrix} 1 \\ x_{2}/(\tau_{j} + x_{1}) \\ \vdots \\ x_{m}/(\tau_{j} + x_{1})\end{pmatrix} $
+                \item $Q_{j} = I - \gamma_{j}u_{j}u_{j}^{T} $
+            \end{enumerate}
+            Then, just like with givens rotations, $Q = Q_{k} \cdots Q_{j} \cdots Q_{2}Q_{1}$, and $R = QA  = Q_{k}\cdots Q_{j} \cdots Q_{2}Q_{1}A$.
+        \item \textbf{Householder reflector decompositions}: We don't transform an entire column. Instead, we act on a block of each column, where the first entry is the first nonzero entry starting from the bottom to the top for each column of $R$. For example, if
+            \begin{align*}
+                A = \begin{pmatrix} 
+                    a_{11} & a_{12} \\ 
+                    a_{21} & a_{22} \\ 
+                    a_{31} & a_{32} \\ 
+                    a_{41} & a_{42}
+                \end{pmatrix}
+            .\end{align*}
+            Then $R$ looks like
+            \begin{align*}
+                R = \begin{pmatrix} 
+                    r_{11} & r_{12} \\
+                    0 & r_{22} \\
+                    0 & 0\\
+                    0 & 0
+                \end{pmatrix}
+            .\end{align*}
+            So, for the first column of $A$, we do need to act on the entire column. But, for the second column, we only need from the second element onward.
+            \bigbreak \noindent 
+            Because the vectors that we need $Q_{j}$ to act on will be of size one less than the previous, the portion of $Q_{j}$ that is not $I$ will also decrease in size. Note that $Q_{j}$ will always be of size $m\times m$. We will have
+            \begin{align*}
+                Q_{1} = I_{m} - \gamma_{1}u_{1}u_{1}^{T},\; Q_{2} = I_{m-1} - \gamma_{2}u_{2}u_{2}^{T}, \ldots
+            .\end{align*}
+            Consider $Q_{2}$, the first row and the first column will be $I$, and the remaining $(m-1\times m-1) $ block will be $I_{m-1} - \gamma_{2}u_{2}u_{2}^{T}$. Because of this fact, the first row and first column of $A$ will be unchanged.
+            \bigbreak \noindent 
+            If $A \in \mathbb{R}^{m\times n}$, then
+            \begin{align*}
+                A_{1} = Q_{1}A = 
+                \begin{pmatrix}
+                    \begin{array}{c|c}
+                        -\tau_{1} & a_{1}^{T} \\[2ex]
+                        \hline\\[0.01cm]
+                        0 & \tilde{A}_{1}
+                    \end{array}
+                \end{pmatrix}
+            ,\end{align*}
+            where 
+            \begin{align*}
+                Q_{1} = I_{m} - \gamma_{1}u_{1}u_{1}^{T}
+            .\end{align*}
+            Then,
+            \begin{align*}
+                A_{2} = Q_{2}A_{1} = Q_{2}Q_{1}A = 
+                \begin{pmatrix} 
+                    \begin{array}{c|c}
+                        -\tau_{1} & a_{1}^{T} \\[2ex]  
+                        \hline\\[0.01cm]
+                        0 & \begin{array}{c|c}
+                           - \tau_{2} & a_{2}^{T}\\[2ex] 
+                            \hline\\[0.01cm]
+                            0 & \tilde{A}_{2}
+                        \end{array}
+                    \end{array}
+                \end{pmatrix}
+            ,\end{align*}
+            with 
+            \begin{align*}
+                Q_{2} = \begin{pmatrix}
+                    \begin{array}{c|c}
+                        1 & 0 \\[2ex]
+                        \hline\\[0.01cm]
+                        0 & I_{m-1}-\gamma_{2}u_{2}u_{2}^{T}
+                    \end{array}
+                \end{pmatrix}
+            .\end{align*}
+            Then,
+            \begin{align*}
+                A_{3} = Q_{3}A_{2} =Q_{3}Q_{2}Q_{1}A =
+                \begin{pmatrix} 
+                    \begin{array}{c|c}
+                        -\tau_{1} & a_{1}^{T} \\[2ex]  
+                        \hline\\[0.01cm]
+                        0 & \begin{array}{c|c}
+                           - \tau_{2} & a_{2}^{T}\\[2ex] 
+                            \hline\\[0.01cm]
+                           0 & \begin{array}{c|c}
+                               -\tau_{3} & a_{3}^{T}\\[2ex] 
+                               \hline\\[0.01cm]
+                               0 & \tilde{A}_{3}
+                            \end{array}
+                        \end{array}
+                    \end{array}
+                \end{pmatrix}
+            ,\end{align*}
+            with
+            \begin{align*}
+                Q_{3} = \begin{pmatrix} 
+                    \begin{array}{c|c}
+                        1 & 0 \\[2ex]
+                        \hline\\[0.01cm]
+                        0 & \begin{array}{c|c}
+                            1 & 0 \\[2ex]     
+                            \hline\\[0.01cm]
+                            1 & I_{m-2} - \gamma_{3}u_{3}u_{3}^{T}
+                        \end{array}
+                    \end{array}
+                \end{pmatrix}
+            .\end{align*}
+            We proceed in this fashion until $A_{n} = R$. Note that we use the blocks of $Q$ that contain the reflector to find the blocks of $A$ that are changed in each step. Call this block $\bar{Q}$.
 
-
-
+        \item \textbf{Flop counts for $QR$ with Householder reflectors}: Consider the steps of Householder
+            \begin{enumerate}
+                \item $\tau_{j} = \text{sgn}(x_{1}) \norm{x^{j}}_{2}$ $(\mathcal{O}(m) \text{ flops})$
+                \item $\gamma_{j} = \frac{\tau_{j} + x_{1}}{\tau_{j}} $ $(\mathcal{O}(1) \text{ flops}) $
+                \item $u_{j} = \begin{pmatrix} 1 \\ x_{2}/(\tau_{j} + x_{1}) \\ \vdots \\ x_{m}/(\tau_{j} + x_{1}) \end{pmatrix} $ $(\mathcal{O}(m) \text{ flops}) $
+                \item $Q_{j} = I - \gamma_{j}u_{j}u_{j}^{T}$ $(\mathcal{O}(m^{2}) \text{ flops}) $
+            \end{enumerate}
+            So, each $Q_{j}$ requires roughly $\mathcal{O}(m^{2})$ flops. But, we compute these steps for each column of $A$. If $A$ has $n$ columns, then we require roughly $\mathcal{O}(nm^{2})$ flops. If $A$ is square, then we need $\mathcal{O}(m^{3})$ flops for the $QR$ factorization of $A$ with Householder reflectors.
+            \bigbreak \noindent 
+            To be precise, $QR$ factorization with Householder reflectors requires $\frac{4}{3}m^{3}$ flops. Not as efficient as $LU$ or Cholesky, but more efficient that computing the inverse.
+        \item \textbf{Reducing flops in $QR$ factorization with Householder reflectors}: Consider a system $Ax = b$, with the $QR$ factorization,
+            \begin{align*}
+                Ax = b \implies QRx = b \implies Rx = Qb
+            .\end{align*}
+            But, $R = QA$, so
+            \begin{align*}
+                Rx = Qb \implies QA = Qb \implies Q_{k} \cdots Q_{2}Q_{1}A = Q_{k} \cdots Q_{2}Q_{1}b
+            .\end{align*}
+            However, we don't really matrix multiply $Q_{j}$ by $A$, what we do is multiply columns of $A$ by $Q_{j}$. Consider a vector $x$ multiplied by a Householder reflector $Q$...
+            \begin{align*}
+                Qx = (I - \gamma uu_{T})x = x - \gamma uu^{T}x
+            .\end{align*}
+            The expensive part is computing the outer product $uu^{T}$. Instead, lets use the associative law of vectors to instead do
+            \begin{align*}
+                Qx = x - \gamma u(u^{T}x)
+            .\end{align*}
+            Notice that $u^{T}x$ is an inner product, just a real number. Thus, we can move it. We have
+            \begin{align*}
+                Qx = x - \gamma (u^{T}x)u
+            .\end{align*}
+            This simple fact reduces the flops for this step by a factor of $m$, i.e $\mathcal{O}(m)$ flops instead of $\mathcal{O}(m^{2})$. 
+            \bigbreak \noindent 
+            We now don't even need to form $Q$ at all, using the fact that since
+            \begin{align*}
+                Rx = Qb \implies QA = Qb
+            ,\end{align*}
+            all we need is vector multiplication by the form of $Q$, the form that we have above $(I - \gamma(u^{T}x)u) $
 
     \end{itemize}
 
