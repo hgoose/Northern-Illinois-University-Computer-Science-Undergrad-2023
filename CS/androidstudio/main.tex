@@ -863,6 +863,75 @@
                 String imageName = "u" + i; // creates u1, u2, ..., u9
                 int resID = getResources().getIdentifier(imageName, "drawable", getPackageName());
             \end{javacode}
+        \item \textbf{Built-in layout resource}: Android provides a set of common, basic layouts so you don't need to create XML files for simple lists.
+            \begin{itemize}
+                \item \textbf{android.R.simple\_list\_item\_1}: It is basically a single TextView, with predefined padding and styling. The XML looks something like
+                    \bigbreak \noindent 
+                    \begin{xmlcode}
+                        <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                            android:id="@android:id/text1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="?android:attr/listPreferredItemHeightSmall"
+                            android:gravity="center_vertical"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:textAppearance="?android:attr/textAppearanceListItemSmall" />
+                    \end{xmlcode}
+                    \bigbreak \noindent 
+                    Perfect for simple \texttt{ArrayAdapter<String>} lists.
+                \item \textbf{android.R.layout.simple\_spinner\_item}: Used for the selected item in a Spinner. Also just one TextView
+                    \bigbreak \noindent 
+                    \begin{xmlcode}
+                        <TextView
+                            android:id="@android:id/text1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:padding="8dp" />
+                    \end{xmlcode}
+                    \bigbreak \noindent 
+                    Suitable for
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        new ArrayAdapter(this, android.R.layout.simple_spinner_item, data);
+                    \end{javacode}
+                \item \textbf{android.R.layout.simple\_dropdown\_item\_1line}: Used for dropdown lists:
+                    \begin{itemize}
+                        \item AutoCompleteTextView
+                        \item Spinner dropdowns
+                    \end{itemize}
+                    Again, a single TextView:
+                    \bigbreak \noindent 
+                    \begin{xmlcode}
+                        <TextView
+                            android:id="@android:id/text1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:padding="8dp" />
+                    \end{xmlcode}
+                    \bigbreak \noindent 
+                    Used like this 
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        adapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+                    \end{javacode}
+
+            \end{itemize}
+        \item \textbf{Other Common Built-In Layouts}:
+            \begin{itemize}
+                \item \textbf{simple\_list\_item\_1}:	One TextView
+                \item \textbf{simple\_list\_item\_2}:	Two stacked TextViews (text1 and text2)
+                \item \textbf{simple\_list\_item\_checked}:	List item with checkmark
+                \item \textbf{simple\_list\_item\_activated\_1}:	For activated/selected states
+                \item \textbf{simple\_spinner\_item}:	Selected Spinner item
+                \item \textbf{simple\_spinner\_dropdown\_item}:	Dropdown row view
+                \item \textbf{simple\_dropdown\_item\_1line}: Single-line dropdown suggestion
+            \end{itemize}
+
+
+
     \end{itemize}
 
     \pagebreak 
@@ -994,7 +1063,7 @@
             \bigbreak \noindent 
             The configuration changes are
             \begin{itemize}
-                \item \textbf{orientation}:	Screen rotated (portrait ↔ landscape)
+                \item \textbf{orientation}:	Screen rotated (portrait $\leftrightarrow$ landscape)
                 \item \textbf{screenSize}:	Screen size changes (usually with orientation)
                 \item \textbf{keyboardHidden}:	Hardware keyboard opened/closed
                 \item \textbf{layoutDirection}:	RTL (Arabic/Hebrew) vs LTR languages
@@ -3188,8 +3257,129 @@
     \pagebreak 
     \subsection{ListView}
     \begin{itemize}
-        \item \textbf{Intro}: A ListView is a UI component that displays a vertical scrolling list of items.
+        \item \textbf{Intro}: A ListView is a UI component that displays a vertical scrolling list of items. 
+            It's an AdapterView that shows one row per item, must use an Adapter to supply the row data
+            \bigbreak \noindent 
+            It does \textbf{not} know:
+            \begin{itemize}
+                \item how many items you have
+                \item how each row looks
+                \item how to convert your data (Strings, objects, etc.) into a row view
+            \end{itemize}
+            The Adapter handles those things.
+        \item \textbf{Example}:
+            \bigbreak \noindent 
+            \begin{javacode}
+            ListView listView = findViewById(R.id.listView);
+
+            String[] animals = {"Dog", "Cat", "Bird"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_list_item_1,
+                    animals
+            );
+
+            listView.setAdapter(adapter);
+            \end{javacode}
+            \bigbreak \noindent 
+            ArrayAdapter expects the layout to contain a TextView with id @android:id/text1, which is what the built-in android.R.layout.simple\_list\_item\_1 provides
     \end{itemize}
+
+    \pagebreak 
+    \subsection{Adapter, AdapterView, ArrayAdapter, BaseAdapter}
+    \begin{itemize}
+        \item \textbf{Adapter}: 
+            An Adapter is an object in Android that acts as a bridge between a data source and an AdapterView (such as a ListView, GridView, Spinner, or AutoCompleteTextView).
+            \bigbreak \noindent 
+            Its primary responsibility is to provide access to the data and create views for each data item so the AdapterView can display them on the screen.
+            \bigbreak \noindent 
+            Adapters allow data of any kind—arrays, lists, database results, custom objects—to be converted into uniform, displayable views.
+        \item \textbf{Purposes of an Adapter}: The Adapter serves two main purposes:
+            \begin{enumerate}
+                \item \textbf{Supplies Data}: The Adapter tells the AdapterView how many items exist (\texttt{getCount()}), what data is at a given position (\texttt{getItem(position)})
+                \item \textbf{Supplies Views}: The Adapter is responsible for producing a View that represents each item, usually through converting data into TextViews, or inflating custom row layouts
+                    \bigbreak \noindent 
+                    It does this through the method:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        getView(int position, View convertView, ViewGroup parent)
+                    \end{javacode}
+                    \bigbreak \noindent 
+                    This method returns the actual row or grid cell that appears on screen.
+            \end{enumerate}
+        \item \textbf{AdapterView}:
+            An AdapterView is an abstract view in Android that displays a collection of items by binding the view to an Adapter. It provides the framework for presenting data in a structured, scrollable layout, such as a list or a grid.
+            \bigbreak \noindent 
+            The AdapterView itself does not store or manage the data; instead, it relies on an Adapter to supply both the data and the corresponding child views.
+        \item \textbf{Purpose of an AdapterView}: The purpose of an AdapterView is to:
+            \begin{itemize}
+                \item \textbf{Display multiple data items} (e.g., a list of strings, objects, etc.)
+                \item \textbf{Create and manage views} for each item using an Adapter
+                \item \textbf{Handle user interaction} with the individual items (such as clicks)
+            \end{itemize}
+        \item \textbf{Common AdapterView subclasses}: Examples of views that extend AdapterView include:
+            \begin{itemize}
+                \item \textbf{ListView:} displays items in a vertically scrollable list
+                \item \textbf{GridView:} displays items in a grid of rows and columns
+                \item \textbf{Spinner:} displays a dropdown list of choices
+                \item \textbf{AutoCompleteTextView:} provides suggestions based on user input
+            \end{itemize}
+        \item \textbf{ArrayAdapter}: An ArrayAdapter is a concrete subclass of the Adapter class in Android that binds an array or list of objects to an AdapterView, such as a ListView, Spinner, or AutoCompleteTextView. It provides a simple way to convert each element of a Java array or List<T> into a View—typically a single TextView.
+        \item \textbf{ArrayAdapter purpose}: The ArrayAdapter is designed to:
+            \begin{itemize}
+                \item Store a collection of data items (usually Strings, but can be any object type)
+                \item Provide the number of items to the AdapterView
+                \item Create a View for each item, typically using a standard Android layout
+            \end{itemize}
+        \item \textbf{Example}:
+            \bigbreak \noindent 
+            \begin{javacode}
+                String[] colors = {"Red", "Green", "Blue"};
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        colors
+                );
+                listView.setAdapter(adapter);
+            \end{javacode}
+            \bigbreak \noindent 
+            Where the arguments are
+            \begin{itemize}
+                \item \textbf{Context}: The Activity or Application context.
+                \item \textbf{Resource ID for the row layout}: Usually a layout with a single TextView, e.g. android.R.layout.simple\_list\_item\_1
+                \item \textbf{Data source}: An array (String[]) or a list (ArrayList<String>)
+            \end{itemize}
+            Internally, ArrayAdapter’s job is to take each data item and convert it into a View.
+            \bigbreak \noindent 
+            For simple layouts:
+            \begin{itemize}
+                \item It inflates the row layout (e.g., simple\_list\_item\_1)
+                \item It finds the TextView
+                \item It sets the text to the item’s string value
+            \end{itemize}
+            If the data is not a string, it uses the item’s toString() method.
+            \bigbreak \noindent 
+            ArrayAdapter works best with layouts that contain one TextView or contain a TextView as the root element
+        \item \textbf{Adapter vs ArrayAdapter}: Adapter is an interface / abstract concept in Android.
+            \bigbreak \noindent 
+            It describes:
+            \begin{itemize}
+                \item What an adapter must do
+                \item How it supplies data to an AdapterView
+            \end{itemize}
+            An Adapter must provide methods such as:
+            \begin{itemize}
+                \item \textbf{getCount()}: how many items
+                \item \textbf{getItem(position)}: return data at position
+                \item \textbf{getView(position, convertView, parent)}: return a View for the item
+            \end{itemize}
+            You almost never create an Adapter yourself because it is too general. Instead, you use one of its concrete subclasses, like ArrayAdapter.
+            \bigbreak \noindent 
+            ArrayAdapter is a specific class that implements the Adapter contract. It works with arrays and ArrayLists
+
+    \end{itemize}
+
 
     \pagebreak 
     \subsection{Image view}
@@ -3203,8 +3393,6 @@
     \pagebreak 
     \subsection{RadioGroup and Radio Buttons}
 
-    \pagebreak 
-    \subsection{Adapter view}
 
     \pagebreak 
     \subsection{Abs spinner}
@@ -4667,6 +4855,44 @@
 
     \pagebreak \noindent
     \subsection{ListView}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Adapter}
+    \begin{itemize}
+        \item \textbf{Methods} 
+            \begin{itemize}
+                \item \textbf{abstract int	getCount():} How many items are in the data set represented by this Adapter.
+                \item \textbf{abstract Object	getItem(int position)}: Get the data item associated with the specified position in the data set.
+                \item \textbf{abstract boolean	isEmpty()}:
+                \item \textbf{abstract View	getView(int position, View convertView, ViewGroup parent)}: Get a View that displays the data at the specified position in the data set.
+                \item \textbf{long getItemId(int position)}:
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{AdapterView (Abstract)}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                \item \textbf{abstract T	getAdapter()}: Returns the adapter currently associated with this widget.
+                \item \textbf{abstract void	setAdapter(T adapter)}: Sets the adapter that provides the data and the views to represent the data in this widget.
+                \item \textbf{void	setEmptyView(View emptyView)}: Sets the view to show if the adapter is empty
+                \item \textbf{View	getEmptyView()}: When the current adapter is empty, the AdapterView can display a special view called the empty view.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{ArrayAdapter}
+
+    \pagebreak 
+    \subsection{BaseAdapter}
+
 
 
     \pagebreak \noindent
