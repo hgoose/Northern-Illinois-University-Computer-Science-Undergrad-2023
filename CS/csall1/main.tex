@@ -11974,6 +11974,463 @@ indicate which strong entity the weak entity depends upon.
             \end{itemize}
     \end{itemize}
 
+    \pagebreak 
+    \subsection{Chapter 8: Software}
+    \subsubsection{Assemblers}
+    \begin{itemize}
+        \item \textbf{Intro}: Mnemonic instructions, such as LOAD 104, are easier for humans to write and understand than binary instructions. 
+            \bigbreak \noindent 
+            The assembler translates instructions that are comprehensible to humans into binary for the CPU to interpret
+            \bigbreak \noindent 
+            The assembler creates executable software compatible with the operating system and available hardware.
+        \item \textbf{Machine code}: When an assembler translates an instruction like \texttt{LOAD $x$}, the assembler produces a binary sequence that contains:
+            \begin{enumerate}
+                \item \textbf{Opcode}: the instruction identifier (e.g., “LOAD”)
+                \item \textbf{Operands}: such as the address, register number, or immediate value
+                \item \textbf{Possibly other fields}: depending on the CPU (flags, function bits, etc.)
+            \end{enumerate}
+            That binary sequence is the machine code.
+        \item \textbf{Object files}: Assemblers create an \textit{object program file} from mnemonic source code in two passes.
+            \bigbreak \noindent 
+            An object file is a partially compiled file produced by a compiler before linking. It contains machine code, but the code is not yet fully ready to run because external references (functions, variables in other files, libraries, etc.) are still unresolved.
+        \item \textbf{Forward / backward references}: Forward references happen when your code refers to something before it has been defined.
+            \bigbreak \noindent 
+            A \textbf{backward reference} is simply when your code refers to something that has already been defined earlier.
+        \item \textbf{The two passes}:
+            \begin{enumerate}
+                \item \textbf{During the first pass}: The assembler assembles as much of the program as it can, while it builds a symbol table that contains memory references for all symbols in the program
+                \item \textbf{During the second pass}: The instructions are completed using the values from the symbol table.
+            \end{enumerate}
+        \item \textbf{The symbol table and the first/second pass}: The \textbf{symbol table} is basically the assembler’s or compiler’s name-tracker.
+            \bigbreak \noindent 
+            It’s a map which records every important name it sees—like labels, variables, and functions—and remembers information about them (such as their address or type).
+            \begin{itemize}
+                \item When the assembler sees a name (like a label), it writes it into the symbol table along with where it is in the program.
+                \item If the program uses a name before it’s defined (a forward reference), the assembler notes it and later comes back to fill in the correct address once the name is finally defined.
+                \item When linking multiple object files, the linker uses the symbol tables from each file to match up which names belong to which actual addresses.
+            \end{itemize}
+            The symbol table is how the compiler/assembler keeps track of what every name means and where it is.
+            \bigbreak \noindent 
+            Two passes are needed to handle forward references. Suppose your program contains \texttt{B $x$}, where $x$ is an address that occurs after the branch statement.
+            \bigbreak \noindent 
+            How can the assembler know the absolute address of $x$, i.e., how can it know how many bytes will occur between the branch statement and the label $x$?
+            \bigbreak \noindent 
+            During the first pass, when the assembler first encounters the label / symbol $x$, the assembler adds the label $x$ to the symbol table. It puts zeros in the address field of the code being assembled for the branch statement, i.e., it leaves the address unresolved until it finds it. Still in the first pass, once $x$ is found, it updates the symbol table to now map $x$ to its address, since it now knows where $x$ is defined.
+            \bigbreak \noindent 
+            References are resolved during the second pass. By the end of the first pass, the symbol table is fully built. As long as the symbols/labels we use in the program are defined, the symbol table will map that symbol / label to its address. On the second pass, it looks up all unresolved references and replaces the zeros (in the machine code) with the correct address.
+        \item \textbf{The linker}: The linker is a tool that takes one or more object files (the partially-compiled outputs from the assembler/compiler) and combines them into a single final program, which is either an executable file, a library, or a module
+            \bigbreak \noindent 
+            When you compile a program with multiple files, each object file contains
+            \begin{itemize}
+                \item machine code
+                \item missing addresses for external symbols (functions/variables in other files)
+                \item a symbol table
+            \end{itemize}
+            The linker’s job is to:
+            \begin{itemize}
+                \item Match up all the undefined symbols with their actual definitions.
+                \item Fill in all missing addresses in the machine code.
+                \item Lay out all the code and data in memory in a single, unified executable.
+            \end{itemize}
+        \item \textbf{The two passes, example}: Consider the program
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}ll@{}}
+                    \toprule
+                    \textbf{Address} & \textbf{Instruction} \\
+                    \midrule
+                    100 & Load $x$ \\[2ex]
+                    101 & Add $y$ \\[2ex]
+                    102 & Store $z$ \\[2ex]
+                    103 & Halt \\[2ex]
+                    104 $x$, & DEC $35$ \\[2ex]
+                    105 $y,$& DEC $-23$ \\[2ex]
+                    106 $z,$& HEX $0000$ \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            During the first pass, we know that LOAD will generate op code ‘1’, but we don’t know the address of $x$ yet. For HALT, we can generate the entire instruction because it has no addresses to resolve.
+            \bigbreak \noindent 
+            When we get to $x$, we can see that its address will be 104. So, at the end of the first pass, we have the symbol table
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}ll@{}}
+                    \toprule
+                    \textbf{Symbol} & \textbf{Address} \\
+                    \midrule
+                    $x$ & \textit{unresolved} \\[2ex]
+                    $y$ &  \textit{unresolved} \\[2ex]
+                    $z$ & \textit{unresolved} \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            and partial machine code
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}X@{}}
+                    \toprule
+                    \textbf{Machine code} \\
+                    \midrule
+                    1 $000$ \\[2ex]
+                    3 $000$ \\[2ex]
+                    2 $000$ \\[2ex]
+                    7 $000$ \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            In the second pass, we fill in addresses for $x$, $y$, and $z$.
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}X@{}}
+                    \toprule
+                    \textbf{Machine code} \\
+                    \midrule
+                    1 $104$ \\[2ex]
+                    3 $105$ \\[2ex]
+                    2 $106$ \\[2ex]
+                    7 $000$ \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+        \item \textbf{Output of assemblers (relocatable binary code)}: The output of most assemblers is a stream of \textbf{relocatable binary code}. 
+            In relocatable code, operand addresses are relative to where the operating system chooses to load the program.
+            \bigbreak \noindent 
+            When relocatable code is loaded for execution, special registers provide the base address. Addresses specified within the program are interpreted as offsets from the base address.
+            \bigbreak \noindent 
+            \textbf{Note:} Absolute (nonrelocatable) code is most suitable for device and operating system control programming
+        \item \textbf{Absolute code}: Absolute code is machine code that uses fixed, hard-coded memory addresses. Because the addresses are built directly into the code, the program:
+            \begin{itemize}
+                \item must be placed at a specific location in memory
+                \item cannot be moved without breaking the program
+                \item has no relocation, no flexibility
+            \end{itemize}
+            This was common in early computers and simple embedded systems.
+            \bigbreak \noindent 
+            If code is absolute, then
+            \begin{itemize}
+                \item Jumps contain absolute addresses
+                \item Loads/stores contain absolute addresses
+                \item The code cannot be moved
+                \item The code cannot be relocated
+                \item The code cannot be linked with other modules
+                \item The code must run at a specific fixed address
+            \end{itemize}
+            \bigbreak \noindent 
+            Absolute code cannot be linked because to link two (or more) object files together, the linker must:
+            \begin{itemize}
+                \item Combine their code sections into one big program
+                \item Reposition code (since each file starts at address 0)
+                \item Assign final addresses for all functions and variables
+                \item Rewrite instructions so they point to the right final address
+            \end{itemize}
+            This process is called relocation. But if the code is absolute, the linker cannot change those addresses.
+        \item \textbf{Relocatable code}: Relocatable code (also called position-independent code or maintainable code) does NOT contain final memory addresses. Instead, it has symbolic references that the linker or loader fills in later. 
+            \bigbreak \noindent 
+            the machine code contains:
+            \bigbreak \noindent 
+            \begin{nasmcode}
+            jump SOME_LABEL   <- unresolved reference
+            \end{nasmcode}
+            \bigbreak \noindent 
+            and the linker later patches in the correct address. This makes the program:
+            \begin{itemize}
+                \item movable
+                \item linkable with other object files
+                \item loadable anywhere in memory
+            \end{itemize}
+            \textbf{Note:} If you write a literal address, the assembler encodes it literally, If you reference a symbol (like a label), the assembler inserts:
+            \begin{itemize}
+                \item An instruction with a placeholder
+                \item a relocation entry saying: “The linker must fix this address later.”
+            \end{itemize}
+            Relocatable code means:
+            \begin{itemize}
+                \item symbols are not bound to final addresses yet
+                \item the machine code contains placeholders for symbolic references
+                \item the assembler creates relocation entries
+                \item the linker or loader will fill in the real addresses later
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Note:} The assembler decides whether to generate relocation entries. 
+        \item \textbf{Relocation entry}: A relocation entry is a record that tells the linker: “At this specific location in the machine code, you must insert or adjust the address of this symbol.”
+            \bigbreak \noindent 
+            A relocation entry contains:
+            \begin{itemize}
+                \item location inside the object file where the placeholder lives
+                \item type of relocation (absolute? relative? PC-relative?)
+                \item size (how many bytes to rewrite)
+                \item which symbol it refers to
+                \item addends (if needed for offset calculations)
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Binding}
+    \begin{itemize}
+        \item \textbf{Binding}: The process of assigning physical addresses to program variables is called \textbf{binding}.
+            \bigbreak \noindent 
+            Binding can occur at compile time, load time, or run time. Compile time binding gives us absolute code.
+        \item \textbf{Compile time binding (absolute code)}: Compile time binding gives us absolute code. In absolute code, a program is always loaded into memory at the same location
+            \bigbreak \noindent 
+            Absolute code is only used today for programs such as the operating system and network handlers, which can’t be moved around because who would do it? (Imagine the operating system moving itself around while it is running...)
+            \bigbreak \noindent 
+            Compile-time binding means all symbol addresses are fixed (decided) during compilation/assembly, not delayed until linking or loading.
+            \bigbreak \noindent 
+            If the compiler/assembler knows every address, it must:
+            \begin{itemize}
+                \item compute and insert final addresses into the machine code
+                \item immediately “bind” symbols to their real numeric addresses
+            \end{itemize}
+            There is nothing left to fix later. If you choose to resolve every address at compile time, the resulting machine code must hard-code those addresses. And that is absolute code. There is no relocation stage, because the compiler has already “locked in” all the addresses.
+        \item \textbf{The loader}: The loader is a program / subsystem whose job is to load an executable into memory and prepare it to run.
+            \bigbreak \noindent 
+            The loader is the part of the operating system that:
+            \begin{itemize}
+                \item Reads the executable file (ELF on Linux, PE on Windows, Mach-O on macOS)
+                \item Creates a new process
+                \item Allocates virtual memory for code, data, stack, heap
+                \item Loads the program’s segments into memory
+                \item Performs load-time relocation (if needed)
+                \item Links shared libraries (dynamic linking)
+                \item Sets up the initial stack and arguments
+                \item Jumps to the program’s entry point (main/\_start)
+            \end{itemize}
+            Then your program begins executing.
+        \item \textbf{Load time binding}: Load time binding assigns physical addresses as the program is loaded into memory.
+            \bigbreak \noindent 
+            With load time binding the program can be loaded into different places but it cannot be moved once it is loaded. That is not common today and is included here only for the sake of completeness.
+        \item \textbf{Run time binding}: Run time binding requires a base register or equivalent to carry out the address mapping. That is the normal way of loading programs today
+            \bigbreak \noindent 
+            Runtime binding means the program does NOT know the address of a symbol until the moment that symbol is actually used while the program is running.
+        \item \textbf{Link editors (linkers) and static linking}: On most systems, binary instructions must pass through a link editor (or linker) to create an executable module. 
+            \bigbreak \noindent 
+            Link editors combine multiple binary object files into a single executable file, resolving references to all external symbols. An external symbol is a reference to data or code in another object module
+            \bigbreak \noindent 
+            \textbf{Note:} This is called \textbf{static linking}.
+        \item \textbf{Linkers two passes}: The link editor has two passes, just like the assembler, and for the same reason.
+            \bigbreak \noindent 
+            Suppose module A calls function B which is in a different object file. The first time the linker reads module A, it has not assigned an address to function B yet.
+            \bigbreak \noindent 
+            The first pass reads all the object modules and creates a symbol table containing the names of all external references.
+            \bigbreak \noindent 
+            The second pass reads all the object modules again, assigning addresses from the symbol table to all the external references. It also builds an executable module, which may have a different format from the object modules.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1040.png}
+        \item \textbf{Dynamic linking}: A problem with static linking comes when someone wants to update a function in one of the modules. After updating your function, you need to find every executable it was linked into and relink it.
+            \bigbreak \noindent 
+            A way to solve this problem is dynamic linking. In dynamic linking, any module with a function that can be called is loaded into a dynamic link library (DLL).
+            \bigbreak \noindent 
+            As the program runs, when an external function is called, the system finds the correct module in the DLL and calls the function
+            \bigbreak \noindent 
+            The advantage of dynamic linking is that when you want to change a function, you only need to update it in its DLL. You do not need to find all the programs that call it
+            \bigbreak \noindent 
+            Another advantage of dynamic linking is that executables are smaller, since they don’t contain copies of all the functions they call
+            \bigbreak \noindent 
+            A disadvantage of dynamic linking is the inverse of the disadvantage of static linking
+            \bigbreak \noindent 
+            Suppose your program still needs the old version of a function. If the DLL is updated with a new version that is incompatible or simply works differently, your program may no longer work. So you still need to be aware of any library updates
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Compilers}
+    \begin{itemize}
+        \item \textbf{Compilers}: A compiler converts a programming language that is comprehensible to humans into binary
+        \item \textbf{Assemblers vs compilers}:  In assembly language, there usually is a one-to-one correspondence between a mnemonic instruction and its machine code.
+            \bigbreak \noindent 
+            Compilers allow higher-level constructs such as $X = Y + Z$
+        \item \textbf{Higher level assemblers}: Some higher-level assemblers allow constructs such as IF, looping, or even pointer notation. This bridges the difference between a high-level assembler and a low-level language such as C
+            \bigbreak \noindent 
+            C is called a low-level language because, although it contains constructs such as IF, looping and pointers, there is a much more direct relationship between C code and the compiled binary than with higher-level languages
+        \item \textbf{Macros}: In some assemblers, higher-level constructs are implemented as macros.
+            \bigbreak \noindent 
+            In a macro, the programmer writes the higher-level construct, and a pre-pass of the assembler converts the construct to a set of assembler language instructions before the regular assembly process.
+            \bigbreak \noindent 
+            Macros have become deprecated because they create hard-to-find bugs when mixed with compiled code
+        \item \textbf{Compiler implementation}: Compilers bridge the gap between the higher level language and the machine’s binary instructions.
+            \bigbreak \noindent 
+            A traditional approach to this translation is a six-phase process. The first three are analysis phases, the last three compiler phases are synthesis phases
+            \begin{enumerate}
+                \item \textbf{Lexical analysis} extracts tokens, e.g., reserved words and variables.
+                \item \textbf{Syntax analysis (parsing)} checks statement construction.
+                \item \textbf{Semantic analysis} checks data types and the validity of operators.
+                \item \textbf{Intermediate code generation} creates an intermediate representation to facilitate optimization and translation.
+                \item \textbf{Optimization} creates assembly code while taking into account architectural features that can make the code efficient.
+                \item \textbf{Code generation} creates binary code from the optimized assembly code.
+            \end{enumerate}
+        \item \textbf{Intermediate code generation: Three address notation}: A traditional form of intermediate code is three-address notation.
+            \bigbreak \noindent 
+            In this form, each instruction has at most three operands, typically a binary operator and an assignment. For example, $Z = X + Y$.
+        \item \textbf{Modularity}: Through the use of modularity, compilers can be written for various platforms by rewriting only the last two phases.
+            \bigbreak \noindent 
+            Thus front-ends for multiple languages can generate the same three-address notation. Then different code can be generated for different platforms.
+        \item \textbf{More (or fewer) phases}: Compilers may have more or fewer phases. Combining the first two or even the first three phases is very common today.
+            \bigbreak \noindent 
+            These phases may be accomplished via the use of a compiler constructor such as YACC (“yet another compiler constructor”). A compiler constructor builds the phases of a compiler from a description of the language.
+            \bigbreak \noindent 
+            The description is often based on BNF (Backus-Naur form), a format for defining each type of statement similar to those used in elementary programming textbooks.
+        \item \textbf{Optimization}: 
+            \begin{itemize}
+                \item \textbf{Pinhole}: Pinhole optimizers use a sliding window to look at small numbers of consecutive assembler instructions. Redundant sequences such as “STORE X, LOAD X, STORE X” can be removed.
+                \item \textbf{Global optimizers}: Global optimizers look at the bigger picture. Perhaps a constant “TAX\_RATE = .03” is defined but never used.
+                    \bigbreak \noindent 
+                    Even if it is used, perhaps it is not necessary to define storage for the variable. Simply replace the variable by the constant wherever it is used.
+            \end{itemize}
+            Optimizers need to take function calls into account.
+        \item \textbf{Compiler phase figure}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1041.png}
+        \item \textbf{Interpreters}: Interpreters produce executable code (not really) from source code in real time, one line at a time. This makes interpreted languages slower than compiled languages, but they are convenient for debugging because you can update one line at a time and keep running.
+            \bigbreak \noindent 
+            An interpreter:
+            \begin{itemize}
+                \item Reads bytecode/AST instructions,
+                \item Decodes them one by one,
+                \item Executes their behavior using pre-written handler routines,
+                \item Never produces native CPU instructions.
+            \end{itemize}
+            A pre-written handler routine is a small piece of code inside an interpreter that implements the behavior of one specific bytecode or AST operation. It is the mechanism an interpreter uses to simulate program instructions instead of compiling them.
+            \bigbreak \noindent 
+            In other words, it simulates the program using its own execution loop.
+            \bigbreak \noindent 
+            Interpreters do not convert IR into machine code. Instead, each instruction is routed to one of these handlers.
+            \bigbreak \noindent 
+            So execution looks like this:
+            \begin{enumerate}
+                \item Fetch next bytecode instruction.
+                \item Look up its handler (often in a switch or dispatch table).
+                \item Jump to that handler code.
+                \item Handler performs the operation.
+                \item Return to the interpreter loop.               
+            \end{enumerate}
+            This dispatch overhead is why interpreters are slower.
+            \bigbreak \noindent 
+            It would be nice to have the speed of the compiler and the flexibility of the interpreter at the same time. That is possible now due to faster computers that can recompile modules faster and more sophisticated software designs that can handle on-the-fly software updates, Python is a good example.
+        \item \textbf{Python}: Python demonstrates that a language can behave like an interpreter while still doing significant compilation, providing the best of both worlds.
+            \bigbreak \noindent 
+            When you run Python
+            \bigbreak \noindent 
+            \begin{bashcode}
+                python main.py
+            \end{bashcode}
+            \bigbreak \noindent 
+            it seems like the interpreter is just executing your source code line by line, but Python actually compiles your code automatically. 
+            \bigbreak \noindent 
+            Before execution, CPython (the official Python implementation) compiles your source (.py) into bytecode (.pyc), which lives in \_\_pycache\_\_/. This bytecode is
+            \begin{itemize}
+                \item Lower-level
+                \item Faster to execute
+                \item Platform-independent
+                \item Not the original source code
+            \end{itemize}
+            This compilation happens on the fly, so you don’t see it. So Python is not “purely interpreted”, it’s a hybrid.
+            \bigbreak \noindent 
+            The Python "interpreter" is a virtual machine, called the Python Virtual Machine (PVM). The PVM
+            \begin{itemize}
+                \item Reads bytecode instructions
+                \item Executes them one at a time
+                \item Just like a classic interpreter executes source lines
+            \end{itemize}
+            This hybrid design is why Python can maintain the interactive benefits of an interpreter while gaining speed from compilation.
+            \bigbreak \noindent 
+            Modern Python implementations even use extra optimizations. This includes
+            \begin{itemize}
+                \item JIT (Just-In-Time compilation) in PyPy
+                \item C-accelerated modules (NumPy, CPython internals)
+                \item aggressive caching (.pyc files)
+                \item dynamic recompilation of hot code paths
+            \end{itemize}
+            These make execution much faster than early interpreters.
+        \item \textbf{JITs (Just-In-Time Compilers)}: A Just-In-Time (JIT) compiler is a component of a runtime system that compiles program code while the program is executing. Unlike a traditional ahead-of-time (AOT) compiler that produces machine code before execution, a JIT compiler generates optimized machine code on demand during runtime.
+            \bigbreak \noindent 
+            A JIT compiler generates native machine code in memory only, during execution.
+            \bigbreak \noindent 
+            That code:
+            \begin{itemize}
+                \item lives in RAM,
+                \item is used by the CPU immediately,
+                \item disappears when the program exits.
+            \end{itemize}
+            A JIT
+            \begin{itemize}
+                \item Compiles only the “hot” (frequently executed) sections of the program.
+                \item Leaves cold code interpreted.
+            \end{itemize}
+            The program never becomes a complete native binary.
+        \item \textbf{Compilers and interpreters}: Theoretically, both an assembler and a compiler produce binary machine code.
+            An interpreter allows code to be executed directly, without compilation. In reality, life has become more complicated than that
+            \bigbreak \noindent 
+            Compilers have adopted some interpreted features. For example, binary code can be augmented with additional debugging information, allowing interactive debugging
+            \bigbreak \noindent 
+            Interpreters have adopted some features of compilers. Usually the interpreter produces some sort of intermediate representation (e.g., Java bytecode) to allow efficient execution. People have written compilers, e.g., JIT, for Java bytecode
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Java case study}
+    \begin{itemize}
+        \item \textbf{JVM}: Java programs (classes) execute within a virtual machine, the Java Virtual Machine (JVM). This allows the language to run on any platform for which a virtual machine environment has been written.
+            \bigbreak \noindent 
+            Therefore Java is partially compiled, partially interpreted. The output of the compilation process is an assembly-like intermediate code (bytecode) that is interpreted by the JVM.
+            \bigbreak \noindent 
+            The JVM is an operating system in miniature. It loads programs, links them, starts execution threads, manages program resources, and deallocates resources when the programs terminate
+            \bigbreak \noindent 
+            Because the JVM runs on top of the operating system, its performance cannot match the performance of a traditional compiled language.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1042.png}
+            \bigbreak \noindent 
+            JVMs have been written for many processors, including MIPS and Intel. Like a real machine, the JVM bytecode has its own ISA. This ISA was designed to be compatible with the architecture of any machine on which one might want to run Java
+            \bigbreak \noindent 
+            Extra layers of software often cause a performance hit
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1043.png}
+            \bigbreak \noindent 
+            At execution time, a Java Virtual Machine must be running on the host system. It loads and executes the bytecode class file
+            \begin{itemize}
+                \item While loading the class file, the JVM verifies the integrity of the bytecode.
+                \item The loader then performs a number of run-time checks as it places the bytecode in memory.
+                \item Finally, the loader invokes the bytecode interpreter. 
+            \end{itemize}
+        \item \textbf{The bytecode interpreter}:
+            \begin{enumerate}
+                \item Performs a link edit of the bytecode instructions by asking the loader to supply all referenced classes and system binaries, if they are not already loaded.
+                \item Creates and initializes the main stack frame and local variables.
+                \item Creates and starts execution thread(s).
+                \item Manages heap storage by deallocating unused storage while the threads are executing.
+                \item Deallocates resources of terminated threads.
+                \item Upon program termination, kills any remaining threads and terminates the JVM
+            \end{enumerate}
+        Java bytecode is a stack-based language
+            \begin{itemize}
+                \item Most instructions are zero address instructions
+                \item The JVM has four registers that provide access to five regions of main memory
+                \item All references to memory are offsets from these registers.
+            \end{itemize}
+        \item \textbf{Java performance}: Because the JVM loads and executes bytecode rather than executing a binary program, it can't match the performance of a compiled language. This is true even when software like Java’s Just-In-Time (JIT) compiler is used.
+            \bigbreak \noindent 
+            However, Java performance has been steadily increasing over the years. For many applications, the difference is not important, since execution speed is not the limiting factor in an application. Human thinking and business processes are often the limiting factors in computer systems.
+        \item \textbf{Advantages of interoperability}: An advantage of Java is that class files can be created and stored on one platform and executed on a different platform
+            \bigbreak \noindent 
+            This “write once, run-anywhere” paradigm is of enormous benefit for enterprises with disparate and geographically separate systems.
+            \bigbreak \noindent 
+            Java was designed for platform interoperability.  Original slogan: “Write once, run anywhere”, took a while to achieve
+            \bigbreak \noindent 
+            Another advantage of the bytecode system is that other languages can be created that compile into Java bytecodes, Kotlin is one example.
+            \bigbreak \noindent 
+            That is much less work than building a full compiler.
+        \item \textbf{Disadvantages of interoperability}: Interoperability has performance cost. Over the years people have started to build native mode compilers for Java (i.e., compiling bytecode instead of interpreting it) to improve performance
+            \bigbreak \noindent 
+            Interoperability can have a compatibility cost. You need to have correct version of Java Runtime Engine (JRE) on your machine to run a Java program.  In practice, that is largely automatic today.
+            \bigbreak \noindent 
+            Java tries hard to keep new versions of the JRE backwards compatible so that they can run any Java program.
+
+
+
+
+
+
+    \end{itemize}
+    
+
 
 
 
