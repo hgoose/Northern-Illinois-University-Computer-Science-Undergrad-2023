@@ -8989,7 +8989,33 @@
             \end{figure}
             \bigbreak \noindent 
             In general, the residual in the projection of a vector onto a space is orthogonal to the space.
-        \item \textbf{Projection onto a space}: Let $v$ be a vector in some space $V$, and $W$ be a subspace of $V$. If $W$ is spanned by a single vector $b$ ($W$ is one-dimensional), then the projection is the one we know,
+        \item \textbf{Projection onto a line derivation}: Consider a line $\ell$, a vector $a$ on $\ell$, and a vector $b$. Define the projection of $b$ onto $a$ as $p$. That is, $p = \text{proj}_{a}(b)$. Since $p$ and $a$ lie on the same line, they are parallel. So, $p = xa$, for $x \in \mathbb{R}$.
+            \bigbreak \noindent 
+            Define the residual as $r = b - p$. Since the residual $r$ is orthogonal to $p$, we have $r \perp p$, so
+            \begin{align*}
+                r^{T}p &= 0\\ 
+                \implies (b-p)^{T}p &= 0 \\
+                \implies (b-xa)^{T}xa &= 0 \\
+                \implies b^{T}xa - xa^{T}xa &= 0 \\
+                \implies b^{T}xa &= x^{2}a^{T}a \\
+                \implies b^{T}a &=  xa^{T}a \\
+                \implies x &= \frac{b^{T}a}{a^{T}a} = \frac{a^{T}b}{a^{T}a}
+            .\end{align*}
+            Thus, 
+            \begin{align*}
+                \text{proj}_{a}(b) = p = xa = \frac{a^{T}b}{a^{T}a}a 
+            .\end{align*}
+            Notice that we can move some things around, and get
+            \begin{align*}
+                p &= a \frac{a^{T}b}{a^{T}a} = \frac{1}{a^{T}a}aa^{T} b
+            .\end{align*}
+            Notice that $\frac{1}{a^{T}a}aa^{T}$ is a matrix. Call this matrix the projection matrix $P$. We therefore have that
+            \begin{align*}
+                \text{proj}_{a}(b) = p = Pb 
+            ,\end{align*}
+            where $P = \frac{1}{a^{T}a}aa^{T}$ is the projection matrix that projects vectors onto $a$ (the line $\ell $).
+
+       \item \textbf{Projection onto a space}: Let $v$ be a vector in some space $V$, and $W$ be a subspace of $V$. If $W$ is spanned by a single vector $b$ ($W$ is one-dimensional), then the projection is the one we know,
             \begin{align*}
                 \text{proj}_{W}(v) = \text{proj}_{b}(v) = \frac{v^{T}b}{b^{T}b}b
             .\end{align*}
@@ -9875,7 +9901,55 @@
             \begin{align*}
                 Rx = Qb \implies QA = Qb
             ,\end{align*}
-            all we need is vector multiplication by the form of $Q$, the form that we have above $(I - \gamma(u^{T}x)u) $
+            all we need is vector multiplication by the form of $Q$, the form that we have above $(x - \gamma(u^{T}x)u) $
+        \item \textbf{Normal equations}: Consider again the geometric interpretation of a vector $b$ outside of the column space of $A$. 
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{mf}
+                \label{fig:mf}
+            \end{figure}
+            \bigbreak \noindent 
+            Which can happen if our system is over-determined. Since there is clearly no solution to the system for the given $b$, we instead solve the least squares problem
+            \begin{align*}
+                (p):\; \min_{x\in \mathbb{R}^{n}}\norm{b-Ax}_{2}^{2} 
+            .\end{align*}
+            Thus, we aim to find some vector $\bar{x}$ such that the residual $b - A\bar{x}$ is minimized. We know that this vector is found by projecting $b$ onto the column space $Ax$, and thus the residual $r = b -A\bar{x}$ is orthogonal to $A\bar{x} $, where $A\bar{x}$ is the projection of $b$ onto the column space.
+            \bigbreak \noindent 
+            So, we have
+            \begin{align*}
+                A\bar{x} \perp r
+            ,\end{align*}
+            which implies that
+            \begin{align*}
+                (A\bar{x})^{T}r &= 0 \\
+                \implies (A\bar{x})^{T}(b-A\bar{x}) &= 0 \\
+                \implies \bar{x}^{T}A^{T}b - \bar{x}^{T}A^{T}A\bar{x} &= 0\\
+                \implies \bar{x}^{T}(A^{T}b - A^{T}A\bar{x}) = 0
+            .\end{align*}
+            But, notice that $\bar{x} \ne 0$ since if it were, then $A\bar{x} = b = 0$. Since the zero vector is in the column space, $b$ is non-zero, and so is $\bar{x}$. Thus,
+            \begin{align*}
+                A^{T}b - A^{T}A\bar{x} &= 0 \\
+                \implies A^{T}A\bar{x} &= A^{T}b
+            .\end{align*}
+            Therefore, $\bar{x}$ is found by solving the system $A^{T}Ax = A^{T}b $, and 
+            \begin{align*}
+                \bar{x} = \text{arg min}_{x\in \mathbb{R}^{n}}\norm{b-Ax}_{2}^{2}
+            .\end{align*}
+            Although this method is far easier than $QR$ factorization methods, one can prove that
+            \begin{align*}
+                \kappa(A^{T}A) = \kappa^{2}(A)
+            \end{align*}
+            So, if $A$ is moderately ill-conditioned, then $A^{T}A$ can be severely ill-conditioned.
+            \bigbreak \noindent 
+            \textbf{Note:} The "normal equations" are the equations
+            \begin{align*}
+                A^{T}Ax = A^{T}b
+            .\end{align*}
+            They are "normal" because they enforce that the residual is \textbf{normal} to the column space.
+
+
+
 
     \end{itemize}
 
@@ -11037,7 +11111,39 @@
                 \end{bmatrix},\; \quad c = \cos{\left(\theta \right)},\; s = \sin{\left(\theta \right)}
             .\end{align*}
             Everywhere else its the identity matrix $I$. Only entries $(i,i), (i,j), (j,i), (j,j)$ are modified.
+        \item \textbf{$QR$ with Householder reflectors}: Let $A \in \mathbb{R}^{m\times n}$, where
+            \begin{align*}
+                A =
+                \begin{bmatrix}
+                    \mid & \mid & \cdots & \mid \\
+                    x^{1} & x^{2} & \cdots & x^{n} \\
+                    \mid & \mid & \cdots & \mid
+                \end{bmatrix}                
+            ,\end{align*}
+            where $x^{j}$ denotes the $j^{\text{th}}$ column of $A$. For each column $j$ of $A$, we have the following steps
+            \begin{enumerate}
+                \item $\tau_{j} = \text{sgn}(x_{1})\norm{x^{j}}_{2}$ 
+                \item $\gamma_{j} = \frac{\tau_{j} + x_{1}}{\tau_{j}} $
+                \item $u_{j} = \begin{pmatrix} 1 \\ x_{2}/(\tau_{j} + x_{1}) \\ \vdots \\ x_{m}/(\tau_{j} + x_{1})\end{pmatrix} $
+                \item $Q_{j} = I - \gamma_{j}u_{j}u_{j}^{T} $
+            \end{enumerate}
+            Then, just like with givens rotations, $Q = Q_{k} \cdots Q_{j} \cdots Q_{2}Q_{1}$, and $R = QA  = Q_{k}\cdots Q_{j} \cdots Q_{2}Q_{1}A$.
+            \bigbreak \noindent 
+            We can avoid forming $Q$ with
+            \begin{align*}
+                Qx = x - \gamma (u^{T}x)u
+            .\end{align*}
 
+        \item \textbf{Normal equations}: The equations
+            \begin{align*}
+                A^{T}Ax = A^{T}b
+            \end{align*}
+            that solve the least squares problem
+            \begin{align*}
+                \min_{x\in\mathbb{R}^{n}}\norm{b-Ax}_{2}^{2}
+            \end{align*}
+            are called the \textbf{normal equations}. They characterize the vector $x$ for which the residual $b-Ax$ is orthogonal to the column space of $A$.
+            
 
 
     \end{itemize}
@@ -11051,10 +11157,21 @@
                 \item $Q^{-1} = Q^{T} $
                 \item $\det(Q) = \pm 1 $
             \end{enumerate}
+        \item \textbf{Additional properties of orthogonal matrices}:
+            \begin{enumerate}
+                \item The product of orthogonal matrices is orthogonal
+                \item If $Q$ is orthogonal, so is $Q^{T} $
+            \end{enumerate}
         \item \textbf{Properties of Givens rotation}: Let $Q$ be the givens rotation matrix
             \begin{enumerate}
                 \item $Q^{T}Q = QQ^{T} = I$ ($Q$ is orthogonal)
             \end{enumerate}
+        \item \textbf{Properties of Householder reflection matrices}
+            \begin{enumerate}
+                \item \textbf{Symmetry}: $Q = Q^{T}$
+                \item \textbf{Orthogonality}: $Q^{T}Q = QQ^{T} = I $
+            \end{enumerate}
+
     \end{itemize}
 
     \pagebreak 
