@@ -4583,7 +4583,7 @@
             GestureDetector handles all of this internally.
         \item \textbf{How it works}: There are three components:
             \begin{enumerate}
-                \item \textbf{A listener object}: You implement one or both listener interfaces (\texttt{GestureDetector.OnGestureListener} (gestures)) (\texttt{GestureDetector.OnDoubleTapListener (taps))}. These contain multiple callback methods.
+                \item \textbf{A listener object}: You implement one or both listener interfaces (GestureDetector.OnGestureListener (gestures)) (GestureDetector.OnDoubleTapListener (taps)). These contain multiple callback methods.
                 \item \textbf{A GestureDetector instance}: You create it in your Activity or View:
                     \bigbreak \noindent 
                     \begin{javacode}
@@ -4676,6 +4676,117 @@
             All of these methods return default values (usually false) in the base class, so you can override only what you need.
     \end{itemize}
 
+
+    \pagebreak 
+    \subsection{view.MeasureSpec}
+    \begin{itemize}
+        \item \textbf{What is it}: 
+            A MeasureSpec is a compact instruction that a parent ViewGroup gives to a child View during the measurement phase of layout. It tells the child:
+            \begin{itemize}
+                \item How much space it may or must use, and
+                \item How strictly that space must be followed.
+            \end{itemize}
+            It is the core mechanism that makes Android’s layout negotiation work.
+            \bigbreak \noindent 
+            A MeasureSpec is a 32-bit packed integer that encodes two pieces of information:
+            \begin{itemize}
+                \item \textbf{A mode}: Describes how the parent wants the child to size itself.
+                \item \textbf{A size}: The pixel value associated with the constraint.
+            \end{itemize}
+            Together
+            \begin{align*}
+                \text{MeasureSpec } = (\text{mode } << 30) \mid \text{ size}
+            .\end{align*}
+            This is why MeasureSpec is passed around as a plain int.
+        \item \textbf{Modes}: These modes define the constraint type.
+            \begin{enumerate}
+                \item \textbf{EXACTLY}: “You must be exactly this size.”
+                    \bigbreak \noindent 
+                    Produced when:
+                    \begin{itemize}
+                        \item The child uses match\_parent
+                        \item The child uses a fixed value like 100dp
+                    \end{itemize}
+                    The child must report that exact dimension in measurement.
+                \item \textbf{AT\_MOST}: “You can be any size you want, up to this maximum.”
+                    \bigbreak \noindent 
+                    Produced mainly when:
+                    \begin{itemize}
+                        \item The child uses wrap\_content
+                        \item The parent can offer some remaining space (e.g. inside LinearLayout, FrameLayout)       
+                    \end{itemize}
+                    Child measures its intrinsic content but clamps to the max.
+                \item \textbf{UNSPECIFIED}: “There is no upper bound. Do whatever your content requires.”
+                    \bigbreak \noindent 
+                    Occurs in special cases:
+                    \begin{itemize}
+                        \item A ScrollView measuring its child
+                        \item Internal platform commands
+                        \item Custom views that need unrestricted measurement
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{How MeasureSpecs Are Used}: During layout:
+            \begin{enumerate}
+                \item Parent receives its own MeasureSpecs from its parent.
+                \item Parent computes new MeasureSpecs for each child.
+                \item Parent calls:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                     child.measure(widthMeasureSpec, heightMeasureSpec);
+                    \end{javacode}
+                \item Child’s onMeasure() reads the MeasureSpec:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        int mode = MeasureSpec.getMode(widthSpec);
+                        int size = MeasureSpec.getSize(widthSpec);
+                    \end{javacode}
+                \item Child computes its measured width and height using:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        setMeasuredDimension(measuredWidth, measuredHeight);
+                    \end{javacode}
+                    \bigbreak \noindent 
+                    The child’s measured size must obey the constraints defined by the MeasureSpecs.
+            \end{enumerate}
+        \item \textbf{view.measure}: measure() is a public final method on View that:
+            \begin{enumerate}
+                \item Receives two MeasureSpecs from the parent (width and height).
+                \item Invokes the view’s onMeasure() method.
+                \item Ensures the view sets its internal measured width and height.
+                \item Enforces that the measurement process is valid.
+            \end{enumerate}
+            This method is part of phase 1 of the Android UI pipeline:
+            \begin{align*}
+                \text{measure } \to \text{ layout } \to \text{ draw }
+            .\end{align*}
+            \begin{itemize}
+                \item Measurement defines how big a view wants to be.
+                \item Layout defines where a view is placed.
+                \item Draw defines how a view is rendered.
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{javacode}
+                public final void measure(int widthMeasureSpec, int heightMeasureSpec) {
+                    // Save the measure specs
+                    mMeasureCache or fields updated
+
+                    // Call developer-overridable measurement function
+                    onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+                    // After onMeasure returns, the view MUST have called
+                    // setMeasuredDimension(w, h);
+
+                    // Constraint enforcement
+                    if (the view violated spec rules) {
+                        correct or throw
+                    }
+                }
+            \end{javacode}
+
+
+
+
+    \end{itemize}
 
 
     \pagebreak 
@@ -5038,7 +5149,6 @@
                 \item \textbf{void measure(int widthMeasureSpec, int heightMeasureSpec)}: Determines the measured size of the view.
                 \item \textbf{final int	getMeasuredHeight()}: Like getMeasuredHeightAndState(), but only returns the raw height component (that is the result is masked by MEASURED_SIZE_MASK).
                 \item \textbf{final int	getMeasuredWidth()}: Like getMeasuredWidthAndState(), but only returns the raw width component (that is the result is masked by MEASURED_SIZE_MASK).
-
                 \item \textbf{getWidth(), getHeight()}:	View’s measured width/height.
                 \item \textbf{setLayoutParams(ViewGroup.LayoutParams)}:	Change width, height, margins programmatically.
                 \item \textbf{getLayoutParams()}:	Access current layout parameters.
@@ -5050,9 +5160,41 @@
                 \item \textbf{setBackgroundColor(int color)}: Set the background to a given Drawable, or remove the background
                 \item \textbf{public void setBackgroundResource (int resid)}: Set the background to a given resource. The resource should refer to a Drawable object or 0 to remove the background.
                 \item \textbf{public void setPadding (int left, int top, int right, int bottom)}: Sets the padding.
+                \item \textbf{public void setTextAlignment (int textAlignment)}:
+                \item \textbf{public void setTextDirection (int textDirection)}:
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int TEXT\_ALIGNMENT\_CENTER}: Center paragraph alignment.
+                \item \textbf{int TEXT\_ALIGNMENT\_GRAVITY}: Default for root view (gravity).
+                \item \textbf{int TEXT\_ALIGNMENT\_INHERIT}: Inherit text alignment.
+                \item \textbf{int TEXT\_ALIGNMENT\_TEXT\_END}: Align to paragraph end.
+                \item \textbf{int TEXT\_ALIGNMENT\_TEXT\_START}: Align to paragraph start.
+                \item \textbf{int TEXT\_ALIGNMENT\_VIEW\_END}: Align to view end (RTL-aware).
+                \item \textbf{int TEXT\_ALIGNMENT\_VIEW\_START}: Align to view start (RTL-aware).
+                \item \textbf{int TEXT\_DIRECTION\_ANY\_RTL}: Any-RTL algorithm.
+                \item \textbf{int TEXT\_DIRECTION\_FIRST\_STRONG}: First-strong algorithm.
+                \item \textbf{int TEXT\_DIRECTION\_FIRST\_STRONG\_LTR}: First-strong, force LTR.
+                \item \textbf{int TEXT\_DIRECTION\_FIRST\_STRONG\_RTL}: First-strong, force RTL.
+                \item \textbf{int TEXT\_DIRECTION\_INHERIT}: Inherit text direction.
+                \item \textbf{int TEXT\_DIRECTION\_LOCALE}: From system locale.
+                \item \textbf{int TEXT\_DIRECTION\_LTR}: Force LTR.
+                \item \textbf{int TEXT\_DIRECTION\_RTL}: Force RTL.
             \end{itemize}
     \end{itemize}
 
+    \pagebreak 
+    \subsection{view.MeasureSpec}
+    \begin{itemize}
+        \item \textbf{Methods}
+            \begin{itemize}
+                
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                
+            \end{itemize}
+    \end{itemize}
 
     \pagebreak \noindent
     \subsection{ViewGroup}
@@ -5063,6 +5205,8 @@
                 \item \textbf{removeView(View) / removeViewAt(int) / removeAllViews()}: Remove children.
                 \item \textbf{removeAllViewsInLayout()}: Called by a ViewGroup subclass to remove child views from itself
                 \item \textbf{getChildCount(), getChildAt(int), indexOfChild(View)}: Inspect/manage children.
+                \item \textbf{void bringChildToFront(View child)}: Moves a child to the top of the Z-order.
+                \item \textbf{final void layout(int l, int t, int r, int b)}: Assigns size/position to this view and descendants.
             \end{itemize}
     \end{itemize}
 
@@ -5295,10 +5439,40 @@
             \begin{itemize}
                 \item \textbf{setRowCount(int rows)}
                 \item \textbf{setColumnCount(int cols)}
-                \item \textbf{static GridLayout.Spec	spec(int start, int size)}: Return a Spec, spec, where:
-                    spec.span = [start, start + size]. To leave the start index undefined, use the value UNDEFINED.
-                \item \textbf{static GridLayout.Spec	spec(int start)}: Return a Spec, spec, where:
-                    spec.span = [start, start + 1]. To leave the start index undefined, use the value UNDEFINED.
+                \item \textbf{void setOrientation(int orientation)}: Sets the layout’s orientation. This controls:
+                \item \textbf{static GridLayout.Spec spec(int start, float weight)}: Equivalent to \texttt{spec(start, 1, weight)}.
+                \item \textbf{static GridLayout.Spec spec(int start)}: Returns a \texttt{Spec} where:
+                    \begin{itemize}
+                        \item \texttt{span = [start, start + 1]}
+                        \item To leave the start index undefined, use \texttt{UNDEFINED}.
+                    \end{itemize}
+                \item \textbf{static GridLayout.Spec spec(int start, int size, GridLayout.Alignment alignment, float weight)}: Returns a \texttt{Spec} where:
+                    \begin{itemize}
+                        \item \texttt{span = [start, start + size]}
+                        \item \texttt{alignment = alignment}
+                        \item \texttt{weight = weight}
+                        \item To leave the start index undefined, use \texttt{UNDEFINED}.
+                    \end{itemize}
+                \item \textbf{static GridLayout.Spec spec(int start, GridLayout.Alignment alignment, float weight)}: Equivalent to \texttt{spec(start, 1, alignment, weight)}.
+                \item \textbf{static GridLayout.Spec spec(int start, int size, GridLayout.Alignment alignment)}: Equivalent to \texttt{spec(start, size, alignment, 0f)}.
+                \item \textbf{static GridLayout.Spec spec(int start, GridLayout.Alignment alignment)}: Returns a \texttt{Spec} where:
+                    \begin{itemize}
+                        \item \texttt{span = [start, start + 1]}
+                        \item \texttt{alignment = alignment}
+                        \item To leave the start index undefined, use \texttt{UNDEFINED}.
+                    \end{itemize}
+                \item \textbf{static GridLayout.Spec spec(int start, int size, float weight)}: Equivalent to \texttt{spec(start, size, default\_alignment, weight)}, where \texttt{default\_alignment} is defined in \texttt{GridLayout.LayoutParams}.
+                \item \textbf{static GridLayout.Spec spec(int start, int size)}: Returns a \texttt{Spec} where:
+                    \begin{itemize}
+                        \item \texttt{span = [start, start + size]}
+                        \item To leave the start index undefined, use \texttt{UNDEFINED}.
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Constants}:
+            \begin{itemize}
+                \item \textbf{int HORIZONTAL}: Constant representing a horizontal orientation for the layout.
+                \item \textbf{int UNDEFINED}: Constant used to indicate that a value is undefined.
+                \item \textbf{int VERTICAL}: Constant representing a vertical orientation for the layout.
             \end{itemize}
     \end{itemize}
 
@@ -5641,10 +5815,11 @@
         \item \textbf{Methods}            
             \begin{itemize}
                 \item \textbf{int	getAction()}: Return the kind of action being performed.
-                \item \textbf{float	getRawX()}: Equivalent to getRawX(int) for pointer index 0 (regardless of the pointer identifier).
-                \item \textbf{float	getRawY()}: Equivalent to getRawY(int) for pointer index 0 (regardless of the pointer identifier).
-                \item \textbf{float	getX()}: Equivalent to getX(int) for pointer index 0 (regardless of the pointer identifier).
-                \item \textbf{float	getY()}: Equivalent to getY(int) for pointer index 0 (regardless of the pointer identifier).
+                \item \textbf{long	getEventTime()}: Retrieve the time this event occurred, in the SystemClock.uptimeMillis() time base.
+                \item \textbf{float	getRawX()}: Returns the exact place on the screen where the finger is touching.
+                \item \textbf{float	getRawY()}: Returns the exact place on the screen where the finger is touching.
+                \item \textbf{float	getX()}: Exact place relative to the top-left corner of the View receiving the event 
+                \item \textbf{float	getY()}: Exact place relative to the top-left corner of the View receiving the event 
                 \item \textbf{boolean	isButtonPressed(int button)}: Checks if a mouse or stylus button (or combination of buttons) is pressed.
             \end{itemize}
         \item \textbf{Constants}
@@ -5875,7 +6050,7 @@
                     \bigbreak \noindent 
                     e2 is the latest MotionEvent delivered to GestureDetector while the user’s finger is moving across the screen. Every time the gesture detector detects movement, it generates a new call to onScroll, and e2 is the MotionEvent from that most recent ACTION\_MOVE.
                     \bigbreak \noindent 
-                    This continues until the user lifts their finger (ACTION_UP), at which point scrolling stops.
+                    This continues until the user lifts their finger (ACTION\_UP), at which point scrolling stops.
                 \item \textbf{void onLongPress(MotionEvent e)}: Called when the user has pressed and held for the long-press timeout, typically $\sim$500 ms.
                     \bigbreak \noindent 
                     This is the exact moment Android recognizes a long-press gesture.
@@ -6138,6 +6313,123 @@
             \bigbreak \noindent 
             attribute on the child view. This attribute is part of \texttt{LinearLayout.LayoutParams}
         
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{GridLayout}
+    \begin{itemize}
+        \item \textbf{Setting orientation}: n GridLayout (Java), you set the orientation directly on the GridLayout instance. The orientation determines how automatic placement proceeds—either left-to-right then top-to-bottom (horizontal), or top-to-bottom then left-to-right (vertical).
+            \bigbreak \noindent 
+            The two valid constants are:
+            \begin{itemize}
+                \item GridLayout.HORIZONTAL
+                \item GridLayout.VERTICAL
+            \end{itemize}
+        \item \textbf{Positioning}:  In GridLayout, every child view lives in a “cell” identified by a (row, column) pair, with indices starting at 0. Positioning is controlled by GridLayout.LayoutParams, specifically its rowSpec and columnSpec fields.
+            \bigbreak \noindent 
+            There are two ways in which we can position items in a GridLayout
+            \begin{enumerate}
+                \item \textbf{Default}: Let GridLayout place in the next available position. The Grid 
+                \item \textbf{Specified}: We can specify an exact (row, col) position to place views at.
+            \end{enumerate}
+        \item \textbf{The GridLayout.Spec object}: A GridLayout.Spec is an object that describes how a single child occupies the grid—specifically, which rows or columns it occupies, how many cells it spans, and what its alignment is within those cells.
+            \bigbreak \noindent 
+            A child has two specs:
+            \begin{enumerate}
+                \item \textbf{rowSpec}: Defines row index and row span
+                \item \textbf{columnSpec}: Defines column index and column span
+            \end{enumerate}
+            These two together fully describe the child's position in the grid. We give these two Spec objects to the GridLayout.LayoutParams that we attach to a child view.
+            \bigbreak \noindent 
+            A Spec object encodes three things
+            \begin{enumerate}
+                \item \textbf{Start index}: The row or column where the child begins
+                \item \textbf{Span}: How many rows or columns it covers
+                \item \textbf{Alignment (optional)}: How the child aligns inside its cells
+            \end{enumerate}
+            \bigbreak \noindent 
+            We create a GridLayout.Spec object by calling GridLayout.spec(...)
+        \item \textbf{Default positioning}: 
+            \bigbreak \noindent 
+            \begin{javacode}
+                // rowSpec and columnSpec say where this view goes
+                GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+                GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED);
+
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, colSpec);
+
+                grid.addView(v, params);
+            \end{javacode}
+            \bigbreak \noindent 
+            \texttt{GridLayout.UNDEFINED} Means “I am not specifying this index; let GridLayout figure it out.”
+        \item \textbf{Automatic placement with spanning}: Now suppose you want a view that spans multiple cells but you still do not care where it lands, only that a block of that size fits.
+            \bigbreak \noindent 
+            Example: automatically place a view that is 2 columns wide and 1 row high.
+            \bigbreak \noindent 
+            \begin{javacode}
+                // row index: unspecified, 1 row high
+                GridLayout.Spec rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1);
+
+                // column index: unspecified, span 2 columns
+                GridLayout.Spec colSpec = GridLayout.spec(GridLayout.UNDEFINED, 2);
+            \end{javacode}
+        \item \textbf{Explicit positioning (specific row and column)}: To place a view in a specific cell (row, column):
+            \bigbreak \noindent 
+            \begin{javacode}
+                // Place at row 1, column 2 (second row, third column)
+                GridLayout.Spec rowSpec = GridLayout.spec(1); // row index 1
+                GridLayout.Spec colSpec = GridLayout.spec(2); // column index 2
+
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, colSpec);
+                grid.addView(button, params);
+            \end{javacode}
+        \item \textbf{(android.widget.GridLayout) Getting the position of a view in a GridLayout}: The API does not expose publicly which position a view is placed in, so we must track this information ourselves
+        \item \textbf{(androidx.gridlayout.widget.GridLayout) Getting the position of a view in a GridLayout}: You obtain the (row, column) pair of a child view by reading its GridLayout.LayoutParams and then inspecting the rowSpec and columnSpec inside those layout parameters.
+            \bigbreak \noindent 
+            Because GridLayout stores position metadata in the Spec objects, this is the only correct way to retrieve a view’s location.
+            \bigbreak \noindent 
+            \begin{javacode}
+                View child = ...;                 // the view inside the GridLayout
+                GridLayout.LayoutParams lp = (GridLayout.LayoutParams) child.getLayoutParams();
+
+                GridLayout.Spec rowSpec = lp.rowSpec;
+                GridLayout.Spec colSpec = lp.columnSpec;
+            \end{javacode}
+            \bigbreak \noindent 
+            Each Spec contains:
+            \begin{itemize}
+                \item start index
+                \item span length
+                \item alignment information
+            \end{itemize}
+            Unfortunately, the start and span fields are not public fields. But Android provides getter methods indirectly via Spec:
+            \begin{itemize}
+                \item \textbf{Starting row / column indices}: 
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        int rowSpan = rowSpec.getSpan().size();
+                        int colSpan = colSpec.getSpan().size();
+                    \end{javacode}
+                \item \textbf{Ending row / column indices}: 
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        int rowEnd = rowSpec.getSpan().max;   // inclusive
+                        int colEnd = colSpec.getSpan().max;   // inclusive
+                    \end{javacode}
+                \item \textbf{Span length}: 
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        int rowSpan = rowSpec.getSpan().size();
+                        int colSpan = colSpec.getSpan().size();
+                    \end{javacode}
+                \item \textbf{Alignment}:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        GridLayout.Alignment align = rowSpan.getAlignment();
+                    \end{javacode}
+            \end{itemize}
+        \item \textbf{Getting child at (row, column) position}: here is no built-in API that maps (row, column) $\to$ child view, we must track this information ourselves.
+
     \end{itemize}
 
 
