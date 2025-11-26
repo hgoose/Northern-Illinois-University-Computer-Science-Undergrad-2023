@@ -10973,6 +10973,163 @@ indicate which strong entity the weak entity depends upon.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Floating point concepts}
+    \begin{itemize}
+        \item \textbf{Intro}: The signed magnitude, one’s complement, and two’s complement representation are used to represent integers.
+            \bigbreak \noindent 
+            We need a representation for fractional values in both scientific and business applications. Floating point representation solves this problem
+        \item \textbf{Fixed-point}: We could arbitrarily decide that the binary point would be at a particular place in a 32-bit binary number, rather than at the end as for integers. That would be a “\textbf{fixed-point}” representation.
+        \item \textbf{Rounding in binary}: Exactly like decimal rounding:
+            \begin{enumerate}
+                \item Look at the bit after the last available bit.
+                \item If that bit is 0, leave the last kept bit unchanged.
+                \item If that bit is 1, add 1 to the last kept bit.
+            \end{enumerate}
+            So, for $0b.0001$, if we only have three bits available, we round to $0b.001$.
+        \item \textbf{Fixed-point mathematically}:
+            If you choose to represent a number using $n$ total bits, you may distribute those bits between
+            \begin{itemize}
+                \item the integer portion (before the binary point)
+                \item the fractional portion (after the binary point)
+            \end{itemize}
+            The split is arbitrary because the binary point location is just a convention. For example,
+            \begin{itemize}
+                \item 4 bits for integer, 4 bits for fraction:
+                    \begin{align*}
+                        xxxx.yyyy
+                    .\end{align*}
+                \item 6 bits integer, 2 bits fraction:
+                    \begin{align*}
+                        xxxxxx.yy
+                    .\end{align*}
+                \item 1 bit integer, 7 bits fraction:
+                    \begin{align*}
+                        x.yyyyyyy
+                    .\end{align*}
+            \end{itemize}
+            Any split is allowed. The binary point is a conceptual separator.
+            \bigbreak \noindent 
+            \textbf{Note:} For a $n$-bit fractional part, the maximum fractional part is 
+            \begin{align*}
+                \frac{1}{2^{1}} + \frac{1}{2^{2}} + ... + \frac{1}{2^{n}}  &= \sum_{k=1}^{n} \frac{1}{2}\left(\frac{1}{2}\right)^{k} = \frac{\frac{1}{2}\left(1-\left(\frac{1}{2}\right)^{n}\right)}{1-\frac{1}{2}} \\
+                                                                           &=2\left(\frac{1}{2}-\frac{1}{2^{n+1}}\right) = 1-\frac{1}{2^{n}}
+            .\end{align*}
+            Further, the fraction part is written as
+            \begin{align*}
+                b_{-1}b_{-2}b_{-3}\cdot b_{-n}
+            .\end{align*}
+            With decimal value
+            \begin{align*}
+                b_{-1}2^{-1} + b_{-2}2^{-2} + b_{-3}2^{-3} + \ldots + b_{-n}2^{-n}
+            .\end{align*}
+            Let's factor out a $2^{-n}$,
+            \begin{align*}
+                2^{-n}\left(b_{-1}2^{n-1} + b_{-2}2^{n-2} + b_{-3}2^{n-3} + \ldots + b_{n-1}2^{1} + b_{n}\right)
+            .\end{align*}
+            Notice that the part in the parenthesis is precisely the integer value of a binary number, lets call it $k\in \mathbb{Z}$. Thus, the fractional part in binary fixed-point is precisely
+            \begin{align*}
+                \frac{k}{2^{n}} \quad k,n \in \mathbb{Z}
+            .\end{align*}
+            So, only fractions whose denominator is a power of two can be represented exactly.
+
+
+
+            Regarding the $m$-bit integer part, the maximum is
+            \begin{align*}
+                1 + 2 + 4 + ... + 2^{m-1} &= \sum_{k=0}^{m-1} 2^{k} = \frac{1-2^{(m-1)+1}}{1-2} = -\left(1-2^{m}\right) = 2^{m}-1
+            .\end{align*}
+        \item \textbf{Fixed-point implementations}: A fixed-point format defines:
+            \begin{itemize}
+                \item a fixed number of integer bits
+                \item a fixed number of fractional bits
+                \item and this split does not change
+            \end{itemize}
+            For example, a common format is $Qm.n$. This is $m$ bits integer, $n$ bits fraction. $Q8.8$ format would be
+            \begin{align*}
+                0biiiiiiii.ffffffff
+            \end{align*}
+            with
+            \begin{itemize}
+                \item \textbf{Largest integer value (all integer bits on)}: $2^{8} -1 $
+                \item \textbf{Largest fractional value (all fractional bits on)}: $1 - 2^{-8} $
+                \item \textbf{Smallest fraction value (only last fractional bit on)}: $2^{-8} $
+            \end{itemize}
+
+            
+        \item \textbf{Problems with fixed-point}: Fixed point has several major flaws:
+            \begin{enumerate}
+                \item Because fractional powers of 10 (e.g, .1, .01, etc.) can’t be exactly expressed by binary fractions, we will have roundoff errors when we try to do calculations.
+                    \bigbreak \noindent 
+                    For example, suppose we have only three bits after the binary point, then $1 /10 = 0b.001 $, and $5\times 1/10 = 0b.101$. But, the correct answer is $1 /2 = 0b.100 $
+                    \bigbreak \noindent 
+                    Converting $1/10$ to binary yields $0b.00001100110011...$, if we only use three bits, we truncate to $0b.001 = 1 /8 = 0.125$. If we multiply this approximation by $5$, we get $5 \cdot 1 / 8 = 5 /8 = 0b.101$.
+                \item We lose significance when subtracting two numbers of similar magnitude
+                    \bigbreak \noindent 
+                    The same problem can happen with multiplication (overflow) and division (underflow).
+                \item We can’t express very large or very small numbers
+            \end{enumerate}
+            Wouldn’t it be better if we could move the binary point as necessary, giving us the equivalent of scientific notation?
+        \item \textbf{Floating point intro}: Floating-point allows the scale of the number to change. Instead of committing to a fixed location for the radix point, the representation moves it to suit the magnitude. This means
+            \begin{itemize}
+                \item It can represent extremely large and extremely small numbers using the same number of bits.
+                \item Precision is not uniform; it depends on magnitude.
+                \item Range is much wider than fixed-point.
+            \end{itemize}
+            Floating point dedicates part of its representation to scaling the number instead of making all bits contribute directly to the magnitude. Because the scale of the number can change, the representable values are not limited to what you can write directly in $n$ bits. The format can “zoom out” to represent very large numbers and “zoom in” to represent very small ones.
+            \bigbreak \noindent 
+            Fixed-point cannot change scale. Its range is tied directly to the number of bits and where the point is fixed.
+            \bigbreak \noindent 
+            So the larger range of floating point ultimately exists because the format includes a mechanism that allows the numeric value to grow by changing scale, rather than by using more magnitude bits.
+            \bigbreak \noindent 
+            When some of the available bits are used to control scale rather than directly represent digits of the number itself, fewer bits remain for the level of detail of the number. That means the spacing between representable values grows as the numbers get larger.
+            \bigbreak \noindent 
+            So floating point has:
+            \begin{itemize}
+                \item High relative precision for small numbers.
+                \item Lower relative precision for large numbers.
+            \end{itemize}
+            Floating point mirrors the same idea used in scientific notation, just adapted for binary instead of decimal.
+            \bigbreak \noindent 
+            When we write very large or very small numbers, we do not write all the zeros. We write:
+            \begin{align*}
+                  (\text{significant-digits} ) \times (\text{base}^\text{scale})
+            .\end{align*}
+            For example,
+            \begin{align*}
+                6.03 \times 10^{23}
+            .\end{align*}
+            \textbf{Note:} To ensure only one representation per number, we always write exactly one digit before the radix point. Otherwise the first value above could have alternate representations like $12.5 \times 10^{-2}$ and $125 \times 10^{-3}$ .
+        \item \textbf{Scientific notation}: Numbers written in scientific notation have three components:
+            \begin{enumerate}
+                \item Sign
+                \item Mantissa
+                \item True exponent
+            \end{enumerate}
+            For example, consider again $+1.25 \times 10^{-1}$. In this case,
+            \begin{enumerate}
+                \item \textbf{Sign}: +
+                \item \textbf{Mantissa}: 1.25
+                \item \textbf{True exponent}: -1
+            \end{enumerate}
+        \item \textbf{Floating point}: Computer representation of a floating point number consists of three fixed-size fields:
+            \begin{enumerate}
+                \item \textbf{Sign}: The one-bit sign field is the sign of the entire value.
+                \item \textbf{Biased exponent}: The size of the exponent field determines the range of values that can be represented
+                \item \textbf{Significand}: The size of the significand determines the precision of the representation, i.e., how many binary (or decimal) digits can be represented
+            \end{enumerate}
+            The fields usually occur in this order, but it isn’t necessary.
+        \item \textbf{IEEE-754}: 
+            \begin{itemize}
+                \item \textbf{IEEE-754 single precision}: The IEEE-754 single precision floating point standard uses an 8-bit exponent and a 23-bit significand, so the total number of bits is 32
+                \item \textbf{IEEE-754 double precision}:  The IEEE-754 double precision standard uses an 11-bit exponent and a 52-bit significand, so the total number of bits is 64.
+            \end{itemize}
+
+
+
+
+    \end{itemize}
+
 
     \pagebreak 
     \subsection{Chapter 4: Overview of computer architecture}

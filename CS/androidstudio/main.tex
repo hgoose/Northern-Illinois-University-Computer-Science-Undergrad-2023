@@ -924,6 +924,18 @@
             \end{javacode}
             \bigbreak \noindent 
             Puts the root layout for activity\_main in the \texttt{layout} variable.
+        \item \textbf{Unit argument in java}: When a method like TextViews \texttt{setTextSize(int unit, float size)} requires a unit parameter, we can used \textbf{TypedValue} constants like
+            \begin{itemize}
+                \item \textbf{int	COMPLEX\_UNIT\_DIP}: TYPE\_DIMENSION complex unit: Value is Device Independent Pixels.
+                \item \textbf{int	COMPLEX\_UNIT\_SP}: TYPE\_DIMENSION complex unit: Value is a scaled pixel.
+                \item \textbf{int	COMPLEX\_UNIT\_PX}: TYPE\_DIMENSION complex unit: Value is raw pixels.
+            \end{itemize}
+            For example,
+            \bigbreak \noindent 
+            \begin{javacode}
+                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
+            \end{javacode}
+
 
 
 
@@ -4748,40 +4760,36 @@
                     \bigbreak \noindent 
                     The child’s measured size must obey the constraints defined by the MeasureSpecs.
             \end{enumerate}
-        \item \textbf{view.measure}: measure() is a public final method on View that:
-            \begin{enumerate}
-                \item Receives two MeasureSpecs from the parent (width and height).
-                \item Invokes the view’s onMeasure() method.
-                \item Ensures the view sets its internal measured width and height.
-                \item Enforces that the measurement process is valid.
-            \end{enumerate}
-            This method is part of phase 1 of the Android UI pipeline:
-            \begin{align*}
-                \text{measure } \to \text{ layout } \to \text{ draw }
-            .\end{align*}
-            \begin{itemize}
-                \item Measurement defines how big a view wants to be.
-                \item Layout defines where a view is placed.
-                \item Draw defines how a view is rendered.
-            \end{itemize}
+        \item \textbf{view.measure}: When we call
             \bigbreak \noindent 
             \begin{javacode}
-                public final void measure(int widthMeasureSpec, int heightMeasureSpec) {
-                    // Save the measure specs
-                    mMeasureCache or fields updated
-
-                    // Call developer-overridable measurement function
-                    onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-                    // After onMeasure returns, the view MUST have called
-                    // setMeasuredDimension(w, h);
-
-                    // Constraint enforcement
-                    if (the view violated spec rules) {
-                        correct or throw
-                    }
-                }
+                view.measure(widthMeasureSpec, heightMeasureSpec);
             \end{javacode}
+            \bigbreak \noindent 
+            calling measure() with MeasureSpecs does change internal measurement state of the View, but it does not change layout, draw, or the final displayed size. It only updates the measured dimensions. After the call to measure,
+            \begin{enumerate}
+                \item Android executes onMeasure() for that view.
+                \item The view recalculates its measured width/height.
+                \item The view stores those values internally by calling:
+                    \bigbreak \noindent 
+                    \begin{javacode}
+                        setMeasuredDimension(w, h);
+                    \end{javacode}
+            \end{enumerate}
+            So, after the manual measure, these properties are updated:
+            \begin{itemize}
+                \item getMeasuredWidth()
+                \item getMeasuredHeight()
+            \end{itemize}
+            Those values are now different if the specs forced different sizing. That is the only guaranteed state change.
+            \bigbreak \noindent 
+            onMeasure()... 
+            \begin{itemize}
+                \item Interprets the MeasureSpec constraints.
+                \item Decide how large the view wants to be.
+                \item Compute the final measured width/height.
+            \end{itemize}
+            onMeasure() must call setMeasuredDimension() before it finishes.
 
 
 
@@ -5153,6 +5161,7 @@
                 \item \textbf{setLayoutParams(ViewGroup.LayoutParams)}:	Change width, height, margins programmatically.
                 \item \textbf{getLayoutParams()}:	Access current layout parameters.
                 \item \textbf{requestLayout()}:	Ask parent to re-measure and re-layout (after size change).
+                \item \textbf{void invalidate()}: Redraws the view on screen.
                 \item \textbf{setTranslationX/Y(float)}:	Move view without changing layout.
                 \item \textbf{setScaleX/Y(float)}:	Scale the view.
                 \item \textbf{setRotation(float)}:	Rotate the view.
@@ -5319,6 +5328,12 @@
         \item \textbf{Methods}
             \begin{itemize}
                 \item \textbf{static int	complexToDimensionPixelSize(int data, DisplayMetrics metrics)}: Converts a complex data value holding a dimension to its final value as an integer pixel size.
+            \end{itemize}
+        \item \textbf{Constants}
+            \begin{itemize}
+                \item \textbf{int	COMPLEX\_UNIT\_SP}: TYPE\_DIMENSION complex unit: Value is a scaled pixel.
+                \item \textbf{int	COMPLEX\_UNIT\_PX}: TYPE\_DIMENSION complex unit: Value is raw pixels.
+                \item \textbf{int	COMPLEX\_UNIT\_DIP}: TYPE\_DIMENSION complex unit: Value is Device Independent Pixels.
             \end{itemize}
     \end{itemize}
 
@@ -5556,9 +5571,11 @@
                 \item \textbf{void	setInputType(int type)}: Set the type of the content with a constant as defined for EditorInfo.inputType.
                 \item \textbf{int	getInputType()}: Get the type of the editable content.
                 \item \textbf{public void setTextSize (float size)}:
+                \item \textbf{void setTextSize(int unit, float size)}: Sets text size with unit.
                 \item \textbf{void	setGravity(int gravity)}: Sets the horizontal alignment of the text and the vertical gravity that will be used when there is extra space in the TextView beyond what is required for the text itself.
                 \item \textbf{void	setTypeface(Typeface tf)}: Sets the typeface and style in which the text should be displayed.
                 \item \textbf{void	setTypeface(Typeface tf, int style)}: Sets the typeface and style in which the text should be displayed, and turns on the fake bold and italic bits in the Paint if the Typeface that you provided does not have all the bits in the style that you specified.
+                \item \textbf{int getLineCount()}: Returns line count or 0 if layout not built.
             \end{itemize}
     \end{itemize}
 
