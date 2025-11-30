@@ -1,0 +1,720 @@
+ \documentclass{report}
+ 
+ \input{~/dev/latex/template/preamble.tex}
+ \input{~/dev/latex/template/macros.tex}
+ 
+ \title{\Huge{}}
+ \author{\huge{Nathan Warner}}
+ \date{\huge{}}
+ \fancyhf{}
+ \rhead{}
+ \fancyhead[R]{\itshape Warner} % Left header: Section name
+ \fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+ \cfoot{\thepage}
+ \renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+ %\pagestyle{fancy}
+ %\fancyhf{}
+ %\lhead{Warner \thepage}
+ %\rhead{}
+ % \lhead{\leftmark}
+ %\cfoot{\thepage}
+ %\setborder
+ % \usepackage[default]{sourcecodepro}
+ % \usepackage[T1]{fontenc}
+ 
+ % Change the title
+ \hypersetup{
+     pdftitle={}
+ }
+
+ \geometry{
+  left=1in,
+  right=1in,
+  top=1in,
+  bottom=1in
+}
+ 
+ \begin{document}
+     % \maketitle
+     %     \begin{titlepage}
+     %    \begin{center}
+     %        \vspace*{1cm}
+     % 
+     %        \textbf{}
+     % 
+     %        \vspace{0.5cm}
+     %         
+     %             
+     %        \vspace{1.5cm}
+     % 
+     %        \textbf{Nathan Warner}
+     % 
+     %        \vfill
+     %             
+     %             
+     %        \vspace{0.8cm}
+     %      
+     %        \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+     %             
+     %        Computer Science \\
+     %        Northern Illinois University\\
+     %        United States\\
+     %        
+     %             
+     %    \end{center}
+     % \end{titlepage}
+     % \tableofcontents
+    \pagebreak \bigbreak \noindent
+    Nate Warner \ \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad  MATH 434 \quad  \quad \quad \quad \quad \quad \quad \quad \quad \ \ \quad \quad Fall 2025
+    \begin{center}
+        \textbf{Problem set 3 - Due: Tuesday, December 2}
+    \end{center}
+    \bigbreak \noindent 
+    \begin{mdframed}
+        3.1.5.
+        Consider the following data.
+        \[
+            \begin{array}{c|ccccc}
+                t_i      & 1.0 & 1.5 & 2.0 & 2.5 & 3.0 \\
+                \hline
+                y_i      & 1.1 & 1.2 & 1.3 & 1.3 & 1.4
+            \end{array}
+        \]
+        \begin{enumerate}
+            \item[(a)] Set up an overdetermined system of the form (3.1.3) for a straight line
+                passing through the data points. Use the standard basis polynomials
+                \(\phi_1(t)=1\), \(\phi_2(t)=t\).
+
+            \item[(b)] Use MATLAB to calculate the least-squares solution of the system from
+                part (a). This is a simple matter. Given an overdetermined system
+                \(Ax=b\), the MATLAB command \texttt{x = A\textbackslash b} computes the least
+                squares solution. Recall that this is exactly the same command as would be
+                used to tell MATLAB to solve a square system \(Ax=b\) by Gaussian
+                elimination. Some useful MATLAB commands:
+                \begin{verbatim}
+                    t = 1:.5:3; t = t'; s = ones(5,1); A = [s t];
+                \end{verbatim}
+                We already know that MATLAB uses Gaussian elimination with partial pivoting
+                in the square case. In the next two sections you will find out what MATLAB
+                does in the overdetermined case.
+            \item[(c)] Use the MATLAB \texttt{plot} command to plot the five data points and your
+                least squares straight line. Type \texttt{help plot} for information about using the
+                plot command.
+            \item[(d)] Use MATLAB to compute \( \|r\|_2 \), the norm of the residual.
+
+        \end{enumerate}
+    \end{mdframed}
+    \bigbreak \noindent 
+    a.) The overdetermined system for a straight line passing through the given data points using the standard basis polynomials $\phi_{1}(t) = 1,\; \phi_{2}(t) = t$ is
+    \begin{align*}
+        \begin{bmatrix}
+            1 & 1.0 \\
+            1 & 1.5 \\
+            1 & 2.0 \\
+            1 & 2.5 \\
+            1 & 3.0 
+        \end{bmatrix}
+        \begin{pmatrix} x_{1} \\ x_{2} \end{pmatrix}
+        =
+        \begin{pmatrix} 1.1 \\ 1.2 \\ 1.3 \\ 1.3 \\ 1.4 \end{pmatrix}
+    .\end{align*}
+    \bigbreak \noindent 
+    b.) 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        ts = [1.0, 1.5, 2.0, 2.5, 3.0]
+        ys = [1.1,1.2,1.3,1.3,1.4]
+        A = [1 1.0; 1 1.5; 1 2.0; 1 2.5; 1 3.0]
+        x = A\ys
+
+        # Out
+        # 2-element Vector{Float64}:
+        #0.9799999999999994
+        #0.14000000000000004
+    \end{jlcode}
+
+
+    \bigbreak \noindent 
+    c.) 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        scatter(ts, ys)
+        plot!(t -> x[1] + x[2] * t)
+    \end{jlcode}
+    \bigbreak \noindent 
+    \fig{.6}{./figures/plotout.png}
+
+    \bigbreak \noindent 
+    d.)
+    \begin{jlcode}
+        r = ys - A *x
+        err = norm(r)
+
+        # Out
+        # 0.05477225575051658
+    \end{jlcode}
+
+
+    \pagebreak \bigbreak \noindent 
+    \begin{mdframed}
+        3.1.6.  Repeat Exercise 3.1.5, but this time compute the best least squares polynomial of degree \( \le 2 \). Notice that in this case the norm of the residual is smaller. This is to be expected; the space of quadratic polynomials contains the space of linear polynomials, so the quadratic fit should be better or in any case no worse than the linear polynomial fit.
+    \end{mdframed}
+    \bigbreak \noindent 
+    In this case, we use standard basis vectors $\phi_{1}(t) = 1,\; \phi_{2}(t) = t,\; \phi_{3}(t) = t^{2} $. Thus, the system is
+    \begin{align*}
+         \begin{bmatrix}
+             1 & 1.0 & 1.0^{2} \\
+             1 & 1.5 & 1.5^{2} \\
+             1 & 2.0 & 2.0^{2} \\
+             1 & 2.5 & 2.5^{2} \\
+             1 & 3.0 & 3.0^{2} 
+        \end{bmatrix}
+        \begin{pmatrix} x_{1} \\ x_{2} \\ x_{3} \end{pmatrix}
+        =
+        \begin{pmatrix} 1.1 \\ 1.2 \\ 1.3 \\ 1.3 \\ 1.4 \end{pmatrix} 
+    .\end{align*}
+    Solving this system in Julia gives
+    \bigbreak \noindent 
+    \begin{jlcode}
+        ts = [1.0, 1.5, 2.0, 2.5, 3.0]
+        ys = [1.1,1.2,1.3,1.3,1.4]
+        A = [ t^(j-1) for t in ts, j in 1:3 ]
+        x = A\ys
+
+        # Out
+        # 3-element Vector{Float64}:
+        # 0.8799999999999981
+        # 0.25428571428571595
+        # -0.028571428571428966
+    \end{jlcode}
+    \bigbreak \noindent 
+    With plot
+    \bigbreak \noindent 
+    \fig{.6}{./figures/plotout2.png}
+    \bigbreak \noindent 
+    The norm of the residual $r = y-Ax$, where $x$ is the solution of the least squares problem, and $y$ is the vector of $y_{i}s$ is 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        r = ys - A *x
+        err = norm(r)
+
+        # Out
+        # 0.04780914437337568
+    \end{jlcode}
+
+    \begin{mdframed}
+        3.1.7. 
+         Repeat Exercise 3.1.5, but this time compute the best
+        least squares polynomial of degree \( \le 4 \). The space of quartic polynomials has 
+        dimension \(5\). Thus we have \( n = m = 5 \); the system is not overdetermined. The 
+        solution interpolates the data exactly (except for roundoff errors). Plot the data 
+        points and the solution on the same set of axes. Make the spacing between points 
+        small enough that the curve appears smooth. Sample code.
+        \begin{verbatim}
+            tt = 1:.01:3;
+            p4 = x(1) + x(2)*tt + x(3)*tt.^2 + x(4)*tt.^3 + x(5)*tt.^4;
+            plot(...,tt,p4,'k-',...)
+        \end{verbatim}
+        In the same plot include your least squares linear and quadratic polynomials from 
+        the previous two exercises. Notice that the latter are much less oscillatory than 
+        the fourth-degree interpolant is. They seem to represent the trend of the data 
+        better.
+
+    \end{mdframed}
+    \bigbreak \noindent 
+    This time, we have basis vectors $\phi_{1}(t) = 1,\; \phi_{2}(t) = t,\; \phi_{3}(t) = t^{2},\; \phi_{4}(t)= t^{3},\; \phi_{5}(t) = t^{4} $. Thus, our system is
+    \begin{align*}
+          \begin{bmatrix}
+              1 & 1.0 & 1.0^{2} & 1.0^{3} & 1.0^{4} \\
+              1 & 1.5 & 1.5^{2}  & 1.5^{3} & 1.5^{4}\\
+              1 & 2.0 & 2.0^{2}& 2.0^{3} & 2.0^{4}\\
+              1 & 2.5 & 2.5^{2} & 2.5^{3} & 2.5^{4}\\
+              1 & 3.0 & 3.0^{2}  & 3.0^{3} & 3.0^{4}
+        \end{bmatrix}
+        \begin{pmatrix} x_{1} \\ x_{2} \\ x_{3}  \\ x_{4} \\ x_{5}\end{pmatrix}
+        =
+        \begin{pmatrix} 1.1 \\ 1.2 \\ 1.3 \\ 1.3 \\ 1.4 \end{pmatrix} 
+    .\end{align*}
+    The solution to this system is 
+    \bigbreak \noindent 
+    \begin{jlcode}
+        ts = [1.0, 1.5, 2.0, 2.5, 3.0]
+        ys = [1.1,1.2,1.3,1.3,1.4]
+        A = [t^(j-1) for t in ts, j in 1:5]
+        x = A\ys
+
+        # Out
+        # 5-element Vector{Float64}:
+        # 2.800000000000004
+        # -4.516666666666675
+        # 4.150000000000006
+        # -1.533333333333335
+        # 0.20000000000000018
+    \end{jlcode}
+    \bigbreak \noindent 
+    With plot
+    \bigbreak \noindent 
+    \fig{.6}{./figures/plotout3.png}
+    \bigbreak \noindent 
+    And residual norm
+    \bigbreak \noindent 
+    \begin{jlcode}
+        r = ys - A *x
+        err = norm(r)
+
+        # Out
+        # 6.564413678897588e-15
+    \end{jlcode}
+    \bigbreak \noindent 
+    In total, we have the plots
+    \bigbreak \noindent 
+    \fig{.6}{./figures/plotout6.png}
+
+
+    \begin{mdframed}
+        3.2.4. Show that if Q is orthogonal, then $\det(Q) = \pm 1$. 
+    \end{mdframed}
+    \bigbreak \noindent 
+    \textbf{\textit{Proof}}. Assume $Q$ is an orthogonal matrix. Since $Q$ is orthogonal, $Q^{T}Q = QQ^{T} = I$. Thus,
+    \begin{align*}
+        \det(Q^{T}Q) &= \det(I) = 1 \\
+        \implies \det(Q^{T})\det(Q) &= \left(\det(Q)\right)^{2} = 1 \\
+        \therefore \det(Q) &= \pm 1
+    .\end{align*}
+    
+    
+    \bigbreak \noindent 
+    \begin{mdframed}
+        3.2.8.
+        Show that if \(Q\) is orthogonal, then
+        \(\lVert Q \rVert_2 = 1\), \(\lVert Q^{-1} \rVert_2 = 1\), and
+        \(\kappa_2(Q) = 1\). Thus \(Q\) is perfectly conditioned with respect to
+        the 2-condition number. This suggests that orthogonal matrices will have
+        good computational properties. \(\square\)
+    \end{mdframed}
+    \bigbreak \noindent 
+    \begin{remark}
+       The matrix 2-norm is the spectral norm 
+       \begin{align*}
+           \norm{A}_{2} = \sqrt{\lambda_{\text{max}}(A^{T}A)}
+       .\end{align*}
+       Consider the identity matrix $I$. The eigenvalues are the roots of the characteristic polynomial $\det(I - \lambda I) $. Observe that the face of $I - \lambda I$ is 
+       \begin{align*}
+           \begin{bmatrix}
+               1 & 0 & 0 & \cdots & 0\\
+               0 & 1 & 0 & \cdots & 0 \\
+               0 & 0 & 1 & \cdots & 0 \\
+               \vdots & \vdots & \vdots & \ddots & \vdots \\
+               0 & 0 & 0 & \cdots & 1
+           \end{bmatrix}
+           -
+              \begin{bmatrix}
+               \lambda & 0 & 0 & \cdots & 0\\
+               0 & \lambda & 0 & \cdots & 0 \\
+               0 & 0 & \lambda & \cdots & 0 \\
+               \vdots & \vdots & \vdots & \ddots & \vdots \\
+               0 & 0 & 0 & \cdots & \lambda
+           \end{bmatrix}
+            =
+              \begin{bmatrix}
+               1-\lambda & 0 & 0 & \cdots & 0\\
+               0 & 1-\lambda & 0 & \cdots & 0 \\
+               0 & 0 & 1-\lambda & \cdots & 0 \\
+               \vdots & \vdots & \vdots & \ddots & \vdots \\
+               0 & 0 & 0 & \cdots & 1-\lambda
+           \end{bmatrix}
+       .\end{align*}
+       Since this matrix is diagonal, the determinant is the product of the main diagonal. That is,
+       \begin{align*}
+           \det\left(\begin{bmatrix}
+                   1-\lambda & 0 & 0 & \cdots & 0\\
+                   0 & 1-\lambda & 0 & \cdots & 0 \\
+                   0 & 0 & 1-\lambda & \cdots & 0 \\
+                   \vdots & \vdots & \vdots & \ddots & \vdots \\
+                   0 & 0 & 0 & \cdots & 1-\lambda
+               \end{bmatrix} \right)
+               = \prod_{i=1}^{n}(1-\lambda) = (1-\lambda)^{n}
+       .\end{align*}
+       Thus, the eigenvalue is $\lambda = 1$, with multiplicity $n$.
+       \bigbreak \noindent 
+       So, the 2-norm of the identity matrix is 
+       \begin{align*}
+           \norm{I}_{2} = \sqrt{\lambda_{\text{max}}(I^{T}I)} = \sqrt{\lambda_{\text{max}}(I)} = \sqrt{1} = 1
+       .\end{align*}
+    \end{remark}
+    \bigbreak \noindent 
+    Regarding the 2-norm of $Q$, we have
+    \begin{align*}
+        \norm{Q}_{2} = \sqrt{\lambda_{\text{max}}(Q^{T}Q)} = \sqrt{\lambda_{\text{max}}(I)} =\sqrt{1} = 1
+    .\end{align*}
+    Next, we remark that since $QQ^{T} = I$, 
+    \begin{align*}
+        (QQ^{T})^{-1} = Q^{-T}Q^{-1}= I^{-1} = I
+    .\end{align*}
+    With this, the 2-norm of $Q^{-1}$ is 
+    \begin{align*}
+        \norm{Q^{-1}}_{2} = \sqrt{\lambda_{\text{max}}(Q^{-T}Q^{-1})} = \sqrt{\lambda_{\text{max}}(I)} = \sqrt{1} = 1
+    .\end{align*}
+    Since $\norm{Q}_{2} = \norm{Q^{-1}}_{2} = 1$, the condition number of $Q$ using the 2-norm $\kappa_{2}(Q)$ is 
+    \begin{align*}
+        \kappa_{2}(Q) = \norm{Q}_{2}\norm{Q^{-1}}_{2} = 1(1) = 1
+    .\end{align*}
+
+
+    \begin{mdframed}
+        3.2.14. Use a $QR$ decomposition to solve the linear system
+        \begin{align*}
+            \begin{bmatrix}
+                2 & 3 \\ 
+                5 & 7
+            \end{bmatrix}
+            \begin{pmatrix}
+                x_{1} \\ x_{2}
+            \end{pmatrix}
+            =
+            \begin{pmatrix} 12 \\ 29 \end{pmatrix}
+        .\end{align*}
+    \end{mdframed}
+    \bigbreak \noindent 
+    We use Givens rotations to find the $QR$ decomposition. We start by mapping
+    \begin{align*}
+        Q_{1}^{T}c_{1}(A) = Q_{1}^{T}\begin{pmatrix} 2 \\ 5 \end{pmatrix} \mapsto \begin{pmatrix} y_{1} \\ 0 \end{pmatrix}
+    .\end{align*}
+    Where $y_{1} = \sqrt{x_{1}^{2} + x_{2}^{2}} = \sqrt{2^{2} + 5^{2}} = \sqrt{29}$. The rotation matrix is
+    \begin{align*}
+        Q_{1}^{T} = \begin{pmatrix} c & s \\ -s & c \end{pmatrix}
+    \end{align*}
+    with $c = \frac{x_{1}}{y_{1}} = \frac{2}{\sqrt{29}}$, and $s = \frac{x_{2}}{y_{1}} = \frac{5}{\sqrt{29}}$. So,
+    \begin{align*}
+        Q_{1}^{T} = \frac{1}{\sqrt{29}}\begin{pmatrix} 2 & 5 \\ -5 & 2 \end{pmatrix}
+    .\end{align*}
+    With $Q_{1}$, we transform the remaining column of $A$, $Q_{1}^{T}c_{2}(A) $. We have
+    \begin{align*}
+        Q_{1}^{T}c_{2}(A) = \frac{1}{\sqrt{29}}\begin{pmatrix} 2 & 5 \\ -5 & 2 \end{pmatrix} \begin{pmatrix} 3 \\ 7 \end{pmatrix} = \frac{1}{\sqrt{29}} \begin{pmatrix} 6 + 35 \\ -15 + 14 \end{pmatrix} = \begin{pmatrix} \frac{41}{\sqrt{29}} \\ - \frac{1}{\sqrt{29}}\end{pmatrix}
+    .\end{align*}
+    Thus,
+    \begin{align*}
+        Q_{1}A = \begin{pmatrix} \sqrt{29} & \frac{41}{\sqrt{29}} \\ 0 & - \frac{1}{\sqrt{29}}\end{pmatrix}
+    .\end{align*}
+    Notice that $Q_{1}A$ is upper triangular, so $Q_{1}A = R = \hat{R}$. With this, we can solve the system using $\hat{R}x = Rx = Q^{T}b = c $. First, we find $c $
+    \begin{align*}
+        c = Q^{T}b = \frac{1}{\sqrt{29}}\begin{pmatrix} 2 & 5 \\ -5 & 2 \end{pmatrix}\begin{pmatrix} 12 \\ 29 \end{pmatrix} = \frac{1}{\sqrt{29}} \begin{pmatrix} 24 + 145 \\ -60 + 58 \end{pmatrix} = \begin{pmatrix} \frac{169}{\sqrt{29}} \\ -\frac{2}{\sqrt{29}} \end{pmatrix}
+    .\end{align*}
+    Now,
+    \begin{align*}
+        Rx = c \implies \begin{pmatrix} \sqrt{29} & \frac{41}{\sqrt{29}} \\ 0 & - \frac{1}{\sqrt{29}}\end{pmatrix} \begin{pmatrix} x_{1} \\ x_{2} \end{pmatrix} = \begin{pmatrix} \frac{169}{\sqrt{29}} \\ -\frac{2}{\sqrt{29}}\end{pmatrix}
+    .\end{align*}
+    We can solve this system with backward substitution.
+    \begin{align*}
+       -\frac{1}{\sqrt{29}} x_{2} = -\frac{2}{\sqrt{29}} \implies x_{2} = -\frac{2}{\sqrt{29}} \left(-\sqrt{29}\right) = 2, \\
+       \sqrt{29}x_{1} + \frac{41}{\sqrt{29}}x_{2} = \frac{169}{\sqrt{29}} \implies x_{1} = \frac{\frac{169}{\sqrt{29}} - \frac{41(2)}{\sqrt{29}}}{\sqrt{29}} = \frac{169-82}{\sqrt{29}^{2}} = 3
+    .\end{align*}
+    So, $x = \begin{pmatrix} 3 \\ 2 \end{pmatrix} $. We can verify this solution by showing that $Ax = b$. We have
+    \begin{align*}
+        \begin{pmatrix} 2 & 3 \\ 5 & 7 \end{pmatrix}\begin{pmatrix} 3 \\ 2 \end{pmatrix} = \begin{pmatrix} 6 + 6 \\ 15 + 14 \end{pmatrix} = \begin{pmatrix} 12 \\ 29 \end{pmatrix}
+    .\end{align*}
+    The solution is verified.
+
+    \begin{mdframed}
+        3.2.17.
+        Let \(Q\) be the plane rotator (3.2.15). Show that the
+        transformations \(x \rightarrow Qx\) and \(x \rightarrow Q^T x\) alter only the \(i\)th and 
+        \(j\)th entries of \(x\) and that the effect on these entries is the same as that of the 
+        2-by-2 rotators
+        \[
+            \hat{Q} =
+            \begin{bmatrix}
+                c & -s \\
+                s & c
+            \end{bmatrix}
+            \qquad\text{and}\qquad
+            \hat{Q}^T =
+            \begin{bmatrix}
+                c & s \\
+                -s & c
+            \end{bmatrix}
+        \]
+        on the vector $\begin{bmatrix} x_i \\ x_j \end{bmatrix}.$
+    \end{mdframed}
+    \bigbreak \noindent 
+    Let $x \in \mathbb{R}^{n}$, where $x = \begin{pmatrix} x_{1} \\ \vdots \\ x_{i} \\ \vdots \\ x_{j} \\ \vdots \\ x_{n} \end{pmatrix}$.
+    The plane rotator $Q$ is $Q = \begin{bmatrix} 1 & & & & & & \\ & \ddots & & & & & \\ & & c & & -s  & \\ & & & 1 & & & \\ & & s & & c & \\ & & &  & & \ddots &\\ & & & & & & 1 \end{bmatrix}$,
+    where 
+    \begin{align*}
+        q_{ii} &= c = \cos{\left(\theta \right)},\; q_{ij} = -s = -\sin{\left(\theta \right)},\; \\
+        q_{ji} &= s = \sin{\left(\theta \right)},\; q_{jj} = c = \cos{\left(\theta \right)}. 
+    .\end{align*}
+    Notice that in $Qx$, 
+    \begin{align*}
+        Qx &= x_{1}e_{1} + x_{2}e_{2} + \ldots + x_{i-1}e_{i-1} + x_{i}(\cos{\left(\theta \right)}e_{i} + \sin{\left(\theta \right)}e_{j}) + x_{i+1}e_{i+1}\\
+           &+\ldots + x_{j-1}e_{j-1} + x_{j}(-\sin{\left(\theta \right)e_{i} + \cos{\left(\theta \right)}}e_{j}) + x_{j+1}e_{j+1}  +\ldots + x_{n}e_{n}
+    .\end{align*}
+    Recall that $e_{i}$ is the $i^{\text{th }} $ standard basis vector in $\mathbb{R}^{n}$. Observe that only $x_{i}$, $x_{j}$ are altered, all other entries are left unchanged. We have
+    \begin{align*}
+        Qx = \begin{cases}
+            x_{k} = x_{k} &\text{ if } k\ne i \text{ and } k\ne j \\
+            x_{k} = x_{i}\cos{\left(\theta \right)} - x_{j}\sin{\left(\theta \right)} & \text{ if } k = i \\
+            x_{k} = x_{i}\sin{\left(\theta \right)} + x_{j}\cos{\left(\theta \right)} & \text{ if } k = j \\
+        \end{cases}
+    .\end{align*}
+    So,
+    \begin{align*}
+        Q\begin{pmatrix} x_{1} \\ \vdots \\ x_{i} \\ \vdots \\ x_{j} \\ \vdots \\ x_{n} \end{pmatrix} \mapsto \begin{pmatrix} x_{1} \\ \vdots \\ x_{i}\cos{\left(\theta \right)} - x_{j}\sin{\left(\theta \right)} \\ \vdots \\ x_{i}\sin{\left(\theta \right)} + x_{j}\cos{\left(\theta \right)} \\ \vdots \\ x_{n}\end{pmatrix}
+    .\end{align*}
+    If we transpose $Q$, the rotation matrix is 
+    \begin{align*}
+        Q^{T} = \begin{bmatrix}
+            1 & & & & & & \\
+              & \ddots & & & & & \\
+              & & c & & s  & \\
+              & & & 1 & & & \\
+              & & -s & & c & \\
+              & & &  & & \ddots &\\
+              & & & & & & 1
+        \end{bmatrix}
+    ,\end{align*}
+    and $Q^{T}x$ is 
+    \begin{align*}
+        Q^{T}x &= x_{1}e_{1} + x_{2}e_{2} + \ldots + x_{i-1}e_{i-1} + x_{i}(\cos{\left(\theta \right)e_{i}} - \sin{\left(\theta \right)}e_{j}) + x_{i+1}e_{i+1}\\
+           &+\ldots + x_{j-1}e_{j-1} + x_{j}(\sin{\left(\theta \right)e_{i} + \cos{\left(\theta \right)}}e_{j}) + x_{j+1}e_{j+1}  +\ldots + x_{n}e_{n}
+    .\end{align*}
+    Thus,
+    \begin{align*}
+        Q^{T}x = \begin{cases}
+            x_{k} = x_{k} &\text{ if } k\ne i \text{ and } k\ne j \\
+            x_{k} = x_{i}\cos{\left(\theta \right)} + x_{j}\sin{\left(\theta \right)} & \text{ if } k = i \\
+            x_{k} = -x_{i}\sin{\left(\theta \right)} + x_{j}\cos{\left(\theta \right)} & \text{ if } k = j \\
+        \end{cases}
+    .\end{align*}
+    And
+    \begin{align*}
+        Q^{T}\begin{pmatrix} x_{1} \\ \vdots \\ x_{i} \\ \vdots \\ x_{j} \\ \vdots \\ x_{n} \end{pmatrix} \mapsto \begin{pmatrix} x_{1} \\ \vdots \\ x_{i}\cos{\left(\theta \right)} + x_{j}\sin{\left(\theta \right)} \\ \vdots \\ -x_{i}\sin{\left(\theta \right)} + x_{j}\cos{\left(\theta \right)} \\ \vdots \\ x_{n}\end{pmatrix}
+    .\end{align*}
+    If we set $\hat{x} = \begin{bmatrix} x_{i} \\ x_{j} \end{bmatrix} $, then the rotation matrices are 
+    \begin{align*}
+        \hat{Q} =
+        \begin{bmatrix}
+            c & -s \\
+            s & c
+        \end{bmatrix}
+        \qquad\text{and}\qquad
+        \hat{Q}^T =
+        \begin{bmatrix}
+            c & s \\
+            -s & c
+        \end{bmatrix}
+    .\end{align*}
+    We have
+    \begin{align*}
+        \hat{Q}\hat{x} &= \begin{bmatrix} c & -s \\ s & c \end{bmatrix} \begin{bmatrix} x_{i} \\ x_{j} \end{bmatrix} = \begin{bmatrix} x_{i}c - x_{j}s \\ x_{i}s  + x_{j}c \end{bmatrix}  = \begin{bmatrix} x_{i}\cos{\left(\theta \right)} - x_{j}\sin{\left(\theta \right)} \\ x_{i}\sin{\left(\theta \right)}  + x_{j}\cos{\left(\theta \right)} \end{bmatrix},\\
+        \hat{Q}^{T}\hat{x} &= \begin{bmatrix} c & s \\ -s & c \end{bmatrix} \begin{bmatrix} x_{i} \\ x_{j} \end{bmatrix} = \begin{bmatrix} x_{i}c + x_{j}s \\ -x_{i}s  + x_{j}c \end{bmatrix}  = \begin{bmatrix} x_{i}\cos{\left(\theta \right)} + x_{j}\sin{\left(\theta \right)} \\ -x_{i}\sin{\left(\theta \right)}  + x_{j}\cos{\left(\theta \right)} \end{bmatrix}
+    .\end{align*}
+    So, the effect is the same.
+
+
+    \begin{mdframed}
+        3.2.26. Prove Theorem 3.2.24
+    \end{mdframed}
+    \bigbreak \noindent 
+    \textbf{Theorem 3.2.24}. Let $u \in \mathbb{R}^{n}$ with $\norm{u}_{2} = 1 $, and define $P \in \mathbb{R}^{n\times n}$ be $P = uu^{T} $. Then,
+    \begin{enumerate}[label=(\alph*)]
+        \item $Pu = u $
+        \item $Pv = 0$ if $\left\langle u,v \right\rangle  = 0$
+        \item $P^{2} = P $
+        \item $P^{T} = P $
+    \end{enumerate}
+    \textbf{\textit{Proof}}. Assume $u \in \mathbb{R}^{n}$, $\norm{u}_{2} = 1$. Define $P \in \mathbb{R}^{n\times n}$, $P = uu^{T}$.
+    \bigbreak \noindent 
+    (a) 
+    \begin{align*}
+        Pu = uu^{T}u = u(u^{T}u) = u\norm{u}_{2}^{2} = u(1) = u
+    .\end{align*}
+    (b)
+    \begin{align*}
+        Pv = uu^{T}v = u(u^{T}v) = u(0) = 0
+    .\end{align*}
+    (c)
+    \begin{align*}
+        P^{2} = uu^{T}uu^{T} = u(u^{T}u)u^{T} = u\norm{u}_{2}^{2}u^{T} = u(1)u^{T} = uu^{T} = P
+    .\end{align*}
+    (d) 
+    \begin{align*}
+        P^{T} = \left(uu^{T}\right)^{T} = \left(u^{T}\right)^{T}u^{T} = uu^{T} = P
+    .\end{align*}
+
+    \begin{mdframed}
+        3.2.39(a). Find a reflector $Q$ that maps the vector 
+        \begin{align*}
+            \begin{bmatrix} 3 & 4 & 1 & 3 & 1 \end{bmatrix}^{T}
+        .\end{align*}
+        to a vector of the form $\begin{bmatrix} -\tau & 0 & 0 & 0 & 0 \end{bmatrix}^{T} $. (You need not concern yourself with precautions to avoid over/underflow.) Write $Q$ two ways: ($i$) in the form $I - \gamma uu^{T} $ and $(ii)$ as a completely assembled matrix.
+    \end{mdframed}
+    We have
+    \begin{align*}
+        \tau &= \text{sgn}(x_{1})\norm{x}_{2} = \text{sgn}(3)\sqrt{3^{2} + 4^{2} + 1^{2} + 3^{2} + 1^{2}} = 6,\\
+        \gamma &= \frac{\tau + x_{1}}{\tau} = \frac{6 + 3}{6} = \frac{3}{2}, \\
+        \tau + x_{1} &= 6 + 3 = 9,\\
+        u &= \begin{pmatrix} 1 \\ \frac{x_{2}}{\tau + x_{1}} \\ \frac{x_{3}}{\tau + x_{1}} \\ \frac{x_{4}}{\tau + x_{1}} \\ \frac{x_{5}}{\tau + x_{1}} \end{pmatrix} = \begin{pmatrix} 1 \\ \frac{4}{9} \\ \frac{1}{9} \\ \frac{1}{3} \\ \frac{1}{9} \end{pmatrix}
+    .\end{align*}
+    Thus (i),
+    \begin{align*}
+        Q = I - \gamma uu^{T} = I - \frac{3}{2}\begin{pmatrix} 1 \\ \frac{4}{9} \\ \frac{1}{9} \\ \frac{1}{3} \\ \frac{1}{9} \end{pmatrix} \begin{pmatrix} 1 & \frac{4}{9} & \frac{1}{9} & \frac{1}{3} & \frac{1}{9} \end{pmatrix} \\
+    .\end{align*}
+    Which is 
+    \begin{align*}
+        Q &= I - \frac{3}{2}\begin{pmatrix} 1 \\ \frac{4}{9} \\ \frac{1}{9} \\ \frac{1}{3} \\ \frac{1}{9} \end{pmatrix} \begin{pmatrix} 1 & \frac{4}{9} & \frac{1}{9} & \frac{1}{3} & \frac{1}{9} \end{pmatrix} \\   
+          &= \begin{bmatrix}
+              1 & 0 & 0 & 0 & 0 \\
+              0 & 1 & 0 & 0 & 0 \\
+              0 & 0 & 1 & 0 & 0 \\
+              0 & 0 & 0 & 1 & 0 \\
+              0 & 0 & 0 & 0 & 1 
+          \end{bmatrix}
+          =
+          \begin{bmatrix}
+              -\frac{1}{2} & -\frac{2}{3} & -\frac{1}{6} & -\frac{1}{2} & -\frac{1}{6} \\
+              -\frac{2}{3} & \frac{19}{27} & -\frac{2}{27} & -\frac{2}{9} & -\frac{2}{27} \\
+              -\frac{1}{6} & -\frac{2}{27} & \frac{53}{54} & -\frac{1}{18} & -\frac{1}{54} \\
+              -\frac{1}{2} & -\frac{2}{9} & -\frac{1}{18} & \frac{5}{6} & -\frac{1}{18} \\
+              -\frac{1}{6} & -\frac{2}{27} & -\frac{1}{54} & -\frac{1}{18} & \frac{53}{54}
+          \end{bmatrix}
+    .\end{align*}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{mdframed}
+        3.2.47.
+        \begin{enumerate}
+            \item[(a)] Let
+                \[
+                    A =
+                    \begin{bmatrix}
+                        1 & 2 \\
+                        1 & 3
+                    \end{bmatrix}.
+                \]
+                Find a reflector \(\hat{Q}\) and an upper triangular \(\hat{R}\) such that
+                \(A = \hat{Q}\hat{R}\). Assemble \(\hat{Q}\) and simplify it.
+
+                \[
+                    \left(
+                        \text{Solution: }
+                        \hat{Q} = \frac{1}{\sqrt{2}}
+                        \begin{bmatrix}
+                            -1 & -1 \\
+                            -1 & 1
+                        \end{bmatrix},
+                        \qquad
+                        \hat{R} = \frac{1}{\sqrt{2}}
+                        \begin{bmatrix}
+                            -2 & -5 \\
+                            0 & 1
+                        \end{bmatrix}
+                    \right).
+                \]
+
+            \item[(b)] Compare your solution from part (a) with the \(QR\) decomposition of the
+                same matrix (obtained using a rotator) in Example 3.2.13. Find a diagonal
+                matrix \(D\) with main diagonal entries \(\pm 1\) such that \(Q = \hat{Q}D\) and
+                \(\hat{R} = DR\).
+        \end{enumerate}
+    \end{mdframed}
+    \bigbreak \noindent 
+    (a) We have
+    \begin{align*}
+        \tau &= \text{sgn}(x_{1}) \norm{x}_{2} = \text{sgn}(1) \sqrt{1^{2} + 1^{2}} = \sqrt{2}, \\
+        \gamma &= \frac{\tau + x_{1}}{\tau} = \frac{\sqrt{2} + 1}{\sqrt{2}}, \\
+        u &= \begin{pmatrix} 1 \\ x_{2} / (\tau + x_{1}) \end{pmatrix} = \begin{pmatrix} 1 \\ 1 / (\sqrt{2} + 1)  \end{pmatrix} = \begin{pmatrix} 1 \\ (\sqrt{2} - 1) / (\sqrt{2}^{2} - 1^{2}) \end{pmatrix} = \begin{pmatrix} 1 \\ \sqrt{2} - 1 \end{pmatrix} \\
+       \hat{Q} &= I - \gamma uu^{T} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \frac{\sqrt{2} + 1}{\sqrt{2}} \begin{pmatrix} 1 \\ \sqrt{2} - 1 \end{pmatrix}\begin{pmatrix} 1 & \sqrt{2} - 1 \end{pmatrix} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \frac{\sqrt{2} + 1}{\sqrt{2}} \begin{pmatrix} 1 & \sqrt{2}-1  \\ \sqrt{2} - 1 & 3 - 2\sqrt{2}  \end{pmatrix} \\
+          &= \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{pmatrix} \frac{\sqrt{2} + 1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} & \frac{\sqrt{2}-1}{\sqrt{2}} \end{pmatrix} = \begin{pmatrix} 1-\frac{\sqrt{2} + 1}{\sqrt{2}}  & -\frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} & 1- \frac{\sqrt{2}-1}{\sqrt{2}}\end{pmatrix} = \begin{pmatrix} -\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{pmatrix}
+    .\end{align*}
+    So,
+    \begin{align*}
+       \hat{Q}\begin{pmatrix} 1 \\ 1 \end{pmatrix} &= \begin{pmatrix} -\sqrt{2} \\ 0 \end{pmatrix}, \\
+       \hat{Q}\begin{pmatrix} 2 \\ 3 \end{pmatrix} &= \begin{pmatrix} -\frac{2}{\sqrt{2}} - \frac{3}{\sqrt{2}} \\ -\frac{2}{\sqrt{2}}  + \frac{3}{\sqrt{2}} \end{pmatrix} = \begin{pmatrix} -\frac{5}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} \end{pmatrix}, 
+    .\end{align*}
+    Therefore,
+    \begin{align*}
+        \hat{Q} &= \begin{pmatrix} -\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{pmatrix} = \frac{1}{\sqrt{2}}\begin{pmatrix} -1 & -1 \\ -1 & 1 \end{pmatrix},\;\hat{Q}A = \begin{pmatrix} -\sqrt{2} & -\frac{5}{\sqrt{2}} \\ 0 & \frac{1}{\sqrt{2}} \end{pmatrix} = \frac{1}{\sqrt{2}} \begin{pmatrix} -2 & -5 \\0 & 1 \end{pmatrix}= \hat{R}
+    .\end{align*}
+    As desired.
+    \bigbreak \noindent 
+    (b) The decomposition in example 3.2.13, which was obtained using a rotator, is
+    \begin{align*}
+        Q = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}, \; Q^{T} = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ -1 & 1 \end{pmatrix},\; R = \frac{1}{\sqrt{2}} \begin{pmatrix} 2 & 5 \\ 0 & 1 \end{pmatrix}
+    .\end{align*}
+    Which has the same numbers, but with different signs.
+    \bigbreak \noindent 
+    We need $Q = \hat{Q}D$, so $\hat{Q}Q = D$. Thus,
+    \begin{align*}
+        \hat{Q}Q &= \left(\frac{1}{\sqrt{2}}\right)^{2} \begin{pmatrix} -1 & -1 \\ -1 & 1 \end{pmatrix} \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix} = \begin{pmatrix} d_{1} &0 \\ 0 & d_{2} \end{pmatrix} \\
+        \implies \frac{1}{2} \begin{pmatrix} -2 & 0 \\ 0 & 2 \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} &= \begin{pmatrix} d_{1}  & 0 \\ 0 & d_{2}\end{pmatrix} 
+    .\end{align*}
+    So,
+    \begin{align*}
+        D = \begin{pmatrix} d_{1} & 0 \\ 0 & d_{2} \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}
+    .\end{align*}
+    We can verify that $\hat{R} = DR $
+    \begin{align*}
+        DR &= \frac{1}{\sqrt{2}}  \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 5 \\ 0 & 1 \end{pmatrix}  = \frac{1}{\sqrt{2}}\begin{pmatrix} -2 & -5 \\ 0 & 1 \end{pmatrix} = \hat{R}
+    .\end{align*}
+
+    \pagebreak \bigbreak \noindent 
+    \begin{mdframed}
+        3.3.7.
+        Work this problem by hand. Consider the
+        overdetermined system
+        \[
+            \begin{bmatrix}
+                1 \\
+                1
+            \end{bmatrix}
+            [x] =
+            \begin{bmatrix}
+                9 \\
+                5
+            \end{bmatrix},
+        \]
+        whose coefficient matrix obviously has full rank.
+
+        \begin{enumerate}
+            \item[(a)] Before you do anything else, guess the least squares solution of the system.
+
+            \item[(b)] Calculate a \(QR\) decomposition of the coefficient matrix, where \(Q\) is a
+                \(2 \times 2\) rotator, and \(R\) is \(2 \times 1\). Use the \(QR\) decomposition to
+                calculate the least squares solution. Also deduce the norm of the residual
+                (without calculating the residual directly).
+        \end{enumerate}
+    \end{mdframed}
+    \bigbreak \noindent 
+    (a) We need a vector $x \in \mathbb{R}^{1}$, when used to scale $\begin{pmatrix} 1 \\ 1 \end{pmatrix} $ produces a vector in $\mathbb{R}^{2}$ closest to $\begin{pmatrix} 9 \\ 5 \end{pmatrix}$ out of all other vectors in the span of $\begin{pmatrix} 1 \\ 1 \end{pmatrix} $. My guess is that the $x$ that produces this scaled vector is the average of the entries in $\begin{pmatrix} 9 \\ 5\end{pmatrix} $. So,
+    \begin{align*}
+        [x] = \left[\frac{9+5}{2}\right] = [7]
+    .\end{align*}
+    (b) We have $y_{1} = \sqrt{1^{2} + 1^{2}} = \sqrt{2} $, and 
+    \begin{align*}
+        Q^{T} = \begin{pmatrix} c & s \\ -s & c \end{pmatrix}
+    ,\end{align*}
+    where
+    \begin{align*}
+       c = \frac{x_{1}}{y_{1}} = \frac{1}{\sqrt{2}},\quad s = \frac{x_{2}}{y_{1}}  = \frac{1}{\sqrt{2}}
+    .\end{align*}
+    So,
+    \begin{align*}
+        Q^{T} = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ -1 & 1 \end{pmatrix}
+    .\end{align*}
+    With $Q^{T}\begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} \sqrt{2} \\ 0 \end{pmatrix}$. So,
+    \begin{align*}
+        R = \begin{pmatrix} \sqrt{2} \\ 0 \end{pmatrix}, \quad Q^{T}b = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ -1 & 1 \end{pmatrix} \begin{pmatrix} 9 \\ 5 \end{pmatrix} = \frac{1}{\sqrt{2}}\begin{pmatrix} 14 \\ -4 \end{pmatrix} = \begin{pmatrix} 7\sqrt{2} \\ -2\sqrt{2} \end{pmatrix}
+    .\end{align*}
+    Thus, $\hat{R} = \sqrt{2}$, and $\hat{c} = \begin{pmatrix} 7\sqrt{2} \end{pmatrix} $. With this, we can solve the system $\hat{R}x = \hat{c}$ to get the least squares solution. We have
+    \begin{align*}
+        \begin{pmatrix} \sqrt{2} \end{pmatrix} \begin{pmatrix} x \end{pmatrix} = \begin{pmatrix} 7\sqrt{2} \end{pmatrix}
+    .\end{align*}
+    So,
+    \begin{align*}
+        \sqrt{2}x = 7\sqrt{2} \implies x = 7
+    .\end{align*}
+    Thus $x=7$, As expected. The norm of the residual is given by the norm of the $\bar{c}$ component in $Q^{T} b = c$. So, the norm of the residual is $(\sqrt{(-2\sqrt{2})^{2}} = 2\sqrt{2}$.
+
+
+\end{document}
