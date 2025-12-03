@@ -11124,6 +11124,333 @@ indicate which strong entity the weak entity depends upon.
                 \item \textbf{IEEE-754 single precision}: The IEEE-754 single precision floating point standard uses an 8-bit exponent and a 23-bit significand, so the total number of bits is 32
                 \item \textbf{IEEE-754 double precision}:  The IEEE-754 double precision standard uses an 11-bit exponent and a 52-bit significand, so the total number of bits is 64.
             \end{itemize}
+        \item \textbf{Significand intro}: The significand of a floating point number is always preceded by an implied binary point. Thus the significand always contains a fractional binary value, which is an encoding of the mantissa
+        \item \textbf{Biased exponent intro}: The exponent indicates, in an encoded fashion, the power of 2 to which the significand is raised.
+        \item \textbf{Issues to resolve}: There are three issues that we need to resolve:
+            \begin{enumerate}
+                \item Just as with fixed point, we want to make sure our representations are unique, i.e., each number has only one floating point representation.
+                \item There is no sign in the exponent field, so how do we represent negative exponents?
+                \item Should zero have a plus or a minus sign
+            \end{enumerate}
+        \item \textbf{Synonymous forms (normalization)}: To resolve the problem of synonymous forms, we will establish a rule that the significand has only one bit before the binary point and that bit must be a 1. We adjust the exponent to make this true
+            \bigbreak \noindent 
+            For example, if the mantissa is 0b.001011, we convert it to a significand of 0b1.011 and subtract 3 from the exponent.
+            \bigbreak \noindent 
+            If the mantissa is 0b1011.00, we convert it to a significand of 0b1.011 and add 3 to the exponent.
+            \bigbreak \noindent 
+            Now, since the first bit is always 1, there is no need to represent it. In the IEEE-754 standard, it is implied.
+            \bigbreak \noindent 
+            That gives us one extra bit of precision, i.e., we now have 24 bits we can use to represent the fractional part of the significand rather than 23.
+            \bigbreak \noindent 
+            For example, if the significand is all 0’s, that represents a mantissa of 1.0.
+            \bigbreak \noindent 
+            This process is called \textbf{normalization}, and the result is called a \textbf{normalized floating point number}
+        \item \textbf{Biased exponents and the bias}: To provide for negative exponents, we use a biased exponent
+            \bigbreak \noindent 
+            We subtract the bias from the value stored in the exponent to determine the true value
+            \bigbreak \noindent 
+            In the IEEE standard, if the exponent has $n$ bits, the bias is $2^{n-1} - 1$.
+        \item \textbf{Excess-127}: The IEEE-754 single precision floating point standard has an 8-bit exponent, so the bias is 127. This is called \textbf{excess-127} representation.
+            \bigbreak \noindent 
+            Since an 8-bit number can range from 0 to 255, the true value of the exponent could theoretically range from -127 to 128. But all 0’s and all 1’s are saved for special purposes. Therefore, the exponent can range from -126 to 127.
+        \item \textbf{IEE-754 single precision}: A single-precision floating-point number uses 32 bits divided into three fields:
+            \begin{enumerate}
+                \item \textbf{Sign}: 1 bit
+                \item \textbf{Biased exponent}: 8 bits
+                \item \textbf{Fraction / Mantissa (F)}: 23 bits
+            \end{enumerate}
+            The layout is 
+            \begin{enumerate}
+                \item \textbf{Bit 31:} Sign
+                \item \textbf{Bits 30–23:} Exponent
+                \item \textbf{Bits 22–0:} Fraction
+            \end{enumerate}
+            A normalized finite number in IEEE-754 single precision has the form:
+            \begin{align*}
+                (-1)^{S} \times (1.F) \times 2^{E-127}
+            .\end{align*}
+            Where
+            \begin{itemize}
+                \item $S \in \{0,1\} $
+                \item $E \in \{1,...,254\} $ (range for normalized values)
+                \item $F$ is a 23-bit binary fraction, contributing the digits after the binary point
+                \item The constant $127$ is the bias for the exponent field
+                \item The leading 1. (called the hidden or implicit leading bit) is used only for normalized values
+            \end{itemize}
+            Notice that the \textbf{mantissa} is the fractional part, whereas the \textbf{significand} is $1.F$, with value $2^{0} + F = 1 + F$. Recall that this leading one is not stored, it is implied.
+        \item \textbf{Deriving the bias}: Consider the unaltered range for an $N$-bit exponent: 
+            \begin{align*}
+                0 \text{ to } 2^{N} - 1
+            .\end{align*}
+            This range has $2^{N} - 1 - 0 + 1 = 2^{N}$ numbers. We wish to shift this range so that half is non-positive, and half is positive. Half of our $2^{N}$ numbers (0 to $2^{N}-1$) is $2^{N} / 2 = 2^{N-1}$.
+            \bigbreak \noindent 
+            If half of our new range is positive $(> 0)$, then the greatest number in this new range is $2^{N-1}$, since $2^{N-1} - 1 + 1 = 2^{N-1}$.
+            \bigbreak \noindent 
+            To find our bias that shifts the range, we just need to compute the number that takes us to $2^{N-1}$ from $2^{N}-1$. That number is precisely
+            \begin{align*}
+                2^{N} - 1 - 2^{N-1} = 2^{N} - \frac{2^{N}}{2} - 1 = 2^{N}\left(1-\frac{1}{2}\right)-1 = 2^{N}\left(\frac{1}{2}\right) - 1 = 2^{N-1}-1
+            .\end{align*}
+            Thus, the shifter (bias) is $2^{N-1}-1$ for an $N$-bit exponent.
+        \item \textbf{Normalized values}: Normalized values are the regular floating-point numbers in IEEE-754 that use the implicit leading 1 in the significand. They make up almost the entire range of representable finite values.
+            \bigbreak \noindent 
+            A floating-point number is normalized when its exponent field satisfies
+            \begin{align*}
+                1 \leq E \leq 2^{N}-2
+            .\end{align*}
+            For IEEE-754 single precision, the exponent is 8-bits, so the range is
+            \begin{align*}
+                1 \leq E \leq 254
+            .\end{align*}
+            In this case, IEEE-754 interprets the value as
+            \begin{align*}
+                (-1)^{S} \times (1.F) \times 2^{E-127}
+            .\end{align*}
+            The key distinguishing feature is the implicit leading 1 in the significand
+            \begin{align*}
+                1.F = 1.f_{1}f_{2}\ldots f_{23}
+            .\end{align*}
+            So, normalized numbers have 24 bits of precision instead of 23.
+            \bigbreak \noindent 
+            Normalization ensures
+            \begin{enumerate}
+                \item The significand is always between 1 and 2.
+                \item There is a unique representation for each nonzero value (no multiple leading zeros).
+                \item Maximum precision is maintained.
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{Note:} The bias rule only applies for normalized numbers
+        \item \textbf{Range of normalized values (IEEE-754 single precision)}: Consider IEEE-754 single precision. The smallest positive normal number is when $S=0,\; E=1$, and all 23 mantissa bits are zero. So, the biased exponent is $1-127 = -126$, and the value is given by
+            \begin{align*}
+                (-1)^{0} \times 1.0_{2} \times 2^{-126} = \frac{1}{2^{126}} \approx 1.17549435 \times 10^{-38}
+            .\end{align*}
+            The largest positive normal number is when $S=0$, $E=254$, and all mantissa bits are one. In this case, the biased exponent is $254 -127 = 127$, and the significant is
+            \begin{align*}
+                0b1.1111\; 1111\; 1111\; 1111\; 1111\; 111
+            ,\end{align*}
+            with value
+            \begin{align*}
+                1 + \sum_{k=1}^{23}\frac{1}{2}\left(\frac{1}{2}\right)^{k-1} = 1 + 1-\frac{1}{2^{23}}
+            .\end{align*}
+            Thus, the value is given by
+            \begin{align*}
+                (-1)^{0} \times \left(2-\frac{1}{2^{23}}\right) \times 2^{127} = 2^{128} - 2^{104} \approx 3.402823466 \times 10^{38}
+            .\end{align*}
+            The smallest negative normal value is when $E=254$, $S = 1$, and all mantissa bits are one. It is the largest positive normal value multiplied by negative one, the value is
+            \begin{align*}
+                 2^{104} - 2^{128} \approx -3.402823466 \times 10^{38}
+            .\end{align*}
+            The largest negative normal value is when $E=1$, $S=1$, and all mantissa bits are zero, it is
+            \begin{align*}
+                (-1)^{1} \times 1.0_{2} \times 2^{-126} = -\frac{1}{2^{126}} \approx -1.17549435 \times 10^{-38}
+            .\end{align*}
+            So, the range of normalized values in the single precision system is
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{singerange}
+                \label{fig:singerange}
+            \end{figure}
+            \bigbreak \noindent 
+            With
+            \begin{itemize}
+                \item $2^{104} - 2^{128} = -3.402823466 \times 10^{38}$
+                \item $-\frac{1}{2^{126}} = -1.17549435 \times 10^{-38}$
+                \item $\frac{1}{2^{126}} =1.17549435 \times 10^{-38}$
+                \item $2^{128} - 2^{104} = 3.402823466 \times 10^{38}$
+            \end{itemize}
+            In fact, one can show quite easily that in general, the ends of the normalized range are given by
+            \begin{align*}
+                \pm \left(2^{2^{n-1}}-2^{2^{n-1}-1-\left\lvert F \right\rvert}\right)
+            ,\end{align*}
+            and the inner bounds are given by
+            \begin{align*}
+               \pm \frac{1}{2^{2-2^{n-1}}} 
+            .\end{align*}
+            Where $n$ is the number of bits in the exponent, and $\left\lvert F \right\rvert $ is the number of bits in the mantissa.
+        \item \textbf{Subnormal (denormalized)}: Subnormal (or denormalized) numbers are a special class of floating-point values that allow IEEE-754 to represent numbers very close to zero with gradual loss of precision, instead of abruptly underflowing to zero.
+            \bigbreak \noindent 
+            A number is subnormal when its exponent field is all zeros ($E = 0$), and its fractional field  is \textbf{not} zero ($F \ne 0 $)
+            \bigbreak \noindent 
+            For subnormals, IEEE-754 does not use the implicit leading 1, the significand begins with 0.
+            \bigbreak \noindent 
+            For subnormals, the exponent is always fixed at $1-\text{bias} = 1-(2^{n-1}-1) = 2-2^{n-1}$. So if the exponent bits are all zero, the exponent is $2-2^{n-1}$, where $n$ is the number of exponent bits. For example, in IEEE-754 single precision, if all 8 of the exponent bits are zero, the exponent is $-126$.
+            \bigbreak \noindent 
+            The form is therefore
+            \begin{align*}
+                (-1)^{S} \times (0.F)_{2} \times 2^{2-2^{n-1}}
+            .\end{align*}
+            Which is
+            \begin{align*}
+                (-1)^{S} \times (0.F)_{2} \times 2^{-126}
+            \end{align*}
+            for IEEE-754 single precision. Precision is reduced because the leading 1 is absent.
+        \item \textbf{Range of subnormals (IEEE-754 single precision)}: The smallest positive subnormal is when $S = 0$, $f_{i} = 0$ except for $f_{\left\lvert F \right\rvert} = 1$, and all exponent bits zero. The value is therefore
+            \begin{align*}
+                (-1)^{0} \times (0.0000...1)_{2} \times 2^{-126} = \frac{1}{2^{23}} \times \frac{1}{2^{126}} = \frac{1}{2^{149}} \approx 1.40129846 \times 10^{-45}
+            .\end{align*}
+            And the largest negative subnormal is therefore
+            \begin{align*}
+                -\frac{1}{2^{149}} \approx -1.40129846 \times 10^{-45}
+            .\end{align*}
+            The largest positive subnormal is when $S=0$, $f_{i} = 1$ for all $i \in \{1,...,23\} $, and all exponent bits zero. The value is
+            \begin{align*}
+                (-1)^{0} \times \sum_{k=1}^{23}\frac{1}{2}\left(\frac{1}{2}\right)^{k-1} \times 2^{-126} &= 1-\frac{1}{2^{23}} \times 2^{-126} = \frac{1}{2^{126}} - \frac{1}{2^{149}} \\
+                                                                                                         &\approx 1.17549421 \times 10^{-38}
+            .\end{align*}
+            And the smallest negative subnormal is therefore
+            \begin{align*}
+                \frac{1}{2^{149}} - \frac{1}{2^{126}} \approx -1.17549421 \times 10^{-38}
+            .\end{align*}
+            So, the range of subnormal values in the IEEE-754 single precision system is 
+            \bigbreak \noindent 
+            \begin{figure}[ht]
+                \centering
+                \incfig{singlerange}
+                \label{fig:singlerange}
+            \end{figure}
+            \bigbreak \noindent 
+            With
+            \begin{itemize}
+                \item $\frac{1}{2^{149}} - \frac{1}{2^{126}} \approx -1.17549421 \times 10^{-38}$ 
+                \item $-\frac{1}{2^{149}} \approx -1.40129846 \times 10^{-45}$ 
+                \item $\frac{1}{2^{149}} \approx 1.40129846 \times 10^{-45}$ 
+                \item $\frac{1}{2^{126}} - \frac{1}{2^{149}} \approx 1.17549421 \times 10^{-38}$ 
+            \end{itemize}
+            Note that these lines are the floating point real lines, not the actual real lines. On the actual real line, there would be gaps between zero and the subnormals, and between the subnormals and the normals. Also, the intervals would not be continous, as there is a gap between each representable floating point number. 
+            \bigbreak \noindent 
+            One can easily show that the outer bounds of the subnormals are given by
+            \begin{align*}
+                \pm \left(\frac{1}{2^{2-2^{n-1}}}\right) - \frac{1}{2^{2-2^{n-1} + \left\lvert F \right\rvert}}
+            ,\end{align*}
+            and the inner bounds are given by
+            \begin{align*}
+                \pm \frac{1}{2^{2-2^{n-1}+\left\lvert F \right\rvert}}
+            .\end{align*}
+        \item \textbf{The distance between subnormals}: The smallest positive subnormal is $2^{-149}$, the second smallest subnormal is $2 / 2^{-149}$, the third smallest is $3 / 2^{-149}$. In fact, the sequence is
+            \begin{align*}
+                x_{k} = k \cdot 2^{-149}, \quad k = 1,2,...,2^{23}-1
+            .\end{align*}
+        \item \textbf{Representable numbers and the gaps}: A floating-point format can represent only finitely many real numbers. These values lie at specific discrete points on the real number line. Between any two representable numbers, there are infinitely many unrepresentable real numbers.
+            \bigbreak \noindent 
+            Thus, the floating-point real line looks like:
+            \begin{align*}
+                \cdots x_{k-1} < x_{k} < x_{k+1}  \cdots 
+            .\end{align*}
+            where each $x_{k}$ is a representable value, and the interv
+            \begin{align*}
+                (x_{k}, x_{k+1})
+            \end{align*}
+            contain an infinite number of real values that cannot be exactly stored. This is why gaps exist.
+            \bigbreak \noindent 
+            Single precision has three categories near zero:
+            \begin{itemize}
+                \item \textbf{Zero:} 0
+                \item \textbf{Subnormals}
+                    \begin{align*}
+                        x_{k} = k \cdot 2^{-149},\; k = 1,2,...,2^{23}-1
+                    .\end{align*}
+                \item \textbf{Normal numbers}:
+                    \begin{align*}
+                        x_{min normal} = 2^{-126}
+                    .\end{align*}
+            \end{itemize}
+            These form a sequence
+            \begin{align*}
+                0 < 2^{-149} < 2 \cdot 2^{-149} < \cdots < (2^{23}-1)2^{-149} < 2^{-126}
+            .\end{align*}
+            This is the complete list of representable positive values between 0 and the smallest normal.
+            \bigbreak \noindent 
+            The smallest positive representable number is:
+            \begin{align*}
+                x_{1} = 2^{-149}
+            .\end{align*}
+            Between zero and $2^{-149}$, there exist infinitely many real numbers that cannot be represented. Thus, the gap is 
+            \begin{align*}
+                (0, 2^{-149})
+            .\end{align*}
+            This is the uniform spacing of all subnormals.
+            \bigbreak \noindent 
+            In the context of normalized values, there is not uniform spacing between the representable values. In fact, the spacing grows as the values get very large or very small.
+            \bigbreak \noindent 
+            When a real number lies in a gap between two representable floating-point numbers, the computer cannot store it exactly. Floating-point numbers form a set like
+            \begin{align*}
+                \cdots < x_{k-1} < x_{k} < x_{k+1} \cdots
+            .\end{align*} 
+            All values between  $x_{k-1}$ and $x_{k}$, and all values between $x_{k}$ and $x_{k+1}$ are not representable. So if you try to store a real number
+            \begin{align*}
+                y \in (x_{k}, x_{k+1})
+            ,\end{align*}
+            the system must choose either $x_{k}$ or $x_{k+1}$, depending on rounding rules.
+            \bigbreak \noindent 
+            Consider numbers near 1.0 in single precision. The spacing is 
+            \begin{align*}
+                2^{-23} \approx 1.19 \times 10^{-7}
+            .\end{align*}
+            The representable numbers are
+            \begin{align*}
+                1.00000000000000000000000, \quad 1.00000011920928955078125
+            .\end{align*}
+            If we try to store 1.00000005, it lies between them, so it is rounded to
+            \begin{align*}
+                1.00000000000000000000000
+            .\end{align*}
+        \item \textbf{IEEE-754 rounding modes}: IEEE-754 defines four rounding modes:
+            \begin{enumerate}
+                \item \textbf{Round to nearest (default) (ties to even) (banker's rounding)}
+                \item Round toward $+\infty $
+                \item Round toward $-\infty $
+                \item Round toward 0
+            \end{enumerate}
+            Unless you change it, the rounding mode is round to nearest, ties to even.
+        \item \textbf{Round to nearest} : When you store a real number $y$, the computer finds
+            \begin{align*}
+                x_{k} = \text{ largest representable value $ \leq y $} \\
+                x_{k+1} = \text{ smallest representable value $ \geq y $}
+            \end{align*}
+            and selects
+            \begin{itemize}
+                \item $x_{k}$ if $y < (x_{k} + x_{k+1}) / 2 $
+                \item $x_{k+1}$ if $y > (x_{k} + x_{k+1}) / 2 $
+                \item The \textbf{even one} if $y$ is exactly halfway. Uses the \textbf{binary significand rule}, also called the \textbf{even rule}.
+            \end{itemize}
+            This is why floating-point sometimes “rounds strangely”: it is trying to ensure statistical fairness.
+            \bigbreak \noindent 
+            The binary significand rule is the rule that decides how to round a number that lies exactly halfway between two representable floating-point numbers in IEEE-754’s default rounding mode. When the real value is exactly halfway between two representable floating-point numbers:
+            \bigbreak \noindent 
+            IEEE-754 chooses the one whose significand (the binary digits after the implicit leading 1) has an even least significant bit (LSB). 
+            \bigbreak \noindent 
+            Since a floating-point significand represents a binary integer if you ignore the binary point, we can look to the LSB of the integer. If the LSB is zero, the integer is even. If the LSB is one, the integer is odd. IEEE-754 chooses the representable number with an even LSB.
+            \bigbreak \noindent 
+            We remark that no two adjacent floats have the same LSB in the significand. This is due to the way binary counting works.
+        \item \textbf{Roundoff error}: Roundoff error (or rounding error) is exactly what happens when a real number cannot be represented in floating-point, so it is rounded to the nearest representable value.
+            \bigbreak \noindent 
+            When a real number $x$ is rounded to a floating-point number $\hat{x}$
+            \begin{align*}
+                \hat{x} = \text{round}(x)
+            ,\end{align*}
+            the difference $\hat{x} - x$ is the roundoff error.
+        \item \textbf{Representing zero}: Zero is represented when both fields are all zeros:
+            \begin{itemize}
+                \item \textbf{Sign bit:} 0 or 1
+                \item \textbf{Exponent field:} 00000000
+                \item \textbf{Fraction field:} 00000000000000000000000
+            \end{itemize}
+            So the bit patterns are:
+            \begin{itemize}
+                \item +0:
+                    \begin{align*}
+                        0\; 00000000\; 00000000000000000000000
+                    .\end{align*}
+                \item −0:
+                    \begin{align*}
+                        1\; 00000000\; 00000000000000000000000
+                    .\end{align*}
+            \end{itemize}
+            Thus, the representation is
+            \begin{align*}
+                (-1)^{S} \times 0
+            .\end{align*}
+        \item \textbf{Float to encoding}
 
 
 
