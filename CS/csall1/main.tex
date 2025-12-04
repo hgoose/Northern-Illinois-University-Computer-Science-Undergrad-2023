@@ -11422,6 +11422,112 @@ indicate which strong entity the weak entity depends upon.
             Since a floating-point significand represents a binary integer if you ignore the binary point, we can look to the LSB of the integer. If the LSB is zero, the integer is even. If the LSB is one, the integer is odd. IEEE-754 chooses the representable number with an even LSB.
             \bigbreak \noindent 
             We remark that no two adjacent floats have the same LSB in the significand. This is due to the way binary counting works.
+        \item \textbf{ULP}: ULP stands for Unit in the Last Place. It is the spacing between two adjacent representable floating-point numbers at a given magnitude.
+            \begin{align*}
+                \text{ULP}(x) =\text{ distance between the two nearest floats around $x$}
+            .\end{align*}
+            ULP is the fundamental measure of floating-point resolution. Floating-point numbers are not evenly spaced on the real line.
+            \begin{itemize}
+                \item \textbf{Near 0 (subnormals), spacing is constant:}: $2^{-149} $
+                \item \textbf{Near 1, spacing is:}: $2^{-23}$
+                \item \textbf{Near 8, spacing is:} $2^{-20}$
+                \item \textbf{Near $2^{127}$, spacing is:} $2^{104}$
+            \end{itemize}
+            These are all ULP sizes at different scales. ULP is the change in last bit of the significand. In IEEE-754 single precision, the significand has 23 explicitly stored bits, but with the hidden bit (implicit one), precision is effectively 24 bits.
+            \bigbreak \noindent 
+            Incrementing the least significant bit of the significand changes the value by
+            \begin{align*}
+                \text{ULP } =     2^{E-23}
+            .\end{align*}
+            Thus, the spacing depends on the unbiased exponent ($E_{S}-127 $). Consider a fixed unbiased exponent $E = E_{S} - 127$, and a float encoded with this exponent,
+            \begin{align*}
+                (1.F) \times 2^{E}
+            .\end{align*}
+            The smallest change in the significand is $2^{-23}$. Let $x = 1.F \times 2^{E}$, and $x_{\text{next}} = (1.F + 2^{-23}) \times 2^{E}$. The difference is
+            \begin{align*}
+                \text{ULP } &= x_{\text{next}} - x = \left(1.F + \frac{1}{2^{23}}\right) \times 2^{E} - 1.F \times 2^{E} \\
+                &= 1.F \times 2^{E} + \frac{2^{E}}{2^{23}} - 1.F \times 2^{E} = \frac{2^{E}}{2^{23}} = 2^{E-23} = 2^{E_{S}-127-23} = 2^{E_{S} - 150}
+            .\end{align*}
+            For example, floats near 1.0 have $E=0$, where $E_{S} = 127$, so
+            \begin{align*}
+                \text{ULP}(1.0) &= 2^{127-127-23} = 2^{-23} \approx 1.192092896 \times 10^{-7}
+            .\end{align*}
+
+
+        \item \textbf{Round to nearest with bits}: When performing floating-point operations (or converting from a real number to IEEE format), the true result often has more precision than the format allows (e.g., more than 23 bits in single precision). So, IEEE-754 computes extra bits beyond the stored mantissa:
+            \begin{itemize}
+                \item \textbf{Guard bit (G)}: 1 extra bit
+                \item \textbf{Round bit (R)}: 1 more bit
+                \item \textbf{Sticky bit (S)}: 1 bit representing all remaining discarded bits
+            \end{itemize}
+            Suppose your mantissa is limited to n bits, but a calculation produces:
+            \begin{align*}
+                [\; n \text{ stored bits}\; ][\; G\; ][\; R\; ][\; S\; ]
+            .\end{align*}
+            Where 
+            \begin{itemize}
+                \item \textbf{Stored fraction (n bits)}: These are the bits that will appear in the IEEE float.
+                \item \textbf{Guard bit (G)}: The first bit beyond the stored LSB.
+                \item \textbf{Round bit (R)}: The next bit after the guard bit.
+                \item \textbf{Sticky bit (S)}: This bit is:
+                    \begin{itemize}
+                        \item 1 if any bits beyond R were 1
+                        \item 0 if all remaining bits were 0
+                    \end{itemize}
+                    So the sticky bit is an OR-accumulator of all remaining bits.
+            \end{itemize}
+            The guard bit is $2^{-24}$, with magnitude $2^{-24} \cdot 2^{E} = 2^{E-24}$. In terms of the ULP,
+            \begin{align*}
+                2^{E-24} = \frac{1}{2} \cdot 2^{E-23} = \frac{1}{2}\text{ULP}
+            .\end{align*}
+            So, the gaurd bit indicates whether the result is at least $\frac{1}{2}\text{ULP}$ past the stored float. $G = 1$ indicates that the stored float is at least halfway between two representable floats.
+            \bigbreak \noindent 
+            Similarly, the round bit R has magnitude $2^{-25} \cdot 2^{E} = 2^{E-25} = \frac{1}{4}\text{ULP}$. Thus, R combined with G tells us if we are strictly more than halfway past the midpoint. R combined with the sticky bit S helps distinguish
+            \begin{itemize}
+                \item exactly half
+                \item slightly more than half
+                \item much more than half
+            \end{itemize}
+            The sticky bit S is the or of all bits past R, the remaining discarded bits.
+            \bigbreak \noindent 
+            To see if we need to round down, all we need is G
+            \begin{itemize}
+                \item \textbf{Round down (truncate)}: If $G=0$, we are less than halfway between representable floats 
+            \end{itemize}
+            \item  If $G=1$ we are at least halfway between representable floats, we look to R and S
+            \begin{itemize}
+                \item \textbf{Ties to even, choose the one whose mantissa has an even least significant bit (LSB)}: If $G=1$, and $R=S=0$, then we are exactly halfway between representable floats
+                \item \textbf{Round up}: If $G=1$, $R=0$, but $S=1$, we are slightly more than halfway between representable floats
+                \item \textbf{Round up}: If $G=1$, $R=1$, and $S = 0$ or $S=1$, we are way past halfway between representable floats
+            \end{itemize}
+        \item \textbf{Rounding examples}: Suppose we have $0b.0010101 $, and we want to round to three binary places. So $G=0,\; R=1,\; S=1$. Since $G=0$, we round down (truncate). So,
+            \begin{align*}
+                0b.0010101 = 0b.001
+            .\end{align*}
+            Next, suppose that we have $0b.0011101$. In this case, $G=1,\; R=1,\; S=1$, so we round up. With three bits, this number is between
+            \begin{align*}
+                (0b.001, 0b.010)
+            .\end{align*}
+            So, we round up to 0b.010. Thus,
+            \begin{align*}
+                0b.0011101 = 0b.010
+            .\end{align*}
+            Next, consider $0b.0011000$. In this case, $G=1,\; R=S=0$. So, we are exactly halfway between representable values, halfway between
+            \begin{align*}
+                (0b.001, 0b.010)
+            .\end{align*}
+            We choose the one that is even (lsb=0). So, we choose $0b.010$, and 
+            \begin{align*}
+                0b.0011000 = 0b.010
+            .\end{align*}
+            Finally, consider $0b.0101000$. In this case, $G=1$, and $R=S=0$. So, we are exactly halfway between
+            \begin{align*}
+                (0b.010, 0b.011)
+            .\end{align*}
+            Since $0b.010$ is the even one, 
+            \begin{align*}
+                0b.0101000 = 0b.010
+            .\end{align*}
         \item \textbf{Roundoff error}: Roundoff error (or rounding error) is exactly what happens when a real number cannot be represented in floating-point, so it is rounded to the nearest representable value.
             \bigbreak \noindent 
             When a real number $x$ is rounded to a floating-point number $\hat{x}$
@@ -11450,11 +11556,211 @@ indicate which strong entity the weak entity depends upon.
             \begin{align*}
                 (-1)^{S} \times 0
             .\end{align*}
-        \item \textbf{Float to encoding}
+        \item \textbf{Real to encoding}: Consider $x\in\mathbb{R}$, to convert this number to its IEEE-754 single precision encoding we need to determine the sign, mantissa, and exponent.
+            \bigbreak \noindent 
+            First, we determine the sign bit.
+            \begin{align*}
+                S = \begin{cases}
+                    0 & \text{ if } x \geq 0      \\
+                    1 & \text{ if } x < 0     
+                \end{cases}
+            .\end{align*}
+            Next, we convert the number to binary (normalized), we need to express $x$ as
+            \begin{align*}
+                \left\lvert x \right\rvert = (1.F)_{2} \times 2^{E}
+            .\end{align*}
+            Where the exponent $E = E_{\text{stored}} - 127$. Note that $E_{\text{stored}} = E + 127$, the exponent we store is an unsigned 8-bit integer.
+            \bigbreak \noindent 
+            We convert the number to binary, and move the binary point so that the number is between 1 and 2.
+            \begin{align*}
+                1 \leq (1.F) < 2
+            .\end{align*}
+            This gives us $\left\lvert F \right\rvert $ binary digits after the leading 1, and $E$, our unbiased exponent. The single precision bias uses bias = 127, so
+            \begin{align*}
+                E_{\text{stored}} = E  + 127
+            .\end{align*}
+            This yields an 8-bit exponent. The fraction field is just the bits of $F $
+            \begin{align*}
+                F = f_{1}f_{2}f_{3} \ldots f_{23}
+            .\end{align*}
+            If $F$ has fewer than 23 bits, pad with zeros. If more than 23 bits, round according to IEEE-754 rounding mode (usually round-to-nearest-even).
+            \bigbreak \noindent 
+            Then, we assemble the final 32-bit pattern
+            \begin{align*}
+                x = S\; E_{\text{stored}}\; F
+            .\end{align*}
+            This is the bitstring you store.
+            \bigbreak \noindent 
+            The algorithm is
+            \begin{enumerate}
+                \item Determine sign bit
+                \item Convert real number to normalized binary scientific notation $1.F \times 2^{E} $
+                \item Bias the exponent $E + 127 $, this is the value we store as the exponent.
+                \item Store the 23 fraction bits, round if needed. Remember that the leading one is implicit, not stored.
+                \item Assemble the final 32-bit pattern
+            \end{enumerate}
+            \bigbreak \noindent 
+            For example, consider $x= 0.15625$. First, we determine that the sign bit is $0$, and convert to binary.
+            \begin{align*}
+                0.15625 = 0b.00101
+            .\end{align*}
+            We normalize by moving the binary point three places to the right, so we have $0b1.01 \times 2^{-3} $. Thus, $F = 01$, and $E = -3$. Since $E = -3$, $E_{\text{stored}} = -3 + 127 = 124 = 0b0111\; 1100$.
+            \bigbreak \noindent 
+            So $S = 0$, $E_{s} = 01111100$, and $F = 01000000000000000000000$. Notice the number of bits in each field is precisely the amount required for 32 bit single precision  floats, we pad with zeros to make sure of this. With all of our bits acquired, our encoded float is
+            \begin{align*}
+                00111110001000000000000000000000
+            .\end{align*}
+        \item \textbf{Real to encoding with rounding}: Consider $x = 0.1$, which cannot be represented exactly with binary, converting to binary gives 
+            \begin{align*}
+                000\; 1100\; 1100\; 1100\; 1100\; 1100...
+            .\end{align*}
+            After converting to binary scientific notation with normalization, we have
+            \begin{align*}
+                1. 100\; 1100\; 1100\; 1100\; 1100... \times 2^{-4}
+            .\end{align*}
+            So, we have $E = -4,\; E_{S} = -4 + 127 = 123 = 0111\; 1011 $. From $1.F$, the mantissa is
+            \begin{align*}
+                F \approx 100\; 1100\; 1100\; 1100\; 1100...
+            .\end{align*}
+            But, we need 23 bits, so we continue the pattern to get the next 4 bits. So, 
+            \begin{align*}
+                100\; 1100\; 1100\; 1100\; 1100\; 1100...
+            .\end{align*}
+            Since the pattern continues, we round. In the default rounding mode, \textit{round to nearest (ties to even)} the next bits are $11$ (nonzero), so we round the 23rd bit (0) to 1. Thus, are 23 mantissa bits are
+            \begin{align*}
+                F = 100\; 1100\; 1100\; 1100\; 1100\; 1101
+            .\end{align*}
+            Thus, the final encoding is
+            \begin{align*}
+                0100\; 1100\; 1100\; 1100\; 1100\; 1101\; 0111\; 1011
+            .\end{align*}
+            \textbf{Note:} Using $(-1)^{S} \times (1.F)_{2} \times 2^{E-127}$, this encoding has value 
+            \begin{align*}
+                0.1000000015
+            .\end{align*}
+            The representable floats that 0.1 falls between are when $E=-4$, $F_{k}$ =  100\; 1100\; 1100\; 1100\; 1100\; 1100, and $F_{k+1}$ = 100\; 1100\; 1100\; 1100\; 1100\; 1101. The values are
+            \begin{align*}
+                (x_{k}, x_{k+1}) = (.099999994, 0.10000000149011612)
+            .\end{align*}
+            Since the midpoint is
+            \begin{align*}
+                \frac{x_{k} + x_{k}}{2} = 0.09999999776482582
+            ,\end{align*}
+            and $0.1 > 0.09999999776482582$, 0.1 was rounded to $x_{k+1}$ =  0.10000000149011612 $\approx$ 0.1000000015
+        \item \textbf{Precision}: When we say single precision (FP32) has 24 bits of significand precision, that number tells you how close two representable floating-point numbers can be, and therefore how many decimal digits you can reliably distinguish. Precision means the smallest relative difference the format can detect. And that is determined directly by how many bits are in the significand.
+            \bigbreak \noindent 
+            A normalized binary significand is IEEE-754 single precision is
+            \begin{align*}
+                1.f_{1}f_{2}f_{3}\ldots f_{23}
+            .\end{align*}
+            This is 24 bits. This represents a binary number between
+            \begin{align*}
+                1.000\ldots 000 \quad \text{ and } \quad 1.111\ldots 111
+            .\end{align*}
+            The smallest step between two distinct representable significands is $2^{-23} $, because the LSB of the significand has weight $2^{-23} $.
+            \bigbreak \noindent 
+            Normalized floats are of the form
+            \begin{align*}
+                (1.F)2^{E}
+            .\end{align*}
+            And the spacing between representable numbers for a given exponent is given by the ULP
+            \begin{align*}
+                \text{ULP } = 2^{E-23} = 2^{E_{S}-150}
+            .\end{align*}
+            The ULP describes absolute spacing, but absolute spacing grows as numbers get bigger. So absolute spacing does not tell you how much precision you really have. To understand precision, you must compare the spacing to the value itself. 
+            \begin{align*}
+                \frac{\text{ULP}(x)}{x} = \frac{2^{E-23}}{(1.F)2^{E}} = = \frac{1}{(1.F)2^{E}}
+            .\end{align*}
+            But, $1.F$ is always between 1.0 and 2.0, so
+            \begin{align*}
+                \frac{1}{2^{23}} \leq \frac{\text{ULP}(x)}{x} \leq \frac{1}{2^{24}}
+            .\end{align*}
+            So, relative precision is always about $10^{-7} $. Relative precision is nearly constant for all normalized floats.
+            \bigbreak \noindent 
+            Thus, 24 bits in the significand gives a relative error bounded above by $2^{-24}$, which is roughly $10^{-7}$. So, we have $\sim$ 7 digits of accuracy.
+            \bigbreak \noindent 
+            We can also ask how many decimal digits do we need if we have $24$ bits to match the precision. So,
+            \begin{align*}
+                10^{D} = 2^{24} \implies \log_{10}(2^{24}) = D \implies D = 24\log_{10}(2) = 7.22471989594
+            .\end{align*}
+            In double precision we have 54 significand bits, so
+            \begin{align*}
+                10^{D} = 2^{54} \implies D = 54\log_{10}(2) = 16.2556197659
+            .\end{align*}
+            So, about 16 digits of accuracy in double precision, and $7$ digits of accuracy in single precision.
+            \bigbreak \noindent 
+            It guarantees only that a float can distinguish numbers that differ in their first 7 digits. Whether a decimal number is representable exactly depends on its binary expansion
+            \bigbreak \noindent 
+            If two real numbers differ within their first 7 digits, a float can tell them apart. If they differ only in the 8th digit, a float will round them to the same value.
+        \item \textbf{Which numbers can be represented}: Consider the values $(1.F) \times 2^{E}$. $1.F$ is
+            \begin{align*}
+                1 + \left(\frac{1}{2^{i}} + \frac{1}{2^{j}} + \cdots + \frac{1}{2^{k}} \right)
+            .\end{align*}
+            Where $i < j < \ldots < k $, we can factor out a $\frac{1}{2^{k}} $,
+            \begin{align*}
+                1 + \frac{1}{2^{k}}\left(\frac{2^{k}}{2^{i}} + \frac{2^{k}}{2^{j}} + \cdots + 1\right) = 1 + \frac{1}{2^{k}}\left(2^{k-i} + 2^{k-j} + \cdots + 1\right)
+            .\end{align*}
+            Notice that $2^{k-i},\; 2^{k-j} > 0$, so $2^{k-i} + 2^{k-j} + ... + 1 \in \mathbb{Z} $, call this integer $\ell$.  We have
+            \begin{align*}
+            1 + \frac{\ell}{2^{k}}  = \frac{2^{k} + \ell}{2^{k}}
+            .\end{align*}
+            Notice that $2^{k} + \ell$ is still an integer, call this value $s$. So,
+            \begin{align*}
+                1.F = \frac{s}{2^{k}}\quad s\in \mathbb{Z}
+            .\end{align*}
+            Now, we multiply by $2^{E}$. If $E \geq 0$, $2^{E} \geq 1$, so
+            \begin{align*}
+                (1.F) \times 2^{E} = \frac{s \times 2^{E}}{2^{k}}
+            .\end{align*}
+            Notice that $s \times 2^{E} \in \mathbb{Z}$, call this value $m$. So,
+            \begin{align*}
+                (1.F) \times 2^{E} = \frac{m}{2^{k}} \quad m\in \mathbb{Z}
+            .\end{align*}
+            Now, if $E < 0$, then $2^{E} < 0$, so 
+            \begin{align*}
+                1.F \times 2^{E} = \frac{s}{2^{k} \cdot 2^{E}} = \frac{s}{2^{k+E}}
+            .\end{align*}
+            In either case, our value is $\frac{m}{2^{k}}$, where $m$ is some integer. That is, only values that can be expressed as an integer divided by a power of two can be represented exactly using floating point. Furthermore, the number of digits must be less than or equal to 7 in single precision, and less than or equal to 16 in double precision.
+        \item \textbf{Infinity and NaN}: We have one more exponent to cover, when $E_{S} = 255 = 0b11111111$, so $E = 255-127 = 128$. This case is reserved to define two special values, either $\pm \infty$, or NaN (not a number).
+            \begin{itemize}
+                \item \textbf{$\pm \infty$}: Significand equals zero
+                \item \textbf{NaN}: Significand different from zero
+            \end{itemize}
+            \bigbreak \noindent 
+            \textbf{Note:} The sign bit of a NaN has no significance, it can be ignored.
+        \item \textbf{NaN}: “not a number” is a special value that some computers use to indicate an error
+            \bigbreak \noindent 
+            For example, if a compiler initializes memory to NaN (instead of 0 or not initializing at all), then it can tell when you are using a variable that hasn’t been assigned a value yet.
+            \bigbreak \noindent 
+            You can do calculations with infinity and NaN. This can prevent your program from terminating abnormally. Of course, you will still have to debug it once you see infinity or NaN in the output.
+        \item \textbf{Double precision bias}: The IEEE double precision standard has an 11-bit exponent, which means its bias is 1023. This is called excess-1023 representation. Everything works the same in double precision, except for minor differences in some numbers.
+        \item \textbf{Counting the number of representable values}: Consider the single precision standard. For normalized numbers, the biased exponent $E \in \{1,254\} $. For each exponent, there are $2 \cdot  2^{23} = 2^{24} $ bit patterns for the sign and significand. Thus, there are
+            \begin{align*}
+                2^{24} \cdot 254
+            \end{align*}
+            normalized numbers. When the exponent is zero, the number is subnormal. Excluding when the significand is all zero, we have
+            \begin{align*}
+                2 (2^{23}-1) = 2^{24} - 2
+            \end{align*}
+            Subnormals. Regarding the representable real numbers (zeros + subnormals + normalized), there are
+            \begin{align*}
+                2^{24} \cdot 254 + 2^{24}-2+2 = 2^{24}(254 + 1) = 2^{24}(255) = 510 \cdot 2^{23}
+            .\end{align*}
+            \bigbreak \noindent 
+            When the exponent is 255 (all ones), there are two infinities. If we include the infinites to the count of the real numbers, we have
+            \begin{align*}
+                510 \cdot 2^{23} + 2
+            .\end{align*}
+            If we include NaN, 
+            \begin{align*}
+                510 \cdot 2^{23} + 3
+            .\end{align*}
+            Finally, there are $2^{32}$ bit patterns.
 
 
 
 
+ 
     \end{itemize}
 
 
