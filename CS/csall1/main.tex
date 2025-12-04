@@ -11284,6 +11284,9 @@ indicate which strong entity the weak entity depends upon.
                 (-1)^{S} \times (0.F)_{2} \times 2^{-126}
             \end{align*}
             for IEEE-754 single precision. Precision is reduced because the leading 1 is absent.
+        \item \textbf{Why subnormals exist}: Subnormals exist to provide a gradual transition from the smallest normalized number to zero. Without them, the format exhibits abrupt underflow.
+            \bigbreak \noindent 
+            The smallest positive normalized number in single precision is $2^{-126} $. Without subnormals, any result whose magnitude is smaller than $2^{-126} $ becomes exactly zero. This creates a discontinuity: you jump from $2^{-126}$ directly to 0 with nothing in between.
         \item \textbf{Range of subnormals (IEEE-754 single precision)}: The smallest positive subnormal is when $S = 0$, $f_{i} = 0$ except for $f_{\left\lvert F \right\rvert} = 1$, and all exponent bits zero. The value is therefore
             \begin{align*}
                 (-1)^{0} \times (0.0000...1)_{2} \times 2^{-126} = \frac{1}{2^{23}} \times \frac{1}{2^{126}} = \frac{1}{2^{149}} \approx 1.40129846 \times 10^{-45}
@@ -11452,7 +11455,15 @@ indicate which strong entity the weak entity depends upon.
             \begin{align*}
                 \text{ULP}(1.0) &= 2^{127-127-23} = 2^{-23} \approx 1.192092896 \times 10^{-7}
             .\end{align*}
-
+        \item \textbf{Binade}: a binade is a set of numbers in a binary floating-point format that all have the same sign and exponent. In other words, a binade is the interval $[2^{e}, 2^{e+1}) $ or $(-2^{e+1}, -2^{e}]$ for some integer value $e$ , that is, the set of real numbers or floating-point numbers $x$ of the same sign such that $2^{e} \leq \left\lvert x \right\rvert < 2^{e+1}$
+            \bigbreak \noindent 
+            In other words, A \textbf{binade} is the set of all \textbf{normalized} floating-point numbers with the same exponent field value (i.e., same unbiased exponent). For a given exponent $e$, all numbers of the form
+            \begin{align*}
+                m \cdot 2^{e}, \quad 1 \leq m < 2
+            \end{align*}
+            belong to one binade. Since there are 254 exponents in IEEE-754 single precision that yield normalized numbers, there are 254 binades. 
+            \bigbreak \noindent 
+            Every binade has spacing $2^{e-(p-1)}$, where $p$ is the precision. 
 
         \item \textbf{Round to nearest with bits}: When performing floating-point operations (or converting from a real number to IEEE format), the true result often has more precision than the format allows (e.g., more than 23 bits in single precision). So, IEEE-754 computes extra bits beyond the stored mantissa:
             \begin{itemize}
@@ -11734,6 +11745,18 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             You can do calculations with infinity and NaN. This can prevent your program from terminating abnormally. Of course, you will still have to debug it once you see infinity or NaN in the output.
         \item \textbf{Double precision bias}: The IEEE double precision standard has an 11-bit exponent, which means its bias is 1023. This is called excess-1023 representation. Everything works the same in double precision, except for minor differences in some numbers.
+        \item \textbf{Range of values}: Consider IEEE-754 single precision. The largest real number is when $S=0,\; E_{S}=254$, and all $F$ bits on. The value is
+            \begin{align*}
+                L = \left(1 + \sum_{k=1}^{23}\frac{1}{2}\left(\frac{1}{2}\right)^{k-1}\right)2^{254-127} = \left(1 + 1-\frac{1}{2^{23}}\right)2^{127} = \left(2 - \frac{1}{2^{23}}\right)2^{127} = 2^{128} - 2^{104}
+            .\end{align*}
+            Whereas the smallest number is therefore
+            \begin{align*}
+                S = -L =  -\left(2^{128} - 2^{104}\right) = 2^{104} - 2^{128}
+            .\end{align*}
+            Thus, the range is 
+            \begin{align*}
+               L - S = 2^{128} - 2^{104} - \left(2^{104} - 2^{128}\right)  = 2^{128} - 2\cdot 2^{104} + 2^{128} = 2^{129} - 2^{105}
+            .\end{align*}
         \item \textbf{Counting the number of representable values}: Consider the single precision standard. For normalized numbers, the biased exponent $E \in \{1,254\} $. For each exponent, there are $2 \cdot  2^{23} = 2^{24} $ bit patterns for the sign and significand. Thus, there are
             \begin{align*}
                 2^{24} \cdot 254
@@ -11756,6 +11779,127 @@ indicate which strong entity the weak entity depends upon.
                 510 \cdot 2^{23} + 3
             .\end{align*}
             Finally, there are $2^{32}$ bit patterns.
+        \item \textbf{Overflow and underflow}: Floating-point numbers have finite range and finite precision. Because of this, some values are too large or too small to represent.
+            \begin{itemize}
+                \item \textbf{Overflow}: Overflow occurs when the magnitude of the true mathematical result exceeds the largest representable finite floating-point number. In IEEE-754 single precision, the largest finite value is 
+                    \begin{align*}
+                        2^{128} - 2^{104}
+                    .\end{align*}
+                    If a computation produces a result larger than this (in magnitude), the format cannot encode it. When this happens, the result is replaced by $\pm \infty$, depending on the sign of the result. Then, an overflow flag is raised.
+                \item \textbf{Underflow}: Underflow is more subtle than overflow because IEEE-754 allows two regimes near zero.
+                    \begin{enumerate}[label=(\alph*)]
+                        \item \textbf{Tiny result}: A result is tiny if its magnitude is smaller than the smallest normal floating-point number. For single precision, the smallest normal value is
+                            \begin{align*}
+                                2^{-126}
+                            .\end{align*}
+                            A value smaller in magnitude than this is subnormal territory.
+                        \item \textbf{Underflow event}: Underflow occurs when a tiny result cannot be represented exactly in the subnormal range after rounding.
+                            If the tiny result is representable as a subnormal, no underflow event. If rounding forces the tiny result to zero, underflow event.
+                            \bigbreak \noindent 
+                    \end{enumerate}
+                    So underflow is not “entering the subnormal region”; it is failing to represent the tiny result accurately even as a subnormal.
+            \end{itemize}
+        \item \textbf{Machine epsilon}: Machine epsilon is the distance between 1 and the next larger representable floating-point number. Formally,
+            \begin{align*}
+                \varepsilon_{\text{mach}} = \min\{\varepsilon > 0:\; \text{fl}(1 + \varepsilon) > 1\}
+            .\end{align*}
+            It is therefore a spacing property of the floating-point format itself, not a property of rounding.
+            \bigbreak \noindent 
+            The machine epsilon is given by
+            \begin{align*}
+                \varepsilon = 2^{-(p-1)}
+            ,\end{align*}
+            where $p$ is the significand precision. In IEEE-754 single precision, the significand precision is 24 bits, so
+            \begin{align*}
+                \varepsilon_{\text{mach}} = 2^{-(24-1)} = 2^{-23} \approx 1.19 \times 10^{-7}
+            .\end{align*}
+            This is the gap between 1.0 and the next representable float above 1.0.
+            \bigbreak \noindent 
+            The machine epsilon tells us
+            \begin{itemize}
+                \item How finely the real line can be resolved around the value 1.
+                \item The ULP (unit in the last place) size at 1.
+            \end{itemize}
+        \item \textbf{Unit roundoff}: Unit roundoff (sometimes denoted $u$) is the maximum relative error introduced by rounding a real number to the nearest floating-point number. Formally, 
+            \begin{align*}
+                u = \frac{1}{2}\varepsilon_{\text{mach}} = 2^{-p}
+            .\end{align*}
+            For rounding-to-nearest, the IEEE-754 default, this is the correct bound. For single precision,
+            \begin{align*}
+                u = 2^{-24} \approx  5.96 \times 10^{-8}
+            .\end{align*}
+        \item \textbf{ULP is proportional to magnitude}: Consider a floating point number
+            \begin{align*}
+                z = m\cdot 2^{e}, \quad 1 \leq m < 2
+            .\end{align*}
+            Recall that 
+            \begin{align*}
+                \text{ulp}(z) = 2^{e-p}
+            .\end{align*}
+            If we look at the ratio $\text{ulp}(z) / \left\lvert z \right\rvert $, we see
+            \begin{align*}
+                \frac{\text{ulp}(z)}{z} = \frac{2^{e-p}}{m2^{e}} = \frac{2^{e}\cdot 2^{-p}}{m2^{e}} = \frac{2^{-p}}{m}
+            .\end{align*}
+            But, $2^{-p}$ is the unit roundoff $u$, so 
+            \begin{align*}
+                \frac{\text{ulp}(z)}{\left\lvert z \right\rvert} = \frac{u}{m}
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                \text{ulp}(z) = \frac{u}{m}\left\lvert z \right\rvert,\quad 1 \leq m < 2
+            .\end{align*}
+            This is the relationship between the spacing of normalized floats around $z$, and the magnitude of $z$. However, because $1 \leq m < 2$, we have
+            \begin{align*}
+                \frac{1}{2} < \frac{1}{m} \leq 1
+            .\end{align*}
+            So,
+            \begin{align*}
+               \frac{1}{2}u\left\lvert z \right\rvert  < \text{ulp}(z) \leq u\left\lvert z \right\rvert
+            .\end{align*}
+            $\text{ulp}(z)$ is the absolute error, with the above fact, we can say that the relative error is bounded by
+            \begin{align*}
+                \frac{1}{2}u < \frac{\text{ulp}(z)}{\left\lvert z \right\rvert} \leq u
+            ,\end{align*}
+            and has value
+            \begin{align*}
+                \frac{\text{ulp}(z)}{\left\lvert z \right\rvert} = \frac{1}{m} \cdot u
+            .\end{align*}
+            Informally, we can say  
+            \begin{align*}
+                \text{ulp}(z) \approx u\left\lvert z \right\rvert
+            .\end{align*}
+
+
+
+
+
+        \item \textbf{Floating point arithmetic}: For $x,y\in\mathbb{R}$,
+            \begin{align*}
+                \text{fl}(x \text{ op } y) = (x \text{ op } y)(1 + \delta ),\quad \left\lvert \delta  \right\rvert \leq u
+            .\end{align*}
+            Where $u$ is the unit roundoff.
+            \bigbreak \noindent 
+            Consider $z\in \mathbb{R}$, 
+            \begin{align*}
+                \text{fl}(z) = z + \varepsilon, \quad \left\lvert \varepsilon \right\rvert \leq \frac{1}{2} \text{ulp}(z) \approx u\left\lvert z \right\rvert
+            .\end{align*}
+            We can convert this into relative error by dividing by $z$, so
+            \begin{align*}
+                \frac{\text{fl}(z)}{z} = 1 + \frac{\varepsilon}{z} \quad \left\lvert \frac{\varepsilon}{z} \right\rvert \leq u
+            .\end{align*}
+            Let $\delta := \frac{\varepsilon}{z} $, so $\left\lvert \delta  \right\rvert \leq u$. Then,
+            \begin{align*}
+                \frac{\text{fl}(z)}{z} = 1 + \delta ,\quad \left\lvert \delta  \right\rvert \leq u
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                \text{fl}(z) = z(1+\delta),\quad \left\lvert \delta  \right\rvert \leq u
+            .\end{align*}
+            In any expression involving real numbers with arithmetic operators, IEEE will first perform that operation, and then round the result to the nearest representable float. So, $z = x \circ y$, where $\circ \in \{+,-,*,/,...\} $. This is why we say that
+            \begin{align*}
+                \text{fl}(x \circ y) = (x \circ y)(1 + \delta ),\quad \left\lvert \delta  \right\rvert \leq u
+            .\end{align*}
+
 
 
 
