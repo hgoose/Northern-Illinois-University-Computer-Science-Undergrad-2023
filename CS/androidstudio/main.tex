@@ -5576,6 +5576,7 @@
                 \item \textbf{void	setTypeface(Typeface tf)}: Sets the typeface and style in which the text should be displayed.
                 \item \textbf{void	setTypeface(Typeface tf, int style)}: Sets the typeface and style in which the text should be displayed, and turns on the fake bold and italic bits in the Paint if the Typeface that you provided does not have all the bits in the style that you specified.
                 \item \textbf{int getLineCount()}: Returns line count or 0 if layout not built.
+                \item \textbf{void setShadowLayer(float radius, float dx, float dy, int color)}: Applies a text shadow.
             \end{itemize}
     \end{itemize}
 
@@ -6121,6 +6122,8 @@
                 detector.setOnDoubleTapListener(doubleTapListener);
             \end{javacode}
             \bigbreak \noindent 
+            Where \texttt{gestureListener} is a class that implements GestureDetector.OnGestureListener, and \texttt{doubleTapListener} is a class that implements GestureDetector.OnDoubleTapListener.
+            \bigbreak \noindent 
             The GestureDetector then routes appropriate touch events to it when you forward all motion events from your View or Activity:
             \bigbreak \noindent 
             \begin{javacode}
@@ -6128,6 +6131,18 @@
             public boolean onTouchEvent(MotionEvent event) {
                 return detector.onTouchEvent(event);
             }
+            \end{javacode}
+            \bigbreak \noindent 
+            By doing this, all touch events inside the activity will be handled by the GestureDetector and its provided listeners. If we wanted to handle touch events only when they happen inside a specific view, we can do
+            \bigbreak \noindent 
+            \begin{javacode}
+                myView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent e) {
+                        detector.onTouchEvent(e);
+                        return true;
+                    }
+                });
             \end{javacode}
     
 
