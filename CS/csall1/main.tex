@@ -10513,12 +10513,14 @@ indicate which strong entity the weak entity depends upon.
     \subsubsection{Endianness (byte ordering)}
     \begin{itemize}
         \item \textbf{Endianness}: Byte ordering, or endianness, is another architectural consideration. There are two options for storing an integer:
+            \bigbreak \noindent 
+            Endianness affects how multi-byte integers are stored.
             \begin{itemize}
                 \item \textbf{Little endian machines}: store the least significant byte before the most significant byte, i.e., the least significant byte is stored at the lower address. Intel x86 machines (PCs) are little endian
                 \item \textbf{Big endian machines}: store the most significant byte before the least significant byte, i.e., the most significant byte is stored at the lower address. IBM mainframes are big endian
             \end{itemize}
             \bigbreak \noindent 
-            Let $x \in \mathbb{R}$, $b = \text{bin}(x)$, $b = b_{n}b_{n-1} \cdots b_{2}b_{1}b_{0} $. In a big endian machine, suppose $b$ was stored at address zero, then
+            Let $b_{n}b_{n-1} \cdots b_{2}b_{1}b_{0} $ be a sequence of bytes representing an integer in memory. In a big endian machine, suppose $b$ was stored at address zero, then
             \begin{align*}
                 \overset{b_{n}}{\underset{a_{0}}{\_}} \overset{b_{n-1}}{\underset{a_{1}}{\_}} \cdots \overset{b_{2}}{\underset{a_{n-2}}{\_}}\overset{b_{1}}{\underset{a_{n-1}}{\_}}\overset{b_{0}}{\underset{a_{n}}{\_}}
             .\end{align*}
@@ -10526,6 +10528,9 @@ indicate which strong entity the weak entity depends upon.
             \begin{align*}
                 \overset{b_{0}}{\underset{a_{0}}{\_}} \overset{b_{1}}{\underset{a_{1}}{\_}}\overset{b_{2}}{\underset{a_{2}}{\_}} \cdots \overset{b_{n-1}}{\underset{a_{n-1}}{\_}}\overset{b_{n}}{\underset{a_{n}}{\_}}
             .\end{align*}
+            If the integer is only one byte, ordering is same for both cases. There is only one byte, so nothing to order.
+            \bigbreak \noindent 
+            In the case of strings, or groupings of character bytes, The first character is at the lowest memory address.
         \item \textbf{Advantages}: The big endian architecture has certain advantages
             \begin{itemize}
                 \item Regardless of the length of the number, the sign of the number can be determined by looking at the byte at address offset 0.
@@ -10774,6 +10779,20 @@ indicate which strong entity the weak entity depends upon.
             .\end{align*}
             \bigbreak \noindent 
             We use the last four byte category to encode $U+1F600$ as $F0\; 9F\; 98\; 80$
+        \item \textbf{Endianness in UTF-8}: Endianness only matters when a value is stored using more than one byte to represent a single numeric quantity. UTF-8 never does that, so it does not have an endianness issue. BE and LE are the same for UTF-8 code point encodings. Endianness matters when a system stores a multi-byte integer, such as 16-bit integer, 32-bit integer, or a 64-bit integer. If you treat a sequence of bytes as one number, byte order matters.
+            \bigbreak \noindent 
+            The UTF-8 leading-byte patterns are interpreted byte-by-byte, not by assembling them into a single integer.
+            \begin{itemize}
+                \item UTF-16 code units are 16 bits. A 16-bit integer must be stored in either big-endian or little-endian order.
+                \item UTF-32 code units are 32 bits. Same issue.
+            \end{itemize}
+            UTF-8 never interprets several bytes as a single integer. It interprets them as a sequence of independently meaningful 8-bit tokens. Therefore, no endianness decision is needed.
+        \item \textbf{Self-synchronization}:  A self-synchronizing encoding is one in which the byte boundaries of characters can be identified by local inspection of the byte stream, even after data corruption or when starting from the middle of the stream. UTF-8 is \textbf{self-synchronizing}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Every byte identifies whether it is a leading byte or a continuation byte.
+                \item If a random byte is lost, the decoder can usually resynchronize quickly by scanning forward until it finds a valid leading byte pattern.
+            \end{itemize}
         \item \textbf{Ranges}
             \begin{itemize}
                 \item \textbf{0000-007F}: code points 0-127 (ascii)
@@ -11786,18 +11805,32 @@ indicate which strong entity the weak entity depends upon.
                         2^{128} - 2^{104}
                     .\end{align*}
                     If a computation produces a result larger than this (in magnitude), the format cannot encode it. When this happens, the result is replaced by $\pm \infty$, depending on the sign of the result. Then, an overflow flag is raised.
-                \item \textbf{Underflow}: Underflow is more subtle than overflow because IEEE-754 allows two regimes near zero.
+                \item \textbf{Underflow}: Underflow is more subtle than overflow because IEEE-754 
+                    provides two regimes near zero: the normal range and the subnormal range.
                     \begin{enumerate}[label=(\alph*)]
-                        \item \textbf{Tiny result}: A result is tiny if its magnitude is smaller than the smallest normal floating-point number. For single precision, the smallest normal value is
-                            \begin{align*}
-                                2^{-126}
-                            .\end{align*}
-                            A value smaller in magnitude than this is subnormal territory.
-                        \item \textbf{Underflow event}: Underflow occurs when a tiny result cannot be represented exactly in the subnormal range after rounding.
-                            If the tiny result is representable as a subnormal, no underflow event. If rounding forces the tiny result to zero, underflow event.
-                            \bigbreak \noindent 
+                        \item \textbf{Tiny result}: A result is tiny if its magnitude is smaller 
+                            than the smallest normal floating-point number. For single precision, the 
+                            smallest normal value is
+                            \[
+                                2^{-126}.
+                            \]
+                            Any nonzero value with magnitude below this threshold lies in the 
+                            subnormal region.
+                        \item \textbf{Underflow event}: IEEE-754 signals underflow only when 
+                            \emph{both} of the following occur:
+                            (i) the correctly rounded result is tiny, and 
+                            (ii) the result is inexact (that is, rounding was required).
+                            Thus:
+                            \begin{itemize}
+                                \item If a tiny result is \emph{exactly} representable as a subnormal, 
+                                    no underflow event occurs.
+                                \item If a tiny result \emph{cannot} be represented exactly and must be 
+                                    rounded—either to a subnormal or to zero—the underflow flag is raised.
+                            \end{itemize}
                     \end{enumerate}
-                    So underflow is not “entering the subnormal region”; it is failing to represent the tiny result accurately even as a subnormal.
+
+                    So underflow is not simply “entering the subnormal region”; it is the 
+                    combination of tininess and inexactness.
             \end{itemize}
         \item \textbf{Machine epsilon}: Machine epsilon is the distance between 1 and the next larger representable floating-point number. Formally,
             \begin{align*}
@@ -11869,10 +11902,11 @@ indicate which strong entity the weak entity depends upon.
                 \text{ulp}(z) \approx u\left\lvert z \right\rvert
             .\end{align*}
 
+    \end{itemize}
 
-
-
-
+    \pagebreak 
+    \subsubsection{Floating point arithmetic}
+    \begin{itemize}
         \item \textbf{Floating point arithmetic}: For $x,y\in\mathbb{R}$,
             \begin{align*}
                 \text{fl}(x \text{ op } y) = (x \text{ op } y)(1 + \delta ),\quad \left\lvert \delta  \right\rvert \leq u
@@ -11899,12 +11933,113 @@ indicate which strong entity the weak entity depends upon.
             \begin{align*}
                 \text{fl}(x \circ y) = (x \circ y)(1 + \delta ),\quad \left\lvert \delta  \right\rvert \leq u
             .\end{align*}
+        \item \textbf{Floating point addition}: Floating point addition and subtraction are accomplished just as with pencil and paper. We convert the operands to have the same exponent before adding the numbers. If the exponent requires adjustment, we renormalize at the end of the calculation
+            \bigbreak \noindent 
+            In scientific notation, we can add $8.0 \times 10^{2}$ and $1.5 \times 10^{-1}$ by first adjusting $8.0\times 10^{2}$ so that it has the same exponent $(-1)$, 
+            \begin{align*}
+                8.0 \times 10^{2} = 8000 \times 10^{-1}
+            .\end{align*}
+            Thus,
+            \begin{align*}
+                8000 \times 10^{-1} + 1.5 \times 10^{-1} = 8001.5 \times 10^{-1} = 8.0015 \times 10^{2}
+            .\end{align*}
+            Binary works the same way.
+        \item \textbf{Floating point multiplication}: We multiply the two operands and add their exponents. If the exponent requires adjustment, we renormalize at the end of the calculation.
+            \bigbreak \noindent 
+            For example, in scientific notation, multiplying $8.0 \times 10^{2}$ and $1.5 \times 10^{-1} $ yields
+            \begin{align*}
+                (8.0 \times 1.5) \times 10^{2+(-1)} = 12 \times 10^{1} = 1.2 \times 10^{2} 
+            .\end{align*}
+    \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Floating point error analysis}
+    \begin{itemize}
+        \item \textbf{Intro}: 
+            No matter how many bits we use in a floating point representation, some numbers will require more bits. Also, some decimal fractions have an infinite representation in binary.
+            \bigbreak \noindent 
+            We can reduce these errors, but not eliminate them.
+        \item \textbf{Calculating errors}: For a number $x$, first find
+            \begin{align*}
+                \bar{x} = \text{fl}(x)
+            .\end{align*}
+            Then, convert $\bar{x}$ back to decimal, $\hat{x} = \text{dec}(\bar{x}) $. Then, calculate $x - \hat{x}$. Sometimes it’s more useful to express the error as a percent of the original number $(x-\hat{x}) / x $.
+        \item \textbf{Error example}: Consider
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int main() {
+                    float a = 1000.43;
+                    float b = 1000.0;
+                    cout << a - b << endl;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The output is 0.429993. Why doesn't it print $0.43$? The floating point representation of $1000.43 $ is  1000.429992675781, the difference is approximately 0.0000073
+            \bigbreak \noindent 
+            If we had a procedure that repetitively added 1000.43 to a sum, the error would grow every time through the loop.
+        \item \textbf{Floating point error in the real world}: An error like this contributed to the deaths of U.S. soldiers in Iraq in 1991. The destination of a Patriot missile was based on the time of last detection of an incoming missile and its velocity. The clock counted in units of 0.1 second. The time since boot was expressed as an integer number of seconds (truncated).
+            \bigbreak \noindent 
+            The integer was converted to floating point in a 24-bit register. But 0.1 has an infinite representation in binary, the error built up over several days. After 100 hours, the error was about 0.34 seconds, which meant an inaccuracy of 0.5 kilometer.
+            \bigbreak \noindent 
+            The missile missed the incoming missile it was supposed to destroy. No one expected the program to run that long. The problem could have been fixed by frequent rebooting if anyone had known.
+        \item \textbf{Comparing floats}: It’s not safe to compare floating point numbers using “==“. Consider 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int main() {
+                    double x = 1.0 / 10.0;
+                    double y = x * 10.0;
 
-
-
-
- 
+                    if (y != 1.0) cout << "Suprise!" << endl;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Some compilers handle this correctly, some don't. It is more likely to fail if the numbers have multiple decimal places or the calculation is done after an I/O or function call so that the compiler can’t optimize it at compile time.
+            \bigbreak \noindent 
+            One way to handle this is to use a tolerance $\varepsilon$,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                const double epsilon = 1e-5;
+                if (abs(x-y) < epsilon)
+                // or
+                if (abs(x-y) < epsilon * abs(x))
+            \end{cppcode}
+            \bigbreak \noindent 
+            Whether an absolute (first example) or relative (second example) is better depends on the application. If you use floating point calculations, you need to do this type of analysis
+            \bigbreak \noindent 
+            Computational science is a new interdisciplinary field that studies such issues
+        \item \textbf{Handling currency}: 
+            For these reasons we don’t use floating point for calculations involving money. You can use integers representing the value in pennies.
+            \bigbreak \noindent 
+            There are other solutions also.
+        \item \textbf{Other error}: 
+            Just because $x == y$ doesn’t mean that $\cos(x) == \cos(y)$, or any other function
+            \bigbreak \noindent 
+            Intermediate results of a calculation can be stored in the CPU in a register with additional bits. These results are truncated when moved to a regular register in main memory.
+            \bigbreak \noindent 
+            Depending on circumstances, a compiler might truncate a number in one instance and not truncate the same number in another case. So an “epsilon” type solution or its equivalent might be needed here too.
+        \item \textbf{Overflow / underflow errors}: 
+            Floating point overflow and underflow can cause programs to terminate.
+            \bigbreak \noindent 
+            Overflow occurs when there is no room to store the high-order bits resulting from a calculation.
+            \bigbreak \noindent 
+            Underflow occurs when a value is too small to store, possibly resulting in division by zero.
+        \item \textbf{Accuracy and precision}: 
+            When discussing floating point numbers, it is important to understand the terms range, precision, and accuracy.
+            \bigbreak \noindent 
+            The range of a numeric integer format is the difference between the largest and smallest values that can be expressed.
+            \bigbreak \noindent 
+            Accuracy refers to how closely a numeric representation approximates a true value.
+            \bigbreak \noindent 
+            The precision of a number indicates how much information we have about a value, usually measured by the number of bits or digits available.
+        \item \textbf{Normalized floats}: The use of normalized floating point enables us to maintain both precision and accuracy.
+            \bigbreak \noindent 
+            With fixed point, as numbers get very small, we lose precision because most of the available digits are taken up by 0’s. The same thing happens with denormalized floating point.
+            \bigbreak \noindent 
+            Still, with fixed point, a calculation has to end when the value is 0 (because multiplying by 0 always gives 0, and dividing by 0 is not doable). With denormalized floating point, although there is a loss of precision, the calculation can continue much further before it has to terminate.
+            \bigbreak \noindent 
+            Normalized floating point allows us to maintain precision without losing accuracy.
+            \bigbreak \noindent 
+            As the numbers get smaller, the exponent gets larger (i.e., the negative exponent grows in absolute value), but we can use all the bits of the mantissa to maintain precision.
     \end{itemize}
 
 
