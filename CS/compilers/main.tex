@@ -1,0 +1,591 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Comilers}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Compilers}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+            
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Introduction}
+    \begin{itemize}
+        \item \textbf{Compilers}: In its most general form, a compiler is a program that accepts as input a program text in a certain language and produces as output a program text in another language, while preserving the meaning of that text
+        \item \textbf{Translation, source language, target language, and implementation language}: This process is called translation, as it would be if the texts were in natural languages. Almost all compilers translate from one input language, the source language, to one output language, the target language, only. One normally expects the source and target language to differ greatly: the source language could be C and the target language might be machine code for the Pentium processor series. The language the compiler itself is written in is the implementation language.
+            \bigbreak \noindent 
+            To obtain the translated program, we run a compiler, which is just another program whose input is a file with the format of a program source text and whose output is a file with the format of executable code
+        \item \textbf{Bootstrapping}: When the source language is also the implementation language and the source text to be compiled is actually a new version of the compiler itself, the process is called bootstrapping. 
+        \item \textbf{Front and back end}: The part of a compiler that performs the analysis of the source language text is called the front-end, and the part that does the target language synthesis is the back-end
+            \bigbreak \noindent 
+            If the compiler has a very clean design, the front-end is totally unaware of the target language and the back-end is totally unaware of the source language, the only thing they have in common is knowledge of the semantic representation
+        \item \textbf{Parse tree / syntax tree}: The \textbf{syntax tree} of a program text is a data structure which shows precisely how the various segments of the program text are to be viewed in terms of the grammar. The syntax tree can be obtained through a process called “parsing”
+            \bigbreak \noindent 
+            \textbf{Parsing} is the process of structuring a text according to a given grammar. For this reason, syntax trees are also called \textbf{parse trees}; we will use the terms interchangeably, with a slight preference for “parse tree” when the emphasis is on the actual parsing. Conversely, parsing is also called syntax analysis
+        \item \textbf{Abstract syntax tree (AST)}: The exact form of the parse tree as required by the grammar is often not the most convenient one for further processing, so usually a modified form of it is used, called an abstract syntax tree, or AST. Detailed information about the semantics can be attached to the nodes in this tree through annotations, which are stored in additional data fields in the nodes; hence the term annotated abstract syntax tree. Since unannotated ASTs are of limited use, ASTs are always more or less annotated in practice, and the abbreviation “AST” is used also for annotated ASTs.
+        \item \textbf{Lexical analysis}: Usually the grammar of a programming language is not specified in terms of input characters but of input “tokens”. Input tokens may be and sometimes must be separated by white space, which is otherwise ignored. So before feeding the input program text to the parser, it must be divided into tokens. Doing so is the task of the lexical analyzer; the activity itself is sometimes called “to tokenize”, but the literary value of that word is doubtful.
+        \item \textbf{Example grammer, parse tree, and AST}: Consider the grammer
+            \begin{align*}
+                E &\to E + T \ \mid \ E - T \ \mid \ T \\
+                T &\to T * F\ \mid \ T / F \ \mid \ F \\
+                F &\to \text{identifier} \ \mid \ \text{ constant } \ \mid \ (E)
+            ,\end{align*}
+            where $E$ is an expression, $T$ is a term, and $F$ is a factor. The parse tree for the expression $b*b-4*a*c$ would look something like
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1.png}
+            \bigbreak \noindent 
+            Whereas the AST would be 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/2.png}
+            \bigbreak \noindent 
+            The annotated AST would be
+            \bigbreak \noindent 
+            \fig{.6}{./figures/3.png}
+        \item \textbf{Narrow and broad compilers}: A narrow compiler reads a small part of the program, typically a few tokens, processes the information obtained, produces a few bytes of object code if appropriate, discards most of the information about these tokens, and repeats this process until the end of the program text is reached.
+            \bigbreak \noindent 
+            A broad compiler reads the entire program and applies a series of transformations to it (lexical, syntactic, contextual, optimizing, code generating, etc.), which eventually result in the desired object code. This object code is then generally written to a file
+        \item \textbf{$N$-pass compilers}: 
+            Since the “field of vision” of a narrow compiler is, well, narrow, it is possible that it cannot manage all its transformations on the fly. Such compilers then write a partially transformed version of the program to disk and, often using a different program, continue with a second pass; occasionally even more passes are used. Not surprisingly, such a compiler is called a 2-pass (or $N$-pass) compiler, or a 2-scan ($N$-scan) compiler. If a distinction between these two terms is made, “2-scan” often indicates that the second pass actually re-reads (re-scans) the original program text, the difference being that it is now armed with information extracted during the first scan.
+        \item \textbf{Portable programs}: A program is considered portable if it takes a limited and reasonable effort to make it run on different machine types. What constitutes “a limited and reasonable effort” is, of course, a matter of opinion, but today many programs can be ported by just editing the makefile to reflect the local situation and recompiling.
+        \item \textbf{Grammers (CFG's)}: Grammars, or more precisely context-free grammars, are the essential formalism for describing the structure of programs in a programming language. In principle the grammar of a language describes the syntactic structure only, but since the semantics of a language is defined in terms of the syntax, the grammar is also instrumental in the definition of the semantics
+            \bigbreak \noindent 
+            There are other grammar types besides context-free grammars, but we will be mainly concerned with context-free grammars. We will also meet regular grammars, which more often go by the name of “regular expressions” and which result from a severe restriction on the context-free grammars; and attribute grammars, which are context-free grammars extended with parameters and code. Other types of grammars play only a marginal role in compiler construction. The term “contextfree” is often abbreviated to CF. We will give here a brief summary of the features of CF grammars
+            \bigbreak \noindent 
+            A “grammar” is a recipe for constructing elements of a set of strings of symbols. When applied to programming languages, the symbols are the tokens in the language, the strings of symbols are program texts, and the set of strings of symbols is the programming language. The string
+            \begin{center}
+                BEGIN print ("Hi!") END
+            \end{center}
+            consists of 6 symbols (tokens) and could be an element of the set of strings of symbols generated by a programming language grammar, or in more normal words, be a program in some programming language. This cut-and-dried view of a programming language would be useless but for the fact that the strings are constructed in a structured fashion; and to this structure semantics can be attached.
+            \bigbreak \noindent 
+            the six tokens produced by a lexical analyzer are:
+            \begin{itemize}
+                \item \textbf{BEGIN:} keyword
+                \item \textbf{print:} identifier (or keyword, depending on the language specification)
+                \item \textbf{(:} left parenthesis
+                \item \textbf{"Hi!":} string literal
+                \item \textbf{):} right parenthesis
+                \item \textbf{END:} keyword
+            \end{itemize}
+        \item \textbf{The form of a grammar}: A \textbf{grammar} consists of a set of production rules and a start symbol. Each production rule defines a named syntactic construct. A \textbf{production rule} consists of two parts, a left-hand side and a right-hand side, separated by a left-to-right arrow. The \textbf{left-hand side} is the name of the syntactic construct; the \textbf{right-hand side} shows a possible form of the syntactic construct. An example of a production rule is
+            \begin{align*}
+                \text{expression } \to '('\text{expression operator expression})'
+            .\end{align*}
+        \item \textbf{Terminal and non-terminal symbols}: The right-hand side of a production rule can contain two kinds of symbols, terminal symbols and non-terminal symbols. As the word says, a \textbf{terminal symbol} (or \textbf{terminal} for short) is an end point of the production process, and can be part of the strings produced by the grammar. A \textbf{non-terminal symbol} (or \textbf{non-terminal} for short) must occur as the left-hand side (the name) of one or more production rules, and cannot be part of the strings produced by the grammar. Terminals are also called \textbf{tokens}, especially when they are part of an input to be analyzed. Non-terminals and terminals together are called \textbf{grammar symbols}. The grammar symbols in the righthand side of a rule are collectively called its \textbf{members}; when they occur as nodes in a syntax tree they are more often called its “children”
+            \begin{itemize}
+                \item \textbf{Non-terminals} are denoted by capital letters, mostly $A$, $B$, $C$, and $N$.
+                \item \textbf{Terminals} are denoted by lower-case letters near the end of the alphabet, mostly $x$, $y$, and $z$.
+                \item \textbf{Sequences of grammar symbols} are denoted by Greek letters near the beginning of the alphabet, mostly $\alpha$ (alpha), $\beta$ (beta), and $\gamma$ (gamma).
+                \item \textbf{Lower-case letters near the beginning of the alphabet} ($a$, $b$, $c$, etc.) stand for themselves, as terminals.
+                \item \textbf{The empty sequence} is denoted by $\varepsilon$ (epsilon).
+            \end{itemize}
+        \item \textbf{Sentential form, production tree,and production step}: The central data structure in the production process is the sentential form. It is usually described as a string of grammar symbols, and can then be thought of as representing a partially produced program text. For our purposes, however, we want to represent the syntactic structure of the program too. The syntactic structure can be added to the flat interpretation of a sentential form as a tree positioned above the sentential form so that the leaves of the tree are the grammar symbols. This combination is also called a production tree
+            \bigbreak \noindent 
+            A string of terminals can be produced from a grammar by applying so-called production steps to a sentential form, as follows. The sentential form is initialized to a copy of the start symbol. Each production step finds a non-terminal $N$ in the leaves of the sentential form, finds a production rule $N \to \alpha$ with $N$ with N as its lefthand side, and replaces the $N$ in the sentential form with a tree having $N$ as the root and the right-hand side of the production rule, $\alpha$, as the leaf or leaves. When no more non-terminals can be found in the leaves of the sentential form, the production process is finished, and the leaves form a string of terminals in accordance with the grammar.
+            \bigbreak \noindent 
+            Using the conventions described above, we can write that the production process replaces the sentential form $\beta N \gamma$ by $ \beta \alpha \gamma $
+        \item \textbf{More on sentential forms and production steps}: A production step is a single application of a grammar rule. If a grammar has a rule
+            \begin{align*}
+                N  \to \alpha
+            \end{align*}
+            then a sentential of the form
+            \begin{align*}
+                \beta N \gamma
+            \end{align*}
+            can be written as
+            \begin{align*}
+                \beta \alpha \gamma
+            .\end{align*}
+            \begin{itemize}
+                \item $N$: A non-terminal to be expanded
+                \item $\alpha$: The replacement string
+                \item $\beta, \gamma$: Unchanged context
+            \end{itemize}
+            When we write
+            \begin{align*}
+                \beta N \gamma \implies \beta \alpha \gamma
+            \end{align*}
+            we are describing one production step
+            \begin{itemize}
+                \item $N$ — a non-terminal that we are going to expand
+                \item $\alpha $ — the right-hand side of a grammar rule (what replaces N)
+                \item $\beta$ — everything to the left of $N$
+                \item $\gamma$ — everything to the right of $N$
+            \end{itemize}
+
+        \item \textbf{Derivation}: The steps in the production process leading from the start symbol to a string of terminals are called the derivation of that string. Suppose our grammar consists of the four numbered production rules:
+            \begin{enumerate}
+                \item expression $\to$ ’(’ expression operator expression ’)’
+                \item expression $\to$ ’1’
+                \item operator $\to$ ’+’
+                \item operator $\to$ ’ *’
+            \end{enumerate}
+            in which the terminal symbols are surrounded by apostrophes and the non-terminals are identifiers, and suppose the start symbol is expression. Then the sequence of sentential forms shown below
+            \bigbreak \noindent 
+            \fig{.6}{./figures/4.png}
+            \bigbreak \noindent 
+            forms the derivation of the string $(1*(1+1))$. More in particular, it forms a \textbf{leftmost derivation}, a derivation in which it is always the leftmost non-terminal in the sentential form that is rewritten
+            \bigbreak \noindent 
+            An indication $R@P$ shows that grammar rule $R$ is used to rewrite the non-terminal at position $P$. The resulting parse tree is 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/5.png}
+            \bigbreak \noindent 
+            We see that recursion—the ability of a production rule to refer directly or indirectly to itself—is essential to the production process; without recursion, a grammar would produce only a finite set of strings
+            \bigbreak \noindent 
+            The production process is kind enough to produce the program text together with the production tree, but then the program text is committed to a linear medium (paper, computer file) and the production tree gets stripped off in the process. Since we need the tree to find out the semantics of the program, we use a special program, called a “parser”, to retrieve it
+        \item \textbf{Extended forms of grammars}: The single grammar rule format
+            \begin{align*}
+                \text{non-terminal } \to \text{ zero or more grammar symbols}
+            \end{align*}
+            used above is sufficient in principle to specify any grammar, but in practice a richer notation is used
+            \bigbreak \noindent 
+            The format described so far is known as BNF, which may be considered an abbreviation of Backus–Naur Form or of Backus Normal Form. It is very suitable for expressing nesting and recursion, but less convenient for expressing repetition and optionality, although it can of course express repetition through recursion. To remedy this, three additional notations are introduced, each in the form of a postfix operator:
+            \begin{itemize}
+                \item $R^{+}$: Indicates the occurrence of one or more $R$s, to express repetition
+                \item $R^{?}$: Indicates the occurrence of zero or one $R$s, to express optionality
+                \item $R^{*}$: Indicates the occurrence of zero or more $R$s, to express optional repetition
+            \end{itemize}
+            Parentheses may be needed if these postfix operators are to operate on more than one grammar symbol. The grammar notation that allows the above forms is called EBNF, for Extended BNF. An example is the grammar rule
+            \begin{align*}
+                \text{paramater\_list } \to \text{ ('IN' \; $\mid$ \; 'OUT')}^{?} \text{ identitfier (',' identifier)}^{*}
+            .\end{align*}
+        \item \textbf{Properties of grammars}: 
+            \begin{itemize}
+                \item \textbf{Left-recursive non-terminal}: A non-terminal $N$ is left-recursive if, starting with a sentential form $N$, we can produce another sentential form starting with $N$
+                \item \textbf{Left-recursive grammar}:  By extension, a grammar that contains one or more left-recursive rules is itself called left-recursive
+                \item \textbf{Right-recursive}: The right version of left-recursive, not as important.
+                \item \textbf{Nullable non-terminal}: A non-terminal $N$ is nullable if, starting with a sentential form $N$, we can produce an empty sentential form $\epsilon$
+                    \bigbreak \noindent 
+                    A grammar rule for a nullable non-terminal is called an $\epsilon$-rule.
+                \item \textbf{Useless non-terminal}: A non-terminal $N$ is useless if it can never produce a string of terminal symbols: any attempt to do so inevitably leads to a sentential that again contains $N$. 
+                \item \textbf{Ambiguous grammar}: A grammar is ambiguous if it can produce two different production trees with the same leaves in the same order. 
+                    \bigbreak \noindent 
+                    That means that when we lose the production tree due to linearization of the program text we cannot reconstruct it unambiguously; and since the semantics derives from the production tree, we lose the semantics as well. So ambiguous grammars are to be avoided in the specification of programming languages, where attached semantics plays an important role
+            \end{itemize}
+        \item \textbf{Symbols}: The basic unit in formal grammars is the symbol. The only property of these symbols is that we can take two of them and compare them to see if they are the same. In this they are comparable to the values of an enumeration type. Like these, symbols are written as identifiers, or, in mathematical texts, as single letters, possibly with subscripts. Examples of symbols are $N$, $x $, procedure\_body, assignment\_symbol, $t_{k} $.
+        \item \textbf{Production rule}. Given two sets of symbols $V_{1}$ and $V_{2}$, a production rule is a pair
+            \begin{align*}
+                (N, \alpha) \text{ such that } N \in V_{1}, \alpha \in V_{2}^{*}
+            ,\end{align*}
+            in which $X^{*} $ means a sequence of zero or more elements of the set $X$. This means that a production rule is a pair consisting of an $N$, which is an element of $V_1$, and a sequence $\alpha$ of elements of $V_2$. We call $N$ the \emph{left-hand side} and $\alpha$ the \emph{right-hand side}. We do not normally write this as a pair $(N, \alpha)$, but rather as
+            \[
+                N \to \alpha,
+            \]
+            although technically it is a pair. The $V$ in $V_1$ and $V_2$ stands for \emph{vocabulary}.
+
+        \item \textbf{CFGs}: A context-free grammar $G$ is a 4-tuple
+            \begin{align*}
+                G = (V_{N}, V_{T}, S, P)
+            \end{align*}
+            where $V_{N}$ and $V_{T}$ are sets of symbols. $S$ is a symbol, and $P$ is a set of production rules. The elements of $V_{N}$ are the \textbf{non-terminal symbols}, and elements of $V_{T} $ are the \textbf{terminal symbols}. $S$ is called the \textbf{start symbol}.
+        \item \textbf{Context conditions}: The previous paragraph defines only the context-free form of a grammar. To make it a real, acceptable grammar, it has to fulfill three context condition
+            \begin{enumerate}
+                \item $V_{N} \cap V_{T} = \varnothing $
+                \item $S \in V_{N}$
+                \item $P \subseteq \{(N,\alpha)} \ \mid \ N \in V_{N}, \alpha \in (V_{N} \cup V_{T})^{*} $
+            \end{enumerate}
+        \item \textbf{Strings}: Sequences of symbols are called strings. 
+        \item \textbf{Directly derivable}: A string may be derivable from another string in a grammar. More precisely, a string $\beta$ is said to be \emph{directly derivable} from a string $\alpha$, written as
+            \[
+                \alpha \Rightarrow \beta,
+            \]
+            if and only if there exist strings $\delta_1$, $\delta_2$, and $\gamma$, and a non-terminal
+            $N \in V_N$, such that
+            \[
+                \alpha = \delta_1 N \delta_2, \quad
+                \beta = \delta_1 \gamma \delta_2, \quad
+                (N, \gamma) \in P.
+            \]
+        \item \textbf{Derivable}: 
+            A string $\beta$ is said to be \emph{derivable} from a string $\alpha$, written as
+            \[
+                \alpha \xRightarrow{*} \beta,
+            \]
+            if and only if either $\alpha = \beta$, or there exists a string $\gamma$ such that
+            \[
+                \alpha \xRightarrow{*} \gamma \quad \text{and} \quad \gamma \Rightarrow \beta.
+            \]
+            This means that a string is derivable from another string if we can reach the second string from the first through zero or more production steps. 
+        \item \textbf{Sentential form}: A sentential form of a grammar $G$ is defined as
+            \begin{align*}
+                \alpha \ \mid \ S \xRightarrow{*} \alpha
+            \end{align*}
+            which is any string that is derivable from the start symbol S of G. Note that α may be the empty string.
+        \item \textbf{Terminal production}:  A terminal production of a grammar $G$ is defined as a sentential form that does not contain non-terminals:
+            \begin{align*}
+                \alpha \ \mid \ S \xRightarrow{*} \alpha \land \alpha \in V_{T}^{*}
+            .\end{align*}
+        \item \textbf{Language generated by a grammar $G$}: The language $\mathcal{L}$ generated by a grammar $G$ is defined as 
+            \begin{align*}
+                \mathscr{L}(G) = \{\alpha \ \mid \ S \xRightarrow{*} \alpha \land \alpha \in V_{T}^{*}\}
+            .\end{align*}
+            So, the set of all terminal productions of $G$. 
+            \bigbreak \noindent 
+            If $G$ is a grammar for a programming language, then $\mathscr{L}(G)$ is the set of all programs in that language that are correct in a context-free sense.
+        \item \textbf{Sentences}: These terminal productions are called \textbf{sentences} in the language $\mathscr{L}(G) $
+        \item \textbf{Intro to closure algorithms}: Quite a number of algorithms in compiler construction start off by collecting some basic information items and then apply a set of rules to extend the information and/or draw conclusions from them. These “information-improving” algorithms share a common structure which does not show up well when the algorithms are treated in isolation; this makes them look more different than they really are. We will therefore treat here a simple representative of this class of algorithms, the construction of the calling graph of a program, and refer back to it from the following chapters
+        \item \textbf{Calling graph}: The calling graph of a program is a directed graph which has a node for each routine (procedure or function) in the program and an arrow from node $A$ to node $B$ if routine $A$ calls routine $B$ directly or indirectly. Such a graph is useful to find out, for example, which routines are recursive and which routines can be expanded in-line inside other routines
+            \bigbreak \noindent 
+            The initial calling graph is, however, of little immediate use since we are mainly interested in which routine calls which other routine directly or indirectly. For example, recursion may involve call chains from A to B to C back to A. To find these additional information items, we apply the following rule to the graph: If there is an arrow from node $A$ to node $B$ and one from $B$ to $C$, make sure there is an arrow from $A$ to $C$.
+            \bigbreak \noindent 
+            Consider the program
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void P(void) { ... Q(); ... S (); ... }
+                void Q(void) { ... R(); ... T (); ... }
+                void R(void) { ... P (); }
+                void T(void) { ... }
+                void S(void) { ... }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The calling graph is then
+            \bigbreak \noindent 
+            \fig{.6}{./figures/6.png}
+        \item \textbf{Transitive closure}: If we consider this rule as an algorithm (which it is not yet), this set-up computes the transitive closure of the relation “calls directly or indirectly”. The transitivity axiom of the relation can be written as:
+            \begin{align*}
+                A \subseteq B \land B \subseteq C \rightarrow A \subseteq C
+            ,\end{align*}
+            where the operator $\subseteq$ should be read as "calls directly or indirectly". Now, $A$ is recursive is equivalent to $A \subseteq A$.
+            \bigbreak \noindent 
+            Adding this rule to the figure above, we get
+            \bigbreak \noindent 
+            \fig{.6}{./figures/7.png}
+            \bigbreak \noindent 
+            We see that the recursion of the routines $P$, $Q$, and $R$ has been brought into the open.
+        \item \textbf{Components of a closure algorithm}: 
+            \begin{itemize}
+                \item \textbf{Data definitions}: definitions and semantics of the information items; these derive from the nature of the problem.
+                \item \textbf{Initializations}: one or more rules for the initialization of the information items; these convert information from the specific problem into information items.
+                \item \textbf{Inference rules}: one or more rules of the form: “If information items I1,I2,... are present then information item J must also be present”. These rules may again refer to specific information from the problem at hand.
+            \end{itemize}
+            The rules are called inference rules because they tell us to infer the presence of information item $J$ from the presence of information items $I_{1},I_{2},....$ When all inferences have been drawn and all inferred information items have been added, we have obtained the closure of the initial item set. If we have specified our closure algorithm correctly, the final set contains the answers we are looking for. For example, if there is an arrow from node $A$ to node $A$, routine $A$ is recursive, and otherwise it is not. Depending on circumstances, we can also check for special, exceptional, or erroneous situations
+        \item \textbf{Recursion detection as a closure algorithm}: 
+            \begin{itemize}
+                \item \textbf{Data definitions:}
+                    \begin{enumerate}
+                        \item $G$, a directed graph with one node for each routine. The information items are arrows in $G$.
+                        \item An arrow from a node $A$ to a node $B$ means that routine $A$ calls routine $B$ directly or indirectly.
+                    \end{enumerate}
+                \item \textbf{Initializations:} If the body of a routine $A$ contains a call to routine $B$, an arrow from $A$ to $B$ must be present.
+                \item \textbf{Inference rules:}: If there is an arrow from node $A$ to node $B$ and one from $B$ to $C$, an arrow from $A$ to $C$ must be present.
+            \end{itemize}
+            Two things must be noted about this format. The first is that it does specify which information items must be present but it does not specify which information items must not be present; nothing in the above prevents us from adding arbitrary information items. To remedy this, we add the requirement that we do not want any information items that are not required by any of the rules: we want the smallest set of information items that fulfills the rules in the closure algorithm. This constellation is called the \textbf{least fixed point} of the closure algorithm.
+            \bigbreak \noindent 
+            The second is that the closure algorithm as introduced above is not really an algorithm in that it does not specify when and how to apply the inference rules and when to stop; it is rather a declarative,
+        \item \textbf{Transitive closure algorithms}: General closure algorithms may have inference rules of the form “If information items $I_{1},I2_{2},...$ are present then information item $J$ must also be present”, as explained above. If the inference rules are restricted to the form “If information items $(A,B)$ and $(B,C)$ are present then information item $(A,C)$ must also be present”, the algorithm is called a transitive closure algorithm
+
+
+
+
+
+    \end{itemize}
+
+
+    \pagebreak 
+    \unsect{Lexical vs Syntactic analysis}
+    \begin{itemize}
+        \item \textbf{Lexical analysis}: First phase of compilation, its purpose is to convert the raw input text (source code) into a sequence of tokens. 
+            \begin{itemize}
+                \item Reads characters from the source program
+                \item Groups characters into tokens
+                \item Removes whitespace and comments
+                \item Classifies lexemes into categories such as:
+                \begin{itemize}
+                    \item keywords
+                    \item identifiers
+                    \item literals
+                    \item operators
+                \end{itemize}
+            \end{itemize}
+            Consider
+            \begin{cppcode}
+            x = 10 + y;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The tokens are
+            \begin{center}
+                IDENTIFIER ASSIGN NUMBER PLUS IDENTIFIER SEMICOLON
+            \end{center}
+        \item \textbf{Syntactic analysis}: Syntactic analysis (parsing) is the second phase of compilation. Its purpose is to determine whether the token sequence follows the grammar of the language.
+            \begin{itemize}
+                \item Takes tokens from the lexer
+                \item Checks grammatical structure
+                \item Builds a parse tree or syntax tree
+                \item Detects syntax errors
+            \end{itemize}
+            Checks whether 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            x = 10 + y
+            \end{cppcode}
+            \bigbreak \noindent 
+            matches the grammar rule
+            \bigbreak \noindent 
+            \begin{align*}
+                \text{assignment } \to \text{ identifier } = \text{ expression};
+            .\end{align*}
+            The component that performs syntactic analysis is called the parser.
+        \item \textbf{Interpreters and compilers}
+            \begin{itemize}
+                \item \textbf{Interpreters}: Lexical analysis $\to$ parsing $\to$ execute
+                \item \textbf{Compilers}: Lexical analysis $\to$ parsing $\to$ code generation $\to$ executable
+            \end{itemize}
+        \item \textbf{Chomsky hierarchy}: The Chomsky Hierarchy is a classification of formal grammars based on their generative power—that is, the types of languages they can describe and the computational models required to recognize them.
+            \bigbreak \noindent 
+            It consists of four levels, ordered from most restrictive to most powerful.
+            \begin{itemize}
+                \item \textbf{Type 3 - Regular grammars}: Of the form
+                    \begin{align*}
+                        A \to a B \quad \text{or} \quad A \to a 
+                    .\end{align*}
+                    Recognized by finite automata (DFA / NFA). Examples are regular languages, programming language tokens, and identifiers, numbers, keywords
+                \item \textbf{Type 2 -  CFGs}: Of the form
+                    \begin{align*}
+                        A \to \alpha
+                    ,\end{align*}
+                    where
+                    \begin{itemize}
+                        \item $A$ is a single non-terminal
+                        \item $\alpha$ is any string of terminals and non-terminals
+                    \end{itemize}
+                    \begin{itemize}
+                        \item Allows recursion
+                        \item Can represent nested structures
+                        \item Most programming language syntax is CFG-based
+                    \end{itemize}
+                    Recognized by push down automata (PDA). Examples are
+                    \begin{itemize}
+                        \item Arithmetic expressions
+                        \item Balanced parentheses
+                        \item Programming language syntax
+                    \end{itemize}
+                \item \textbf{Type 1 - CSGs}: Of the form
+                    \begin{align*}
+                        \alpha A \beta \to \alpha \gamma \beta
+                    \end{align*}
+                    with 
+                    \begin{align*}
+                        \left\lvert \gamma \right\rvert \geq 1
+                    .\end{align*}
+                    Characteristics are
+                    \begin{itemize}
+                        \item Rules depend on surrounding context
+                        \item Length of strings never decreases
+                        \item More powerful than CFGs
+                    \end{itemize}
+                    Recognized by Linear bounded automata (LBA)
+                \item \textbf{Type 0 - Unrestricted grammars}: Of the form
+                    \begin{align*}
+                        \alpha \to \beta
+                    ,\end{align*}
+                    where $\alpha$ contains at least one non-terminal. Characteristics are
+                    \begin{itemize}
+                        \item No restrictions on production rules
+                        \item Most powerful grammar type
+                        \item Can generate all computable languages
+                    \end{itemize}
+                    Recognized by turing machines. Example is an REL.
+            \end{itemize}
+        \item \textbf{Regular grammars / regular languages}: A regular grammar is the most restrictive class in the Chomsky hierarchy. It generates exactly the regular languages, which are the languages recognized by finite automata.
+            \bigbreak \noindent 
+            A grammar is regular if all of its productions are of one of the following forms:
+            \begin{itemize}
+                \item \textbf{Right regular}:
+                    \begin{align*}
+                        A \to a B \quad \text{or} A \to a
+                    .\end{align*}
+                \item \textbf{Left regular}:
+                    \begin{align*}
+                        A \to Ba \quad \text{or} A \to a
+                    .\end{align*}
+            \end{itemize}
+            A grammar must be either entirely right-regular or entirely left-regular — never mixed.
+            \bigbreak \noindent 
+            Consider a mixed grammar
+            \begin{align*}
+                S &\to \varepsilon \; \mid \; aA \\
+                A &\to Sb
+            .\end{align*}
+            This would allow
+            \begin{itemize}
+                \item Non-terminals on both sides
+                \item Multiple derivation directions
+                \item Power beyond regular languages
+            \end{itemize}
+            Such grammars can generate non-regular languages, which breaks the definition.
+            \bigbreak \noindent 
+            Notice that the above grammar could generate the language $\mathscr{L} = \{a^{n}b^{n} \ : \ n \geq 0\}$, which is famously nonregular. Observe that 
+            \begin{align*}
+                S &\to \varepsilon \; \mid \; aA \\
+                A &\to bS
+            \end{align*}
+            yields $\mathscr{L} = \{(ab)^{n} \ : \ n \geq 0 \} $, which is regular. Notice that all productions are right-linear
+        \item \textbf{Regular languages and FAs in lexical analysis}: Lexical analysis is the first phase of compilation. Its purpose is to convert a stream of characters into a stream of tokens.
+            \bigbreak \noindent 
+            This process is based almost entirely on finite automata. Lexical structure of programming languages is:
+            \begin{itemize}
+                \item Regular
+                \item Pattern-based
+                \item Non-nested
+                \item Locally decidable
+            \end{itemize}
+            All of these can be described by regular expressions, which implies regular languages, which implies FAs.
+        \item \textbf{Token specification}: Each token class is defined using an regular expression. For example,
+            \begin{align*}
+                \text{identifier}  &\to \text{letter(letter | digit)}^{*} \\
+                \text{number}      &\to \text{digit}^{+} \\
+                \text{whitespace}  &\to \text{(space | tab | newline)}^{+}
+            .\end{align*}
+            Each regular expression is converted into an NFA using standard constructions like Thompson's construction with $\epsilon$-transitions allowed.
+            \bigbreak \noindent 
+            \textbf{Note:} Note efficient to execute directly, we can instead convert the NFA to a DFA, which is possible.
+        \item \textbf{How the DFA is used (maximal munch / longest match rule)}: 
+            \begin{enumerate}
+                \item Start at the initial state
+                \item Read input character by character
+                \item Follow transitions
+                \item Track the last accepting state
+                \item When no transition is possible:
+                    \begin{itemize}
+                        \item Backtrack to last accepting state
+                        \item Emit the corresponding token
+                        \item Restart from next input position
+                    \end{itemize}
+            \end{enumerate}
+            \textbf{Note:} You use a finite automaton to extract the tokens. The FA operations on raw characters.
+            \begin{align*}
+                \text{Char stream } \to \text{ FA } \to \text{ tokens} 
+            .\end{align*}
+            So the FA’s job is to recognize token boundaries, not to consume tokens. The outputs of the FA is the tokens.
+        \item \textbf{Lexical analyzer example}: We will build a lexer for the following token types
+            \begin{align*}
+                \text{ID }    &$\to$ [a-zA-Z][a-zA-Z0-9]^{*} \\
+                \text{NUM }   &$\to$ [0-9]^{+} \\
+                \text{PLUS }  &$\to$ + \\
+                \text{WS }    &$\to$ [ \t\n]^{+}
+            .\end{align*}
+            We will use the following transition table
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXXXX@{}}
+                    \toprule
+                    \textbf{Current}	&\textbf{Letter}	&\textbf{Digit}	&+	&\textbf{Whitespace} \\
+                    \midrule
+                    q0	&q1	&q2	&q3	&q0 \\[2ex]
+                    q1	&q1	&q1	&—	&accept\\[2ex]
+                    q2	&—	&q2	&—	&accept\\[2ex]
+                    q3	&—	&—	&—	&accept \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Consider the stream
+            \begin{cppcode}
+                sum1 + 42
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, reading the stream gives
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Input Read} &	\textbf{State} &	\textbf{Action} \\
+                    \midrule
+                    s&	q1	&continue\\[2ex]
+                    u&	q1	&continue\\[2ex]
+                    m&	q1	&continue\\[2ex]
+                    1&	q1	&continue\\[2ex]
+                    space& —	&emit ID(sum1)\\[2ex]
+                    +&	q3	&emit PLUS\\[2ex]
+                    space& —	&ignore\\[2ex]
+                    4& q2	&continue\\[2ex]
+                    2& 	q2	&continue\\[2ex]
+                    EOF&	—	&emit NUM(42) \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            So, the output tokens are
+            \bigbreak \noindent 
+            \begin{cppcode}
+                <ID, "sum1">
+                <PLUS, "+">
+                <NUM, "42">
+            \end{cppcode}
+        \item \textbf{Invalid tokens}: A token is invalid if:
+            \begin{itemize}
+                \item The input character sequence does not match any token pattern
+                \item The DFA reaches a state with no valid transition
+                \item No accepting state was reached before failure
+            \end{itemize}
+            In this case, a lexical error is reported.
+        \item \textbf{Where do the tokens go}:  The output of the lexical analyzer goes directly to the parser. The lexer produces a stream of tokens, and these tokens are consumed one-by-one by the parser. The lexer does not store the full list of tokens permanently — it typically supplies them on demand to the parser.
+        \item \textbf{Int to string conversion}:
+        \item \textbf{String to int conversion}
+        \item \textbf{UTF-8}
+
+            
+
+    \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+\end{document}
