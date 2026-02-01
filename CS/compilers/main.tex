@@ -688,6 +688,14 @@
             \bigbreak \noindent 
             \fig{.6}{./figures/7.png}
             \bigbreak \noindent 
+            Note that in parse trees, the children of a node are implicitly grouped as if surrounded by parentheses, Even if no parentheses appear in the source code, the tree structure itself acts as parentheses. A parse tree represents how the grammar groups subexpressions.
+            \begin{itemize}
+                \item Each node = an operation
+                \item Its children = operands
+                \item Subtrees = grouped expressions
+            \end{itemize}
+            Note that in derivations, when we expand a non-terminal, that expansion is implicitly grouped by parenthesis, even if we do not write the parenthesis in the derivation. In fact, we shouldn't. Every application of a production rule implicitly creates a grouped subtree, the grouping exists in the tree, not in the derivation string.
+            \bigbreak \noindent 
             Suppose that we try to extend this grammar for multiplication and division, so we might extend our grammar to
             \begin{align*}
                 E &\to E + T\ |\ E - T\ | \ E*T \ | \ E/T \ |\ T \\
@@ -726,12 +734,188 @@
             So we need a grammar that forces precedence structurally, not by rules outside the grammar.
             \bigbreak \noindent 
             The solution is to separate precedence levels into different nonterminals.
+        \item \textbf{Structural layers}: In order to enforce precedence, we must build structural layers in our grammar, where higher precedence operators appear on lower levels. Consider
+            \begin{itemize}
+                \item \textbf{E:} Expression, lowest precedence
+                \item \textbf{T:} Term, medium precedence
+                \item \textbf{F:} Factor, highest precedence
+            \end{itemize} 
+            Each layer corresponds to how tightly operators bind. Precedence is enforced by how deep an operator appears in the grammar. Lower in the grammar enforces 
+            \begin{itemize}
+                \item more deeply nested in the parse tree
+                \item evaluated earlier
+                \item higher precedence
+            \end{itemize}
+            The grammar
+            \begin{align*}
+                E &\to E + T \ \mid \ E - T \ \mid \ T \\
+                T &\to T * F \ \mid \ T / F \ \mid \ F \\
+                F &\to \text{int} \ \mid \ \text{var}
+            .\end{align*}
+            Provides correct operator precedence. Consider the expression $a + b * c$. The derivation is then
+            \begin{align*}
+                E &\implies E + T \implies T + T \implies T + T * F \implies T + T * \text{var (c)} \\
+                  &\implies F + F + \text{var (c)} \implies \text{var (a) } + F + \text{ var (c)}  \\
+                  &\implies \text{var (a) } + \text{var (b)} + \text{ var (c)}
+            .\end{align*}
+            Recall that the parenthesis are not required in the derivation, as they are implicit and expressed by the parse tree. Derivations describe rule application order. Parse trees describe grouping.
+            \bigbreak \noindent 
+            The parse tree for the above derivation would be
+            \bigbreak \noindent 
+            \fig{1}{./figures/8.png}
+            \bigbreak \noindent 
+            With this knowledge its easy to see that if we switched the precedence of +,-,*,/ so that +,- appears on a deeper level than *,/, then $a+b$ would be grouped and evaluated before multiplying by $c$.
+        \item \textbf{Explicit Parenthesis, custom order of operations}: We can create a new terminal $(E)$, so our grammar would become
+            \begin{align*}
+                E &\to E + T \ \mid \ E - T \ \mid \ T \\
+                T &\to T * F \ \mid \ T / F \ \mid \ F \\
+                F &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
+            .\end{align*}
+            Note that parenthesis has highest precedence, so it must appear on the deepest level. Now, suppose we want the expression
+            \begin{align*}
+                (a + ((b-c)*d))
+            .\end{align*}
+            Note that most of these parenthesis are implicit i.e we do not need them, the only explicit parenthesis are
+            \begin{align*}
+                a + (b-c) * d
+            .\end{align*}
+            However, even if parenthesis are usually implicit, but still added in the input string, we must use $(E)$ to derive incorporate those parenthesis. For $a + (b-c) * d$ the derivation is 
+            \begin{align*}
+                E &\implies E + T \implies E + T * F \implies E + F * F \implies E + (E) * F  \\
+                &\implies \cdots \implies a + (E) * d \implies a + (E-T) * d \implies \cdots \implies a + (b-c) * d
+            ,\end{align*}
+            which has parse tree
+            \bigbreak \noindent 
+            \fig{1}{./figures/9.png}
+            \bigbreak \noindent 
+            If the input string was instead 
+            \begin{align*}
+                (a + ((b-c) * d))
+            ,\end{align*}
+            the derivation is 
+            \begin{align*}
+                E &\implies T \implies F \implies (E) \implies (E + T) \implies (E + F) \implies (E + (E)) \\
+                  &\implies (E + (T)) \implies (E + (T * F)) \implies (E + (F * F)) \implies (E + ((E) * F)) \\
+                  &\implies (E + ((E - T) * F)) \implies \cdots \implies (a + ((b-c) * d))
+            .\end{align*}
+        \item \textbf{AST's, parse tree to AST}: Turning a parse tree into an Abstract Syntax Tree (AST) is one of the most important conceptual steps in a compiler. The key idea is: A parse tree represents syntax. An AST represents meaning.
+            \bigbreak \noindent 
+            A parse tree includes
+            \begin{itemize}
+                \item Every nonterminal $(E, T, F)$
+                \item Every production rule used
+                \item Parentheses as grammar artifacts
+                \item Structural nodes that carry no semantic meaning
+            \end{itemize}
+            The parse tree for $a+b*c$ is
+            \bigbreak \noindent 
+            \fig{1}{./figures/10.png}
+            \bigbreak \noindent 
+            This tree
+            \begin{itemize}
+                \item Is correct
+                \item Is verbose
+                \item Contains nodes that exist only to enforce grammar rules
+            \end{itemize}
+            But a compiler does not need most of this information. An AST
+            \begin{itemize}
+                \item Removes grammar-specific nodes
+                \item Keeps only semantic structure
+                \item Represents computation directly
+                \item Is independent of parsing strategy
+            \end{itemize}
+            For $a+b*c$, the AST is simply
+            \bigbreak \noindent 
+            \fig{1}{./figures/11.png}
+            \bigbreak \noindent 
+            If a node exists only to enforce grammar structure, remove it. If a node represents an operation or value, keep it.
+            \bigbreak \noindent 
+            To convert an parse tree to AST, we follow the following steps
+            \begin{enumerate}
+                \item \textbf{Remove Non-semantic Nodes}: Nodes like $E,T,F$, parenthesis, and single child chains are removed.
+                    \begin{align*}
+                        E \to T \to F \to a
+                    \end{align*}
+                    becomes simply $a$.
+                \item \textbf{Promote operators}: Nodes like
+                    \begin{align*}
+                        E &\to E + T, \\
+                        T &\to T * F
+                    \end{align*}
+                    become
+                    \bigbreak \noindent 
+                    \fig{1}{./figures/12.png}
+                    \bigbreak \noindent 
+                    \fig{1}{./figures/13.png}
+                \item \textbf{Preserve hierarchy}: Because the grammar enforced precedence, the tree already has correct nesting, no additional rules are needed.
+                    \bigbreak \noindent 
+            \end{enumerate}
+            A parse tree answers “how was this derived?” An AST answers “what does this compute?”
+            \bigbreak \noindent 
+            In essence, to build an AST, remove grammar-only nodes from the parse tree and retain only operators and operands arranged according to the tree’s structure.
+            \bigbreak \noindent 
+            Algorithmically, 
+            \begin{enumerate}
+                \item Visit parse tree node
+                \item If node is:
+                    \begin{itemize}
+                        \item Operator $\to $ create AST node
+                        \item Literal $\to $ create leaf
+                        \item Grammar-only node $\to $ skip
+                    \end{itemize}
+                \item Recursively process children
+                \item Return AST node upward
+            \end{enumerate}
+            Notice that the parse tree
+            \bigbreak \noindent 
+            \fig{.6}{./figures/9.png}
+            \bigbreak \noindent 
+            becomes the AST
+            \bigbreak \noindent 
+            \fig{1}{./figures/14.png}
+            If the expression $a+b-c*d$ had no explicit parenthesis, the parse tree would be
+            \bigbreak \noindent 
+            \fig{.8}{./figures/15.png}
+            \bigbreak \noindent 
+            So, the AST would be 
+            \bigbreak \noindent 
+            \fig{1}{./figures/16.png}
+        \item \textbf{Evaluating ASTs}: A post-order traversal of an expression AST produces Reverse Polish Notation (RPN).
+            \bigbreak \noindent 
+            This is not a coincidence; it is a direct consequence of how ASTs represent computation.
+            \bigbreak \noindent 
+            In an AST:
+            \begin{itemize}
+                \item Internal nodes = operators
+                \item Leaves = operands
+                \item Children = arguments to the operator
+            \end{itemize}
+            Post-order traversal visits:
+            \begin{itemize}
+                \item Left subtree
+                \item Right subtree
+                \item Node itself
+            \end{itemize}
+            This is precisely
+            \begin{center}
+                operand operand operator
+            \end{center}
+            which is reverse polish notation.
+        \item \textbf{Negation and exponentiation}: To introduce unary negation and exponentiation correctly, we must extend the grammar without breaking precedence or associativity. This requires adding one new level and being careful about recursion direction. Negation binds tighter than multiplication or division, but looser than exponentiation. Exponentiation binds looser than parenthesis. So, the grammar becomes
+            \begin{align*}
+                E &\to E + T \mid E - T \mid T \\ 
+                T &\to T * U \mid T / U \mid U \\ 
+                U &\to -U \mid P \\ 
+                P &\to F\land P  \mid F \\ 
+                F &\to (E) \mid \text{int} \mid \text{var}
+            .\end{align*}
+            Note that exponentiation is right-associative, so right recursion works here. 
+            \begin{align*}
+                a \land b \land c = a \land (b \land c) 
+            .\end{align*}
 
-
-            
 
     \end{itemize}
-
 
 
 
