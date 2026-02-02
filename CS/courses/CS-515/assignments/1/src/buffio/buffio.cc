@@ -41,7 +41,7 @@ int buffer_init(const char* filename) {
     file.seekg(0, std::ios::end);
 
     // Retrieve the position
-    std::streampos end_pos =  file.tellg();
+    std::streampos end_pos = file.tellg();
 
     // If either the stream buffer associated to the stream does not support the operation, or if it fails, the tellg returns -1, return error
     if (end_pos == std::streampos(-1)) return -2;
@@ -210,22 +210,4 @@ int get_src_line(int line_no, string& line) {
     }
 
     return 0;
-}
-
-int main() {
-    buffer_init("test");
-    string line{};
-    int ret = get_src_line(2, line);
-    if (ret == -1) std::cout << "error" << std::endl;
-    std::cout << line << std::endl;
-
-    // std::cout << line_start[2] << std::endl;
-    // std::cout << line_sizes[2] << std::endl;
-    // for (size_t i=0; i<buff_size; ++i) {
-    //     if (buffer[i] == '\n') {
-    //         std::cout << "\\n" << std::endl;
-    //     } else {
-    //         std::cout << buffer[i] << std::endl;
-    //     }
-    // }
 }
