@@ -1,7 +1,16 @@
-CXX      = g++
-CXXFLAGS = -std=c++23 
+CXX      = g++ 
+CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer
 TARGET   = bin/main
-SRC      = tests/main.cc buffio/buffio.cc 
+SRC      = tests/main.cc \
+		   tests/util.cc \
+           tests/drivers/copy_compare.cc \
+		   tests/drivers/unget_rewind.cc \
+		   tests/drivers/eof_overread.cc \
+		   tests/drivers/line_reconstruct.cc \
+		   src/err/error.cc \
+		   src/lexer/lex.cc \
+		   src/lexer/token.cc \
+		   src/buffio/buffio.cc 
 
 all: $(TARGET)
 

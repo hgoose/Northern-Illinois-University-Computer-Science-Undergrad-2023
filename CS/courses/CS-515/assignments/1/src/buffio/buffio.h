@@ -28,8 +28,12 @@ int buffer_back_char(void);
 
 int buffer_cleanup(void);
 
-int get_src_line(int line_no, string & line);
+int get_src_line(size_t line_no, string& line);
 // Return a specified line of the source code.  Intended for error
 // messages
+
+// Looks ahead one position in the buffer, and returns the character
+int buffer_peek_next(char& c);
+int buffer_consume_k(size_t k, string& next_k);
 
 #endif /* BUFFERED_INPUT_H */
