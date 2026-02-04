@@ -7,17 +7,17 @@ using std::cerr;
 using std::string;
 
 static const std::vector<std::string> token_names = {
-    "NULL", "EOF", "PLUS",
-    "MINUS", "MULT", "DIV",
-    "IDENT", "EXP", "LESS",
-    "LESS_EQ", "GREATER", "GREATER_EQ",
-    "EQUAL", "NOT_EQUAL", "ASSIGN",
-    "NOT", "LPAREN", "RPAREN",
-    "LBRACE", "RBRACE", "LBRACKET",
-    "RBRACKET", "AND", "OR",
-    "DOT", "AT", "INTEGER",
-    "STRING", "COLON", "SEMICOLON",
-    "COMMA", "REAL"
+    "TOKEN_NULL", "TOKEN_EOF", "TOKEN_PLUS",
+    "TOKEN_MINUS", "TOKEN_MULT", "TOKEN_DIV",
+    "TOKEN_IDENT", "TOKEN_EXP", "TOKEN_LESS",
+    "TOKEN_LESS_EQ", "TOKEN_GREATER", "TOKEN_GREATER_EQ",
+    "TOKEN_EQUAL", "TOKEN_NOT_EQUAL", "TOKEN_ASSIGN",
+    "TOKEN_NOT", "TOKEN_LPAREN", "TOKEN_RPAREN",
+    "TOKEN_LBRACE", "TOKEN_RBRACE", "TOKEN_LBRACKET",
+    "TOKEN_RBRACKET", "TOKEN_AND", "TOKEN_OR",
+    "TOKEN_DOT", "TOKEN_AT", "TOKEN_INTEGER",
+    "TOKEN_STRING", "TOKEN_COLON", "TOKEN_SEMICOLON",
+    "TOKEN_COMMA", "TOKEN_REAL"
 };
 
 
@@ -28,20 +28,25 @@ void print_token(const Token& t) {
         return;
     }
 
-    cout << "TOKEN: " << token_names[t.id] << '\n'
-         << "\tlexeme\t\t:" << t.lexeme << '\n'
-         << "\tid\t\t:" << t.id << '\n';
+    if (t.id == TOKEN_NULL) return;
 
-    // One of these should be of interest
-    if (t.value != -1) {
-        cout << "\tvalue\t\t: " << t.value << '\n';
-    } else if (!t.str.empty()) {
-        cout << "\tstring\t\t: " << t.str << '\n';
-    } else if (!t.identifier.empty()) {
-        cout << "\tidentifier\t\t: " << t.identifier << '\n';
-    }
+    cout << token_names[t.id] << " at " << t.line_no << ":" << t.col_no << '\n';
 
-    // Line and column numbers are always of interest
-    cout << "\tline\t\t: " << t.line_no << '\n'
-         << "\tcolumn\t\t: " << t.col_no << "\n\n";
+
+    // cout << "TOKEN: " << token_names[t.id] << '\n'
+    //      << "\tlexeme\t\t: " << t.lexeme << '\n'
+    //      << "\tid\t\t: " << t.id << '\n';
+    //
+    // // One of these should be of interest
+    // if (t.value != -1) {
+    //     cout << "\tvalue\t\t: " << t.value << '\n';
+    // } else if (!t.str.empty()) {
+    //     cout << "\tstring\t\t: " << t.str << '\n';
+    // } else if (!t.identifier.empty()) {
+    //     cout << "\tidentifier\t\t: " << t.identifier << '\n';
+    // }
+    //
+    // // Line and column numbers are always of interest
+    // cout << "\tline\t\t: " << t.line_no << '\n'
+    //      << "\tcolumn\t\t: " << t.col_no << "\n\n";
 }

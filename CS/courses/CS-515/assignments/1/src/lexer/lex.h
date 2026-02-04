@@ -6,7 +6,7 @@
 
 Error lex_init(const char*  src_code);
 
-Error get_token(Token& t);
+Error get_token(Token& t, bool& begin);
 
 bool lex_eof(void);  // Read past end of input stream?
 

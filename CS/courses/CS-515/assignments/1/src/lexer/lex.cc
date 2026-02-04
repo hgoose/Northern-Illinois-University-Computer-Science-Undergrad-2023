@@ -4,9 +4,12 @@
 #include "util.h"
 #include "lex.h"
 
+#include <iostream>
 #include <string>
 
 using std::string;
+using std::cout;
+using std::endl;
 
 // Takes a character in a string, and if it is an escape sequence, replace it and return true
 // If provided character was replaced, return true, otherwise return false. 
@@ -99,35 +102,211 @@ Error lex_init(const char*  src_code) {
     For 0 <= k < buffer_size, read characters from buffer until white space or newline.
     The state path we travel on depends on the first character
   </remark>*/
-Error get_token(Token& t) {
+Error get_token(Token& t, bool& begin) {
     Error err;
+    string lexeme{};
+    char curr_char{};
 
-    // Check if we are at expected EOF
-    if (lex_eof()) {
-        err.error = NCC_EOF;
-        return err;
+    // Preset token id to TOKEN_NULL;
+    t.id = TOKEN_NULL;
+
+
+    // Either we get first valid (non white space) character, or hit EOF
+    for (;;) {
+        int rc{};
+        if (begin) {
+            // Get first char and error code
+            rc = buffer_get_cur_char(curr_char);
+            begin = false;
+        } else {
+            // Get next char and error code
+            rc = buffer_get_next_char(curr_char);
+        }
+
+        // At this point EOF is fine, haven't started token yet
+        if (rc == NCC_EOF) {
+            // Build EOF token
+            t.id = TOKEN_EOF;
+            t.lexeme = "";
+            t.line_no = src_line_no;
+            t.col_no = src_col_no;
+            t.value = -1;
+            t.str = "";
+            t.identifier = "";
+
+            err.error = NCC_EOF;
+            return err;
+        }
+
+        // Move past whitespace
+        if (curr_char == ' ' || curr_char == '\t' || curr_char == '\n' || curr_char == '\r') {
+            continue;
+        }
+
+        // Found first non white space character
+        break;
     }
 
-    // Otherwise, continue
-    string token;
-    char current_char{};
+    // Record line and column number of first character of token
+    t.col_no = src_col_no;
+    t.line_no = src_line_no;
 
-    // First character, not going to be EOF checked for that above
-    buffer_get_cur_char(current_char);
+    // Add to lexeme string
+    lexeme.push_back(curr_char);
 
-    while (current_char == ' ') {
-        int rc = buffer_get_next_char(current_char);
+    // Now we decide token class based on first character and consume the rest
 
-        // At this point we haven't started our token yet, EOF is ok
-        if (rc == NCC_EOF) {
-           err.error = NCC_EOF; 
-           return err;
+    int rc{};
+    if (curr_char == '+') {
+        t.id = TOKEN_PLUS; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '-') {
+        t.id = TOKEN_MINUS; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '*') {
+        t.id = TOKEN_MULT; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '/') {
+        t.id = TOKEN_DIV; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '^') {
+        t.id = TOKEN_EXP; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '<') {
+        rc = buffer_get_next_char(curr_char);
+        if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
+            t.id = TOKEN_LESS; 
+            t.lexeme = lexeme;
+        } else {
+            if (curr_char == '=') {
+                lexeme.push_back(curr_char);
+                t.id = TOKEN_LESS_EQ;
+                t.lexeme = lexeme;
+                // t.line_no = src_line_no;
+                // t.col_no = src_col_no;
+            } else {
+                buffer_back_char();
+            }
+        }
+    } else if (curr_char == '>') {
+        rc = buffer_get_next_char(curr_char);
+        if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
+            t.id = TOKEN_GREATER; 
+            t.lexeme = lexeme;
+        } else {
+            if (curr_char == '=') {
+                lexeme.push_back(curr_char);
+                t.id = TOKEN_GREATER_EQ;
+                t.lexeme = lexeme;
+                // t.line_no = src_line_no;
+                // t.col_no = src_col_no;
+            } else {
+                buffer_back_char();
+            }
+        }
+    } else if (curr_char == '=') {
+        t.id = TOKEN_EQUAL;
+        t.lexeme = lexeme;
+    } else if (curr_char == '!') {
+        t.id = TOKEN_NOT;
+        t.lexeme = lexeme;
+    } else if (curr_char == '(') {
+        t.id = TOKEN_LPAREN;
+        t.lexeme = lexeme;
+    } else if (curr_char == ')') {
+        t.id = TOKEN_RPAREN;
+        t.lexeme = lexeme;
+    } else if (curr_char == '{') {
+        t.id = TOKEN_LBRACE;
+        t.lexeme = lexeme;
+    } else if (curr_char == '}') {
+        t.id = TOKEN_RBRACE;
+        t.lexeme = lexeme;
+    } else if (curr_char == '[') {
+        t.id = TOKEN_LBRACKET; 
+        t.lexeme = lexeme;
+    } else if (curr_char == ']') {
+        t.id = TOKEN_RBRACKET; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '&') {
+        t.id = TOKEN_AND; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '|') {
+        t.id = TOKEN_OR; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '.') {
+        t.id = TOKEN_DOT; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '@') {
+        t.id = TOKEN_AT; 
+        t.lexeme = lexeme;
+    } else if (curr_char == ';') {
+        t.id = TOKEN_SEMICOLON; 
+        t.lexeme = lexeme;
+    } else if (curr_char == ':') {
+        rc = buffer_get_next_char(curr_char);
+        if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
+            t.id = TOKEN_COLON; 
+            t.lexeme = lexeme;
+        } else {
+            if (curr_char == '=') {
+                lexeme.push_back(curr_char);
+                t.id = TOKEN_ASSIGN;
+                t.lexeme = lexeme;
+                // t.line_no = src_line_no;
+                // t.col_no = src_col_no;
+            } else {
+                buffer_back_char();
+            }
+        }
+    } else if (curr_char == ',') {
+        t.id = TOKEN_COMMA; 
+        t.lexeme = lexeme;
+    } else if (curr_char == '~') {
+        rc = buffer_get_next_char(curr_char); 
+        if (curr_char == '=') {
+            lexeme.push_back(curr_char);
+            t.id = TOKEN_NOT_EQUAL;
+            t.lexeme = lexeme;
+            // t.line_no = src_line_no; 
+            // t.col_no = src_col_no;
+        } else if (curr_char == '\n') {
+            err.error = NCC_UNEXPECTED_EOF;
+            err.line = t.line_no;
+            err.col = t.col_no;
+
+            return err;
+        } 
+        else {
+            err.error = NCC_UNDEFINED_TOKEN; 
+            err.line = src_line_no;
+            err.col = src_col_no;
+
+            return err;
+        }
+    } else if (curr_char == '#') {
+        for (;;) {
+            rc = buffer_get_next_char(curr_char);
+
+            if (curr_char == '\n') break;
+
+            if (rc == NCC_EOF) {
+                err.error = NCC_UNEXPECTED_EOF;
+                err.line = src_line_no;
+                err.col = src_col_no;
+
+                return err;
+            }
         }
     }
 
-    // Current character is not white space, and we did not reach EOF
-    token+=current_char;
+    // else if (curr_char == ) {
+    //
+    // } else if (curr_char == ) {
+    // }
 
+    err.error = NCC_OK;
+    return err;
 }
 
 // Read past end of input stream?

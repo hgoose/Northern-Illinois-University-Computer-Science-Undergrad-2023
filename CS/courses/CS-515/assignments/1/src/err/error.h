@@ -10,6 +10,7 @@
 #define  NCC_UNEXPECTED_EOF        -6
 #define  NCC_ILLEGAL_COMMENT       -7
 #define  NCC_ILLEGAL_ESCAPE        -8
+#define  NCC_UNDEFINED_TOKEN       -9
 
 struct Error
 {

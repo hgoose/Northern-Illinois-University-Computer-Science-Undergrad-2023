@@ -1,6 +1,8 @@
 #include "drivers.h"
 #include "token.h"
 #include "lex.h"
+#include "buffio.h"
+#include "error.h"
 
 #include <iostream> // For input/output tasks
 #include <iomanip> // For input/output manipulators
@@ -81,6 +83,45 @@ int main(int argc, const char* argv[]) {
     }
     cout << '\n';
 
+    // LEXER TESTS
+
+    const char* test101 = "tests/lextests/test102";
+   
+    Error err = lex_init(test101);
+    Token t;
+    bool begin = true;
+
+    for (;;) {
+        err = get_token(t, begin);
+        print_token(t);
+        print_error(err);
+        if (err.error == NCC_EOF) {
+            break;
+        }
+    }
+
+    // if (err.error != NCC_OK) {
+    //     print_error(err);
+    // } else {
+    //     while (err.error == NCC_OK) {
+    //         err = get_token(t, begin);
+    //         print_token(t);
+    //
+    //         if (lex_eof()) break;
+    //     }
+    //
+    //     if (err.error != NCC_OK && err.error != NCC_EOF) {
+    //         print_error(err);
+    //     }
+    // }
+
+    lex_cleanup();
+
+
+
+
+
+
+
     return EXIT_SUCCESS;
 }
-

@@ -133,7 +133,7 @@ int buffer_next_char(void) {
 // Advance to the next position and get the character there.
 int buffer_get_next_char(char& c) {
     // See if advancing would fall off the buffer, 
-    if (buffer_next_char() != 0) return NCC_EOF;
+    if (buffer_next_char() != NCC_OK) return NCC_EOF;
     if (buffer_eof()) return NCC_EOF;
 
     // Otherwise, position is advanced and we get the character
@@ -194,8 +194,8 @@ int buffer_consume_k(size_t k, string& next_k) {
         ++curr_pos;
         next_k+=buffer[curr_pos];
     }
-    // Advanced one past the consumed k characters
-    ++curr_pos;
+
+    // Ending position of curr_pos is curr_pos + k
 
     return NCC_OK;
 }
