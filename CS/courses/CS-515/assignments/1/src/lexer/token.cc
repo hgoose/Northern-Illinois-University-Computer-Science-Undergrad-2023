@@ -30,7 +30,22 @@ void print_token(const Token& t) {
 
     if (t.id == TOKEN_NULL) return;
 
-    cout << token_names[t.id] << " at " << t.line_no << ":" << t.col_no << '\n';
+    if (t.id == TOKEN_INTEGER) {
+        cout << token_names[t.id] << ": " << t.integer 
+            << " at " << t.line_no << ":" << t.col_no << '\n';
+    } else if (t.id == TOKEN_IDENT) {
+        cout << token_names[t.id] << ": "<< t.identifier 
+            << " at " << t.line_no << ":" << t.col_no << '\n';
+    } else if (t.id == TOKEN_REAL) {
+        cout << token_names[t.id] << ": " << t.fl 
+            << " at " << t.line_no << ":" << t.col_no << '\n';
+    } else if (t.id == TOKEN_STRING) {
+        cout << token_names[t.id] << ": " << t.str 
+            << " at " << t.line_no << ":" << t.col_no << '\n';
+    } else {
+        cout << token_names[t.id] 
+            << " at " << t.line_no << ":" << t.col_no << '\n';
+    }
 
 
     // cout << "TOKEN: " << token_names[t.id] << '\n'

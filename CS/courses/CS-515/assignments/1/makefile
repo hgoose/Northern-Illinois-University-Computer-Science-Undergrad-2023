@@ -7,6 +7,7 @@ SRC      = tests/main.cc \
 		   tests/drivers/unget_rewind.cc \
 		   tests/drivers/eof_overread.cc \
 		   tests/drivers/line_reconstruct.cc \
+		   tests/drivers/lex_tester.cc \
 		   src/err/error.cc \
 		   src/lexer/lex.cc \
 		   src/lexer/token.cc \

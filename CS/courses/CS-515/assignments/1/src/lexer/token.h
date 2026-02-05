@@ -56,7 +56,8 @@ struct Token
     int col_no{-1};
 
     // Dependent on token type
-    int value{-1};
+    unsigned long integer{0};
+    double fl{-1.0f};
     std::string str{};
     std::string identifier{};
 };
