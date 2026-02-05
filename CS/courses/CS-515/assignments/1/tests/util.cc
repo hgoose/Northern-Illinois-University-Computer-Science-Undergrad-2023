@@ -1,16 +1,15 @@
+// Nate Warner z2004109
+//
+// util.cc: Various utility functions, used in other parts of the project
+
 #include "buffio.h"
 #include "util.h"
-#include "drivers.h"
 #include "error.h"
-#include <vector>
-#include <cstdint>
 
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 
-using std::vector;
-using std::cout;
-using std::endl;
 using std::cerr;
 
 // Compares two files
@@ -70,14 +69,27 @@ bool compare_two_files(const char* file_name1, const char* file_name2) {
     file1.read(buff1, buff1_size);
     file2.read(buff2, buff2_size);
 
+    // Check for errors in reading files to buffers
+    // At this point buffers have been allocated, cleanup must take place if we are exiting
     if (!file1) {
         cerr << "Error reading input file to buffer" << '\n';
+
+        // Cleanup memory and exit
+        delete[] buff1;
+        delete[] buff2;
+
         return false;
     } else if (!file2) {
         cerr << "Error reading output file to buffer" << '\n';
+
+        // Cleanup memory and exit
+        delete[] buff1;
+        delete[] buff2;
+
         return false;
     }
 
+    // Close files, no longer needed
     file1.close();
     file2.close();
 
