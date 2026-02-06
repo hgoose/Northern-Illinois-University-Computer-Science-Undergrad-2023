@@ -1,4 +1,9 @@
+// Nate Warner z2004109
+// CS-490D/515
+// Assignment 1
+
 #include "token.h"
+
 #include <iostream>
 #include <vector>
 
@@ -6,6 +11,7 @@ using std::cout;
 using std::cerr;
 using std::string;
 
+// Will come in handy
 static const std::vector<std::string> token_names = {
     "TOKEN_NULL", "TOKEN_EOF", "TOKEN_PLUS",
     "TOKEN_MINUS", "TOKEN_MULT", "TOKEN_DIV",
@@ -21,6 +27,7 @@ static const std::vector<std::string> token_names = {
 };
 
 
+// Prints a token
 void print_token(const Token& t) {
     // Guaranteed values of interest
     if (t.id < 0 || static_cast<size_t>(t.id) >= token_names.size()) {
@@ -28,8 +35,10 @@ void print_token(const Token& t) {
         return;
     }
 
+    // For TOKEN_NULL just return, we want to ignore it 
     if (t.id == TOKEN_NULL) return;
 
+    // Custom output depending on token type
     if (t.id == TOKEN_INTEGER) {
         cout << token_names[t.id] << ": " << t.integer 
             << " at " << t.line_no << ":" << t.col_no << '\n';
@@ -46,22 +55,4 @@ void print_token(const Token& t) {
         cout << token_names[t.id] 
             << " at " << t.line_no << ":" << t.col_no << '\n';
     }
-
-
-    // cout << "TOKEN: " << token_names[t.id] << '\n'
-    //      << "\tlexeme\t\t: " << t.lexeme << '\n'
-    //      << "\tid\t\t: " << t.id << '\n';
-    //
-    // // One of these should be of interest
-    // if (t.value != -1) {
-    //     cout << "\tvalue\t\t: " << t.value << '\n';
-    // } else if (!t.str.empty()) {
-    //     cout << "\tstring\t\t: " << t.str << '\n';
-    // } else if (!t.identifier.empty()) {
-    //     cout << "\tidentifier\t\t: " << t.identifier << '\n';
-    // }
-    //
-    // // Line and column numbers are always of interest
-    // cout << "\tline\t\t: " << t.line_no << '\n'
-    //      << "\tcolumn\t\t: " << t.col_no << "\n\n";
 }

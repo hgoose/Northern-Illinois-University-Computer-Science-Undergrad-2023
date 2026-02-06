@@ -9,6 +9,7 @@ using std::cout;
 using std::endl;
 using std::ifstream;
 
+// Read some number of bytes greater than the file size, buffer should stay at EOF
 void eof_overread(const char* file_name) {
     int rc{};
     if ((rc = buffer_init(file_name)) != NCC_OK) {

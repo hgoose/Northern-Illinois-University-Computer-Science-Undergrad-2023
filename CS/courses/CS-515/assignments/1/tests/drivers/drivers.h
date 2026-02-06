@@ -1,7 +1,7 @@
 #ifndef DRIVERS
 #define DRIVERS
 
-#include <cstdlib>
+#include <cstdlib> // For size_t
 #include <string>
 
 bool copy_compare(const char* file_name1, const char* file_name2);

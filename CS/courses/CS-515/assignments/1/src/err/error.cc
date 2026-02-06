@@ -1,9 +1,9 @@
+// Nate warner z2004109
+// error.cc
+
 #include "error.h"
 
-#include <string>
 #include <iostream>
-
-using std::string;
 using std::cerr;
 
 // Returns the error message for a given error code

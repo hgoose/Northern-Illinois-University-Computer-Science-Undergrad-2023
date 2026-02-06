@@ -12,13 +12,20 @@
 
 using std::cerr;
 
-// Compares two files
+// Helper function that compares two files and returns whether or not they are the same.
+// Compares byte by byte
 bool compare_two_files(const char* file_name1, const char* file_name2) {
+    // Create two buffers
     char* buff1 = nullptr, *buff2 = nullptr;
+
+    // Declare two size variables for the buffers
     size_t buff1_size, buff2_size;
 
+    // Open both files for reading
     std::ifstream file1(file_name1, std::ios_base::binary), file2(file_name2, std::ios_base::binary);
 
+    // Check if they have been opened successfully
+    // If not, report errors
     if (!file1) {
         cerr << "Error reading input file" << '\n';
         return false;
@@ -143,18 +150,33 @@ void read_file_to_file(const char* infile, const char* outfile) {
     out.close();
 }
 
+
+// Helper function to turn string that contains 6 hex digits to unsigned int
 int parse_hex6_codepoint(const std::string& hex6, uint32_t& value) {
+    // If here are not exactly 6 hex digits, error
     if (hex6.size() != 6) {
         return NCC_ILLEGAL_ESCAPE;
     }
 
+    // For each hex digit
     for (char c : hex6) {
+        // Shift four
         value <<= 4;
+
+        // Turn on bits that make up c for 0-9
         if ('0' <= c && c <= '9') value |= (c - '0');
+
+        // Turn on bits for a-f
         else if ('a' <= c && c <= 'f') value |= (c - 'a' + 10);
+
+        // Turn on bits for A-F
         else if ('A' <= c && c <= 'F') value |= (c - 'A' + 10);
+
+        // Not a valid hex digit
         else return NCC_ILLEGAL_ESCAPE;
     }
+
+    // All is good
     return NCC_OK;
 }
 
@@ -164,19 +186,26 @@ int encode_utf8(uint32_t cp, std::string& out) {
     if (cp > 0x10FFFF) {
         return NCC_ILLEGAL_ESCAPE;
     }
+
+    // In the removed group, error
     if (0xD800 <= cp && cp <= 0xDFFF) {
         return NCC_ILLEGAL_ESCAPE;
     }
 
+    // 1 Byte
     if (cp <= 0x7F) {
         out.push_back(static_cast<char>(cp));
+
+    // 2 Bytes
     } else if (cp <= 0x7FF) {
         out.push_back(static_cast<char>(0xC0 | ((cp >> 6) & 0x1F)));
         out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    // 3 Bytes
     } else if (cp <= 0xFFFF) {
         out.push_back(static_cast<char>(0xE0 | ((cp >> 12) & 0x0F)));
         out.push_back(static_cast<char>(0x80 | ((cp >> 6) & 0x3F)));
         out.push_back(static_cast<char>(0x80 | (cp & 0x3F)));
+    // 4 Bytes
     } else { 
         out.push_back(static_cast<char>(0xF0 | ((cp >> 18) & 0x07)));
         out.push_back(static_cast<char>(0x80 | ((cp >> 12) & 0x3F)));
@@ -187,10 +216,12 @@ int encode_utf8(uint32_t cp, std::string& out) {
     return NCC_OK; 
 }
 
+// Calls parse_hex6_codepoint and encode_utf8, we get returned the utf8 representation
 std::string hex6_to_utf8(const std::string& hex6) {
     uint32_t cp{};
     string out{};
 
+    // Parse and encode
     parse_hex6_codepoint(hex6,cp);
     encode_utf8(cp, out);
 

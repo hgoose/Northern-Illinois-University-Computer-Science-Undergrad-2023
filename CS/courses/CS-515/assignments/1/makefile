@@ -1,7 +1,7 @@
 CXX      = g++
 CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer
 
-TARGET   = bin/main
+TARGET   = bin/ncc
 OBJDIR   = obj
 
 SRC = \

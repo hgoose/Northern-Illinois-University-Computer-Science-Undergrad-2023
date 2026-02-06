@@ -11,6 +11,8 @@ using std::cerr;
 using std::ofstream;
 using std::string;
 
+// Reconstruct lines from created buffer, send to output file, return true or false
+// based on if the input file is the same as the output file (should be the same).
 bool line_reconstruct(const string& input_file) {
 
     // Create output file

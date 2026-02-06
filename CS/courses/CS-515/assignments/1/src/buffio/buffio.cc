@@ -1,6 +1,10 @@
+// Nate warner z2004109
+// CS-490D/515
+// buffio.cc
+
 #include "buffio.h"
 #include "error.h"
-#include <iostream>
+
 #include <vector>
 #include <fstream>
 #include <string>
@@ -20,6 +24,7 @@ static vector<size_t> line_sizes;
 
 // All int return values are error codes
 
+// Initializes buffer
 int buffer_init(const char* filename) {
 
     // Reset states
@@ -66,7 +71,10 @@ int buffer_init(const char* filename) {
     file.read(buffer, static_cast<std::streamsize>(buff_size));
 
     // Check if any error flags were set, (file.bad() or file.fail())
-    if (!file) return NCC_FILE_NOT_FOUND;
+    if (!file) {
+        delete[] buffer;
+        return NCC_FILE_NOT_FOUND;
+    }
 
     // Read through the buffer, if \n is encountered, record index of start of next line 
     size_t curr_line_size = 0;
@@ -230,11 +238,14 @@ int buffer_cleanup(void) {
 int get_src_line(size_t line_no, string& line) {
     line.clear();
 
+    // If passed in line_no doesn't exist for some reason
     if (line_no <= 0 || line_no >= line_start.size()) return NCC_NOT_FOUND;
 
+    // Get start and line size
     size_t start = line_start[line_no];
     size_t line_size = line_sizes[line_no];
 
+    // Create the line
     for (size_t i = start; i<start+line_size; ++i) {
         line+=buffer[i];
     }

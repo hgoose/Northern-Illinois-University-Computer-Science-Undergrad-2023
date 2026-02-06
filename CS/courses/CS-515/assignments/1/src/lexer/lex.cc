@@ -1,3 +1,8 @@
+// Nate Warner z2004109
+// CS 490D/515
+// Assignment 1
+// lex.cc
+
 #include "token.h"
 #include "error.h"
 #include "buffio.h"
@@ -11,24 +16,25 @@ using std::string;
 using std::cout;
 using std::endl;
 
-// Helper function
+// Helper function to check if a character is a digit
 static inline bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
-// Takes a character in a string, and if it is an escape sequence, replace it and return true
-// If provided character was replaced, return true, otherwise return false. 
+// Checks for escape sequence and replaces character
 void check_replace_escape(char& c, int& rc, string& utf8) {
+    // Clear this just in case its not already empty
     utf8.clear();
+
+    // Start return code as OK
     rc = NCC_OK;
 
     char next{};
 
-    // Check for the simple ones
+    // EOF is not good here, unexpected, didn't finish string token yet
     if (buffer_get_next_char(next) == NCC_EOF) {
         rc = NCC_UNEXPECTED_EOF;
         return;
     }
 
-    // Potential unicode escape sequence 
     if (next == 'n') {
         c = ESC_NEWLINE;
     } else if (next == 't') {
@@ -43,23 +49,30 @@ void check_replace_escape(char& c, int& rc, string& utf8) {
         c = ESC_ALERT;
     } else if (next == 'b') {
         c = ESC_BACKSPACE;
+    // If unicode escape, call helper functions
     } else  if (next == 'u') {
         string hex{};
+
+        // Try to consume the next six, should be hex digits
+        // If, return error
         if (buffer_consume_k(6,hex) == NCC_EOF) {
             rc = NCC_UNEXPECTED_EOF;
             return;
         }
+        // Get the utf8 rep
         utf8 = hex6_to_utf8(hex);
+    // Line continuation, replace with black
     } else if (next == '\n') {
         c = EMPTY;
+    // Unknown escape sequence, get rid of it
     } else {
         rc = NCC_ILLEGAL_ESCAPE;
-        c = EMPTY;
     }
 
 }
 
 
+// Initializes lexer
 Error lex_init(const char*  src_code) {
     // Call buffer init and get the error code
     int rc = buffer_init(src_code); 
@@ -73,6 +86,7 @@ Error lex_init(const char*  src_code) {
     return err;
 }
 
+// Gets the next token
 Error get_token(Token& t, bool& begin) {
     // Reset token
     t.id = TOKEN_NULL;
@@ -156,31 +170,36 @@ Error get_token(Token& t, bool& begin) {
     } else if (curr_char == '^') {
         t.id = TOKEN_EXP; 
         t.lexeme = lexeme;
+    // With character <, could be <, could be <=, could be block comment
     } else if (curr_char == '<') {
+        // Get next char
         rc = buffer_get_next_char(curr_char);
+
+        // In this case its just TOKEN_LESS 
         if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
             t.id = TOKEN_LESS; 
             t.lexeme = lexeme;
+        // In this case its TOKEN_LESS_EQ
         } else if (curr_char == '=') {
             lexeme.push_back(curr_char);
             t.id = TOKEN_LESS_EQ;
             t.lexeme = lexeme;
-            // t.line_no = src_line_no;
-            // t.col_no = src_col_no;
 
-            // Could be a block comment
+        // Could be a block comment, now we have <<
         } else if (curr_char == '<') {
+            // Consume next char
             rc = buffer_get_next_char(curr_char); 
 
             // Not a block comment
             if (curr_char != '-') {
                 buffer_back_char();
-                // We have a block comment
+            // We have a block comment
             } else {
                 // Read until -
                 for (;;) {
                     rc = buffer_get_next_char(curr_char);
 
+                    // Unexpected EOF, block comment was not closed
                     if (rc == NCC_EOF) {
                         err.error = NCC_UNEXPECTED_EOF;
                         err.line = src_line_no;
@@ -217,22 +236,33 @@ Error get_token(Token& t, bool& begin) {
                     }
                 }
             }
+        // Back up, could be the start of something new, we have TOKEN_LESS
         } else {
+            t.id = TOKEN_LESS; 
+            t.lexeme = lexeme;
             buffer_back_char();
         }
+    // Could be TOKEN_GREATER or TOKEN_GREATER_EQ
     } else if (curr_char == '>') {
+        // Get next char
         rc = buffer_get_next_char(curr_char);
+
+        // In this case its TOKEN_GREATER
         if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
             t.id = TOKEN_GREATER; 
             t.lexeme = lexeme;
         } else {
+            // Found TOKEN_GREATER_EQ
             if (curr_char == '=') {
                 lexeme.push_back(curr_char);
                 t.id = TOKEN_GREATER_EQ;
                 t.lexeme = lexeme;
-                // t.line_no = src_line_no;
-                // t.col_no = src_col_no;
+            // Just TOKEN_GREATER
             } else {
+                t.id = TOKEN_GREATER; 
+                t.lexeme = lexeme;
+
+                // Back up one, we found our token, go back to end of current token
                 buffer_back_char();
             }
         }
@@ -272,40 +302,50 @@ Error get_token(Token& t, bool& begin) {
     } else if (curr_char == ';') {
         t.id = TOKEN_SEMICOLON; 
         t.lexeme = lexeme;
+    // Could be TOKEN_COLON or TOKEN_ASSIGN
     } else if (curr_char == ':') {
+        // Get next char
         rc = buffer_get_next_char(curr_char);
+
+        // In this case its TOKEN_COLON
         if (rc == NCC_EOF || curr_char == ' ' || curr_char == '\n' || curr_char == '\t') {
             t.id = TOKEN_COLON; 
             t.lexeme = lexeme;
         } else {
+            // In this case its TOKEN_ASSIGN
             if (curr_char == '=') {
                 lexeme.push_back(curr_char);
                 t.id = TOKEN_ASSIGN;
                 t.lexeme = lexeme;
-                // t.line_no = src_line_no;
-                // t.col_no = src_col_no;
+            // Its TOKEN_COLON, back up to end of token
             } else {
+                t.id = TOKEN_COLON; 
+                t.lexeme = lexeme;
                 buffer_back_char();
             }
         }
     } else if (curr_char == ',') {
         t.id = TOKEN_COMMA; 
         t.lexeme = lexeme;
+    // Either TOKEN_NOT_EQUAL or undefined token
     } else if (curr_char == '~') {
+        // Get next char, expecting =
         rc = buffer_get_next_char(curr_char); 
+
+        // It's =, we found TOKEN_NOT_EQUAL
         if (curr_char == '=') {
             lexeme.push_back(curr_char);
             t.id = TOKEN_NOT_EQUAL;
             t.lexeme = lexeme;
-            // t.line_no = src_line_no; 
-            // t.col_no = src_col_no;
-        } else if (curr_char == '\n') {
+        // If EOF, report unexpected EOF
+        } else if (rc == NCC_EOF) {
             err.error = NCC_UNEXPECTED_EOF;
             err.line = t.line_no;
             err.col = t.col_no;
 
             return err;
         } 
+        // Otherwise, token is undefined, just a lone ~
         else {
             buffer_back_char();
             err.error = NCC_UNDEFINED_TOKEN; 
@@ -314,12 +354,16 @@ Error get_token(Token& t, bool& begin) {
 
             return err;
         }
+    // Line comment, consume rest of line without doing anything
     } else if (curr_char == '#') {
+        // Consume rest of line
         for (;;) {
             rc = buffer_get_next_char(curr_char);
 
+            // End at newline, comment is disregarded
             if (curr_char == '\n') break;
 
+            // Must end with newline, otherwise it's unexpected EOF
             if (rc == NCC_EOF) {
                 err.error = NCC_UNEXPECTED_EOF;
                 err.line = src_line_no;
@@ -328,11 +372,17 @@ Error get_token(Token& t, bool& begin) {
                 return err;
             }
         }
+    // Possible identifier
     } else if (('a' <= curr_char && curr_char <= 'z') || ('A' <= curr_char && curr_char <= 'Z') || (curr_char == '_')) {
+        // Assume identifier
         t.id = TOKEN_IDENT;
+
+        // Start consuming characters to build identifier until whitespace
         for (;;) {
             rc = buffer_get_next_char(curr_char);
 
+            // This may not be correct, can't remember what I was thinking here. I'll come 
+            // back to this later if there are problems
             if (rc == NCC_EOF) {
                 t.id = TOKEN_EOF;
                 t.lexeme = lexeme;
@@ -340,6 +390,8 @@ Error get_token(Token& t, bool& begin) {
 
                 err.line = src_line_no;
                 err.col = src_col_no;
+
+                // Might want this to be unexpected EOF
                 err.error = NCC_EOF;
 
                 return err;
@@ -348,15 +400,16 @@ Error get_token(Token& t, bool& begin) {
             // Identifier is growing
             if (('a' <= curr_char  && curr_char <= 'z') || ('A' <= curr_char  && curr_char <= 'Z') || ('0' <= curr_char && curr_char <= '9') || curr_char == '_') {
                 lexeme.push_back(curr_char);
-                // End of identifier
+            // End of identifier
             } else {
                 buffer_back_char();
+
                 t.lexeme = lexeme;
                 t.identifier = lexeme;
                 break;
             }
         } 
-        // Handle strings with escape sequences
+    // Handle strings with escape sequences
     } else if (curr_char == '"') {
         t.id = TOKEN_NULL;
         // Consume characters and replace their escape sequences
@@ -412,6 +465,7 @@ Error get_token(Token& t, bool& begin) {
 
             }
         }
+        // String token was built successfully
         t.id = TOKEN_STRING;
         t.lexeme = lexeme;
         t.str = lexeme;
@@ -420,8 +474,8 @@ Error get_token(Token& t, bool& begin) {
         char next{};
         rc = buffer_get_next_char(next);
 
+        // Lone '.' at EOF, report token as dot and EOF
         if (rc == NCC_EOF) {
-            // Lone '.' at EOF, report token as dot and EOF
             t.id = TOKEN_DOT;
             t.lexeme = lexeme; 
             err.error = NCC_EOF; 
