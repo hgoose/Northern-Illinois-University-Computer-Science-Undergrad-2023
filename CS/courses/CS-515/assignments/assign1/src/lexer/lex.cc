@@ -149,8 +149,8 @@ Error get_token(Token& t, bool& begin) {
     t.col_no = src_col_no;
     t.line_no = src_line_no;
 
-    // Add to lexeme string
-    lexeme.push_back(curr_char);
+    // Add to lexeme string, we don't want to push the opening quote for a string though
+    if (curr_char != '"') lexeme.push_back(curr_char);
 
     // Now we decide token class based on first character and consume the rest
 
