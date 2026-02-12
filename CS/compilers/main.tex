@@ -918,9 +918,557 @@
     \end{itemize}
 
     \pagebreak 
-    \unsect{Intel architecture and code generation}
+    \unsect{Intel x86-64 architecture and code generation}
     \begin{itemize}
-        
+        \item \textbf{General purpose registers}: General-purpose registers store integers, pointers, loop counters, and intermediate results.
+            \bigbreak \noindent 
+            The 32-bit registers are 
+            \begin{itemize}
+                \item EAX – Accumulator (frequently used for arithmetic and return values)
+                \item EBX – Base register
+                \item ECX – Counter (loops, shifts)
+                \item EDX – Data register (multiplication/division)
+                \item ESI – Source index (string operations)
+                \item EDI – Destination index (string operations)
+                \item EBP – Base pointer (stack frame)
+                \item ESP – Stack pointer
+            \end{itemize}
+            The 64-bit registers are
+            \begin{itemize}
+                \item RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP
+                \item R8–R15 (additional registers introduced in 64-bit mode)
+            \end{itemize}
+            Each 64-bit register has accessible sub-registers. For example, 
+            \begin{align*}
+                \text{AX } \to \text{ EAX } \to \text{ AX }\to \text{ AH/AL}
+            .\end{align*}
+            This backward compatibility is fundamental to x86 design.
+        \item \textbf{3-bit register specifier}: Many x86 instructions include a 3-bit register specifier, which implicitly numbers the registers:
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Encoding}&	\textbf{Register} \\
+                    \midrule
+                    000	&EAX\\[2ex]
+                    001	&ECX\\[2ex]
+                    010	&EDX\\[2ex]
+                    011	&EBX\\[2ex]
+                    100	&ESP\\[2ex]
+                    101	&EBP\\[2ex]
+                    110	&ESI\\[2ex]
+                    111	&EDI\\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            \textbf{Note:} Exists only at the binary encoding level
+        \item \textbf{Instruction pointer (RIP)}: 
+            \begin{itemize}
+                \item \textbf{EIP (32-bit) / RIP (64-bit)}: Holds the address of the next instruction to execute.
+            \end{itemize}
+        \item \textbf{The return instruction (C3)}: The ret (return) instruction transfers control back to the calling function by restoring the instruction pointer from the stack. It is the logical inverse of the call instruction.
+        \item \textbf{Dynamic code execution basic example (CPP) (JIT execution)}: We will 
+            \begin{itemize}
+                \item Allocate memory at runtime
+                \item Write machine code (Intel x86/x86-64 instructions) into that memory
+                \item Mark the memory as executable
+                \item Cast the address to a function pointer
+                \item Call it
+            \end{itemize}
+            This is exactly what a JIT compiler does at a minimal level. Consider 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                unsigned char prog[50000];
+                prog[0] = 0xC3; // ret instruction
+
+                int value;
+                // Cast to a function pointer, then call, store returned value from call in value
+                value = ((int(*)(void))prog)();
+            \end{cppcode}
+            \bigbreak \noindent 
+            If we run this code, we will get a seg fault. This is because our memory block is only read/write, we need a way to mark the memory as executable. We can do this by using sys/mman.h to allocate memory through the operating system, and errno to check for errors.
+        \item \textbf{sys/mman.h}:  <sys/mman.h> declares the memory-mapping API. It allows a process to request, control, and manage virtual memory regions directly from the operating system.
+            \bigbreak \noindent 
+            The function \textbf{mmap} maps a region of virtual memory.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void* mmap(
+                    void* addr,
+                    size_t length,
+                    int prot,
+                    int flags,
+                    int fd,
+                    off_t offset
+                );
+            \end{cppcode}
+            \bigbreak \noindent 
+            fd is an open file descriptor referring to a file or device, it declares “this mapping is backed by the contents of this file.” It must be opened with permissions compatible with prot. The kernel uses it as the source of bytes for the mapping. offset specifies where in the file the mapping starts, in bytes.
+            \bigbreak \noindent 
+            Returns a pointer to the mapped region. On failure, it returns MAP\_FAILED.
+            \bigbreak \noindent 
+            \textbf{munmap} Unmaps a previously mapped region.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int munmap(void* addr, size_t length);
+            \end{cppcode}
+            \bigbreak \noindent 
+            After munmap, any access to the region is invalid.
+            \bigbreak \noindent 
+            \textbf{mprotect} Changes access permissions on an existing mapping.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int mprotect(void* addr, size_t len, int prot);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Commonly used to transition memory:
+            \begin{itemize}
+                \item \textbf{RW:} Write code
+                \item \textbf{RX:} Execute code
+            \end{itemize}
+            This is critical for enforcing $W \oplus X$ (write xor execute) security.
+            \bigbreak \noindent 
+            The protection flags (prot) are
+            \begin{itemize}
+                \item \textbf{PROT\_READ}: Readable
+                \item \textbf{PROT\_WRITE}: Writable
+                \item \textbf{PROT\_EXEC}: Executable
+                \item \textbf{PROT\_NONE}: No access
+            \end{itemize}
+            These specify what the CPU is allowed to do with the memory
+            \bigbreak \noindent 
+            The mapping flags (flags) are
+            \begin{itemize}
+                \item \textbf{MAP\_PRIVATE}: Copy-on-write
+                \item \textbf{MAP\_SHARED}: Shared between processes
+                \item \textbf{MAP\_ANONYMOUS}: Not backed by a file
+                \item \textbf{MAP\_FIXED}: Place mapping at a fixed address (dangerous)
+            \end{itemize}
+        \item \textbf{errno}: errno is a thread-local integer that reports why a system call failed. It is declared in 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                <errno.h>
+            \end{cppcode}
+            \bigbreak \noindent 
+            System calls signal failure via return values, they set errno to a symbolic error code. The value persists until overwritten
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void* p = mmap(...);
+                if (p == MAP_FAILED) {
+                    perror("mmap");
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Only meaningful immediately after failure, not reset automatically. The common errno values with mmap are
+            \begin{itemize}
+                \item \textbf{ENOMEM}:	Insufficient memory or address space
+                \item \textbf{EACCES}:	Permission denied (e.g., PROT\_EXEC disallowed)
+                \item \textbf{EINVAL}:	Invalid flags, alignment, or parameters
+                \item \textbf{EBADF}:	Invalid file descriptor
+                \item \textbf{ENODEV}:	Unsupported mapping type
+            \end{itemize}
+            To convert errno to text, use perror or strerror
+            \bigbreak \noindent 
+            \begin{cppcode}
+                perror(const char*)
+                strerror(errno)
+            \end{cppcode}
+            \bigbreak \noindent 
+            perror prints a textual description of the error code currently stored in the system variable errno to stderr. It's parameter is a pointer to a null-terminated string with explanatory message
+        \item \textbf{DCE with mmap and errno}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+const int prog_size = 50000;
+unsigned char* prog;
+
+prog = mmap(0, prog_size, PROT_EXEC |$\mid$| PROT_READ |$\mid$| PROT_WRITE, MAP_PRIVATE |$\mid$| MAP_ANONYMOUS, -1, 0);
+
+if (errno) {
+    perror("mmap");
+    return;
+}
+            \end{cppcode}
+            \bigbreak \noindent 
+            Having fd=-1 means “This mapping is not backed by any file.” This is only valid when used together with MAP\_ANONYMOUS. Without it, fd=-1 is an error.
+            \bigbreak \noindent 
+            Having addr=0 means that the memory placement is decided by the operating system.
+            \bigbreak \noindent 
+            Now, prog points to the start of our block of memory that is readable, writable, and executable. Remember, to free the memory we must call \texttt{munmap}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            munmap(prog, prog_size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Now, with
+            \bigbreak \noindent 
+            \begin{cppcode}
+                value = ((int(*)(void))prog)();
+            \end{cppcode}
+            \bigbreak \noindent 
+            We can output the value of value, which will give us the current value in the accumulator RAX. The return value of a function is defined to be placed in the accumulator register
+            \begin{itemize}
+                \item prog points to executable memory
+                \item (int(*)(void))prog reinterprets that address as a function
+                \item () performs a call instruction
+                \item The CPU jumps to prog
+                \item Your machine code executes
+                \item A ret instruction returns control to the caller
+                \item The caller reads the return value from the accumulator
+                \item That value is assigned to value
+            \end{itemize}
+            Remember that we have 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                prog[0] = 0xC3
+            \end{cppcode}
+            \bigbreak \noindent 
+            I.e the ret instruction, which is the only instruction currently in our program.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                cout << "Memory at: " << (int*) prog << '\n';
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that if we left our program pointer as char*, C++ uses the overload for outputing C-style strings. Since we just want the address of the first byte of our program, we must cast it to a different pointer, in this case a pointer to an integer. A better way to go about doing this is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            cout << "Memory at: " << static_cast<void*>(prog) << '\n';
+            \end{cppcode}
+        \item \textbf{The ModR/M byte}: The ModR/M byte is a mandatory operand-encoding byte used by many x86 instructions. It specifies which registers are used and whether an operand refers to a register or to memory, including the basic addressing mode. 
+            \bigbreak \noindent 
+            The ModR/M byte is one byte (8 bits), divided into three fields
+            \begin{itemize}
+                \item \textbf{r /m}: Bits 0-2 
+                \item \textbf{reg}: Bits 3-5
+                \item \textbf{mod}: Bits 6-7
+            \end{itemize}
+            mod determines how the r/m field is interpreted:
+            \begin{itemize}
+                \item \textbf{00}:	Memory operand, no displacement (except special cases)
+                \item \textbf{01}:	Memory operand + 8-bit displacement
+                \item \textbf{10}:	Memory operand + 32-bit displacement (16-bit in 16-bit mode)
+                \item \textbf{11}:	Register operand (no memory access)
+            \end{itemize}
+            The reg field usually selects a register operand. 
+            \begin{itemize}
+                \item \textbf{000}:	EAX
+                \item \textbf{001}:	ECX
+                \item \textbf{010}:	EDX
+                \item \textbf{011}:	EBX
+                \item \textbf{100}:	ESP
+                \item \textbf{101}:	EBP
+                \item \textbf{110}:	ESI
+                \item \textbf{111}:	EDI
+            \end{itemize}
+            In /r encodings, reg is a real operand. In /0–/7 encodings, reg is an opcode extension, not a register
+            \bigbreak \noindent 
+            The r/m field selects:
+            \begin{itemize}
+                \item A register if mod = 11
+                \item A memory addressing mode if mod $\ne $ 11
+            \end{itemize}
+            In the second case, r/m selects a base addressing form. In 32/64-bit mode:
+            \begin{itemize}
+                \item 000	[EAX]
+                \item 001	[ECX]
+                \item 010	[EDX]
+                \item 011	[EBX]
+                \item 100	SIB byte follows
+                \item 101	[disp32] if mod=00, otherwise [EBP]+disp
+                \item 110	[ESI]
+                \item 111	[EDI]
+            \end{itemize}
+            If r/m = 100 and mod $\ne $ 11, a SIB (Scale–Index–Base) byte follows. This allows
+            \begin{align*}
+                [\text{base } + \text{ index } \cdot \text{ scale } + \text{ displacement} ]
+            .\end{align*}
+        \item \textbf{Word sizes in Intel architecture}: 
+            \begin{itemize}
+                \item \textbf{Byte}:	8 bits
+                \item \textbf{Word}:	16 bits
+                \item \textbf{Doubleword (dword)}:	32 bits
+                \item \textbf{Quadword (qword)}:	64 bits
+                \item \textbf{Double quadword (dqword / xmmword)}:	128 bits
+                \item \textbf{YMM word}:	256 bits
+                \item \textbf{ZMM word}:	512 bits
+            \end{itemize}
+        \item \textbf{MOV instructions: Putting a value into the accumulator}: For this we use the instruction
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV     dst,src
+            \end{cppcode}
+            \bigbreak \noindent 
+            Many forms of the MOV instruction can be found in the Intel manual. There are different forms based on whether dst, src is memory or a register, and how many bits these fields are. For example, we could use
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV    r/m8,r8
+            \end{cppcode}
+            \bigbreak \noindent 
+            where r/m8,r8 means that the destination operand can be either an 8-bit memory location, or an 8-bit register, and the source must be an 8-bit register. Conversely,
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV    r8,r/m8
+            \end{cppcode}
+            \bigbreak \noindent 
+            is the opposite. In the first form, the opcode is 88 /r, where /r denotes that the encoding requires a modR/M byte. 
+            \bigbreak \noindent 
+            Note that there are forms for 8, 16, 32, and 64 bit. There are also immediate byte forms, for example
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV    rk,immk 
+            \end{cppcode}
+            \bigbreak \noindent 
+            where $k\in \{8,16,32,64\} $. Consider the form
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV r32,imm32
+            \end{cppcode}
+            \bigbreak \noindent 
+            This form has opcode $B8 + \text{ rd id} $, where the $d$ stands for \textit{double word} 32-bit.  If our instruction is
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MOV    EAX,4
+            \end{cppcode}
+            \bigbreak \noindent 
+            where 4 is the immediate byte, then the opcode is
+            \begin{align*}
+                B804000000
+            .\end{align*}
+            Note that EAX is 000, so B8 remains the same. Further note that our immediate byte is 32-bits, since we used the double word version, and those bytes are in little endian, so the bytes are reversed. In BE it would be
+            \begin{align*}
+                00000004
+            .\end{align*}
+            Another note is that there are no memory to memory moves, we must go memory to register, then register to memory. 
+            \bigbreak \noindent 
+            Let's add this MOV instruction to our code, we add to the program buffer
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t p_offset = 0;
+
+            prog[p_offset++] = 0xb8; // MOV EAX,4
+            prog[p_offset++] = 0x04;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0xc3; // RET to caller
+            \end{cppcode}
+            \bigbreak \noindent 
+            Now, the value returned from the call to prog gives the value $4$, as $4$ is the value in the accumulator.
+        \item \textbf{A note}: The 64-bit architecture is called IA-32e, since it is an extension of the 32-bit architecture, not a 64-bit rework.
+        \item \textbf{Two's complement}: IA uses twos complement, so to put $-7$ into the accumulator, we use
+            \begin{align*}
+                f9ffffff
+            .\end{align*}
+            as the immediate byte. Notice the LE. 
+        \item \textbf{Finite width arithmetic}: An $n$-digit base-$b$ register  can store exactly
+            \begin{align*}
+                \{0,1,\dots, b^{n}-1\}
+            ,\end{align*}
+            nothing else. Any computation that exceeds this range wraps. The hardware drops the carry out of the top digit. This behavior is precisely arithmetic modulo $b^{n}$.
+        \item \textbf{Twos complement}: This system comes from the question... On an $n$-digit base $b$-machine, what value should represent $-x$ so that subtraction can be done by addition.
+            \bigbreak \noindent 
+            So, with finite-width arithmetic, we want a value $y$ such that
+            \begin{align*}
+                x + y \equiv 0 \pmod{b^{n}}
+            .\end{align*}
+            So, $y$ is the additive inverse of $x$ modulo $b^{n}$. Notice that since $x+y \equiv 0 \pmod{b^{n}} $, 
+            \begin{align*}
+                x+y = kb^{n}
+            \end{align*}
+            for some integer $k$. However, since 
+            \begin{align*}
+                0 \leq x,y \leq b^{n}-1
+            \end{align*}
+            implies that 
+            \begin{align*}
+                0 \leq x + y \leq 2(b^{n}-1) = 2b^{n}-2
+            ,\end{align*}
+            the only multiples of $b^{n}$ that $x+y$ can equal are $0$ and $b^{n}$, so we can safely say that $k = 1$. Thus, our equation becomes
+            \begin{align*}
+                x+y =b^{n}
+            .\end{align*}
+            From this, we can solve for $y$
+            \begin{align*}
+                y = b^{n}-x
+            .\end{align*}
+            Therefore, 
+            \begin{align*}
+                x + (b^{n}-x) = b^{n}
+            ,\end{align*}
+            since $x + y = b^{n}$, and $y = b^{n}-x$. Thus,
+            \begin{align*}
+                x + (b^{n}-x) \equiv 0 \pmod{b^{n}}
+            .\end{align*}
+
+        \item \textbf{Why twos complement works}: Consider an $n$ digit system (base $b$), and a number $x$ in that system. If we subtract by $b^{n}$, we get
+            \begin{align*}
+                b^{n} - x
+            .\end{align*}
+            Now, we can add zero to this subtraction
+            \begin{align*}
+                b^{n} - 1 - x + 1 = (b-1)(b^{n-1}+b^{n-2}+\dots+b^{0}) - x + 1
+            .\end{align*}
+            Notice that $b^{n}-1$ becomes $(b-1)(b^{n-1} + b^{n-2} + \dots + b^{0}) $. Further notice that $b^{n}-1$ is the number with all digits equal to $b-1$. In base $2$, this would be all bits set to 1.
+            \bigbreak \noindent 
+            This algebraic trick reveals that
+            \begin{align*}
+                b^{n}-1 = (b - 1)(b^{n-1} + \dots + b^{0})
+            .\end{align*}
+            From this, subtracting $x$ gives the digitwise complement of $x$. In base two, this would mean flipping all the bits. Thus,
+            \begin{align*}
+                b^{n}-1 - x + 1
+            \end{align*}
+            is the digitwise complement plus one, where the plus one is a carry. This is the step that turns the digitwise complement into the true additive inverse in base $b$.  We now understand that
+            \begin{align*}
+                \bar{x} = (b^{n}-1)-x
+            .\end{align*}
+            This is the digitwise (radix-$b-1$) complement. So, we know the complement and the additive inverse. Notice that all we need to do to turn the complement into the additive inverse is add one to the complement. 
+        \item \textbf{ADD instructions: Adding the value from a register into the accumulator}: Suppose we want to add $+3$ into ECX, then add that value to the accumulator. We can use the ADD instruction version
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ADD    r32, r/m32
+            \end{cppcode}
+            \bigbreak \noindent 
+            with opcode 03 /r and the same immediate byte move instruction
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV    ECX, 3 
+            \end{cppcode}
+            \bigbreak \noindent 
+            This has encoding 
+            \begin{align*}
+                B903000000
+            .\end{align*}
+            The ADD instruction is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ADD    EAX,ECX
+            \end{cppcode}
+            The ModR/M byte for the ADD instruction is $C1$, since mod=11, reg=000 (ECX), and r/m = 001  (EAX).  Thus, the encoding is
+            \begin{align*}
+                03C1
+            .\end{align*}
+        \item \textbf{Note on instruction length}: An x86 instruction can be anywhere from 1 to 15 bytes long. There is no fixed instruction width. The length depends on which optional components are present.
+        \item \textbf{/0 - /7}: In Intel x86 architecture, the symbols /0 through /7 refer to opcode extensions encoded in the ModR/M byte of an instruction. They are not registers themselves; rather, they select which operation an instruction performs when multiple operations share the same primary opcode. 
+            \bigbreak \noindent 
+            Many x86 instructions reuse a single opcode and rely on the ModR/M byte to disambiguate the operation. When documentation writes /0, /1, …, /7, it means “The reg/opcode field of the ModR/M byte must contain this value.” That 3-bit field can encode values from 0 to 7, hence /0–/7.
+            \bigbreak \noindent 
+            Therefore, the 3-bit reg field has exactly one meaning per instruction:
+            \begin{itemize}
+                \item Either it selects a register operand
+                \item Or it selects an opcode extension (/0–/7)
+            \end{itemize}
+        \item \textbf{Substraction instructions}: Suppose we want to subtract ECX from EAX,
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SUB    EAX, ECX
+            \end{cppcode}
+            \bigbreak \noindent 
+            Suppose ECX has value 3, and $EAX$ has value $-7$. The opcode for this SUB instruction
+            \bigbreak \noindent 
+            \begin{cppcode}
+             SUB r/m32, r32
+            \end{cppcode}
+            \bigbreak \noindent 
+            Is 29 /r. The encoding is therefore $29C8$, since the ModR/M byte is C8 (11 001 000).
+        \item \textbf{Multiplication instructions}: We have two primary instructions, MUL (unsigned multiplication), and IMUL (signed multiplication). Regarding IMUL, there are four one operand instructions, one for each register/memory size. Consider
+            \bigbreak \noindent 
+            \begin{cppcode}
+            IMUL    r/m32
+            \end{cppcode}
+            \bigbreak \noindent 
+            It should be noted that the operand is multiplied against the value in the accumulator, and the DX/AX registers are combined to make one 64-bit register split into two 32-bit sections, 32-bits per half. The DX register is the high order 32-bits, and the AX register is the low order 32-bits. Since we will use the 32-bit version, EDX and EAX are our register pairs.
+            \bigbreak \noindent 
+            The opcode for this instruction is f7 /5, so we use $101$ in the 3-bit reg field in the ModR/M byte. 
+            \bigbreak \noindent 
+            If our instruction was
+            \bigbreak \noindent 
+            \begin{cppcode}
+            IMUL    ECX
+            \end{cppcode}
+            \bigbreak \noindent 
+            ,this byte would be 11 101 001, which is $E9$ in hex. Thus, the encoding is $F7E9$.
+        \item \textbf{Division and converting instructions}: We have DIV for unsigned division, and IDIV for signed division. This operation divides the value in the accumulator by the value in the supplied operand, and again the result is split into the DX / AX pair. The quotient of the operation will be housed in AX, and the remainder in DX.
+            \bigbreak \noindent 
+            Before we can proceed with the division, we must extend the sign bit of the accumulator into the DX register. For this, we need CWD, CDQ, CQO instructions. CWD converts a word to a double word, and CDQ converts a double word to a quadword. In particular, the version of these instructions that extend the sign bit of AX into DX are given by opcode 99, and they take no operands. Thus,
+            \bigbreak \noindent 
+            \begin{cppcode}
+            CDQ
+            \end{cppcode}
+            \bigbreak \noindent 
+            Extends the sign bit of EAX (32-bit doubleword) into EDX, thus converting to a quadword (64-bit). This operation must be done before division.
+            \bigbreak \noindent 
+            Note that the encoding for CDQ is 99, and the encoding for IDIV is f7 /7, where the instruction is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            IDIV   r/m32
+            \end{cppcode}
+        \item \textbf{XOR instruction, Clearing registers}: The XOR instruction is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XOR   r /m32 r32 
+            \end{cppcode}
+            \bigbreak \noindent 
+            and variants. The opcode for this particular instruction is $31 /r$. To clear a register, we therefore use the same register for both operands 
+            \bigbreak \noindent 
+        \item \textbf{R8-R15, the REX prefix}: The REX prefix is a one-byte instruction prefix introduced with x86-64 to extend the original x86 encoding so that it can address 64-bit operands and additional registers. 
+            \bigbreak \noindent 
+            The REX prefix is one byte, with the following fixed structure:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            0100WRXB
+            \end{cppcode}
+            \bigbreak \noindent 
+            The high nibble 0100 identifies it as a REX prefix. The low nibble contains four 1-bit flags.
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Bit}&	\textbf{Name}&	\textbf{Purpose}
+                    \midrule
+                    W	&REX.W	&64-bit operand size\\[2ex]
+                    R	&REX.R	&Extends ModR/M reg field\\[2ex]
+                    X	&REX.X	&Extends SIB index field\\[2ex]
+                    B	&REX.B	&Extends ModR/M r/m or SIB base \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            REX.W = 1 forces a 64-bit operand size. Requires REX.W Without it, the instruction would operate on 32-bit registers.
+            \bigbreak \noindent 
+            REX.R, REX.X, and REX.B extend 3-bit register fields into 4-bit fields.
+            \begin{itemize}
+                \item \textbf{REX.R}: Extends the reg field of the modR/m byte. Place the high order bit of the non r /m register mask into this bit. For example, for R8 = 1000, set R=1.
+                \item \textbf{REX.X}: Extends the index field in the SIB byte, only meaningful if a SIB byte is present, otherwise leave zero
+                \item \textbf{REX.B}: Extends the r /m field of the modr /m byte. Place the high order bit of the r / m register mask into this bit.
+            \end{itemize}
+        \item \textbf{Recall: Fast exponentiation}: Uses the identity that
+            \begin{align*}
+               a^{b} = \begin{cases}
+                    (a^{2})^{\frac{b}{2}} \quad b = 2k \\
+                    a\cdot a^{b-1} \quad b=2\ell  + 1
+               \end{cases}
+            .\end{align*}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            e = 1
+            // b!=0 and b>=0 (nonnegative b) implies b>0
+            while (b>0) {
+                if (b & 0x01) {
+                    e = e * a
+                }
+                a = a*a
+                b>>1 // Divide by two
+            }
+            \end{cppcode}
+
+
+
+
+
+
+
+
+
+
+
+            
+
     \end{itemize}
 
 

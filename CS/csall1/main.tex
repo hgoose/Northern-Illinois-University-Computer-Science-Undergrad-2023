@@ -13662,149 +13662,628 @@ indicate which strong entity the weak entity depends upon.
     \pagebreak 
     \subsection{OS structure and system calls}
     \begin{itemize}
-        \item \textbf{Computer-System Structures}: 
+        \item \textbf{The kernel}: The kernel is the core control program of an operating system. Formally, it is the privileged component that manages hardware resources and provides fundamental abstractions to user programs.
+            \bigbreak \noindent 
+            It runs in kernel mode (highest privilege level) and mediates all access to the underlying machine.
+            \bigbreak \noindent 
+            At a systems-theoretic level, the kernel is a resource allocator and control authority. It is responsible for:
             \begin{itemize}
-                \item One or more CPU, memory and its controller, devices (Disks, Printers, Tapes, Audio devices, network card) and their controllers.
-                \item System bus provides access to the memory for the CPU and the device controllers. 
+                \item CPU time
+                \item Memory
+                \item Storage
+                \item I/O devices
+                \item Network interfaces
             \end{itemize}
+            User programs cannot access these directly; they must request services from the kernel.
             \bigbreak \noindent 
-            \fig{.6}{./figures/1047.png}
-        \item \textbf{Facts about devices}: 
+            The operating system includes the kernel plus user-space utilities, libraries, and system programs. On Linux, the kernel is just the vmlinuz binary.
+            \bigbreak \noindent 
+            So, the kernel is a program.
+        \item \textbf{Responsibilities of the kernel}: 
             \begin{itemize}
-                \item Devices (disks, printers etc.)– mechanical components.
-                \item Device controllers – electronic components that can handle one or more (identical) devices.
-                \item OS/device drivers deals with the controllers, never physical devices.
-                \item Device controller informs CPU that it has finished its operation by causing an interrupt.
-                \item Device driver – the code that talks to a controller, giving it commands and accepting responses.
-                \item Each device controller has a local buffer and a few registers. CPU moves data from/to main memory to/ from local buffers.
-                \item CPU and device controllers have access to the memory through the memory controller.
-            \end{itemize}
-        \item \textbf{Interrupts}: Operating Systems communicate with its environment by interrupts. (OS is interruptdriven!)
-            \bigbreak \noindent 
-            Hardware interrupt:
-            \begin{itemize}
-                \item Example: signal from a device about completion of an I/O operation.
-            \end{itemize}
-            Software-generated interrupt (trap):
-            \begin{itemize}
-                \item Example: a system call from user program for reading a
-            \end{itemize}
-            \begin{itemize}
-                \item \textbf{Interrupt vector} stores the address of interrupt handlers. 
-                \item \textbf{Interrupt handler} receives interrupts – routine at a fixed address in memory: determines the cause of the interrupt, performs the necessary processing and executes a “return from interrupt” to return to the CPU
-                \item Maskable to ignore or delay some interrupts. Some are unmaskable.
-                \item Interrupt vector to dispatch interrupt to correct handler.
-            \end{itemize}
-        \item \textbf{A typical interrupt vector table }:
-            \bigbreak \noindent 
-            \fig{.6}{./figures/1048.png}
-        \item \textbf{Caching}: Performed at many levels in a computer or a computing system (in hardware, operating system, software, browser, Internet) 
-            \bigbreak \noindent 
-            Information in use copied from slower to faster storage temporarily. Faster storage (cache) checked first to determine if information is there
-            \begin{itemize}
-                \item If it is, information used directly from the cache (fast)
-                \item If not, data copied to cache and used there 
-            \end{itemize}
-            Cache smaller than storage being cached
-            \begin{itemize}
-                \item Cache management: important design problem
-                \item Cache size and replacement policy 
-            \end{itemize}
-        \item \textbf{Cache management policy: the closet analogy}: Your closet overflows, what do you do? Your closet presents the same challenge that a computer faces when managing its memory:  space is limited, and the goal is to save both money and time. 
-            \bigbreak \noindent 
-            The dual problem:
-            \begin{itemize}
-                \item What to throw away?
-                \item How to organize it so that I can find what I need quickly? 
-            \end{itemize}
-        \item \textbf{Storage heirarchy}:
-            \bigbreak \noindent 
-            \fig{.6}{./figures/1050.png}
-            \bigbreak \noindent 
-            Typical access time:
-            \begin{itemize}
-                register: 0.25-0.5 nsec
-                cache: 0.5- 25 nsec
-                memory: 80-250 nsec
-                mag disk: 5-10 msec
-                tape: 100 sec
-            \end{itemize}
-        \item \textbf{More characteristics of storage hierarchy }: 
-            \bigbreak \noindent 
-            \fig{.6}{./figures/1049.png}
-        \item \textbf{DMA (Direct Memory Access) }: Used for high-speed I/O devices able to transmit information at close to memory speeds. 
-            \bigbreak \noindent 
-            Device controller transfers blocks of data from buffer storage directly to main memory without CPU intervention. Only one interrupt is generated per block, rather than one interrupt per byte.
-        \item \textbf{Dual Mode Operation}: Sharing system resources requires operating system to ensure that an incorrect program cannot cause other programs to execute incorrectly. Without this hardware support, OS can have big shortcomings.
-            \bigbreak \noindent 
-            Provide hardware support to differentiate between at least two modes of operations.
-            \begin{itemize}
-                \item User mode – execution done on behalf of a user.
-                \item Monitor mode (also kernel mode or system mode) – execution done on behalf of operating system
-            \end{itemize}
-        \item \textbf{Dual Mode Operation (cont.) }: 
-            Mode bit added to computer hardware to indicate the current mode: monitor (0) or user (1). When an interrupt/system call occurs, hardware switches to monitor mode. Privileged instructions can be issued only in monitor mode
-            \bigbreak \noindent 
-            \fig{.6}{./figures/1051.png}
-        \item \textbf{I/O protection }: All I/O instructions are privileged instructions
-            \bigbreak \noindent 
-            Must ensure that a user program could never gain control of the computer in monitor mode --- Example: a user program that, as part of its execution, stores a new address in the interrupt vector
-        \item \textbf{Memory protection }: Must provide memory protection at least for the interrupt vector and the interrupt service routines. 
-            \bigbreak \noindent 
-            In order to have memory protection, add two registers that determine the range of legal addresses a program may access:
-            \begin{itemize}
-                \item Base register – holds the smallest legal physical memory address. 
-                \item Limit register – contains the size of the range 
-            \end{itemize}
-            Memory outside the defined range is protected. Loading base \& limit registers are privileged instructions 
-            \bigbreak \noindent 
-            \fig{.6}{./figures/1052.png}
-        \item \textbf{CPU protection}: Timer – interrupts computer after specified period to ensure operating system maintains control. 
-            \bigbreak \noindent 
-            Timer is decremented every clock tick. When timer reaches the value 0, an interrupt occurs. Timer commonly used to implement time sharing. Timer also used to compute the current time. Load-timer is a privileged instruction
-        \item \textbf{System components}: 
-            \begin{itemize}
-                \item Process	Management		
-                \item Main	Memory	Management	
-                \item Secondary	Storage	Management	
-                \item File	Management	
-                \item I/O	System	Management	
-                \item Networking	
-                \item Protection	and	Security
-            \end{itemize}
-        \item \textbf{Process	Management	}: 
-            A	process	is	a	program	in	execution.			A	process	needs	certain	resources,	including	CPU	time,	memory,	files,	and	I/O	devices,	to	accomplish	its	task.	
-            \bigbreak \noindent 
-            The	operating	system	is	responsible	for	the	following	activities	in	connection	with	process	management.	
-            \begin{itemize}
-                \item Process	creation	and	deletion.	
-                \item process	suspension	and	resumption.	
-                \item Provision	of	mechanisms	for:	
+                \item \textbf{Process management}: The kernel implements the abstraction of a process. The scheduler decides which process executes next.
+                \item \textbf{Memory management}: The kernel provides virtual memory.
                     \begin{itemize}
-                        \item process	synchronization	
-                        \item process	communication	
+                        \item Creates page tables
+                        \item Maps virtual addresses to physical memory
+                        \item Enforces protection (user vs kernel pages)
+                        \item Handles page faults
+                        \item Manages swapping (if enabled)
+                    \end{itemize}
+                    Without the kernel, processes would compete unsafely for RAM.
+                \item \textbf{System calls}: The kernel defines the system call interface.
+                \item \textbf{File system management}:
+                    \begin{itemize}
+                        \item Implements file system structures
+                        \item Manages inodes and directories
+                        \item Controls disk access
+                        \item Maintains buffer caches
+                    \end{itemize}
+                    Files are abstractions provided by the kernel.
+                \item \textbf{Device drivers}:  Hardware devices are controlled via drivers, which typically run in kernel space.
+                \item \textbf{Interrupt handling}: Hardware devices signal events via interrupts. The kernel
+                    \begin{itemize}
+                        \item Receives the interrupt
+                        \item Executes an interrupt handler
+                        \item Schedules further work if necessary
                     \end{itemize}
             \end{itemize}
-            A	process	has	many	threads	of	execution	in	modern	systems
-        \item \textbf{Main-Memory	Management}: Main	memory	is	a	volatile	storage	device.		It	loses	its	contents	in	the	case	of	system	failure. 
-            \bigbreak \noindent 
-            The	operating	system	is	responsible	for	the	following	activities	in	connections	with	memory	management:
+        \item \textbf{User space and kernel space}: 
             \begin{itemize}
-                \item Keep	track	of	which	parts	of	memory	are	currently	being	used	and	by	whom.	
-                \item Decide	which	processes	to	load	when	memory	space	becomes	available.	
-                \item Allocate	and	deallocate	memory	space	as	needed	
+                \textbf{Kernel space}: Kernel space is the privileged execution domain in which the operating system kernel runs.
+                \begin{itemize}
+                    \item Full access to physical memory
+                    \item Direct access to CPU control registers
+                    \item Ability to execute privileged instructions
+                    \item Unrestricted access to hardware devices
+                \end{itemize}
+                \item \textbf{User space}: User space is the unprivileged execution domain where application programs run. User processes
+                    \begin{itemize}
+                        \item Cannot directly access hardware
+                        \item Cannot execute privileged CPU instructions
+                        \item Cannot access kernel memory
+                        \item Are isolated from other processes
+                    \end{itemize}
+                    They run in a restricted CPU mode. If a user process crashes, the OS can safely terminate it without affecting the rest of the system. U
+                    \bigbreak \noindent 
+                    \textbf{Note:} User programs must request kernel services via system calls.
+                    \begin{itemize}
+                        \item User code executes a special instruction (syscall, int 0x80, etc.)
+                        \item CPU switches to kernel mode
+                        \item Kernel validates arguments
+                        \item Kernel performs operation
+                        \item CPU returns to user mode
+                    \end{itemize}
+                    This is called a controlled privilege escalation. Without separation, any application could:
+                    \begin{itemize}
+                        \item Overwrite kernel memory
+                        \item Access other processes’ memory
+                        \item Directly manipulate hardware
+                        \item This would destroy system integrity.
+                    \end{itemize}
             \end{itemize}
-        \item \textbf{File	Management}: A	file	is	a	collection	of	related	information	defined	by	its	creator.		Commonly,	files	represent	programs	(both	source	and	object	forms)	and	data.
-            \bigbreak \noindent 
-            The	operating	system	is	responsible	for	the	following	activities	in	connections	with	file	management:
+            At any instant, a CPU core is in one of two modes:
             \begin{itemize}
-                \item File	creation	and	deletion.	
-                \item Directory	creation	and	deletion.	
-                \item Support	of	primitives	for	manipulating	files	and	directories.	
-                \item Mapping	files	onto	secondary	storage.	
-                \item File	backup	on	stable	(nonvolatile)	storage	media.	
+                \item \textbf{User mode}:
+                \item \textbf{Kernel mode}:
             \end{itemize}
-        \item \textbf{Secondary-Storage	Management}: Since	main	memory	(primary	storage)	is	volatile	and	too	small	to	accommodate	all	data	and	programs	permanently,	the	computer	system	must	provide	secondary	storage	to	back	up	main	memory.	
+            The kernel runs only when the processor is in kernel mode. When the processor is executing user code, the kernel is not actively executing instructions - but it still “exists” in memory and retains control authority.
+        \item \textbf{Traps}: In operating systems theory, a trap is a controlled transfer of execution from user mode to kernel mode caused by an instruction or an exceptional condition. It is a synchronous control transfer initiated by the currently executing instruction stream. Traps are fundamental to protection, system calls, and fault handling.
+            \bigbreak \noindent 
+            Formally, A trap is a processor exception that transfers control to a predefined handler in the kernel, triggered by the current instruction.
+            \bigbreak \noindent 
+            Traps serve three primary purposes:
+            \begin{enumerate}
+                \item System calls
+                \item Fault handling
+                \item Debugging support
+            \end{enumerate}
+            Without traps, user programs could not safely request privileged services.
+        \item \textbf{OS Structures}: An operating system provides the environment within which programs are executed. We view an operating systems from several vantage points:
+            \begin{itemize}
+                \item One view focuses on the services that the system provides.
+                \item Another on the interface that it makes available to users and programmers.
+                \item A third on its components and their interconnections.
+            \end{itemize}
+        \item \textbf{OS services}: An operating systems provides an environment for the execution of programs. Makes certain services available to programs and to the users of those programs. These services differ from one operating system to another, but we can identify common classes.
+            \begin{itemize}
+                \item \textbf{User interface}: Almost all operating systems have a UI. Most commonly in the form of a GUI. In the GUI the interface is a window system with a mouse that serves as a pointing device to direct I/O, choose from menus, and make selections and a keyboard to enter text. Another option is a CLI, which uses text commands and a method for entering them (say, a keyboard). Some systems provide multiple of these variations.
+                \item \textbf{Program execution}: The system must be able to load a program into memory and run the program. The program must be able to end its execution, either normally or abnormally
+                \item \textbf{I/O operations}: A running program may require I/O, which may involve a file or an I/O device. For specific devices, special functions may be desired like reading from a network interface or writing to a file system. For efficiency and protection, users cannot control I/O devices directly, the operating system must provide a means to do I/O.
+                \item \textbf{File-system manipulation}: The file system is of particular interest. Programs need to read and write files and directories. They also need to create and delete them by name, search for a given file, and list file information. Finally, some operating systems include permissions management to allow or deny access to files or directories based on file ownership. Many operating systems provide a variety of file systems.
+                \item \textbf{Communications}: one process may need to exchange information with other processes. Such communication may occur between processes that are executing on the same computer or between processes that are executing on different computer systems tied together by a network. Communication may be implemented via shared memory, in which two or more processes read and write to a shared section of memory, or message passing, in which packets of information in predefined formats are moved between processes by the OS.
+                \item \textbf{Error detection}: The OS needs to be detecting and correcting errors constantly. Errors may occur in the CPU and memory hardware, in I/O devices, and in the user program. For each error type, the OS needs to take appropriate action. Sometimes, it may have no choice but to halt the system. Other times, it may terminate the error-causing process or return an error code to a process for the process to detect and possibly correct.
+                \item \textbf{Resource allocation}: When there are multiple processes running at the same time, resources must be allocated to each of them. The OS manages many types of resources. Some (CPU cycles, main memory, file storage) may have special allocation code, whereas others (such as I/O devices) may have much more general request and release code. For instance, in determining how best to use the CPU, operating systems have CPU-scheduling routines that take into account the speed of the CPU, the process that must be executed, the number of processing cores, and other factors.
+                \item \textbf{Logging}: We want to keep track of which programs use how much and what kinds of computer resources. May be used for accounting (so the user can be billed) or simply for usage statistics.
+                \item \textbf{Protection and security}: The owners of information stored in a multiuser or networked computer system may want to control use of that information. When several Processes execute concurrently, it should not be possible for one process to interfere with the others or with the operating system itself. Security of the system from outsiders is also important. It starts with user authentication via a password, and extends to defending external I/O devices, including network adapters, from invalid access attempts and recording all such connections.
+            \end{itemize}
+        \item \textbf{Interfaces}:
+            \begin{itemize}
+                \item \textbf{CLI}: Most OS’s treat the CLI as a special program that is running when a process is initiated or when a user first logs on (on interactive systems). On systems with multiple CLI’s to choose from, the interpreters are known as shells. The main function of the command interpreter is to get and execute the next user-specified command.
+                    \bigbreak \noindent 
+                    The CLI can be implemented in two general ways.
+                    \begin{enumerate}
+                        \item The command interpreter itself contains the code to execute the command. For example, the command to delete a file may cause the command interpreter to jump to a section of its code that sets up the parameters and makes the appropriate system calls. In this case, the number of commands that the interpreter offers determines the size of the interpreter, since each command requires its own implementing code.
+                        \item Another approach – used by UNIX (among other OS’s) – implements most commands through system programs. In this case, the CLI does not understand the command, it mearly uses the command to identify the file to be loaded into memory and executed.
+                    \end{enumerate}
+                \item \textbf{GUI}:  A user friendly graphical user interface. Rather than entering commands directly via a CLI, users employ a mouse based window and menu system.
+            \end{itemize}
+        \item \textbf{System calls}: Provides an interface to the services made available by an OS. These calls are generally available as functions written in C and C++. Some low-level tasks may have to be written using assembly instructions.
+        \item \textbf{APIs}: Application developers typically write programs that rely on an application programming interface (API). An API defines the set of functions, types, and constants that are available to a programmer, along with the required parameters, return values, and semantic guarantees associated with their use.
+            \bigbreak \noindent 
+            An API is a specification rather than an implementation. In many cases, an API is made available to programmers through a library, which provides the concrete implementation of the API’s functions.
+            \bigbreak \noindent 
+            A well-known example of an operating system API is the Windows API, which provides applications with access to operating system services.
+            \bigbreak \noindent 
+            In the context of operating systems, API functions often act as wrappers around lower-level system calls, performing tasks such as parameter validation and setup before transferring control to the kernel. For example, the Windows function \texttt{CreateProcess()} ultimately invokes the internal system call \texttt{NTCreateProcess()}.
+            \bigbreak \noindent 
+            On UNIX and Linux systems, system calls are commonly accessed through the C API provided by the standard C library, libc, which exposes user-level functions that invoke the corresponding kernel services.
+        \item \textbf{System call interface}:  An important factor in handling system calls is the run-time enviroment (RTE) – the full suite of software needed to execute applications written in a given programming language.
+            \bigbreak \noindent 
+            The RTE provides a system call interface that serves as the link to system calls made available by the OS. The system call interface intercepts function calls in the API and invokes the necessary system calls within the OS. A number is typically associated with each system call. The system-call interface maintains a table indexed according to these numbers. The system-call interface invokes the intended system call in the OS kernel and returns the status of the system call.
+            \bigbreak \noindent 
+            \textbf{Note:} Most of the details of the OS-system interface are hidden from the programmer by the API and are managed by the RTE.
+            \bigbreak \noindent 
+            \fig{1}{./figures/1053.png}
+        \item \textbf{Types of syscalls}: 
+            \begin{itemize}
+                \item \textbf{Process control}: 
+                    \begin{itemize}
+                        \item create process, terminate process
+                        \item load, execute
+                        \item get process attributes, set process attributes
+                        \item wait event, signal event
+                        \item allocate and free memory
+                \end{itemize}
+                \item \textbf{File management}: 
+                    \begin{itemize}
+                        \item create file, delete file
+                        \item open, close
+                        \item read, write, reposition get file attributes, set file attributes
+                    \end{itemize}
+                \item \textbf{Device management}: 
+                    \begin{itemize}
+                        \item request device, release device
+                        \item read, write, reposition
+                        \item get device attributes, set device attributes
+                        \item logically attach or detach devices
+                    \end{itemize}
+                \item \textbf{Information maintenance}: 
+                    \begin{itemize}
+                        \item get time or date, set time or date
+                        \item get system data, set system data
+                        \item get process, file, or device attributes
+                        \item set process, file, or device attributes
+                    \end{itemize}
+                \item \textbf{Communications}: 
+                    \begin{itemize}
+                        \item create, delete communication connection
+                        \item send, receive messages
+                        \item transfer status information
+                        \item attach or detach remote devices
+                    \end{itemize}
+                \item \textbf{Protection}: 
+                    \begin{itemize}
+                        \item get file permissions
+                        \item set file permissions
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Process control}: A running program needs to be able to halt its execution normally (end()) or abnormally (abort()).
+            \bigbreak \noindent 
+            If a system call is made to terminate the currently running program abnormally, or if the program runs into a problem and causes an error trap, a dump of memory is sometimes taken and an error message generated. The dump is written to a special log file on disk. This may be examined by the debugger.
+            \bigbreak \noindent 
+            If the program discovers an error in its input and wants to terminate abnormally, it may also want to define an error level. More severe errors can be indicated by a higher error level. It is then possible to combine normal and abnormal termination by defining a normal termination as error level 0.
+            \bigbreak \noindent 
+            A process executing one program may want to load() or execute() another program. An interesting question is related to where to return control when the loaded program terminates. This question is related to whether the existing program is lost, saved, or allowed to continue execution concurrently with the new program. If control returns to the existing program when the new program terminates, we must save the memory image of the existing program; thus, we have effectively created a mechanism for one program to call another program. If both programs continue concurrently, we have created a new process to be multiprogrammed. Often, there is a system call specifically for this purpose. (create\_process).
+            \bigbreak \noindent 
+            If we create a new process, or set of processes, we should be able to control its execution.
+            \bigbreak \noindent 
+            This control requires the ability to determine and reset the attributes of a process, including its priority, its max allowable execution time, and so on. (\texttt{get\_process\_attributes()} and \texttt{set\_process\_attributes()}).
+            \bigbreak \noindent 
+            We may also want to terminate a process that we created (\texttt{terminate\_process()}).
+            \bigbreak \noindent 
+            We may need to wait for a process to finish their execution. We may want to wait for a certain amount of time to pass (\texttt{wait\_time()})
+            \bigbreak \noindent 
+            More probably, we will want to wait for a specific event to occur (wait\_event()). The process should then signal when that event has occurred (\texttt{signal\_event()}).
+            \bigbreak \noindent 
+            Often, two or more processes share data. To ensure integrity of the data, operating systems provide a system call allowing a process to lock shared data. Then, no other process can access the data until the lock is released. Typically, such system calls include \texttt{acquire\_lock()} and \texttt{release\_lock()}.
+        \item \textbf{File management}: We first need to be able to create() and delete() files. Either system call requires the name of the file and perhaps some of the file’s attributes. Once the file is created, we need to open() it and to use it. We may also read(), write(), or reposition() (rewind or skip to the end of the file, for example). Finally, we need to close() the file.
+            \bigbreak \noindent 
+            We may need these same sets of operations for directories if we have a directory structure for organizing files in the file system. 
+            \bigbreak \noindent 
+            In addition, for either files or directories, we need to be able to determine the values of various attributes and perhaps to set them if necessary. File attributes include the file name, file type, protection codes, accounting information, and so on. At least two system calls, get\_file\_attributes() and set\_file\_attributes(), are required for this function. Some operating systems provide many more calls such as calls for file move() and copy()
+        \item \textbf{Device management}: A process may need several resources to execute – main memory, disk drives, access to files, and so on. If the resources are available, they can be granted and control can be returned to the user process. Otherwise, the process will have to wait until sufficient resources are available. The various resources controlled by the operating system can be thought of as devices. Some of these are physical devices (disk drives for example). Others are abstract or virtual devices (files for example).
+            \bigbreak \noindent 
+            A system with multiple users may require us to first request() a device, to ensure the exclusive use of it. After we are finished with the device, we release() it
+            \bigbreak \noindent 
+            Other operating systems allow unmanaged access to devices. The hazard then is the potential for device contention and perhaps deadlock. Once the device has been requested (and allocated to us), we can read(), write(), and possibly reposition() the device, just as we can with files.
+            \bigbreak \noindent 
+            The similarity to I/O devices and files is so great that many operating systems, including UNIX, merge the two into a combined file-device structure. In this case, a set of system calls is used on both files and devices. Sometimes, I/O devices are identified by special file names, directory placement, or file attributes.
+        \item \textbf{Information Maintenance}: Many system calls exist simply for the purpose of transferring information between the user program and the OS. Most systems have a system call to return the current time() and date().
+            \bigbreak \noindent 
+            Other system calls may return information about the system, such as the version number of the operating system, the amount of free memory, etc. Another set of system calls is helpful in debugging a program. Many systems provide system calls to dump() memory, useful for debugging.
+            \bigbreak \noindent 
+            The programs trace, which is available on Linux, lists each system call as it is executed
+            \bigbreak \noindent 
+            Even microprocessors provide a CPU mode, known as a single step, in which a trap is executed by the CPU after every instruction. This trap is usually caught by the debugger.
+            \bigbreak \noindent 
+            The OS keeps information about all processes, and system calls are used to access this information. Generally, calls are also used to get and set the process information (get\_process\_attributes() and set\_process\_attributes()).
+        \item \textbf{Communication}: Two common models of interprocess communication
+            \begin{enumerate}
+                \item \textbf{message-passing model}: In the message-passing model the communicating processes exchange messages with one another to transfer information. Messages shared either directly or indirectly through a common mailbox. Before communication, a connection must be opened. The name of the other communicator must be known. Each computer network has a host name by which it is commonly known. A host also has a network identifier, such as an IP address.
+                    \bigbreak \noindent 
+                    Each process has a process name, and this name is translated into an identifier by which the OS can refer to the process. The get\_hostid() and get\_processid() system calls can do this translation. The identifiers are then passed to the general purpose open() and close() calls provided by the file system or open\_connection() and close\_connection() system calls, depending on the systems model of communication.
+                    \bigbreak \noindent 
+                    The recipient process usually must give its permission for communication to take place with an accept\_connection() call. Most processes that will be receiving connections are special-purpose daemons. They execute a wait\_for\_connection() call and are awakened when a connection is made. The source of the communication, the client, and the receiving daemon, the server, then exchange messages by using read\_message() and write\_message() system calls. The close\_connection() call terminates the communication.
+                \item \textbf{shared-memory model}: In the shared-memory model, processes use shared\_memory\_create() and shared\_memory\_attach() system calls to create and gain access to regions of memory owned by other processes.
+                    \bigbreak \noindent 
+                    Normally, the operating system tries to prevent one process from accessing another process’s memory. Shared memory requires that two or more processes agree to remove this restriction. They can exchange information by reading and writing data in the shared areas. The form of data is determined by the processes and is not under the operating system’s control. The processes are also responsible for ensuring that they are not writing to the same location simultaneously.
+            \end{enumerate}
+            It is common for both the message-passing, and shared-memory model to be implemented by the operating system.
+            \bigbreak \noindent 
+            Message passing is useful for exchanging smaller amounts of data, because no conflicts need be avoided. It is also easier to implement
+            \bigbreak \noindent 
+            Shared memory allows maximum speed and convenience of communication, since it can be done at memory transfer speeds
+        \item \textbf{Protection}: Protection provides a mechanism for controlling access to the resources provided by a computer system. Historically only a concern with multiprogrammed systems with several users.
+            \bigbreak \noindent 
+            With the advent of networking and the Internet, all computer systems, from servers to mobile devices must be concerned with protection.
+            \bigbreak \noindent 
+            set\_permission() and get\_permission() manipulate the permission settings of resources such as files and disks. The allow\_user() and deny\_user() system calls specify whether particular users can or cannot be allowed access to certain resources.
+        \item \textbf{Logical computer hierarchy}: At the lowest level is hardware, next is the operating system, then the system services, and finally the application programs.
+        \item \textbf{System services}: System services, also known as system utilities, provide a convenient environment for program development and execution. Some are simply user interfaces to system calls. Others are considerably more complex.
+            \bigbreak \noindent 
+            Divided into these categories:
+            \begin{itemize}
+                \item \textbf{File management}: These programs create, delete, copy, rename, print, list and generally access and manipulate files and directories.
+                \item \textbf{Status information}: Some programs simply ask the system for the date,time, amount of available memory or disk space, number of users. Others are more complex, providing detailed performance, logging, and debugging information. Typically, these programs format and print the output to the terminal or other output devices or files or display it in a window of the GUI.
+                \item \textbf{File modification}: Several text editors may be available to create and modify the content of files stored on disk or other storage devices. May also be special commands to search contents of files or perform transformations of the text.
+                \item \textbf{Programming-language support}: Compilers, assemblers, debuggers, and interpreters for common programming languages are often provided with the operating system.
+                \item \textbf{Program loading and execution}: Once a program is assembled or compiled, it must be loaded into memory to be executed. The system may provide absolute loaders, relocatable loaders, linkage editors, and overlay loaders. Debugging systems for either higher-level languages or machine languages are needed as well.
+                \item \textbf{Communications}: These programs provide the mechanism for creating virtual connections among processes, users, and computer systems. They allow users to send messages to one another’s screens, to browse web pages, to send e-mail messages, to log in remotely or to transfer files from one machine to another.
+                \item \textbf{Background services}: All general-purpose systems have methods for launching certain system-program processes at boot time. Some of these processes terminate after completing their tasks, while others continue to run until the system is halted. Constantly running system-program processes are known as services, subsystems, or daemons.
+            \end{itemize}
+            The view of the operating system seen by most users is defined by the application and system programs, rather than the actual system calls.
+        \item \textbf{Linkers and Loaders}: Usually, a program resides on disk as a binary executable file. To run on the CPU, the program must be brought into memory and placed in the context of a file.
+            \bigbreak \noindent 
+            Source files are compiled into object files that are designed to be loaded into any physical memory location, a format known as an \textbf{relocatable object file}.
+            \bigbreak \noindent 
+            The linker combines these relocatable object files into a single binary executable file. During the linking phase, other object files or libraries may be included as well, such as the standard C or math library
+            \bigbreak \noindent 
+            A loader is used to load the binary executable file into memory, where it is eligible to run on a CPU core.
+            \bigbreak \noindent 
+            When a program is executed, the shell first creates a new process to run the program using the fork() system call. The shell then invokes the loader with the exec() system call, passing exec() then name of the executable file. The loader then loads the specified program into memory using the address space of the newly created process.
+            \bigbreak \noindent 
+            Thus far, we assume all libraries are linked into the executable file and loaded into memory. Most systems however, allow a program to dynamically link libraries as the program is loaded. Windows, for instance, supports dynamically linked libraries (DLLs). DLLs benefit is that it avoids linking and loading libraries that may end up not being used into an executable file. Instead, the library is conditionally linked and is loaded if it is required during program run time.
+            \bigbreak \noindent 
+            Object files and executable files typically have standard formats that include the compiled machine code and a symbol table containing metadata about functions and variables that are referenced in the program. For UNIX and LINUX systems, this format is known as ELF (Executable and Linkable Format). One piece of information in the ELF file for executable files is the programs entry point – the first instruction to be executed when the program runs
+        \item \textbf{Applications are Operating-System Specific}: Fundamentally, applications compiled on one operating system are not executable on other operating systems.
+            \bigbreak \noindent 
+            Each OS provides a unique set of system calls, and system calls are part of the set of services provided by the operating systems for use by applications.
+            \bigbreak \noindent 
+            An application can be made available to run on multiple operating systems in one of three ways:
+            \begin{enumerate}
+                \item The application is written in an interpreted language that has an interpreter available for multiple operating systems. It reads each line of the program, executes equivalent instructions on the native instruction set, and calls native operating system calls. The interpreter provides only a subset of each operating system’s features possibly limiting the feature sets of the applications.
+                \item The application was written in a language that includes a virtual machine containing the running application. The VM is part of the language’s full RTE. Java for example.
+                \item The application developer can use a standard language or API in which the compiler generates binaries in a machine and operating-system specific language. The application must be ported to each operating system on which it will run.
+            \end{enumerate}
+            In theory, these three approaches seemingly provide simple solutions for developing applications that can run across different operating systems. However, the general lack of mobility has several causes.
+            \bigbreak \noindent 
+            At the application level, the libraries provided with the operating system contain APIs to provide features like GUI interfaces, and an application designed to call one set of APIs will not work on an operating system that does not provide those APIs.
+            \bigbreak \noindent 
+            Other challenges exist at lower levels in the system.
+            \begin{itemize}
+                \item Each OS has a binary format for applications that dictates the layout of the header, instructions, and variables. Those components need to be at certain locations in specified structures within an executable file so the OS can open the file and load the application for execution.
+                \item CPUs have varying instruction sets, and only applications containing the appropriate instructions can execute correctly.
+                \item Operating systems provide system calls that allow applications to request various activities, such as creating files and opening network connections. Those system calls vary among operating systems in many respects.
+            \end{itemize}
+        \item \textbf{Application binary interface (ABI)}: An application binary interface (ABI) is used to define how different components of binary code can interface for a given operating system on a given architecture.
+            \bigbreak \noindent 
+            An ABI specifies low-level details, including address width, methods of passing parameters to system calls, the organization of the run-time stack, the binary format of system libraries, and the size of data types, to name a few. Typically, an ABI is specified for a given architecture. Thus, an ABI is the architecture-level equivalent of an API.
+            \bigbreak \noindent 
+            If a binary executable file has been compiled and linked according to a particular ABI, it should be able to run on different systems that support that ABI.
+            \bigbreak \noindent 
+            Because a particular ABI is defined for a certain operating system running on a given architecture, ABIs do little to provide cross-platform compatibility
+            \bigbreak \noindent 
+            In summary, unless an interpreter, RTE, or binary executable file is written for and compiled on a specific operating system on a specific CPU type, the application will fail to run.
+        \item \textbf{OS design goals}: First problem in designing a system is to define goals and specifications. At the highest level, the design of the system will be affected by the choice of hardware and the type of the system: traditional desktop/laptop, mobile, distributed
+            \bigbreak \noindent 
+            The requirements can be divided into two basic groups:
+            \begin{enumerate}
+                \item \textbf{User goals}: 
+                \item \textbf{System goals}: 
+            \end{enumerate}
+            \textbf{Important principle}: separation of policy from mechanism. Mechanism determines \textbf{how} to do something, policy determines \textbf{what} will be done. The separation of mechanism and policy are important for flexibility, policies are likely to change across places or over time. In the worst case, each change in the policy would result in a change in the underlying mechanism.
+            \bigbreak \noindent 
+            Once an operating system is designed, it must be implemented. Early operating systems were written in Assembly languages. Now, most are written in higher-level languages such as C or C++, with small amounts of the system written in assembly language.
+            \bigbreak \noindent 
+            More than one higher-level language is often used. The lowest levels of the kernel might be written in assembly language and C. Higher-level routines might be written in C and C++, and system libraries might be written in C++ or even higher level languages.
+        \item \textbf{OS structure}: A system as large and complex as a modern operating system must be engineered carefully if it is to function properly and be modified easily
+            \bigbreak \noindent 
+            Partition a task into smaller components, or modules, rather than have one single system. Each module should be a well-defined portion of the system.
+        \item \textbf{Monolithic Structure}: The simplest structure is no structure at all. Place all of the functionality of the kernel into a single, static binary file that runs in a single address space. 
+            \bigbreak \noindent 
+            The original UNIX operating system – consists of two separable parts: the kernel and the system programs. The kernel is further separated into a series of interfaces and device drivers
+            \bigbreak \noindent 
+            The kernel provides the file system, CPU scheduling, memory management, and other operating system functions through system calls. That is an enormous amount of functionality to be combined into one single address space.
+            \bigbreak \noindent 
+            The Linux OS is based on UNIX and is structured similarly. Applications typically use the glibc standard C library when communicating with the system call interface to the kernel
+            \bigbreak \noindent 
+            The Linux kernel is monolithic in that it runs entirely in kernel mode in a single address space, but it does have a modular design that allows the kernel to be modified during run time. The monolithic structure does well in speed and efficiency.
+        \item \textbf{Layered approach}: The monolithic structure is known as a tightly couped system because changes to one part of the system can have wide-ranging effects on other parts. We could design a loosely coupled system. Such a system is divided into seperate, smaller components that have specific and limited functionality. All these components together comprise the kernel. The advantage is that changes in one component affect only that component.
+            \bigbreak \noindent 
+            A system can be made modular in many ways. One method is the layered approach, in which the OS is broken into a number of layers (levels). The bottom layer (layer 0) is the hardware; the highest layer (layer) $N$ is the user interface.
+            \bigbreak \noindent 
+            An operating-system layer is an implementation of an abstract object made up of data and the operations that can manipulate those data. A typical operating system layer-say, layer M-consists of data structures and a set of functions that can be invoked by higher-level layers. Layer $M$, in turn, can invoke operations on lower-level layers
+            \bigbreak \noindent 
+            Main advantage of the layered approach is simplicity of construction and debugging. The layers are selected so that each uses functions and services of only lower-level layers. If an error is found on a layer, the error must be on that layer. Because the layers below are already debugged.
+            \bigbreak \noindent 
+            Layered systems have been successfully used in computer networks (such as TPC/IP) and web applications. But few operating systems use a pure layered approach.
+            \bigbreak \noindent 
+            High overhead and hard to define functionality of each layer.
+        \item \textbf{Micro-kernels}: This method structures the operating system by removing all nonessential components from the kernel and implementing them as user-level programs that reside in separate address space. The result is a smaller kernel. There is little consensus regarding which services should remain in the kernel and which should be implemented in user space
+            \bigbreak \noindent 
+            Typically, microkernels provide minimal process and memory management, in addition to a communications facility. The main function of the micro kernel is to provide communication between the client program and the various services that are also running in user space. Communication is provided through message passing.
+            \bigbreak \noindent 
+            For example, if the client program wants to access a file, it must interact with the file server. The client program and file server never interact directly. Rather, they communicate indirectly by exchanging messages with the microkernel.
+            \bigbreak \noindent 
+            This concept makes extending the OS easier. All new services are added to the user space and do not require modifying the kernel.
+            \bigbreak \noindent 
+            \textit{Darwin} is the kernel for the macOS and iOS operating system. It is a microkernel. Darwin, in fact, consists of two kernels, one of which is the Mach microkernel.
+        \item \textbf{Modules}: Perhaps the best current methodology for operating system design involves using loadable kernel modules (LKMs). Here, the kernel has a set of core components and can link in additional services via modules, either at boot time or during run time. This type of design is common in modern implementations of UNIX, such as Linux, macOS, and Solaris, as well as Windows.
+            \bigbreak \noindent 
+            The kernel provides core services, while other services are implemented dynamically, as the kernel is running. Linking services dynamically is perferable to adding new features directly to the kernel, which would require recompilation of the kernel. For example, we might build CPU scheduling and memory management algorithms directly into the kernel and then add support for different file systems by way of loadable modules.
+            \bigbreak \noindent 
+            The overall result resembles a layered system in that each kernel section has defined, protected interfaces; but it is more flexible than a layered system, because any module can call any other module.
+            \bigbreak \noindent 
+            Also similar to the microkernel approach in that the primary module has only core functions and knowledge of how to load and communicate with other modules.
+            \bigbreak \noindent 
+            \textbf{Note:} Linux uses loadable kernel modules.
+        \item \textbf{Hybrid systems}: Very few operating systems adopt a single, strictly defined structure. Instead they combine different structures. Linux is monolithic. However it is also modular.
+            \bigbreak \noindent 
+            Windows is largely monolithic, but it retains some behavior typical of microkernel systems, including providing support for seperate subsystems that run as user-mode processes.
+        \item \textbf{Building and Booting an Operating System}: It is possible to design, code, and implement an operating system specifically for one specific machine configuration. More commonly, operating systems are designed to run on any of a class of machines with a variety of peripheral configurations.
+        \item \textbf{Operating System Generation}: If you are generating (or building) an operating system from scratch, you must follow these steps:
+            \begin{enumerate}
+                \item Write the operating system source code (or obtain previously written source code).
+                \item Configure the operating system for the system on which it will run.
+                \item Compile the operating system.
+                \item Install the operating system.
+                \item Boot the computer and its new operating system
+            \end{enumerate}
+            Configuring the system involves specifying which features will be included. Typically, parameters describing how the system is configured is stored in a configuration file of some type. Once the file is created it can be used in several ways.
+            \begin{enumerate}
+                \item A system admin can use it to modify a copy of the operating system source code. Then the opearting system is completely compiled (system build). Data declarations, initializations, and constants, along with compilation, produce an output-object version of the operating system that is tailored to the system described in the configuration file.
+                \item The system description can lead to the selection of precompiled object modules from an existing library. These modules are linked together to form the generated operating system.
+                \item It is possible to construct a system that is completely modular. Here, selection occurs at execution time rather than at compile or link time. System generation involves simply settting the parameters that describe the system configuration.
+            \end{enumerate}
+            For embedded systems, it is not uncommon to adopt the first approach. Modern operating systems that support desktop and laptop computers as well as mobile devices have adopted the second approach. The OS is still generated for a specific hardware configuration but the use of techniques such as loadable kernel modules provides modular support for dynamic changes to the system.
+        \item \textbf{Building linux from scratch.}: 
+            \begin{enumerate}
+                \item Download the Linux source code.
+                \item Configure the kernel using make menuconfig. This generates the .config configuration file.
+                \item Compile the kernel using make. The make command compiles the kernel based on the configuration parameters in the .config file, producing the vmlinuz, which is the kernel image.
+                \item Compile the kernel modules using the make modules command. Module compilation depends on the configuration parameters specified in the .config file.
+                \item Use the command make modules\_install to install the kernel modules into vmlinuz.
+                \item Install the new kernel on the system using make install.
+            \end{enumerate}
+        \item \textbf{System Boot}: After an operating system is generated, it must be made available for use by the hardware. But how does the hardware know where the kernel is or how to load the kernel?
+            \bigbreak \noindent 
+            The process of starting a computer by loading the kernel is known as \textbf{booting the system}.
+            \begin{itemize}
+                \item A small piece of code known as the boot loader locates the kernel.
+                \item The kernel is loaded into memory and started.
+                \item The root file system is mounted.
+            \end{itemize}
+        \item \textbf{BIOS boot process}: When the computer is powered on, a small boot loader located in nonvolatile firmware known as BIOS is run. This initial boot loader usually does nothing more than load a second bootloader, which is located at a fixed disk location called the boot block.
+            \bigbreak \noindent 
+            The program in the boot block may be sophisticated enough to load the entire operating system into memory and begin its execution. More typically, it is simple code (as it must fit in a single disk block) and knows only the address on disk and the length of the remainder of the boot loader.
+            \bigbreak \noindent 
+        \item \textbf{UEFI}: UEFI has several advantages over BIOS, including better support for 64-bit systems and larger disks. Perhaps the greatest advantage is that UEFI is a single, complete boot manager and therefore is faster than the multistage BIOS boot process.
+            \bigbreak \noindent 
+            Whether booting from BIOS or UEFI, the boot loader can perform a variety of tasks. In addition to loading the file containing the kernel program into memory, it also runs diagnostics to determine the state of the machine. If the diagnostics pass, the program can continue with the booting steps.
+            \bigbreak \noindent 
+            The bootloader can also initialize all aspects of the system, from CPU registers to device controllers and the contents of main memory. 
+            \bigbreak \noindent 
+            Sooner or later, it starts the operating system and mounts the root file system. At this point the system is said to be running.
+        \item \textbf{GRUB}: Grub is an open-source bootloader for Linux and UNIX systems. Boot parameters for the system are set in a GRUB configuration file, which is loaded at startup.
+            \bigbreak \noindent 
+            GRUB allows changes to be made at boot time, including modifying kernel parameters and even selecting among different kernels that can be booted. To save space and decrease boot time, the Linux kernel image is a compressed file that is extracted after it is loaded into memory.
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Reading a smaller compressed file from disk is faster than reading a large uncompressed file.
+                \item Decompression in RAM is very fast relative to disk access time.
+            \end{itemize}
+            \textbf{Note:} The file must always be read from storage before it can be placed into memory. “Loaded into memory” necessarily implies that it has been read. You can read the bytes of a compressed file exactly like any other file. However, you cannot directly interpret its original contents without decompressing it.
+            \bigbreak \noindent 
+            During the boot process the boot loader typically creates a temporary RAM file system, known as initramfs. Disk I/O is typically much slower than RAM operations and CPU decompression. This file system contains necessary drivers and kernel modules that must be installed to support the real root file system (which is not in main memory).
+            \bigbreak \noindent 
+            \textbf{Note:} A RAM file system is a file system whose storage medium is main memory (RAM) instead of persistent storage (SSD, HDD, etc.). It behaves like a normal file system from the user’s perspective, but all data resides in volatile memory.
+            \bigbreak \noindent 
+            Once the kernel has started and the necessary drivers are installed, the kernel switches the root file system from the temporary RAM location to the appropriate root file system. Finally linux creates the systemd process, the initial process of the system, and then starts other services.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                BOOT_IMAGE=/boot/vmlinuz-4.4.0-59-generic
+                root=UUID=5f2e2232...
+            \end{bashcode}
+            \bigbreak \noindent 
+            BOOT\_IMAGE is the name of the kernel image to be loaded into memory, and root specifies a unique identifier of the root file system.
+            \bigbreak \noindent 
+            initramfs exists to solve this fundamental constraint:
+            \bigbreak \noindent 
+            \begin{center}
+                You need drivers to mount the root filesystem.
+            \end{center}
+            But,
+            \begin{center}
+                Those drivers may live on the root filesystem 
+            \end{center}
+            \textbf{Note:} The temporary filesystem does not fetch drivers from the real root filesystem, the required drivers are already packaged inside the initramfs image before boot even begins.
+            \begin{itemize}
+                \item The bootloader loads:
+                    \begin{itemize}
+                        \item The kernel
+                        \item The initramfs image
+                    \end{itemize}
+                \item The kernel mounts initramfs as the temporary root.
+                \item The /init script runs.
+                \item It loads the included modules from RAM.
+                \item Once storage drivers are active, the real root filesystem can be mounted.
+            \end{itemize}
+        \item \textbf{Failure Analysis}: If a process fails, most operating systems write the error information to a log file.
+            \bigbreak \noindent 
+            The operating system can also take a core dump – a capture of memory of the process and store it in a file. (memory was referred to as the core in early days of computing). Running programs and core dumps can be probed by a debugger.
+            \bigbreak \noindent 
+            A failure in the kernel is called a crash. When a crash occurs, error information is saved to a log file, and the memory state is saved to a crash dump. Operating system debugging, and program debugging frequently use different tools and techniques due to the very different nature of these two tasks.
+            \bigbreak \noindent 
+            A kernel failure in the file-system code would make it unsafe for the kernel to try to save its state to a file on the file system before rebooting. A common technique is to save the kernel’s memory state to a section of disk set aside for this purpose that contains no file system. When the system reboots, a process runs to gather the data from that area and write it to a crash dump file within a file system for analysis.
+        \item \textbf{Performance Monitoring and Tuning}:  The operating system must have some means of computing and displaying measures of system behavior.
+            \bigbreak \noindent 
+            Tools may be characterized as providing either \textbf{per-process} or \textbf{system-wide observations.}
+            \bigbreak \noindent 
+            Tools may use one of two approaches – \textbf{counters or tracing}.
+        \item \textbf{Counters}: Operating systems keep track of system activity through a series of counters, such as the number of system calls made or the number of operations performed to a network device or disk.
+            \begin{itemize}
+                \item \textbf{Per-process}: 
+                    \begin{itemize}
+                        \item ps – reports information for a single process or selection of processes.
+                        \item top – reports real-time statistics for current processes.
+                    \end{itemize}
+                \item \textbf{System-wide}: 
+                    \begin{itemize}
+                        \item vmstat – reports memory usage statistics
+                        \item netstat – reports statistics for network interfaces
+                        \item iostat – reports I/O usage for disks
+                    \end{itemize}
+            \end{itemize}
+            Most counter-based tools on linux systems read statistics from the /proc pseudo file system.
+        \item \textbf{Pseudo filesystems}: A pseudo filesystem is a filesystem that does not store data on a physical block device. Instead, it presents kernel-managed data structures as if they were files and directories. It is a filesystem interface layered over in-memory or virtual kernel objects.
+        \item \textbf{Tracing}: Whereas counter-based tools simply inquire on the current value of certain statistics that are maintained by the kernel, tracing tools collect data for a specific event – such as the steps involved in a system-call invocation
+            \begin{itemize}
+                \item \textbf{Per-process}:
+                \begin{itemize}
+                    \item strace – traces syscalls invoked by a process
+                    \item gdb – a source-level debugger
+                \end{itemize}
+                \item \textbf{System-wide}:
+                    \begin{itemize}
+                        \item perf – a collection of linux performance tools
+                        \item tcpdump – collects network packets
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{BCC}: A toolkit for dynamic kernel tracing in Linux.
+        \item \textbf{ABI}: Hardware-level interface between two pieces of software. Can think of it as a common language that all software that abides by a given ABI speaks
+            \begin{itemize}
+                \item How to pass arguments to a function
+                \item How to pass a function’s return values
+                \item How to make system calls.
+            \end{itemize}
+        \item \textbf{ABI vs API}: API specifies what functionality exists, while the ABI specifies how the functionality interworks using shared hardware resources at the low-level.
+            \begin{itemize}
+                \item API is high-level and hardware independent.
+                \item  ABI is low-level and hardware dependent.
+            \end{itemize}
+            Programmers focus on APIs, while tool writers (e.g., compiler back-end developers) focus on ABIs. The C compiler enforces the ABI on your behalf.
+        \item \textbf{A good definition}: The ABI is a set of rules that compilers and linkers adhere to in order to compile your program so that it will work properly
+            \bigbreak \noindent 
+            ABIs cover multiple topics
+            \begin{itemize}
+                \item Arguably the biggest and most important part of an ABI is the \textbf{procedure call standard} sometimes known as the “calling convention”. Calling conventions standardize how functions are translated to assembly code.
+                \item ABIs also dictate how the names of exposed functions in libraries should be represented so that code can call those libaries and know what arguments should be passed. This is “name mangling”.
+                \item ABIs also dictate what type of data types can be used, how they must be aligned, and other low-level details.
+            \end{itemize}
+            An ABI defines low-level binary conventions, including:
+            \begin{itemize}
+                \item Calling conventions (register usage, stack layout)
+                \item System call interface
+                \item Object file format (ELF, etc.)
+                \item Symbol naming and linkage
+                \item Data type sizes and alignment
+                \item Exception handling conventions
+            \end{itemize}
+            It is therefore defined through a combination of:
+            \begin{itemize}
+                \item Formal specification documents
+                \item Compiler conventions
+                \item Operating system interfaces
+                \item Processor architecture manuals
+            \end{itemize}
+            It is the contract that ensures independently compiled binaries can interoperate. For each CPU architecture, there is typically a published ABI specification. For x86-64 Linux, the relevant document is: 
+            \begin{center}
+                \textbf{System V AMD64 ABI}
+            \end{center}
+            Compilers such as GCC implement the ABI by
+            \begin{itemize}
+                \item Emitting correct calling sequences
+                \item Generating compliant object files (e.g., ELF)
+                \item Respecting register and stack conventions
+            \end{itemize}
+            If a compiler deviates from the ABI, binaries will not link or execute correctly.
+        \item \textbf{The core of an ABI: Calling conventions}: The machine itself has no concept of “functions”. When you write a function in a high-level language like C, the compiler generates a line of assembly code like \_MyFunction1:. This is a \textit{label}, which will eventually get resolved into an address by the assembler. This label marks the “start” of your “function” in the assembly code. In high-level code When you “call” that function, what you’re really doing is causing the CPU to jump to the address of that label and continue executing there. In preperation for that jump, the compiler must do a bunch of important stuff. The calling convention is like a checklist that the compiler follows to do all this stuff.
+            \begin{enumerate}
+                \item First, the compiler inserts a little bit of assembly code to save the current address, so that when your “function” is done, the CPU can jump back to the right place and continue executing.
+                \item Next the compiler generates assembly code to pass the arguments.
+                    \begin{itemize}
+                        \item Some calling conventions dictate that arguments should be put on the stack (in a particular order of course).
+                        \item still other conventions dictate that a specific combination of stack and registers should be used.
+                    \end{itemize}
+                \item  If there was anything important in those registers before, those values are now overwritten and lost forever, so some calling conventions may dictate that the compiler should save some of those registers prior to putting the arguments in them.
+                \item Now the compiler inserts a jump instruction telling the CPU to go to that label it made previously (\_MyFunction1:). At this point, you can consider the CPU to be “in” your function.
+                \item At the end of the function, the compiler puts some assembly code that will make the CPU write the return value in the correct place. The calling convention will dictate whether the return value should be placed into a particular register (depending on its type), or the stack.
+                \item Now its time for clean-up. The calling convention will dictate where the compiler places the cleanup assembly code.
+                    \begin{itemize}
+                        \item Some conventions say that the caller must clean up the stack. This means that after the “function” is done and the CPU jumps back to where it was before, the very next code to be executed should be some very specific cleanup code.
+                        \item Other Conventions say that some particular parts of the cleanup code should be at the end of the “function” before the jump back.
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{Types of ABIs}: There are many different ABIs / calling conventions. Some main ones are:
+            \begin{itemize}
+                \item CDECL
+                \item STDCALL
+                \item FASTCALL
+                \item VECTORCALL
+                \item THISCALL
+            \end{itemize}
+        \item \textbf{Where to find the ABI}: ABIs are processor dependent. They are also operating system dependent. They are also possibly tool dependent.
+            \bigbreak \noindent 
+            Using 
+            \bigbreak \noindent 
+            \begin{bashcode}
+            readelf -h bin
+            \end{bashcode}
+            \bigbreak \noindent 
+            on an executable named \texttt{bin} reveals many facts about ELF files on your machine. For example, it might say
+            \bigbreak \noindent 
+            \begin{bashcode}
+                ELF Header:
+                Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+                Class:                             ELF64
+                Data:                              2's complement, little endian
+                Version:                           1 (current)
+                OS/ABI:                            UNIX - System V
+                ABI Version:                       0
+                Type:                              DYN (Position-Independent Executable file)
+                Machine:                           Advanced Micro Devices X86-64
+                Version:                           0x1
+                Entry point address:               0x1050
+                Start of program headers:          64 (bytes into file)
+                Start of section headers:          13760 (bytes into file)
+                Flags:                             0x0
+                Size of this header:               64 (bytes)
+                Size of program headers:           56 (bytes)
+                Number of program headers:         14
+                Size of section headers:           64 (bytes)
+                Number of section headers:         30
+                Section header string table index: 29
+            \end{bashcode}
+            \bigbreak \noindent 
+            So, we see the ABI is System V
+        \item \textbf{Linux modules}: When system programmers want to add a new functionality to the linux kernel, they are faced with an interesting dilemma: should they write the new code so that it will be compiled as a module, or should they statically link the new code to the kernel.
+            \bigbreak \noindent 
+            They tend to implement the code as a module, because they can be linked on demand. Nearly every higher-level component of the linux kernel– filesystems, device drivers, executable formats, network layers, etc. can be compiled as a module.
+            \bigbreak \noindent 
+            Some kernel code must be linked statically – it is either compiled with the kernel or not included at all. This typically happens when the component requires a modificiation to some data structure or function statically linked in the kernel.
+        \item \textbf{Static and Dynmaic Linking}: When you statically link a file into an executable, the contents of that file are included at link time.
+            \bigbreak \noindent 
+            when you link dynamically, a pointer to the file being linked in is included in the executable and the contents of said file are not included at link time. It’s only when you run the executable that these dynamically linked files are brought in and they’re only brought into the in-memory copy of the executable, not the one on disk. Its basically a method of deferred linking.
+            \bigbreak \noindent 
+            Statically linked files are ‘locked‘ to the executable at link time so they never change. A dynamically linked file referenced by an executable can change just by replacing the file on the disk.
+            \bigbreak \noindent 
+            Dynamic linking allows modules to be added to the kernel without having to recompile the entire kernel.
+        \item \textbf{Virtual memory}: Virtual memory is a memory management technique that provides an "idealized abstraction of the storage resources that are actually available on a given machine" which "creates the illusion to users of a very large (main) memory".
+            \bigbreak \noindent 
+            The operating system, using a combination of hardware and software, maps memory addresses used by a program, called virtual addresses, into physical addresses in computer memory.
+
+
+
+
+
+
+
+
+
+
+
+
 
     \end{itemize}
 

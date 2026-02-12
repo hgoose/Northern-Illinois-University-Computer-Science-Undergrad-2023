@@ -109,6 +109,78 @@
                     \bottomrule
                 \end{tabularx}
             \end{center}
+        \item \textbf{Rect}:
+            \begin{itemize}
+                \item \textbf{x}:  x-coordinate (top-left)
+                \item \textbf{y}:  y-coordinate (top-left)
+                \item \textbf{width}:  rectangle width
+                \item \textbf{height}:  rectangle height
+                \item \textbf{rx}:  x-axis corner radius (rounded corners)
+                \item \textbf{ry}:  y-axis corner radius
+                \item \textbf{fill}
+                \item \textbf{stroke}
+                \item \textbf{stroke-width}
+                \item \textbf{opacity}
+            \end{itemize}
+        \item \textbf{Circle}
+            \begin{itemize}
+                \item \textbf{cx}  center x-coordinate
+                \item \textbf{cy}  center y-coordinate
+                \item \textbf{r}  radius
+                \item \textbf{fill}
+                \item \textbf{stroke}
+                \item \textbf{stroke-width}
+            \end{itemize}
+        \item \textbf{Ellipse}
+            \begin{itemize}
+                \item \textbf{cx}  center x-coordinate
+                \item \textbf{cy}  center y-coordinate
+                \item \textbf{rx}  x-radius
+                \item \textbf{ry}  y-radius
+                \item \textbf{fill}
+                \item \textbf{stroke}
+                \item \textbf{stroke-width}
+            \end{itemize}
+        \item \textbf{Line}
+            \begin{itemize}
+                \item \textbf{x1, y1}:  start point
+                \item \textbf{x2, y2}:  end point
+                \item \textbf{stroke}: (required)
+                \item \textbf{stroke-width}:
+                \item \textbf{stroke-linecap} (butt, round, square)
+                \item \textbf{stroke-dasharray}:
+            \end{itemize}
+        \item \textbf{Polyline}
+            \begin{itemize}
+                \item \textbf{points}:  list of coordinate pairs "x1,y1 x2,y2 x3,y3 ..."
+                \item \textbf{fill}: (usually none)
+                \item \textbf{stroke:}
+                \item \textbf{stroke-width:}
+                \item \textbf{stroke-linejoin}:
+            \end{itemize}
+        \item \textbf{Polygon}
+            \begin{itemize}
+                \item \textbf{points}:  list of coordinate pairs "x1,y1 x2,y2 x3,y3 ..."
+                \item \textbf{fill}:
+                \item \textbf{stroke}:
+                \item \textbf{stroke-width}:
+                \item \textbf{fill-rule}: (nonzero, evenodd)
+            \end{itemize}
+        \item \textbf{Text}
+            \begin{itemize}
+                \item \textbf{x}:
+                \item \textbf{y}:
+                \item \textbf{dx}:
+                \item \textbf{dy}:
+                \item \textbf{text-anchor}: (start, middle, end)
+                \item \textbf{font-family}:
+                \item \textbf{font-size:}
+                \item \textbf{font-weight:}
+                \item \textbf{letter-spacing}:
+                \item \textbf{fill}:
+                \item \textbf{stroke}:
+                \item \textbf{opacity}:
+            \end{itemize}
         \item \textbf{SVG viewbox}: 
             \bigbreak \noindent 
             \begin{htmlcode}
@@ -293,6 +365,54 @@
     \end{itemize}
 
     \pagebreak 
+    \subsection{Observable}
+    \begin{itemize}
+        \item \textbf{Window}: Global variables can be defined with the global window object
+            \bigbreak \noindent 
+            \begin{jscode}
+            window.data = ...
+            \end{jscode}
+            \bigbreak \noindent 
+            Then, this property can be accessed in other cells.
+        \item \textbf{Blocks}: In observable, multi-line javascript cells must be placed in a curly brace block
+        \item \textbf{HTML templating}: Observable provides an html tag for writing HTML declaratively:
+            \bigbreak \noindent 
+            \begin{jscode}
+            html`<h1>Hello</h1>`
+            \end{jscode}
+            \begin{itemize}
+                \item Returns a live DOM node, not a string.
+                \item HTML is parsed immediately.
+                \item Values inside \$\{...\} are safely interpolated.
+            \end{itemize}
+            In a multi statement (curly brace block), this node must be returned to be rendered.
+            \bigbreak \noindent 
+            To make a table dynamically with templating, 
+            \bigbreak \noindent 
+            \begin{jscode}
+html`
+  <table>
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Weekday</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(d => html`
+        <tr>
+          <td>${d.Year}</td>
+          <td>${d.Weekday}</td>
+        </tr>
+      `)}
+    </tbody>
+  </table>
+            \end{jscode}
+            \bigbreak \noindent 
+            Notice that html must be placed inside ticks.
+    \end{itemize}
+
+    \pagebreak 
     \subsection{JS}
     \begin{itemize}
         \item \textbf{Var, let, and const}:  
@@ -313,6 +433,7 @@
                     \end{jscode}
                     \bigbreak \noindent 
                     Cannot be reassigned. Const prevents reassignment, not mutation.
+            \end{itemize}
                 \item \textbf{Immutable types}: These cannot be changed after creation. Any “modification” creates a new value. Primitive Types are all immutable 
                     \begin{itemize}
                         \item number	
@@ -380,11 +501,149 @@
                     \textbf{Note:} Dot-notation only works with certain identifiers, bracket notation works with more identifiers, like if the key was a string.
                 \item \textbf{JSON}: Data interchange format, subset of JS. Uses nested objects and arrays. Data only, no functions.
                 \item \textbf{Functional programming in JS}
+                \item \textbf{Unary plus operator}: The unary plus (+) operator precedes its operand and evaluates to its operand but attempts to convert it into a number, if it isn't already.
+                \item \textbf{Map, filter, and reduce}: 
+                    \begin{itemize}
+                        \item \textbf{Map}: map transforms each element of an array using a callback function and returns a new array of the same length. It is a pure transformation; the original array is not modified.
+                            \bigbreak \noindent 
+                            \begin{jscode}
+                            arr.map((element, index, array) => newElement) -> Array
+                            \end{jscode}
+                        \item \textbf{Filter}: filter selects a subset of elements based on a predicate function and returns a new array containing only those elements for which the predicate evaluates to true.
+                            \bigbreak \noindent 
+                            \begin{jscode}
+                            arr.filter((element, index, array) => boolean) -> Array
+                            \end{jscode}
+                        \item \textbf{Reduce}: reduce aggregates an array into a single value by repeatedly combining elements using an accumulator function. It is the most general of the three operations.
+                            \bigbreak \noindent 
+                            \begin{jscode}
+                                arr.reduce((accumulator, element, index, array) => newAccumulator, initialValue) -> any
+                            \end{jscode}
+                    \end{itemize}
+                \item \textbf{forEach}: forEach executes a provided callback function once for each element of an array. It is intended for side effects, not for producing values.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    arr.forEach((element, index, array) => void) -> void
+                    \end{jscode}
+                \item \textbf{Object manipulation}
+                    \begin{itemize}
+                        \item \textbf{Deleting properties}: We use the delete operator
+                            \bigbreak \noindent 
+                            \begin{jscode}
+                            delete person.age;
+                            \end{jscode}
+                    \end{itemize}
 
-
-
-
+        \item \textbf{Creating html elements manually with JS (SVGs)}:
+            \begin{itemize}
+                \item \textbf{document.createElementNS}: We use create element to create new elements, to create a new svg element,
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    const new_element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    \end{jscode}
+                \item \textbf{setAttribute}: We can set attributes on our element with setAttribute
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    new_element.setAttribute(name: string, value);
+                    \end{jscode}
+                \item \textbf{appendChild}: We use append child to append child to a root node in our document tree
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        root_element.appendChild(new_element);
+                    \end{jscode}
+                \item \textbf{createTextNode(value)}: Creates a plain text node
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    root_element.appendChild(document.createTextNode("Hello world"));
+                    \end{jscode}
             \end{itemize}
+        \item \textbf{General JS to create HTML dynamically}: 
+            \begin{itemize}
+                \item \textbf{document.createElement(tagName)}: Creates a new DOM element but does not place it in the document.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    const div = document.createElement("div");
+                    \end{jscode}
+                \item \textbf{document.createTextNode(text)}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        const text = document.createTextNode("Hello world");
+                        div.appendChild(text);
+                    \end{jscode}
+                \item \textbf{element.textContent}: Assigns or retrieves text content (preferred in most cases).
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    div.textContent = "Hello world";
+                    \end{jscode}
+                \item \textbf{div.setAttribute("class", "container")}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    div.setAttribute("class", "container");
+                    \end{jscode}
+                \item \textbf{getAttribute(name)}:
+                \item \textbf{removeAttribute(name)}:
+                \item \textbf{hasAttribute(name)}: 
+                \item \textbf{parent.appendChild(child)}: Appends as the last child.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    document.body.appendChild(div);
+                    \end{jscode}
+                \item \textbf{parent.insertBefore(newNode, referenceNode)}: Inserts at a specific position.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    parent.insertBefore(div, parent.firstChild);
+                    \end{jscode}
+                \item \textbf{element.append(...)}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    document.body.append(div);
+                    \end{jscode}
+                \item \textbf{element.prepend(...):}
+                \item \textbf{element.before(...):}
+                \item \textbf{element.after(...)}:
+                \item \textbf{element.innerHTML}: Parses an HTML string and replaces the element’s contents.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        div.innerHTML = "<strong>Hello</strong>";
+                    \end{jscode}
+                \item \textbf{document.getElementById(id)}:
+                \item \textbf{document.querySelector(cssSelector)}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        const container = document.querySelector(".container");
+                        container.append(div);
+                    \end{jscode}
+                \item \textbf{document.querySelectorAll(cssSelector)}:
+                \item \textbf{element.cloneNode(deep)}: Copies an element.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    const copy = div.cloneNode(true);
+                    \end{jscode}
+                \item \textbf{element.addEventListener(type, handler)}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    button.addEventListener("click", handleClick);
+                    \end{jscode}
+            \end{itemize}
+        \item \textbf{Direct property assignment (often cleaner and safer):}
+            \bigbreak \noindent 
+            \begin{jscode}
+                div.id = "main";
+                div.className = "container";
+            \end{jscode}
+        \item \textbf{Element properties}: 
+            \begin{itemize}
+                \item \textbf{id}: Unique element identifier
+                \item \textbf{className}: Space-separated CSS classes
+                \item \textbf{classList}: Token-based class API (add, remove, toggle)
+                \item \textbf{tagName}: Uppercase tag name (read-only)
+                \item \textbf{nodeName}: Same as tagName for elements
+                \item \textbf{nodeType}: Numeric node type (1 = Element)
+                \item \textbf{style}: Inline style object
+                \item \textbf{hidden}: Shortcut for display: none
+            \end{itemize}
+
+
     \end{itemize}
 
 
