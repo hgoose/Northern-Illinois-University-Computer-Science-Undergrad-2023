@@ -1320,6 +1320,78 @@ if (errno) {
                 \bar{x} = (b^{n}-1)-x
             .\end{align*}
             This is the digitwise (radix-$b-1$) complement. So, we know the complement and the additive inverse. Notice that all we need to do to turn the complement into the additive inverse is add one to the complement. 
+        \item \textbf{A cleaned up twos complement argument}: 
+            Consider a base-$b$, $n$-digit system, note that our context is finite width arithmetic, since this is how registers work. Thus, all arithmetic is taken modulo $b^{n}$, since
+            \begin{align*}
+                0 \leq x \leq b^{n}-1
+            \end{align*}
+            for all $x$ in our system. Now consider 
+            \begin{align*}
+                b^{n}-x
+            \end{align*}
+            Now, add zero to this expression
+            \begin{align*}
+                b^{n}-1-x+1
+            .\end{align*}
+            Consider the quantity $b^{n}-1$, we can factor out a $b-1$ to get
+            \begin{align*}
+                (b^{n}-1) = (b-1)(b^{n-1} + b^{n-2} + \dots + b^{1} + b^{0})
+            .\end{align*}
+            Observe that this quantity is a number in our system with all digits equal to $b-1$. For example, if $b=2$, then this is precisely the expression that gives us an $n$-bit binary number with all bits set to one. 
+            \bigbreak \noindent 
+            So, subtracting $x$ from this quantity gives the radix $b-1$ (digitwise) complement. In base two this would mean flipping all bits in $x$. So,
+            \begin{align*}
+                b^{n}-1-x+1
+            \end{align*}
+            is the digitwise complement plus one. Our goal is to derive the additive inverse of $x$ using this digitwise complement. The additive inverse of $x$ in unbounded width arithmetic would be the number $y$ such that
+            \begin{align*}
+                x+y = 0
+            .\end{align*}
+            However, we are dealing with finite width arithmetic, so all expressions equal to zero must be congruent to zero when taken modulo $b^{n}$. So, we must instead consider
+            \begin{align*}
+                x+y \equiv 0 \pmod{b^{n}}
+            .\end{align*}
+            Using modular arthritic, this means that
+            \begin{align*}
+                x+y = kb^{n}
+            \end{align*}
+            for some $k\in \mathbb{Z}$. But, notice that since
+            \begin{align*}
+                0 \leq x,y \leq b^{n}-1
+            ,\end{align*}
+            it must be that
+            \begin{align*}
+                0 \leq x + y \leq 2(b^{n} - 1) = 2b^{n}-2
+            .\end{align*}
+            Since the maximum in our system is $b^{n}$, the only possible multiple of $b^{n}$ is $b^{n}$ itself, so $k=1$ (actually $k\in \{0,1\}$, but $k=0$ only if $x=y=0$, otherwise $k=1$). Thus,
+            \begin{align*}
+                x+y = b^{n}
+            .\end{align*}
+            Now we see that the additive inverse $y$ is 
+            \begin{align*}
+                y = b^{n} - x 
+            .\end{align*}
+            Notice that the digitwise complement ($b^{n}-1-x$) and the additive inverse ($b^{n}-x$) look very similar. All we need to do to get from the digitwise complement to the additive inverse is add one to the complement, which is precisely what twos complement does.
+            \bigbreak \noindent 
+            The story of the sign bit (in base two) arises once you define the signed interpretation map
+            \begin{align*}
+                \phi(u) = \begin{cases}
+                    u, \quad 0 \leq u < 2^{n}-1     \\
+                    u-2^{n}, \quad 2^{n-1} \leq u < 2^{n}
+                \end{cases}
+            .\end{align*}
+            Notice that 
+            \begin{align*}
+                \phi(2^{n}-u) = (2^{n}-u)-2^{n} = -u = -\phi(u)
+            .\end{align*}
+            Any value greater than or equal to $2^{n-1}$, which corresponds to MSB=1 is negative, hence the sign bit.
+            \bigbreak \noindent 
+            In addition, consider performing twos complement twice on any number $x$,
+            \begin{align*}
+                2^{n}-(2^{n}-x) = x
+            \end{align*}
+            so we get back $x$. This is why we don't have to reverse the process of twos complement to undo it.
+
         \item \textbf{ADD instructions: Adding the value from a register into the accumulator}: Suppose we want to add $+3$ into ECX, then add that value to the accumulator. We can use the ADD instruction version
             \bigbreak \noindent 
             \begin{cppcode}
@@ -1453,10 +1525,126 @@ if (errno) {
                     e = e * a
                 }
                 a = a*a
-                b>>1 // Divide by two
+                b>>=1 // Divide by two
             }
             \end{cppcode}
+        \item \textbf{$k$ child trees to binary trees}: When creating abstract syntax trees, it is likely the case that a binary tree is too restrictive, we may need to have trees that can have $k$ children, for $k$ not restricted to $2$. Thus, it is helpful to know the way in which we can convert such a tree into a binary tree.
+            \bigbreak \noindent 
+            The idea is that for each parent node, we take its first (leftmost) child and make that its child in the binary tree. Then, for any other children (siblings of the first child), we attach those in a link to the first child. So, if $A$ has children $B,C,D$, and $B$ has children $E,F$, then the binary tree would have connections
+            \begin{align*}
+                A &\to B, \\
+                B &\to C,E \\
+                C &\to D, \\
+                E &\to F
+            .\end{align*}
+        \item \textbf{The POP and PUSH instructions}: The PUSH instruction pushes a word, doubleword, or quadword onto the stack. Decrements the stack pointer and then stores the source operand on the top of the stack.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PUSH    r32
+            \end{cppcode}
+            \bigbreak \noindent 
+            The POP instruction loads the value from the top of the stack to the location specified with the destination operand
+            \bigbreak \noindent 
+            \begin{cppcode}
+            POP     r32
+            \end{cppcode}
+        \item \textbf{The ECHG (exchange) instruction}: Exchanges register / memory with register
+        \item \textbf{Machine execution model (MEM)}: There is a problem that arises when trying to generate machine code. We have many registers, but when generating code, which registers do we use? And if we have to go to memory if those registers are in use, which addresses do we go to? And how does this access of memory to store values work? 
+            \bigbreak \noindent 
+            Since this is outside the scope of our current progress in compiler theory, we will start with the use of a stack based model.
+            \bigbreak \noindent 
+            In this model, we will have the top of the stack always be the current value in the accumulator.
+            \bigbreak \noindent 
+            First, consider a generic tree 
+            \bigbreak \noindent 
+            \fig{1}{./figures/18.png}
+            \bigbreak \noindent 
+            where $T_{1}$ and $T_{2}$ are subtrees. When $T_{1}$ completes its duties, its computed value will be in the accumulator. So, we push this value onto the stack. Then, we can generate code for $T_{2}$ and its value will now be in the accumulator. From here, we need to perform the addition with these two values. So, we pop the top of the stack into ECX, then write the instruction
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ADD    EAX,ECX
+            \end{cppcode}
+            \bigbreak \noindent 
+            Consider the expression $6-5-10$, which generates the AST 
+            \bigbreak \noindent 
+            \fig{1}{./figures/17.png}
+            \bigbreak \noindent 
+            The code will look something like
+            \bigbreak \noindent 
+            \begin{cppcode}
+            // Computes 6-5 and places result on the top of the stack
+            MOV   EAX,6
+            PUSH  EAX
+            MOV   EAX,5
+            POP   ECX
+            XCHG  EAX, ECX
+            SUB   EAX, ECX
+            PUSH  EAX
 
+            // Computes 6-5-10, 6-5 is on the top of the stack at this point
+            MOV   EAX,10
+            POP   ECX
+            XCHG  EAX,ECX
+            SUB   EAX,ECX
+            \end{cppcode}
+
+        \item \textbf{The TEST instruction}: The TEST instruction in IA-32e (the 64-bit extension of the x86 architecture) performs a bitwise logical AND between two operands without storing the result. Its sole purpose is to update the condition flags in RFLAGS. Given
+            \bigbreak \noindent 
+            \begin{cppcode}
+            TEST  op1, op2
+            \end{cppcode}
+            \bigbreak \noindent 
+            The processor computes
+            \bigbreak \noindent 
+            \begin{cppcode}
+            temp := op1 AND op2
+            \end{cppcode}
+            \bigbreak \noindent 
+            The value of temp is not written back to any operand. Instead, only flags are updated. After execution:
+            \begin{itemize}
+                \item \textbf{ZF (Zero Flag)}: Set if temp == 0, otherwise cleared.
+                \item \textbf{SF (Sign Flag)}: Set according to the most significant bit of temp.
+                \item \textbf{PF (Parity Flag)}: Set according to parity of the low byte of temp.
+                \item \textbf{CF (Carry Flag)}: Cleared to 0
+                \item \textbf{OF (Overflow Flag)}: Cleared to 0
+                \item \textbf{AF (Auxiliary Flag)}: Undefined
+            \end{itemize}
+            This is identical to AND except the result is discarded.
+        \item \textbf{Common use cases of TEST}:
+            \begin{enumerate}
+                \item \textbf{Checking if a register is zero}:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    TEST   R,R
+
+                    // Jump on ZF zero
+                    jz
+                    \end{cppcode}
+                \item \textbf{Testing specific bits}:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    test rax, 1
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This tests if the LSB is set (check ZF).
+            \end{enumerate}
+        \item \textbf{Code generation for the fast exponentiation algorithm}: We aim to compute the quantity $e = a^{b}$. For this, we will place 
+            \begin{align*}
+                e \to r8, \quad a \to r9, \quad b \to r10
+            .\end{align*}
+            Assume the stack has $b$ on the bottom, and $a$ at the top. The code is then
+            \begin{cppcode}
+                // Clear out r8
+                XOR   r8,r8
+
+                // Place |$a$| in r9
+                POP   r9
+
+                // Place |$b$| in r10
+                POP   r10
+
+                TEST r10,r10
+            \end{cppcode}
 
 
 

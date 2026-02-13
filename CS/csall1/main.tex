@@ -13784,7 +13784,7 @@ indicate which strong entity the weak entity depends upon.
                     The CLI can be implemented in two general ways.
                     \begin{enumerate}
                         \item The command interpreter itself contains the code to execute the command. For example, the command to delete a file may cause the command interpreter to jump to a section of its code that sets up the parameters and makes the appropriate system calls. In this case, the number of commands that the interpreter offers determines the size of the interpreter, since each command requires its own implementing code.
-                        \item Another approach – used by UNIX (among other OS’s) – implements most commands through system programs. In this case, the CLI does not understand the command, it mearly uses the command to identify the file to be loaded into memory and executed.
+                        \item Another approach – used by UNIX (among other OS’s) – implements most commands through system programs. In this case, the CLI does not understand the command, it merely uses the command to identify the file to be loaded into memory and executed.
                     \end{enumerate}
                 \item \textbf{GUI}:  A user friendly graphical user interface. Rather than entering commands directly via a CLI, users employ a mouse based window and menu system.
             \end{itemize}
@@ -13798,7 +13798,7 @@ indicate which strong entity the weak entity depends upon.
             In the context of operating systems, API functions often act as wrappers around lower-level system calls, performing tasks such as parameter validation and setup before transferring control to the kernel. For example, the Windows function \texttt{CreateProcess()} ultimately invokes the internal system call \texttt{NTCreateProcess()}.
             \bigbreak \noindent 
             On UNIX and Linux systems, system calls are commonly accessed through the C API provided by the standard C library, libc, which exposes user-level functions that invoke the corresponding kernel services.
-        \item \textbf{System call interface}:  An important factor in handling system calls is the run-time enviroment (RTE) – the full suite of software needed to execute applications written in a given programming language.
+        \item \textbf{System call interface}:  An important factor in handling system calls is the run-time environment (RTE) – the full suite of software needed to execute applications written in a given programming language.
             \bigbreak \noindent 
             The RTE provides a system call interface that serves as the link to system calls made available by the OS. The system call interface intercepts function calls in the API and invokes the necessary system calls within the OS. A number is typically associated with each system call. The system-call interface maintains a table indexed according to these numbers. The system-call interface invokes the intended system call in the OS kernel and returns the status of the system call.
             \bigbreak \noindent 
@@ -14261,7 +14261,7 @@ indicate which strong entity the weak entity depends upon.
             \bigbreak \noindent 
             They tend to implement the code as a module, because they can be linked on demand. Nearly every higher-level component of the linux kernel– filesystems, device drivers, executable formats, network layers, etc. can be compiled as a module.
             \bigbreak \noindent 
-            Some kernel code must be linked statically – it is either compiled with the kernel or not included at all. This typically happens when the component requires a modificiation to some data structure or function statically linked in the kernel.
+            Some kernel code must be linked statically – it is either compiled with the kernel or not included at all. This typically happens when the component requires a modification to some data structure or function statically linked in the kernel.
         \item \textbf{Static and Dynmaic Linking}: When you statically link a file into an executable, the contents of that file are included at link time.
             \bigbreak \noindent 
             when you link dynamically, a pointer to the file being linked in is included in the executable and the contents of said file are not included at link time. It’s only when you run the executable that these dynamically linked files are brought in and they’re only brought into the in-memory copy of the executable, not the one on disk. Its basically a method of deferred linking.
@@ -14272,25 +14272,520 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{Virtual memory}: Virtual memory is a memory management technique that provides an "idealized abstraction of the storage resources that are actually available on a given machine" which "creates the illusion to users of a very large (main) memory".
             \bigbreak \noindent 
             The operating system, using a combination of hardware and software, maps memory addresses used by a program, called virtual addresses, into physical addresses in computer memory.
-
-
-
-
-
-
-
-
-
-
-
-
-
+        \item \textbf{A note}: The operating system is not a separate program running “alongside” your program. It is the privileged control layer that schedules and supervises all programs.
+            \bigbreak \noindent 
+            The OS is always running, but not like a normal program. The operating system kernel
+            \begin{itemize}
+                \item Resides in memory.
+                \item Runs in kernel mode (privileged CPU mode).
+                \item Gains control via:
+                    \begin{itemize}
+                        \item Interrupts
+                        \item System calls
+                        \item Exceptions
+                        \item Scheduling events
+                \end{itemize}
+            \end{itemize}
+            User programs run in user mode, which is restricted. The CPU switches between these modes.
     \end{itemize}
 
     \pagebreak 
     \subsection{Process}
     \begin{itemize}
-        
+        \item \textbf{CPU cores}: A CPU core is an independent processing unit within a central processing unit (CPU). Each core is capable of executing program instructions, performing arithmetic and logical operations, managing control flow, and interacting with memory and I/O through the operating system. In architectural terms, a core is a complete execution engine.
+            \bigbreak \noindent 
+            A modern core typically contains:
+            \begin{itemize}
+                \item \textbf{Control Unit (CU)}: Fetches and decodes instructions.
+                \item \textbf{Arithmetic Logic Unit (ALU)}: Performs integer arithmetic and logical operations.
+                \item \textbf{Floating-Point Unit (FPU)}: – Handles floating-point arithmetic.
+                \item \textbf{Registers}: Small, ultra-fast storage (e.g., general-purpose registers, program counter, flags).
+                \item \textbf{L1 / L2 Cache}: Private high-speed memory for low-latency access.
+                \item \textbf{Branch Predictor}: Predicts control flow to reduce pipeline stalls.
+                \item \textbf{Pipeline}: Stages instruction execution (fetch → decode → execute → write-back).
+                \item \textbf{Execution Units}: May include SIMD/vector units (e.g., AVX).
+            \end{itemize}
+        \item \textbf{Intro}: Early computers allowed only one program to be executed at a time. This process has complete control over the system. A process is a program in execution. A process is the unit of work in a modern computer system.
+            \bigbreak \noindent 
+            A system consists of a collection of processes, some executing user code, some executing operating system code. Potentially, all these processes can execute concurrently, with the CPU (or CPUs) multiplexed among them. 
+        \item \textbf{Jobs}: Early computer systems executed jobs. We now call them processes. The term jobs have some historical significance. Much of operating system theory and terminology was developed during a time where the major activity of operating systems was job processing.
+            \bigbreak \noindent 
+            Therefore, in some instances we use the term job when describing the role of the operating system. I.e., job scheduling instead of process scheduling.
+        \item \textbf{The process}: The status of the current activity of a process is represented by the value of the program counter (PC) and the contents of the processor’s registers. The memory layout of a process is typically divided into multiple sections.
+            \begin{itemize}
+                \item \textbf{Text section}: the executable code
+                \item \textbf{Data section}: global variables
+                \item \textbf{Heap section}: memory that is dynamically allocated during program run time.
+                \item \textbf{Stack section}: temporary data storage when invoking functions (such as function parameters, return addresses, and local variables)
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{1}{./figures/1055.png}
+            \bigbreak \noindent 
+            The stack and heap sections can shrink and grow dynamically during program execution.
+            \bigbreak \noindent 
+            Stack and heap grow towards each other, but the OS makes sure that they do not overlap.
+        \item \textbf{Activation records}: Each time a function is called, an activation record containing function parameters, local variables, and the return address is pushed onto the stack. When control is returned from the function, the activation record is popped from the stack.
+        \item \textbf{Program vs process}: A program by itself is not a process. A program is a passive entity. A process is an active entity, with a program counter specifying the next instruction to execute and a set of associated resources. A program becomes a process when it is loaded into memory.
+            \bigbreak \noindent 
+            Two processes may be associated with the same program, they are nevertheless considered two separate execution sequences. Example: a user invoking many copies of a web browser program. Each of these are separate processes.
+            \bigbreak \noindent 
+            It is also common to have a process that spawns many processes as it runs.
+            \bigbreak \noindent 
+            A process can itself be an execution environment for other code. Ex. The JVM executes as a process that interprets the loaded java code and takes actions. The command java Program runs the JVM as a process, which in turns executes the Java program Program in the virtual machine.
+        \item \textbf{Process state}: As a process executes, it changes state. The state of a process is defined in part by the current activity of that process.
+            \bigbreak \noindent 
+            A process may be in one of the following states:
+            \begin{enumerate}
+                \item \textbf{New}: The process is being created.
+                \item \textbf{Running}: Instructions are being executed.
+                \item \textbf{Waiting}: The process is waiting for some event to occur (such as I/O completion or reception of a signal).
+                \item \textbf{Ready}: The process is waiting to be assigned to a processor.
+                \item \textbf{Terminated}: The process has finished execution.
+            \end{enumerate}
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1056.png}
+            \bigbreak \noindent 
+            These names are arbitrary and they vary across operating systems. The states that they represent are found on all systems.
+            \bigbreak \noindent 
+            Only one process can be running on any processor core at any instant. Many processes may be ready and waiting, however.
+        \item \textbf{Process control block}: Each process is represented in the operating system as a process control block (PCB) – also called a task control block.
+            \bigbreak \noindent 
+            It contains many pieces of information associated with a specific process.
+            \begin{itemize}
+                \item \textbf{Process state}: The state may be new, ready, running, waiting, halted, and so on.
+                \item \textbf{Program counter}: The counter indicates the address of the next instruction to be executed for this process
+                \item \textbf{CPU registers}: The registers vary in number and type, depending on the computer architecture. They include accumulators, index registers, stack pointers, and general-purpose registers, plus any condition-code information. Along with the program counter, this state information must be saved when an interupt occurs, to allow the process to be continued correctly afterward when it is rescheduled to run.
+                \item \textbf{CPU-scheduling information}: This information includes a process priority, pointers to scheduling queues, and any other sceduling parameters.
+                \item \textbf{Memory-management information}: This information may include such items as the value of the base and limit registers and the page tables, or the segment tables, depending on the memory system used by the operating system.
+                \item \textbf{Accounting information}: This information includes the amount of CPU and real time used, time limits, account numbers, job or process numbers, and so on.
+                \item \textbf{I/O}: status information. This information includes the list of I/O devices allocated to the process, a list of open files, and so on.
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{1}{./figures/1057.png}
+        \item \textbf{Intro to Threads}: The process model discussed so far has implied that a process is a program that performs a single thread of execution.
+            \bigbreak \noindent 
+            A thread is the smallest unit of execution that can be scheduled by an operating system.
+            \begin{itemize}
+                \item A \textbf{process} is a resource container (address space, file descriptors, heap, etc.).
+                \item A \textbf{thread} is a single execution context within that process.
+            \end{itemize}
+            A thread represents one sequence of instructions with its own control state. An execution context is the complete set of machine-level state required for a CPU to begin or resume executing a sequence of instructions. A thread is the specific computational state that allows code inside a process to actively run.
+            \bigbreak \noindent 
+            A thread has 
+            \begin{itemize}
+                \item \textbf{Program Counter (PC)}: Address of next instruction
+                \item \textbf{Registers}: General-purpose and special-purpose
+                \item \textbf{Stack}: Function calls, local variables, return addresses
+                \item \textbf{Thread state}: Running, ready, blocked, etc.
+            \end{itemize}
+            Threads within the same process share:
+            \begin{itemize}
+                \item Address space
+                \item Heap
+                \item Global variables
+                \item Open files
+                \item Memory-mapped regions
+            \end{itemize}
+            So,
+            \begin{center}
+                Process = Shared Resources + One or More Threads
+            \end{center}
+            A single CPU might have 8 cores and 16 threads. Consider the code
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int x = 0;
+
+            void f() { x++; }
+            void g() { x--; }
+
+            int main() {
+                std::thread t1(f);
+                std::thread t2(g);
+            }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The process has one address space, and one variable $x$. But, $t1$ has its own execution context, and $t2$ has its own execution context. Each thread has independent register and stack state, but both operate on the same memory. Each thread has independent register and stack state, but both operate on the same memory.
+            \bigbreak \noindent 
+            A CPU core executes one execution context at a time (ignoring SMT). When the OS performs a \textbf{context switch}, it 
+            \begin{itemize}
+                \item Saves current thread’s registers and PC.
+                \item Loads another thread’s registers and PC.
+                \item The CPU resumes execution as if uninterrupted.
+            \end{itemize}
+            So, an execution context is the tuple
+            \begin{center}
+                (PC, Registers, Stack, Scheduling state)
+            \end{center}
+            Whereas the process provides
+            \begin{center}
+                (Address space, Open files, Permissions)
+            \end{center}
+            Threads separate control flow from resource ownership.
+            \begin{itemize}
+                \item The process is the building.
+                \item The threads are workers inside it.
+                \item Each worker has:
+                    \begin{itemize}
+                        \item Their own clipboard (registers)
+                        \item Their own desk (stack)
+                        \item Their own position in a task (program counter)
+                    \end{itemize}
+                \item But they all use the same building resources.
+            \end{itemize}
+            By default, a standard C++ program uses one thread — the main thread. When you execute a C++ program:
+            \begin{itemize}
+                \item The OS creates a new process.
+                \item The process is initialized with:
+                    \begin{itemize}
+                        \item One address space
+                        \item One stack for the main thread
+                        \item One execution context
+                    \end{itemize}
+                \item Control is transferred to main().
+            \end{itemize}
+            Consider a word processor program, a single thread of instructions is being executed. This single thread of control allows the process to perform only one task at a time. Thus, the user cannot simultaneously type in characters and run the spell checker.
+            \bigbreak \noindent 
+            Most operating systems have extended the process concept to allow a process to have multiple threads of execution and thus to perform more than one task at a time.
+            \bigbreak \noindent 
+            A multithreaded word processor could, for example, assign one thread to manage user input while another thread runs the spell checker.
+            \bigbreak \noindent 
+            On systems that support threads, the PCB is expanded to include information for each thread.
+        \item \textbf{Threads and cores}: On one physical core, at any instant only one hardware execution context can issue instructions (ignoring SMT for the moment). So, on a single-core CPU:
+            \begin{align*}
+                \text{At any instant } \to \text{ one thread executing}
+            .\end{align*}
+            Multiple processes are interleaved via context switching. 
+            \bigbreak \noindent 
+            Say a system has 4 physical cores, no SMT. Then, 4 threads can execute simultaneously, one per core.
+            \bigbreak \noindent 
+            So, system-wide:
+            \begin{center}
+                Max simultaneous execution = number of cores
+            \end{center}
+            So the correct statement is:
+            \begin{center}
+                Only one thread per core executes at any instant.
+            \end{center}
+            Not:
+            \begin{center}
+                Only one process executes at a time.
+            \end{center}
+        \item \textbf{SMT (hardware threads)}: Processors from Intel and AMD often implement Simultaneous Multithreading (SMT). If you have 4 physical cores, 2 hardware threads per core, then up to 8 logical threads may execute concurrently. However, 
+            \begin{itemize}
+                \item Execution units are shared.
+                \item It is not double performance.
+                \item It improves pipeline utilization.
+            \end{itemize}
+        \item \textbf{Multiprogramming}: Multiprogramming is an operating system technique that loads multiple programs into main memory simultaneously to maximize CPU utilization, ensuring the processor rarely sits idle. While only one program executes on the CPU at a time, the OS quickly switches between tasks when one waits for I/O operations, creating the illusion of concurrent execution. 
+        \item \textbf{Time-sharing}: Time-sharing in computing is a technique where a single computer's resources (like the CPU) are rapidly switched between multiple users or processes, giving each a small "time slice," creating the illusion that they are running concurrently on their own dedicated machine, which makes expensive hardware accessible to many people simultaneously for interactive tasks.
+        \item \textbf{Multitasking}: Multitasking is an extension of multiprogramming that uses time-sharing to allow rapid switching between tasks, often for user interaction.
+        \item \textbf{Process Scheduling}: The objective of multiprogramming is to have some process running at all times so as to maximize CPU utilization.
+            \bigbreak \noindent 
+            The objective of time sharing is to switch a CPU core among processes so frequently that users can interact with each program while it is running
+            \bigbreak \noindent 
+            To meet this objectives, the process scheduler selects an available process for program execution on a core. Each CPU core can run one process at a time.
+        \item \textbf{Process representation in Linux}: The PCB in Linux is represented by the C struct task\_struct, which is found in include/linux/sched.h in the Linux source code directory.
+            \bigbreak \noindent 
+            Contains the state, scheduling and memory-management information, list of open file, and pointers to the process’s parent and a list of its children and siblings.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                long state; /* state of the process */
+                struct sched_entity se; /* scheduling information */
+                struct task_struct *parent /* the process's parent */
+                struct list_head children; /* this process's children */
+                struct file_struct *files; /* list of open files */
+                struct mm_struct *mm; /* address space */
+            \end{cppcode}
+            \bigbreak \noindent 
+            Within the Linux kernel, all active processes are represented using a doubly-linked-list of task\_struct. The kernel maintains a pointer current to the process currently executing on the system
+            \bigbreak \noindent 
+            For a system with a single CPU core, there will never be more than one process running at a time, whereas a multicore system can run multiple processes at one time.
+            \bigbreak \noindent 
+            If there are more processes than cores, excess processes will have to wait until a core is free and can be rescheduled.
+            \bigbreak \noindent 
+        \item \textbf{Degree of multiprogramming}: The number of processes currently waiting in memory is known as the degree of multiprogramming.
+        \item \textbf{IO-bound vs CPU-bound processes}: In general most processes can either be described as I/O-bound and CPU-bound. An I/O-bound process spends most of its time doing I/O than it spends doing computations. A CPU-bound process generates I/O requests infrequently, using more of its time doing computations.
+        \item \textbf{Scheduling Queues}: As processes enter the system, they are put into a \textbf{ready queue}, where they are ready and waiting to execute on a CPU’s core. This queue is generally stored as a linked list
+            \bigbreak \noindent 
+            A ready-queue header contains pointers to the first PCB in the list and each PCB includes a pointer field that points to the next PCB in the ready queue.
+            \bigbreak \noindent 
+            The system also includes other queues. When a process is allocated A CPU core, it may wait for the occurrence of a particular event, such as the completion of an I/O request. Suppose the process makes an I/O request to a device such as a disk. Since devices run way slower than processors, the process will have to wait for the I/O to become available. Processes that are waiting for a certain event to occur are placed in a \textbf{wait queue}.
+            \bigbreak \noindent 
+            A common representation of process scheduling is a queueing diagram. Once the process is allocated a CPU core and is executing, one of several events could occur.
+            \begin{itemize}
+                \item The process could issue an I/O request and then be placed in an I/O wait queue.
+                \item The process could create a new child process and then be placed in a wait queue while it awaits the child’s termination.
+                \item The process could be removed forcibly from the core, as a result of an interrupt or having its time slice expire, and be put back in the ready queue.
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{1}{./figures/1058.png}
+            \bigbreak \noindent 
+            \fc{Queuing-diagram representation of process scheduling. Two types of queues are present: the ready queue and a set of wait queues. The circles represent the resources that serve the queues, and the arrows indicate the flow of processes in the system}
+        \item \textbf{CPU Scheduling}: A process migrates among the ready queue and various wait queues throughout its lifetime.
+            \bigbreak \noindent 
+            The role of the \textbf{CPU scheduler} is to select from among the processes that are in the ready queue and allocate a CPU core to one of them.
+            \bigbreak \noindent 
+            The CPU scheduler must select a new process for the CPU frequently. An I/O-bound process may execute for only a few milliseconds before waiting for an I/O request.
+            \bigbreak \noindent 
+            Although a CPU-bound process will require a CPU core for longer durations, the scheduler is unlikely to grant the core to a process for an extended period. Instead, it is likely designed to forcibly remove the CPU from a process and schedule another process to run.
+            \bigbreak \noindent 
+            Therefore, the CPU scheduler executes at least once every 100ms.
+            \bigbreak \noindent 
+        \item \textbf{Swapping}: Some operating systems have an intermediate form of scheduling, known as swapping. The idea is that sometimes it can be advantageous to remove a process from memory (and from active contention for the CPU) and thus reduce the degree of multiprogramming. The process can be later reintroduced into memory, and its execution can be continued where it left off.
+            \bigbreak \noindent 
+            Swapping is typically only necessary when memory has been overcommitted and must be freed up.
+        \item \textbf{Interrupts}: An interrupt is a hardware or software mechanism that forces the CPU to temporarily stop its current execution flow and transfer control to a predefined handler.
+            \begin{center}
+                Interrupt = Asynchronous control transfer into privileged code
+            \end{center}
+            Interrupts allow devices to signal: “Something requires attention.” For example:
+            \begin{itemize}
+                \item Keyboard input
+                \item Network packet arrival
+                \item Disk I/O completion
+                \item Timer expiration
+            \end{itemize}
+            Suppose a timer interrupt fires, the CPU performs
+            \begin{enumerate}
+                \item Finishes current instruction.
+                \item Switches to kernel mode.
+                \item Saves:
+                \begin{itemize}
+                    \item Program counter
+                    \item Flags
+                    \item Possibly registers
+                \end{itemize}
+                \item Loads the interrupt handler address from the interrupt descriptor table (IDT).
+                \item Executes kernel interrupt handler.
+                \item Returns to previous execution context.
+            \end{enumerate}
+        \item \textbf{Types of interrupts}: 
+            \begin{enumerate}
+                \item \textbf{Hardware interrupts (external)}: Triggered by external devices
+                \item \textbf{Software interrupts}: Triggered intentionally by instructions. Used for system calls.
+                    \bigbreak \noindent 
+                    These are synchronous
+                \item \textbf{Exceptions (Faults / traps) (internal)}: Generated by the CPU itself. These are also interrupt-like control transfers.
+            \end{enumerate}
+        \item \textbf{Faults, traps, and aborts (exceptions)}: 
+            \begin{itemize}
+                \item \textbf{Faults}: A fault occurs before the instruction completes. The instruction can usually be retried. Examples are
+                    \begin{itemize}
+                        \item Page fault
+                        \item Divide-by-zero
+                        \item General protection fault
+                    \end{itemize}
+                \item \textbf{Traps}: A trap occurs after the instruction completes. Used intentionally for control transfer. For example syscalls.
+                \item \textbf{Aborts}: Serious unrecoverable errors. System often terminates
+            \end{itemize}
+            Faults and traps are architecturally classified as exceptions, and exceptions are handled through the same mechanism as interrupts.
+            \begin{center}
+                Interrupts = External asynchronous events \\
+                Exceptions (faults/traps) = Internal synchronous events
+            \end{center}
+            All of them ultimately use the CPU’s interrupt/exception handling machinery.
+        \item \textbf{Context switching}:  Interrupts cause the operating system to change a CPU core from its current task and to run a kernel routine.
+            \bigbreak \noindent 
+            When an interrupt occurs the system needs to save the current \textbf{context} of the process running on the CPU core so that it can restore that context when its processing is done, essentially suspending the process and then resuming it.
+            \bigbreak \noindent 
+            The context is represented in the PCB of the process. It includes the value of the CPU registers, the process state, and memory-management information.
+            \bigbreak \noindent 
+            We perform a state save of the current state of the CPU core, be it in kernel or user mode, and then a state restore to resume operations.
+            \bigbreak \noindent 
+            Switching the CPU core to another process requires performing a state save of the current process and a state restore of a different process. This task is known as a context switch.
+            \bigbreak \noindent 
+            When a context switch occurs, the kernel saves the context of the old process in its PCB and loads the saved context of the new process scheduled to run.
+        \item \textbf{Process creation}: During the course of execution, a process may create several new processes. The creating process is the parent process, and the new processes are called the children of that process. Each of these new processes may in turn create other processes, forming a tree of processes.
+        \item \textbf{Listing processes and the PID}: Many operating systems like Linux identify processes by their process id (pid), which is typically an integer. The pid can be used as an index to access various attributes of a process within the kernel.
+            \bigbreak \noindent 
+            The Systemd process always has a PID of 1 and serves as the root parent process for all user processes, and is the first user process created when the system boots.
+            \bigbreak \noindent 
+            Once the system boots, the Systemd process creates processes which provide additional services like Bluetooth and network managers. On Linux, we can obtain a listing of processes by using the ps command.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            ps -el
+            \end{bashcode}
+            There is also the pstree command, which prints the process tree.
+            \bigbreak \noindent 
+        \item \textbf{Parent processes and child processes}: When a process creates a child process, that child process will need certain resources (CPU time, memory, files, I/O devices) to accomplish its task. A child may be able to obtain these resources from the operating system or may be constrained to a subset of resources from its parent process.
+            \bigbreak \noindent 
+            The parent may have to partition its resources among its children, or it may be able to share some resources (such as memory or files). Restricting a child process to a subset of the parent’s resources prevents nay process from overloading the system by creating too many child processes
+            \bigbreak \noindent 
+            In addition to supplying various physical and logical resources, the parent process may pass along initialization data (input) to the child process. For example, A process that displays file content to the terminal. When the process is created, it will get, as an input from its parent process, the name of the file.
+            \bigbreak \noindent 
+            When a process creates a new process, two possibilities for execution exist
+            \begin{enumerate}
+                \item The parent continues to execute concurrently with its children.
+                \item The parent waits until some or all of its children have terminated.
+            \end{enumerate}
+            There are two address space possibilities for the new process:
+            \begin{enumerate}
+                \item The child process is a duplicate of the parent process (it has the same program and data as the parent)
+                \item The child process has a new program loaded into it.
+            \end{enumerate}
+            A new process is created by the fork() system call. The new process consists of a copy of the address space of the original process. Both processes continue execution at the instruction after the fork(), with one difference: the return code for the fork() is zero for the new (child) process, whereas the (nonzero) process identifier of the child is return to the parent.
+            \bigbreak \noindent 
+            After a fork() system call, one of the two processes typically uses the exec() system call to replace the process’s memory space with a new program. The exec() system call loads a binary file into memory (destroying the memory image of the program containing the exec() system call) and starts it execution.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <sys/types.h>
+                #include <stdio.h>
+                #include <unistd.h>
+                int main() {
+                    pid_t pid;
+                    pid = fork();
+
+                    if (pid < 0) {
+                        fprintf(stderr, "Fork Failed");
+                        return 1;
+                    } else if (pid == 0) {
+                        execlp("/bin/ls", "ls", NULL);
+                    } else {
+                        wait(NULL);
+                        printf("Child Complete");
+                    }
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The wait() system call moves itself off the ready queue until the termination of the child.
+            \bigbreak \noindent 
+            Because the call to exec() overlays the process’s address space with a new program, exec() does not return control unless an error occurs.
+            \bigbreak \noindent 
+            The pid is assigned 0 for the child, and the parent process gets the pid of the child.
+            \bigbreak \noindent 
+            The child process inherits privileges and scheduling attributes from the parent, as well as certain resources, such as open files.
+            \bigbreak \noindent 
+            The child process overlays its address space with the UNIX command /bin/ls using the execlp() sys call.
+            \bigbreak \noindent 
+            If there is no call to exec() the child and the parent are concurrent processes running the same code instructions.
+        \item \textbf{Process Termination}: A process terminates when it finishes executing its final statement and asks the operating system to delete it by using the exit() system call. The process may return a status value (typically an integer) to its waiting parent process (via the wait() system call). All the resources of the process – including physical and virtual memory, open files, and I/O buffers – are deallocated and reclaimed by the operating system.
+            \bigbreak \noindent 
+            The parent needs to know the identity of the child in order to terminate them, thus the pid of the child is returned to the parent. Such systems do not allow a child to exist if its parent has terminated. If a process terminates, then all its children must also terminate.
+            \bigbreak \noindent 
+            This is referred to as \textbf{cascading termination}. It is normally initiated by the operating system.
+            \bigbreak \noindent 
+            The wait() system call is passed a parameter that allows the parent to obtain the exit status of the child. It also returns the process identifier of the terminated child so that the parent knows which of its children has terminated.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                pid_t pid;
+
+                int status;
+                pid = wait(&status);
+            \end{cppcode}
+            \bigbreak \noindent 
+            When a process terminates, its resources are deallocated by the operating system, however its entry in the process table must remain until the parent calls wait(), because the process table contains the process’s exit status.
+            \bigbreak \noindent 
+            A process that has terminated, but whose parent has not yet called wait() is known as a \textbf{zombie process}.
+            \bigbreak \noindent 
+            All processes transition to this state when they terminate, but generally they exist as zombies only briefly
+            \bigbreak \noindent 
+            When the parent process terminates without calling wait() beforehand, the child process is left as an orphan. In UNIX, the init process is assigned as the new parent of the orphan.
+            \bigbreak \noindent 
+            The init process periodically invokes wait(), thereby allowing the exit status of the orphan to be collected and releasing the orphan’s process identifier and process-table entry.
+            \bigbreak \noindent 
+            This is true for Linux as well, but Linux allows other processes other than Systemd to inherit the orphan processes and manage their termination.
+            \bigbreak \noindent 
+        \item \textbf{Interprocess Communication}: Processes executing concurrently in the operating system may be either independent processes or cooperating processes.
+            \bigbreak \noindent 
+            A process is \textbf{independent} if it does not share data with any other processes executing in the system.
+            \bigbreak \noindent 
+            A process is cooperating if it can affect or be affected by the other processes executing in the system.
+            \bigbreak \noindent 
+            Several reasons for providing an environment that allows process cooperation:
+            \begin{itemize}
+                \item \textbf{Information sharing}: Since several applications may be interested in the same piece of information (e.g., copying and pasting), we must provide an environment to allow concurrent access to such information.
+                \item \textbf{Computation speedup}: If we want a particular task to run faster, we must break it into subtasks, each of which will be executing in parallel with the others.
+                \item \textbf{Modularity}: We may want to construct the system in a modular fashion, dividing the system functions into separate processes or threads
+            \end{itemize}
+            Cooperating processes require an \textbf{interprocess communication (IPC)} mechanism that will allow them to exchange data (send data and receive data from each other).
+            \bigbreak \noindent 
+            The two models of interprocess communication – shared memory and message passing.
+            \bigbreak \noindent 
+            In the shared memory model, a region of memory that is shared by the cooperating processes is established. Processes can then exchange information by reading and writing data to the shared region.
+            \bigbreak \noindent 
+            In the message-passing model, communication takes place by means of messages exchanged between the cooperating processes.
+            \bigbreak \noindent 
+            Message passing tends to be slower since they involve system calls which is time-consuming kernel intervention.
+            \bigbreak \noindent 
+            In shared-memory, system calls are only required to establish shared-memory regions.
+        \item \textbf{IPC in shared memory systems}: IPC using shared memory required communicating processes to establish a region of shared memory.
+            \bigbreak \noindent 
+            Typically, a shared-memory region resides in the address space of the process creating the shared-memory segment.
+            \bigbreak \noindent 
+            Other processes that wish to communicate using this shared-memory segment must attach it to their address space.
+            \bigbreak \noindent 
+            OS normally tries to restrict one process from accessing another process’s memory. Shared memory requires that two or more processes agree to remove this restriction
+            \bigbreak \noindent 
+            They exchange information by reading and writing to this shared region.
+            \bigbreak \noindent 
+            The form of the data and the location are determined by these processes and are not under the OS’s control. They are also responsible for ensuring that they are not writing to the same location simultaneously.
+        \item \textbf{Producer-Consumer shared memory paradigm}: A producer produces information that is consumer by a consumer process.
+            \bigbreak \noindent 
+            To allow producer and consumer processes to run concurrently, we must have available a buffer of items that can be filled by the producer and emptied by the consumer.
+            \bigbreak \noindent 
+            A producer can produce one item while the consumer is consuming another item. Processes must be synchronized, so that the consumer does not try to consume an item that has not yet been produced.
+            \bigbreak \noindent 
+            Unbounded buffer places no practical limit on the size of the buffer
+            \bigbreak \noindent 
+            bounded buffer sets a fixed size of the buffer. In this case the consumer must wait if the buffer is empty and the producer must wait if the buffer is full.
+            \bigbreak \noindent 
+            Here is a bounded buffer
+            \bigbreak \noindent 
+            \begin{cppcode}
+            #define BUF_SIZE = 10
+            typedef struct {
+                ...
+            } item;
+
+            item buf[BUF_SIZE];
+
+            int int = 0;
+            int out = 0;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The shared buffer is implemented as a circular array with two logical pointers in and out. in points to the next item in the buffer, and out points to the first full position. The buffer is empty when in == out and the buffer is full when 
+            \begin{align*}
+                (\text{in } + 1) \% \text{ BUF_SIZE } == \text{ out}
+            .\end{align*}
+            The producer code is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            item next_produced; 
+
+            for(;;) {
+                // Produce an item in next_produced
+                whlie (((in+1) % BUF_SIZE) == out); // Do nothing
+
+                buffer[in] = next_produced;
+                in = (in+1) % BUF_SIZE;
+            }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The consumer code is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            item next_consumed;
+
+            for(;;) {
+                while (in == out) // do nothing
+
+                next_consumed = buffer[out];
+                out = (out + 1) % BUF_SIZE;
+
+                // consume the item in next_consumed
+            }
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:} synchronization not yet introduced.
+        \item \textbf{IPC in Message-Passing Systems}
+
+
+
+
+
+
+
     \end{itemize}
     
 
