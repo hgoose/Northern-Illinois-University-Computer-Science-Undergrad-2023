@@ -14744,9 +14744,9 @@ indicate which strong entity the weak entity depends upon.
             int out = 0;
             \end{cppcode}
             \bigbreak \noindent 
-            The shared buffer is implemented as a circular array with two logical pointers in and out. in points to the next item in the buffer, and out points to the first full position. The buffer is empty when in == out and the buffer is full when 
+            The shared buffer is implemented as a circular array with two logical pointers in and out. In points to the next item in the buffer, and out points to the first full position. The buffer is empty when in == out and the buffer is full when 
             \begin{align*}
-                (\text{in } + 1) \% \text{ BUF_SIZE } == \text{ out}
+                (\text{in } + 1)\; \% \text{ BUF\_SIZE } == \text{ out}
             .\end{align*}
             The producer code is 
             \bigbreak \noindent 
@@ -14778,10 +14778,663 @@ indicate which strong entity the weak entity depends upon.
             \end{cppcode}
             \bigbreak \noindent 
             \textbf{Note:} synchronization not yet introduced.
-        \item \textbf{IPC in Message-Passing Systems}
+        \item \textbf{IPC in Message-Passing Systems}: Provides a mechanism to allow processes to communicate and to synchronize their actions without sharing the same address space
+            \bigbreak \noindent 
+            useful in a distributed environment, where the communicating processes reside on different computers connected to a network.
+            \bigbreak \noindent 
+            Provides at least two operations: send(message) and receive(message) Messages can either be fixed or variable in size. If only fixed-sized messages can be sent, then the implementation is straightforward. If processes $P$ and $Q$ want to communicate, they must send messages to and receive messages from each other: a communication link must exist between them.
+            \bigbreak \noindent 
+            Logically, the link can be implemented via:
+            \begin{itemize}
+                \item Direct or indirect communication
+                \item Synchronous or asynchronous communication
+                \item Automatic or explicit buffering.
+            \end{itemize}
+        \item \textbf{Naming}: Processes that want to communicate must have a way to refer to each other.
+        \item \textbf{Direct communication}: Under direct communication, each process that wants to communicate must explicitly name the recipient or sender of the communication.
+            \bigbreak \noindent 
+            The send and receive() primitives are defined as:
+            \begin{itemize}
+                \item \textbf{send(P,message)}: Send a message to process $P$.
+                \item \textbf{receive(Q, message)}: Receive a message from process $Q$
+            \end{itemize}
+            A communication link in this scheme has the following properties:
+            \begin{itemize}
+                \item A link is established automatically between every pair of processes that want to communicate. The processes need only each other’s identity.
+                \item A link is associated with exactly two processes.
+                \item Between each pair of processes, there exists exactly one link
+            \end{itemize}
+            This scheme exhibits symmetry in addressing; that is, both the sender process and the receiver process must name the other to communicate.
+            \bigbreak \noindent 
+            A variant of this scheme employs asymmetric in addressing. Only the sender names the recipient, the recipient is not required to name the sender
+            \begin{itemize}
+                \item \textbf{send(P, message)}
+                \item \textbf{receive(id, message)}: The variable id is set to the name of the communicating process
+            \end{itemize}
+            Changing the identifier of a process may necessitate examining all other process definitions. All references to the old identifier must be found, so that they can be modified to the new identifier.
+            \bigbreak \noindent 
+            In general any hard-coding techniques such as this one are less desirable.
+        \item \textbf{Indirect communication}: With indirect communication, the messages are sent to and received from mailboxes or ports. A mailbox can be viewed abstractly as an object into which messages can be placed by processes and from which messages can be removed. Each mailbox has a unique identification.
+            \bigbreak \noindent 
+            A process can communicate with another process via a number of different mailboxes, but two processes can communicate only if they have a shared mailbox.
+            \begin{itemize}
+                \item \textbf{send(A, message)}: Send message to mailbox $A$
+                \item \textbf{receive(A, message)}: Receive a message from mailbox $A$
+            \end{itemize}
+            In this scheme, a communication link has the following properties:
+            \begin{itemize}
+                \item A link is established between a pair of processes only if both members of the pair have a shared mailbox.
+                \item A link may be associated with more than two processes.
+                \item Between each pair of communicating processes, a number of different links may exist, with each link corresponding to one mailbox.
+            \end{itemize}
+            Suppose that processes $P_{1}, P_{2}, P_{3}$ all share mailbox $A$. Process $P_{1}$ sends a message to $A$. Both $P_{2}$, and $P_{3}$ execute a receive() from $A$. Which process will receive the message?
+            \bigbreak \noindent 
+            The answer depends on which of the following methods we choose:
+            \begin{itemize}
+                \item Allow a link to be associated with two processes at most
+                \item Allow at most one process at a time to execute a receive operation
+                \item Allow the system to select arbitrarily which process will receive the message.
+            \end{itemize}
+            A mailbox may be owned either by a process or the operating system.
+            \bigbreak \noindent 
+            If the mailbox is owned by a process, and thus in the address space of that process, then we distinguish between the owner (which can only receive messages) and the user (which can only send messages).
+            \bigbreak \noindent 
+            When the process that owns the mailbox terminates, the mailbox disappears. If the operating system owns the mailbox, then it must provide a process to do the following:
+            \begin{itemize}
+                \item Create a new mailbox
+                \item Send and receive messages through the mailbox
+                \item Delete a mailbox
+            \end{itemize}
+            The process that creates the mailbox is the owner by default. Initially, the owner is the only process that can receive messages through this mailbox. However the ownership and receiving privilege may be passed to other processes through system calls.
+        \item \textbf{Synchronization}: Communication between processes takes place through calls to send() and receive primitives. There are different design options for implementing each primitive.
+            \bigbreak \noindent 
+            Message passing may be blocking or non-blocking also known as synchronous and asynchronous.
+            \begin{itemize}
+                \item \textbf{Blocking send}: The sending process is blocked until the message is received by the receiving process or by the mailbox.
+                \item \textbf{Nonblocking send}: The sending process sends the message and resumes operation.
+                \item \textbf{Blocking receive}: The receiver blocks until a message is available.
+                \item \textbf{Nonblocking receive}: The receiver retrieves either a valid message or null.
+            \end{itemize}
+        \item \textbf{Buffering}: Messages exchanged by communicating processes reside in a temporary queue. Such queues can be implemented in three ways:
+            \begin{enumerate}
+                \item \textbf{Zero capacity}: The queue has a max length of zero; thus, the link cannot have any messages waiting in it. In this case, the sender must block until the recipient receives a message.
+                    \bigbreak \noindent 
+                    a zero-capacity queue does not store messages at all. It represents a communication link with no buffering. The queue length is conceptually zero, so a message cannot exist “in transit” independently of both processes.
+                    \bigbreak \noindent 
+                    Instead, communication occurs only when sender and receiver synchronize at the same instant. This mechanism is commonly called a rendezvous or synchronous message passing
+                    \bigbreak \noindent 
+                    When a process attempts to send a message:
+                    \begin{itemize}
+                        \item If no receiver is ready, the sender blocks (sleeps).
+                        \item When a receiver arrives and performs a receive operation, the OS:
+                            \begin{itemize}
+                                \item Wakes the sender
+                                \item Copies the message directly from sender to receiver
+                                \item Unblocks both processes
+                            \end{itemize}
+                    \end{itemize}
+                    No message is ever stored in a queue. The kernel merely records that one side is waiting. “Delivery happens only when both parties are present.”
+                \item \textbf{Bounded capacity}: The queue has finite length $n$. If the queue is not full when a new message is sent, the message is placed in the queue, and the sender can continue execution without waiting. If the queue is full, the sender must block until space is available in the queue.
+                \item \textbf{Unbounded capacity}: The queue’s length is potentially infinite. The sender never needs to block
+            \end{enumerate}
+        \item \textbf{Memory-mapped files (mmap)}: A memory-mapped file (mmap) in Linux is a mechanism that maps the contents of a file (or device) directly into a process’s virtual address space. After mapping, the file can be accessed using ordinary memory operations (loads and stores) rather than explicit system calls like read() or write().
+            \bigbreak \noindent 
+            Ordinarily, file I/O requires copying data between kernel buffers and user buffers:
+            \begin{itemize}
+                \item \textbf{read()}: kernel copies file data into user memory
+                \item \textbf{write()}: kernel copies user data into the file cache
+            \end{itemize}
+            With memory mapping, the kernel instead establishes a virtual memory region whose pages correspond to pages of the file. The CPU’s memory hardware handles access transparently.
+            \bigbreak \noindent 
+            From the program’s perspective, the file behaves like a contiguous array in memory.
+        \item \textbf{POSIX Shared Memory}: POSIX shared memory is organized using memory-mapped files, which associate the region of shared memory with a file. A process must first create a shared-memory object using the shm_open() system call
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <sys/mman.h>
+                #include <sys/stat.h>        /* For mode constants */
+                #include <fcntl.h>           /* For O_* constants */
 
+                int shm_open(const char *name, int oflag, mode_t mode);
+                int shm_unlink(const char *name);
+            \end{cppcode}
+            \bigbreak \noindent 
+            For example, 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The first parameter specifies the name of the shared memory object. Processes that wish to access this shared memory must refer to the object by this name.
+            \bigbreak \noindent 
+            O\_CREAT says to create the shared-memory object if it does not yet exist, and O\_RDWR means that the object is open for reading and writing. The last parameter specifies the file permissions.
+            \bigbreak \noindent 
+            Success returns an integer file descriptor for the shared memory object.
+            \bigbreak \noindent 
+            Once the object is established, the ftruncate() function is used to configure the size of the object in bytes.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ftruncate(fd, 4096)
+            \end{cppcode}
+            \bigbreak \noindent 
+            sets the size of the object to 4096 bytes. The mmap() function establishes a memory-mapped file containing the sharedmemory object. It also returns a pointer to the memory mapped file that is used for accessing the shared memory object.
+            \bigbreak \noindent 
+            A producer program is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <stdlib.h>
+                #include <string.h>
+                #include <fcntl.h>
+                #include <sys/shm.h>
+                #include <sys/stat.h>
+                #include <sys/mman.h>
 
+                int main() {
+                    const int SIZE = 4098;
+                    const char * name = "OS";
+                    const char * message_0 = "Hello";
+                    const char * message_1 = "World!";
 
+                    int fd;
+
+                    char * ptr;
+
+                    fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+
+                    ftruncate(fd, SIZE)
+
+                    ptr = (char *)mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+                    sprintf(ptr, "%s", message_0);
+                    ptr += strlen(message_0)
+                    sprintf(ptr, "%s", message_1);
+                    ptr += strlen(message_1)
+
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            You might notice there is no munmap() or close(fd), munmap() is omitted because the program exits immediately, and process termination implicitly tears down the entire address space, including any memory mappings. In other words, the kernel will unmap the region as part of normal process cleanup.
+            \bigbreak \noindent 
+            When main() returns (or the process calls exit()), Linux:
+            \begin{itemize}
+                \item unmaps all VMAs (including mmap regions),
+                \item closes open file descriptors,
+                \item releases other process resources.
+            \end{itemize}
+            This is actually true for all resources used in a Linux program, It is not specific to mmap(). The same “cleanup on process exit” principle applies to memory obtained via new, malloc, and most other user-space resources. However, the mechanisms differ fundamentally.
+            \bigbreak \noindent 
+            When a process terminates, the kernel destroys the entire process:
+            \begin{itemize}
+                \item All virtual memory mappings are released
+                \item All heap memory is reclaimed
+                \item All file descriptors are closed
+                \item All threads are destroyed
+                \item Kernel objects referenced only by that process are dereferenced
+            \end{itemize}
+            However, with \texttt{new}, C++ object lifetime rules apply. If you do not \texttt{delete}, 
+            \begin{itemize}
+                \item Destructors for dynamically allocated objects are not called
+                \item Resource cleanup inside those destructors will not occur
+            \end{itemize}
+            And, in long running programs, 
+            \begin{itemize}
+                \item Not calling delete $\to$ real memory leak
+                \item Not calling munmap $\to$ real address-space/resource leak
+            \end{itemize}
+            For daemons, servers, compilers, databases, etc., this is unacceptable.
+            \bigbreak \noindent 
+            A consumer program is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <stdlib.h>
+                #include <fcntl.h>
+                #include <sys/shm.h>
+                #include <sys/stat.h>
+                #include <sys/mman.h>
+
+                int main()
+                {
+                    /* the size (in bytes) of shared memory object */
+                    const int SIZE = 4096;
+
+                    /* name of the shared memory object */
+                    const char *name = "OS";
+
+                    /* shared memory file descriptor */
+                    int fd;
+
+                    /* pointer to shared memory obect */
+                    char *ptr;
+
+                    /* open the shared memory object */
+                    fd = shm_open(name, O RDONLY, 0666);
+
+                    /* memory map the shared memory object */
+                    ptr = (char *)
+                    mmap(0, SIZE, PROT READ | PROT WRITE, MAP SHARED, fd, 0);
+
+                    /* read from the shared memory object */
+                    printf("%s",(char *)ptr);
+
+                    /* remove the shared memory object */
+                    shm_unlink(name);
+
+                    return 0;
+                }
+            \end{cppcode}
+        \item \textbf{Pipes}: A pipe acts as a conduit allowing two processes to communicate. 
+            \bigbreak \noindent 
+            When implementing a pipe, 4 issues must be considered:
+            \begin{enumerate}
+                \item Does the pipe allow bidirectional communication, or is communication unidirectional.
+                \item If two-way communication is allowed, is it half duplex (data can travel only one way at a time) or full duplex (data can travel in both directions at the same time).
+                \item Must a relationship (such as parent-child) exist between the communicating processes?
+                \item Can the pipes communicate over a network, or must the communicating processes reside on the same machine?
+            \end{enumerate}
+        \item \textbf{Ordinary pipes}:  Ordinary pipes allow two processes to communicate in standard producerconsumer fashion: the producer writes to one end of the pipe (the write end) and the consumer reads from the other end (the read end). This makes ordinary pipes unidirectional, allowing only one-way communication.
+            \bigbreak \noindent 
+            If two-way communication is required, two pipes must be used, with each pipe sending data in a different direction.
+            \bigbreak \noindent 
+            ON UNIX systems, ordinary pipes are constructed using the function:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                pipe(int fd[]);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The function creates a pipe that is accessed through the int fd[] file descriptors; fd[0] is the read end of the pipe, and fd[1] is the write end.
+            \bigbreak \noindent 
+            UNIX treats a pipe as a special type of file. Thus, pipes can be accessed using ordinary read() and write() system calls.
+            \bigbreak \noindent 
+            An ordinary pipe cannot be accessed from outside the process that created it. Typically, a parent process will create a pipe to communicate with its children.
+            \bigbreak \noindent 
+            The child inherits the files open in the parent process, and since the pipe is a special kind of file, the child inherits the pipe.
+            \bigbreak \noindent 
+            \fig{1}{./figures/1059.png}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <sys/types.h>
+                #include <stdio.h>
+                #include <string>
+                #include <unistd.h>
+
+                #define BUFFER_SIZE 25
+                #define READ_END 0
+                #define WRITE_END 1
+
+                int main(void) {
+                    char write_msg[BUFFER_SIZE] = "Greetings"
+                    char read_msg[BUFFER_SIZE];
+                    int fd[2];
+                    pid_t pid;
+
+                    if (pipe(fd) == -1) {
+                        fprintf(stderr, "Pipe Failed");
+                        return 1;
+                    }
+                    pid = fork();
+
+                    if (pid < 0) {
+                        fprintf(stderr, "Fork Failed");
+                        return 1;
+                    }
+                    if (pid > 0) {
+                        /* close the unused end of the pipe */
+                        close(fd[READ_END]);
+                        write(fd[WRITE_END], write_msg, strlen(write_msg)+1);
+                        close(fd[WRITE_END]);
+                    }
+                    else {
+                        close(fd[WRITE_END]);
+                        read(fd[READ_END], read_msg, BUFFER_SIZE);
+                        printf("read %s", read_msg);
+                        close(fd[READ_END]);
+                    }
+                }
+            \end{cppcode}
+        \item \textbf{Closing the unused ends}: Suppose two processes, $A$ and $B$ need to communicate. In such a case, it is important that the process which writes, closes its read end of the pipe and the process which reads closes its write end of a pipe.
+            \bigbreak \noindent 
+            This is referred to as plumbing, and it is required to create a properly directed pipe.
+            \bigbreak \noindent 
+            Closing the unused ends is an important step to ensure that a process reading from the pipe can detect end-of-file (read() returns 0) when the writer has closed its end of the pipe.
+        \item \textbf{Named pipes}: Communication can be bidirectional, and no parent-child relationship is required. Once a named pipe is established, several processes can use it for communication. In a typical scenario, a named pipe has several writers. Named pipes continue to exist after communicating processes have finished.
+            \bigbreak \noindent 
+            FIFO in UNIX systems. Once created, they appear as typical files in the file system. A FIFO is created with the mkfifo() system call and manipulated with the ordinary open(), read(), write(), and close() system calls. It will continue to exist until it is explicitly deleted.
+            \bigbreak \noindent 
+            FIFOs allow bidrectional communication, but only half-duplex transmission is permitted. If data must travel in both directions, two FIFOs are typically used.
+            \bigbreak \noindent 
+            The communicating processes must reside on the same machine. Sockets are used for intermachine communication.
+        \item \textbf{Sockets}: A socket is defined as an endpoint for communication. A pair of processes communicating over a network employs a pair of sockets. One for each process
+            \bigbreak \noindent 
+            A socket is identified by an IP address concatenated with a port number. Sockets use a client-server architecture. The server waits for incoming client requests by listening to a specified port.
+            \bigbreak \noindent 
+            Once a request is received, the server accepts a connection from the client socket to complete the connection.
+            \bigbreak \noindent 
+            Servers implementing services such as SSH, FTP, and HTTP listen to well-known ports. An ssh server listens to port 22; an FTP server listens to port 21; and a web, or HTTP server listens to port 80.
+            \bigbreak \noindent 
+            All ports below 1024 are considered well known and are used to implement standard services.
+            \bigbreak \noindent 
+            When a client process initiates a request for a connection, it is assigned a port by its host computer. This port is some arbitrary number greater than 1024.
+            \bigbreak \noindent 
+            If a client on host $X$ with IP address 146.86.5.20 wishes to establish a connection to a web server at address 161.25.19.8, host $X$ may be assigned port 1625. The connection will consist of a pair of sockets: (146.86.5.20:1625) on host $X$ and (161.25.19.8.80) on the web server.
+            \bigbreak \noindent 
+            The packets traveling between the hosts are delivered to the appropriate process based on the destination port number.
+            \bigbreak \noindent 
+            All connections must be unique. Therefore, if another process also on host X wishes to establish another connection with the same web server, it would be assigned a port number greater than 1024 and not equal to 1625.
+            \bigbreak \noindent 
+            Two types of sockets are TCP and UDP.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Threads and concurrency}
+    \begin{itemize}
+        \item \textbf{Overview}: A thread is a basic unit of CPU utilization; it comprises a thread ID, a program counter (PC), a register set, and a stack. It shares with other threads belonging to the same process its code section, data section, and other operating-system resources, such as open files and signals. A traditional process has a single thread of control. If a process has multiple threads of control, it can perform more than one task at a time
+        \item \textbf{Motivation}: Applications can also be designed to leverage processing capabilities on multicore systems. Such applications can perform several CPU-intensive tasks in parallel across the multiple computing cores.
+            \bigbreak \noindent 
+            In certain situations, a single application may be required to perform several similar tasks. For example, a web server accepts client requests for web pages, images, sound, and so forth. A busy web server may have several (perhaps thousands of) clients concurrently accessing it. If the web server ran as a traditional single-threaded process, it would be able to service only one client at a time, and a client might have to wait a very long time for its request to be serviced. 
+            \bigbreak \noindent 
+            One solution is to have the server run as a single process that accepts requests. When the server receives a request, it creates a separate process to service that request.
+            \bigbreak \noindent 
+            Process creation is time consuming and resource intensive, however. If the new process will perform the same tasks as the existing process, why incur all that overhead? It is generally more efficient to use one process that contains multiple threads. If the web-server process is multithreaded, the server will create a separate thread that listens for client requests. When a request is made, rather than creating another process, the server creates a new thread to service the request and resumes listening for additional requests
+            \bigbreak \noindent 
+            Most operating system kernels are also typically multithreaded. As an example, during system boot time on Linux systems, several kernel threads are created. Each thread performs a specific task, such as managing devices, memory management, or interrupt handling. The command 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                ps -ef 
+            \end{bashcode}
+            can be used to display the kernel threads on a running Linux system. Examining the output of this command will show the kernel thread kthreadd (with pid = 2), which serves as the parent of all other kernel threads.
+            \bigbreak \noindent 
+            Many applications can also take advantage of multiple threads, including basic sorting, trees, and graph algorithms. In addition, programmers who must solve contemporary CPU-intensive problems in data mining, graphics, and artificial intelligence can leverage the power of modern multicore systems by designing solutions that run in parallel.
+            \bigbreak \noindent 
+            \fig{1}{./figures/1060.png}
+        \item \textbf{Benefits}: 
+            \begin{enumerate}
+                \item \textbf{Responsiveness}: Multithreading an interactive application may allow a program to continue running even if part of it is blocked or is performing a lengthy operation, thereby increasing responsiveness to the user. This quality is especially useful in designing user interfaces. 
+                \item \textbf{Resource sharing}: Processes can share resources only through techniques such as shared memory and message passing. Such techniques must be explicitly arranged by the programmer. However, threads share the memory and the resources of the process to which they belong by default. The benefit of sharing code and data is that it allows an application to have several different threads of activity within the same address space.
+                \item \textbf{Economy}: Allocating memory and resources for process creation is costly. Because threads share the resources of the process to which they belong, it is more economical to create and context-switch threads. Empirically gauging the difference in overhead can be difficult, but in general thread creation consumes less time and memory than process creation. Additionally, context switching is typically faster between threads than between processes.
+                \item \textbf{Scalability}: The benefits of multithreading can be even greater in a multiprocessor architecture, where threads may be running in parallel on different processing cores. A single-threaded process can run on only one processor, regardless how many are available.
+            \end{enumerate}
+        \item \textbf{Multicore programming}: Early in computer design, in order to get more computing performance, single CPU systems evolved into multi-CPU systems. A later, yet similar, trend in system design is to place multiple computing cores on a single processing chip where each core appears as a separate CPU to the operating system. We refer to such systems as multicore, and multithreaded programming provides a mechanism for more efficient use of these multiple computing cores and improved concurrency
+            \bigbreak \noindent 
+            On a system with multiple cores, concurrency means that some threads can run in parallel, because the system can assign a separate thread to each core.
+        \item \textbf{Concurrency vs parallelism}: A concurrent system supports more than one task by allowing all the tasks to make progress. In contrast, a parallel system can perform more than one task simultaneously.  Thus, it is possible to have concurrency without parallelism.
+            \bigbreak \noindent 
+            Before the advent of multiprocessor and multicore architectures, most computer systems had only a single processor, and CPU schedulers were designed to provide the illusion of parallelism by rapidly switching between processes, thereby allowing each process to make progress. Such processes were running concurrently, but not in parallel.
+        \item \textbf{The python global interpreter lock (GIL)}: The Global Interpreter Lock (GIL) means that threads can make progress concurrently but cannot execute Python bytecode in parallel on multiple CPU cores.
+            \bigbreak \noindent 
+            CPython uses reference counting for memory management. Updating reference counts is not thread-safe, so the interpreter enforces that only one thread executes Python bytecode at a time.
+            \bigbreak \noindent 
+            The interpreter periodically releases the GIL, allowing thread switching. Thus multiple threads can:
+            \begin{itemize}
+                \item Overlap in time
+                \item Appear to run simultaneously
+                \item Progress while others are waiting
+            \end{itemize}
+            However, at any instant, only one thread executes Python instructions.
+        \item \textbf{Programming challenges}:  Designers of operating systems must write scheduling algorithms that use multiple processing cores to allow the parallel execution. In general, five areas present challenges in programming for multicore systems:
+            \begin{enumerate}
+                \item \textbf{Identifying tasks}: This involves examining applications to find areas that can be divided into separate, concurrent tasks. Ideally, tasks are independent of one another and thus can run in parallel on individual cores.
+                \item \textbf{Balance}: While identifying tasks that can run in parallel, programmers must also ensure that the tasks perform equal work of equal value. In some instances, a certain task may not contribute as much value to the overall process as other tasks. Using a separate execution core to run that task may not be worth the cost.
+                \item \textbf{Data splitting}: Just as applications are divided into separate tasks, the data accessed and manipulated by the tasks must be divided to run on separate cores.
+                \item \textbf{Data dependency}: The data accessed by the tasks must be examined for dependencies between two or more tasks. When one task depends on data from another, programmers must ensure that the execution of the tasks is synchronized to accommodate the data dependency. We examine such strategies in Chapter 6.
+                \item \textbf{Testing and debugging}: When a program is running in parallel on multiple cores, many different execution paths are possible. Testing and debugging such concurrent programs is inherently more difficult than testing and debugging single-threaded applications.
+            \end{enumerate}
+        \item \textbf{Amdahl's law}: Amdahl’s Law is a formula that identifies potential performance gains from adding additional computing cores to an application that has both serial (nonparallel) and parallel components. If $S$ is the portion of the application that must be performed serially on a system with $N$ processing cores, the formula appears as follows:
+            \begin{align*}
+                \text{speedup } \leq \frac{1}{S + \frac{(1-S)}{N}}
+            .\end{align*}
+        \item \textbf{Types of parallelism}: In general, there are two types of parallelism:
+            \begin{enumerate}
+                \item \textbf{Data parallelism} focuses on distributing subsets of the same data across multiple computing cores and performing the same operation on each core
+                \item \textbf{Task parallelism} involves distributing not data but tasks (threads) across multiple computing cores. Each thread is performing a unique operation. Different threads may be operating on the same data, or they may be operating on different data.  
+            \end{enumerate}
+            However, data and task parallelism are not mutually exclusive, and an application may in fact use a hybrid of these two strategies.
+        \item \textbf{User threads and kernel threads}: Support for threads may be provided either at the user level, for \textbf{user threads}, or by the kernel, for \textbf{kernel threads}. User threads are supported above the kernel and are managed without kernel support, whereas kernel threads are supported and managed directly by the operating system. Virtually all contemporary operating systems—including Windows, Linux, and macOS— support kernel threads.
+        \item \textbf{Multithreading models}: Ultimately, a relationship must exist between user threads and kernel threads
+            \begin{enumerate}
+                \item \textbf{Many-to-one model}: The many-to-one model maps many user-level threads to one kernel thread. Thread management is done by the thread library in user space, so it is efficient. However, the entire process will block if a thread makes a blocking system call. 
+                    \bigbreak \noindent 
+                    Because only one thread can access the kernel at a time, multiple threads are unable to run in parallel on multicore systems.
+                    \bigbreak \noindent 
+                    Very few systems continue to use the model because of its inability to take advantage of multiple processing cores, which have now become standard on most computer systems.
+                \item \textbf{One-to-One model}: The one-to-one model  maps each user thread to a kernel thread.  It provides more concurrency than the many-to-one model by allowing another thread to run when a thread makes a blocking system call. It also allows multiple threads to run in parallel on multiprocessors. The only drawback to this model is that creating a user thread requires creating the corresponding kernel thread, and a large number of kernel threads may burden the performance of a system. Linux, along with the family of Windows operating systems, implement the one-to-one model.
+                \item \textbf{Many-to-Many model}:  Multiplexes many user-level threads to a smaller or equal number of kernel threads. The number of kernel threads may be specific to either a particular application or a particular machine
+
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{Note:} A thread does not inherently have to be mapped 1:1 to a kernel thread, but if you want that thread to execute on the CPU independently and in parallel, the operating system must know about it. That requires a kernel-visible schedulable entity, i.e., a \textbf{kernel thread}.
+            \bigbreak \noindent 
+            User programs cannot directly control CPU time. The hardware timer, interrupts, context switching, and run queues are all managed by the kernel. Therefore, for a thread to:
+            \begin{itemize}
+                \item Run independently of other threads
+                \item Be preempted
+                \item Block on I/O without freezing the whole process
+                \item Execute on another core
+                \item Be accounted for by the scheduler
+            \end{itemize}
+            ...…it must correspond to something the kernel can schedule — a kernel thread. 
+            \bigbreak \noindent 
+            Also, a CPU core executes one stream of instructions at a time, but a user thread and a kernel thread in a 1:1 model are not two independent streams — they are two views of the same execution context. So, a mapped user thread and kernel thread are not “two threads running.” They are one schedulable entity represented at two layers.
+            \begin{itemize}
+                \item \textbf{User thread}: The abstraction in your program/runtime (e.g., std::thread, Python thread)
+                \item \textbf{Kernel thread}: The OS object the scheduler actually runs on the CPU
+            \end{itemize}
+            The CPU executes the kernel thread, which executes your user code. A CPU core executes:
+            \begin{itemize}
+                \item Machine instructions
+                \item From a specific address space
+                \item With a specific register state
+                \item In a specific privilege mode
+            \end{itemize}
+            That execution context belongs to a kernel thread. When running user code, that kernel thread is in user mode, but it is still the same kernel-managed entity.
+            \bigbreak \noindent 
+            There is no second execution stream. So,
+            \begin{center}
+                User thread  $\to$ mapped to $\to$ Kernel thread $\to$ scheduled on CPU
+            \end{center}
+            Only the kernel thread is real from the hardware perspective. Your program’s thread object is simply a handle to it.
+        \item \textbf{More on the models}: Whereas the many-to-one model allows the developer to create as many user threads as we wish, it does not result in parallelism, because the kernel can schedule only one kernel thread at a time. The one-to-one model allows greater concurrency, but the developer has to be careful not to create too many threads within an application.
+            \bigbreak \noindent 
+            The many-to-many model suffers from neither of these shortcomings: developers can create as many user threads as necessary, and the corresponding kernel threads can run in parallel on a multiprocessor. Also, when a thread performs a blocking system call, the kernel can schedule another thread for execution.
+            \bigbreak \noindent 
+            Although the many-to-many model appears to be the most flexible of the models discussed, in practice it is difficult to implement. In addition, with an increasing number of processing cores appearing on most systems, limiting the number of kernel threads has become less important. As a result, most operating systems now use the one-to-one model.
+
+        \item \textbf{The Two Level Model}: One variation on the many-to-many model still multiplexes many userlevel threads to a smaller or equal number of kernel threads but also allows a user-level thread to be bound to a kernel thread. This variation is sometimes referred to as the two-level model
+        \item \textbf{Thread libraries}: A thread library provides the programmer with an API for creating and managing threads. There are two primary ways of implementing a thread library. The first approach is to provide a library entirely in user space with no kernel support. All code and data structures for the library exist in user space. This means that invoking a function in the library results in a local function call in user space and not a system call.
+            \bigbreak \noindent 
+            The second approach is to implement a kernel-level library supported directly by the operating system. In this case, code and data structures for the library exist in kernel space. Invoking a function in the API for the library typically results in a system call to the kernel.
+        \item \textbf{Three main thread libraries}: 
+            \begin{enumerate}
+                \item \textbf{POSIX Pthreads}: The threads extension of the POSIX standard, may be provided as either a user-level or a kernel-level library
+                \item \textbf{Windows threads}: The Windows thread library is a kernel-level library available on Windows systems.
+                \item \textbf{Java threads}: The Java thread API allows threads to be created and managed directly in Java programs. Because in most instances the JVM is running on top of a host operating system, the Java thread API is generally implemented using a thread library available on the host system. This means that on Windows systems, Java threads are typically implemented using the Windows API; UNIX, Linux, and macOS systems typically use Pthreads
+            \end{enumerate}
+        \item \textbf{Asynchronous threading and synchronous threading}: 
+            \begin{itemize}
+                \item With \textbf{asynchronous threading}, once the parent creates a child thread, the parent resumes its execution, so that the parent and child execute concurrently and independently of one another. Because the threads are independent, there is typically little data sharing between them. 
+                \item \textbf{Synchronous threading} occurs when the parent thread creates one or more children and then must wait for all of its children to terminate before it resumes. Here, the threads created by the parent perform work concurrently, but the parent cannot continue until this work has been completed. Once each thread has finished its work, it terminates and joins with its parent. Only after all of the children have joined can the parent resume execution. Typically, synchronous threading involves significant data sharing among threads.
+            \end{itemize}
+        \item \textbf{Pthreads}: Pthreads refers to the POSIX standard (IEEE 1003.1c) defining an API for thread creation and synchronization. This is a specification for thread behavior, not an implementation. Operating-system designers may implement the specification
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <pthread.h>
+                #include <stdio.h>
+                #include <stdlib.h>
+
+                int sum; /* this data is shared by the thread(s) */
+                void *runner(void *param); /* threads call this function */
+
+                int main(int argc, char* argv[]) {
+                    pthread_t tid; /* the thread identifier */
+                    pthread_attr_t attr; /* set of thread attributes */
+
+                    /* set the default attributes of the thread */
+                    pthread_attr init(&attr);
+
+                    /* create the thread */
+                    pthread_create(&tid, &attr, runner, argv[1]);
+
+                    /* wait for the thread to exit */
+                    pthread_join(tid,NULL);
+                    printf("sum = %d∖n",sum);
+                }
+
+                /* The thread will execute in this function */
+                void *runner(void *param)
+                {
+                    int i, upper = atoi(param);
+                    sum = 0;
+
+                    for (i = 1; i <= upper; i++) sum += i;
+
+                    pthread_exit(0);
+                }
+            \end{cppcode}
+
+            \bigbreak \noindent 
+            The code to join threads is
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #define NUM THREADS 10
+
+                /* an array of threads to be joined upon */
+                pthread t workers[NUM THREADS];
+
+                for (int i = 0; i < NUM THREADS; i++)
+                    pthread join(workers[i], NULL);
+            \end{cppcode}
+        \item \textbf{Implicit Threading}: With the continued growth of multicore processing, applications containing hundreds—or even thousands—of threads are looming on the horizon. Designing such applications is not a trivial undertaking. Programmers must not address not only the challenges discussed previously, but additional difficulties as well. 
+            \bigbreak \noindent 
+            One way to address these difficulties and better support the design of concurrent and parallel applications is to transfer the creation and management of threading from application developers to compilers and run-time libraries. This strategy, termed implicit threading, is an increasingly popular trend
+            \bigbreak \noindent 
+            As we shall see, these strategies generally require application developers to identify tasks—not threads— that can run in parallel. A task is usually written as a function, which the run-time library then maps to a separate thread, typically using the many-to-many model. The advantage of this approach is that developers only need to identify parallel tasks, and the libraries determine the specific details of thread creation and management.
+        \item \textbf{Thread pools}: One issue with thread creation is the time it takes to created them. Also, We have not placed a bound on the number of threads concurrently active in the system. Unlimited threads could exhaust system resources, such as CPU time or memory. One solution to this problem is to use a \textbf{thread pool}.
+            \bigbreak \noindent 
+            The general idea behind a thread pool is to create a number of threads at start-up and place them into a pool, where they sit and wait for work. When a server receives a request, rather than creating a thread, it instead submits the request to the thread pool and resumes waiting for additional requests.
+            \bigbreak \noindent 
+            If there is an available thread in the pool, it is awakened, and the request is serviced immediately. If the pool contains no available thread, the task is queued until one becomes free. Once a thread completes its service, it returns to the pool and awaits more work. Thread pools work well when the tasks submitted to the pool can be executed asynchronously.
+            \bigbreak \noindent 
+            Thread pools offer these benefits:
+            \begin{enumerate}
+                \item Servicing a request with an existing thread is often faster than waiting to create a thread.
+                \item A thread pool limits the number of threads that exist at any one point. This is particularly important on systems that cannot support a large number of concurrent threads.
+                \item Separating the task to be performed from the mechanics of creating the task allows us to use different strategies for running the task. For example, the task could be scheduled to execute after a time delay or to execute periodically.
+            \end{enumerate}
+            \bigbreak \noindent 
+            The number of threads in the pool can be set heuristically based on factors such as the number of CPUs in the system, the amount of physical memory, and the expected number of concurrent client requests. s. More sophisticated threadpool architectures can dynamically adjust the number of threads in the pool according to usage patterns. Such architectures provide the further benefit of having a smaller pool— thereby consuming less memory—when the load on the system is low
+        \item \textbf{Threading Issues}: If one thread in a program calls fork(), does the new process duplicate all threads, or is the new process single-threaded? Some UNIX systems have chosen to have two versions of fork(), one that duplicates all threads and another that duplicates only the thread that invoked the fork() system call.
+            \bigbreak \noindent 
+            If a thread invokes the exec() system call, the program specified in the parameter to exec() will replace the entire process—including all threads
+            \bigbreak \noindent 
+            Which of the two versions of fork() to use depends on the application. If exec() is called immediately after forking, then duplicating all threads is unnecessary, as the program specified in the parameters to exec() will replace the process. In this instance, duplicating only the calling thread is appropriate. If, however, the separate process does not call exec() after forking, the separate process should duplicate all threads.
+        \item \textbf{Signal Handling}: A signal is used in UNIX systems to notify a process that a particular event has occurred. A signal may be received either synchronously or asynchronously, depending on the source of and the reason for the event being signaled. All signals, whether synchronous or asynchronous, follow the same pattern:
+            \begin{enumerate}
+                \item A signal is generated by the occurrence of a particular event.
+                \item The signal is delivered to a process.
+                \item Once delivered, the signal must be handled.
+            \end{enumerate}
+            Examples of synchronous signals include illegal memory access and division by 0. If a running program performs either of these actions, a signal is generated. Synchronous signals are delivered to the same process that performed the operation that caused the signal (that is the reason they are considered synchronous).
+            \bigbreak \noindent 
+            When a signal is generated by an event external to a running process, that process receives the signal asynchronously. Examples of such signals include terminating a process with specific keystrokes. Typically, an asynchronous signal is sent to another process.
+            \bigbreak \noindent 
+            A signal may be handled by one of two possible handlers:
+            \begin{enumerate}
+                \item A default signal handler
+                \item A user-defined signal handler
+            \end{enumerate}
+            Every signal has a default signal handler that the kernel runs when handling that signal. This default action can be overridden by a user-define signal handler that is called to handle the signal. Signals are handled in different ways. Some signals may be ignored, while others (for example, an illegal memory access) are handled by terminating the program.
+            \bigbreak \noindent 
+            Handling signals in single-threaded programs is straightforward: signals are always delivered to a process. However, delivering signals is more complicated in multithreaded programs, where a process may have several threads. Where, then, should a signal be delivered?
+            \bigbreak \noindent 
+            In general, the following options exist:
+            \begin{enumerate}
+                \item Deliver the signal to the thread to which the signal applies.
+                \item Deliver the signal to every thread in the process.
+                \item Deliver the signal to certain threads in the process.
+                \item Assign a specific thread to receive all signals for the process.
+            \end{enumerate}
+            The method for delivering a signal depends on the type of signal generated. For example, synchronous signals need to be delivered to the thread causing the signal and not to other threads in the process. However, the situation with asynchronous signals is not as clear. Some asynchronous signals—such as a signal that terminates a process should be sent to all threads.
+            \bigbreak \noindent 
+            The standard UNIX function for delivering a signal is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            kill(pid_t pid, int signal)
+            \end{cppcode}
+            \bigbreak \noindent 
+            This function specifies the process (pid) to which a particular signal (signal) is to be delivered. Most multithreaded versions of UNIX allow a thread to specify which signals it will accept and which it will block. Therefore, in some cases, an asynchronous signal may be delivered only to those threads that are not blocking it. However, because signals need to be handled only once, a signal is typically delivered only to the first thread found that is not blocking it. POSIX Pthreads provides the following function, which allows a signal to be delivered to a specified thread (tid):
+            \bigbreak \noindent 
+            \begin{cppcode}
+            pthread_kill(pthread_t tid, int signal)
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:} Despite the name, kill() does not necessarily kill anything.
+        \item \textbf{Thread Cancellation}: Thread cancellation involves terminating a thread before it has completed. For example, if multiple threads are concurrently searching through a database and one thread returns the result, the remaining threads might be canceled.
+            \bigbreak \noindent 
+            A thread that is to be canceled is often referred to as the \textbf{target thread}. Cancellation of a target thread may occur in two different scenarios:
+            \begin{enumerate}
+                \item \textbf{Asynchronous cancellation}: One thread immediately terminates the target thread.
+                \item \textbf{Deferred cancellation}: The target thread periodically checks whether it should terminate, allo
+            \end{enumerate}
+            The difficulty with cancellation occurs in situations where resources have been allocated to a canceled thread or where a thread is canceled while in the midst of updating data it is sharing with other threads. This becomes especially troublesome with asynchronous cancellation. Often, the operating system will reclaim system resources from a canceled thread but will not reclaim all resources. Therefore, canceling a thread asynchronously may not free a necessary system-wide resource.
+            \bigbreak \noindent 
+            With deferred cancellation, in contrast, one thread indicates that a target thread is to be canceled, but cancellation occurs only after the target thread has checked a flag to determine whether or not it should be canceled. The thread can perform this check at a point at which it can be canceled safely.
+            \bigbreak \noindent 
+            In Pthreads, thread cancellation is initiated using the pthread\_cancel() function. The identifier of the target thread is passed as a parameter to the function.
+            \bigbreak \noindent 
+            Invoking pthread\_cancel()indicates only a request to cancel the target thread, however; actual cancellation depends on how the target thread is set up to handle the request. When the target thread is finally canceled, the call to pthread\_join() in the canceling thread returns. Pthreads supports three cancellation modes. Each mode is defined as a state and a type. A thread may set its cancellation state and type using an API.
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Mode}& \textbf{State}& \textbf{Type} \\
+                    \midrule
+                    Off &Disabled &– \\[2ex]
+                    Deferred &Enabled &Deferred \\[2ex]
+                    Asynchronous &Enabled &Asynchronous \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            \bigbreak \noindent 
+            Pthreads allows threads to disable or enable cancellation. Obviously, a thread cannot be canceled if cancellation is disabled. However, cancellation requests remain pending, so the thread can later enable cancellation and respond to the request. The default cancellation type is deferred cancellation. However, cancellation occurs only when a thread reaches a \textbf{cancellation point}.
+            \bigbreak \noindent 
+            Most of the blocking system calls in the POSIX and standard C library are defined as cancellation points, and these are listed when invoking the command man pthreads on a Linux system. For example, the read() system call is a cancellation point that allows cancelling a thread that is blocked while awaiting input from read().
+            \bigbreak \noindent 
+            One technique for establishing a cancellation point is to invoke the pthread\_testcancel() function. If a cancellation request is found to be pending, the call to pthread\_testcancel() will not return, and the thread will terminate; otherwise, the call to the function will return, and the thread will continue to run
+            \bigbreak \noindent 
+            Additionally, Pthreads allows a function known as a \textbf{cleanup handler} to be invoked if a thread is canceled. This function allows any resources a thread may have acquired to be released before the thread is terminated.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                while (1) {
+                    /* do some work for awhile */
+
+                    ...
+
+                    /* check if there is a cancellation request */
+                    pthread testcancel();
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Asynchronous cancellation is not recommended in Pthreads documentation.
+        \item \textbf{Thread-Local Storage}: Threads belonging to a process share the data of the process. Indeed, this data sharing provides one of the benefits of multithreaded programming. However, in some circumstances, each thread might need its own copy of certain data. We will call such data \textbf{thread-local storage (or TLS)}.
+            \bigbreak \noindent 
+            It is easy to confuse TLS with local variables. However, local variables are visible only during a single function invocation, whereas TLS data are visible across function invocations.
+            \bigbreak \noindent 
+            In some ways, TLS is similar to static data; the difference is that TLS data are unique to each thread. (In fact, TLS is usually declared as static.) Most thread libraries and compilers provide support for TLS.
+            \bigbreak \noindent 
+             Pthreads includes the type pthread\_key\_t, which provides a key that is specific to each thread. This key can then be used to access TLS data.
+        \item \textbf{Scheduler Activations}: A final issue to be considered with multithreaded programs concerns communication between the kernel and the thread library, which may be required by the many-to-many and two-level models. Such coordination allows the number of kernel threads to be dynamically adjusted to help ensure the best performance.
+            \bigbreak \noindent 
+            Many systems implementing either the many-to-many or the two-level model place an intermediate data structure between the user and kernel threads. This data structure— typically known as a \textbf{lightweight process}, or \textbf{LWP}
+            \bigbreak \noindent 
+            To the user-thread library, the LWP appears to be a virtual processor on which the application can schedule a user thread to run. Each LWP is attached to a kernel thread, and it is kernel threads that the operating system schedules to run on physical processors. If a kernel thread blocks (such as while waiting for an I/O operation to complete), the LWP blocks as well. Up the chain, the user-level thread attached to the LWP also blocks.
+            \bigbreak \noindent 
+            An application may require any number of LWPs to run efficiently. Consider a CPU-bound application running on a single processor. In this scenario, only one thread can run at a time, so one LWP is sufficient. An application that is I/Ointensive may require multiple LWPs to execute, however. Typically, an LWP is required for each concurrent blocking system call. Suppose, for example, that five different file-read requests occur simultaneously. Five LWPs are needed, because all could be waiting for I/O completion in the kernel. If a process has only four LWPs, then the fifth request must wait for one of the LWPs to return from the kernel.
+            \bigbreak \noindent 
+            One scheme for communication between the user-thread library and the kernel is known as \textbf{scheduler activation}. It works as follows: The kernel provides an application with a set of virtual processors (LWPs), and the application can schedule user threads onto an available virtual processor. Furthermore, the kernel must inform an application about certain events. This procedure is known as an \textbf{upcall}. Upcalls are handled by the thread library with an \textbf{upcall handler}, and upcall handlers must run on a virtual processor.
+            \bigbreak \noindent 
+            One event that triggers an upcall occurs when an application thread is about to block. In this scenario, the kernel makes an upcall to the application informing it that a thread is about to block and identifying the specific thread. The kernel then allocates a new virtual processor to the application. The application runs an upcall handler on this new virtual processor, which saves the state of the blocking thread and relinquishes the virtual processor on which the blocking thread is running. The upcall handler then schedules another thread that is eligible to run on the new virtual processor. When the event that the blocking thread was waiting for occurs, the kernel makes another upcall to the thread library informing it that the previously blocked thread is now eligible to run. The upcall handler for this event also requires a virtual processor, and the kernel may allocate a new virtual processor or preempt one of the user threads and run the upcall handler on its virtual processor. After marking the unblocked thread as eligible to run, the application schedules an eligible thread to run on an available virtual processor.
 
 
 

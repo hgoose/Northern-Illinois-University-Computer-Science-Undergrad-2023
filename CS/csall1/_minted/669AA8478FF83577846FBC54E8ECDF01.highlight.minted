@@ -1,0 +1,38 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}stdio.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}stdlib.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}fcntl.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}sys/shm.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}sys/stat.h\PYGZgt{}}
+\PYG{c+cp}{\PYGZsh{}}\PYG{c+cp}{include}\PYG{+w}{ }\PYG{c+cpf}{\PYGZlt{}sys/mman.h\PYGZgt{}}
+
+\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n+nf}{main}\PYG{p}{(}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{c+cm}{/* the size (in bytes) of shared memory object */}
+\PYG{+w}{    }\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{SIZE}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{4096}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* name of the shared memory object */}
+\PYG{+w}{    }\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{name}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{OS}\PYG{l+s}{\PYGZdq{}}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* shared memory file descriptor */}
+\PYG{+w}{    }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{fd}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* pointer to shared memory obect */}
+\PYG{+w}{    }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{ptr}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* open the shared memory object */}
+\PYG{+w}{    }\PYG{n}{fd}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{shm\PYGZus{}open}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{O}\PYG{+w}{ }\PYG{n}{RDONLY}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mo}{0666}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* memory map the shared memory object */}
+\PYG{+w}{    }\PYG{n}{ptr}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{char}\PYG{+w}{ }\PYG{o}{*}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{mmap}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{SIZE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{PROT}\PYG{+w}{ }\PYG{n}{READ}\PYG{+w}{ }\PYG{err}{|}\PYG{+w}{ }\PYG{n}{PROT}\PYG{+w}{ }\PYG{n}{WRITE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{MAP}\PYG{+w}{ }\PYG{n}{SHARED}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{fd}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* read from the shared memory object */}
+\PYG{+w}{    }\PYG{n}{printf}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{\PYGZpc{}s}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}\PYG{p}{(}\PYG{k+kt}{char}\PYG{+w}{ }\PYG{o}{*}\PYG{p}{)}\PYG{n}{ptr}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{c+cm}{/* remove the shared memory object */}
+\PYG{+w}{    }\PYG{n}{shm\PYGZus{}unlink}\PYG{p}{(}\PYG{n}{name}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{k}{return}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}
