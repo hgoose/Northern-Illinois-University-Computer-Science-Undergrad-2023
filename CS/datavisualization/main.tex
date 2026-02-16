@@ -533,6 +533,14 @@ html`
                             delete person.age;
                             \end{jscode}
                     \end{itemize}
+                \item \textbf{JS functions are objects}: We can assign properties to functions
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    function f() {}
+
+                    f.x = 10;
+                    f.y = 15;
+                    \end{jscode}
 
         \item \textbf{Creating html elements manually with JS (SVGs)}:
             \begin{itemize}
@@ -645,6 +653,641 @@ html`
 
 
     \end{itemize}
+
+    \pagebreak 
+    \unsect{D3}
+    \begin{itemize}
+        \item \textbf{Data-driven documents}: D3.js (Data-Driven Documents) is a JavaScript library for producing dynamic, interactive data visualizations in web browsers using standard web technologies — primarily HTML, SVG, and CSS. Unlike charting libraries that provide predefined plots, D3 is a low-level visualization toolkit that gives fine-grained control over how data maps to visual elements.
+            \bigbreak \noindent 
+            D3’s central abstraction is that data drives document structure. You associate data with elements on a page, and D3 computes what should be created, updated, or removed.
+            \bigbreak \noindent 
+            Conceptually,
+            \begin{center}
+                Data $\to$ Visual elements
+            \end{center}
+        \item \textbf{Key features}: 
+            \begin{itemize}
+                \item Supports data as a core piece of Web elements
+                    \begin{itemize}
+                        \item Loading data
+                        \item Dealing with changing data (joins, enter/update/exit)
+                        \item Correspondence between data and DOM elements               
+                    \end{itemize}
+                \item Selections (similar to CSS) that allow greater manipulation
+                \item Method chaining
+                \item Integrated layout algorithms
+                \item Focus on interaction support
+            \end{itemize}
+        \item \textbf{Data Binding (Selections)}: D3 can bind arrays or objects directly to DOM elements.
+            \bigbreak \noindent 
+            \begin{jscode}
+                d3.selectAll("p")
+                .data([10, 20, 30])
+                .text(d => d);
+            \end{jscode}
+            \bigbreak \noindent 
+            This replaces each paragraph’s text with the corresponding data value.
+        \item \textbf{Select and selectAll}:
+            \begin{itemize}
+                \item \textbf{d3.select(selector)}: Selects the first element that matches the specified selector string. If no elements match the selector, returns an empty selection. If multiple elements match the selector, only the first matching element (in document order) will be selected. 
+                    \bigbreak \noindent 
+                    If the selector is not a string, instead selects the specified node; this is useful if you already have a reference to a node
+                \item \textbf{selection.select(selector)}: For each selected element, selects the first descendant element that matches the specified selector string
+                    \bigbreak \noindent 
+                    If the selector is a function, it is evaluated for each selected element, in order, being passed the current datum (d), the current index (i), and the current group (nodes),
+                \item \textbf{d3.selectAll(selector)}: Selects all elements that match the specified selector string. The elements will be selected in document order (top-to-bottom). If no elements in the document match the selector, or if the selector is null or undefined, returns an empty selection.
+                    \bigbreak \noindent 
+                    If the selector is not a string, instead selects the specified array of nodes
+                \item \textbf{selection.selectAll(selector)}: For each selected element, selects the descendant elements that match the specified selector string. The elements in the returned selection are grouped by their corresponding parent node in this selection.
+            \end{itemize}
+        \item \textbf{selection.selectAll with function example}
+            \bigbreak \noindent 
+            \begin{jscode}
+                function run5b(svg) {
+                    // arrow functions
+                    svg.selectAll("rect")
+                        .attr("x", 0)
+                        .attr("y", (d,i) => i*90+50)
+                        .attr("width", (d,i) => i*150+100)
+                        .attr("height", 20)
+                        .style("fill", "steelblue")  
+                }
+            \end{jscode}
+        \item \textbf{Enter-update-exit pattern}: When data size changes, D3 determines
+            \begin{itemize}
+                \item \textbf{Enter:} New data $\to $ create elements
+                \item \textbf{Update:} Existing data $\to $ modify elements
+                \item \textbf{Exit:} Removed data $\to$ delete elements
+            \end{itemize}
+        \item \textbf{Changing attributes}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            var r1 = svg.select("rect").attr("width", 100).attr("height", 100);
+            \end{jscode}
+        \item \textbf{Changing styles}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            var r1 = svg.select("rect").style("fill", "blue"); 
+            \end{jscode}
+        \item \textbf{Binding data}: We use
+            \bigbreak \noindent 
+            \begin{jscode}
+                selection.data(data: arr, key?: fn)
+            \end{jscode}
+            \bigbreak \noindent 
+            Binds the specified array of data with the selected elements, returning a new selection that represents the update selection: the elements successfully bound to data. Also defines the enter and exit selections on the returned selection, which can be used to add or remove elements to correspond to the new data.
+            \bigbreak \noindent 
+            the key parameter in .data(data, key) specifies how data items are matched to existing DOM elements during a data join.
+            \bigbreak \noindent 
+            If we write
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.data(data)
+            \end{jscode}
+            \bigbreak \noindent 
+            D3 matches data to elements by index (position):
+            \begin{itemize}
+                \item First data item $\to$ first element
+                \item Second $\to$ second
+            \end{itemize}
+            etc... With a key,
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.data(data, key)
+            \end{jscode}
+            \bigbreak \noindent 
+            D3 matches elements by identity, not position. The key function returns a unique identifier for each datum.
+            \bigbreak \noindent 
+            \begin{jscode}
+            (d, i) => keyValue
+            \end{jscode}
+            \bigbreak \noindent 
+            Suppose the data is
+            \bigbreak \noindent 
+            \begin{jscode}
+            const data = [
+                { id: 101, name: "Alice" },
+                { id: 102, name: "Bob" }
+            ];
+            \end{jscode}
+            \bigbreak \noindent 
+            Then, the key could be 
+            \bigbreak \noindent 
+            \begin{jscode}
+                svg.selectAll("circle")
+                .data(data, d => d.id);
+            \end{jscode}
+            \bigbreak \noindent 
+            D3 now tracks circles by id, not position.
+        \item \textbf{The enter selection}: In D3, the enter selection represents data items that do not yet have corresponding DOM elements. It is the mechanism by which new visual elements are created when the dataset grows. 
+            \bigbreak \noindent 
+            After a data join,
+            \bigbreak \noindent 
+            \begin{jscode}
+            const sel = selction.data(data);
+            \end{jscode}
+            \bigbreak \noindent 
+            D3 partitions the result into three disjoint subsets
+            \begin{itemize}
+                \item Update — data matched to existing elements
+                \item Enter — data with no element yet
+                \item Exit — elements with no data anymore
+            \end{itemize}
+            \bigbreak \noindent 
+            .enter() returns a special selection containing placeholder nodes — not actual DOM elements. Each placeholder corresponds to one new data item. You cannot style or position them until you append real elements.
+            \bigbreak \noindent 
+            \begin{jscode}
+                selection.data(data)
+                    .enter()
+                    .append("circle");
+            \end{jscode}
+            \bigbreak \noindent 
+            “For each new datum, create a new <circle> element.”
+            \bigbreak \noindent 
+            \begin{jscode}
+            function run8(svg) {
+                var selection = svg.selectAll("rect")
+                .data([127, 61, 256, 71])
+
+                selection
+                    .attr("x", 0)
+                    .attr("y", (d,i) => i*90+50)
+                    .attr("width", d => d)
+                    .attr("height", 20)
+                    .style("fill", "steelblue")
+
+                selection.enter().append("rect")
+                    .attr("x", 10) // let's just put it somewhere
+                    .attr("y", 10)
+                    .attr("width", 30)
+                    .attr("height", 30)
+                    .style("fill", "green")
+            }
+            \end{jscode}
+        \item \textbf{Appending}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.append(type)
+            \end{jscode}
+            \bigbreak \noindent 
+            If the specified type is a string, appends a new element of this type (tag name) as the last child of each selected element, or before the next following sibling in the update selection if this is an enter selection. The latter behavior for enter selections allows you to insert elements into the DOM in an order consistent with the new bound data
+            \bigbreak \noindent 
+            If the specified type is a function, it is evaluated for each selected element, in order, being passed the current datum (d), the current index (i), and the current group (nodes), with \textit{this} as the current DOM element (nodes[i]). This function should return an element to be appended. (The function typically creates a new element, but it may instead return an existing element.) 
+        \item \textbf{Inserting}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.insert(type, before?)
+            \end{jscode}
+            \bigbreak \noindent 
+            If the specified type is a string, inserts a new element of this type (tag name) before the first element matching the specified before selector for each selected element. For example, a before selector :first-child will prepend nodes before the first child. If before is not specified, it defaults to null.
+        \item \textbf{Merge}: .merge() combines two selections into one — most commonly the enter selection and the update selection — so that you can apply the same operations to both newly created and already existing elements.
+            \bigbreak \noindent 
+            \begin{jscode}
+                function run10(svg) {
+                    var selection = svg.selectAll("rect")
+                    .data([127, 61, 256, 71]);
+
+                    selection.enter().append("rect")
+                        .merge(selection)
+                        .attr("x", 0)
+                        .attr("y", (d,i) => i*90+50)
+                        .attr("width", d => d)
+                        .attr("height", 20)
+                        .style("fill", "steelblue");
+                }
+            \end{jscode}
+            \bigbreak \noindent 
+            Here, the enter section is merged with the update section.
+        \item \textbf{Join}: .join() is a high-level method that performs the complete data join lifecycle — handling enter, update, and exit selections in a single operation. It is the modern replacement for the classic pattern using .enter(), .merge(), and .exit().
+            \bigbreak \noindent 
+            Formally, .join() orchestrates:
+            \begin{itemize}
+                \item Creation of elements for new data (enter)
+                \item Updating of existing elements (update)
+                \item Removal of obsolete elements (exit)
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{jscode}
+                selection.data(data).join("tag")
+            \end{jscode}
+            \bigbreak \noindent 
+            For example, 
+            \bigbreak \noindent 
+            \begin{jscode}
+                svg.selectAll("circle")
+                    .data(data)
+                    .join("circle");
+            \end{jscode}
+            \bigbreak \noindent 
+            For each data item, ensure there is exactly one <circle> element.
+            \bigbreak \noindent 
+            Internally:
+            \begin{itemize}
+                \item Enter $\to $ append <circle>
+                \item Update $\to $ keep existing circles
+                \item Exit $\to$ remove extra circles
+            \end{itemize}
+            After .join(), you typically chain attribute setters:
+            \bigbreak \noindent 
+            \begin{jscode}
+                svg.selectAll("circle")
+                    .data(data)
+                    .join("circle")
+                    .attr("r", d => d);
+            \end{jscode}
+            \bigbreak \noindent 
+            The selector in selectAll() determines which existing elements participate in the join; the tag in .join() determines what new elements are created.
+            \bigbreak \noindent 
+            This affects both newly created and existing elements. This simplifies the classic no-join pattern
+            \bigbreak \noindent 
+            \begin{jscode}
+                const update = svg.selectAll("circle") .data(data);
+
+                update.enter()
+                    .append("circle")
+                    .merge(update)
+                    .attr("r", d => d);
+
+                update.exit().remove();
+            \end{jscode}
+            \bigbreak \noindent 
+            For 
+            \bigbreak \noindent 
+            \begin{jscode}
+                svg.selectAll("rect")
+                    .data(data)
+                    .join("circle");
+            \end{jscode}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{Update selection}: Existing <rect> elements are matched to data
+                    \bigbreak \noindent 
+                    They remain <rect> elements (they are not converted)
+                \item \textbf{Enter selection}: For new data items, D3 creates <circle> elements
+                \item \textbf{Exit selection}: Extra <rect> elements (without data) are removed
+            \end{itemize}
+        \item \textbf{.join with function parameters}: .join also has two optional parameters \texttt{update} and \texttt{exit}, specifying functions to call on update and exit. Note that the enter parameter can also be a function, and as is called for enter.
+            \bigbreak \noindent 
+            \begin{jscode}
+            svg.selectAll("rect")
+            .data([127, 61, 256, 71])
+            .join(enter => enter.append("rect")
+                   .attr("x", 200)
+                   .attr("y", 200)
+                   .attr("width", 10)
+                   .attr("height", 10)
+                   .style("fill", "red")
+                   .call(update_bars),
+                 update => update.call(update_bars),
+                 exit => exit.attr("opacity", 1)
+                   .transition()
+                   .duration(3000)
+                   .attr("opacity", 0)
+                   .remove());
+            \end{jscode}
+        \item \textbf{Remove}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.remove()
+            \end{jscode}
+            \bigbreak \noindent 
+            Removes the selected elements from the document. Returns this selection (the removed elements) which are now detached from the DOM. There is not currently a dedicated API to add removed elements back to the document; however, you can pass a function to selection.append or selection.insert to re-add elements.
+        \item \textbf{Exit}: The .exit() selection represents DOM elements that no longer have corresponding data after a data join.
+            \bigbreak \noindent 
+            \begin{jscode}
+                sel.exit()
+            \end{jscode}
+            \bigbreak \noindent 
+            returns a selection of actual DOM nodes (unlike enter placeholders) that are now obsolete. These nodes still exist in the DOM until you remove them.
+            \bigbreak \noindent 
+            \begin{jscode}
+            sel.exit().remove();
+            \end{jscode}
+            \bigbreak \noindent 
+            Is most commonly used, removes all elements that no longer represent any data.
+        \item \textbf{Transition}:
+            \bigbreak \noindent 
+            \begin{jscode}
+                selection.transition(name?)
+            \end{jscode}
+            \bigbreak \noindent 
+            Returns a new transition on the given selection with the specified name. If a name is not specified, null is used. The new transition is only exclusive with other transitions of the same name.
+            \bigbreak \noindent 
+            selection.transition() initiates an animated transition on the selected elements, allowing their attributes, styles, or properties to change smoothly over time rather than instantaneously.
+            \bigbreak \noindent 
+            \begin{jscode}
+                d3.select("circle")
+                    .transition()
+                    .attr("r", 50);
+            \end{jscode}
+            \bigbreak \noindent 
+            Calling .transition():
+            \begin{enumerate}
+                \item Captures current state of each element
+                \item Schedules animation frames
+                \item Interpolates values over time
+                \item Applies intermediate values continuously
+            \end{enumerate}
+            If nothing is specified, 
+            \begin{itemize}
+                \item \textbf{Duration:} 250 ms (approximate default)
+                \item \textbf{Delay:} 0
+                \item \textbf{Easing:} cubic in-out
+            \end{itemize}
+            We have the functions
+            \bigbreak \noindent 
+            \begin{jscode}
+            .duration(ms), .delay(ms), .ease(fn)
+            \end{jscode}
+            \bigbreak \noindent 
+            .ease() takes an ease function, for example d3.easeSin().
+        \item \textbf{What can be animated}: Transitions interpolate numeric or color values. Common targets are
+            \begin{itemize}
+                \item SVG attributes (cx, r, x, y, etc.)
+                \item CSS styles (opacity, fill, etc.)
+                \item Text content (with special handling)
+                \item Transforms
+            \end{itemize}
+        \item \textbf{Chaining Transitions}: You can sequence animations
+            \bigbreak \noindent 
+            \begin{jscode}
+                .transition()
+                .duration(500)
+                .attr("r", 20)
+                .transition()
+                .duration(500)
+                .attr("r", 5);
+            \end{jscode}
+            \bigbreak \noindent 
+            Second transition begins after the first completes.
+            \bigbreak \noindent 
+            \begin{jscode}
+                function run15(svg) {
+                    var selection = svg.selectAll("rect")
+                        .data([127, 61,256,128])
+
+                    selection.enter().append("rect")
+                            .attr("x", 200)
+                            .attr("y", 200)
+                            .attr("width", 10)
+                            .attr("height", 10)
+                            .style("fill", "red")
+                        .merge(selection)
+                        .transition()
+                        .duration(3000)
+                            .attr("x", 0)
+                            .attr("y", (d,i) => i*10+50)
+                            .attr("width", d => d)
+                            .attr("height", 8)
+                            .style("fill", "steelblue")
+                            .transition()
+                            .duration(3000)
+                                .style("fill", "green")
+                                .attr("width", d => d*1.5)
+
+                    selection.exit()
+                        .attr("opacity", 1)
+                        .transition()
+                        .duration(3000)
+                            .attr("opacity", 0)
+                            .remove()
+                }
+            \end{jscode}
+        \item \textbf{.call()}: .call() invokes a function on a selection (or transition) and passes that selection as the function’s argument.
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.call(function, ...args?)
+            \end{jscode}
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.call(f);
+            \end{jscode}
+            \bigbreak \noindent 
+            Is essentially the same as 
+            \bigbreak \noindent 
+            \begin{jscode}
+            f(selection)
+            \end{jscode}
+            \bigbreak \noindent 
+            but .call() returns the original selection, enabling chaining.
+        \item \textbf{Data as the key}: Consider
+            \bigbreak \noindent 
+            \begin{jscode}
+                .data(data, d => d); 
+            \end{jscode}
+            \bigbreak \noindent 
+            So, the key is simply the datum value itself. The key function computes a unique key for each datum. It is appropriate when your data consists of primitive unique values, such as numbers or strings.
+            \bigbreak \noindent 
+            Consider the initial data
+            \bigbreak \noindent 
+            \begin{jscode}
+                [1,2,3]
+            \end{jscode}
+            \bigbreak \noindent 
+            Then, we update the data to 
+            \bigbreak \noindent 
+            \begin{jscode}
+                [3,2,1]
+            \end{jscode}
+            \bigbreak \noindent 
+            Without the key, D3 assumes
+            \begin{itemize}
+                \item Element 1 now represents 3
+                \item Element 2 still represents 2
+                \item Element 3 now represents 1
+            \end{itemize}
+            With $d \implies d$,  
+            \begin{itemize}
+                \item Element with key 3 already exists $\to$ move/update
+                \item Element with key 2 $\to $ unchanged
+                \item Element with key 1 $\to$ move/update
+            \end{itemize}
+        \item \textbf{Nested selections, grouping}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+                function run19(svg) {
+                  var myData = [
+                    [15, 20],
+                    [40, 10],
+                    [30, 27]
+                  ]
+
+                  // First selection (within svg)
+                  var selA = svg.selectAll("g")
+                    .data(myData)
+                    .join("g")
+                    // .attr("y", (d,i) => i*100 + 50)
+                    .attr("transform", (d, i) => `translate(70,${i*100+50})`)
+                    // backticks (``) denote template literal
+                    // normal strings except that text inside ${...}
+                    // is evaluated (can be js expression)!
+
+                  // Second selection (within first selection)
+                  var selB = selA.selectAll('circle')
+                    .data(d => d)
+                    .join("circle")
+                    .attr("cx", (d, i) => i*80)
+                    .attr("r", (d,i) => d)
+                };
+            \end{jscode}
+        \item \textbf{Scaling}: In D3, scaling refers to mapping values from a data domain to a visual range — typically pixel positions, lengths, colors, or sizes. Raw data values usually do not correspond directly to screen coordinates.
+            \bigbreak \noindent 
+            Every D3 scale has two fundamental parts:
+            \begin{enumerate}
+                \item \textbf{Domain}:
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        [min data, max data]
+                    \end{jscode}
+                \item \textbf{Range}
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                        [min pixel, max pixel]
+                    \end{jscode}
+            \end{enumerate}
+            For example,
+            \bigbreak \noindent 
+            \begin{jscode}
+                const x = d3.scaleLinear().domain([0,100]).range([0,500]);
+            \end{jscode}
+            \bigbreak \noindent 
+            A scale is simply a function. Now, we can use it when defining $x,y$ attributes.
+            \bigbreak \noindent 
+            \begin{jscode}
+            .attr("x", d => x(d));
+            \end{jscode}
+        \item \textbf{scaleLog and scaleBand}: A log scale maps data using a logarithmic function, instead of using a linear mapping
+            \begin{align*}
+                y = ax + b
+            ,\end{align*}
+            it uses a logarithmic one
+            \begin{align*}
+               y = a\log_{}{x} + b 
+            .\end{align*}
+            We use logarithmic scaling when data spans multiple orders of magnitude. A linear scale would compress small values and stretch large ones excessively.
+            \bigbreak \noindent 
+            \textbf{Note:} Be careful with the domain,
+            \begin{align*}
+                D(\log(x)) = (0, \infty)
+            .\end{align*}
+            We can also define the base of the logarithm
+            \bigbreak \noindent 
+            \begin{jscode}
+            x.base(2);
+            \end{jscode}
+            \bigbreak \noindent 
+            Log scales typically produce ticks at powers
+            \bigbreak \noindent 
+            d3.scaleBand() maps discrete categories to evenly spaced rectangular bands across a continuous range. It is the standard tool for bar charts. Categorical data has no numeric spacing.
+            \bigbreak \noindent 
+            \begin{jscode}
+                const x = d3.scaleBand().domain(["A", "B", "C"]).range([0,300]);
+            \end{jscode}
+            \bigbreak \noindent 
+            D3 divides the range into equal bands
+            \begin{align*}
+                A &\to 0-100 \\
+                B &\to 100-200 \\
+                C &\to 200-300
+            .\end{align*}
+            We get the bandwidth with \texttt{bandwidth()}
+            \bigbreak \noindent 
+            \begin{jscode}
+            .attr("x", d=>x(d.category)).attr("width", x.bandwidth());
+            \end{jscode}
+            \bigbreak \noindent 
+            We can add spacing between bars with 
+            \bigbreak \noindent 
+            \begin{jscode}
+            x.padding(p)
+            \end{jscode}
+        \item \textbf{d3.max(), d3.min()}: Retrieves the max or min value from an iterablea. Unlike Math.max() and Math.min(), these methods ignores undefined values, which is useful for missing data.
+        \item \textbf{d3.maxIndex(), d3.minIndex()}: Retrieves the index of the max or min value from an iterable.
+        \item \textbf{Axes}:
+            \begin{itemize}
+                \item \textbf{axis(context)}: Render the axis to the given context, which may be either a selection of SVG containers (either SVG or G elements) or a corresponding transition.
+                \item \textbf{d3.axisTop(scale)}: Constructs a new top-oriented axis generator for the given scale, with empty tick arguments, a tick size of 6 and padding of 3. In this orientation, ticks are drawn above the horizontal domain path.
+                \item \textbf{d3.axisBottom(scale)}: Constructs a new bottom-oriented axis generator for the given scale, with empty tick arguments, a tick size of 6 and padding of 3. In this orientation, ticks are drawn below the horizontal domain path.
+                \item \textbf{d3.axisLeft(scale)}: Constructs a new left-oriented axis generator for the given scale, with empty tick arguments, a tick size of 6 and padding of 3. In this orientation, ticks are drawn to the left of the vertical domain path.
+                \item \textbf{d3.axisRight(scale)}: Constructs a new right-oriented axis generator for the given scale, with empty tick arguments, a tick size of 6 and padding of 3. In this orientation, ticks are drawn to the right of the vertical domain path.
+                \item \textbf{axis.scale(scale?)}: If scale is specified, sets the scale and returns the axis. If scale is not specified, returns the current scale.
+                \item \textbf{axis.ticks(args...)}: Sets the arguments that will be passed to scale.ticks and scale.tickFormat when the axis is rendered, and returns the axis generator. The meaning of the arguments depends on the axis’ scale type: most commonly, the arguments are a suggested count for the number of ticks (or a time interval for time scales), and an optional format specifier to customize how the tick values are formatted.
+                    \bigbreak \noindent 
+                    This method has no effect if the scale does not implement scale.ticks, as with band and point scales. To set the tick values explicitly, use axis.tickValues. To set the tick format explicitly, use axis.tickFormat.
+                \item \textbf{axis.offset(offset?)}: If offset is specified, sets the offset to the specified value in pixels and returns the axis. If offset is not specified, returns the current offset which defaults to 0 on devices with a devicePixelRatio greater than 1, and 0.5px otherwise. This default offset ensures crisp edges on low-resolution devices.
+                \item \textbf{axis.tickSize(size?)}: If size is specified, sets the inner and outer tick size to the specified value and returns the axis. If size is not specified, returns the current inner tick size, which defaults to 6.
+                \item \textbf{exis.tickSizeInner(size?)}: 
+                \item \textbf{axis.tickSizeOuter(size?)}:
+                \item \textbf{axis.tickFormat(format?)}: If format is specified, sets the tick format function and returns the axis. If format is not specified, returns the current format function, which defaults to null. A null format indicates that the scale’s default formatter should be used, which is generated by calling scale.tickFormat. In this case, the arguments specified by axis.tickArguments are likewise passed to scale.tickFormat.
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    axis.tickFormat(d3.format(",.0f"));
+                    \end{jscode}
+                    \bigbreak \noindent 
+                    Formats integers with comma-grouping for thousands
+                    \bigbreak \noindent 
+                    More commonly, a format specifier is passed to axis.ticks
+                    \bigbreak \noindent 
+                    \begin{jscode}
+                    axis.ticks(10, ",f")
+                    \end{jscode}
+                \item \textbf{axis.tickValues(values?)}: If a values iterable is specified, the specified values are used for ticks rather than using the scale’s automatic tick generator. If values is null, clears any previously-set explicit tick values and reverts back to the scale’s tick generator. If values is not specified, returns the current tick values, which defaults to null.
+                \item \textbf{axis.tickPadding(padding?)}: If padding is specified, sets the padding to the specified value in pixels and returns the axis. If padding is not specified, returns the current padding which defaults to 3 pixels.
+                \item \textbf{axis.tickArguments([args])}: If arguments is specified, sets the arguments that will be passed to scale.ticks and scale.tickFormat when the axis is rendered, and returns the axis generator. The meaning of the arguments depends on the axis’ scale type: most commonly, the arguments are a suggested count for the number of ticks (or a time interval for time scales), and an optional format specifier to customize how the tick values are formatted.
+            \end{itemize}
+        \item \textbf{The return value of axisTop() and others}: The return value is the generator function that builds the axis.
+            \bigbreak \noindent 
+            We can then call this generator passing in selectors so that an axis is built as a child of that selector.
+        \item \textbf{Axis example}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            // the scale function
+            var xScale = d3.scaleLinear()
+              .domain([0,d3.max(data)])
+              .range([0,300]);
+
+            var xAxis = d3.axisTop()
+            xAxis.scale(xScale);
+            svg.append("g").call(xAxis);
+            \end{jscode}
+            \bigbreak \noindent 
+            Where 
+            \bigbreak \noindent 
+            \begin{jscode}
+                svg.append("g").call(xAxis);
+            \end{jscode}
+            \bigbreak \noindent 
+            means “Apply the axis generator to this <g> element, causing it to create ticks, labels, and lines inside it.”
+        \item \textbf{Adding text}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.text(value?)
+            \end{jscode}
+            \bigbreak \noindent 
+            If a value is specified, sets the text content to the specified value on all selected elements, replacing any existing child elements. If the value is a constant, then all elements are given the same text content; otherwise, if the value is a function, it is evaluated for each selected element, in order, being passed the current datum (d), the current index (i), and the current group (nodes), with this as the current DOM element (nodes[i]). The function’s return value is then used to set each element’s text content. A null value will clear the content.
+            \bigbreak \noindent 
+            If a value is not specified, returns the text content for the first (non-null) element in the selection. This is generally useful only if you know the selection contains exactly one element.
+        \item \textbf{Inner html}: 
+            \bigbreak \noindent 
+            \begin{jscode}
+            selection.html(value?)
+            \end{jscode}
+            \bigbreak \noindent 
+            If a value is specified, sets the inner HTML to the specified value on all selected elements, replacing any existing child elements. If the value is a constant, then all elements are given the same inner HTML; otherwise, if the value is a function, it is evaluated for each selected element, in order, being passed the current datum (d), the current index (i), and the current group (nodes), with this as the current DOM element (nodes[i]). The function’s return value is then used to set each element’s inner HTML. A null value will clear the content.
+            \bigbreak \noindent 
+            If a value is not specified, returns the inner HTML for the first (non-null) element in the selection. This is generally useful only if you know the selection contains exactly one element.
+
+
+
+
+
+
+
+
+
+
+    \end{itemize}
+    
 
 
 

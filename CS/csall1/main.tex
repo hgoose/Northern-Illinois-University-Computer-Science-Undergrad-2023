@@ -14659,6 +14659,99 @@ indicate which strong entity the weak entity depends upon.
             The child process overlays its address space with the UNIX command /bin/ls using the execlp() sys call.
             \bigbreak \noindent 
             If there is no call to exec() the child and the parent are concurrent processes running the same code instructions.
+        \item \textbf{More on child processes}: When you call fork() in C (on Unix/Linux), the children do not run in sequence by default. They run concurrently, and their actual execution order is determined by the operating system’s scheduler.
+            \bigbreak \noindent 
+            Each call to fork() creates a new process that is:
+            \begin{itemize}
+                \item A nearly identical copy of the parent (separate address space)
+                \item Scheduled independently by the kernel
+                \item Able to run on a different CPU core
+                \item Not ordered relative to its siblings
+            \end{itemize}
+            If you create $N$ children, you now have $N+1$ runnable processes (including the parent). The kernel may run them:
+            \begin{itemize}
+                \item In parallel (on multiple cores)
+                \item Interleaved (time-sliced on one core)
+                \item In any order whatsoever
+            \end{itemize}
+            They will only run sequentially if you explicitly enforce ordering, typically using synchronization primitives such as:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            wait() / waitpid()
+            \end{bashcode}
+            \bigbreak \noindent 
+            Parent blocks until a child exits.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                for (int i = 0; i < N; i++) {
+                    pid_t pid = fork();
+
+                    if (pid == 0) {
+                        // Child
+                        do_work(i);
+                        exit(0);
+                    } else {
+                        // Parent waits before creating next child
+                        wait(NULL);
+                    }
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Now children execute one after another.
+            \bigbreak \noindent 
+            If wait() is moved outside the loop, the parent will create all children first, then wait for them afterward.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                for (int i = 0; i < N; i++) {
+                    pid_t pid = fork();
+
+                    if (pid == 0) {
+                        do_work(i);
+                        exit(0);
+                    }
+                }
+
+                // Parent waits after creating all children
+                for (int i = 0; i < N; i++) {
+                    wait(NULL);
+                }
+            \end{cppcode}
+        \item \textbf{Killing children gracefully and instantly}: To kill all child processes from a parent process in C, the parent must store the Process IDs (PIDs) returned by each fork() call and then use the kill() system call to send a termination signal to each one
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{SIGTERM (15):} This is a request for the process to terminate gracefully, allowing it to perform cleanup operations.
+                \item \textbf{SIGKILL (9):} This signal forces immediate termination and cannot be caught or ignored by the child process, ensuring it dies instantly.
+            \end{itemize}
+        \item \textbf{Reaping zombie processes}: After sending the kill signals, the parent must call waitpid() for each child to clean up their resources and prevent them from becoming zombie processes (defunct state).
+            \bigbreak \noindent 
+            \begin{cppcode}
+                for (int i=0; i<N; ++i) {
+                    ...
+
+                    pid_t pid = fork();
+
+                    ...
+
+                    if (pid == 0) {
+                        ...
+                    } else {
+                        children[i] = pid;
+                    }
+                }
+
+                printf("Parent sending SIGKILL to all children...\n");
+                for (i = 0; i < NUM_CHILDREN; i++) {
+                    if (kill(children[i], SIGKILL) == -1 && errno != ESRCH) {
+                        perror("kill failed");
+                    }
+                }
+
+                // Parent waits for children to be reaped
+                for (i = 0; i < NUM_CHILDREN; i++) {
+                    waitpid(children[i], NULL, 0);
+                    printf("Reaped child PID: %d\n", children[i]);
+                }
+            \end{cppcode}
         \item \textbf{Process Termination}: A process terminates when it finishes executing its final statement and asks the operating system to delete it by using the exit() system call. The process may return a status value (typically an integer) to its waiting parent process (via the wait() system call). All the resources of the process – including physical and virtual memory, open files, and I/O buffers – are deallocated and reclaimed by the operating system.
             \bigbreak \noindent 
             The parent needs to know the identity of the child in order to terminate them, thus the pid of the child is returned to the parent. Such systems do not allow a child to exist if its parent has terminated. If a process terminates, then all its children must also terminate.
