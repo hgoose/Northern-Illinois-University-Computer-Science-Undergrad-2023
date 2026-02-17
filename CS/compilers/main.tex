@@ -1628,6 +1628,74 @@ if (errno) {
                     \bigbreak \noindent 
                     This tests if the LSB is set (check ZF).
             \end{enumerate}
+        \item \textbf{A quick note about registers r8-r15}: In IA-32e mode, the registers R8 through R15 are full 64-bit general-purpose registers. Like 
+            \begin{center}
+                RAX $\to $ EAX $\to $ AX $\to $ AL, 
+            \end{center}
+            the extended registers also have smaller views
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Size}	&\textbf{Name Example} \\
+                    64-bit&	R8\\[2ex]
+                    32-bit&	R8D\\[2ex]
+                    16-bit&	R8W\\[2ex]
+                    8-bit	&R8B \\
+                    \midrule
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Using a smaller view automatically clears the unused upper regions, the same is true for the named registers.
+            \bigbreak \noindent 
+            Any instruction referencing R8–R15 uses a REX prefix (IA-32e encoding extension). Without it, the encoding refers to legacy registers.
+            \bigbreak \noindent 
+            \textbf{Note:} We can use these registers with r32 instructions, although will still need a REX prefix. In this case, the 32-bit is the operand size, and we should set REX.W = 0. Although the explicit instruction would use the doubleword subregister, we can still use Rk informally. For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+            INST   r8,r9
+            \end{cppcode}
+            \bigbreak \noindent 
+            could use INSTs r32 variant, with a REX prefix and REX.W = 0, which is effectively the same as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            INST   r8d, r9d
+            \end{cppcode}
+            \bigbreak \noindent 
+            assuming we want our operands to be 32-bit.
+        \item \textbf{Fast exponentiation}: The FE algorithm leverages the idea that  for $a\in \mathbb{Z}$, $b \in \mathbb{Z}_{ \geq 0}$,
+            \begin{align*}
+                a^{b} = \begin{cases}
+                        (a^{2})^{\frac{b}{2}} \quad b \in 2k,\; k\in \mathbb{Z}, \\
+                        aa^{b-1} \quad b \in 2\ell + 1,\; \ell \in \mathbb{Z}
+                \end{cases}
+            .\end{align*}
+            Which therefore gives us exponentiation in logarithmic time.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef long long ll;
+                ll _fe(ll a, ll b) {
+
+                    if (b <= 0) {
+                        cerr << "Negative b rejected'\n";
+                        _exit(1);
+                    }
+
+                    int e{1};
+                    while (b != 0) {
+                        // Check if the LSB is set, then b is odd, so factor out a
+                        if (b & 1) {
+                            e *= a;
+                        }
+
+                        // Square a
+                        a *= a;
+
+                        // Divide b by two
+                        b>>=1; // floors b/2, no need to subtract one from b to make it even
+                    }  
+                    return e;
+                }
+            \end{cppcode}
         \item \textbf{Code generation for the fast exponentiation algorithm}: We aim to compute the quantity $e = a^{b}$. For this, we will place 
             \begin{align*}
                 e \to r8, \quad a \to r9, \quad b \to r10
@@ -1635,15 +1703,161 @@ if (errno) {
             Assume the stack has $b$ on the bottom, and $a$ at the top. The code is then
             \begin{cppcode}
                 // Clear out r8
-                XOR   r8,r8
+                4531C0   XOR   r8,r8                 
 
                 // Place |$a$| in r9
-                POP   r9
+                418FC1   POP   r9
 
                 // Place |$b$| in r10
-                POP   r10
+                418FC2   POP   r10
 
-                TEST r10,r10
+                // Check if b<0, reject b by jumping to end
+                4585D2   TEST  r10,r10
+                7C1E     JL    30
+
+                // Increment r8 by one (set e=1)
+                41FFC0   INC   r8
+
+                // Test b==0, if true jump to end
+                4585D2   TEST  r10, r10
+                7416     JE    22
+
+                // Test if LSB set on b, jump over first IMUL if ZF equal to zero (b & 1 == 0) (b even)
+                41F7C2   TEST  r10,1
+                7404     JE    4
+
+                // Multiply e by a (factor out a) (e *= a)
+                450FAFC1 IMUL  r8,r9
+
+                // Square a 
+                450FAFC9 IMUL  r9,r9
+
+                // Shift arithmetic right one (floor(b/2))
+                41D1FA   SAR   r10,1
+    
+                // Jump back to top of loop
+                EBE5     JMP    -27
+
+                // Move result into accumulator
+                418BC0   MOV   EAX,r8
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:} Generated machine code on the left for each instruction.             To use this code, we first need to
+            \bigbreak \noindent 
+            \begin{cppcode}
+            MOV   ECX,b
+            MOV   EAX,a
+
+            PUSH  ECX
+            PUSH  EAX
+            \end{cppcode}
+
+        \item \textbf{Instruction explanations}
+            \begin{itemize}
+                \item \textbf{Jumps}: The JL instruction 
+                    \begin{align*}
+                        75\; \text{cb}
+                    ,\end{align*}
+                    where cb stands for \textit{code byte}, and is the number of bytes you want to jump. Byte zero is the start of the instruction following the jump instruction. So, start at the next instruction, and use the encodings to count the number of bytes until jump point.
+                    \bigbreak \noindent 
+                    In the last jump, we need to jump backwards, so the byte count is -27 = E5.
+                    \bigbreak \noindent 
+                \item \textbf{IMULS}: The version of IMUL above is 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    0F AF /r   IMUL r32, r/m32
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    which is defined as 
+                    \begin{align*}
+                        \text{dword register } :=  \text{ dword register } * r /m32
+                    .\end{align*}
+                    So, instead of using the DX / AX pair, we just multiply the contents of two 32-bit registers and hope the result fits in a 32-bit register.
+            \end{itemize}
+        \item \textbf{The RIP (instruction pointer)}: In IA-32e mode (Intel 64-bit architecture), the program counter is a 64-bit register known as the RIP (Instruction Pointer). It holds the memory address of the next instruction to be executed. The RIP is implicitly updated by the processor during execution and cannot be directly accessed by software, but is modified via control-transfer instructions.
+        \item \textbf{More conditional jumps (defined in section JCC of the IA-32e manual)}:
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Instruction} & \textbf{Meaning} & \textbf{Opcode} \\
+                    \midrule
+                    JE / JZ	&Jump if equal / zero (ZF=1)	&74 cb \\[2ex]
+                    JNE / JNZ	&Jump if not equal / not zero (ZF=0)	&75 cb \\[2ex]
+                    JL / JNGE	&Less than (signed)	&7C cb\\[2ex]
+                    JLE / JNG	&$ \leq$ (signed)	&7E cb\\[2ex]
+                    JG / JNLE	&$> $ (signed)	&7F cb\\[2ex]
+                    JGE / JNL	&$ \geq $ (signed)	&7D cb\\[2ex]
+                    JB / JC / JNAE	&Below (unsigned <)	&72 cb\\[2ex]
+                    JBE / JNA	&$ \leq $ (unsigned)	&76 cb\\[2ex]
+                    JA / JNBE	&$> $ (unsigned)	&77 cb\\[2ex]
+                    JAE / JNB / JNC	&$ \geq $ (unsigned)	&73 cb\\[2ex]
+                    JS	&Sign flag set	&78 cb\\[2ex]
+                    JNS	&Sign flag clear	&79 cb\\[2ex]
+                    JO	&Overflow	&70 cb\\[2ex]
+                    JNO	&No overflow	&71 cb\\[2ex]
+                    JP / JPE	&Parity even	&7A cb\\[2ex]
+                    JNP / JPO	&Parity odd	&7B cb\\[2ex]
+                    JCXZ / JECXZ / JRCXZ &Jump if CX/ECX/RCX = 0 &E3 cb \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            \textbf{Note:} A short jump is a 8-bit relative branch instruction. So, we can jump 127 bytes forward and 128 bytes backwards. The jump is relative to the RIP (instruction pointer)
+        \item \textbf{Unconditional jump (JMP)}: The short unconditional jump instruction is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            EB cb   JMP rel8
+            \end{cppcode}
+        \item \textbf{Shifts (with immediate bytes)}: 
+            \begin{itemize}
+                \item \textbf{Shift arithmetic left (SAL)}:  Multiply r/m32 by 2, imm8 times.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    C1 /4 ib SAL r/m32, imm8
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    There is also an instruction if you need the immediate byte to be one.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    D1 /4 SAL r/m32, 1
+                    \end{cppcode}
+                \item \textbf{Shift arithmetic right (SAR)}:  Signed divide r/m32 by 2, imm8 times.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    C1 /7 ib SAR r/m32, imm8
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    and
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        D1 /7 SAR r/m32, 1                    
+                    \end{cppcode}
+                \item \textbf{Shift logical left (SHL)}: Multiply r/m32 by 2, imm8 times.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    C1 /4 ib SHL r/m32, imm8
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    and
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    D1 /4 SHL r/m32,1
+                    \end{cppcode}
+                \item \textbf{Shift logical right (SHR)}: Unsigned divide r/m32 by 2, imm8 times.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    C1 /5 ib SHR r/m32, imm8
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    and
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    D1 /5 SHR r/m32, 1
+                    \end{cppcode}
+            \end{itemize}
+        \item \textbf{Increment (INC)}:  Increment r/m doubleword by 1.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                FF /0 INC r/m32
             \end{cppcode}
 
 

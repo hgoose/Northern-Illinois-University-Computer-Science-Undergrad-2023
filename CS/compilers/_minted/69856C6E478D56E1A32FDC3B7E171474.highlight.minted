@@ -1,0 +1,40 @@
+\begin{MintedVerbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}]
+\PYG{c+c1}{// Clear out r8}
+\PYG{l+m+mi}{4531}\PYG{n}{C0}\PYG{+w}{   }\PYG{n}{XOR}\PYG{+w}{   }\PYG{n}{r8}\PYG{p}{,}\PYG{n}{r8}
+
+\PYG{c+c1}{// Place |$a$| in r9}
+\PYG{l+m+mf}{418F}\PYG{n}{C1}\PYG{+w}{   }\PYG{n}{POP}\PYG{+w}{   }\PYG{n}{r9}
+
+\PYG{c+c1}{// Place |$b$| in r10}
+\PYG{l+m+mf}{418F}\PYG{n}{C2}\PYG{+w}{   }\PYG{n}{POP}\PYG{+w}{   }\PYG{n}{r10}
+
+\PYG{c+c1}{// Check if b\PYGZlt{}0, reject b by jumping to end}
+\PYG{l+m+mi}{4585}\PYG{n}{D2}\PYG{+w}{   }\PYG{n}{TEST}\PYG{+w}{  }\PYG{n}{r10}\PYG{p}{,}\PYG{n}{r10}
+\PYG{l+m+mi}{7}\PYG{n}{C1E}\PYG{+w}{     }\PYG{n}{JL}\PYG{+w}{    }\PYG{l+m+mi}{30}
+
+\PYG{c+c1}{// Increment r8 by one (set e=1)}
+\PYG{l+m+mf}{41F}\PYG{n}{FC0}\PYG{+w}{   }\PYG{n}{INC}\PYG{+w}{   }\PYG{n}{r8}
+
+\PYG{c+c1}{// Test b==0, if true jump to end}
+\PYG{l+m+mi}{4585}\PYG{n}{D2}\PYG{+w}{   }\PYG{n}{TEST}\PYG{+w}{  }\PYG{n}{r10}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{r10}
+\PYG{l+m+mi}{7416}\PYG{+w}{     }\PYG{n}{JE}\PYG{+w}{    }\PYG{l+m+mi}{22}
+
+\PYG{c+c1}{// Test if LSB set on b, jump over first IMUL if ZF equal to zero (b \PYGZam{} 1 == 0) (b even)}
+\PYG{l+m+mf}{41F}\PYG{l+m+mi}{7}\PYG{n}{C2}\PYG{+w}{   }\PYG{n}{TEST}\PYG{+w}{  }\PYG{n}{r10}\PYG{p}{,}\PYG{l+m+mi}{1}
+\PYG{l+m+mi}{7404}\PYG{+w}{     }\PYG{n}{JE}\PYG{+w}{    }\PYG{l+m+mi}{4}
+
+\PYG{c+c1}{// Multiply e by a (factor out a) (e *= a)}
+\PYG{l+m+mf}{450F}\PYG{n}{AFC1}\PYG{+w}{ }\PYG{n}{IMUL}\PYG{+w}{  }\PYG{n}{r8}\PYG{p}{,}\PYG{n}{r9}
+
+\PYG{c+c1}{// Square a}
+\PYG{l+m+mf}{450F}\PYG{n}{AFC9}\PYG{+w}{ }\PYG{n}{IMUL}\PYG{+w}{  }\PYG{n}{r9}\PYG{p}{,}\PYG{n}{r9}
+
+\PYG{c+c1}{// Shift arithmetic right one (floor(b/2))}
+\PYG{l+m+mi}{41}\PYG{n}{D1FA}\PYG{+w}{   }\PYG{n}{SAR}\PYG{+w}{   }\PYG{n}{r10}\PYG{p}{,}\PYG{l+m+mi}{1}
+
+\PYG{c+c1}{// Jump back to top of loop}
+\PYG{n}{EBE5}\PYG{+w}{     }\PYG{n}{JMP}\PYG{+w}{    }\PYG{l+m+mi}{\PYGZhy{}27}
+
+\PYG{c+c1}{// Move result into accumulator}
+\PYG{l+m+mi}{418}\PYG{n}{BC0}\PYG{+w}{   }\PYG{n}{MOV}\PYG{+w}{   }\PYG{n}{EAX}\PYG{p}{,}\PYG{n}{r8}
+\end{MintedVerbatim}
