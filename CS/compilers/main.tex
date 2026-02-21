@@ -202,9 +202,9 @@
                 \item \textbf{Left-recursive non-terminal}: A non-terminal $N$ is left-recursive if, starting with a sentential form $N$, we can produce another sentential form starting with $N$
                 \item \textbf{Left-recursive grammar}:  By extension, a grammar that contains one or more left-recursive rules is itself called left-recursive
                 \item \textbf{Right-recursive}: The right version of left-recursive, not as important.
-                \item \textbf{Nullable non-terminal}: A non-terminal $N$ is nullable if, starting with a sentential form $N$, we can produce an empty sentential form $\epsilon$
+                \item \textbf{Nullable non-terminal}: A non-terminal $N$ is nullable if, starting with a sentential form $N$, we can produce an empty sentential form $\varepsilon$
                     \bigbreak \noindent 
-                    A grammar rule for a nullable non-terminal is called an $\epsilon$-rule.
+                    A grammar rule for a nullable non-terminal is called an $\varepsilon$-rule.
                 \item \textbf{Useless non-terminal}: A non-terminal $N$ is useless if it can never produce a string of terminal symbols: any attempt to do so inevitably leads to a sentential that again contains $N$. 
                 \item \textbf{Ambiguous grammar}: A grammar is ambiguous if it can produce two different production trees with the same leaves in the same order. 
                     \bigbreak \noindent 
@@ -484,7 +484,7 @@
                 \text{number}      &\to \text{digit}^{+} \\
                 \text{whitespace}  &\to \text{(space | tab | newline)}^{+}
             .\end{align*}
-            Each regular expression is converted into an NFA using standard constructions like Thompson's construction with $\epsilon$-transitions allowed.
+            Each regular expression is converted into an NFA using standard constructions like Thompson's construction with $\varepsilon$-transitions allowed.
             \bigbreak \noindent 
             \textbf{Note:} Note efficient to execute directly, we can instead convert the NFA to a DFA, which is possible.
         \item \textbf{How the DFA is used (maximal munch / longest match rule)}: 
@@ -955,7 +955,7 @@
             where each $\beta$ does not start with $A$, we transform to
             \begin{align*}
                 A &\to \beta A^{\prime} \\
-                A^{\prime} &\to \alpha_{1}A^{\prime} \ \mid \ \alpha_{2}A^{\prime} \ \mid \ \cdots \ \mid \ \epsilon
+                A^{\prime} &\to \alpha_{1}A^{\prime} \ \mid \ \alpha_{2}A^{\prime} \ \mid \ \cdots \ \mid \ \varepsilon
             .\end{align*}
             Notice that expansions of $A$ before elimination of left-recursion take the form  $\beta(\alpha_{1} + \alpha_{2} + ... + \alpha_{k})^{*}$. In the updated grammar, the first production rule produces
             \begin{align*}
@@ -972,7 +972,7 @@
             Notice that $\beta = T$, $\alpha_{1} = +T$, and $\alpha_{2} = -T$. Thus, the production rule becomes
             \begin{align*}
                 E &\to TE^{\prime} \\
-                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon
             .\end{align*}
             Notice that they both produce derivations of the form
             \begin{align*}
@@ -981,12 +981,12 @@
             The full grammar would be converted to
             \begin{align*}
                 E &\to TE^{\prime} \\
-                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
                 T &\to NT^{\prime} \\
-                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \epsilon \\
+                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
                 N &\to +N \ \mid \ -N \ \mid \ F \\
                 F &\to SF^{\prime} \\
-                F^{\prime} &\to \land SF^{\prime} \ \mid \ \epsilon\\
+                F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
                 S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
             .\end{align*}
             Notice that the rules that are not left recursive can remain the same.
@@ -995,17 +995,17 @@
             If a CFG is LL(1), there exists a deterministic predictive parser that, at every step, can choose the correct production using only the next input symbol. No guessing. No backtracking. No multiple possibilities.
         \item \textbf{FIRST / FOLLOW sets}: 
             \begin{itemize}
-                \item \textbf{FIRST set}:  The FIRST set of a non-terminal contains all the terminal symbols that can appear at the beginning of any string derived from that non-terminal. In other words, it tells us which terminal symbols are possible when expanding a non-terminal.
+                \item \textbf{FIRST set}:  The FIRST set of a non-terminal contains all the terminal symbols that can appear at the beginning of any string derived from that non-terminal (starting at that nonterminal). In other words, it tells us which terminal symbols are possible when expanding a non-terminal.
                     \begin{align*}
-                        \text{FIRST}(X) = \{a \; \mid \; X \implies^{*} a\alpha, a \text{ terminal}\}
+                        \text{FIRST}(X) = \{a \; \mid \; X \xRightarrow{*} a\alpha, a \text{ terminal}\}
                     .\end{align*}
-                    Also includes $\epsilon$ if $X$ can derive the empty string. Also, terminals derive themselves, so 
+                    Also includes $\varepsilon$ if $X$ can derive the empty string. Also, terminals derive themselves, so 
                     \begin{align*}
                         \text{FIRST}(a) = \{a\}
                     \end{align*}
                     for any terminal $a$, and
                     \begin{align*}
-                        \text{FIRST}(\epsilon) = \{\epsilon\}
+                        \text{FIRST}(\varepsilon) = \{\epsilon\}
                     .\end{align*}
                     For each production 
                     \begin{align*}
@@ -1017,14 +1017,14 @@
                     ,\end{align*}
                     compute $\text{FIRST}(\alpha)$ as follows,
                     \begin{enumerate}
-                        \item Add FIRST($X_{1}$) - $\{\epsilon\} $
-                        \item If $\epsilon \in \text{ FIRST}(X_{1})$, and $\text{FIRST}(X_{2}) - \{\epsilon\} $
+                        \item Add FIRST($X_{1}$) - $\{\varepsilon\} $
+                        \item If $\varepsilon \in \text{ FIRST}(X_{1})$, and $\text{FIRST}(X_{2}) - \{\epsilon\} $
                         \item Continue left to right
-                        \item If all $X_{i}$ can derive $\epsilon$, then include $\epsilon$ in $\text{FIRST}(\alpha) $
+                        \item If all $X_{i}$ can derive $\varepsilon$, then include $\epsilon$ in $\text{FIRST}(\alpha) $
                     \end{enumerate}
                 \item \textbf{FOLLOW set}: The FOLLOW set of a non-terminal contains all the terminal symbols that can appear immediately after that non-terminal in any derivation. It helps identify what can follow a non-terminal in the grammar and is essential for handling productions where a non-terminal is at the end of a rule.
                     \begin{align*}
-                        \text{FOLLOW}(A) = \{a \ \mid \ S \implies^{*} \alpha Aa \beta\}
+                        \text{FOLLOW}(A) = \{a \ \mid \ S \xRightarrow{*} \alpha Aa \beta\}
                     .\end{align*}
                     First, we place end marker in FOLLOW of start symbol
                     \begin{align*}
@@ -1042,11 +1042,11 @@
                     \begin{align*}
                         A \to \alpha B \beta,
                     \end{align*}
-                    where $\beta \ne \epsilon$, add
+                    where $\beta \ne \varepsilon$, add
                     \begin{align*}
-                       \text{FIRST}(\beta) - \{\epsilon\} 
+                       \text{FIRST}(\beta) - \{\varepsilon\} 
                     \end{align*}
-                    to $\text{FOLLOW}(B)$. If $\epsilon \in \text{FIRST}(\beta)$, add $\text{FOLLOW}(A)$ to $\text{FOLLOW}(B)$. If $\text{FIRST}(\beta)$ is empty, then add $\text{FOLLOW}(A) $ to $\text{FOLLOW}(B)$, so that
+                    to $\text{FOLLOW}(B)$. If $\varepsilon \in \text{FIRST}(\beta)$, add $\text{FOLLOW}(A)$ to $\text{FOLLOW}(B)$. If $\text{FIRST}(\beta)$ is empty, then add $\text{FOLLOW}(A) $ to $\text{FOLLOW}(B)$, so that
                     \begin{align*}
                         \text{FOLLOW}(A) \subseteq \text{FOLLOW}(B)
                     \end{align*}
@@ -1069,7 +1069,7 @@
                 A \to a \implies \text{FIRST}(A) = \{a\} \\
                 B \to b \implies \text{FIRST}(B) = \{b\}
             .\end{align*}
-            For $S \to AB$, since $A$ cannot derive $\epsilon$,
+            For $S \to AB$, since $A$ cannot derive $\varepsilon$,
             \begin{align*}
                 \text{FIRST}(S) = \text{FIRST}(A) = \{a\}
             .\end{align*}
@@ -1077,6 +1077,19 @@
             \begin{align*}
                 \text{FOLLOW}(S) = \{\$\}
             .\end{align*}
+        \item \textbf{What is the purpose of \$}: The special marker \$ marks the \textbf{end of input}. It lets the parser detect when the entire input has been successfully consumed.
+            Without an explicit end marker, the parser cannot distinguish between:
+            \begin{itemize}
+                \item A complete valid parse
+                \item A valid prefix followed by garbage
+                \item Premature termination
+            \end{itemize}
+            Regarding the start symbol $S$,
+            \begin{align*}
+                \$ \in \text{FOLLOW}(S)
+            .\end{align*}
+            Means the start symbol may be followed by end-of-input.
+        \item \textbf{$\varepsilon$ in FIRST and FOLLOW sets}: It is important to note that $\varepsilon$ is not a terminal, and since FOLLOW sets contain only terminals, it therefore cannot appear. However, we let $\varepsilon$ appear in FIRST sets to indicate if a nonterminal is nullable, and is therefore necessary in building other FIRST sets. 
         \item \textbf{FIRST of a sequence}: Consider the rule
             \begin{align*}
                 E &\to TE^{\prime}
@@ -1128,24 +1141,24 @@
                     .\end{align*}
 
 
-                \item \textbf{If $\epsilon$ is possible, FIRST and FOLLOW must be disjoint}: If some $\alpha_{i} \implies^{*} \epsilon$, then for every $j \ne i$,
+                \item \textbf{If $\varepsilon$ is possible, FIRST and FOLLOW must be disjoint}: If some $\alpha_{i} \xRightarrow{*} \epsilon$, then for every $j \ne i$,
                     \begin{align*}
                         \text{FIRST}(\alpha_{j}) \cap \text{FOLLOW}(A) = \varnothing
                     .\end{align*}
                     If $A$ can disappear, the parser must decide between expanding $A$ or skipping it based on the lookahead — which must not conflict with any other production. When the parser encounters $A$, it must decide between
                     \begin{enumerate}
-                        \item Expanding $A$ using a non-$\epsilon$ production, or
-                        \item Letting $A \implies \epsilon$ (produce nothing)
+                        \item Expanding $A$ using a non-$\varepsilon$ production, or
+                        \item Letting $A \implies \varepsilon$ (produce nothing)
                     \end{enumerate}
                     But, producing nothing means the parser will next see whatever terminal can legally follow $A$ in the surrounding context, precisely the terminals in $\text{FOLLOW}(A)$. Thus, the parser uses
                     \begin{itemize}
                         \item FIRST sets to choose real expansions
-                        \item FOLLOW set to decide when to use $\epsilon$
+                        \item FOLLOW set to decide when to use $\varepsilon$
                     \end{itemize}
                     If these sets overlap, the parser cannot decide.
                     \begin{itemize}
                         \item If the symbol belongs to FIRST of some real alternative $A$ expand
-                        \item If the symbol belongs to FOLLOW($A$) $\to$ choose $\epsilon$
+                        \item If the symbol belongs to FOLLOW($A$) $\to$ choose $\varepsilon$
                     \end{itemize}
 
             \end{enumerate}
@@ -1157,10 +1170,60 @@
                     .\end{align*}
                 \item \textbf{Indirect left recursion}
                     \begin{align*}
-                        A \implies^{+} A\alpha
+                        A \xRightarrow{+} A\alpha
                     .\end{align*}
                 \item \textbf{Ambiguous grammar}
             \end{itemize}
+        \item \textbf{Note on nullability}: A nonterminal $X$ is nullable if and only if its FIRST set contains the empty string $\varepsilon$.
+            \begin{align*}
+                X \xRightarrow{*} \varepsilon \iff \varepsilon \in \text{FIRST}(X)
+            .\end{align*}
+            The same applies for a RHS sequence $\alpha$.
+        \item \textbf{FIRST / FOLLOW sets for our LL(1) grammar}: Recall the grammar
+            \begin{align*}
+                E &\to TE^{\prime} \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+                T &\to NT^{\prime} \\
+                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+                N &\to +N \ \mid \ -N \ \mid \ F \\
+                F &\to SF^{\prime} \\
+                F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+                S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
+            .\end{align*}
+            Note that the terminals are
+            \begin{align*}
+                \{+, -, *, /, \text{ MOD }, \land, (, ), \text{int}, \text{var}\}
+            .\end{align*}
+            So, we find the FIRST sets of all non-terminals on the right hand side of our production rules. Then, any sequences $\alpha$ can be derived from those sets. Recall that the FIRST set of a non-terminal $X$ is found by determining the nonterminals that can begin a string derived starting at that nonterminal. So, those sets are
+            \begin{align*}
+                \text{FIRST}(S) &= \{(,\text{int}, \text{var}\} \\
+                \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
+                \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}\} \\
+                \text{FIRST}(N) &= \{+,-\} \cup \text{FIRST}(F) = \text{FIRST}(S) = \{+,-,(,\text{int}, \text{var}\} \\
+                \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
+                \text{FIRST}(T) &= \text{FIRST}(N) = \{+,-,(,\text{int}, \text{var}\} \\
+                \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
+                \text{FIRST}(E) &=\text{FIRST}(T) = \{+,-,(, \text{int}, \text{var}\}
+            .\end{align*}
+            Note the order in which we found these sets. For the FOLLOW sets, we start by initializing the FOLLOW set of the start symbol $E$,
+            \begin{align*}
+                \text{FOLLOW}(E) = \{\$\}
+            .\end{align*}
+            Recall that the FOLLOW set for a nonterminal contains all the terminals that can appear immediately after that nonterminal in some sentential form derived from the start symbol.
+            \begin{align*}
+                a \in \text{FOLLOW}(A) \iff S \xRightarrow{*} \alpha Aa \beta
+            .\end{align*}
+            These sets are therefore
+            \begin{align*}
+                \text{FOLLOW}(E) &= \{\$, )\}\\
+                \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) = \{\$, )\}\\
+                \text{FOLLOW}(T) &= \text{FIRST}(E^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(E) = \{+,-,\$, )\}\\
+                \text{FOLLOW}(T^{\prime}) &= \text{FOLLOW}(T) = \{+,-,\$,)\}\\
+                \text{FOLLOW}(N) &= \text{FIRST}(T^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(T^{\prime}) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F) &= \text{FOLLOW}(N) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F^{\prime}) &= \text{FOLLOW}(F) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(S) &= \text{FIRST}(F^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(F) = \{\land, *, /, \text{MOD}, +, -, \$, )\}\\
+            .\end{align*}
 
         \item \textbf{Basics on parsing (arithmetic expressions)}: For arithmetic expressions, you typically structure the grammar to encode precedence and associativity, so the parser produces the “right” AST shape.
             \bigbreak \noindent 
@@ -1199,12 +1262,12 @@
             We already know that a right-recursive language is suitable for recursive descent, and that language is precisely given by the grammar
             \begin{align*}
                 E &\to TE^{\prime} \\
-                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
                 T &\to NT^{\prime} \\
-                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \epsilon \\
+                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
                 N &\to +N \ \mid \ -N \ \mid \ F \\
                 F &\to SF^{\prime} \\
-                F^{\prime} &\to \land SF^{\prime} \ \mid \ \epsilon\\
+                F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
                 S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
             .\end{align*}
             An LL(1) parser uses 
