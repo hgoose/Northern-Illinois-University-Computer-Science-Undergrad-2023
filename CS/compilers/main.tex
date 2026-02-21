@@ -918,6 +918,344 @@
     \end{itemize}
 
     \pagebreak 
+    \subsubsection{Parsing algorithms}
+    \begin{itemize}
+        \item \textbf{LL and LR families of deterministic parsers for CFGs}: The LL and LR families are the two major classes of deterministic parsers for context-free grammars. They differ in direction of parsing, derivation strategy, grammar requirements, and implementation style.
+            \begin{itemize}
+                \item \textbf{LL} = Left-to-right scan, Leftmost derivation
+                \item \textbf{LR} = Left-to-right scan, Rightmost derivation (in reverse)
+            \end{itemize}
+            Both read the input left-to-right. What differs is how they construct the parse.
+        \item \textbf{The LL family (top-down parsers)}: 
+            \begin{itemize}
+                \item \textbf{First L:} scan input Left to right
+                \item \textbf{Second L:} produce a Leftmost derivation
+            \end{itemize}
+            They start from the start symbol and try to expand it to match the input.  They:
+            \begin{itemize}
+                \item Maintain a stack of grammar symbols (or recursive call stack)
+                \item Look at the next input token
+                \item Choose a production for the top nonterminal
+                \item Expand until terminals match the input
+            \end{itemize}
+            This corresponds exactly to recursive-descent parsing.           
+            \bigbreak \noindent 
+            \textbf{Note:} LL parsers \textbf{cannot} handle left recursion.
+        \item \textbf{LL(k)}: Uses $k$ tokens of lookahead. So, $LL(1)$ uses only one token, very common.
+        \item \textbf{The LR family}: 
+            \begin{itemize}
+                \item \textbf{First L:} scan input Left to right
+                \item \textbf{R:} construct a Rightmost derivation in reverse
+            \end{itemize}
+            They start from the input and reduce it back to the start symbol. These parsers are \textbf{bottom up}
+        \item \textbf{Left-recursion elimination}: For a rule of the form
+            \begin{align*}
+                A &\to A\alpha_{1} \ \mid \ A\alpha_{2} \ \mid \ \cdots \ \mid \ \beta
+            \end{align*}
+            where each $\beta$ does not start with $A$, we transform to
+            \begin{align*}
+                A &\to \beta A^{\prime} \\
+                A^{\prime} &\to \alpha_{1}A^{\prime} \ \mid \ \alpha_{2}A^{\prime} \ \mid \ \cdots \ \mid \ \epsilon
+            .\end{align*}
+            Notice that expansions of $A$ before elimination of left-recursion take the form  $\beta(\alpha_{1} + \alpha_{2} + ... + \alpha_{k})^{*}$. In the updated grammar, the first production rule produces
+            \begin{align*}
+                \beta A^{\prime}
+            .\end{align*}
+            Now, notice that $A^{\prime}$ has expansions of the form $(\alpha_{1} + \alpha_{2} + ... + \alpha_{k})^{*}$. So, the updated grammar produces
+            \begin{align*}
+                \beta(\alpha_{1} + \alpha_{2} + \cdots + \alpha_{k})^{*} 
+            .\end{align*}
+            Since the two grammars produce the same derivations, they are equivalent. Consider the first rule in our left-recursive grammar
+            \begin{align*}
+                E &\to E + T \ \mid \ E - T \ \mid \ T
+            .\end{align*}
+            Notice that $\beta = T$, $\alpha_{1} = +T$, and $\alpha_{2} = -T$. Thus, the production rule becomes
+            \begin{align*}
+                E &\to TE^{\prime} \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon
+            .\end{align*}
+            Notice that they both produce derivations of the form
+            \begin{align*}
+                T(+T \ \mid \ -T)^{*}
+            .\end{align*}
+            The full grammar would be converted to
+            \begin{align*}
+                E &\to TE^{\prime} \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon \\
+                T &\to NT^{\prime} \\
+                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \epsilon \\
+                N &\to +N \ \mid \ -N \ \mid \ F \\
+                F &\to SF^{\prime} \\
+                F^{\prime} &\to \land SF^{\prime} \ \mid \ \epsilon\\
+                S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
+            .\end{align*}
+            Notice that the rules that are not left recursive can remain the same.
+        \item \textbf{LL(1) grammars}: A context-free grammar is called LL(1) if it can be parsed by a deterministic LL(1) parser. That is, using left-to-right scanning, leftmost derivation, and one token of lookahead with no backtracking. Thus, LL(1) is a subclass of CFGs.
+            \bigbreak \noindent 
+            If a CFG is LL(1), there exists a deterministic predictive parser that, at every step, can choose the correct production using only the next input symbol. No guessing. No backtracking. No multiple possibilities.
+        \item \textbf{FIRST / FOLLOW sets}: 
+            \begin{itemize}
+                \item \textbf{FIRST set}:  The FIRST set of a non-terminal contains all the terminal symbols that can appear at the beginning of any string derived from that non-terminal. In other words, it tells us which terminal symbols are possible when expanding a non-terminal.
+                    \begin{align*}
+                        \text{FIRST}(X) = \{a \; \mid \; X \implies^{*} a\alpha, a \text{ terminal}\}
+                    .\end{align*}
+                    Also includes $\epsilon$ if $X$ can derive the empty string. Also, terminals derive themselves, so 
+                    \begin{align*}
+                        \text{FIRST}(a) = \{a\}
+                    \end{align*}
+                    for any terminal $a$, and
+                    \begin{align*}
+                        \text{FIRST}(\epsilon) = \{\epsilon\}
+                    .\end{align*}
+                    For each production 
+                    \begin{align*}
+                        A \to \alpha
+                    ,\end{align*}
+                    add $\text{FIRST}(\alpha)$ to $\text{FIRST}(A)$. For a string of symbols
+                    \begin{align*}
+                        \alpha = X_{1}X_{2} \cdots X_{k}
+                    ,\end{align*}
+                    compute $\text{FIRST}(\alpha)$ as follows,
+                    \begin{enumerate}
+                        \item Add FIRST($X_{1}$) - $\{\epsilon\} $
+                        \item If $\epsilon \in \text{ FIRST}(X_{1})$, and $\text{FIRST}(X_{2}) - \{\epsilon\} $
+                        \item Continue left to right
+                        \item If all $X_{i}$ can derive $\epsilon$, then include $\epsilon$ in $\text{FIRST}(\alpha) $
+                    \end{enumerate}
+                \item \textbf{FOLLOW set}: The FOLLOW set of a non-terminal contains all the terminal symbols that can appear immediately after that non-terminal in any derivation. It helps identify what can follow a non-terminal in the grammar and is essential for handling productions where a non-terminal is at the end of a rule.
+                    \begin{align*}
+                        \text{FOLLOW}(A) = \{a \ \mid \ S \implies^{*} \alpha Aa \beta\}
+                    .\end{align*}
+                    First, we place end marker in FOLLOW of start symbol
+                    \begin{align*}
+                        \$ \in \text{FOLLOW}(S)
+                    .\end{align*}
+                    For any production 
+                    \begin{align*}
+                        A \to \alpha Ba \beta,
+                    \end{align*}
+                    where $a$ is a terminal, 
+                    \begin{align*}
+                        a \in \text{FOLLOW}(B)
+                    .\end{align*}
+                    For any production
+                    \begin{align*}
+                        A \to \alpha B \beta,
+                    \end{align*}
+                    where $\beta \ne \epsilon$, add
+                    \begin{align*}
+                       \text{FIRST}(\beta) - \{\epsilon\} 
+                    \end{align*}
+                    to $\text{FOLLOW}(B)$. If $\epsilon \in \text{FIRST}(\beta)$, add $\text{FOLLOW}(A)$ to $\text{FOLLOW}(B)$. If $\text{FIRST}(\beta)$ is empty, then add $\text{FOLLOW}(A) $ to $\text{FOLLOW}(B)$, so that
+                    \begin{align*}
+                        \text{FOLLOW}(A) \subseteq \text{FOLLOW}(B)
+                    \end{align*}
+                
+
+            \end{itemize}
+            For example, consider the grammar
+            \begin{align*}
+                S & \to AB \\
+                A &\to a \\
+                B &\to b
+            .\end{align*}
+            Terminals derive themselves, so
+            \begin{align*}
+                \text{FIRST}(a) &= \{a\} \\
+                \text{FIRST}(b) &= \{b\} 
+            .\end{align*}
+            Now nonterminals,
+            \begin{align*}
+                A \to a \implies \text{FIRST}(A) = \{a\} \\
+                B \to b \implies \text{FIRST}(B) = \{b\}
+            .\end{align*}
+            For $S \to AB$, since $A$ cannot derive $\epsilon$,
+            \begin{align*}
+                \text{FIRST}(S) = \text{FIRST}(A) = \{a\}
+            .\end{align*}
+            For the FOLLOW sets, put \$ in FOLLOW of start symbol, use occurrences on right-hand sides.
+            \begin{align*}
+                \text{FOLLOW}(S) = \{\$\}
+            .\end{align*}
+        \item \textbf{FIRST of a sequence}: Consider the rule
+            \begin{align*}
+                E &\to TE^{\prime}
+            .\end{align*}
+            Here, $\alpha = TE^{\prime}$, so we need $\text{FIRST}(TE^{\prime})$. But, this may require $\text{FIRST}(T)$ and $\text{FIRST}(E^{\prime}) $
+            \bigbreak \noindent 
+            For a sequence $X_{1}X_{2} \ldots X_{n}$:
+            \begin{enumerate}
+                \item Add $\text{FIRST}(X_{1}) \setminus \{\varepsilon\} $
+                \item If $X_{1} \Rightarrow^{*}\; \varepsilon$, also consider $X_{2}$
+                \item Continue until a symbol cannot derive $\varepsilon$
+                \item If all symbols can derive $\varepsilon$, include $\varepsilon$
+            \end{enumerate}
+            Recall that a non-terminal is \textbf{nullable} if it can derive $\varepsilon$. So, if $T$ is \textbf{not} nullable,
+            \begin{align*}
+                \text{FIRST}(TE^{\prime}) = \text{ FIRST}(T)
+            .\end{align*}
+            If $T$ is nullable, 
+            \begin{align*}
+                \text{FIRST}(TE^{\prime}) = (\text{FIRST}(T) \setminus \{\varepsilon\}) \cup \text{FIRST}(E^{\prime})
+            ,\end{align*}
+            and $\varepsilon$ is included only if both $T$ and $E^{\prime}$ are nullable.
+        \item \textbf{Showing that a grammar is LL(1)}: There are two standard methods used in compiler theory. The first is the FIRST / FOLLOW disjointness conditions
+            A grammar is LL(1) if and only if for every nonterminal $A$ with multiple productions.
+            \begin{align*}
+                A &\to \alpha_{1} \ \mid \ \alpha_{2} \ \mid \ \cdots \ \mid \ \alpha_{n},
+            \end{align*}
+            the following conditions hold.
+            \begin{enumerate}
+                \item \textbf{FIRST sets must be pairwise disjoint}: For all $i\ne j$,
+                    \begin{align*}
+                        \text{FIRST}(\alpha_{i}) \cap \text{ FIRST}(\alpha_{j}) = \varnothing
+                    .\end{align*}
+                    This ensures that the parser can choose a production based solely on the next input symbol.
+                    \bigbreak \noindent 
+                    FIRST sets must be pairwise disjoint because an LL(1) parser must choose exactly one production using only one lookahead token. If two alternatives can begin with the same terminal, the parser cannot decide which production to apply without additional lookahead or backtracking — both forbidden in LL(1).
+                    \bigbreak \noindent 
+                    Consider a nonterminal 
+                    \begin{align*}
+                        A \to \alpha_{1} \mid \alpha_{2}
+                    .\end{align*}
+                    An LL(1) predictive parser decides which rule to use by inspecting the next input symbol $a$. 
+                    \begin{align*}
+                        a \in \text{ FIRST}(\alpha_{i}) \implies \text{ choose } \alpha_{i}
+                    .\end{align*}
+                    For this decision to be unique 
+                    \begin{align*}
+                        \text{FIRST}(\alpha_{1}) \cap \text{ FIRST}(\alpha_{2}) = \varnothing
+                    .\end{align*}
+
+
+                \item \textbf{If $\epsilon$ is possible, FIRST and FOLLOW must be disjoint}: If some $\alpha_{i} \implies^{*} \epsilon$, then for every $j \ne i$,
+                    \begin{align*}
+                        \text{FIRST}(\alpha_{j}) \cap \text{FOLLOW}(A) = \varnothing
+                    .\end{align*}
+                    If $A$ can disappear, the parser must decide between expanding $A$ or skipping it based on the lookahead — which must not conflict with any other production. When the parser encounters $A$, it must decide between
+                    \begin{enumerate}
+                        \item Expanding $A$ using a non-$\epsilon$ production, or
+                        \item Letting $A \implies \epsilon$ (produce nothing)
+                    \end{enumerate}
+                    But, producing nothing means the parser will next see whatever terminal can legally follow $A$ in the surrounding context, precisely the terminals in $\text{FOLLOW}(A)$. Thus, the parser uses
+                    \begin{itemize}
+                        \item FIRST sets to choose real expansions
+                        \item FOLLOW set to decide when to use $\epsilon$
+                    \end{itemize}
+                    If these sets overlap, the parser cannot decide.
+                    \begin{itemize}
+                        \item If the symbol belongs to FIRST of some real alternative $A$ expand
+                        \item If the symbol belongs to FOLLOW($A$) $\to$ choose $\epsilon$
+                    \end{itemize}
+
+            \end{enumerate}
+        \item \textbf{When is a grammar not LL(1)}: 
+            \begin{itemize}
+                \item \textbf{Immediate left recursion}
+                    \begin{align*}
+                        A \to A\alpha \mid \beta
+                    .\end{align*}
+                \item \textbf{Indirect left recursion}
+                    \begin{align*}
+                        A \implies^{+} A\alpha
+                    .\end{align*}
+                \item \textbf{Ambiguous grammar}
+            \end{itemize}
+
+        \item \textbf{Basics on parsing (arithmetic expressions)}: For arithmetic expressions, you typically structure the grammar to encode precedence and associativity, so the parser produces the “right” AST shape.
+            \bigbreak \noindent 
+            Note that we use a lexer to first get all tokens, then consume the token sequence to build the AST
+            \bigbreak \noindent 
+            For a parser whose language is arithmetic expressions, you should accept exactly the token kinds that can legally appear in that language — and reject everything else as a syntax error.
+            \bigbreak \noindent 
+            A typical expression language needs:
+            \begin{itemize}
+                \item \textbf{Numeric literals}: Integers and/or floats
+                \item \textbf{Arithmetic operators}: $—\; +\; -\; *\; /$ (optionally \%, $\land$, etc.)
+                \item \textbf{Parentheses}: ( )
+                \item \textbf{Identifiers}: variable names (e.g., x, sum, foo)
+                \item \textbf{EOF}: end-of-input marker (very important)
+            \end{itemize}
+            A string literal (e.g., "hello") is not part of arithmetic expressions in the usual sense. It is important that we do not silently discard it, we instead must treat it as a syntax error.
+            \bigbreak \noindent 
+            Consider a grammar that accepts arithmetic expressions,
+            \bigbreak \noindent 
+            \begin{align*}
+                E &\to E + T \ \mid \ E - T  \ \mid \ T \\
+                T &\to T * N \ \mid \ T / N \ \mid \ T \text{ MOD } N \ \mid \ N \\
+                N &\to +N \ \mid \ -N \ \mid \ F \\
+                F &\to F \land S \ \mid \ S \\
+                S &\to (E) \ \mid \ \text{ int } \ \mid \ \text{ var}
+            .\end{align*}
+            Thus, the following operators are acceptable
+            \begin{itemize}
+                \item Addition, subtraction
+                \item Multiplication, division, modulus
+                \item Unary negation, unary plus
+                \item Exponentiation
+            \end{itemize}
+
+        \item \textbf{LL(1) Recursive descent without a decision matrix}: 
+            We already know that a right-recursive language is suitable for recursive descent, and that language is precisely given by the grammar
+            \begin{align*}
+                E &\to TE^{\prime} \\
+                E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \epsilon \\
+                T &\to NT^{\prime} \\
+                T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \epsilon \\
+                N &\to +N \ \mid \ -N \ \mid \ F \\
+                F &\to SF^{\prime} \\
+                F^{\prime} &\to \land SF^{\prime} \ \mid \ \epsilon\\
+                S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
+            .\end{align*}
+            An LL(1) parser uses 
+            \begin{itemize}
+                \item \textbf{Input buffer}: The token stream
+                \item \textbf{Lookahead mechanism}
+                \item \textbf{The implicit call stack}
+                \item \textbf{Optional structures for building the AST}
+            \end{itemize}
+            If you want a tree:
+            \begin{itemize}
+                \item Nodes allocated dynamically
+                \item Returned from functions
+                \item Or constructed incrementally
+            \end{itemize}
+            Without this, the parser merely validates syntax.
+            \bigbreak \noindent 
+            \textbf{Note:} The lookahead token is the \textbf{next unconsumed token}, is it the only \textit{"current token"} we need to track.
+            \bigbreak \noindent 
+            The selection rule for LL(1) given the lookahead token $a$ is 
+            \begin{enumerate}
+                \item If $a \in \text{FIRST}(\alpha_{i}) $, choose the production $\alpha_{i}$, otherwise
+                \item If $\varepsilon \in \text{FIRST}(\alpha_{k})$, and $a \in \text{FOLLOW}(A)$, choose $\alpha_{k}$,
+                \item Otherwise, syntax error.
+            \end{enumerate}
+            Note that
+            \begin{align*}
+                \varepsilon \in \text{FIRST}(\alpha_{k}) \iff a_{k} \Rightarrow^{*}\; \varepsilon
+            .\end{align*}
+        \item  \textbf{LL(1) parse tables}: A parsing table (specifically for LL(1) parsing) is a deterministic decision structure that tells the parser which production rule to apply based on
+            \begin{itemize}
+                \item The current nonterminal to be expaneded
+                \item The next input token (lookahead)
+            \end{itemize}
+            It eliminates backtracking by precomputing all valid choices.
+            \bigbreak \noindent 
+            An LL(1) table is a 2-dimensional matrix:
+            \begin{align*}
+                M[A,a]
+            \end{align*}
+            where 
+            \begin{itemize}
+                \item $A$ = nonterminal (row)
+                \item $a$ = terminal or \$ (column)
+                \item Entry = production $A \to \alpha$
+            \end{itemize}
+
+
+    \end{itemize}
+
+    \pagebreak 
     \unsect{Intel x86-64 architecture and code generation}
     \begin{itemize}
         \item \textbf{General purpose registers}: General-purpose registers store integers, pointers, loop counters, and intermediate results.

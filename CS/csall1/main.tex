@@ -13710,7 +13710,7 @@ indicate which strong entity the weak entity depends upon.
             \end{itemize}
         \item \textbf{User space and kernel space}: 
             \begin{itemize}
-                \textbf{Kernel space}: Kernel space is the privileged execution domain in which the operating system kernel runs.
+                \item \textbf{Kernel space}: Kernel space is the privileged execution domain in which the operating system kernel runs.
                 \begin{itemize}
                     \item Full access to physical memory
                     \item Direct access to CPU control registers
@@ -14470,6 +14470,18 @@ indicate which strong entity the weak entity depends upon.
             \begin{center}
                 Only one process executes at a time.
             \end{center}
+        \item \textbf{Hardware threads}: A hardware thread is a CPU’s ability to execute an independent instruction stream using a separate architectural state within a single physical core. It is a “slot” inside a CPU core that can run one thread at a time.
+            \bigbreak \noindent 
+            Each hardware thread maintains its own:
+            \begin{itemize}
+                \item Program counter (instruction pointer)
+                \item Register set
+                \item Stack pointer
+                \item Processor status flags
+            \end{itemize}
+            This allows multiple threads to make progress without saving/restoring state on every switch.
+            \bigbreak \noindent 
+            \textbf{A hardware thread is the execution context in the CPU where a software thread runs.}
         \item \textbf{SMT (hardware threads)}: Processors from Intel and AMD often implement Simultaneous Multithreading (SMT). If you have 4 physical cores, 2 hardware threads per core, then up to 8 logical threads may execute concurrently. However, 
             \begin{itemize}
                 \item Execution units are shared.
@@ -14980,7 +14992,7 @@ indicate which strong entity the weak entity depends upon.
             With memory mapping, the kernel instead establishes a virtual memory region whose pages correspond to pages of the file. The CPU’s memory hardware handles access transparently.
             \bigbreak \noindent 
             From the program’s perspective, the file behaves like a contiguous array in memory.
-        \item \textbf{POSIX Shared Memory}: POSIX shared memory is organized using memory-mapped files, which associate the region of shared memory with a file. A process must first create a shared-memory object using the shm_open() system call
+        \item \textbf{POSIX Shared Memory}: POSIX shared memory is organized using memory-mapped files, which associate the region of shared memory with a file. A process must first create a shared-memory object using the shm\_open() system call
             \bigbreak \noindent 
             \begin{cppcode}
                 #include <sys/mman.h>
@@ -15528,12 +15540,806 @@ indicate which strong entity the weak entity depends upon.
             One scheme for communication between the user-thread library and the kernel is known as \textbf{scheduler activation}. It works as follows: The kernel provides an application with a set of virtual processors (LWPs), and the application can schedule user threads onto an available virtual processor. Furthermore, the kernel must inform an application about certain events. This procedure is known as an \textbf{upcall}. Upcalls are handled by the thread library with an \textbf{upcall handler}, and upcall handlers must run on a virtual processor.
             \bigbreak \noindent 
             One event that triggers an upcall occurs when an application thread is about to block. In this scenario, the kernel makes an upcall to the application informing it that a thread is about to block and identifying the specific thread. The kernel then allocates a new virtual processor to the application. The application runs an upcall handler on this new virtual processor, which saves the state of the blocking thread and relinquishes the virtual processor on which the blocking thread is running. The upcall handler then schedules another thread that is eligible to run on the new virtual processor. When the event that the blocking thread was waiting for occurs, the kernel makes another upcall to the thread library informing it that the previously blocked thread is now eligible to run. The upcall handler for this event also requires a virtual processor, and the kernel may allocate a new virtual processor or preempt one of the user threads and run the upcall handler on its virtual processor. After marking the unblocked thread as eligible to run, the application schedules an eligible thread to run on an available virtual processor.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{CPU Scheduling}
+    \begin{itemize}
+        \item \textbf{Intro}: CPU scheduling is the basis of multiprogrammed operating systems. By switching the CPU among processes, the operating system can make the computer more productive
+            \bigbreak \noindent 
+            We introduced threads to the process model. On modern operating systems it is kernel-level threads—not processes— that are in fact being scheduled by the operating system. However, the terms "process scheduling" and "thread scheduling" are often used interchangeably. In this section, we use \textbf{process scheduling} when discussing general scheduling concepts and \textbf{thread scheduling} to refer to thread-specific ideas.
+            \bigbreak \noindent 
+            When we use the general terminology of scheduling a process to "run on a CPU", we are implying that the process is running on a CPU’s core.
+        \item \textbf{Basic concepts}: In a system with a single CPU core, only one process can run at a time. Others must wait until the CPU’s core is free and can be rescheduled. The objective of multiprogramming is to have some process running at all times, to maximize CPU utilization. The idea is relatively simple. A process is executed until it must wait, typically for the completion of some I/O request.
+            \bigbreak \noindent 
+            In a simple computer system, the CPU then just sits idle. All this waiting time is wasted; no useful work is accomplished. With multiprogramming, we try to use this time productively. Several processes are kept in memory at one time. When one process has to wait, the operating system takes the CPU away from that process and gives the CPU to another process. This pattern continues. Every time one process has to wait, another process can take over use of the CPU. On a multicore system, this concept of keeping the CPU busy is extended to all processing cores on the system.
+            \bigbreak \noindent 
+            Scheduling of this kind is a fundamental operating-system function. Almost all computer resources are scheduled before use. The CPU is, of course, one of the primary computer resources. Thus, its scheduling is central to operating-system design.
+        \item \textbf{CPU-I/O burst cycle}: The success of CPU scheduling depends on an observed property of processes: process execution consists of a cycle of CPU execution and I/O wait. Processes alternate between these two states. Process execution begins with a \textbf{CPU burst}. That is followed by an \textbf{I/O burst}, which is followed by another CPU burst, then another I/O burst, and so on. Eventually, the final CPU burst ends with a system request to terminate execution.
+            \bigbreak \noindent 
+            The durations of CPU bursts have been measured extensively. Although they vary greatly from process to process and from computer to computer, they tend to have a frequency curve similar to that shown below
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1063.png}
+            \bigbreak \noindent 
+            The curve is generally characterized as exponential or hyperexponential, with a large number of short CPU bursts and a small number of long CPU bursts. An I/O-bound program typically has many short CPU bursts. A CPU-bound program might have a few long CPU bursts. This distribution can be important when implementing a CPU-scheduling algorithm.
+        \item \textbf{CPU Scheduler}: Whenever the CPU becomes idle, the operating system must select one of the processes in the ready queue to be executed. The selection process is carried out by the CPU scheduler, which selects a process from the processes in memory that are ready to execute and allocates the CPU to that process.
+            \bigbreak \noindent 
+            Note that the ready queue is not necessarily a first-in, first-out (FIFO) queue. As we shall see when we consider the various scheduling algorithms, a ready queue can be implemented as a FIFO queue, a priority queue, a tree, or simply an unordered linked list. Conceptually, however, all the processes in the ready queue are lined up waiting for a chance to run on the CPU. The records in the queues are generally process control blocks (PCBs) of the processes.
+        \item \textbf{Real-time computing (RTC)}: Real-time computing (RTC) refers to systems that process data and respond to events within strict, predictable time constraints—often milliseconds or microseconds—where the correctness of the system depends not only on the logical result but also on the time it is delivered. It is essential for mission-critical applications like industrial automation, airbag deployment, and flight control, where delayed responses can lead to system failure.
+        \item \textbf{Preemptive and Nonpreemptive Scheduling}: CPU-scheduling decisions may take place under the following four circumstances:
+            \begin{enumerate}
+                \item When a process switches from the running state to the waiting state (for example, as the result of an I/O request or an invocation of wait() for the termination of a child process)
+                \item  When a process switches from the running state to the ready state (for example, when an interrupt occurs)
+                \item When a process switches from the waiting state to the ready state (for example, at completion of I/O)
+                \item When a process terminates
+            \end{enumerate}
+            For situations 1 and 4, there is no choice in terms of scheduling. A new process (if one exists in the ready queue) must be selected for execution. There is a choice, however, for situations 2 and 3.
+            \bigbreak \noindent 
+            When scheduling takes place only under circumstances 1 and 4, we say that the scheduling scheme is nonpreemptive or cooperative. Otherwise, it is preemptive.
+            \bigbreak \noindent 
+            Under nonpreemptive scheduling, once the CPU has been allocated to a process, the process keeps the CPU until it releases it either by terminating or by switching to the waiting state.
+            \bigbreak \noindent 
+            Virtually all modern operating systems including Windows, macOS, Linux, and UNIX use preemptive scheduling algorithms.
+            \bigbreak \noindent 
+            Unfortunately, preemptive scheduling can result in race conditions when data are shared among several processes. Consider the case of two processes that share data. While one process is updating the data, it is preempted so that the second process can run. The second process then tries to read the data, which are in an inconsistent state.
+            \bigbreak \noindent 
+            Preemption also affects the design of the operating-system kernel. During the processing of a system call, the kernel may be busy with an activity on behalf of a process. Such activities may involve changing important kernel data (for instance, I/O queues). What happens if the process is preempted in the middle of these changes and the kernel (or the device driver) needs to read or modify the same structure? Chaos ensues. When a process is preempted, the CPU stops executing the kernel code on behalf of that process, even if that code is in the middle of a system call.
+            \bigbreak \noindent 
+            While servicing the call, the kernel runs using the process’s context (its stack, registers, etc.). If preemption occurs:
+            \begin{itemize}
+                \item The CPU saves the current execution state
+                \item The scheduler chooses another runnable entity
+                \item The CPU begins executing something else
+                \item The original kernel code pauses mid-execution
+            \end{itemize}
+            Another kernel execution path may observe or modify the partially updated structure, but the structure is temporarily inconsistent.
+            \bigbreak \noindent 
+            Operating-system kernels can be designed as either nonpreemptive or preemptive. A nonpreemptive kernel will wait for a system call to complete or for a process to block while waiting for I/O to complete to take place before doing a context switch. This scheme ensures that the kernel structure is simple, since the kernel will not preempt a process while the kernel data structures are in an inconsistent state. Unfortunately, this kernel-execution model is a poor one for supporting real-time computing, where tasks must complete execution within a given time frame
+            \bigbreak \noindent 
+            A preemptive kernel requires mechanisms such as mutex locks to prevent race conditions when accessing shared kernel data structures. Most modern operating systems are now fully preemptive when running in kernel mode.
+            \bigbreak \noindent 
+        \item \textbf{Note about interrupts}: Because interrupts can, by definition, occur at any time, and because they cannot always be ignored by the kernel, the sections of code affected by interrupts must be guarded from simultaneous use. The operating system needs to accept interrupts at almost all times. Otherwise, input might be lost or output overwritten. So that these sections of code are not accessed concurrently by several processes, they disable interrupts at entry and reenable interrupts at exit. It is important to note that sections of code that disable interrupts do not occur very often and typically contain few instructions. 
+        \item \textbf{The dispatcher}: Another component involved in the CPU-scheduling function is the dispatcher. The dispatcher is the module that gives control of the CPU’s core to the process selected by the CPU scheduler. This function involves the following:
+            \begin{itemize}
+                \item Switching context from one process to another
+                \item Switching to user mode
+                \item Jumping to the proper location in the user program to resume that program
+            \end{itemize}
+            The dispatcher should be as fast as possible, since it is invoked during every context switch. The time it takes for the dispatcher to stop one process and start another running is known as the dispatch latency
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1064.png}
+            \bigbreak \noindent 
+            An interesting question to consider is, how often do context switches occur? On a system-wide level, the number of context switches can be obtained by using the vmstat command that is available on Linux systems
+            \bigbreak \noindent 
+            \begin{bashcode}
+            vmstat 1 3
+            \end{bashcode}
+            \bigbreak \noindent 
+            This command provides 3 lines of output over a 1-second delay:
+            \bigbreak \noindent 
+            \begin{center}
+                ------cpu----- \\
+                24 \\
+                225 \\
+                339
+            \end{center}
+            The first line gives the average number of context switches over 1 second since the system booted, and the next two lines give the number of context switches over two 1-second intervals. Since this machine booted, it has averaged 24 context switches per second. And in the past second, 225 context switches were made, with 339 context switches in the second prior to that
+            \bigbreak \noindent 
+            We can also get some info about context switches by reading
+            \bigbreak \noindent 
+            \begin{bashcode}
+            cat /proc/pid/status
+            \end{bashcode}
+            \bigbreak \noindent 
+            which provides the following trimmed output
+            \begin{center}
+                voluntary\_ctxt\_switches 150\\
+                nonvoluntary\_ctxt\_switches 8
+            \end{center}
+            \bigbreak \noindent 
+            This output shows the number of context switches over the lifetime of the process. Notice the distinction between voluntary and nonvoluntary context switches. A voluntary context switch occurs when a process has given up control of the CPU because it requires a resource that is currently unavailable (such as blocking for I/O.) A nonvoluntary context switch occurs when the CPU has been taken away from a process, such as when its time slice has expired or it has been preempted by a higher-priority process.
+        \item \textbf{Scheduling Criteria}: Different CPU-scheduling algorithms have different properties, and the choice of a particular algorithm may favor one class of processes over another. In choosing which algorithm to use in a particular situation, we must consider the properties of the various algorithms.
+            \bigbreak \noindent 
+            Many criteria have been suggested for comparing CPU-scheduling algorithms. Which characteristics are used for comparison can make a substantial difference in which algorithm is judged to be best. The criteria include the following
+            \begin{itemize}
+                \item \textbf{CPU utilization.} We want to keep the CPU as busy as possible. Conceptually, CPU utilization can range from 0 to 100 percent. In a real system, it should range from 40 percent (for a lightly loaded system) to 90 percent (for a heavily loaded system). (CPU utilization can be obtained by using the top command on Linux, macOS, and UNIX systems.)
+                \item \textbf{Throughput}. If the CPU is busy executing processes, then work is being done. One measure of work is the number of processes that are completed
+                \item \textbf{Turnaround time}. From the point of view of a particular process, the important criterion is how long it takes to execute that process. The interval from the time of submission of a process to the time of completion is the turnaround time. Turnaround time is the sum of the periods spent waiting in the ready queue, executing on the CPU, and doing I/O.
+                \item \textbf{Waiting time.} The CPU-scheduling algorithm does not affect the amount of time during which a process executes or does I/O. It affects only the amount of time that a process spends waiting in the ready queue. Waiting time is the sum of the periods spent waiting in the ready queue.
+                \item \textbf{Response time.} In an interactive system, turnaround time may not be the best criterion. Often, a process can produce some output fairly early and can continue computing new results while previous results are being output to the user. Thus, another measure is the time from the submission of a request until the first response is produced. This measure, called response time, is the time it takes to start responding, not the time it takes to output the response.
+            \end{itemize}
+            It is desirable to maximize CPU utilization and throughput and to minimize turnaround time, waiting time, and response time. In most cases, we optimize the average measure. However, under some circumstances, we prefer to optimize the minimum or maximum values rather than the average. For example, to guarantee that all users get good service, we may want to minimize the maximum response time.
+        \item \textbf{Scheduling Algorithms}: CPU scheduling deals with the problem of deciding which of the processes in the ready queue is to be allocated the CPU’s core. There are many different CPUscheduling algorithms. In this section, we describe several of them. Although most modern CPU architectures have multiple processing cores, we describe these scheduling algorithms in the context of only one processing core available. That is, a single CPU that has a single processing core, thus the system is capable of only running one process at a time.
+            \bigbreak \noindent 
+            Also, an accurate illustration should involve many processes, each a sequence of several hundred CPU bursts and I/O bursts. For simplicity, though, we consider only one CPU burst (in milliseconds) per process in our examples.
+        \item \textbf{The FIFO scheduling algorithm}: By far the simplest CPU-scheduling algorithm is the first-come first-serve (FCFS) scheduling algorithm. With this scheme, the process that requests the CPU first is allocated the CPU first. The implementation of the FCFS policy is easily managed with a FIFO queue. When a process enters the ready queue, its PCB is linked onto the tail of the queue. When the CPU is free, it is allocated to the process at the head of the queue. The running process is then removed from the queue. 
+            \bigbreak \noindent 
+            On the negative side, the average waiting time under the FCFS policy is often quite long. Consider the following set of processes that arrive at time 0, with the length of the CPU burst given in milliseconds:
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Process}& \textbf{Burst Time} \\
+                    \midrule
+                        $P_{1}$ &24 \\[2ex]
+                        $P_{2}$ &3 \\[2ex]
+                        $P_{3}$ &3 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            If the processes arrive in the order $P_{1}, P_{2}, P_{3}$, and are served in FCFS order, we get the result shown in the following Gantt chart, which is a bar chart that illustrates a particular schedule, including the start and finish times of each of the participating processes:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1065.png}
+            \bigbreak \noindent 
+            The average waiting time is $ (0 + 24 + 27) / 3 = 17$ ms. If the processes arrive in the order $P_{2},P_{3}, P_{1}$, the average waiting time is then $(6 + 0 + 3) / 3 = 3$ ms. This reduction is substantial. Thus, the average waiting time under an FCFS policy is generally not minimal and may vary substantially if the processes’ CPU burst times vary greatly.
+            \bigbreak \noindent 
+            Note also that the FCFS scheduling algorithm is nonpreemptive. Once the CPU has been allocated to a process, that process keeps the CPU until it releases the CPU, either by terminating or by requesting I/O. The FCFS algorithm is thus particularly troublesome for interactive systems, where it is important that each process get a share of the CPU at regular intervals. It would be disastrous to allow one process to keep the CPU for an extended period.
+        \item \textbf{Shortest-Job-First Scheduling (SJF / SNJF)}: A different approach to CPU scheduling is the shortest-job-firs (SJF) scheduling algorithm. This algorithm associates with each process the length of the process’s next CPU burst. When the CPU is available, it is assigned to the process that has the smallest next CPU burst. If the next CPU bursts of two processes are the same, FCFS scheduling is used to break the tie. Note that a more appropriate term for this scheduling method would be the shortest-next-CPU-burst algorithm, because scheduling depends on the length of the next CPU burst of a process, rather than its total length. We use the term SJF because most people and textbooks use this term to refer to this type of scheduling.
+            \bigbreak \noindent 
+            If
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Process} &\textbf{Burst Time} \\
+                    \midrule
+                    $P_{1}$ &6 \\[2ex]
+                    $P_{2}$ &8 \\[2ex]
+                    $P_{3}$ &7 \\[2ex]
+                    $P_{4}$ &3 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Using SJF scheduling, we would schedule these processes according to the following Gantt chart:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1066.png}
+            \bigbreak \noindent 
+            Here, the average wait time is $7$ ms, whereas with FCFS, its $10.25$ ms.
+            \bigbreak \noindent 
+            The SJF scheduling algorithm is provably optimal, in that it gives the minimum average waiting time for a given set of processes. Moving a short process before a long one decreases the waiting time of the short process more than it increases the waiting time of the long process. Consequently, the average waiting time decreases.
+            \bigbreak \noindent 
+            Although the SJF algorithm is optimal, it cannot be implemented at the level of CPU scheduling, as there is no way to know the length of the next CPU burst. One approach to this problem is to try to approximate SJF scheduling. We may not know the length of the next CPU burst, but we may be able to predict its value. We expect that the next CPU burst will be similar in length to the previous ones. By computing an approximation of the length of the next CPU burst, we can pick the process with the shortest predicted CPU burst.
+            \bigbreak \noindent 
+            The next CPU burst is generally predicted as an exponential average of the measured lengths of previous CPU bursts. We can define the exponential average with the following formula. Let $t_{n}$ be the length of the $n$th CPU burst, and let $\tau_{n+1}$ be our predicted value for the next CPU burst. Then, for $\alpha$, $0 \leq \alpha \leq 1$, define
+            \begin{align*}
+                \tau_{n+1} = \alpha t_{n} + (1-\alpha)\tau_{n}
+            .\end{align*}
+            Figure 5.4 shows an exponential average with $\alpha = \frac{1}{2}$ and $\tau_{0} = 10$.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1067.png}
+            \bigbreak \noindent 
+            The SJF algorithm can be either preemptive or nonpreemptive. The choice arises when a new process arrives at the ready queue while a previous process is still executing. The next CPU burst of the newly arrived process may be shorter than what is left of the currently executing process. A preemptive SJF algorithm will preempt the currently executing process, whereas a nonpreemptive SJF algorithm will allow the currently running process to finish its CPU burst. Preemptive SJF scheduling is sometimes called shortest-remaining-time-first scheduling.
+            \bigbreak \noindent 
+            As an example, consider the following four processes, with the length of the CPU burst given in milliseconds:
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Process}& \textbf{Arrival Time}& \textbf{Burst Time} \\
+                    \midrule
+                    $P_{1}$ &0 &8 \\[2ex]
+                    $P_{2}$ &1 &4 \\[2ex]
+                    $P_{3}$ &2 &9 \\[2ex]
+                    $P_{4}$ &3 &5 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            If the processes arrive at the ready queue at the times shown and need the indicated burst times, then the resulting preemptive SJF schedule is as depicted in the following Gantt chart:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1068.png}
+        \item \textbf{Round-Robin Scheduling}: The round-robin (RR) scheduling algorithm is similar to FCFS scheduling, but preemption is added to enable the system to switch between processes. A small unit of time, called a \textbf{time quantum} or \textbf{time slice}, is defined. A time quantum is generally from 10 to 100 milliseconds in length. The ready queue is treated as a circular queue. The CPU scheduler goes around the ready queue, allocating the CPU to each process for a time interval of up to 1 time quantum.
+            \bigbreak \noindent 
+            To implement RR scheduling, we again treat the ready queue as a FIFO queue of processes. New processes are added to the tail of the ready queue. The CPU scheduler picks the first process from the ready queue, sets a timer to interrupt after 1 time quantum, and dispatches the process
+            \bigbreak \noindent 
+            One of two things will then happen. The process may have a CPU burst of less than 1 time quantum. In this case, the process itself will release the CPU voluntarily. The scheduler will then proceed to the next process in the ready queue. If the CPU burst of the currently running process is longer than 1 time quantum, the timer will go off and will cause an interrupt to the operating system. A context switch will be executed, and the process will be put at the tail of the ready queue. The CPU scheduler will then select the next process in the ready queue.
+            \bigbreak \noindent 
+            The average waiting time under the RR policy is often long. Consider the following set of processes that arrive at time 0, with the length of the CPU burst given in milliseconds:
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Process} & \textbf{Burst Time} \\
+                    \midrule
+                    $P_{1}$ &24 \\[2ex]
+                    $P_{2}$ &3 \\[2ex]
+                    $P_{3}$ &3 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            If we use a time quantum of $4$ milliseconds, then process $P_1$ gets the first $4$ milliseconds. Since it requires another $20$ milliseconds, it is preempted after the first time quantum, and the CPU is given to the next process in the queue, process $P_2$. Process $P_2$ does not need $4$ milliseconds, so it quits before its time quantum expires. The CPU is then given to the next process, process $P_3$. Once each process has received $1$ time quantum, the CPU is returned to process $P_1$ for an additional time quantum. The resulting RR schedule is as follows:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1069.png}
+            \bigbreak \noindent 
+            Here, the average waiting time is $5.66$ ms. In the RR scheduling algorithm, no process is allocated the CPU for more than 1 time quantum in a row (unless it is the only runnable process). If a process’s CPU burst exceeds 1 time quantum, that process is preempted and is put back in the ready queue. The RR scheduling algorithm is thus preemptive.
+            \bigbreak \noindent 
+            If there are $n$ processes in the ready queue and the time quantum is $q$, then each process gets $\frac{1}{n}$ of the CPU time in chunks of at most $q$ time units. Each process must wait no longer than 
+            \begin{align*}
+                \frac{n-1}{q}
+            \end{align*}
+            time units until its next time quantum. For example, with five processes and a time quantum of 20 milliseconds, each process will get up to 20 milliseconds every 100 milliseconds.
+            \bigbreak \noindent 
+            The performance of the RR algorithm depends heavily on the size of the time quantum. At one extreme, if the time quantum is extremely large, the RR policy is the same as the FCFS policy. In contrast, if the time quantum is extremely small (say, 1 millisecond), the RR approach can result in a large number of context switches.
+            \bigbreak \noindent 
+            We want the time quantum to be large with respect to the contextswitch time. If the context-switch time is approximately 10 percent of the time quantum, then about 10 percent of the CPU time will be spent in context switching. In practice, most modern systems have time quanta ranging from 10 to 100 milliseconds. The time required for a context switch is typically less than 10 microseconds; thus, the context-switch time is a small fraction of the time quantum.
+            \bigbreak \noindent 
+            Turnaround time also depends on the size of the time quantum, the average turnaround time of a set of processes does not necessarily improve as the time-quantum size increases. In general, the average turnaround time can be improved if most processes finish their next CPU burst in a single time quantum. For example, given three processes of 10 time units each and a quantum of 1 time unit, the average turnaround time is 29. If the time quantum is 10, however, the average turnaround time drops to 20. If context-switch time is added in, the average turnaround time increases even more for a smaller time quantum, since more context switches are required.
+            \bigbreak \noindent 
+            A rule of thumb is that 80 percent of the CPU bursts should be shorter than the time quantum.
+        \item \textbf{Priority Scheduling}: The SJF algorithm is a special case of the general priority-scheduling algorithm. A priority is associated with each process, and the CPU is allocated to the process with the highest priority.
+            \bigbreak \noindent 
+            Equal-priority processes are scheduled in FCFS order. An SJF algorithm is simply a priority algorithm where the priority ($p$) is the inverse of the (predicted) next CPU burst. The larger the CPU burst, the lower the priority, and vice versa
+            \bigbreak \noindent 
+            Note that we discuss scheduling in terms of high priority and low priority. Priorities are generally indicated by some fixed range of numbers, such as 0 to 7 or 0 to 4,095. However, there is no general agreement on whether 0 is the highest or lowest priority. Some systems use low numbers to represent low priority; others use low numbers for high priority. This difference can lead to confusion. In this text, we assume that low numbers represent high priority.
+            \bigbreak \noindent 
+            consider the following set of processes, assumed to have arrived at time 0
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Process}& \textbf{Burst Time} &\textbf{Priority} \\
+                    \midrule
+                    $P_{1}$ &10 &3\\[2ex]
+                    $P_{2}$ &1 &1\\[2ex]
+                    $P_{3}$ &2 &4\\[2ex]
+                    $P_{4}$ &1 &5\\[2ex]
+                    $P_{5}$ &5 &2 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Using priority scheduling, we would schedule these processes according to the following Gantt chart
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1070.png}
+            \bigbreak \noindent 
+            The average waiting time is 8.2 milliseconds. Priorities can be defined either internally or externally. Internally defined priorities use some measurable quantity or quantities to compute the priority of a process. For example, time limits, memory requirements, the number of open files, and the ratio of average I/O burst to average CPU burst have been used in computing priorities. External priorities are set by criteria outside the operating system, such as the importance of the process, the type and amount of funds being paid for computer use, the department sponsoring the work, and other, often political, factors.
+            \bigbreak \noindent 
+            Priority scheduling can be either preemptive or nonpreemptive. When a process arrives at the ready queue, its priority is compared with the priority of the currently running process. A preemptive priority scheduling algorithm will preempt the CPU if the priority of the newly arrived process is higher than the priority of the currently running process. A nonpreemptive priority scheduling algorithm will simply put the new process at the head of the ready queue.
+        \item \textbf{Batch processing and batch systems}: Batch processing is the automated, non-interactive execution of a series of programs or data jobs in groups (batches) rather than in real-time. It is used to efficiently handle high-volume, repetitive tasks, such as payroll processing, billing, and system backups, typically scheduled during off-peak hours. 
+            \bigbreak \noindent 
+            A batch system is a system where jobs are grouped and executed together rather than individually.
+        \item \textbf{Priority scheduling starvation and aging}: A process that is ready to run but waiting for the CPU can be considered blocked. A priority scheduling algorithm can leave some lowpriority processes waiting indefinitely. In a heavily loaded computer system, a steady stream of higher-priority processes can prevent a low-priority process from ever getting the CPU. Generally, one of two things will happen. Either the process will eventually be run (at 2 A.M. Sunday, when the system is finally lightly loaded), or the computer system will eventually crash and lose all unfinished low-priority processes. This problem is referred to as \textbf{indefinite blocking}, or \textbf{starvation}
+            \bigbreak \noindent 
+            A solution to the problem of indefinite blockage of low-priority processes is \textbf{aging}. Aging involves gradually increasing the priority of processes that wait in the system for a long time. For example, if priorities range from 127 (low) to 0 (high), we could periodically (say, every second) increase the priority of a waiting process by 1. Eventually, even a process with an initial priority of 127 would have the highest priority in the system and would be executed. In fact, it would take a little over 2 minutes for a priority-127 process to age to a priority-0 process.
+            \bigbreak \noindent 
+            Another option is to combine round-robin and priority scheduling in such a way that the system executes the highest-priority process and runs processes with the same priority using round-robin scheduling. Consider the set of processes
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Process}& \textbf{Burst Time}& \textbf{Priority} \\
+                    \midrule
+                    $P_{1}$& 4& 3\\[2ex]
+                    $P_{2}$& 5& 2\\[2ex]
+                    $P_{3}$& 8& 2\\[2ex]
+                    $P_{4}$& 7& 1\\[2ex]
+                    $P_{5}$& 3& 3 \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Using priority scheduling with round-robin for processes with equal priority, we would schedule these processes according to the following Gantt chart using a time quantum of 2 milliseconds:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1071.png}
+        \item \textbf{Multilevel Queue Scheduling}: With both priority and round-robin scheduling, all processes may be placed in a single queue, and the scheduler then selects the process with the highest priority to run. Depending on how the queues are managed, an $O(n)$ search may be necessary to determine the highest-priority process.
+            \bigbreak \noindent 
+             In practice, it is often easier to have separate queues for each distinct priority, and priority scheduling simply schedules the process in the highest-priority queue.
+             \bigbreak \noindent 
+             This approach is known as multilevel queue, and works well when priority scheduling is combined with round-robin. if there are multiple processes in the highest-priority queue, they are executed in round-robin order. In the most generalized form of this approach, a priority is assigned statically to each process, and a process remains in the same queue for the duration of its runtime.
+        \item \textbf{Foreground / background batch processes with a multilevel queue scheduling algorithm}: A multilevel queue scheduling algorithm can also be used to partition processes into several separate queues based on the process type
+            \bigbreak \noindent 
+            For example, a common division is made between \textbf{foreground} (interactive) processes and \textbf{background} (batch) processes. These two types of processes have different response-time requirements and so may have different scheduling needs. In addition, foreground processes may have priority (externally defined) over background processes. Separate queues might be used for foreground and background processes, and each queue might have its own scheduling algorithm. The foreground queue might be scheduled by an RR algorithm, for example, while the background queue is scheduled by an FCFS algorithm
+            \bigbreak \noindent 
+            In addition, there must be scheduling among the queues, which is commonly implemented as fixed-priority preemptive scheduling. For example, the real-time queue may have absolute priority over the interactive queue.
+            \bigbreak \noindent 
+            Let’s look at an example of a multilevel queue scheduling algorithm with four queues, listed below in order of priority:
+            \begin{enumerate}
+                \item Real-time processes
+                \item System processes
+                \item Interactive processes
+                \item Batch processes
+            \end{enumerate}
+            Each queue has absolute priority over lower-priority queues. No process in the batch queue, for example, could run unless the queues for real-time processes, system processes, and interactive processes were all empty. If an interactive process entered the ready queue while a batch process was running, the batch process would be preempted.
+            \bigbreak \noindent 
+            Another possibility is to time-slice among the queues. Here, each queue gets a certain portion of the CPU time, which it can then schedule among its various processes. For instance, in the foreground –background queue example, the foreground queue can be given 80 percent of the CPU time for RR scheduling among its processes, while the background queue receives 20 percent of the CPU to give to its processes on an FCFS basis.
+        \item \textbf{Summary of the CPU scheduling algorithms}: 
+            \begin{itemize}
+                \itme \textbf{FCFS}: Non-preemptive
+                \itme \textbf{SJF}: Preemptive or non-preemptive
+                \itme \textbf{RR}: Preemptive or non-preemptive
+                \itme \textbf{Priority}: Preemptive
+                \itme \textbf{Multilevel queue}:
+                \itme \textbf{Multilevel feedback queue}:
+            \end{itemize}
+        \item \textbf{Multilevel Feedback Queue Scheduling}: Normally, when the multilevel queue scheduling algorithm is used, processes are permanently assigned to a queue when they enter the system. If there are separate queues for foreground and background processes, for example, processes do not move from one queue to the other, since processes do not change their foreground or background nature. This setup has the advantage of low scheduling overhead, but it is inflexible.
+            \bigbreak \noindent 
+            The multilevel feedback queue scheduling algorithm, in contrast, allows a process to move between queues. The idea is to separate processes according to the characteristics of their CPU bursts. If a process uses too much CPU time, it will be moved to a lower-priority queue. This scheme leaves I/O-bound and interactive processes—which are typically characterized by short CPU bursts —in the higher-priority queues. In addition, a process that waits too long in a lower-priority queue may be moved to a higher-priority queue. This form of aging prevents starvation.
+            \bigbreak \noindent 
+            In general, a multilevel feedback queue scheduler is defined by the following parameters:
+            \begin{itemize}
+                \item The number of queues
+                \item The scheduling algorithm for each queue
+                \item The method used to determine when to upgrade a process to a higherpriority queue
+                \item The method used to determine when to demote a process to a lowerpriority queue
+                \item The method used to determine which queue a process will enter when that process needs service
+            \end{itemize}
+            The definition of a multilevel feedback queue scheduler makes it the most general CPU-scheduling algorithm. It can be configured to match a specific system under design. Unfortunately, it is also the most complex algorithm, since defining the best scheduler requires some means by which to select values for all the parameters.
+        \item \textbf{Real-time jobs}: A real-time job is one that must meet timing deadlines, not one that only uses the CPU.
+        \item \textbf{The CFS (completely fair scheduler) intro}: The Completely Fair Scheduler (CFS) is the default CPU scheduler in Linux. Its goal is simple: Give each runnable process a fair share of CPU time. Instead of using fixed time slices or rigid queues, CFS tries to simulate an ideal system where all processes run simultaneously at equal speed
+            \bigbreak \noindent 
+            CFS tracks how much CPU time each process has received using a metric called \textbf{virtual runtime (vruntime).}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item The more CPU a process uses $\to $ the larger its vruntime becomes
+                \item The less CPU it has used $\to $ the smaller its vruntime remains
+            \end{itemize}
+            The scheduler always runs the process with the smallest vruntime. In other words, run the process that has received the least fair share so far.
+        \item \textbf{The CFS}: 
+            Scheduling in the Linux system is based on \textbf{scheduling classes}. Each class is assigned a specific priority. By using different scheduling classes, the kernel can accommodate different scheduling algorithms based on the needs of the system and its processes. The scheduling criteria for a Linux server, for example, may be different from those for a mobile device running Linux. To decide which task to run next, the scheduler selects the highest-priority task belonging to the highest-priority scheduling class. 
+            \bigbreak \noindent 
+            Standard Linux kernels implement two scheduling classes: 
+            \begin{enumerate}
+                \item a default scheduling class using the CFS scheduling algorithm and 
+                \item a real-time scheduling class
+            \end{enumerate}
+            Rather than using strict rules that associate a relative priority value with the length of a time quantum, the CFS scheduler assigns a proportion of CPU processing time to each task. This proportion is calculated based on the \textbf{nice value} assigned to each task. Nice values range from −20 to +19, where a numerically lower nice value indicates a higher relative priority. Tasks with lower nice values receive a higher proportion of CPU processing time than tasks with higher nice values. The default nice value is 0. (The term nice comes from the idea that if a task increases its nice value from, say, 0 to +10, it is being nice to other tasks in the system by lowering its relative priority. 
+            \bigbreak \noindent 
+            CFS doesn’t use discrete values of time slices and instead identifies a \textbf{targeted latency}, which is an interval of time during which every runnable task should run at least once. Proportions of CPU time are allocated from the value of targeted latency. In addition to having default and minimum values, targeted latency can increase if the number of active tasks in the system grows beyond a certain threshold.
+            \begin{align*}
+                \text{time slice } \approx \frac{\text{targeted latency}}{N}
+            ,\end{align*}
+            where $N$ is the number of runnable tasks. If too many tasks exist, slices could become extremely small. Linux enforces a minimum granularity so tasks are not switched too frequently.
+            \bigbreak \noindent 
+            The CFS scheduler doesn’t directly assign priorities. Rather, it records how long each task has run by maintaining the \textbf{virtual run time} of each task using the per-task variable \textbf{vruntime}. The virtual run time is associated with a \textbf{decay factor} based on the priority of a task: lower-priority tasks have higher rates of decay than higher-priority tasks. For tasks at normal priority (nice values of 0), virtual run time is identical to actual physical run time. Thus, if a task with default priority runs for 200 milliseconds, its vruntime will also be 200 milliseconds. However, if a lower-priority task runs for 200 milliseconds, its vruntime will be higher than 200 milliseconds. Similarly, if a higher-priority task runs for 200 milliseconds, its vruntime will be less than 200 milliseconds. To decide which task to run next, the scheduler simply selects the task that has the smallest vruntime value. In addition, a higher-priority task that becomes available to run can preempt a lower-priority task.
+            \bigbreak \noindent 
+            Linux also implements real-time scheduling using the POSIX standard. Any task scheduled using either the SCHED\_FIFO or the SCHED\_RR real-time policy runs at a higher priority than normal (non-realtime) tasks. Linux uses two separate priority ranges, one for real-time tasks and a second for normal tasks. Real-time tasks are assigned static priorities within the range of 0 to 99, and normal tasks are assigned priorities from 100 to 139. These two ranges map into a global priority scheme wherein numerically lower values indicate higher relative priorities. Normal tasks are assigned a priority based on their nice values, where a value of -20 maps to priority 100 and a nice value of +19 maps to 139.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1072.png}
+        \item \textbf{Thread scheduling}: On most modern operating systems it is kernel-level threads—not processes— that are being scheduled by the operating system. User-level threads are managed by a thread library, and the kernel is unaware of them. To run on a CPU, user-level threads must ultimately be mapped to an associated kernel-level thread, although this mapping may be indirect and may use a lightweight process (LWP). In this section, we explore scheduling issues involving user-level and kernel-level threads and offer specific examples of scheduling for Pthreads.
+        \item \textbf{Contention Scope}: One distinction between user-level and kernel-level threads lies in how they are scheduled. On systems implementing the many-to-one and many-to-many models,  the thread library schedules userlevel threads to run on an available LWP. This scheme is known as \textbf{process contention scope (PCS)}, since competition for the CPU takes place among threads belonging to the same process. (When we say the thread library schedules user threads onto available LWPs, we do not mean that the threads are actually running on a CPU as that further requires the operating system to schedule the LWP’s kernel thread onto a physical CPU core.)
+            \bigbreak \noindent 
+            To decide which kernel-level thread to schedule onto a CPU, the kernel uses \textbf{system-contention scope (SCS)}. Competition for the CPU with SCS scheduling takes place among all threads in the system. Systems using the one-to-one model such as Windows and Linux schedule threads using only SCS.
+            \bigbreak \noindent 
+            Typically, PCS is done according to priority— the scheduler selects the runnable thread with the highest priority to run. User-level thread priorities are set by the programmer and are not adjusted by the thread library, although some thread libraries may allow the programmer to change the priority of a thread. It is important to note that PCS will typically preempt the thread currently running in favor of a higher-priority thread; however, there is no guarantee of time slicing among threads of equal priority.
+        \item \textbf{Multithreaded cores}: A multithreaded core is a physical CPU processor unit designed to handle multiple software threads (streams of instructions) simultaneously to improve efficiency and performance. By utilizing techniques like Simultaneous Multithreading (SMT or Hyper-Threading), one physical core acts as multiple "logical" cores, allowing it to work on another task when the first is idle
+        \item \textbf{Race conditions}: A race condition in OS theory is a,bug occurring when multiple threads or processes access and manipulate shared data concurrently, and the final outcome depends on the unpredictable timing or sequence of their execution.  This lack of synchronization leads to inconsistent, non-deterministic data, as the threads "race" to modify the same resource.
+        \item \textbf{Mutex}: A mutex (mutual exclusion object) is a synchronization primitive used in OS theory to prevent multiple threads or processes from accessing a shared resource simultaneously, thus preventing data corruption and race conditions. It acts as a lock that only one thread can hold at a time, forcing other threads to wait until the mutex is released.
+        \item \textbf{Multi-Processor Scheduling}: Our discussion thus far has focused on the problems of scheduling the CPU in a system with a single processing core. If multiple CPUs are available, \textbf{load sharing}, where multiple threads may run in parallel, becomes possible, however scheduling issues become correspondingly more complex. Many possibilities have been tried; and as we saw with CPU scheduling with a single-core CPU, there is no one best solution.
+            \bigbreak \noindent 
+            Traditionally, the term multiprocessor referred to systems that provided multiple physical processors, where each processor contained one single-core CPU. However, the definition of multiprocessor has evolved significantly, and on modern computing systems, multiprocessor now applies to the following system architectures:
+            \begin{itemize}
+                \item Multicore CPUs
+                \item Multithreaded cores
+                \item NUMA systems
+                \item Heterogeneous multiprocessing
+            \end{itemize}
+            Here, we discuss several concerns in multiprocessor scheduling in the context of these different architectures. In the first three examples we concentrate on systems in which the processors are identical—homogeneous—in terms of their functionality. We can then use any available CPU to run any process in the queue. In the last example we explore a system where the processors are not identical in their capabilities.
+        \item \textbf{Asymmetric multiprocessing}: One approach to CPU scheduling in a multiprocessor system has all scheduling decisions, I/O processing, and other system activities handled by a single processor — the master server. The other processors execute only user code. This asymmetric multiprocessing is simple because only one core accesses the system data structures, reducing the need for data sharing. The downfall of this approach is the master server becomes a potential bottleneck where overall system performance may be reduced.
+        \item \textbf{Symmetric multiprocessing (SMP)}: The standard approach for supporting multiprocessors is symmetric multiprocessing (SMP), where each processor is self-scheduling. Scheduling proceeds by having the scheduler for each processor examine the ready queue and select a thread to run. Note that this provides two possible strategies for organizing the threads eligible to be scheduled:
+            \begin{enumerate}
+                \item All threads may be in a common ready queue.
+                \item Each processor may have its own private queue of threads
+            \end{enumerate}
+            If we select the first option, we have a possible race condition on the shared ready queue and therefore must ensure that two separate processors do not choose to schedule the same thread and that threads are not lost from the queue. We could use some form of locking to protect the common ready queue from this race condition. Locking would be highly contended, however, as all accesses to the queue would require lock ownership, and accessing the shared queue would likely be a performance bottleneck.
+            \bigbreak \noindent 
+            The second option permits each processor to schedule threads from its private run queue and therefore does not suffer from the possible performance problems associated with a shared run queue. Thus, it is the most common approach on systems supporting SMP.
+        \item \textbf{Multicore Processors and chip multithreading}: Traditionally, SMP systems have allowed several processes to run in parallel by providing multiple physical processors. However, most contemporary computer hardware now places multiple computing cores on the same physical chip, resulting in a multicore processor. Each core maintains its architectural state and thus appears to the operating system to be a separate logical CPU. SMP systems that use multicore processors are faster and consume less power than systems in which each CPU has its own physical chip.
+            \bigbreak \noindent 
+            Multicore processors may complicate scheduling issues. For instance, researchers have discovered that when a processor accesses memory, it spends a significant amount of time waiting for the data to become available. This situation, known as a \textbf{memory stall}, occurs primarily because modern processors operate at much faster speeds than memory.
+            \bigbreak \noindent 
+            However, a memory stall can also occur because of a cache miss (accessing data that are not in cache memory).  In the scenario below, the processor can spend up to 50 percent of its time waiting for data to become available from memory
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1073.png}
+            \bigbreak \noindent 
+            To remedy this situation, many recent hardware designs have implemented multithreaded processing cores in which two (or more) hardware threads are assigned to each core. That way, if one hardware thread stalls while waiting for memory, the core can switch to another thread.
+            \bigbreak \noindent 
+            From an operating system perspective, each hardware thread maintains its architectural state, such as instruction pointer and register set, and thus appears as a logical CPU that is available to run a software thread. This technique—known as \textbf{chip multithreading (CMT)}
+            \bigbreak \noindent 
+            If the processor contains four computing cores, with each core containing two hardware threads. From the perspective of the operating system, there are eight logical CPUs.
+        \item \textbf{Instruction pipelines in cores}: A single CPU core typically contains one main instruction pipeline, but modern high-performance processors are "superscalar," meaning they have multiple, parallel execution pipelines (often 4–8 or more) to process several instructions simultaneously. Pipeline depth commonly ranges from 5 to 20+ stages
+        \item \textbf{Intel hyper-threading (SMT)}: Intel processors use the term \textbf{hyper-threading} (also known as \textbf{simultaneous multithreading or SMT)} to describe assigning multiple hardware threads to a single processing core. Contemporary Intel processors—such as the i7—support two threads per core, while the Oracle Sparc M7 processor supports eight threads per core, with eight cores per processor, thus providing the operating system with 64 logical CPUs. 
+        \item \textbf{Coarse-grained and fine-grained multithreading}:  With coarse-grained multithreading, a thread executes on a core until a long-latency event such as a memory stall occurs. Because of the delay caused by the long-latency event, the core must switch to another thread to begin execution. However, the cost of switching between threads is high, since the instruction pipeline must be flushed before the other thread can begin execution on the processor core. Once this new thread begins execution, it begins filling the pipeline with its instructions.
+            \bigbreak \noindent 
+            Fine-grained (or interleaved) multithreading switches between threads at a much finer level of granularity— typically at the boundary of an instruction cycle. However, the architectural design of fine-grained systems includes logic for thread switching. As a result, the cost of switching between threads is small.
+            \bigbreak \noindent 
+            It is important to note that the resources of the physical core (such as caches and pipelines) must be shared among its hardware threads, and therefore a processing core can only execute one hardware thread at a time. Consequently, a multithreaded, multicore processor actually requires two different levels of scheduling
+            \bigbreak \noindent 
+            On one level are the scheduling decisions that must be made by the operating system as it chooses which software thread to run on each hardware thread (logical CPU). For all practical purposes, such decisions have been the primary focus of this chapter. Therefore, for this level of scheduling, the operating system may choose any scheduling algorithm
+            \bigbreak \noindent 
+            A second level of scheduling specifies how each core decides which hardware thread to run. There are several strategies to adopt in this situation. One approach is to use a simple round-robin algorithm to schedule a hardware thread to the processing core
+            \bigbreak \noindent 
+            Another approach is used by the Intel Itanium, a dual-core processor with two hardware-managed threads per core. Assigned to each hardware thread is a dynamic urgency value ranging from 0 to 7, with 0 representing the lowest urgency and 7 the highest. The Itanium identifies five different events that may trigger a thread switch. When one of these events occurs, the thread-switching logic compares the urgency of the two threads and selects the thread with the highest urgency value to execute on the processor core.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1074.png}
+            \bigbreak \noindent 
+            Note that the two different levels of scheduling shown in the figure above are not necessarily mutually exclusive. In fact, if the operating system scheduler (the first level) is made aware of the sharing of processor resources, it can make more effective scheduling decisions. As an example, assume that a CPU has two processing cores, and each core has two hardware threads. If two software threads are running on this system, they can be running either on the same core or on separate cores. If they are both scheduled to run on the same core, they have to share processor resources and thus are likely to proceed more slowly than if they were scheduled on separate cores. If the operating system is aware of the level of processor resource sharing, it can schedule software threads onto logical processors that do not share resources.
+        \item \textbf{Load Balancing (push migration and pull migration)}:  On SMP systems, it is important to keep the workload balanced among all processors to fully utilize the benefits of having more than one processor. Otherwise, one or more processors may sit idle while other processors have high workloads, along with ready queues of threads awaiting the CPU.
+            \bigbreak \noindent 
+            \textbf{Load balancing} attempts to keep the workload evenly distributed across all processors in an SMP system. It is important to note that load balancing is typically necessary only on systems where each processor has its own private ready queue of eligible threads to execute. On systems with a common run queue, load balancing is unnecessary, because once a processor becomes idle, it immediately extracts a runnable thread from the common ready queue
+            \bigbreak \noindent 
+            There are two general approaches to load balancing: push migration and pull migration.
+            \begin{itemize}
+                \item \textbf{Push migration}:  With push migration, a specific task periodically checks the load on each processor and—if it finds an imbalance—evenly distributes the load by moving (or pushing) threads from overloaded to idle or less-busy processors
+                \item \textbf{Pull migration}:  Pull migration occurs when an idle processor pulls a waiting task from a busy processor
+            \end{itemize}
+            Push and pull migration need not be mutually exclusive and are, in fact, often implemented in parallel on load-balancing systems. The concept of a “balanced load” may have different meanings. One view of a balanced load may require simply that all queues have approximately the same number of threads. Alternatively, balance may require an equal distribution of thread priorities across all queues. In addition, in certain situations, neither of these strategies may be sufficient. Indeed, they may work against the goals of the scheduling algorithm. 
+        \item \textbf{Processor affinity}: Consider what happens to cache memory when a thread has been running on a specific processor. The data most recently accessed by the thread populate the cache for the processor. As a result, successive memory accesses by the thread are often satisfied in cache memory (known as a “warm cache”). Now consider what happens if the thread migrates to another processor—say, due to load balancing. The contents of cache memory must be invalidated for the first processor, and the cache for the second processor must be repopulated. Because of the high cost of invalidating and repopulating caches, most operating systems with SMP support try to avoid migrating a thread from one processor to another and instead attempt to keep a thread running on the same processor and take advantage of a warm cache. This is known as \textbf{processor affinity}. That is, a process has an affinity for the processor on which it is currently running.
+            \bigbreak \noindent 
+            If we adopt the approach of a common ready queue, a thread may be selected for execution by any processor. Thus, if a thread is scheduled on a new processor, that processor’s cache must be repopulated. With private, per-processor ready queues, a thread is always scheduled on the same processor and can therefore benefit from the contents of a warm cache. Essentially, per-processor ready queues provide processor affinity for free!
+        \item \textbf{Soft and hard processor affinity}: Processor affinity takes several forms. When an operating system has a policy of attempting to keep a process running on the same processor—but not guaranteeing that it will do so—we have a situation known as \textbf{soft affinity}. Here, the operating system will attempt to keep a process on a single processor, but it is possible for a process to migrate between processors during load balancing
+            \bigbreak \noindent 
+            In contrast, some systems provide system calls that support \textbf{hard affinity}, thereby allowing a process to specify a subset of processors on which it can run. Many systems provide both soft and hard affinity.
+            \bigbreak \noindent 
+            For example, Linux implements soft affinity, but it also provides the sched\_setaffinity() system call, which supports hard affinity by allowing a thread to specify the set of CPUs on which it is eligible to run
+        \item \textbf{Heterogeneous Multiprocessing}: Although mobile systems now include multicore architectures, some systems are now designed using cores that run the same instruction set, yet vary in terms of their clock speed and power management, including the ability to adjust the power consumption of a core to the point of idling the core. Such systems are known as heterogeneous multiprocessing (HMP). Note this is not a form of asymmetric multiprocessing as both system and user tasks can run on any core. Rather, the intention behind HMP is to better manage power consumption by assigning tasks to certain cores based upon the specific demands of the task.
+            \bigbreak \noindent 
+            For ARM processors that support it, this type of architecture is known as \textbf{big.LITTLE} where higher performance \textbf{big} cores are combined with energy efficient \textbf{LITTLE} cores. \textbf{Big} cores consume greater energy and therefore should only be used for short periods of time. Likewise, little cores use less energy and can therefore be used for longer periods
+            \bigbreak \noindent 
+            There are several advantages to this approach. By combining a number of slower cores with faster ones, a CPU scheduler can assign tasks that do not require high performance, but may need to run for longer periods, (such as background tasks) to little cores, thereby helping to preserve a battery charge. Similarly, interactive applications which require more processing power, but may run for shorter durations, can be assigned to big cores. Additionally, if the mobile device is in a power-saving mode, energy-intensive big cores can be disabled and the system can rely solely on energy-efficient little cores.
+            
+
+
+    \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Process Synchronization}
+    \begin{itemize}
+        \item \textbf{Cooperating process}: A cooperating process is one that can affect or be affected by other processes executing in the system. Cooperating processes can either directly share a logical address space (that is, both code and data) or be allowed to share data only through shared memory or message passing. Concurrent access to shared data may result in data inconsistency 
+        \item \textbf{Some background}: Consider a producer-consumer example, where we add a shared data value \texttt{count}. Suppose \texttt{count = 5}. and that the producer and consumer processes concurrently execute the statements “count++” and “count\texttt{--}”. Following the execution of these two statements, the value of the variable count may be 4, 5, or 6! The only correct result, though, is count == 5, which is generated correctly if the producer and consumer execute separately.
+            \bigbreak \noindent 
+            To understand this, we must understand that the count\texttt{++}, count\texttt{--} statements generate multi-line machine code, 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            // count++
+            r1 = count
+            r1 = r1 + 1
+            count = r1
+
+            // count--
+            r1 = count
+            r1 = r1 - 1
+            count = r1
+            \end{cppcode}
+            \bigbreak \noindent 
+            The concurrent execution of “count++” and “count\texttt{--}” is equivalent to a sequential execution in which the lower-level statements presented previously are interleaved in some arbitrary order (but the order within each high-level statement is preserved).
+            \bigbreak \noindent 
+            Following different interleaved execution paths for both processes then yields the states $4,5,6$.
+            \bigbreak \noindent 
+            We would arrive at this incorrect state because we allowed both processes to manipulate the variable count concurrently. A situation like this, where several processes access and manipulate the same data concurrently and the outcome of the execution depends on the particular order in which the access takes place, is called a \textbf{race condition}. To guard against the race condition above, we need to ensure that only one process at a time can be manipulating the variable count. To make such a guarantee, we require that the processes be synchronized in some way.
+            \bigbreak \noindent 
+            Situations such as the one just described occur frequently in operating systems as different parts of the system manipulate resources. Furthermore, as we have emphasized in earlier chapters, the prominence of multicore systems has brought an increased emphasis on developing multithreaded applications. In such applications, several threads—which are quite possibly sharing data—are running in parallel on different processing cores. Clearly, we want any changes that result from such activities not to interfere with one another. Because of the importance of this issue, we devote this section to \textbf{process synchronization} and \textbf{coordination} among cooperating processes.
+        \item \textbf{The Critical-Section Problem}:  We begin our consideration of process synchronization by discussing the so called critical-section problem Consider a system consisting of $n$ processes 
+            \begin{align*}
+                \{P_{0}, P_{1}, \dots, P_{n-1}\}
+            .\end{align*}
+            Each process has a segment of code, called a \textbf{critical section}, in which the process may be accessing — and updating — data that is shared with at least one other process. The important feature of the system is that, when one process is executing in its critical section, no other process is allowed to execute in its critical section. That is, no two processes are executing in their critical sections at the same time. The critical-section problem is to design a protocol that the processes can use to synchronize their activity so as to cooperatively share data. Each process must request permission to enter its critical section. The section of code implementing this request is the \textbf{entry section}. The critical section may be followed by an \textbf{exit section}. The remaining code is the \textbf{remainder section}.
+            \begin{itemize}
+                \item \textbf{Entry section}: Code that requests permission to enter
+                \item \textbf{Critical section (CS)}: Code that accesses shared data
+                \item \textbf{Exit section}: Code that releases permission
+                \item \textbf{Remainder section}: All other code
+            \end{itemize}
+            \bigbreak \noindent 
+            A solution to the critical-section problem must satisfy the following three requirements:
+            \begin{enumerate}
+                \item \textbf{Mutual exclusion}: If process $P_{i}$ is executing in its critical section, then no other processes can be executing in their critical sections.
+                \item \textbf{Progress}: If no process is executing in its critical section and some processes wish to enter their critical sections, then only those processes that are not executing in their remainder sections can participate in deciding which will enter its critical section next, and this selection cannot be postponed indefinitely.
+                \item \textbf{Bounded waiting}: There exists a bound, or limit, on the number of times that other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted.
+                    \bigbreak \noindent 
+                    Bounded waiting guarantees that once a process requests entry to the critical section, it will not be forced to wait forever. In other words, After a process $P_{i}$ requests entry, there is a finite upper bound on how many times other processes may enter the critical section before $P_{i}$ is allowed in.
+            \end{enumerate}
+            We assume that each process is executing at a nonzero speed. However, we can make no assumption concerning the relative speed of the $n$ processes.
+            \bigbreak \noindent 
+            At a given point in time, many kernel-mode processes may be active in the operating system. As a result, the code implementing an operating system (kernel code) is subject to several possible race conditions. Consider as an example a kernel data structure that maintains a list of all open files in the system. This list must be modified when a new file is opened or closed (adding the file to the list or removing it from the list). If two processes were to open files simultaneously, the separate updates to this list could result in a race condition
+            \bigbreak \noindent 
+            Another example is if two processes $P_{0}$ and $P_{1}$ issue a call to \texttt{fork()}. Since this system call returns the process identifier of the newly created process to the parent, there is a race condition on the kernel variable \texttt{new\_available\_pid}. Unless mutual exclusion is provided, it is possible the same process identifier number could be assigned to two separate processes.
+            \bigbreak \noindent 
+            Other kernel data structures that are prone to possible race conditions include structures for maintaining memory allocation, for maintaining process lists, and for interrupt handling. It is up to kernel developers to ensure that the operating system is free from such race conditions.
+            \bigbreak \noindent 
+            The critical-section problem could be solved simply in a single-core environment if we could prevent interrupts from occurring while a shared variable was being modified. In this way, we could be sure that the current sequence of instructions would be allowed to execute in order without preemption. No other instructions would be run, so no unexpected modifications could be made to the shared variable.
+            \bigbreak \noindent 
+            Unfortunately, this solution is not as feasible in a multiprocessor environment. Disabling interrupts on a multiprocessor can be time consuming, since the message is passed to all the processors. This message passing delays entry into each critical section, and system efficiency decreases. Also consider the effect on a system’s clock if the clock is kept updated by interrupts.
+        \item \textbf{Preemptive kernels and nonpreemptive kernels}:  Two general approaches are used to handle critical sections in operating systems:
+            \begin{itemize}
+                \item \textbf{Preemptive kernels}: A preemptive kernel allows a process to be preempted while it is running in kernel mode
+                \item \textbf{Nonpreemptive kernels}: A nonpreemptive kernel does not allow a process running in kernel mode to be preempted; a kernel-mode process will run until it exits kernel mode, blocks, or voluntarily yields control of the CPU.
+            \end{itemize}
+            Obviously, a nonpreemptive kernel is essentially free from race conditions on kernel data structures, as only one process is active in the kernel at a time. We cannot say the same about preemptive kernels, so they must be carefully designed to ensure that shared kernel data are free from race conditions. Preemptive kernels are especially difficult to design for SMP architectures, since in these environments it is possible for two kernel-mode processes to run simultaneously on different CPU cores.
+        \item \textbf{Peterson's solution}: Because of the way modern computer architectures perform basic machine-language instructions, such as load and store, there are no guarantees that Peterson’s solution will work correctly on such architectures. However, we present the solution because it provides a good algorithmic description of solving the critical-section problem and illustrates some of the complexities involved in designing software that addresses the requirements of mutual exclusion, progress, and bounded waiting.
+            \bigbreak \noindent 
+            Peterson’s solution is restricted to two processes that alternate execution between their critical sections and remainder sections. The processes are numbered $P_{0}$ and $P_{1}$. For convenience, when presenting $P_{i}$, we use $P_{j}$ to denote the other process. That is, $j = 1-i$.
+            \bigbreak \noindent 
+            Peterson’s solution requires the two processes to share two data items:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int turn;
+                bool flag[2];
+
+                while (true) {
+                    flag[i] = true;
+                    turn = j;
+                    while (flag[j] && turn == j)
+                        ;
+
+                        /* critical section */
+
+                    flag[i] = false;
+
+                        /*remainder section */
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The variable turn indicates whose turn it is to enter its critical section. The flag array is used to indicate if a process is ready to enter its critical section.
+            \bigbreak \noindent 
+            To enter the critical section, process $P_{i}$ first sets \texttt{flag[i]} to be true and then sets turn to the value $j$, thereby asserting that if the other process wishes to enter the critical section, it can do so
+            \bigbreak \noindent 
+            If both processes try to enter at the same time, turn will be set to both $i$ and $j$ at roughly the same time. Only one of these assignments will last; the other will occur but will be overwritten immediately. The eventual value of turn determines which of the two processes is allowed to enter its critical section first.
+            \bigbreak \noindent 
+            As mentioned at the beginning of this section, Peterson’s solution is not guaranteed to work on modern computer architectures for the primary reason that, to improve system performance, processors and/or compilers may reorder read and write operations that have no dependencies. For a singlethreaded application, this reordering is immaterial as far as program correctness is concerned, as the final values are consistent with what is expected. (This is similar to balancing a checkbook— the actual order in which credit and debit operations are performed is unimportant, because the final balance will still be the same.) But for a multithreaded application with shared data, the reordering of instructions may render inconsistent or unexpected results.
+            \bigbreak \noindent 
+            How does this affect Peterson’s solution? Consider what happens if the assignments of the first two statements that appear in the entry section of Peterson’s solution in Figure 6.3 are reordered; it is possible that both threads may be active in their critical sections at the same time.
+        \item \textbf{Hardware Support for Synchronization}: We have just described one software-based solution to the critical-section problem. (We refer to it as a software-based solution because the algorithm involves no special support from the operating system or specific hardware instructions to ensure mutual exclusion.) However, as discussed, software-based solutions are not guaranteed to work on modern computer architectures. In this section, we present three hardware instructions that provide support for solving the critical-section problem. These primitive operations can be used directly as synchronization tools, or they can be used to form the foundation of more abstract synchronization mechanisms.
+        \item \textbf{Memory Barriers}: How a computer architecture determines what memory guarantees it will provide to an application program is known as its memory model. In general, a memory model falls into one of two categories:
+            \begin{enumerate}
+                \item \textbf{Strongly ordered}: where a memory modification on one processor is immediately visible to all other processors.
+                \item \textbf{Weakly ordered}: where modifications to memory on one processor may not be immediately visible to other processors.
+            \end{enumerate}
+            Memory models vary by processor type, so kernel developers cannot make any assumptions regarding the visibility of modifications to memory on a shared-memory multiprocessor. To address this issue, computer architectures provide instructions that can force any changes in memory to be propagated to all other processors, thereby ensuring that memory modifications are visible to threads running on other processors. Such instructions are known as \textbf{memory barriers} or \textbf{memory fences}. When a memory barrier instruction is performed, the system ensures that all loads and stores are completed before any subsequent load or store operations are performed. Therefore, even if instructions were reordered, the memory barrier ensures that the store operations are completed in memory and visible to other processors before future load or store operations are performed.
+            \bigbreak \noindent 
+            For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                x = 100;
+                memory barrier();
+                flag = true;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Ensures that the assignment to $x$ occurs before the assignment to flag. With respect to Peterson’s solution, we could place a memory barrier between the first two assignment statements in the entry section to avoid the reordering of operations 
+            \bigbreak \noindent 
+            Note that memory barriers are considered very low-level operations and are typically only used by kernel developers when writing specialized code that ensures mutual exclusion.
+        \item \textbf{Atomic / non-atomic operations}: 
+            \begin{itemize}
+                \item \textbf{Atomic operations}: An operation is atomic if: It either happens completely, or not at all, with no intermediate state visible.
+                \item \textbf{Non-atomic operations}: A non-atomic operation consists of multiple steps that may be interleaved with other operations. Other threads can observe intermediate states.
+            \end{itemize}
+        \item \textbf{Hardware Instructions}: Many modern computer systems provide special hardware instructions that allow us either to test and modify the content of a word or to swap the contents of two words \textbf{atomically} that is, as one uninterruptible unit. We can use these special instructions to solve the critical-section problem in a relatively simple manner. Rather than discussing one specific instruction for one specific machine, we abstract the main concepts behind these types of instructions by describing the test\_and\_set() and compare\_and\_swap() instructions.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                boolean test_and_set(boolean *target) {
+                    boolean rv = *target;
+                    *target = true;
+
+                    return rv;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                do {
+                    while (test and set(&lock))
+                        ; /* do nothing */
+
+                    /* critical section */
+
+                    lock = false;
+
+                    /* remainder section */
+                } while (true);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The important characteristic of \texttt{test\_and\_set()} is that it is executed atomically. Thus, if two \texttt{test\_and\_set()} instructions are executed simultaneously (each on a different core), they will be executed sequentially in some arbitrary order. If the machine supports the \texttt{test\_and\_set()} instruction, then we can implement mutual exclusion by declaring a boolean variable \texttt{lock}, initialized to \texttt{false}.
+            \bigbreak \noindent 
+            Note that \texttt{lock} is a shared variable.
+            \bigbreak \noindent 
+            The \texttt{compare\_and\_swap()} instruction (CAS), just like the \texttt{test\_and\_set()} instruction, operates on two words atomically, but uses a different mechanism that is based on swapping the content of two words.
+            \bigbreak \noindent 
+            The CAS instruction operates on three operands
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int compare and swap(int *value, int expected, int new value) {
+                    int temp = *value;
+
+                    if (*value == expected)
+                        *value = new value;
+
+                    return temp;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Mutual exclusion using CAS can be provided as follows: A global variable (lock) is declared and is initialized to 0. The first process that invokes \texttt{compare\_and\_swap()} will set lock to 1. It will then enter its critical section,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                while (true) {
+                    while (compare_and_swap(&lock, 0, 1) != 0)
+                        ; /* do nothing */
+
+                        /* critical section */
+
+                    lock = 0;
+
+                        /* remainder section */
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Although this algorithm satisfies the mutual-exclusion requirement, it does not satisfy the bounded-waiting requirement.
+            \bigbreak \noindent 
+            We now present another algorithm using \texttt{compare\_and\_swap()} that satisfies all three requirements. The common data structures are
+            \begin{cppcode}
+                bool waiting[n];
+                int lock;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The elements in the waiting array are initialized to false, and lock is initialized to 0. The algorithm is then
+            \bigbreak \noindent 
+            \begin{cppcode}
+                while (true) {
+                    waiting[i] = true;
+                    key = 1;
+
+                    while (waiting[i] && key == 1)
+                        key = compare and swap(&lock,0,1);
+                    waiting[i] = false;
+
+                        /* critical section */
+
+                    j = (i + 1) % n;
+                    while ((j != i) && !waiting[j])
+                        j = (j + 1) % n;
+
+                    if (j == i)
+                        lock = 0;
+                    else
+                        waiting[j] = false;
+
+                        /* remainder section */
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+        \item \textbf{IA CAS}: On Intel x86 architectures, the assembly language statement \texttt{cmpxchg} is used to implement the compare\_and\_swap() instruction. To enforce atomic execution, the lock prefix is used to lock the bus while the destination operand is being updated. The general form of this instruction appears as:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            lock cmpxchg <destination operand>, <source operand>
+            \end{cppcode}
+        \item \textbf{Atomic Variables}: Typically, the compare\_and\_swap() instruction is not used directly to provide mutual exclusion. Rather, it is used as a basic building block for constructing other tools that solve the critical-section problem. One such tool is an \textbf{atomic variable}, which provides atomic operations on basic data types such as integers and booleans. Atomic variables can be used in to ensure mutual exclusion in situations where there may be a data race on a single variable while it is being updated, as when a counter is incremented
+            \bigbreak \noindent 
+            Most systems that support atomic variables provide special atomic data types as well as functions for accessing and manipulating atomic variables
+            \bigbreak \noindent 
+            These functions are often implemented using \texttt{compare\_and\_swap()} operations. As an example, the following increments the atomic integer sequence:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                increment(&sequence);
+            \end{cppcode}
+            \bigbreak \noindent 
+            where the increment() function is implemented using the CAS instruction
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void increment(atomic_int *v)
+                {
+                    int temp;
+                    do {
+                        temp = *v;
+                    }
+                    while (temp != compare and swap(v, temp, temp+1));
+                }
+            \end{cppcode}
+        \item \textbf{Mutex locks}: Operating-system designers build higher-level software tools to solve the critical-section problem. The simplest of these tools is the mutex lock. (In fact, the term mutex is short for mutual exclusion.) We use the mutex lock to protect critical sections and thus prevent race conditions That is, a process must acquire the lock before entering a critical section; it releases the lock when it exits the critical section. The acquire()function acquires the lock, and the release() function releases the lock
+            \bigbreak \noindent 
+            A mutex lock has a boolean variable available whose value indicates if the lock is available or not. If the lock is available, a call to acquire() succeeds, and the lock is then considered unavailable. A process that attempts to acquire an unavailable lock is blocked until the lock is released.
+            \bigbreak \noindent 
+            The definition of acquire() is as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                acquire() {
+                    while (!available)
+                        ; /* busy wait */
+
+                    available = false;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The definition of release() is as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                release() {
+                    available = true;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Calls to either acquire() or release() must be performed atomically. Thus, mutex locks can be implemented using the CAS operation
+            \bigbreak \noindent 
+            The main disadvantage of the implementation given here is that it requires busy waiting. While a process is in its critical section, any other process that tries to enter its critical section must loop continuously in the call to acquire(). This continual looping is clearly a problem in a real multiprogramming system, where a single CPU core is shared among many processes. Busy waiting also wastes CPU cycles that some other process might be able to use productively
+        \item \textbf{Lock contention}: Locks are either contended or uncontended. A lock is considered contended if a thread blocks while trying to acquire the lock. If a lock is available when a thread attempts to acquire it, the lock is considered uncontended. Contended locks can experience either high contention (a relatively large number of threads attempting to acquire the lock) or low contention (a relatively small number of threads attempting to acquire the lock.) Unsurprisingly, highly contended locks tend to decrease overall performance of concurrent applications.
+        \item \textbf{Spin locks}: The type of mutex lock we have been describing is also called a spinlock because the process “spins” while waiting for the lock to become available. Spinlocks do have an advantage, however, in that no context switch is required when a process must wait on a lock, and a context switch may take considerable time. In certain circumstances on multicore systems, spinlocks are in fact the preferable choice for locking. If a lock is to be held for a short duration, one thread can “spin” on one processing core while another thread performs its critical section on another core. On modern multicore computing systems, spinlocks are widely used in many operating systems.
+        \item \textbf{Short duration}: Spinlocks are often identified as the locking mechanism of choice on multiprocessor systems when the lock is to be held for a short duration. But what exactly constitutes a short duration? Given that waiting on a lock requires two context switches— a context switch to move the thread to the waiting state and a second context switch to restore the waiting thread once the lock becomes available— the general rule is to use a spinlock if the lock will be held for a duration of less than two context switches.
+        \item \textbf{Semaphores}: Mutex locks, as we mentioned earlier, are generally considered the simplest of synchronization tools. In this section, we examine a more robust tool that can behave similarly to a mutex lock but can also provide more sophisticated ways for processes to synchronize their activities.
+            \bigbreak \noindent 
+            A semaphore $S$ is an integer variable that, apart from initialization, is accessed only through two standard atomic operations: wait() and signal().
+            \bigbreak \noindent 
+            The definition of wait() is as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                wait(S) {
+                    while (S <= 0)
+                        ; // busy wait
+                    S--;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The definition of signal() is as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                signal(S) {
+                    S++;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            All modifications to the integer value of the semaphore in the wait() and signal() operations must be executed atomically. That is, when one process modifies the semaphore value, no other process can simultaneously modify that same semaphore value. In addition, in the case of wait($S$), the testing of the integer value of $S$ ($S \leq 0$), as well as its possible modification ($S$\texttt{--}), must be executed without interruption.
+        \item \textbf{Semaphore Usage}: Operating systems often distinguish between counting and binary semaphores.
+            \begin{itemize}
+                \item \textbf{Counting semaphore}: The value of a counting semaphore can range over an unrestricted domain.
+                \item \textbf{Binary semaphore}: The value of a binary semaphore can range only between 0 and 1. Thus, binary semaphores behave similarly to mutex locks. In fact, on systems that do not provide mutex locks, binary semaphores can be used instead for providing mutual exclusion.
+            \end{itemize}
+            \bigbreak \noindent 
+            Counting semaphores can be used to control access to a given resource consisting of a finite number of instances. The semaphore is initialized to the number of resources available. Each process that wishes to use a resource performs a wait() operation on the semaphore (thereby decrementing the count). When a process releases a resource, it performs a signal() operation (incrementing the count). When the count for the semaphore goes to 0, all resources are being used. After that, processes that wish to use a resource will block until the count becomes greater than 0.
+            \bigbreak \noindent 
+            We can also use semaphores to solve various synchronization problems. For example, consider two concurrently running processes: $P_1$ with a statement $S_1$ and $P_2$ with a statement $S_2$. Suppose we require that $S_2$ be executed only after $S_1$ has completed. We can implement this scheme readily by letting $P_1$ and $P_2$ share a common semaphore \textit{synch}, initialized to $0$. In process $P_1$, we insert the statements
+            \bigbreak \noindent 
+            \begin{cppcode}
+                S1;
+                signal(synch);
+            \end{cppcode}
+            \bigbreak \noindent 
+            In process $P_{2} $, we insert the statements
+            \bigbreak \noindent 
+            \begin{cppcode}
+            wait(synch);
+            S2;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Because synch is initialized to 0, $P_{2}$ will execute $S_{2}$ only after $P_{1}$ has invoked signal(synch), which is after statement $S_{1}$  has been executed
+        \item \textbf{Semaphore Implementation}: The definitions of the wait() and signal() semaphore operations just described present the same problem. To overcome this problem, we can modify the definition of the wait() and signal() operations as follows: When a process executes the wait() operation and finds that the semaphore value is not positive, it must wait. However, rather than engaging in busy waiting, the process can suspend itself. The suspend operation places a process into a waiting queue associated with the semaphore, and the state of the process is switched to the waiting state. Then control is transferred to the CPU scheduler, which selects another process to execute 
+            \bigbreak \noindent 
+            A process that is suspended, waiting on a semaphore $S$, should be restarted when some other process executes a signal() operation. The process is restarted by a wakeup() operation, which changes the process from the waiting state to the ready state. The process is then placed in the ready queue. (The CPU may or may not be switched from the running process to the newly ready process, depending on the CPU-scheduling algorithm.)
+            \bigbreak \noindent 
+            To implement semaphores under this definition, we define a semaphore as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int values;
+                    struct process* list;
+                } semaphore;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Each semaphore has an integer value and a list of processes list. When a process must wait on a semaphore, it is added to the list of processes. A signal() operation removes one process from the list of waiting processes and awakens that process.
+            \bigbreak \noindent 
+            Now, the wait() semaphore operation can be defined as
+            \bigbreak \noindent 
+            \begin{cppcode}
+                wait(semaphore *S) {
+                    S->value--;
+                    if (S->value < 0) {
+                        add this process to S->list;
+                        sleep();
+                    }
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            and the signal() semaphore operation can be defined as
+            \bigbreak \noindent 
+            \begin{cppcode}
+                signal(semaphore *S) {
+                    S->value++;
+                    if (S->value <= 0) {
+                        remove a process P from S->list;
+                        wakeup(P);
+                    }
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            As mentioned, it is critical that semaphore operations be executed atomically. We must guarantee that no two processes can execute wait() and signal() operations on the same semaphore at the same time. This is a criticalsection problem, and in a single-processor environment, we can solve it by simply inhibiting interrupts during the time the wait() and signal() operations are executing. This scheme works in a single-processor environment because, once interrupts are inhibited, instructions from different processes cannot be interleaved. Only the currently running process executes until interrupts are reenabled and the scheduler can regain control.
+            \bigbreak \noindent 
+            In a multicore environment, interrupts must be disabled on every processing core. Otherwise, instructions from different processes (running on different cores) may be interleaved in some arbitrary way. Disabling interrupts on every core can be a difficult task and can seriously diminish performance. Therefore, SMP systems must provide alternative techniques—such as compare\_and\_swap() or spinlocks— to ensure that wait() and signal() are performed atomically
+        \item \textbf{Deadlock}: The implementation of a semaphore with a waiting queue may result in a situation where two or more processes are waiting indefinitely for an event that can be caused only by one of the waiting processes. The event in question is the execution of a signal() operation. When such a state is reached, these processes are said to be deadlocked.
+
+
+
 
 
 
 
     \end{itemize}
-    
 
 
 
