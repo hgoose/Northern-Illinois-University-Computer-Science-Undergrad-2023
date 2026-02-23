@@ -18,6 +18,7 @@ const char* error_string(int err) {
         case NCC_ILLEGAL_ESCAPE:  return "illegal escape";
         case NCC_UNDEFINED_TOKEN: return "undefined token";
         case NCC_INVALID_NUMBER: return "invalid number";
+        case NCC_SYNTAX_ERROR:   return "syntax error";
         default: return "unknown error";
     }
 }

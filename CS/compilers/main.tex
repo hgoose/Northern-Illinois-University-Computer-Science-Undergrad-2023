@@ -1224,6 +1224,24 @@
                 \text{FOLLOW}(F^{\prime}) &= \text{FOLLOW}(F) = \{*, /, \text{MOD}, +, -, \$, )\}\\
                 \text{FOLLOW}(S) &= \text{FIRST}(F^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(F) = \{\land, *, /, \text{MOD}, +, -, \$, )\}\\
             .\end{align*}
+            Then, the FIRST sets for all sequences are 
+            \begin{align*}
+                \text{FIRST}(\varepsilon) &= \{\varepsilon\}\\
+                \text{FIRST}(TE^{\prime}) &= \{+,-,(, \text{int}, \text{var}\}\\
+                \text{FIRST}(+TE^{\prime}) &= \{+\}\\
+                \text{FIRST}(-TE^{\prime}) &= \{-\}\\
+                \text{FIRST}(NT^{\prime}) &= \{+,-,(, \text{int}, \text{var}\}\\
+                \text{FIRST}(*NT^{\prime}) &= \{*\}\\
+                \text{FIRST}(/NT^{\prime}) &= \{/\}\\
+                \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
+                \text{FIRST}(+N) &= \{+\}\\
+                \text{FIRST}(-N) &= \{-\} \\
+                \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}\}\\
+                \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
+                \text{FIRST}((E)) &= \{(\}\\
+                \text{FIRST}(\text{int}) &= \{\text{int}\}\\
+                \text{FIRST}(\text{var}) &= \{\text{var}\}
+            .\end{align*}
 
         \item \textbf{Basics on parsing (arithmetic expressions)}: For arithmetic expressions, you typically structure the grammar to encode precedence and associativity, so the parser produces the “right” AST shape.
             \bigbreak \noindent 
@@ -1297,6 +1315,13 @@
             \begin{align*}
                 \varepsilon \in \text{FIRST}(\alpha_{k}) \iff a_{k} \Rightarrow^{*}\; \varepsilon
             .\end{align*}
+            So, given our current lookahead token, we choose a production from the selection rules above. But, does this action consume the token? No. A token is consumed only if the top of the stack contains only a terminal that matches the token. For example, if our current token is $a$, with token type \texttt{var}, and we choose a production $S \to \text{var}$. Then, we consume the token. This consumption should then be visible to all other calls in the call stack. In other words, the lookahead should be global, not local to any particular rule.
+            \bigbreak \noindent 
+            In the case of actually building the AST, we should return a node if we consumed a token.
+            \bigbreak \noindent 
+            Consider the expression $a + b$, the parse tree is generated implicitly by the call tree, and the AST is generated explicitly through returned nodes.
+            \bigbreak \noindent 
+            \fig{1}{./figures/19.png}
         \item  \textbf{LL(1) parse tables}: A parsing table (specifically for LL(1) parsing) is a deterministic decision structure that tells the parser which production rule to apply based on
             \begin{itemize}
                 \item The current nonterminal to be expaneded

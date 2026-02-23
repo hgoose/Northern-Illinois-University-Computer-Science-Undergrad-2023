@@ -12,6 +12,7 @@
 #define  NCC_ILLEGAL_ESCAPE        -8
 #define  NCC_UNDEFINED_TOKEN       -9
 #define  NCC_INVALID_NUMBER       -10
+#define  NCC_SYNTAX_ERROR         -11
 
 struct Error
 {

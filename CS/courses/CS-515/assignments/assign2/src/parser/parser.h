@@ -2,6 +2,8 @@
 
 Error parser_init(const char* src_code);
 
+AST_NODE* parse(Error& err);
+
 // PRODUCTION RULES
 AST_NODE* E();
 AST_NODE* EP();

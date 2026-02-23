@@ -11,7 +11,8 @@ SRC = \
 	src/lexer/lex.cc \
 	src/lexer/token.cc \
 	src/buffio/buffio.cc \
-	src/parser/parser.cc
+	src/parser/parser.cc \
+	src/parser/ast_utils.cc
 
 OBJ = $(SRC:%=$(OBJDIR)/%.o)
 
