@@ -11577,7 +11577,7 @@ indicate which strong entity the weak entity depends upon.
                     \begin{align*}
                         0\; 00000000\; 00000000000000000000000
                     .\end{align*}
-                \item −0:
+                \item -0:
                     \begin{align*}
                         1\; 00000000\; 00000000000000000000000
                     .\end{align*}
@@ -15836,12 +15836,12 @@ indicate which strong entity the weak entity depends upon.
             Another possibility is to time-slice among the queues. Here, each queue gets a certain portion of the CPU time, which it can then schedule among its various processes. For instance, in the foreground –background queue example, the foreground queue can be given 80 percent of the CPU time for RR scheduling among its processes, while the background queue receives 20 percent of the CPU to give to its processes on an FCFS basis.
         \item \textbf{Summary of the CPU scheduling algorithms}: 
             \begin{itemize}
-                \itme \textbf{FCFS}: Non-preemptive
-                \itme \textbf{SJF}: Preemptive or non-preemptive
-                \itme \textbf{RR}: Preemptive or non-preemptive
-                \itme \textbf{Priority}: Preemptive
-                \itme \textbf{Multilevel queue}:
-                \itme \textbf{Multilevel feedback queue}:
+                \item \textbf{FCFS}: Non-preemptive
+                \item \textbf{SJF}: Preemptive or non-preemptive
+                \item \textbf{RR}: Preemptive or non-preemptive
+                \item \textbf{Priority}: Preemptive
+                \item \textbf{Multilevel queue}:
+                \item \textbf{Multilevel feedback queue}:
             \end{itemize}
         \item \textbf{Multilevel Feedback Queue Scheduling}: Normally, when the multilevel queue scheduling algorithm is used, processes are permanently assigned to a queue when they enter the system. If there are separate queues for foreground and background processes, for example, processes do not move from one queue to the other, since processes do not change their foreground or background nature. This setup has the advantage of low scheduling overhead, but it is inflexible.
             \bigbreak \noindent 
@@ -15874,7 +15874,7 @@ indicate which strong entity the weak entity depends upon.
                 \item a default scheduling class using the CFS scheduling algorithm and 
                 \item a real-time scheduling class
             \end{enumerate}
-            Rather than using strict rules that associate a relative priority value with the length of a time quantum, the CFS scheduler assigns a proportion of CPU processing time to each task. This proportion is calculated based on the \textbf{nice value} assigned to each task. Nice values range from −20 to +19, where a numerically lower nice value indicates a higher relative priority. Tasks with lower nice values receive a higher proportion of CPU processing time than tasks with higher nice values. The default nice value is 0. (The term nice comes from the idea that if a task increases its nice value from, say, 0 to +10, it is being nice to other tasks in the system by lowering its relative priority. 
+            Rather than using strict rules that associate a relative priority value with the length of a time quantum, the CFS scheduler assigns a proportion of CPU processing time to each task. This proportion is calculated based on the \textbf{nice value} assigned to each task. Nice values range from -20 to +19, where a numerically lower nice value indicates a higher relative priority. Tasks with lower nice values receive a higher proportion of CPU processing time than tasks with higher nice values. The default nice value is 0. (The term nice comes from the idea that if a task increases its nice value from, say, 0 to +10, it is being nice to other tasks in the system by lowering its relative priority. 
             \bigbreak \noindent 
             CFS doesn’t use discrete values of time slices and instead identifies a \textbf{targeted latency}, which is an interval of time during which every runnable task should run at least once. Proportions of CPU time are allocated from the value of targeted latency. In addition to having default and minimum values, targeted latency can increase if the number of active tasks in the system grows beyond a certain threshold.
             \begin{align*}
@@ -15971,7 +15971,6 @@ indicate which strong entity the weak entity depends upon.
             
 
 
-    \end{itemize}
     \end{itemize}
 
     \pagebreak 
@@ -16331,9 +16330,512 @@ indicate which strong entity the weak entity depends upon.
             As mentioned, it is critical that semaphore operations be executed atomically. We must guarantee that no two processes can execute wait() and signal() operations on the same semaphore at the same time. This is a criticalsection problem, and in a single-processor environment, we can solve it by simply inhibiting interrupts during the time the wait() and signal() operations are executing. This scheme works in a single-processor environment because, once interrupts are inhibited, instructions from different processes cannot be interleaved. Only the currently running process executes until interrupts are reenabled and the scheduler can regain control.
             \bigbreak \noindent 
             In a multicore environment, interrupts must be disabled on every processing core. Otherwise, instructions from different processes (running on different cores) may be interleaved in some arbitrary way. Disabling interrupts on every core can be a difficult task and can seriously diminish performance. Therefore, SMP systems must provide alternative techniques—such as compare\_and\_swap() or spinlocks— to ensure that wait() and signal() are performed atomically
+        \item \textbf{Semaphore bugs}: Although semaphores provide a convenient and effective mechanism for process synchronization, using them incorrectly can result in timing errors that are difficult to detect, since these errors happen only if particular execution sequences take place, and these sequences do not always occur.
+            \bigbreak \noindent 
+            Unfortunately, such timing errors can still occur when either mutex locks or semaphores are used. To illustrate how, we review the semaphore solution to the critical-section problem. All processes share a binary semaphore variable mutex, which is initialized to 1
+            \bigbreak \noindent 
+            Each process must execute wait(mutex) before entering the critical section and signal(mutex) afterward. If this sequence is not observed, two processes may be in their critical sections simultaneously. Next, we list several difficulties that may result. Note that these difficulties will arise even if a single process is not well behaved. This situation may be caused by an honest programming error or an uncooperative programmer.
+            \begin{itemize}
+                \item Suppose that a program interchanges the order in which the wait() and signal() operations on the semaphore mutex are executed, resulting in the following execution:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    signal(mutex);
+                            ...
+                        critical section
+                            ...
+
+                    wait(mutex);
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    In this situation, several processes may be executing in their critical sections simultaneously, violating the mutual-exclusion requirement. This error may be discovered only if several processes are simultaneously active in their critical sections. Note that this situation may not always be reproducible.
+                \item Suppose that a program replaces signal(mutex) with wait(mutex). That is, it executes
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    wait(mutex);
+                            ...
+                        critical section
+                            ...
+                    wait(mutex);
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    In this case, the process will permanently block on the second call to wait(), as the semaphore is now unavailable.
+                \item Suppose that a process omits the wait(mutex), or the signal(mutex), or both. In this case, either mutual exclusion is violated or the process will permanently block
+                
+            \end{itemize}
+            These examples illustrate that various types of errors can be generated easily when programmers use semaphores or mutex locks incorrectly to solve the critical-section problem. One strategy for dealing with such errors is to incorporate simple synchronization tools as high-level language constructs. In this section, we describe one fundamental high-level synchronization construct— the monitor type.
+        \item \textbf{Monitors}: An abstract data type—or ADT—encapsulates data with a set of functions to operate on that data that are independent of any specific implementation of the ADT. A monitor type is an ADT that includes a set of programmer-defined operations that are provided with mutual exclusion within the monitor. The monitor type also declares the variables whose values define the state of an instance of that type, along with the bodies of functions that operate on those variables. 
+            So, A monitor is a high-level synchronization construct that combines:
+            \begin{itemize}
+                \item Shared data
+                \item Operations on that data
+                \item Automatic mutual exclusion
+            \end{itemize}
+            It is best understood as a thread-safe object managed by the operating system or language runtime.
+            \begin{center}
+                Monitor = mutex + condition variables + encapsulation, packaged as one abstraction
+            \end{center}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                monitor monitor_name
+                {
+                    /* shared variable declarations */
+                    function P1 (...) {
+                        ...
+                    }
+                    function P2 (...) {
+                        ...
+                    }
+                    .
+                    .
+                    .
+                    function Pn (...) {
+                        ...
+                    }
+                    initialization code ( ...) {
+                        ...
+                    }
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The representation of a monitor type cannot be used directly by the various processes. Thus, a function defined within a monitor can access only those variables declared locally within the monitor and its formal parameters. Similarly, the local variables of a monitor can be accessed by only the local functions.
+            \bigbreak \noindent 
+            The monitor construct ensures that only one process at a time is active within the monitor. Consequently, the programmer does not need to code this synchronization constraint explicitly
+            \bigbreak \noindent 
+            At most one thread/process can execute inside the monitor at any time means 
+            \begin{itemize}
+                \item You do NOT manually acquire or release a lock
+                \item Entry to any monitor function is implicitly synchronized
+            \end{itemize}
+            Calling any operation is like entering a critical section.
+
+
+        \item \textbf{The condition construct}: The monitor construct, as defined so far, is not sufficiently powerful for modeling some synchronization schemes. For this purpose, we need to define additional synchronization mechanisms. These mechanisms are provided by the \textbf{condition construct}. A programmer who needs to write a tailor-made synchronization scheme can define one or more variables of type condition:
+            \bigbreak \noindent 
+            Condition variables are specifically designed to be used inside monitors. A monitor without condition variables can enforce exclusivity, but cannot express “wait until $X$ becomes true.”
+            \bigbreak \noindent 
+            \begin{cppcode}
+            condition x,y;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The only operations that can be invoked on a condition variable are wait() and signal(). The operation
+            \bigbreak \noindent 
+            \begin{cppcode}
+            x.wait();
+            \end{cppcode}
+            \bigbreak \noindent 
+            means that the process invoking this operation is suspended until another process invokes
+            \bigbreak \noindent 
+            \begin{cppcode}
+                x.signal(); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:}
+            \bigbreak \noindent 
+            Each one is conceptually:
+            \begin{itemize}
+                \item A queue of suspended processes/threads
+                \item Used to wait for a specific logical condition
+                \item Managed only through wait() and signal()
+            \end{itemize}
+             Different conditions require different waiting sets.
+             \begin{itemize}
+                 \item Threads waiting for “buffer not empty”
+                 \item Threads waiting for “buffer not full”
+             \end{itemize}
+             These must be separated so that signaling wakes the correct group.
+             \begin{itemize}
+                 \item $x$ might represent “notEmpty”
+                 \item $y$ might represent “notFull”
+             \end{itemize}
+             Think of each condition variable as: A labeled waiting room inside the monitor. Threads choose which room to wait in based on what they need.
+             \bigbreak \noindent 
+             On x.wait(), the calling thread
+             \begin{enumerate}
+                 \item Releases the monitor lock
+                 \item Joins x’s waiting queue
+                 \item Sleeps
+                 \item Later reacquires the monitor lock before resuming                
+             \end{enumerate}
+             On x.signal(),
+             \begin{enumerate}
+                 \item Wake exactly one thread waiting in $x$’s queue
+                 \item If none exist $\to$ nothing happens
+             \end{enumerate}
+            The x.signal() operation resumes exactly one suspended process. If no process is suspended, then the signal() operation has no effect; that is, the state of x is the same as if the operation had never been executed. Contrast this operation with the signal() operation associated with semaphores, which always affects the state of the semaphore.
+            \bigbreak \noindent 
+            Now suppose that, when the x.signal() operation is invoked by a process $P$, there exists a suspended process $Q$ associated with condition $x$. Clearly, if the suspended process $Q$ is allowed to resume its execution, the signaling process $P$ must wait. Otherwise, both $P$ and $Q$ would be active simultaneously within the monitor. Note, however, that conceptually both processes can continue with their execution. Two possibilities exist:
+            \begin{enumerate}
+                \item \textbf{Signal and wait}: $P$ either waits until $Q$ leaves the monitor or waits for another condition.
+                \item \textbf{Signal and continue}: $Q$ either waits until $P$ leaves the monitor or waits for another condition.
+            \end{enumerate}
+            There are reasonable arguments in favor of adopting either option. On the one hand, since $P$ was already executing in the monitor, the \textbf{signal-and-continue} method seems more reasonable. On the other, if we allow thread $P$ to continue, then by the time $Q$ is resumed, the logical condition for which $Q$ was waiting may no longer hold. A compromise between these two choices exists as well: when thread $P$ executes the signal operation, it immediately leaves the monitor. Hence, $Q$ is immediately resumed.
+        \item \textbf{Implementing a Monitor Using Semaphores}: We now consider a possible implementation of the monitor mechanism using semaphores. For each monitor, a binary semaphore mutex (initialized to 1) is provided to ensure mutual exclusion. A process must execute wait(mutex) before entering the monitor and must execute signal(mutex) after leaving the monitor.
+            \bigbreak \noindent 
+            We will use the signal-and-wait scheme in our implementation. Since a signaling process must wait until the resumed process either leaves or waits, an additional binary semaphore, \texttt{next}, is introduced, initialized to 0. The signaling processes can use next to suspend themselves. An integer variable \texttt{next\_count} is also provided to count the number of processes suspended on next. Thus, each monitor procedure $F$ is replaced by
+            \bigbreak \noindent 
+            \begin{cppcode}
+                wait(mutex);
+                        ...
+                    body of F
+                        ...
+                if (next_count > 0)
+                    signal(next);
+                else
+                    signal(mutex);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Mutual exclusion within a monitor is ensured.
+            \bigbreak \noindent 
+            We can now describe how condition variables are implemented as well. For each condition $x$, we introduce a binary semaphore \texttt{x\_sem} and an integer variable \texttt{x\_count}, both initialized to 0. The operation x.wait() can now be implemented as
+            \bigbreak \noindent 
+            \begin{cppcode}
+                x_count++;
+                if (next_count > 0)
+                    signal(next);
+                else
+                    signal(mutex);
+                wait(x sem);
+                x count--;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The operation x.signal() can be implemented as
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if (x count > 0) {
+                    next count++;
+                    signal(x sem);
+                    wait(next);
+                    next count--;
+                }
+            \end{cppcode}
+        \item \textbf{Resuming Processes within a Monitor}: We turn now to the subject of process-resumption order within a monitor. If several processes are suspended on condition x, and an x.signal() operation is executed by some process, then how do we determine which of the suspended processes should be resumed next? One simple solution is to use a first-come, first-served (FCFS) ordering, so that the process that has been waiting the longest is resumed first. In many circumstances, however, such a simple scheduling scheme is not adequate. In these circumstances, the conditionalwait construct can be used. This construct has the form
+            \bigbreak \noindent 
+            \begin{cppcode}
+            x.wait(c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            where c is an integer expression that is evaluated when the wait() operation is executed. The value of c, which is called a \textbf{priority number}, is then stored with the name of the process that is suspended. When x.signal() is executed, the process with the smallest priority number is resumed next.
+        \item \textbf{Liveness}: Liveness refers to a set of properties that a system must satisfy to ensure that processes make progress during their execution life cycle. A process waiting indefinitely under the circumstances just described is an example of a “liveness failure.”
+            \bigbreak \noindent 
+            There are many different forms of liveness failure; however, all are generally characterized by poor performance and responsiveness. A very simple example of a liveness failure is an infinite loop. A busy wait loop presents the possibility of a liveness failure, especially if a process may loop an arbitrarily long period of time. Efforts at providing mutual exclusion using tools such as mutex locks and semaphores can often lead to such failures in concurrent programming.
         \item \textbf{Deadlock}: The implementation of a semaphore with a waiting queue may result in a situation where two or more processes are waiting indefinitely for an event that can be caused only by one of the waiting processes. The event in question is the execution of a signal() operation. When such a state is reached, these processes are said to be deadlocked.
+        \item \textbf{Priority inversion}: A high-priority process is forced to wait because a lower-priority process holds a needed resource (e.g., a lock or critical section).
+            \bigbreak \noindent 
+            Meanwhile, medium-priority processes may run, further delaying the high-priority one — effectively “inverting” priorities.
 
 
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Synchronization examples}
+    \begin{itemize}
+        \item \textbf{The bounded buffer problem}: In our problem, the producer and consumer processes share the following data structures: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int n;
+            semaphore mutex = 1;
+            semaphore empty = n;
+            semaphore full = 0;
+            \end{cppcode}
+            \bigbreak \noindent 
+            We assume that the pool consists of $n$ buffers, each capable of holding one item. The mutex binary semaphore provides mutual exclusion for accesses to the buffer pool and is initialized to the value 1. The empty and full semaphores count the number of empty and full buffers. The semaphore empty is initialized to the value $n$; the semaphore full is initialized to the value 0.
+            \bigbreak \noindent 
+            Then, the producer and consumer could would be something like
+            \bigbreak \noindent 
+            \begin{cppcode}
+                // Producer
+                while (true) {
+                        ...
+                    /* produce an item in next produced */
+                        ...
+                    wait(empty);
+                    wait(mutex);
+                        ...
+                    /* add next produced to the buffer */
+                        ...
+                    signal(mutex);
+                    signal(full);
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                // Consumer
+                while (true) {
+                    wait(full);
+                    wait(mutex);
+                        ...
+                    /* remove an item from buffer to next consumed */
+                        ...
+                    signal(mutex);
+                    signal(empty);
+                        ...
+                    /* consume the item in next consumed */
+                        ...
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            We can interpret this code as the producer producing full buffers for the consumer or as the consumer producing empty buffers for the producer.
+        \item \textbf{The Readers –Writers Problem}: Suppose that a database is to be shared among several concurrent processes. Some of these processes may want only to read the database, whereas others may want to update (that is, read and write) the database. We distinguish between these two types of processes by referring to the former as readers and to the latter as writers. Obviously, if two readers access the shared data simultaneously, no adverse effects will result. However, if a writer and some other process (either a reader or a writer) access the database simultaneously, chaos may ensue.
+            \bigbreak \noindent 
+            To ensure that these difficulties do not arise, we require that the writers have exclusive access to the shared database while writing to the database. This synchronization problem is referred to as the \textbf{readers-writers problem}. Since it was originally stated, it has been used to test nearly every new synchronization primitive.
+            \bigbreak \noindent 
+            The readers–writers problem has several variations, all involving priorities.
+            \begin{enumerate}
+                \item \textbf{First readers-writers}: The simplest one, referred to as the first readers–writers problem, requires that no reader be kept waiting unless a writer has already obtained permission to use the shared object. In other words, no reader should wait for other readers to finish simply because a writer is waiting. A waiting writer does not block incoming readers So readers can “pile up.”
+                \item \textbf{Second readers-writers}: The second readers–writers problem requires that, once a writer is ready, that writer perform its write as soon as possible. In other words, if a writer is waiting to access the object, no new readers may start reading.
+            \end{enumerate}
+            A solution to either problem may result in starvation. In the first case, writers may starve; in the second case, readers may starve. For this reason, other variants of the problem have been proposed. Next, we present a solution to the first readers–writers problem
+            \bigbreak \noindent 
+            In the solution to the first readers–writers problem, the reader processes share the following data structures:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                semaphore rw_mutex = 1;
+                semaphore mutex = 1;
+                int read_count = 0;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The binary semaphores mutex and rw\_mutex are initialized to 1; read count is a counting semaphore initialized to 0. The semaphore rw\_mutex is common to both reader and writer processes.
+            \bigbreak \noindent 
+            The mutex semaphore is used to ensure mutual exclusion when the variable read\_count is updated. The read count variable keeps track of how many processes are currently reading the object. The semaphore rw mutex functions as a mutual exclusion semaphore for the writers. It is also used by the first or last reader that enters or exits the critical section. It is not used by readers that enter or exit while other readers are in their critical sections.
+            \bigbreak \noindent 
+            The code for the writer process is as follows
+            \bigbreak \noindent 
+            \begin{cppcode}
+                while (true) {
+                    wait(rw mutex);
+                        ...
+                    /* writing is performed */
+                        ...
+                    signal(rw mutex);
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The code for a reader process is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                while (true) {
+                    wait(mutex);
+                    read count++;
+                    if (read count == 1)
+                        wait(rw mutex);
+                    signal(mutex);
+                        ...
+                    /* reading is performed */
+                        ...
+                    wait(mutex);
+                    read count--;
+                    if (read count == 0)
+                        signal(rw mutex);
+                    signal(mutex);
+                }
+             \end{cppcode}
+             \bigbreak \noindent 
+             Note that, if a writer is in the critical section and $n$ readers are waiting, then one reader is queued on rw\_mutex, and $n - 1$ readers are queued on mutex.
+             \bigbreak \noindent 
+             Also observe that, when a writer executes signal(rw\_mutex), we may resume the execution of either the waiting readers or a single waiting writer. The selection is made by the scheduler.
+             \bigbreak \noindent 
+             The readers–writers problem and its solutions have been generalized to provide \textbf{reader–writer} locks on some systems. Acquiring a reader–writer lock requires specifying the mode of the lock: either \textit{read} or \textit{write} access. When a process wishes only to read shared data, it requests the reader–writer lock in read mode.  A process wishing to modify the shared data must request the lock in write mode. Multiple processes are permitted to concurrently acquire a reader–writer lock in read mode, but only one process may acquire the lock for writing, as exclusive access is required for writers.
+             \bigbreak \noindent 
+             Reader–writer locks are most useful in the following situations:
+             \begin{itemize}
+                 \item In applications where it is easy to identify which processes only read shared data and which processes only write shared data.
+                 \item In applications that have more readers than writers. This is because reader–writer locks generally require more overhead to establish than semaphores or mutual-exclusion locks. The increased concurrency of allowing multiple readers compensates for the overhead involved in setting up the reader–writer lock.
+             \end{itemize}
+         \item \textbf{The Dining-Philosophers Problem}: Consider five philosophers who spend their lives thinking and eating. The philosophers share a circular table surrounded by five chairs, each belonging to one philosopher. In the center of the table is a bowl of rice, and the table is laid with five single chopsticks.
+             \bigbreak \noindent 
+             When a philosopher thinks, she does not interact with her colleagues. From time to time, a philosopher gets hungry and tries to pick up the two chopsticks that are closest to her (the chopsticks that are between her and her left and right neighbors). A philosopher may pick up only one chopstick at a time. Obviously, she cannot pick up a chopstick that is already in the hand of a neighbor. When a hungry philosopher has both her chopsticks at the same time, she eats without releasing the chopsticks. When she is finished eating, she puts down both chopsticks and starts thinking again.
+             \bigbreak \noindent 
+             \fig{.7}{./figures/1075.png}
+             \bigbreak \noindent 
+             The \textbf{dining-philosophers problem} is considered a classic synchronization problem neither because of its practical importance nor because computer scientists dislike philosophers but because it is an example of a large class of concurrency-control problems. It is a simple representation of the need to allocate several resources among several processes in a deadlock-free and starvation-free manner.
+         \item \textbf{DP problem, semaphore solution}: One simple solution is to represent each chopstick with a semaphore. A philosopher tries to grab a chopstick by executing a wait() operation on that semaphore. She releases her chopsticks by executing the signal() operation on the appropriate semaphores. Thus, the shared data are
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 semaphore chopstick[5];
+             \end{cppcode}
+             \bigbreak \noindent 
+             where all the elements of chopstick are initialized to 1. The structure of philosopher $i$ is
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 while (true) {
+                     wait(chopstick[i]);
+                     wait(chopstick[(i+1) % 5]);
+                         ...
+                     /* eat for a while */
+                         ...
+                     signal(chopstick[i]);
+                     signal(chopstick[(i+1) % 5]);
+                         ...
+                     /* think for awhile */
+                         ...
+                 }
+             \end{cppcode}
+             \bigbreak \noindent 
+             Although this solution guarantees that no two neighbors are eating simultaneously, it nevertheless must be rejected because it could create a deadlock. Suppose that all five philosophers become hungry at the same time and each grabs her left chopstick. All the elements of chopstick will now be equal to 0. When each philosopher tries to grab her right chopstick, she will be delayed forever.
+             \bigbreak \noindent 
+             Several possible remedies to the deadlock problem are the following:
+             \begin{itemize}
+                 \item Allow at most four philosophers to be sitting simultaneously at the table.
+                 \item Allow a philosopher to pick up her chopsticks only if both chopsticks are available (to do this, she must pick them up in a critical section).
+                 \item Use an asymmetric solution— that is, an odd-numbered philosopher picks up first her left chopstick and then her right chopstick, whereas an evennumbered philosopher picks up her right chopstick and then her left chopstick.
+             \end{itemize}
+             Note, however, that any satisfactory solution to the dining-philosophers problem must guard against the possibility that one of the philosophers will starve to death. A deadlock-free solution does not necessarily eliminate the possibility of starvation.
+         \item \textbf{DP problem, monitor solution}: Next, we illustrate monitor concepts by presenting a deadlock-free solution to
+             the dining-philosophers problem. This solution imposes the restriction that a
+             philosopher may pick up her chopsticks only if both of them are available. To
+             code this solution, we need to distinguish among three states in which we may
+             find a philosopher. For this purpose, we introduce the following data structure:
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 enum{THINKING, HUNGRY, EATING} e;
+                 e state[5];
+             \end{cppcode}
+             \bigbreak \noindent 
+             Philosopher $i$ can set the variable state[i] = EATING only if here two neighbors are not eating.
+             \bigbreak \noindent 
+             We also need to declare
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 condition self[5];
+             \end{cppcode}
+             \bigbreak \noindent 
+             This allows philosopher $i$ to delay herself when she is hungry but is unable to obtain the chopsticks she needs.
+             \bigbreak \noindent 
+             We are now in a position to describe our solution to the dining-philosophers problem. The distribution of the chopsticks is controlled by the monitor DiningPhilosophers,
+             \bigbreak \noindent 
+             \begin{cppcode}
+                 monitor DiningPhilosophers {
+                     enum {THINKING, HUNGRY, EATING} state[5];
+                     condition self[5];
+
+                     void pickup(int i) {
+                         state[i] = HUNGRY;
+                         test(i);
+                         if (state[i] != EATING)
+                             self[i].wait();
+                     }
+
+                     void putdown(int i) {
+                         state[i] = THINKING;
+                         test((i + 4) % 5);
+                         test((i + 1) % 5);
+                     }
+
+                     void test(int i) {
+                         if ((state[(i + 4) % 5] != EATING) &&
+                             (state[i] == HUNGRY) &&
+                             (state[(i + 1) % 5] != EATING)
+                         ) {
+                             state[i] = EATING;
+                             self[i].signal();
+                     }
+                 }
+
+                 initialization_code() {
+                     for (int i = 0; i < 5; i++)
+                     state[i] = THINKING;
+                 }
+             }
+             \end{cppcode}
+             \bigbreak \noindent 
+             Each philosopher, before starting to eat, must invoke the operation pickup(). This act may result in the suspension of the philosopher process. After the successful completion of the operation, the philosopher may eat. Following this, the philosopher invokes the putdown() operation. Thus, philosopher i must invoke the operations pickup() and putdown() in the following sequence:
+             \bigbreak \noindent 
+             \begin{cppcode}
+             DiningPhilosophers.pickup(i);
+                 ...
+                 eat
+                 ...
+             DiningPhilosophers.putdown(i);
+             \end{cppcode}
+             \bigbreak \noindent 
+             It is easy to show that this solution ensures that no two neighbors are eating simultaneously and that no deadlocks will occur. As we already noted, however, it is possible for a philosopher to starve to death. We do not present a solution to this problem.
+    \item \textbf{POSIX Synchronization}:
+        \begin{itemize}
+            \item \textbf{Mutex locks}: Mutex locks represent the fundamental synchronization technique used with Pthreads. A mutex lock is used to protect critical sections of code— that is, a thread acquires the lock before entering a critical section and releases it upon exiting the critical section. Pthreads uses the \texttt{pthread\_mutex\_t} data type for mutex locks. A mutex is created with the \texttt{pthread\_mutex\_init()} function. The first parameter is a pointer to the mutex. By passing NULL as a second parameter, we initialize the mutex to its default attributes.
+                \bigbreak \noindent 
+                The mutex is acquired and released with the \texttt{pthread\_mutex\_lock()} and \texttt{pthread\_mutex\_unlock()} functions. If the mutex lock is unavailable when \texttt{pthread\_mutex\_lock()} is invoked, the calling thread is blocked until the owner invokes \texttt{pthread\_mutex\_unlock()}.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    #include <pthread.h>
+
+                    pthread mutex t mutex;
+
+                    /* create and initialize the mutex lock */
+                    pthread mutex init(&mutex,NULL);
+
+                    /* acquire the mutex lock */
+                    pthread mutex lock(&mutex);
+
+                    /* critical section */
+
+                    /* release the mutex lock */
+                    pthread mutex unlock(&mutex);
+                \end{cppcode}
+                \bigbreak \noindent 
+                All mutex functions return a value of 0 with correct operation; if an error occurs, these functions return a nonzero error code.
+            \item \textbf{POSIX Semaphores}: Many systems that implement Pthreads also provide semaphores, although semaphores are not part of the POSIX standard and instead belong to the POSIX SEM extension. POSIX specifies two types of semaphores, \textbf{named} and \textbf{unnamed}. Fundamentally, the two are quite similar, but they differ in terms of how they are created and shared between processes.
+                \begin{enumerate}
+                    \item \textbf{Named}:  The function \texttt{sem\_open()} is used to create and open a POSIX named sempahore:
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                            #include <semaphore.h>
+                            sem t *sem;
+
+                            /* Create the semaphore and initialize it to 1 */
+                            sem = sem open("SEM", O CREAT, 0666, 1);
+                        \end{cppcode}
+                        \bigbreak \noindent 
+                        In this instance, we are naming the semaphore SEM. The O\_CREAT flag indicates that the semaphore will be created if it does not already exist. Additionally, the semaphore has read and write access for other processes (via the parameter 0666) and is initialized to 1.
+                        \bigbreak \noindent 
+                        The advantage of named semaphores is that multiple unrelated processes can easily use a common semaphore as a synchronization mechanism by simply referring to the semaphore’s name. 
+                        \bigbreak \noindent 
+                        subsequent calls to sem\_open() (with the same parameters) by other processes return a descriptor to the existing semaphore.
+                        \bigbreak \noindent 
+                        we described the classic wait() and signal() semaphore operations. POSIX declares these operations \texttt{sem\_wait()} and \texttt{sem\_post()}, respectively
+                    \item \textbf{Unnamed}: An unnamed semaphore is created and initialized using the \texttt{sem\_init()} function, which is passed three parameters:
+                        \begin{enumerate}
+                            \item A pointer to the semaphore
+                            \item A flag indicating the level of sharing
+                            \item The semaphore’s initial value
+                        \end{enumerate}
+                        By passing the flag 0, we are indicating that this semaphore can be shared only by threads belonging to the process that created the semaphore. (If we supplied a nonzero value, we could allow the semaphore to be shared between separate processes by placing it in a region of shared memory.)
+                        \bigbreak \noindent 
+                        POSIX unnamed semaphores use the same sem\_wait() and sem\_post() operations as named semaphores.
+                        \bigbreak \noindent 
+                        Just like mutex locks, all semaphore functions return 0 when successful and nonzero when an error condition occurs.
+                \end{enumerate}
+            \item \textbf{POSIX condition variables}: Since Pthreads is typically used in C programs—and since C does not have a monitor— we accomplish locking by associating a condition variable with a mutex lock
+                \bigbreak \noindent 
+                Condition variables in Pthreads use the \texttt{pthread\_cond\_t} data type and are initialized using the \texttt{pthread\_cond\_init()}
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    pthread mutex t mutex;
+                    pthread cond t cond var;
+
+                    pthread mutex init(&mutex,NULL);
+                    pthread cond init(&cond var,NULL);
+                \end{cppcode}
+                The \texttt{pthread\_cond\_wait()} function is used for waiting on a condition variable.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                pthread mutex lock(&mutex);
+                while (a != b)
+                    pthread cond wait(&cond var, &mutex);
+
+                pthread mutex unlock(&mutex);
+                \end{cppcode}
+                The mutex lock associated with the condition variable must be locked before the pthread\_cond\_wait() function is called, since it is used to protect the data in the conditional clause from a possible race condition. Once this lock is acquired, the thread can check the condition. If the condition is not true, the thread then invokes pthread\_cond\_wait(), passing the mutex\_lock and the condition variable as parameters. Calling pthread\_cond\_wait() releases the mutex lock, thereby allowing another thread to access the shared data and possibly update its value so that the condition clause evaluates to true
+                \bigbreak \noindent 
+                A thread that modifies the shared data can invoke the pthread\_cond\_signal() function, thereby signaling one thread waiting on the condition variable. 
+                \bigbreak \noindent 
+                It is important to note that the call to pthread\_cond\_signal() does not release the mutex lock. It is the subsequent call to pthread\_mutex\_unlock() that releases the mutex. Once the mutex lock is released, the signaled thread becomes the owner of the mutex lock and returns control from the call to pthread\_cond\_wait().
+        \end{itemize}
+        \item \textbf{Functional programming languages}: 
+            Most well-known programming languages—such as C, C++, Java, and C#— are known as \textbf{imperative} (or \textbf{procedural}) languages. Imperative languages are used for implementing algorithms that are state-based. In these languages, the flow of the algorithm is crucial to its correct operation, and state is represented with variables and other data structures. Of course, program state is mutable, as variables may be assigned different values over time.
+            \bigbreak \noindent 
+            With the current emphasis on concurrent and parallel programming for multicore systems, there has been greater focus on \textbf{functional} programming languages, which follow a programming paradigm much different from that offered by imperative languages. The fundamental difference between imperative and functional languages is that functional languages do not maintain state. That is, once a variable has been defined and assigned a value, its value is immutable—it cannot change. Because functional languages disallow mutable state, they need not be concerned with issues such as race conditions and deadlocks. Essentially, most of the problems addressed in this chapter are nonexistent in functional languages.
 
 
 
