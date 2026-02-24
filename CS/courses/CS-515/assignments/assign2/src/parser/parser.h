@@ -1,4 +1,5 @@
 #include "ast_node.h"
+#include "error.h"
 
 Error parser_init(const char* src_code);
 

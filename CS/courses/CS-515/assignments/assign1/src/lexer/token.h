@@ -36,6 +36,7 @@
 #define TOKEN_SEMICOLON	         29
 #define TOKEN_COMMA	             30
 #define TOKEN_REAL               31
+#define TOKEN_MOD                32
 
 // Mapping these to their ascii values
 #define ESC_NEWLINE              10

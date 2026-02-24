@@ -230,7 +230,7 @@
             \begin{enumerate}
                 \item $V_{N} \cap V_{T} = \varnothing $
                 \item $S \in V_{N}$
-                \item $P \subseteq \{(N,\alpha)} \ \mid \ N \in V_{N}, \alpha \in (V_{N} \cup V_{T})^{*} $
+                \item $P \subseteq \{(N,\alpha)\} \ \mid \ N \in V_{N}, \alpha \in (V_{N} \cup V_{T})^{*} $
             \end{enumerate}
         \item \textbf{Strings}: Sequences of symbols are called strings. 
         \item \textbf{Directly derivable}: A string may be derivable from another string in a grammar. More precisely, a string $\beta$ is said to be \emph{directly derivable} from a string $\alpha$, written as
@@ -510,7 +510,7 @@
                 \text{ID }    &$\to$ [a-zA-Z][a-zA-Z0-9]^{*} \\
                 \text{NUM }   &$\to$ [0-9]^{+} \\
                 \text{PLUS }  &$\to$ + \\
-                \text{WS }    &$\to$ [ \t\n]^{+}
+                \text{WS }    &$\to$ [ \textbackslash t\textbackslash n]^{+}
             .\end{align*}
             We will use the following transition table
             \begin{center}
@@ -2285,15 +2285,132 @@ if (errno) {
             \begin{cppcode}
                 FF /0 INC r/m32
             \end{cppcode}
+        \item \textbf{The CALL instruction}: We will use the versions
+            \bigbreak \noindent 
+            \begin{cppcode}
+            FF /2 CALL r/m16
+            FF /2 CALL r/m32
+            FF /2 CALL r/m64
+            \end{cppcode}
+            \bigbreak \noindent 
+            which require us to load an address into a register, and then use that register as the operand. There are also versions
+            \bigbreak \noindent 
+            \begin{cppcode}
+            E8 cw CALL rel16
+            E8 cd CALL rel32
+            \end{cppcode} 
+            \bigbreak \noindent 
+            which allow us to specify the number bytes relative to the RIP.
+        \item \textbf{Loading values into our program buffer}: Consider the case in which we have a 64-bit value in cpp, and we wish to place this value into our program buffer. Recall that each entry in the buffer is 8-bit. So, our value will take up the next 8 available bytes in the buffer.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void load_imm64(unsigned char* prog, int& p_offset, long long value) {
+                    for (int i=0; i<7; ++i) {
+                        // Grab the right most 8-bits, place in buffer
+                        prog[p_offset++] = value & 0xff;
 
+                        // Right shift 8 bits to place the next 8-bits in the 8 low order bit position for next iteration.
+                        value>>=8;
+                    }
+                } 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, suppose we want to place
+            \bigbreak \noindent 
+            \begin{cppcode}
+            // Some random int64
+            long long useful_int64 = 0x80C24FA11AF32C08;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            load_imm64(prog, p_offset, useful_int64);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Places this value into our program buffer. This exercise is useful if, for example, we require an address placed into our program buffer to be used as an operand.
+        \item \textbf{Simple I/O}: Instead of dealing with the complexities of low-level I/O, we will instead create high-level C/CPP functions, and use the IA-32e instruction set to call those functions, using registers for passed arguments and the accumulator for return values.
+            \bigbreak \noindent 
+            Consider the function
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void print_int(int p) {
+                    std::cout << p;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Now, suppose we have a program that places some value into EAX, some other value into ECX, and uses a subtract instruction to find the difference. This difference would then be in the accumulator, which we can easily retrieve, but what if we want to instead output the result to stdout?. So, at this moment we have
+            \bigbreak \noindent 
+            \begin{cppcode}
+            .
+            .
+            .
 
+            prog[p_offset++] = 0xb8;  // MOV EAX, -7
+            prog[p_offset++] = 0xf9;
+            prog[p_offset++] = 0xff;
+            prog[p_offset++] = 0xff;
+            prog[p_offset++] = 0xff;
+            prog[p_offset++] = 0xb9;  // MOV  ECX, 3
+            prog[p_offset++] = 0x03;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0x00;
+            prog[p_offset++] = 0x29;  // SUB  EAX, ECX
+            prog[p_offset++] = 0xc8;
+            \end{cppcode}
+            \bigbreak \noindent 
+            From here, we simply need to move the address of \texttt{print\_int} into some register, move the argument for \texttt{print\_int} into some other register, and use the call instruction with the operand being the register that contains the address of \texttt{print\_int}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MOV  RSI, print_int
+                MOV  EDI, EAX
+                CALL RSI
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:} The System V ABI dictates that the first six integer or pointer arguments are passed in RDI, RSI, RDX, RCX, R8, and R9 in that order. This is why our argument was placed into EDI. The functions address being placed into ESI was not determined by any conventions.
+            \bigbreak \noindent 
+            For the first instruction, we use the 64-bit MOV, since our functions address is 64-bit:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            REX.W + B8+rd io MOV r64, imm64
+            \end{cppcode}
+            \bigbreak \noindent 
+            where io means immediate octaword. RSI maps to six, so REX.W + B8+rd is
+            \begin{align*}
+                01001000\; B8+6 = 48\; BE
+            .\end{align*}
+            \textbf{Note}: REX.W + B8 means prepend REX to B8 with REX.W on. 
+            \bigbreak \noindent 
+            So, immediately after \texttt{prog[p\_offset++] = 0xc8} in our code above, we put
+            \bigbreak \noindent 
+            \begin{cppcode}
+                prog[p_offset++] = 48; // MOV RSI, print_int
+                prog[p_offset++] = B8;
+                load_imm64(prog, p_offset, print_int); // Place the address of print_int in the next 8 bytes of the buffer, since the CPU will look at these bytes when looking for the operand of our MOV
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, the second and third instructions use
+            \bigbreak \noindent 
+            \begin{cppcode}
+            89 /r MOV r/m32, r32
+            FF /2 CALL r/m64
+            \end{cppcode}
+            \bigbreak \noindent 
+            So, the encodings are
+            \begin{align*}
+                89C7\quad FFD6  
+            \end{align*}
+            respectively. Thus, we append to the program
+            \bigbreak \noindent 
+            \begin{cppcode}
+                prog[p_offset++] = 89; // MOV EDI, EAX
+                prog[p_offset++] = C7;
+                prog[p_offset++] = FF; // CALL RSI
+                prog[p_offset++] = D6;
 
-
-
-
-
-
-
+                prog[p_offset++] = C3; // RET 
+            \end{cppcode}
 
             
 

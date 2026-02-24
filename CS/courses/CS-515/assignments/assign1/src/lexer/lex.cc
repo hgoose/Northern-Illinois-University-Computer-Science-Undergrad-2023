@@ -11,6 +11,8 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
+#include <cctype>
 
 using std::string;
 using std::cout;
@@ -409,6 +411,19 @@ Error get_token(Token& t, bool& begin) {
                 break;
             }
         } 
+
+        // It could be that our "identifier" is really the mod operator, so we check for that.
+        // First, clean the string by converting everything to lower case
+        std::transform(lexeme.begin(), lexeme.end(), lexeme.begin(), [](unsigned char c) {
+                return std::tolower(c);
+                });
+
+        if (lexeme == "mod") {
+            cout << "hello world\n"; 
+            t.id = TOKEN_MOD; 
+            t.lexeme = lexeme;
+        }
+
     // Handle strings with escape sequences
     } else if (curr_char == '"') {
         t.id = TOKEN_NULL;

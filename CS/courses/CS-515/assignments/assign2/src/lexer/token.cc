@@ -23,7 +23,7 @@ static const std::vector<std::string> token_names = {
     "TOKEN_RBRACKET", "TOKEN_AND", "TOKEN_OR",
     "TOKEN_DOT", "TOKEN_AT", "TOKEN_INTEGER",
     "TOKEN_STRING", "TOKEN_COLON", "TOKEN_SEMICOLON",
-    "TOKEN_COMMA", "TOKEN_REAL"
+    "TOKEN_COMMA", "TOKEN_REAL", "TOKEN_MOD"
 };
 
 

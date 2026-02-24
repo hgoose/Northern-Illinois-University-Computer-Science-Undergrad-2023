@@ -13,7 +13,7 @@ struct AST_NODE {
     AST_NODE() = default;
 
     // Implicitly inline so we are good to define here
-    bool empty() { return token.id == -1; } const;
+    bool empty() { return token.id == -1; };
 };
 
 #endif

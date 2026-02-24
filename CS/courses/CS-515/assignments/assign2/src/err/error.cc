@@ -1,7 +1,3 @@
- tree: 
-Code size: 1 bytes.
-Code execution:
-63053824
 // Nate warner z2004109
 // error.cc
 
