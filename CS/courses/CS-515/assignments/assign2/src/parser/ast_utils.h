@@ -2,9 +2,13 @@
 #define NCC_AST_UTILS_H
 
 #include "ast_node.h"
+#include <stack>
 
-AST_NODE* node_hoist(AST_NODE*& here, AST_NODE*& left, AST_NODE*& right);
-void 
+// Parse tree to ast
+AST_NODE* pttoast(AST_NODE* root);
+void ast_preorder(AST_NODE* root);
+void ast_inorder(AST_NODE* root);
+void ast_postorder(AST_NODE* root);
 void ast_out(AST_NODE* root);
 
 #endif

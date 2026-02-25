@@ -8,6 +8,8 @@
 #include "ast_node.h"
 #include "ast_utils.h"
 
+static void inhouse_cleanup(AST_NODE* parse_tree);
+
 // Move this later 
 /* <remark>
     The classic left-recursive CFG for arithmetic expressions
@@ -30,13 +32,17 @@
 
     The fully transformed CFG is then
         E  \to TE' \\
-        E' \to +T | -T | \varepsilon \\
+        E' \to +TE' | -TE' | \varepsilon \\
         T  \to NT' \\
         T' \to *NT' | /NT' | MOD NT' | \varepsilon \\
-        N \to +N | -N | F \\
+        N \to \oplus N | \neg N | F \\
         F \to SF' \\
         F' \to ^SF' | \varepsilon \\
         S \to (E) | int
+
+    Note that here, we will say that \oplus is unary plus, and \neg is unary negation, 
+    although we make no such distinction in the parse tree or ast (they will just be +,-), 
+    although the token type will reflect this
 
     Since the first CFG encodes both precedence and associativity, and the two are equivalent, so 
     does the transformed CFG. As it happens, this CFG is in fact LL(1). Proof left as an exercise to the reader.
@@ -83,12 +89,35 @@ Error parser_init(const char* src_code) {
     return err;
 }
 
-AST_NODE* parse(Error& err) {
+void parse() {
+    for(;;) {
+        begin = true;
+
+        Error err{};
+        AST_NODE* curr = next_parse(err);
+
+        print_error(err);
+        if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) break;
+
+        ast_out(curr);
+        free_tree(curr);
+    }
+
+    parser_cleanup();
+}
+
+AST_NODE* next_parse(Error& err) {
     // Get the first token
-    get_token(next_token, begin);
+    err = get_token(next_token, begin);
     begin = false;
 
-    return E();
+    AST_NODE* parse_root = E();
+    AST_NODE* ast_root = pttoast(parse_root);
+
+    // Delete the parse tree
+    inhouse_cleanup(parse_root);
+
+    return ast_root;
 }
 
 AST_NODE* E() {
@@ -97,8 +126,8 @@ AST_NODE* E() {
 	AST_NODE* left{}, *right{};
 
     // Consider FIRST(TE')
-    if (next_token.id == TOKEN_PLUS 
-        || next_token.id == TOKEN_MINUS 
+    if (next_token.id == TOKEN_UPLUS 
+        || next_token.id == TOKEN_UNEG
         || next_token.id == TOKEN_LPAREN 
         || next_token.id == TOKEN_INTEGER
     // Take the production E -> TE'
@@ -108,16 +137,14 @@ AST_NODE* E() {
     } else {
         // Handle syntax error
     }
+    // No other productions to check, although TE' is not nullable so 
+    // it doesn't matter.
 
     here->left = left;
     here->right = right;
     return here;
 
-    // No other productions to check, although TE' is not nullable so 
-    // it doesn't matter.
 
-    // Hoisting
-    // return node_hoist(here, left, right);
 }
 
 AST_NODE* EP() {
@@ -153,8 +180,8 @@ AST_NODE* T() {
 	AST_NODE* left{}, *right{};
 
     // Consider FIRST(NT'), not nullable
-    if (next_token.id == TOKEN_PLUS 
-        || next_token.id == TOKEN_MINUS 
+    if (next_token.id == TOKEN_UPLUS 
+        || next_token.id == TOKEN_UNEG
         || next_token.id == TOKEN_LPAREN 
         || next_token.id == TOKEN_INTEGER
     ) {
@@ -212,8 +239,8 @@ AST_NODE* N() {
     // Consider FIRST(-N), FIRST(+N), and FIRST(F). No nullable productions.
     // No production rule is nullable, don't need to consider FOLLOW(N).
     
-    // t \in FIRST(-N) or t \in FIRST(+N)
-    if (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
+    // t \in FIRST(\neg N) or t \in FIRST(\oplus N)
+    if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG) {
         // When we return, the top of the stack will be the token, eat it
         here->token = next_token;
         get_token(next_token, begin);
@@ -305,8 +332,25 @@ AST_NODE* S() {
     return here;
 }
 
-// Free all nodes created for the AST
+// Let vmlinux reclaim memory associated with tree nodes
+void free_tree(AST_NODE* p) {
+    if (!p) return;
+
+    if (!p->left && !p->right) {
+        delete p;
+        p = nullptr;
+    } else {
+        free_tree(p->left);
+        free_tree(p->right);
+    }
+}
+
+// Free parse tree nodes
+void inhouse_cleanup(AST_NODE* parse_tree) {
+    free_tree(parse_tree);
+}
+
+// Free all nodes created for the AST and parse tree
 void parser_cleanup() {
-    
     lex_cleanup();
 }

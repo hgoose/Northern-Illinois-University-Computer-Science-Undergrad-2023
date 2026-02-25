@@ -18,7 +18,7 @@ int main(int argc, const char* argv[]) {
     const char* filename = argv[1];
 
     // Run the parser test driver
-
+    parser_test(filename);
 
     return EXIT_SUCCESS;
 }

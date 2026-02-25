@@ -7,6 +7,7 @@ OBJDIR   = obj
 SRC = \
 	tests/main.cc \
 	tests/util.cc \
+	tests/drivers/parsertest.cc \
 	src/err/error.cc \
 	src/lexer/lex.cc \
 	src/lexer/token.cc \

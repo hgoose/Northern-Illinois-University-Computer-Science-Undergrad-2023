@@ -21,6 +21,8 @@ using std::endl;
 // Helper function to check if a character is a digit
 static inline bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
+static Token last_token{};
+
 // Checks for escape sequence and replaces character
 void check_replace_escape(char& c, int& rc, string& utf8) {
     // Clear this just in case its not already empty
@@ -158,10 +160,41 @@ Error get_token(Token& t, bool& begin) {
 
     int rc{};
     if (curr_char == '+') {
-        t.id = TOKEN_PLUS; 
+        // Its unary plus. I acknowledge that it would be better to have a isoperator field
+        // on the token struct, maybe ill do that later.
+        if (last_token.id == TOKEN_NULL || last_token.id == TOKEN_PLUS
+            || last_token.id == TOKEN_MINUS || last_token.id == TOKEN_MULT
+            || last_token.id == TOKEN_DIV || last_token.id == TOKEN_EXP
+            || last_token.id == TOKEN_LESS || last_token.id == TOKEN_GREATER
+            || last_token.id == TOKEN_LESS_EQ || last_token.id == TOKEN_GREATER_EQ
+            || last_token.id == TOKEN_EQUAL || last_token.id == TOKEN_NOT_EQUAL
+            || last_token.id == TOKEN_ASSIGN || last_token.id == TOKEN_NOT
+            || last_token.id == TOKEN_LPAREN || last_token.id == TOKEN_COMMA
+            || last_token.id == TOKEN_DOT || last_token.id == TOKEN_MOD
+            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND || last_token.id == TOKEN_AT
+        ) {
+            t.id = TOKEN_UPLUS;
+        } else {
+            t.id = TOKEN_PLUS; 
+        }
         t.lexeme = lexeme;
+    // Its unary negation
     } else if (curr_char == '-') {
-        t.id = TOKEN_MINUS; 
+        if (last_token.id == TOKEN_NULL || last_token.id == TOKEN_PLUS
+            || last_token.id == TOKEN_MINUS || last_token.id == TOKEN_MULT
+            || last_token.id == TOKEN_DIV || last_token.id == TOKEN_EXP
+            || last_token.id == TOKEN_LESS || last_token.id == TOKEN_GREATER
+            || last_token.id == TOKEN_LESS_EQ || last_token.id == TOKEN_GREATER_EQ
+            || last_token.id == TOKEN_EQUAL || last_token.id == TOKEN_NOT_EQUAL
+            || last_token.id == TOKEN_ASSIGN || last_token.id == TOKEN_NOT
+            || last_token.id == TOKEN_LPAREN || last_token.id == TOKEN_COMMA
+            || last_token.id == TOKEN_DOT || last_token.id == TOKEN_MOD
+            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND || last_token.id == TOKEN_AT
+        ) {
+            t.id = TOKEN_UNEG;
+        } else {
+            t.id = TOKEN_MINUS; 
+        }
         t.lexeme = lexeme;
     } else if (curr_char == '*') {
         t.id = TOKEN_MULT; 
@@ -820,6 +853,7 @@ Error get_token(Token& t, bool& begin) {
         }
     }
 
+    last_token = t;
 
     // Return our NCC_OK Error
     return err;

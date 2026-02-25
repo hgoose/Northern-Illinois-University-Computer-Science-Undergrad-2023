@@ -2,6 +2,7 @@
 #define NCC_TOKEN_H
 
 #include <string>
+#include <vector>
 
 /*******     Token  id  values   ******/
 #define TOKEN_NULL               0
@@ -37,6 +38,8 @@
 #define TOKEN_COMMA	             30
 #define TOKEN_REAL               31
 #define TOKEN_MOD                32
+#define TOKEN_UNEG               33
+#define TOKEN_UPLUS              34
 
 // Mapping these to their ascii values
 #define ESC_NEWLINE              10
@@ -47,6 +50,8 @@
 #define ESC_ALERT                7
 #define ESC_BACKSPACE            8
 #define EMPTY                    0
+
+extern const std::vector<std::string> token_names;
 
 struct Token
 {

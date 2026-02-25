@@ -5,6 +5,7 @@
 #include "token.h"
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 using std::cout;
@@ -12,7 +13,7 @@ using std::cerr;
 using std::string;
 
 // Will come in handy
-static const std::vector<std::string> token_names = {
+const std::vector<std::string> token_names = {
     "TOKEN_NULL", "TOKEN_EOF", "TOKEN_PLUS",
     "TOKEN_MINUS", "TOKEN_MULT", "TOKEN_DIV",
     "TOKEN_IDENT", "TOKEN_EXP", "TOKEN_LESS",
@@ -23,7 +24,8 @@ static const std::vector<std::string> token_names = {
     "TOKEN_RBRACKET", "TOKEN_AND", "TOKEN_OR",
     "TOKEN_DOT", "TOKEN_AT", "TOKEN_INTEGER",
     "TOKEN_STRING", "TOKEN_COLON", "TOKEN_SEMICOLON",
-    "TOKEN_COMMA", "TOKEN_REAL", "TOKEN_MOD"
+    "TOKEN_COMMA", "TOKEN_REAL", "TOKEN_MOD",
+    "TOKEN_UNEG", "TOKEN_UPLUS"
 };
 
 
