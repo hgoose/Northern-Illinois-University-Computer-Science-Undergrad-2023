@@ -1,5 +1,5 @@
 CXX      = g++
-CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer -Isrc/parser
+CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer -Isrc/parser -g
 
 TARGET   = bin/ncc
 OBJDIR   = obj

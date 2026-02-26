@@ -103,6 +103,9 @@ void ast_postorder(AST_NODE* root) {
 }
 
 void ast_out(AST_NODE* root) {
+    // Noop on empty tree
+    if (!root) return;
+
     // cout << "THE AST\n";
     // cout << "-------------\n\n";
     //

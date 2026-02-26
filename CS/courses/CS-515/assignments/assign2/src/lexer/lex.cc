@@ -140,10 +140,21 @@ Error get_token(Token& t, bool& begin) {
             return err;
         }
 
+        if (curr_char == '\n') {
+            t.id = TOKEN_NEWLINE;
+            t.lexeme = "\n";
+            t.line_no = src_line_no;
+            t.col_no = src_col_no;
+
+            last_token = t;
+            return err;
+        }
+
         // Move past whitespace
-        if (curr_char == ' ' || curr_char == '\t' || curr_char == '\n' || curr_char == '\r') {
+        if (curr_char == ' ' || curr_char == '\t' || curr_char == '\r') {
             continue;
         }
+
 
         // Found first non white space character
         break;
@@ -406,7 +417,10 @@ Error get_token(Token& t, bool& begin) {
 
                 return err;
             }
+
         }
+        get_token(t, begin);
+
     // Possible identifier
     } else if (('a' <= curr_char && curr_char <= 'z') || ('A' <= curr_char && curr_char <= 'Z') || (curr_char == '_')) {
         // Assume identifier

@@ -16,7 +16,7 @@
 
 struct Error
 {
-  int error;
+  int error{NCC_OK};
   int line, col;
 };
 

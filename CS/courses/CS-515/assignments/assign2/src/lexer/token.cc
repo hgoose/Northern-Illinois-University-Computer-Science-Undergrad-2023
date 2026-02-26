@@ -25,7 +25,7 @@ const std::vector<std::string> token_names = {
     "TOKEN_DOT", "TOKEN_AT", "TOKEN_INTEGER",
     "TOKEN_STRING", "TOKEN_COLON", "TOKEN_SEMICOLON",
     "TOKEN_COMMA", "TOKEN_REAL", "TOKEN_MOD",
-    "TOKEN_UNEG", "TOKEN_UPLUS"
+    "TOKEN_UNEG", "TOKEN_UPLUS", "TOKEN_NEWLINE"
 };
 
 
