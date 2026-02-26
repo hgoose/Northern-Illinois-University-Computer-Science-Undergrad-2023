@@ -6,6 +6,7 @@
 #include <iostream>
 using std::cout;
 
+
 // Traverse parse tree bottom up, place terminals in queue
 static void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
     if (!p) return;
@@ -102,23 +103,53 @@ void ast_postorder(AST_NODE* root) {
 
 }
 
+const char* op_name(int id) {
+    switch (id) {
+        case TOKEN_PLUS:  return "add";
+        case TOKEN_MINUS: return "sub";
+        case TOKEN_MULT:  return "mul";
+        case TOKEN_DIV:   return "div";
+        case TOKEN_MOD:   return "mod";
+        case TOKEN_EXP:   return "exp";
+        default:          return "";
+    }
+}
+
+void r_ast_out(AST_NODE* node, int depth)
+{
+    if (!node) return;
+
+    // indentation (2 spaces per level)
+    for (int i = 0; i < depth; ++i)
+        std::cout << "  ";
+
+    // Leaf: integer literal
+    if (node->token.id == TOKEN_INTEGER) {
+        std::cout << node->token.lexeme << "\n";
+    }
+    // Operator node
+    else if (node->token.id == TOKEN_PLUS  ||
+             node->token.id == TOKEN_MINUS ||
+             node->token.id == TOKEN_MULT  ||
+             node->token.id == TOKEN_DIV   ||
+             node->token.id == TOKEN_MOD   ||
+             node->token.id == TOKEN_EXP) {
+
+        std::cout << node->token.lexeme
+                  << " (" << op_name(node->token.id) << ")"
+                  << "\n";
+    }
+    // Other internal nodes (if any)
+    else {
+        std::cout << "?\n";
+    }
+
+    // Recurse children
+    r_ast_out(node->left,  depth + 1);
+    r_ast_out(node->right, depth + 1);
+}
+
 void ast_out(AST_NODE* root) {
-    // Noop on empty tree
-    if (!root) return;
-
-    // cout << "THE AST\n";
-    // cout << "-------------\n\n";
-    //
-    // cout << "Preorder: "; 
-    // ast_preorder(root);
-    // cout << "\n\n";
-    //
-    cout << "Inorder: "; 
-    ast_inorder(root);
-    cout << "\n\n";
-
-    // cout << "Postorder: "; 
-    // ast_postorder(root);
-    // cout << "\n\n";
-    
+    cout << "Code tree: \n";
+    r_ast_out(root, 0);
 }

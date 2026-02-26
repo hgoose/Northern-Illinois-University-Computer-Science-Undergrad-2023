@@ -127,145 +127,205 @@ AST_NODE* next_parse(Error& err) {
 
 AST_NODE* E() {
     Error err;
+    AST_NODE* left = nullptr;
 
-    AST_NODE* here = new AST_NODE();
-	AST_NODE* left{}, *right{};
-
-    // Consider FIRST(TE')
-    if (next_token.id == TOKEN_UPLUS 
-        || next_token.id == TOKEN_UNEG
-        || next_token.id == TOKEN_LPAREN 
-        || next_token.id == TOKEN_INTEGER
-    // Take the production E -> TE'
-    ) {
+    if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
+        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
         left = T();
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = EP();
+
+        while (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
+            Token op = next_token;
+            get_token(next_token, begin);
+
+            AST_NODE* rhs = T();
+
+            AST_NODE* node = new AST_NODE();
+            node->token = op;
+            node->left  = left;
+            node->right = rhs;
+            left = node;
         }
-    } 
-    // Handle syntax error
-    else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token, begin);
-    }
-    // No other productions to check, although TE' is not nullable so 
-    // it doesn't matter.
-
-    here->left = left;
-    here->right = right;
-    return here;
-
-
-}
-
-AST_NODE* EP() {
-    Error err;
-
-    AST_NODE* here = new AST_NODE();
-	AST_NODE* left{}, *right{};
-
-    // t \in FIRST(+TE') \cup FIRST(-TE')
-    if (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
-        here->token = next_token;
-        get_token(next_token,begin);
-
-        left = T();
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = EP();
-        }
-    } 
-    // t \not\in any alpha_i, but some alpha is nullable, so look to FOLLOW(E').
-    // If t \in FOLLOW(E'), then choose E' -> \varepsilon. That is, return nullptr
-    else if (next_token.id == TOKEN_EOF || next_token.id == TOKEN_RPAREN) {
-        delete here;
-        return nullptr;
-    } 
-    // Handle syntax error
-    else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token,begin);
+        return left;
     }
 
-    here->left = left;
-    here->right = right;
-    return here;
+    err.error = NCC_SYNTAX_ERROR;
+    print_error(err);
+    get_token(next_token, begin);
+    return nullptr;
 }
+
+// AST_NODE* E() {
+//     Error err;
+//
+//     AST_NODE* here = new AST_NODE();
+// 	AST_NODE* left{}, *right{};
+//
+//     // Consider FIRST(TE')
+//     if (next_token.id == TOKEN_UPLUS 
+//         || next_token.id == TOKEN_UNEG
+//         || next_token.id == TOKEN_LPAREN 
+//         || next_token.id == TOKEN_INTEGER
+//     // Take the production E -> TE'
+//     ) {
+//         left = T();
+//         if (next_token.id != TOKEN_NEWLINE) {
+//             right = EP();
+//         }
+//     } 
+//     // Handle syntax error
+//     else {
+//         err.error = NCC_SYNTAX_ERROR;
+//         print_error(err);
+//
+//         get_token(next_token, begin);
+//     }
+//     // No other productions to check, although TE' is not nullable so 
+//     // it doesn't matter.
+//
+//     here->left = left;
+//     here->right = right;
+//     return here;
+//
+//
+// }
+
+// AST_NODE* EP() {
+//     Error err;
+//
+//     AST_NODE* here = new AST_NODE();
+// 	AST_NODE* left{}, *right{};
+//
+//     // t \in FIRST(+TE') \cup FIRST(-TE')
+//     if (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
+//         here->token = next_token;
+//         get_token(next_token,begin);
+//
+//         left = T();
+//         if (next_token.id != TOKEN_NEWLINE) {
+//             right = EP();
+//         }
+//     } 
+//     // t \not\in any alpha_i, but some alpha is nullable, so look to FOLLOW(E').
+//     // If t \in FOLLOW(E'), then choose E' -> \varepsilon. That is, return nullptr
+//     else if (next_token.id == TOKEN_EOF || next_token.id == TOKEN_RPAREN) {
+//         delete here;
+//         return nullptr;
+//     } 
+//     // Handle syntax error
+//     else {
+//         err.error = NCC_SYNTAX_ERROR;
+//         print_error(err);
+//
+//         get_token(next_token,begin);
+//     }
+//
+//     here->left = left;
+//     here->right = right;
+//     return here;
+// }
 
 AST_NODE* T() {
     Error err;
+    AST_NODE* left = nullptr;
 
-    AST_NODE* here = new AST_NODE();
-	AST_NODE* left{}, *right{};
-
-    // Consider FIRST(NT'), not nullable
-    if (next_token.id == TOKEN_UPLUS 
-        || next_token.id == TOKEN_UNEG
-        || next_token.id == TOKEN_LPAREN 
-        || next_token.id == TOKEN_INTEGER
-    ) {
+    if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
+        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
         left = N();
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = TP();
-        }
-    } 
-    // Handle syntax error
-    else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
 
-        get_token(next_token,begin);
+        while (next_token.id == TOKEN_MULT ||
+               next_token.id == TOKEN_DIV  ||
+               next_token.id == TOKEN_MOD) {
+            Token op = next_token;
+            get_token(next_token, begin);
+
+            AST_NODE* rhs = N();
+
+            AST_NODE* node = new AST_NODE();
+            node->token = op;
+            node->left  = left;
+            node->right = rhs;
+            left = node;
+        }
+        return left;
     }
 
-    here->left = left;
-    here->right = right;
-    return here;
+    err.error = NCC_SYNTAX_ERROR;
+    print_error(err);
+    get_token(next_token, begin);
+    return nullptr;
 }
 
-AST_NODE* TP() {
-    Error err;
+// AST_NODE* T() {
+//     Error err;
+//
+//     AST_NODE* here = new AST_NODE();
+// 	AST_NODE* left{}, *right{};
+//
+//     // Consider FIRST(NT'), not nullable
+//     if (next_token.id == TOKEN_UPLUS 
+//         || next_token.id == TOKEN_UNEG
+//         || next_token.id == TOKEN_LPAREN 
+//         || next_token.id == TOKEN_INTEGER
+//     ) {
+//         left = N();
+//         if (next_token.id != TOKEN_NEWLINE) {
+//             right = TP();
+//         }
+//     } 
+//     // Handle syntax error
+//     else {
+//         err.error = NCC_SYNTAX_ERROR;
+//         print_error(err);
+//
+//         get_token(next_token,begin);
+//     }
+//
+//     here->left = left;
+//     here->right = right;
+//     return here;
+// }
 
-    AST_NODE* here = new AST_NODE();
-	AST_NODE* left{}, *right{};
-
-    // Consider FIRST(*NT'), FIRST(/NT'), FIRST(MOD NT'), FIRST(epsilon)
-    if (next_token.id == TOKEN_MULT 
-        || next_token.id == TOKEN_DIV 
-        || next_token.id == TOKEN_MOD
-    ) {
-        here->token = next_token;
-        get_token(next_token, begin);
-
-        left = N();
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = TP();
-        }
-    } 
-    // A production is nullable, so look to FOLLOW(T'). If t \in FOLLOW(T'), the nullable 
-    // production is just \varepsilon, so return nullptr
-    else if (next_token.id == TOKEN_PLUS 
-            || next_token.id == TOKEN_MINUS 
-            || next_token.id == TOKEN_EOF 
-            || next_token.id == TOKEN_RPAREN
-    ) {
-        delete here;
-        return nullptr;
-    } 
-    // Handle syntax error
-    else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token,begin);
-    }
-
-    here->left = left;
-    here->right = right;
-    return here;
-}
+// AST_NODE* TP() {
+//     Error err;
+//
+//     AST_NODE* here = new AST_NODE();
+// 	AST_NODE* left{}, *right{};
+//
+//     // Consider FIRST(*NT'), FIRST(/NT'), FIRST(MOD NT'), FIRST(epsilon)
+//     if (next_token.id == TOKEN_MULT 
+//         || next_token.id == TOKEN_DIV 
+//         || next_token.id == TOKEN_MOD
+//     ) {
+//         here->token = next_token;
+//         get_token(next_token, begin);
+//
+//         left = N();
+//         if (next_token.id != TOKEN_NEWLINE) {
+//             right = TP();
+//         }
+//     } 
+//     // A production is nullable, so look to FOLLOW(T'). If t \in FOLLOW(T'), the nullable 
+//     // production is just \varepsilon, so return nullptr
+//     else if (next_token.id == TOKEN_PLUS 
+//             || next_token.id == TOKEN_MINUS 
+//             || next_token.id == TOKEN_EOF 
+//             || next_token.id == TOKEN_RPAREN
+//     ) {
+//         delete here;
+//         return nullptr;
+//     } 
+//     // Handle syntax error
+//     else {
+//         err.error = NCC_SYNTAX_ERROR;
+//         print_error(err);
+//
+//         get_token(next_token,begin);
+//     }
+//
+//     here->left = left;
+//     here->right = right;
+//     return here;
+// }
 
 AST_NODE* N() {
     Error err;
