@@ -60,7 +60,6 @@ AST_NODE* pttoast(AST_NODE* root) {
 
             children.push(curr);
 
-            ast_root = curr;
         }
         // Operator (except \neg or \oplus), attach stack top to right, stack top-1 to left
         else {
@@ -72,8 +71,8 @@ AST_NODE* pttoast(AST_NODE* root) {
 
             children.push(curr);
 
-            ast_root = curr;
         }
+        ast_root = curr;
     }
 
     return ast_root;
@@ -150,6 +149,10 @@ void r_ast_out(AST_NODE* node, int depth)
 }
 
 void ast_out(AST_NODE* root) {
-    cout << "Code tree: \n";
+    if (!root) return;
+
+    cout << "Code tree:\n";
     r_ast_out(root, 0);
+
+    cout << '\n';
 }

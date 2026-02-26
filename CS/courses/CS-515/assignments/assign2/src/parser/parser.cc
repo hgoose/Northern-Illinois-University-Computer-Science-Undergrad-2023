@@ -8,6 +8,8 @@
 #include "ast_node.h"
 #include "ast_utils.h"
 
+#include <iostream>
+
 static void inhouse_cleanup(AST_NODE* parse_tree);
 
 // Move this later 
@@ -81,6 +83,8 @@ static void inhouse_cleanup(AST_NODE* parse_tree);
 typedef unsigned int _uint;
 
 static Token next_token;
+static Token last_token;
+static Token last_consumed;
 static bool begin = true;
 
 // Initialize the parser. 
@@ -93,26 +97,35 @@ void parse() {
     for(;;) {
         // begin = true;
 
-        Error err{};
-        AST_NODE* curr = next_parse(err);
-
-        print_error(err);
-        if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) break;
+        AST_NODE* curr = next_parse(); if (!curr) continue;
 
         ast_out(curr);
         free_tree(curr);
+
+        if (next_token.id != TOKEN_NEWLINE && next_token.id != TOKEN_EOF) {
+            Error err2;
+            err2.error = NCC_SYNTAX_ERROR;
+            err2.line = next_token.line_no;
+            err2.col = next_token.col_no;
+
+            print_error(err2);
+        }
+
     }
 
     parser_cleanup();
 }
 
-AST_NODE* next_parse(Error& err) {
+AST_NODE* next_parse() {
     // Get the first token
-    err = get_token(next_token, begin);
+    Error err = get_token(next_token, begin);
     begin = false;
 
+    // Come back to this
+    if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
+
     // Empty tree, no expression
-    if (next_token.id == TOKEN_NEWLINE) {
+    if (next_token.id == TOKEN_NEWLINE || next_token.id == TOKEN_EOF) {
         return nullptr;
     }
 
@@ -148,9 +161,12 @@ AST_NODE* E() {
         return left;
     }
 
-    err.error = NCC_SYNTAX_ERROR;
-    print_error(err);
-    get_token(next_token, begin);
+    // err.error = NCC_SYNTAX_ERROR;
+	// err.line = next_token.line_no;
+	// err.col = next_token.col_no;
+    // std::cout << "E token: " << token_names[next_token.id] << '\n';
+    // print_error(err);
+    // get_token(next_token, begin);
     return nullptr;
 }
 
@@ -175,6 +191,8 @@ AST_NODE* E() {
 //     // Handle syntax error
 //     else {
 //         err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
 //         print_error(err);
 //
 //         get_token(next_token, begin);
@@ -214,6 +232,8 @@ AST_NODE* E() {
 //     // Handle syntax error
 //     else {
 //         err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
 //         print_error(err);
 //
 //         get_token(next_token,begin);
@@ -249,9 +269,12 @@ AST_NODE* T() {
         return left;
     }
 
-    err.error = NCC_SYNTAX_ERROR;
-    print_error(err);
-    get_token(next_token, begin);
+ //    err.error = NCC_SYNTAX_ERROR;
+	// err.line = next_token.line_no;
+	// err.col = next_token.col_no;
+ //    std::cout << "T token: " << token_names[next_token.id] << '\n';
+ //    print_error(err);
+    // get_token(next_token, begin);
     return nullptr;
 }
 
@@ -275,6 +298,8 @@ AST_NODE* T() {
 //     // Handle syntax error
 //     else {
 //         err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
 //         print_error(err);
 //
 //         get_token(next_token,begin);
@@ -317,7 +342,9 @@ AST_NODE* T() {
 //     // Handle syntax error
 //     else {
 //         err.error = NCC_SYNTAX_ERROR;
-//         print_error(err);
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
+    //         print_error(err);
 //
 //         get_token(next_token,begin);
 //     }
@@ -349,10 +376,13 @@ AST_NODE* N() {
     } 
     // Handle syntax error
     else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
+        // err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
+        // print_error(err);
 
-        get_token(next_token,begin);
+        // std::cout << "N token: " << token_names[next_token.id] << '\n';
+        // get_token(next_token,begin);
     }
 
     here->left = left;
@@ -375,10 +405,13 @@ AST_NODE* F() {
     } 
     // Handle syntax error
     else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token,begin);
+        // err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
+        // print_error(err);
+        //
+        // std::cout << "F token: " << token_names[next_token.id] << '\n';
+        // get_token(next_token,begin);
     }
 
     here->left = left;
@@ -417,10 +450,13 @@ AST_NODE* FP() {
     } 
     // Handle syntax error
     else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token,begin);
+        // err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
+        // print_error(err);
+        //
+        // std::cout << "FP token: " << token_names[next_token.id] << '\n';
+        // get_token(next_token,begin);
     }
 
     here->left = left;
@@ -452,10 +488,15 @@ AST_NODE* S() {
     } 
     // Handle syntax error
     else {
-        err.error = NCC_SYNTAX_ERROR;
-        print_error(err);
-
-        get_token(next_token,begin);
+        // err.error = NCC_SYNTAX_ERROR;
+        // err.line = next_token.line_no;
+        // err.col = next_token.col_no;
+        //
+        // std::cout << "S token: " << token_names[next_token.id] << '\n';
+        //
+        // print_error(err);
+        //
+        // get_token(next_token,begin);
     }
 
     here->left = left;

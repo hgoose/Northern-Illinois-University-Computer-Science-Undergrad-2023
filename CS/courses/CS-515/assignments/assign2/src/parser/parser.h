@@ -4,7 +4,7 @@
 Error parser_init(const char* src_code);
 
 void parse();
-AST_NODE* next_parse(Error& err);
+AST_NODE* next_parse();
 
 // PRODUCTION RULES
 AST_NODE* E();

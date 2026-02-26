@@ -21,7 +21,7 @@ int main(int argc, const char* argv[]) {
 
     // The filename is the first argument after program name
     // const char* filename = argv[1];
-    const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign2/tests/pt_testdata/test203";
+    const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign2/tests/pt_testdata/test201";
 
     Error err = lex_init(filename);
     print_error(err);
