@@ -1,6 +1,45 @@
 // ELEGANT LL(1) PARSING
 // Nate Warner z2004109
 // Assignment 2
+//
+/* <remark>
+    The classic left-recursive CFG for arithmetic expressions
+    that encodes associativity and precedence
+        E \to E + T | E - T | T \\
+        T \to T * N | T / N | T MOD N | N \\
+        N \to -F | +F | F \\
+        F \to F ^ S | S \\
+        S \to (E) | int
+
+    Has been converted to an LL(1) grammar using the idea that 
+    left-recursion on production rules of the form
+        A \to A\alpha_1 | \cdots | A\alpha_k | \beta
+
+    can be eliminated by the transform
+        A \to \beta A' \\
+        A' \to \alpha_1 A' | \cdots \alpha_k A' | \varepsilon
+
+    The fully transformed CFG is then
+        E  \to TE' \\
+        E' \to +TE' | -TE' | \varepsilon \\
+        T  \to NT' \\
+        T' \to *NT' | /NT' | MOD NT' | \varepsilon \\
+        N \to \oplus F | \neg F | F \\
+        F \to SF' \\
+        F' \to ^SF' | \varepsilon \\
+        S \to (E) | int
+
+    Note that here, we will say that \oplus is unary plus, and \neg is unary negation, 
+    although we make no such distinction in the parse tree or ast (they will just be +,-), 
+    although the token type will reflect this
+
+    To choose a production \alpha_i given the current lookahead token $a$,
+        1. If a \in FIRST(\alpha_i), choose \alpha_i, otherwise
+        2. If alpha_k derives \varepsilon (\varepsilon \in FIRST(\alpha_k)) then choose alpha_k if a \in FOLLOW(A)
+
+    NOTE: We call next_token t to save some typing in comments
+
+</remark> */
 
 #include "parser.h"
 #include "error.h"
@@ -12,80 +51,21 @@
 
 #include <iostream>
 
-static void inhouse_cleanup(AST_NODE* parse_tree);
-
-// Move this later 
-/* <remark>
-    The classic left-recursive CFG for arithmetic expressions
-    that encodes associativity and precedence
-        E \to E + T | E - T | T \\
-        T \to T * N | T / N | T MOD N | N \\
-        N \to -F | +F | F \\
-        F \to F ^ S | S \\
-        S \to (E) | int
-
-    Has been converted to an LL(1) parser complaint (LL(1) grammar)
-    using the idea that left-recursion on production rules of the form
-        A \to A\alpha_1 | \cdots | A\alpha_k | \beta
-    can be eliminated by the transform
-        A \to \beta A' \\
-        A' \to \alpha_1 A' | \cdots \alpha_k A' | \varepsilon
-
-    Both produce derivations of the form A => \beta(alpha_1 + alpha_2 + \cdots + alpha_k)^*
-    so the transform is valid. Notice that the transformed production rule contains no left-recursion
-
-    The fully transformed CFG is then
-        E  \to TE' \\
-        E' \to +TE' | -TE' | \varepsilon \\
-        T  \to NT' \\
-        T' \to *NT' | /NT' | MOD NT' | \varepsilon \\
-        N \to \oplus N | \neg N | F \\
-        F \to SF' \\
-        F' \to ^SF' | \varepsilon \\
-        S \to (E) | int
-
-    Note that here, we will say that \oplus is unary plus, and \neg is unary negation, 
-    although we make no such distinction in the parse tree or ast (they will just be +,-), 
-    although the token type will reflect this
-
-    Since the first CFG encodes both precedence and associativity, and the two are equivalent, so 
-    does the transformed CFG. As it happens, this CFG is in fact LL(1). Proof left as an exercise to the reader.
-
-    Since this grammar is LL(1), the parsing should be made easy (I hope), we only need one lookahead (next) token to determine
-    which production rule to apply. This follows from the conditions imposed by LL(1) grammars. If we consider a production of the form
-    A \to \alpha_1 | \alpha_2 | \cdots | \alpha_\ell, the conditions are 
-        1. For all i \ne j, FIRST(\alpha_i) \cap FIRST(\alpha_j) = \varnothing
-           (First sets are pairwise disjoint)
-        2. If \alpha_i derives \varepsilon, then for all i\ne j, FIRST(\alpha_j) \cap FOLLOW(A) = \varnothing
-
-    To summarize, our CFG admits an LL(1) parser.
-
-    To choose a production \alpha_i given the current lookahead token $a$,
-        1. If a \in FIRST(\alpha_i), choose \alpha_i, otherwise
-        2. If alpha_k derives \varepsilon (\varepsilon \in FIRST(\alpha_k)) then choose alpha_k if a \in FOLLOW(A)
-        3. Otherwise, syntax error.
-
-    The tokens we are interested in are the following
-        1. TOKEN_EOF
-        2. TOKEN_PLUS
-        3. TOKEN_MINUS
-        4. TOKEN_MULT
-        5. TOKEN_DIV
-        6. TOKEN_MOD
-        7. TOKEN_EXP
-        8. TOKEN_LPAREN
-        9. TOKEN_RPAREN
-        10. TOKEN_INTEGER
-
-    Anything else should output a syntax error.
-
-
-</remark> */
-
-typedef unsigned int _uint;
-
 Token next_token;
 bool begin = true;
+
+static void inhouse_cleanup(AST_NODE*& parse_tree);
+
+// Check if the current token is invalid
+static bool invalid_lookahead() {
+    return next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_UNEG    && 
+        next_token.id != TOKEN_UPLUS   && next_token.id != TOKEN_PLUS    && 
+        next_token.id != TOKEN_MINUS   && next_token.id != TOKEN_MULT    && 
+        next_token.id != TOKEN_DIV     && next_token.id != TOKEN_MOD     && 
+        next_token.id != TOKEN_EXP     && next_token.id != TOKEN_LPAREN  && 
+        next_token.id != TOKEN_RPAREN && next_token.id != TOKEN_NULL && 
+        next_token.id != TOKEN_EOF;
+}
 
 // Initialize the parser. 
 Error parser_init(const char* src_code) {
@@ -93,35 +73,31 @@ Error parser_init(const char* src_code) {
     return err;
 }
 
+// Generate all parse trees
 void parse() {
     Error e;
     for(;;) {
+        // Brittle flag usage, no time to fix
         begin = true;
 
-        AST_NODE* curr = next_parse(e); if (!curr) continue;
-
-        // TODO: Check for error in e
-
-        // If the next token is a valid start or EOF, no syntax error, otherwise syntax error.
-
-        // Reject the tree
-        if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
-                && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
+        // Reject the tree, current token can not start a valid ast
+        if (next_token.id != TOKEN_NULL && next_token.id != TOKEN_UPLUS 
+                && next_token.id != TOKEN_UNEG && next_token.id != TOKEN_LPAREN 
+                && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
         ) {
             e.error = NCC_SYNTAX_ERROR;
             e.line = next_token.line_no;
             e.col = next_token.col_no;
-
             print_error(e);
-            get_token(next_token, begin);
 
-            free_tree(curr);
-            curr = nullptr;
-
-            return;
+            // Current token is not valid, get next
+            handle_lex_error(get_token(next_token, begin));
         }
 
-        // Tree is valid
+        // Try to create the next AST
+        AST_NODE* curr = next_parse(e); if (!curr) continue;
+
+        // Tree is valid, output, evaluate, free
         ast_out(curr);
         evaluate_expr(curr);
         free_tree(curr);
@@ -131,21 +107,20 @@ void parse() {
 }
 
 AST_NODE* next_parse(Error& err) {
-    // Get the next token unless the token we are on is a valid start
-    // to an expression
+    // Get the next token unless the token we are on is a valid start to an expression
     if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
             && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER 
     ) {
         // Get the first token
         err = get_token(next_token, begin);
-        if (!handle_lex_error(err)) {
+        if (invalid_lookahead() || handle_lex_error(err)) {
+            get_token(next_token,begin);
             return nullptr;
         }
     } 
-
     begin = false;
 
-    // Come back to this
+    // Exit parser on EOF
     if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
 
     // Empty tree, no expression
@@ -153,7 +128,10 @@ AST_NODE* next_parse(Error& err) {
         return nullptr;
     }
 
+    // Call start state
     AST_NODE* parse_root = E(err);
+
+    // Convert parse tree to AST
     AST_NODE* ast_root = pttoast(parse_root);
 
     // Delete the parse tree
@@ -165,65 +143,109 @@ AST_NODE* next_parse(Error& err) {
 AST_NODE* E(Error& err) {
     AST_NODE* left = nullptr;
 
+    // t \in FIRST(TE'). Removed E' for this fold operation, left folds
+    // +,- so that these operations are not right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+        
+        // Get lhs sub tree
         left = T(err);
 
+        // Simulates the job of E', but makes +,- left associative
         while (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
+            // Save current token
             Token op = next_token;
-            get_token(next_token, begin);
 
+            // Get next token
+            if (invalid_lookahead() || 
+            	handle_lex_error(get_token(next_token, begin))
+            ) {
+            	return nullptr;
+            }
+
+            // Create rhs subtree
             AST_NODE* rhs = T(err);
 
+            // Here node
             AST_NODE* node = new AST_NODE();
+
+            // Has previous token as its token (the operator)
             node->token = op;
-            node->left  = left;
-            node->right = rhs;
+
+            // Attach left and right only if they make valid ASTs
+            bool left_valid{}, right_valid{};
+            if (is_st_valid(left, ACCEPT_EMPTY)) {
+                node->left  = left;
+                left_valid = true;
+            } else free_tree(left);
+
+            if (is_st_valid(rhs, NO_ACCEPT_EMPTY)) {
+                node->right = rhs;
+                right_valid = true;
+            } else free_tree(rhs);
+
+            // Current node is an operator that requires two operands, 
+            // so left and right must be valid
+            if (!left_valid || !right_valid) {
+                // Don't worry about syntax errors at this level, bottom levels handle them
+                
+                // If we don't have two valid operands, remove operator
+                node->token = Token{};
+            }
+
             left = node;
         }
         return left;
     }
 
-    // err.error = NCC_SYNTAX_ERROR;
-	// err.line = next_token.line_no;
-	// err.col = next_token.col_no;
-    // std::cout << "E token: " << token_names[next_token.id] << '\n';
-    // print_error(err);
-    // get_token(next_token, begin);
     return nullptr;
 }
-
 
 AST_NODE* T(Error& err) {
     AST_NODE* left = nullptr;
 
+    // Left folds *,/,mod, since the grammar I have makes these operations right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+
         left = N(err);
 
+        // Left fold *,/,mod, same idea as for +,-
         while (next_token.id == TOKEN_MULT ||
                next_token.id == TOKEN_DIV  ||
                next_token.id == TOKEN_MOD) {
             Token op = next_token;
-            get_token(next_token, begin);
+            if (invalid_lookahead() || 
+            	handle_lex_error(get_token(next_token, begin))
+            ) {
+            	return nullptr;
+            }
 
             AST_NODE* rhs = N(err);
 
             AST_NODE* node = new AST_NODE();
             node->token = op;
-            node->left  = left;
-            node->right = rhs;
+
+            bool left_valid{}, right_valid{};
+            if (is_st_valid(left, ACCEPT_EMPTY)) {
+                node->left  = left;
+                left_valid = true;
+            } else free_tree(left);
+
+            if (is_st_valid(rhs, NO_ACCEPT_EMPTY)) {
+                node->right = rhs;
+                right_valid = true;
+            } else free_tree(rhs);
+
+            if (!left_valid || !right_valid) {
+                node->token = Token{};
+            }
+
             left = node;
         }
         return left;
     }
 
- //    err.error = NCC_SYNTAX_ERROR;
-	// err.line = next_token.line_no;
-	// err.col = next_token.col_no;
- //    std::cout << "T token: " << token_names[next_token.id] << '\n';
- //    print_error(err);
-    // get_token(next_token, begin);
     return nullptr;
 }
 
@@ -231,14 +253,18 @@ AST_NODE* T(Error& err) {
 AST_NODE* N(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
-    // Consider FIRST(-N), FIRST(+N), and FIRST(F). No nullable productions.
+
+    // Consider FIRST(-F), FIRST(+F), and FIRST(F). No nullable productions.
     // No production rule is nullable, don't need to consider FOLLOW(N).
     
     // t \in FIRST(\neg F) or t \in FIRST(\oplus F)
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG) {
-        // When we return, the top of the stack will be the token, eat it
         here->token = next_token;
-        get_token(next_token, begin);
+        if (invalid_lookahead() || 
+        	handle_lex_error(get_token(next_token, begin))
+        ) {
+        	return nullptr;
+        }
 
         left = F(err);
     } 
@@ -246,18 +272,20 @@ AST_NODE* N(Error& err) {
     else if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
         left = F(err);
     } 
-    // Handle syntax error
-    else {
-        // err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-        // print_error(err);
 
-        // std::cout << "N token: " << token_names[next_token.id] << '\n';
-        // get_token(next_token,begin);
+    // Check if left tree is valid, must have at least one terminal
+    bool left_valid{};
+    if (is_st_valid(left, NO_ACCEPT_EMPTY)) {
+        here->left = left;
+        left_valid = true;
+    } else free_tree(left);
+
+    // If the left subtree is not valid, this operator is not valid
+    if (!left_valid) {
+        syntax_error();
+        here->token = Token{};
     }
 
-    here->left = left;
     return here;
 }
 
@@ -266,26 +294,16 @@ AST_NODE* F(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
 
+    // t \in FIRST(SF')
     if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
         left = S(err);
-
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = FP(err);
-        }
+        right = FP(err);
     } 
-    // Handle syntax error
-    else {
-        // err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-        // print_error(err);
-        //
-        // std::cout << "F token: " << token_names[next_token.id] << '\n';
-        // get_token(next_token,begin);
-    }
 
+    // This level is not concerned with verification of left and right subtrees
     here->left = left;
     here->right = right;
+
     return here;
 }
 
@@ -295,13 +313,17 @@ AST_NODE* FP(Error& err) {
 
     // Consider FIRST(\land SF') or FIRST(\varepsilon)
     if (next_token.id == TOKEN_EXP) {
+        // Consume exponentiation
         here->token = next_token;
-        get_token(next_token, begin);
-
-        left = S(err);
-        if (next_token.id != TOKEN_NEWLINE) {
-            right = FP(err);
+        if (invalid_lookahead() || 
+        	handle_lex_error(get_token(next_token, begin))
+        ) {
+        	return nullptr;
         }
+
+        // Take F' -> ^SF'
+        left = S(err);
+        right = FP(err);
     } 
     // F' -> \varepsilon nullable, so consider FOLLOW(F') = FOLLOW(N). If
     // t \in FOLLOW(F'), annihilate this node (take F' \to \varepsilon)
@@ -316,36 +338,48 @@ AST_NODE* FP(Error& err) {
         delete here;
         return nullptr;
     } 
-    // Handle syntax error
-    else {
-        // err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-        // print_error(err);
-        //
-        // std::cout << "FP token: " << token_names[next_token.id] << '\n';
-        // get_token(next_token,begin);
-    }
 
-    here->left = left;
-    here->right = right;
+    // Determine whether left and right subtrees are valid
+    bool left_valid{}, right_valid{};
+    if (is_st_valid(left, NO_ACCEPT_EMPTY)) {
+        here->left = left;
+        left_valid = true;
+    } else free_tree(left);
+
+    if (is_st_valid(right, ACCEPT_EMPTY)) {
+        here->right = right;
+        right_valid = true;
+    } else free_tree(right);
+
+    // If right operand is missing for the exponentiation (left subtree), 
+    // throw out operator (exp)
+    if (!left_valid) here->token = Token{};
+
     return here;
 }
 
 AST_NODE* S(Error& err) {
     AST_NODE* here = new AST_NODE();
-	AST_NODE* left{}, *right{};
+	AST_NODE* left{};
 
     // Consider FIRST((E)), FIRST(int), nothing nullable
     
     // t \in FIRST(int), token must be TOKEN_INTEGER, nothing to call.
     if (next_token.id == TOKEN_INTEGER) {
         here->token = next_token;
-        get_token(next_token, begin);
+        if (invalid_lookahead() || 
+        	handle_lex_error(get_token(next_token, begin))
+        ) {
+        	return nullptr;
+        }
     // Token is LPAREN, so we choose S -> (E), make sure to eat the parenthesis
     } else if (next_token.id == TOKEN_LPAREN) {
         // Eat lparen
-        get_token(next_token, begin);
+        if (invalid_lookahead() || 
+        	handle_lex_error(get_token(next_token, begin))
+        ) {
+        	return nullptr;
+        }
 
         left = E(err);
 
@@ -356,46 +390,38 @@ AST_NODE* S(Error& err) {
             err.col = next_token.col_no;
             print_error(err);
 
-            get_token(next_token,begin);
         } 
         // Otherwise eat the )
         else {
-            get_token(next_token,begin);
+            if (invalid_lookahead() || 
+            	handle_lex_error(get_token(next_token,begin))
+            ) {
+            	return nullptr;
+            }
         }
     } 
-    // Handle syntax error
-    else {
-        // err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-        //
-        // std::cout << "S token: " << token_names[next_token.id] << '\n';
-        //
-        // print_error(err);
-        //
-        // get_token(next_token,begin);
-    }
 
-    here->left = left;
-    here->right = right;
+    // Only attach S->(E) if that path is validated, otherwise delete the subtree
+    if (is_st_valid(left, ACCEPT_EMPTY)) {
+        here->left = left;
+    } else free_tree(left);
+
     return here;
 }
 
-// Let vmlinux reclaim memory associated with tree nodes
-void free_tree(AST_NODE* p) {
+// Reclaim memory associated with tree nodes
+void free_tree(AST_NODE*& p) {
     if (!p) return;
 
-    if (!p->left && !p->right) {
-        delete p;
-        p = nullptr;
-    } else {
-        free_tree(p->left);
-        free_tree(p->right);
-    }
+    free_tree(p->left);
+    free_tree(p->right);
+
+    delete p;
+    p=nullptr;
 }
 
 // Free parse tree nodes
-void inhouse_cleanup(AST_NODE* parse_tree) {
+void inhouse_cleanup(AST_NODE*& parse_tree) {
     free_tree(parse_tree);
 }
 
@@ -404,12 +430,13 @@ void parser_cleanup() {
     lex_cleanup();
 }
 
-bool handle_lex_error(Error& err) {
+// True if error is critical, false otherwise
+bool handle_lex_error(const Error& err) {
     print_error(err);
 
     if (err.error != NCC_OK && err.error != NCC_EOF) {
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }

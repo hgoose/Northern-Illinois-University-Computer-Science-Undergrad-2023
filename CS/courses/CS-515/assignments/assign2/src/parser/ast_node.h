@@ -1,3 +1,7 @@
+// Nate warner 
+// CS 515
+// Assignment 2
+
 #ifndef NCC_ASTNODE_H
 #define NCC_ASTNODE_H
 
@@ -11,9 +15,6 @@ struct AST_NODE {
 
     AST_NODE(Token token) : token(token) {}
     AST_NODE() = default;
-
-    // Implicitly inline so we are good to define here
-    bool empty() { return token.id == -1; };
 };
 
 #endif

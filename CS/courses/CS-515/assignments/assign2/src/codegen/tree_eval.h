@@ -1,3 +1,7 @@
+// Nate warner 
+// CS 515
+// Assignment 2
+
 #ifndef TREE_EVAL_H
 #define TREE_EVAL_H
 

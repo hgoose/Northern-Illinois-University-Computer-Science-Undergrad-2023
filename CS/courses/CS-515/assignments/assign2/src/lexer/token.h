@@ -40,7 +40,6 @@
 #define TOKEN_MOD                32
 #define TOKEN_UNEG               33
 #define TOKEN_UPLUS              34
-#define TOKEN_NEWLINE            35
 
 // Mapping these to their ascii values
 #define ESC_NEWLINE              10

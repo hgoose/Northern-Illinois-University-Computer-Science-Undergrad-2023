@@ -18,7 +18,7 @@ const char* error_string(int err) {
         case NCC_ILLEGAL_ESCAPE:  return "illegal escape";
         case NCC_UNDEFINED_TOKEN: return "undefined token";
         case NCC_INVALID_NUMBER: return "invalid number";
-        case NCC_SYNTAX_ERROR:   return "syntax error";
+        case NCC_SYNTAX_ERROR:   return "Syntax error";
         case NCC_EXPECTED_RPAREN: return "expected )";
         default: return "unknown error";
     }
@@ -39,7 +39,7 @@ void print_error(const Error& e) {
     }
 
     // Otherwise, lexer error, print error message, line, and column
-    cerr << "error: " << error_string(e.error) << " at line " << e.line << ", column " << e.col << '\n'; 
+    cerr << (e.error == NCC_SYNTAX_ERROR ? "" : "error: ") << error_string(e.error) << " at line " << e.line << ", column " << e.col << '\n'; 
 
     // More verbose error reporting, reports source line and shows column position
     

@@ -1,13 +1,25 @@
+// Nate warner 
+// CS 515
+// Assignment 2
+
 #include "ast_node.h"
 #include "error.h"
 #include <stack>
 
+// No terminals in a subtree is unacceptable
+#define NO_ACCEPT_EMPTY 0
+
+// No terminals in a subtree is acceptable
+#define ACCEPT_EMPTY    1
+
+// Lookahead token
 extern Token next_token;
 extern bool begin;
-extern std::stack<AST_NODE*> post_last_valid;
 
+// INITIALIZATION
 Error parser_init(const char* src_code);
 
+// PARSING AND GENERATING ASTS
 void parse();
 AST_NODE* next_parse(Error& err);
 
@@ -21,7 +33,9 @@ AST_NODE* F(Error& err);
 AST_NODE* FP(Error& err);
 AST_NODE* S(Error& err);
 
-void free_tree(AST_NODE* p);
+// CLEANUP
+void free_tree(AST_NODE*& p);
 void parser_cleanup();
 
-bool handle_lex_error(Error& err);
+// ERROR HANDLING FOR LEXER
+bool handle_lex_error(const Error& err);

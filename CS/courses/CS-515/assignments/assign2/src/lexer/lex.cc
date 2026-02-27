@@ -139,16 +139,6 @@ Error get_token(Token& t, bool& begin) {
             err.error = NCC_EOF;
             return err;
         }
-        //
-        // if (curr_char == '\n') {
-        //     t.id = TOKEN_NEWLINE;
-        //     t.lexeme = "\n";
-        //     t.line_no = src_line_no;
-        //     t.col_no = src_col_no;
-        //
-        //     last_token = t;
-        //     return err;
-        // }
 
         // Move past whitespace
         if (curr_char == '\n' || curr_char == ' ' || curr_char == '\t' || curr_char == '\r') {

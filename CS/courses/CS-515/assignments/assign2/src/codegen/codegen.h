@@ -1,3 +1,7 @@
+// Nate warner 
+// CS 515
+// Assignment 2
+
 #ifndef CODEGEN_H
 #define CODEGEN_H
 

@@ -1,3 +1,7 @@
+// Nate warner 
+// CS 515
+// Assignment 2
+
 #include "codegen.h"
 #include <cstdlib>
 #include <errno.h>
@@ -13,6 +17,7 @@ static unsigned char* prog;
 // Offset into the address space
 static size_t p_offset;
 
+// Loads a 32-bit integer into the program to be used as an operand
 size_t load_imm32(int x) {
     for (int i=0; i<4; ++i) {
         prog[p_offset++] = x & 0xff; x>>=0x8;
@@ -21,6 +26,7 @@ size_t load_imm32(int x) {
     return 4;
 }
 
+// Loads a 64-bit integer into the program
 size_t load_imm64(long long x) {
     for (int i=0; i<8; ++i) {
         prog[p_offset++] = x & 0xff; x>>=0x8;
@@ -146,6 +152,7 @@ size_t IA32e_modulo_rr(REGISTER dest, REGISTER src) {
     return byte_count;
 }
 
+// The fast exponentiation algorithm in IA-32e
 size_t IA32e_fast_exp() {
     prog[p_offset++] = 0x45;  // XOR R8, R8  // e = 0
     prog[p_offset++] = 0x31;

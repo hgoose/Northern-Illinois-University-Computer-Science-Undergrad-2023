@@ -12,6 +12,4 @@ void parser_test(const char* file_name) {
     print_error(init_err);
 
     parse();
-
-
 }
