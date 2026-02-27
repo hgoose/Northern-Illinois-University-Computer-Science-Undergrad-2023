@@ -14,14 +14,14 @@ using std::cout;
 int main(int argc, const char* argv[]) {
 
     // Check that a filename was provided
-    // if (argc < 2) {
-    //     std::cerr << "Usage: " << argv[0] << " <filename>\n";
-    //     return 1;
-    // }
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <filename>\n";
+        return 1;
+    }
 
     // The filename is the first argument after program name
-    // const char* filename = argv[1];
-    const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign2/tests/pt_testdata/test201";
+    const char* filename = argv[1];
+    // const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign2/tests/pt_testdata/test";
 
     Error err = lex_init(filename);
     print_error(err);
@@ -31,7 +31,7 @@ int main(int argc, const char* argv[]) {
     // while (!lex_eof()) {
     //     get_token(t,begin);
     //
-    //     cout << (t.id != -1 ? token_names[t.id] : "stop") << "\n";
+    //     cout << (t.id != -1 ? token_names[t.id] : "stop") << ", " << t.lexeme << "\n";
     // }
 
     // Run the parser test driver

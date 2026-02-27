@@ -57,7 +57,7 @@ extern const std::vector<std::string> token_names;
 struct Token
 {
     // Guaranteed to have
-    int id{-1};
+    int id{0};
     std::string lexeme{};
     int line_no{-1};
     int col_no{-1};

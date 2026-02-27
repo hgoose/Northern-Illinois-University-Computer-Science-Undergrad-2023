@@ -1,5 +1,9 @@
 #include "ast_utils.h"
 #include "ast_node.h"
+#include "token.h"
+#include "error.h"
+#include "lex.h"
+#include "parser.h"
 
 #include <queue>
 #include <stack>
@@ -38,6 +42,13 @@ AST_NODE* pttoast(AST_NODE* root) {
 
     gen_queue(root,terminals);
 
+    // while (!terminals.empty()) {
+    //     AST_NODE* curr = terminals.front();
+    //     terminals.pop();
+    //
+    //     cout << "token: " << curr->token.lexeme << ", " << '\n';
+    // }
+
     while (!terminals.empty()) {
         AST_NODE* curr = terminals.front();
         terminals.pop();
@@ -55,15 +66,62 @@ AST_NODE* pttoast(AST_NODE* root) {
         ) {
             children.push(curr); 
         } else if (curr->token.id == TOKEN_UPLUS || curr->token.id == TOKEN_UNEG) {
+            if (children.empty()) {
+                Error err2;
+                err2.error = NCC_SYNTAX_ERROR;
+                err2.line = next_token.line_no;
+                err2.col = next_token.col_no;
+
+                print_error(err2);
+                get_token(next_token, begin);
+
+                // Clean the tree
+                clean_tree(root);
+
+                // Try again
+                return pttoast(root);
+
+                // return nullptr;
+            }
+
             AST_NODE* right = children.top(); children.pop();
             curr->right = right;
-
             children.push(curr);
-
         }
         // Operator (except \neg or \oplus), attach stack top to right, stack top-1 to left
         else {
+            if (children.empty()) {
+                Error err2;
+                err2.error = NCC_SYNTAX_ERROR;
+                err2.line = next_token.line_no;
+                err2.col = next_token.col_no;
+
+                print_error(err2);
+                // get_token(next_token, begin);
+                
+                // Recover the AST
+                clean_tree(root);
+                return pttoast(root);
+
+                // return nullptr;
+            }
             AST_NODE* right = children.top(); children.pop();
+
+            if (children.empty()) {
+                Error err2;
+                err2.error = NCC_SYNTAX_ERROR;
+                err2.line = next_token.line_no;
+                err2.col = next_token.col_no;
+
+                print_error(err2);
+                // get_token(next_token, begin);
+
+                clean_tree(root);
+
+                return pttoast(root);
+
+                // return nullptr;
+            }
             AST_NODE* left = children.top(); children.pop();
             
             curr->left = left;
@@ -110,6 +168,8 @@ const char* op_name(int id) {
         case TOKEN_DIV:   return "div";
         case TOKEN_MOD:   return "mod";
         case TOKEN_EXP:   return "exp";
+        case TOKEN_UNEG:  return "neg";
+        case TOKEN_UPLUS: return "pos";
         default:          return "";
     }
 }
@@ -132,7 +192,10 @@ void r_ast_out(AST_NODE* node, int depth)
              node->token.id == TOKEN_MULT  ||
              node->token.id == TOKEN_DIV   ||
              node->token.id == TOKEN_MOD   ||
-             node->token.id == TOKEN_EXP) {
+             node->token.id == TOKEN_EXP   ||
+             node->token.id == TOKEN_UNEG  ||
+             node->token.id == TOKEN_UPLUS 
+    ) {
 
         std::cout << node->token.lexeme
                   << " (" << op_name(node->token.id) << ")"
@@ -153,6 +216,43 @@ void ast_out(AST_NODE* root) {
 
     cout << "Code tree:\n";
     r_ast_out(root, 0);
+}
 
-    cout << '\n';
+// Locates the parent of a given node so that it can destroy the given node
+static bool locate_parent_destroy_child(AST_NODE*& p, AST_NODE*& child) {
+    if (!p || !child) return false;
+
+    if (p->left == child) {
+        AST_NODE* doomed = p->left;
+        p->left = nullptr;
+        delete doomed;
+        return true;
+    } else if (p->right == child) {
+        AST_NODE* doomed = p->right;
+        p->right = nullptr;
+        delete doomed;
+        return true;
+    }
+
+    return locate_parent_destroy_child(p->left, child) ||
+        locate_parent_destroy_child(p->right, child);
+}
+
+// Cleans a tree from all terminals that make the statement meaningless
+void clean_tree(AST_NODE*& root) {
+    while (!post_last_valid.empty()) {
+        AST_NODE* curr = post_last_valid.top(); 
+        post_last_valid.pop();
+
+        if (!curr) continue;
+
+        if (root == curr) { 
+            AST_NODE* doomed = root;
+            root = nullptr;
+            delete doomed;
+            continue;
+        }
+
+        locate_parent_destroy_child(root, curr);
+    } 
 }

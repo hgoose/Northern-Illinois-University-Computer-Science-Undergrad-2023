@@ -7,8 +7,11 @@
 #include "lex.h"
 #include "ast_node.h"
 #include "ast_utils.h"
+#include "buffio.h"
+#include "tree_eval.h"
 
 #include <iostream>
+#include <stack>
 
 static void inhouse_cleanup(AST_NODE* parse_tree);
 
@@ -18,7 +21,7 @@ static void inhouse_cleanup(AST_NODE* parse_tree);
     that encodes associativity and precedence
         E \to E + T | E - T | T \\
         T \to T * N | T / N | T MOD N | N \\
-        N \to -N | +N | F \\
+        N \to -F | +F | F \\
         F \to F ^ S | S \\
         S \to (E) | int
 
@@ -82,10 +85,14 @@ static void inhouse_cleanup(AST_NODE* parse_tree);
 
 typedef unsigned int _uint;
 
-static Token next_token;
-static Token last_token;
-static Token last_consumed;
-static bool begin = true;
+Token next_token;
+
+// Last non-operator
+static AST_NODE* last_valid;
+
+std::stack<AST_NODE*> post_last_valid;
+
+bool begin = true;
 
 // Initialize the parser. 
 Error parser_init(const char* src_code) {
@@ -94,42 +101,66 @@ Error parser_init(const char* src_code) {
 }
 
 void parse() {
+    Error e;
     for(;;) {
-        // begin = true;
+        begin = true;
 
-        AST_NODE* curr = next_parse(); if (!curr) continue;
+        AST_NODE* curr = next_parse(e); if (!curr) continue;
 
-        ast_out(curr);
-        free_tree(curr);
+        // TODO: Check for error in e
 
-        if (next_token.id != TOKEN_NEWLINE && next_token.id != TOKEN_EOF) {
-            Error err2;
-            err2.error = NCC_SYNTAX_ERROR;
-            err2.line = next_token.line_no;
-            err2.col = next_token.col_no;
+        // If the next token is a valid start or EOF, no syntax error, otherwise syntax error.
 
-            print_error(err2);
+        // Reject the tree
+        if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
+                && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
+        ) {
+            e.error = NCC_SYNTAX_ERROR;
+            e.line = next_token.line_no;
+            e.col = next_token.col_no;
+
+            print_error(e);
+            get_token(next_token, begin);
+
+            free_tree(curr);
+            curr = nullptr;
+
+            return;
         }
 
+        // Tree is valid
+        ast_out(curr);
+        evaluate_expr(curr);
+        free_tree(curr);
     }
 
     parser_cleanup();
 }
 
-AST_NODE* next_parse() {
-    // Get the first token
-    Error err = get_token(next_token, begin);
+AST_NODE* next_parse(Error& err) {
+    // Get the next token unless the token we are on is a valid start
+    // to an expression
+    if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
+            && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER 
+    ) {
+        // Get the first token
+        err = get_token(next_token, begin);
+        if (!handle_lex_error(err)) {
+            return nullptr;
+        }
+    } 
+
     begin = false;
 
     // Come back to this
     if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
 
     // Empty tree, no expression
-    if (next_token.id == TOKEN_NEWLINE || next_token.id == TOKEN_EOF) {
+    if (next_token.id == TOKEN_EOF) {
         return nullptr;
     }
 
-    AST_NODE* parse_root = E();
+    AST_NODE* parse_root = E(err);
     AST_NODE* ast_root = pttoast(parse_root);
 
     // Delete the parse tree
@@ -138,19 +169,18 @@ AST_NODE* next_parse() {
     return ast_root;
 }
 
-AST_NODE* E() {
-    Error err;
+AST_NODE* E(Error& err) {
     AST_NODE* left = nullptr;
 
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
-        left = T();
+        left = T(err);
 
         while (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
             Token op = next_token;
             get_token(next_token, begin);
 
-            AST_NODE* rhs = T();
+            AST_NODE* rhs = T(err);
 
             AST_NODE* node = new AST_NODE();
             node->token = op;
@@ -170,87 +200,13 @@ AST_NODE* E() {
     return nullptr;
 }
 
-// AST_NODE* E() {
-//     Error err;
-//
-//     AST_NODE* here = new AST_NODE();
-// 	AST_NODE* left{}, *right{};
-//
-//     // Consider FIRST(TE')
-//     if (next_token.id == TOKEN_UPLUS 
-//         || next_token.id == TOKEN_UNEG
-//         || next_token.id == TOKEN_LPAREN 
-//         || next_token.id == TOKEN_INTEGER
-//     // Take the production E -> TE'
-//     ) {
-//         left = T();
-//         if (next_token.id != TOKEN_NEWLINE) {
-//             right = EP();
-//         }
-//     } 
-//     // Handle syntax error
-//     else {
-//         err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-//         print_error(err);
-//
-//         get_token(next_token, begin);
-//     }
-//     // No other productions to check, although TE' is not nullable so 
-//     // it doesn't matter.
-//
-//     here->left = left;
-//     here->right = right;
-//     return here;
-//
-//
-// }
 
-// AST_NODE* EP() {
-//     Error err;
-//
-//     AST_NODE* here = new AST_NODE();
-// 	AST_NODE* left{}, *right{};
-//
-//     // t \in FIRST(+TE') \cup FIRST(-TE')
-//     if (next_token.id == TOKEN_PLUS || next_token.id == TOKEN_MINUS) {
-//         here->token = next_token;
-//         get_token(next_token,begin);
-//
-//         left = T();
-//         if (next_token.id != TOKEN_NEWLINE) {
-//             right = EP();
-//         }
-//     } 
-//     // t \not\in any alpha_i, but some alpha is nullable, so look to FOLLOW(E').
-//     // If t \in FOLLOW(E'), then choose E' -> \varepsilon. That is, return nullptr
-//     else if (next_token.id == TOKEN_EOF || next_token.id == TOKEN_RPAREN) {
-//         delete here;
-//         return nullptr;
-//     } 
-//     // Handle syntax error
-//     else {
-//         err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-//         print_error(err);
-//
-//         get_token(next_token,begin);
-//     }
-//
-//     here->left = left;
-//     here->right = right;
-//     return here;
-// }
-
-AST_NODE* T() {
-    Error err;
+AST_NODE* T(Error& err) {
     AST_NODE* left = nullptr;
 
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
-        left = N();
+        left = N(err);
 
         while (next_token.id == TOKEN_MULT ||
                next_token.id == TOKEN_DIV  ||
@@ -258,7 +214,7 @@ AST_NODE* T() {
             Token op = next_token;
             get_token(next_token, begin);
 
-            AST_NODE* rhs = N();
+            AST_NODE* rhs = N(err);
 
             AST_NODE* node = new AST_NODE();
             node->token = op;
@@ -278,101 +234,25 @@ AST_NODE* T() {
     return nullptr;
 }
 
-// AST_NODE* T() {
-//     Error err;
-//
-//     AST_NODE* here = new AST_NODE();
-// 	AST_NODE* left{}, *right{};
-//
-//     // Consider FIRST(NT'), not nullable
-//     if (next_token.id == TOKEN_UPLUS 
-//         || next_token.id == TOKEN_UNEG
-//         || next_token.id == TOKEN_LPAREN 
-//         || next_token.id == TOKEN_INTEGER
-//     ) {
-//         left = N();
-//         if (next_token.id != TOKEN_NEWLINE) {
-//             right = TP();
-//         }
-//     } 
-//     // Handle syntax error
-//     else {
-//         err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-//         print_error(err);
-//
-//         get_token(next_token,begin);
-//     }
-//
-//     here->left = left;
-//     here->right = right;
-//     return here;
-// }
 
-// AST_NODE* TP() {
-//     Error err;
-//
-//     AST_NODE* here = new AST_NODE();
-// 	AST_NODE* left{}, *right{};
-//
-//     // Consider FIRST(*NT'), FIRST(/NT'), FIRST(MOD NT'), FIRST(epsilon)
-//     if (next_token.id == TOKEN_MULT 
-//         || next_token.id == TOKEN_DIV 
-//         || next_token.id == TOKEN_MOD
-//     ) {
-//         here->token = next_token;
-//         get_token(next_token, begin);
-//
-//         left = N();
-//         if (next_token.id != TOKEN_NEWLINE) {
-//             right = TP();
-//         }
-//     } 
-//     // A production is nullable, so look to FOLLOW(T'). If t \in FOLLOW(T'), the nullable 
-//     // production is just \varepsilon, so return nullptr
-//     else if (next_token.id == TOKEN_PLUS 
-//             || next_token.id == TOKEN_MINUS 
-//             || next_token.id == TOKEN_EOF 
-//             || next_token.id == TOKEN_RPAREN
-//     ) {
-//         delete here;
-//         return nullptr;
-//     } 
-//     // Handle syntax error
-//     else {
-//         err.error = NCC_SYNTAX_ERROR;
-        // err.line = next_token.line_no;
-        // err.col = next_token.col_no;
-    //         print_error(err);
-//
-//         get_token(next_token,begin);
-//     }
-//
-//     here->left = left;
-//     here->right = right;
-//     return here;
-// }
-
-AST_NODE* N() {
-    Error err;
-
+AST_NODE* N(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
     // Consider FIRST(-N), FIRST(+N), and FIRST(F). No nullable productions.
     // No production rule is nullable, don't need to consider FOLLOW(N).
     
-    // t \in FIRST(\neg N) or t \in FIRST(\oplus N)
+    // t \in FIRST(\neg F) or t \in FIRST(\oplus F)
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG) {
         // When we return, the top of the stack will be the token, eat it
         here->token = next_token;
+        post_last_valid.push(here);
         get_token(next_token, begin);
 
-        left = N();
+        left = F(err);
     } 
     // t \in FIRST(F)
     else if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
-        left = F();
+        left = F(err);
     } 
     // Handle syntax error
     else {
@@ -389,18 +269,16 @@ AST_NODE* N() {
     return here;
 }
 
-AST_NODE* F() {
-    Error err;
-
+AST_NODE* F(Error& err) {
     // Consider FIRST(SF'), not nullable
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
 
     if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
-        left = S();
+        left = S(err);
 
         if (next_token.id != TOKEN_NEWLINE) {
-            right = FP();
+            right = FP(err);
         }
     } 
     // Handle syntax error
@@ -419,20 +297,19 @@ AST_NODE* F() {
     return here;
 }
 
-AST_NODE* FP() {
-    Error err;
-
+AST_NODE* FP(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
 
     // Consider FIRST(\land SF') or FIRST(\varepsilon)
     if (next_token.id == TOKEN_EXP) {
         here->token = next_token;
+        post_last_valid.push(here);
         get_token(next_token, begin);
 
-        left = S();
+        left = S(err);
         if (next_token.id != TOKEN_NEWLINE) {
-            right = FP();
+            right = FP(err);
         }
     } 
     // F' -> \varepsilon nullable, so consider FOLLOW(F') = FOLLOW(N). If
@@ -464,9 +341,7 @@ AST_NODE* FP() {
     return here;
 }
 
-AST_NODE* S() {
-    Error err;
-
+AST_NODE* S(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{}, *right{};
 
@@ -475,16 +350,29 @@ AST_NODE* S() {
     // t \in FIRST(int), token must be TOKEN_INTEGER, nothing to call.
     if (next_token.id == TOKEN_INTEGER) {
         here->token = next_token;
+        post_last_valid = {};
+        last_valid = here;
         get_token(next_token, begin);
     // Token is LPAREN, so we choose S -> (E), make sure to eat the parenthesis
     } else if (next_token.id == TOKEN_LPAREN) {
         // Eat lparen
         get_token(next_token, begin);
 
-        left = E();
+        left = E(err);
 
-        // Eat rparen
-        get_token(next_token,begin);
+        // If next token is not ), error
+        if (next_token.id != TOKEN_RPAREN) {
+            err.error = NCC_EXPECTED_RPAREN;
+            err.line = next_token.line_no;
+            err.col = next_token.col_no;
+            print_error(err);
+
+            get_token(next_token,begin);
+        } 
+        // Otherwise eat the )
+        else {
+            get_token(next_token,begin);
+        }
     } 
     // Handle syntax error
     else {
@@ -525,4 +413,14 @@ void inhouse_cleanup(AST_NODE* parse_tree) {
 // Free all nodes created for the AST and parse tree
 void parser_cleanup() {
     lex_cleanup();
+}
+
+bool handle_lex_error(Error& err) {
+    print_error(err);
+
+    if (err.error != NCC_OK && err.error != NCC_EOF) {
+        return false;
+    }
+
+    return true;
 }

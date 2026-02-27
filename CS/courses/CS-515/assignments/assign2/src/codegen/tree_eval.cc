@@ -1,0 +1,98 @@
+#include "tree_eval.h"
+#include "ast_node.h"
+#include "codegen.h"
+#include "token.h"
+#include "error.h"
+
+#include <cstdlib>
+#include <iostream>
+
+static void r_evaluate_expr(AST_NODE* p, size_t& byte_count) {
+    if (!p) return;
+
+    r_evaluate_expr(p->left, byte_count);
+    r_evaluate_expr(p->right, byte_count);
+
+    if (p->token.id == TOKEN_INTEGER) {
+        byte_count+=IA32e_push_imm32(p->token.integer);
+    } 
+    else if (p->token.id == TOKEN_UNEG) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_xor_rr(REGISTER::ECX, REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_sub_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+    } 
+    else if (p->token.id == TOKEN_PLUS) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_pop(REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_add_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+    }
+    else if (p->token.id == TOKEN_MINUS) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_pop(REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_sub_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+    }
+    else if (p->token.id == TOKEN_MULT) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_pop(REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_mult_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+       
+    }
+    else if (p->token.id == TOKEN_DIV) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_pop(REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_div_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+    }
+    else if (p->token.id == TOKEN_MOD) {
+        byte_count+=IA32e_pop(REGISTER::EAX);
+        byte_count+=IA32e_pop(REGISTER::ECX);
+        byte_count+=IA32e_xchg(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_modulo_rr(REGISTER::EAX, REGISTER::ECX);
+        byte_count+=IA32e_push(REGISTER::EAX);
+    }
+    else if (p->token.id == TOKEN_EXP) {
+        byte_count+=IA32e_fast_exp();
+    }
+}
+
+void evaluate_expr(AST_NODE* root) {
+    // Noop on empty tree
+    if (!root) return;
+
+    size_t byte_count = 0;
+
+    // Initialize program space
+    if (pspace_init() == -1) {
+        std::cerr << "Error requesting address space for this expression\n";
+        return;
+    }
+
+    // Evaluate expression
+    r_evaluate_expr(root, byte_count);
+
+    byte_count+=IA32e_pop(REGISTER::EAX);
+
+    // Add a RET instruction
+    byte_count+=IA32e_construct_ret();
+    
+    std::cout << "Code size: " << byte_count << " bytes.\n";
+    std::cout << "Code execution: \n";
+
+    // Execute program
+    std::cout << IA32e_exec() << "\n\n";
+
+    // Reclaim address space
+    if (pspace_reclaim() == -1) {
+        std::cerr << "Error reclaiming address space for this expression\n";
+        return;
+    }
+}

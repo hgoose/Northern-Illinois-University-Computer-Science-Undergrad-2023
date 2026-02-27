@@ -139,19 +139,19 @@ Error get_token(Token& t, bool& begin) {
             err.error = NCC_EOF;
             return err;
         }
-
-        if (curr_char == '\n') {
-            t.id = TOKEN_NEWLINE;
-            t.lexeme = "\n";
-            t.line_no = src_line_no;
-            t.col_no = src_col_no;
-
-            last_token = t;
-            return err;
-        }
+        //
+        // if (curr_char == '\n') {
+        //     t.id = TOKEN_NEWLINE;
+        //     t.lexeme = "\n";
+        //     t.line_no = src_line_no;
+        //     t.col_no = src_col_no;
+        //
+        //     last_token = t;
+        //     return err;
+        // }
 
         // Move past whitespace
-        if (curr_char == ' ' || curr_char == '\t' || curr_char == '\r') {
+        if (curr_char == '\n' || curr_char == ' ' || curr_char == '\t' || curr_char == '\r') {
             continue;
         }
 
@@ -182,7 +182,9 @@ Error get_token(Token& t, bool& begin) {
             || last_token.id == TOKEN_ASSIGN || last_token.id == TOKEN_NOT
             || last_token.id == TOKEN_LPAREN || last_token.id == TOKEN_COMMA
             || last_token.id == TOKEN_DOT || last_token.id == TOKEN_MOD
-            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND || last_token.id == TOKEN_AT
+            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND 
+            || last_token.id == TOKEN_AT || last_token.id == TOKEN_UNEG
+            || last_token.id == TOKEN_UPLUS
         ) {
             t.id = TOKEN_UPLUS;
         } else {
@@ -200,7 +202,9 @@ Error get_token(Token& t, bool& begin) {
             || last_token.id == TOKEN_ASSIGN || last_token.id == TOKEN_NOT
             || last_token.id == TOKEN_LPAREN || last_token.id == TOKEN_COMMA
             || last_token.id == TOKEN_DOT || last_token.id == TOKEN_MOD
-            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND || last_token.id == TOKEN_AT
+            || last_token.id == TOKEN_OR || last_token.id == TOKEN_AND 
+            || last_token.id == TOKEN_AT || last_token.id == TOKEN_UNEG
+            || last_token.id == TOKEN_UPLUS 
         ) {
             t.id = TOKEN_UNEG;
         } else {

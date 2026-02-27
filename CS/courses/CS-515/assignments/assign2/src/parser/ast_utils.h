@@ -12,5 +12,6 @@ void ast_postorder(AST_NODE* root);
 const char* op_name(int id);
 void r_ast_out(AST_NODE* node, int depth);
 void ast_out(AST_NODE* node);
+void clean_tree(AST_NODE*& root);
 
 #endif
