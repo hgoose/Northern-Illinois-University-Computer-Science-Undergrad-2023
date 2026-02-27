@@ -11,7 +11,6 @@
 #include "tree_eval.h"
 
 #include <iostream>
-#include <stack>
 
 static void inhouse_cleanup(AST_NODE* parse_tree);
 
@@ -86,12 +85,6 @@ static void inhouse_cleanup(AST_NODE* parse_tree);
 typedef unsigned int _uint;
 
 Token next_token;
-
-// Last non-operator
-static AST_NODE* last_valid;
-
-std::stack<AST_NODE*> post_last_valid;
-
 bool begin = true;
 
 // Initialize the parser. 
@@ -245,7 +238,6 @@ AST_NODE* N(Error& err) {
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG) {
         // When we return, the top of the stack will be the token, eat it
         here->token = next_token;
-        post_last_valid.push(here);
         get_token(next_token, begin);
 
         left = F(err);
@@ -304,7 +296,6 @@ AST_NODE* FP(Error& err) {
     // Consider FIRST(\land SF') or FIRST(\varepsilon)
     if (next_token.id == TOKEN_EXP) {
         here->token = next_token;
-        post_last_valid.push(here);
         get_token(next_token, begin);
 
         left = S(err);
@@ -350,8 +341,6 @@ AST_NODE* S(Error& err) {
     // t \in FIRST(int), token must be TOKEN_INTEGER, nothing to call.
     if (next_token.id == TOKEN_INTEGER) {
         here->token = next_token;
-        post_last_valid = {};
-        last_valid = here;
         get_token(next_token, begin);
     // Token is LPAREN, so we choose S -> (E), make sure to eat the parenthesis
     } else if (next_token.id == TOKEN_LPAREN) {

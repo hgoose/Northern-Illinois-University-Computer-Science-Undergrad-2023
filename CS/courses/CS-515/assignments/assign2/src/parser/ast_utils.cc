@@ -73,15 +73,9 @@ AST_NODE* pttoast(AST_NODE* root) {
                 err2.col = next_token.col_no;
 
                 print_error(err2);
-                get_token(next_token, begin);
+                // get_token(next_token, begin);
 
-                // Clean the tree
-                clean_tree(root);
-
-                // Try again
-                return pttoast(root);
-
-                // return nullptr;
+                return nullptr;
             }
 
             AST_NODE* right = children.top(); children.pop();
@@ -99,11 +93,7 @@ AST_NODE* pttoast(AST_NODE* root) {
                 print_error(err2);
                 // get_token(next_token, begin);
                 
-                // Recover the AST
-                clean_tree(root);
-                return pttoast(root);
-
-                // return nullptr;
+                return nullptr;
             }
             AST_NODE* right = children.top(); children.pop();
 
@@ -116,11 +106,7 @@ AST_NODE* pttoast(AST_NODE* root) {
                 print_error(err2);
                 // get_token(next_token, begin);
 
-                clean_tree(root);
-
-                return pttoast(root);
-
-                // return nullptr;
+                return nullptr;
             }
             AST_NODE* left = children.top(); children.pop();
             
@@ -216,43 +202,4 @@ void ast_out(AST_NODE* root) {
 
     cout << "Code tree:\n";
     r_ast_out(root, 0);
-}
-
-// Locates the parent of a given node so that it can destroy the given node
-static bool locate_parent_destroy_child(AST_NODE*& p, AST_NODE*& child) {
-    if (!p || !child) return false;
-
-    if (p->left == child) {
-        AST_NODE* doomed = p->left;
-        p->left = nullptr;
-        delete doomed;
-        return true;
-    } else if (p->right == child) {
-        AST_NODE* doomed = p->right;
-        p->right = nullptr;
-        delete doomed;
-        return true;
-    }
-
-    return locate_parent_destroy_child(p->left, child) ||
-        locate_parent_destroy_child(p->right, child);
-}
-
-// Cleans a tree from all terminals that make the statement meaningless
-void clean_tree(AST_NODE*& root) {
-    while (!post_last_valid.empty()) {
-        AST_NODE* curr = post_last_valid.top(); 
-        post_last_valid.pop();
-
-        if (!curr) continue;
-
-        if (root == curr) { 
-            AST_NODE* doomed = root;
-            root = nullptr;
-            delete doomed;
-            continue;
-        }
-
-        locate_parent_destroy_child(root, curr);
-    } 
 }
