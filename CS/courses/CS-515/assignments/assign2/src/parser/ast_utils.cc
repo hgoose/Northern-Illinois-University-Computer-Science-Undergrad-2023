@@ -39,6 +39,7 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
 
     gen_queue(root, terminals);
 
+
     while (!terminals.empty()) {
         AST_NODE* curr = terminals.front();
         terminals.pop();
@@ -120,6 +121,7 @@ AST_NODE* pttoast(AST_NODE* root) {
     // Fill the queue by doing a post order of the parse tree
     gen_queue(root,terminals);
 
+
     // Can't make a valid AST for the whole tree for whatever reason, 
     // through out the tree
     if (!is_st_valid(root, ACCEPT_EMPTY)) return nullptr;
@@ -189,7 +191,7 @@ void ast_postorder(AST_NODE* root) {
 
     ast_postorder(root->left);
     ast_postorder(root->right);
-    cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
+    cout << (root->token.id != -1 ? root->token.lexeme : "Empty") << ", ";
 
 }
 

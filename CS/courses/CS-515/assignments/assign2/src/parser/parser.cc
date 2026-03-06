@@ -346,10 +346,8 @@ AST_NODE* FP(Error& err) {
         left_valid = true;
     } else free_tree(left);
 
-    if (is_st_valid(right, ACCEPT_EMPTY)) {
-        here->right = right;
-        right_valid = true;
-    } else free_tree(right);
+    // We are not concerned with right subtree validation at this level
+    here->right = right;
 
     // If right operand is missing for the exponentiation (left subtree), 
     // throw out operator (exp)

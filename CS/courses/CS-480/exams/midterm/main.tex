@@ -1,0 +1,556 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Midterm Review}
+}
+
+\begin{document}
+    % \maketitle
+    %     \begin{titlepage}
+    %    \begin{center}
+    %        \vspace*{1cm}
+    % 
+    %        \textbf{Midterm Review}
+    % 
+    %        \vspace{0.5cm}
+    %         
+    %             
+    %        \vspace{1.5cm}
+    % 
+    %        \textbf{Nathan Warner}
+    % 
+    %        \vfill
+    %             
+    %             
+    %        \vspace{0.8cm}
+    %      
+    %        \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+    %             
+    %        Computer Science \\
+    %        Northern Illinois University\\
+    %        United States\\
+    %        
+    %             
+    %    \end{center}
+    % \end{titlepage}
+    % \tableofcontents
+    % \pagebreak 
+    \unsect{OS structure and system calls}
+    \begin{itemize}
+        \item \textbf{The kernel:} The kernel is the core control program of an operating system. Formally, it is the privileged component that manages hardware resources and provides
+        \item \textbf{OS Structures}: An operating system provides the environment within which programs are executed. We view an operating systems from several vantage points:
+            \begin{itemize}
+                \item One view focuses on the services that the system provides.
+                \item Another on the interface that it makes available to users and programmers.
+                \item A third on its components and their interconnections.
+            \end{itemize}
+                    \item \textbf{Traps}: In operating systems theory, a trap is a controlled transfer of execution from user mode to kernel mode caused by an instruction or an exceptional condition. It is a synchronous control transfer initiated by the currently executing instruction stream. Traps are fundamental to protection, system calls, and fault handling.
+            \bigbreak \noindent 
+            Formally, A trap is a processor exception that transfers control to a predefined handler in the kernel, triggered by the current instruction.
+            \bigbreak \noindent 
+            Traps serve three primary purposes:
+            \begin{enumerate}
+                \item System calls
+                \item Fault handling
+                \item Debugging support
+            \end{enumerate}
+            Without traps, user programs could not safely request privileged services.
+
+        \item \textbf{OS services}: An operating systems provides an environment for the execution of programs. Makes certain services available to programs and to the users of those programs. These services differ from one operating system to another, but we can identify common classes.
+            \begin{itemize}
+                \item \textbf{User interface}: Almost all operating systems have a UI. Most commonly in the form of a GUI. In the GUI the interface is a window system with a mouse that serves as a pointing device to direct I/O, choose from menus, and make selections and a keyboard to enter text. Another option is a CLI, which uses text commands and a method for entering them (say, a keyboard). Some systems provide multiple of these variations.
+                \item \textbf{Program execution}: The system must be able to load a program into memory and run the program. The program must be able to end its execution, either normally or abnormally
+                \item \textbf{I/O operations}: A running program may require I/O, which may involve a file or an I/O device. For specific devices, special functions may be desired like reading from a network interface or writing to a file system. For efficiency and protection, users cannot control I/O devices directly, the operating system must provide a means to do I/O.
+                \item \textbf{File-system manipulation}: The file system is of particular interest. Programs need to read and write files and directories. They also need to create and delete them by name, search for a given file, and list file information. Finally, some operating systems include permissions management to allow or deny access to files or directories based on file ownership. Many operating systems provide a variety of file systems.
+                \item \textbf{Communications}: one process may need to exchange information with other processes. Such communication may occur between processes that are executing on the same computer or between processes that are executing on different computer systems tied together by a network. Communication may be implemented via shared memory, in which two or more processes read and write to a shared section of memory, or message passing, in which packets of information in predefined formats are moved between processes by the OS.
+                \item \textbf{Error detection}: The OS needs to be detecting and correcting errors constantly. Errors may occur in the CPU and memory hardware, in I/O devices, and in the user program. For each error type, the OS needs to take appropriate action. Sometimes, it may have no choice but to halt the system. Other times, it may terminate the error-causing process or return an error code to a process for the process to detect and possibly correct.
+                \item \textbf{Resource allocation}: When there are multiple processes running at the same time, resources must be allocated to each of them. The OS manages many types of resources. Some (CPU cycles, main memory, file storage) may have special allocation code, whereas others (such as I/O devices) may have much more general request and release code. For instance, in determining how best to use the CPU, operating systems have CPU-scheduling routines that take into account the speed of the CPU, the process that must be executed, the number of processing cores, and other factors.
+                \item \textbf{Logging}: We want to keep track of which programs use how much and what kinds of computer resources. May be used for accounting (so the user can be billed) or simply for usage statistics.
+                \item \textbf{Protection and security}: The owners of information stored in a multiuser or networked computer system may want to control use of that information. When several Processes execute concurrently, it should not be possible for one process to interfere with the others or with the operating system itself. Security of the system from outsiders is also important. It starts with user authentication via a password, and extends to defending external I/O devices, including network adapters, from invalid access attempts and recording all such connections.
+            \end{itemize}
+        \item \textbf{System calls}: Provides an interface to the services made available by an OS. These calls are generally available as functions written in C and C++. Some low-level tasks may have to be written using assembly instructions.
+        \item \textbf{Communication}: Two common models of interprocess communication
+            \begin{enumerate}
+                \item \textbf{message-passing model}: In the message-passing model the communicating processes exchange messages with one another to transfer information. Messages shared either directly or indirectly through a common mailbox. Before communication, a connection must be opened. The name of the other communicator must be known. Each computer network has a host name by which it is commonly known. A host also has a network identifier, such as an IP address.
+                    \bigbreak \noindent 
+                    Each process has a process name, and this name is translated into an identifier by which the OS can refer to the process. The get\_hostid() and get\_processid() system calls can do this translation. The identifiers are then passed to the general purpose open() and close() calls provided by the file system or open\_connection() and close\_connection() system calls, depending on the systems model of communication.
+                    \bigbreak \noindent 
+                    The recipient process usually must give its permission for communication to take place with an accept\_connection() call. Most processes that will be receiving connections are special-purpose daemons. They execute a wait\_for\_connection() call and are awakened when a connection is made. The source of the communication, the client, and the receiving daemon, the server, then exchange messages by using read\_message() and write\_message() system calls. The close\_connection() call terminates the communication.
+                \item \textbf{shared-memory model}: In the shared-memory model, processes use shared\_memory\_create() and shared\_memory\_attach() system calls to create and gain access to regions of memory owned by other processes.
+                    \bigbreak \noindent 
+                    Normally, the operating system tries to prevent one process from accessing another process’s memory. Shared memory requires that two or more processes agree to remove this restriction. They can exchange information by reading and writing data in the shared areas. The form of data is determined by the processes and is not under the operating system’s control. The processes are also responsible for ensuring that they are not writing to the same location simultaneously.
+            \end{enumerate}
+            It is common for both the message-passing, and shared-memory model to be implemented by the operating system.
+            \bigbreak \noindent 
+            Message passing is useful for exchanging smaller amounts of data, because no conflicts need be avoided. It is also easier to implement
+            \bigbreak \noindent 
+            Shared memory allows maximum speed and convenience of communication, since it can be done at memory transfer speeds
+        \item \textbf{OS structure}: A system as large and complex as a modern operating system must be engineered carefully if it is to function properly and be modified easily
+            \bigbreak \noindent 
+            Partition a task into smaller components, or modules, rather than have one single system. Each module should be a well-defined portion of the system.
+        \item \textbf{Monolithic Structure}: The simplest structure is no structure at all. Place all of the functionality of the kernel into a single, static binary file that runs in a single address space. 
+            \bigbreak \noindent 
+            The original UNIX operating system – consists of two separable parts: the kernel and the system programs. The kernel is further separated into a series of interfaces and device drivers
+            \bigbreak \noindent 
+            The kernel provides the file system, CPU scheduling, memory management, and other operating system functions through system calls. That is an enormous amount of functionality to be combined into one single address space.
+            \bigbreak \noindent 
+            The Linux OS is based on UNIX and is structured similarly. Applications typically use the glibc standard C library when communicating with the system call interface to the kernel
+            \bigbreak \noindent 
+            The Linux kernel is monolithic in that it runs entirely in kernel mode in a single address space, but it does have a modular design that allows the kernel to be modified during run time. The monolithic structure does well in speed and efficiency.
+        \item \textbf{Layered approach}: The monolithic structure is known as a tightly couped system because changes to one part of the system can have wide-ranging effects on other parts. We could design a loosely coupled system. Such a system is divided into seperate, smaller components that have specific and limited functionality. All these components together comprise the kernel. The advantage is that changes in one component affect only that component.
+            \bigbreak \noindent 
+            A system can be made modular in many ways. One method is the layered approach, in which the OS is broken into a number of layers (levels). The bottom layer (layer 0) is the hardware; the highest layer (layer) $N$ is the user interface.
+            \bigbreak \noindent 
+            An operating-system layer is an implementation of an abstract object made up of data and the operations that can manipulate those data. A typical operating system layer-say, layer M-consists of data structures and a set of functions that can be invoked by higher-level layers. Layer $M$, in turn, can invoke operations on lower-level layers
+            \bigbreak \noindent 
+            Main advantage of the layered approach is simplicity of construction and debugging. The layers are selected so that each uses functions and services of only lower-level layers. If an error is found on a layer, the error must be on that layer. Because the layers below are already debugged.
+            \bigbreak \noindent 
+            Layered systems have been successfully used in computer networks (such as TPC/IP) and web applications. But few operating systems use a pure layered approach.
+            \bigbreak \noindent 
+            High overhead and hard to define functionality of each layer.
+        \item \textbf{Micro-kernels}: This method structures the operating system by removing all nonessential components from the kernel and implementing them as user-level programs that reside in separate address space. The result is a smaller kernel. There is little consensus regarding which services should remain in the kernel and which should be implemented in user space
+            \bigbreak \noindent 
+            Typically, microkernels provide minimal process and memory management, in addition to a communications facility. The main function of the micro kernel is to provide communication between the client program and the various services that are also running in user space. Communication is provided through message passing.
+            \bigbreak \noindent 
+            For example, if the client program wants to access a file, it must interact with the file server. The client program and file server never interact directly. Rather, they communicate indirectly by exchanging messages with the microkernel.
+            \bigbreak \noindent 
+            This concept makes extending the OS easier. All new services are added to the user space and do not require modifying the kernel.
+            \bigbreak \noindent 
+            \textit{Darwin} is the kernel for the macOS and iOS operating system. It is a microkernel. Darwin, in fact, consists of two kernels, one of which is the Mach microkernel.
+        \item \textbf{Modules}: Perhaps the best current methodology for operating system design involves using loadable kernel modules (LKMs). Here, the kernel has a set of core components and can link in additional services via modules, either at boot time or during run time. This type of design is common in modern implementations of UNIX, such as Linux, macOS, and Solaris, as well as Windows.
+            \bigbreak \noindent 
+            The kernel provides core services, while other services are implemented dynamically, as the kernel is running. Linking services dynamically is perferable to adding new features directly to the kernel, which would require recompilation of the kernel. For example, we might build CPU scheduling and memory management algorithms directly into the kernel and then add support for different file systems by way of loadable modules.
+            \bigbreak \noindent 
+            The overall result resembles a layered system in that each kernel section has defined, protected interfaces; but it is more flexible than a layered system, because any module can call any other module.
+            \bigbreak \noindent 
+            Also similar to the microkernel approach in that the primary module has only core functions and knowledge of how to load and communicate with other modules.
+            \bigbreak \noindent 
+            \textbf{Note:} Linux uses loadable kernel modules.
+        \item \textbf{Hybrid systems}: Very few operating systems adopt a single, strictly defined structure. Instead they combine different structures. Linux is monolithic. However it is also modular.
+            \bigbreak \noindent 
+            Windows is largely monolithic, but it retains some behavior typical of microkernel systems, including providing support for seperate subsystems that run as user-mode processes.
+        \item \textbf{System Boot}: After an operating system is generated, it must be made available for use by the hardware. But how does the hardware know where the kernel is or how to load the kernel?
+            \bigbreak \noindent 
+            The process of starting a computer by loading the kernel is known as \textbf{booting the system}.
+            \begin{itemize}
+                \item A small piece of code known as the boot loader locates the kernel.
+                \item The kernel is loaded into memory and started.
+                \item The root file system is mounted.
+            \end{itemize}
+        \item \textbf{BIOS boot process}: When the computer is powered on, a small boot loader located in nonvolatile firmware known as BIOS is run. This initial boot loader usually does nothing more than load a second bootloader, which is located at a fixed disk location called the boot block.
+            \bigbreak \noindent 
+            The program in the boot block may be sophisticated enough to load the entire operating system into memory and begin its execution. More typically, it is simple code (as it must fit in a single disk block) and knows only the address on disk and the length of the remainder of the boot loader.
+            \bigbreak \noindent 
+        \item \textbf{UEFI}: UEFI has several advantages over BIOS, including better support for 64-bit systems and larger disks. Perhaps the greatest advantage is that UEFI is a single, complete boot manager and therefore is faster than the multistage BIOS boot process.
+            \bigbreak \noindent 
+            Whether booting from BIOS or UEFI, the boot loader can perform a variety of tasks. In addition to loading the file containing the kernel program into memory, it also runs diagnostics to determine the state of the machine. If the diagnostics pass, the program can continue with the booting steps.
+            \bigbreak \noindent 
+            The bootloader can also initialize all aspects of the system, from CPU registers to device controllers and the contents of main memory. 
+            \bigbreak \noindent 
+            Sooner or later, it starts the operating system and mounts the root file system. At this point the system is said to be running.
+        \item \textbf{GRUB}: Grub is an open-source bootloader for Linux and UNIX systems. Boot parameters for the system are set in a GRUB configuration file, which is loaded at startup.
+            \bigbreak \noindent 
+            GRUB allows changes to be made at boot time, including modifying kernel parameters and even selecting among different kernels that can be booted. To save space and decrease boot time, the Linux kernel image is a compressed file that is extracted after it is loaded into memory.
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Reading a smaller compressed file from disk is faster than reading a large uncompressed file.
+                \item Decompression in RAM is very fast relative to disk access time.
+            \end{itemize}
+            \textbf{Note:} The file must always be read from storage before it can be placed into memory. “Loaded into memory” necessarily implies that it has been read. You can read the bytes of a compressed file exactly like any other file. However, you cannot directly interpret its original contents without decompressing it.
+            \bigbreak \noindent 
+            During the boot process the boot loader typically creates a temporary RAM file system, known as initramfs. Disk I/O is typically much slower than RAM operations and CPU decompression. This file system contains necessary drivers and kernel modules that must be installed to support the real root file system (which is not in main memory).
+            \bigbreak \noindent 
+            \textbf{Note:} A RAM file system is a file system whose storage medium is main memory (RAM) instead of persistent storage (SSD, HDD, etc.). It behaves like a normal file system from the user’s perspective, but all data resides in volatile memory.
+            \bigbreak \noindent 
+            Once the kernel has started and the necessary drivers are installed, the kernel switches the root file system from the temporary RAM location to the appropriate root file system. Finally linux creates the systemd process, the initial process of the system, and then starts other services.
+        \item \textbf{Performance Monitoring and Tuning}:  The operating system must have some means of computing and displaying measures of system behavior.
+            \bigbreak \noindent 
+            Tools may be characterized as providing either \textbf{per-process} or \textbf{system-wide observations.}
+            \bigbreak \noindent 
+            Tools may use one of two approaches – \textbf{counters or tracing}.
+        \item \textbf{Counters}: Operating systems keep track of system activity through a series of counters, such as the number of system calls made or the number of operations performed to a network device or disk.
+            \begin{itemize}
+                \item \textbf{Per-process}: 
+                    \begin{itemize}
+                        \item ps – reports information for a single process or selection of processes.
+                        \item top – reports real-time statistics for current processes.
+                    \end{itemize}
+                \item \textbf{System-wide}: 
+                    \begin{itemize}
+                        \item vmstat – reports memory usage statistics
+                        \item netstat – reports statistics for network interfaces
+                        \item iostat – reports I/O usage for disks
+                    \end{itemize}
+            \end{itemize}
+            Most counter-based tools on linux systems read statistics from the /proc pseudo file system.
+        \item \textbf{Pseudo filesystems}: A pseudo filesystem is a filesystem that does not store data on a physical block device. Instead, it presents kernel-managed data structures as if they were files and directories. It is a filesystem interface layered over in-memory or virtual kernel objects.
+        \item \textbf{Tracing}: Whereas counter-based tools simply inquire on the current value of certain statistics that are maintained by the kernel, tracing tools collect data for a specific event – such as the steps involved in a system-call invocation
+            \begin{itemize}
+                \item \textbf{Per-process}:
+                \begin{itemize}
+                    \item strace – traces syscalls invoked by a process
+                    \item gdb – a source-level debugger
+                \end{itemize}
+                \item \textbf{System-wide}:
+                    \begin{itemize}
+                        \item perf – a collection of linux performance tools
+                        \item tcpdump – collects network packets
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Virtual memory}: Virtual memory is a memory management technique that provides an "idealized abstraction of the storage resources that are actually available on a given machine" which "creates the illusion to users of a very large (main) memory".
+            \bigbreak \noindent 
+            The operating system, using a combination of hardware and software, maps memory addresses used by a program, called virtual addresses, into physical addresses in computer memory.
+        \item \textbf{A note}: The operating system is not a separate program running “alongside” your program. It is the privileged control layer that schedules and supervises all programs.
+            \bigbreak \noindent 
+            The OS is always running, but not like a normal program. The operating system kernel
+            \begin{itemize}
+                \item Resides in memory.
+                \item Runs in kernel mode (privileged CPU mode).
+                \item Gains control via:
+                    \begin{itemize}
+                        \item Interrupts
+                        \item System calls
+                        \item Exceptions
+                        \item Scheduling events
+                \end{itemize}
+            \end{itemize}
+            User programs run in user mode, which is restricted. The CPU switches between these modes.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Process}
+    \begin{itemize}
+        \item \textbf{CPU cores}: A CPU core is an independent processing unit within a central processing unit (CPU). Each core is capable of executing program instructions, performing arithmetic and logical operations, managing control flow, and interacting with memory and I/O through the operating system. In architectural terms, a core is a complete execution engine.
+            \bigbreak \noindent 
+            A modern core typically contains:
+            \begin{itemize}
+                \item \textbf{Control Unit (CU)}: Fetches and decodes instructions.
+                \item \textbf{Arithmetic Logic Unit (ALU)}: Performs integer arithmetic and logical operations.
+                \item \textbf{Floating-Point Unit (FPU)}: – Handles floating-point arithmetic.
+                \item \textbf{Registers}: Small, ultra-fast storage (e.g., general-purpose registers, program counter, flags).
+                \item \textbf{L1 / L2 Cache}: Private high-speed memory for low-latency access.
+                \item \textbf{Branch Predictor}: Predicts control flow to reduce pipeline stalls.
+                \item \textbf{Pipeline}: Stages instruction execution (fetch → decode → execute → write-back).
+                \item \textbf{Execution Units}: May include SIMD/vector units (e.g., AVX).
+            \end{itemize}
+        \item \textbf{Jobs}: Early computer systems executed jobs. We now call them processes. The term jobs have some historical significance. Much of operating system theory and terminology was developed during a time where the major activity of operating systems was job processing.
+            \bigbreak \noindent 
+            Therefore, in some instances we use the term job when describing the role of the operating system. I.e., job scheduling instead of process scheduling.
+        \item \textbf{The process}: The status of the current activity of a process is represented by the value of the program counter (PC) and the contents of the processor’s registers. The memory layout of a process is typically divided into multiple sections.
+            \begin{itemize}
+                \item \textbf{Text section}: the executable code
+                \item \textbf{Data section}: global variables
+                \item \textbf{Heap section}: memory that is dynamically allocated during program run time.
+                \item \textbf{Stack section}: temporary data storage when invoking functions (such as function parameters, return addresses, and local variables)
+            \end{itemize}
+            The stack and heap sections can shrink and grow dynamically during program execution.
+            \bigbreak \noindent 
+            Stack and heap grow towards each other, but the OS makes sure that they do not overlap.
+        \item \textbf{Activation records}: Each time a function is called, an activation record containing function parameters, local variables, and the return address is pushed onto the stack. When control is returned from the function, the activation record is popped from the stack.
+        \item \textbf{Process state}: As a process executes, it changes state. The state of a process is defined in part by the current activity of that process.
+            \bigbreak \noindent 
+            A process may be in one of the following states:
+            \begin{enumerate}
+                \item \textbf{New}: The process is being created.
+                \item \textbf{Running}: Instructions are being executed.
+                \item \textbf{Waiting}: The process is waiting for some event to occur (such as I/O completion or reception of a signal).
+                \item \textbf{Ready}: The process is waiting to be assigned to a processor.
+                \item \textbf{Terminated}: The process has finished execution.
+            \end{enumerate}
+            \fig{.8}{./figures/1056.png}
+            \bigbreak \noindent 
+            These names are arbitrary and they vary across operating systems. The states that they represent are found on all systems.
+            \bigbreak \noindent 
+            Only one process can be running on any processor core at any instant. Many processes may be ready and waiting, however.
+        \item \textbf{Process control block}: Each process is represented in the operating system as a process control block (PCB) – also called a task control block.
+            \bigbreak \noindent 
+            It contains many pieces of information associated with a specific process.
+            \begin{itemize}
+                \item \textbf{Process state}: The state may be new, ready, running, waiting, halted, and so on.
+                \item \textbf{Program counter}: The counter indicates the address of the next instruction to be executed for this process
+                \item \textbf{CPU registers}: The registers vary in number and type, depending on the computer architecture. They include accumulators, index registers, stack pointers, and general-purpose registers, plus any condition-code information. Along with the program counter, this state information must be saved when an interupt occurs, to allow the process to be continued correctly afterward when it is rescheduled to run.
+                \item \textbf{CPU-scheduling information}: This information includes a process priority, pointers to scheduling queues, and any other sceduling parameters.
+                \item \textbf{Memory-management information}: This information may include such items as the value of the base and limit registers and the page tables, or the segment tables, depending on the memory system used by the operating system.
+                \item \textbf{Accounting information}: This information includes the amount of CPU and real time used, time limits, account numbers, job or process numbers, and so on.
+                \item \textbf{I/O}: status information. This information includes the list of I/O devices allocated to the process, a list of open files, and so on.
+            \end{itemize}
+        \item \textbf{Intro to Threads}: The process model discussed so far has implied that a process is a program that performs a single thread of execution.
+            \bigbreak \noindent 
+            A thread is the smallest unit of execution that can be scheduled by an operating system.
+            \begin{itemize}
+                \item A \textbf{process} is a resource container (address space, file descriptors, heap, etc.).
+                \item A \textbf{thread} is a single execution context within that process.
+            \end{itemize}
+            A thread represents one sequence of instructions with its own control state. An execution context is the complete set of machine-level state required for a CPU to begin or resume executing a sequence of instructions. A thread is the specific computational state that allows code inside a process to actively run.
+            \bigbreak \noindent 
+            A thread has 
+            \begin{itemize}
+                \item \textbf{Program Counter (PC)}: Address of next instruction
+                \item \textbf{Registers}: General-purpose and special-purpose
+                \item \textbf{Stack}: Function calls, local variables, return addresses
+                \item \textbf{Thread state}: Running, ready, blocked, etc.
+            \end{itemize}
+            Threads within the same process share:
+            \begin{itemize}
+                \item Address space
+                \item Heap
+                \item Global variables
+                \item Open files
+                \item Memory-mapped regions
+            \end{itemize}
+            So,
+            \begin{center}
+                Process = Shared Resources + One or More Threads
+            \end{center}
+        \item \textbf{Hardware threads}: A hardware thread is a CPU’s ability to execute an independent instruction stream using a separate architectural state within a single physical core. It is a “slot” inside a CPU core that can run one thread at a time.
+            \bigbreak \noindent 
+            Each hardware thread maintains its own:
+            \begin{itemize}
+                \item Program counter (instruction pointer)
+                \item Register set
+                \item Stack pointer
+                \item Processor status flags
+            \end{itemize}
+            This allows multiple threads to make progress without saving/restoring state on every switch.
+            \bigbreak \noindent 
+            \textbf{A hardware thread is the execution context in the CPU where a software thread runs.}
+        \item \textbf{SMT (hardware threads)}: Processors from Intel and AMD often implement Simultaneous Multithreading (SMT). If you have 4 physical cores, 2 hardware threads per core, then up to 8 logical threads may execute concurrently. However, 
+            \begin{itemize}
+                \item Execution units are shared.
+                \item It is not double performance.
+                \item It improves pipeline utilization.
+            \end{itemize}
+        \item \textbf{Multiprogramming}: Multiprogramming is an operating system technique that loads multiple programs into main memory simultaneously to maximize CPU utilization, ensuring the processor rarely sits idle. While only one program executes on the CPU at a time, the OS quickly switches between tasks when one waits for I/O operations, creating the illusion of concurrent execution. 
+        \item \textbf{Time-sharing}: Time-sharing in computing is a technique where a single computer's resources (like the CPU) are rapidly switched between multiple users or processes, giving each a small "time slice," creating the illusion that they are running concurrently on their own dedicated machine, which makes expensive hardware accessible to many people simultaneously for interactive tasks.
+        \item \textbf{Multitasking}: Multitasking is an extension of multiprogramming that uses time-sharing to allow rapid switching between tasks, often for user interaction.
+        \item \textbf{Process Scheduling}: The objective of multiprogramming is to have some process running at all times so as to maximize CPU utilization.
+            \bigbreak \noindent 
+            The objective of time sharing is to switch a CPU core among processes so frequently that users can interact with each program while it is running
+            \bigbreak \noindent 
+            To meet this objectives, the process scheduler selects an available process for program execution on a core. Each CPU core can run one process at a time.
+        \item \textbf{Scheduling Queues}: As processes enter the system, they are put into a \textbf{ready queue}, where they are ready and waiting to execute on a CPU’s core. This queue is generally stored as a linked list
+            \bigbreak \noindent 
+            A ready-queue header contains pointers to the first PCB in the list and each PCB includes a pointer field that points to the next PCB in the ready queue.
+            \bigbreak \noindent 
+            The system also includes other queues. When a process is allocated A CPU core, it may wait for the occurrence of a particular event, such as the completion of an I/O request. Suppose the process makes an I/O request to a device such as a disk. Since devices run way slower than processors, the process will have to wait for the I/O to become available. Processes that are waiting for a certain event to occur are placed in a \textbf{wait queue}.
+            \bigbreak \noindent 
+            A common representation of process scheduling is a queueing diagram. Once the process is allocated a CPU core and is executing, one of several events could occur.
+            \begin{itemize}
+                \item The process could issue an I/O request and then be placed in an I/O wait queue.
+                \item The process could create a new child process and then be placed in a wait queue while it awaits the child’s termination.
+                \item The process could be removed forcibly from the core, as a result of an interrupt or having its time slice expire, and be put back in the ready queue.
+            \end{itemize}
+        \item \textbf{CPU Scheduling}: A process migrates among the ready queue and various wait queues throughout its lifetime.
+            \bigbreak \noindent 
+            The role of the \textbf{CPU scheduler} is to select from among the processes that are in the ready queue and allocate a CPU core to one of them.
+            \bigbreak \noindent 
+            The CPU scheduler must select a new process for the CPU frequently. An I/O-bound process may execute for only a few milliseconds before waiting for an I/O request.
+            \bigbreak \noindent 
+            Although a CPU-bound process will require a CPU core for longer durations, the scheduler is unlikely to grant the core to a process for an extended period. Instead, it is likely designed to forcibly remove the CPU from a process and schedule another process to run.
+            \bigbreak \noindent 
+            Therefore, the CPU scheduler executes at least once every 100ms.
+        \item \textbf{Swapping}: Some operating systems have an intermediate form of scheduling, known as swapping. The idea is that sometimes it can be advantageous to remove a process from memory (and from active contention for the CPU) and thus reduce the degree of multiprogramming. The process can be later reintroduced into memory, and its execution can be continued where it left off.
+            \bigbreak \noindent 
+            Swapping is typically only necessary when memory has been overcommitted and must be freed up.
+        \item \textbf{Interrupts}: An interrupt is a hardware or software mechanism that forces the CPU to temporarily stop its current execution flow and transfer control to a predefined handler.
+            \begin{center}
+                Interrupt = Asynchronous control transfer into privileged code
+            \end{center}
+            Interrupts allow devices to signal: “Something requires attention.” For example:
+            \begin{itemize}
+                \item Keyboard input
+                \item Network packet arrival
+                \item Disk I/O completion
+                \item Timer expiration
+            \end{itemize}
+        \item \textbf{Types of interrupts}: 
+            \begin{enumerate}
+                \item \textbf{Hardware interrupts (external)}: Triggered by external devices
+                \item \textbf{Software interrupts}: Triggered intentionally by instructions. Used for system calls.
+                    \bigbreak \noindent 
+                    These are synchronous
+                \item \textbf{Exceptions (Faults / traps) (internal)}: Generated by the CPU itself. These are also interrupt-like control transfers.
+            \end{enumerate}
+        \item \textbf{Faults, traps, and aborts (exceptions)}: 
+            \begin{itemize}
+                \item \textbf{Faults}: A fault occurs before the instruction completes. The instruction can usually be retried. Examples are
+                    \begin{itemize}
+                        \item Page fault
+                        \item Divide-by-zero
+                        \item General protection fault
+                    \end{itemize}
+                \item \textbf{Traps}: A trap occurs after the instruction completes. Used intentionally for control transfer. For example syscalls.
+                \item \textbf{Aborts}: Serious unrecoverable errors. System often terminates
+            \end{itemize}
+            Faults and traps are architecturally classified as exceptions, and exceptions are handled through the same mechanism as interrupts.
+            \begin{center}
+                Interrupts = External asynchronous events \\
+                Exceptions (faults/traps) = Internal synchronous events
+            \end{center}
+            All of them ultimately use the CPU’s interrupt/exception handling machinery.
+        \item \textbf{Reaping zombie processes}: A process that has terminated, but whose parent has not yet called wait() is known as a zombie process.
+            \bigbreak \noindent 
+            After sending the kill signals, the parent must call waitpid() for each child to clean up their resources and prevent them from becoming zombie processes (defunct state).
+        \item \textbf{Process Termination}: A process terminates when it finishes executing its final statement and asks the operating system to delete it by using the exit() system call. The process may return a status value (typically an integer) to its waiting parent process (via the wait() system call). All the resources of the process – including physical and virtual memory, open files, and I/O buffers – are deallocated and reclaimed by the operating system.
+            \bigbreak \noindent 
+            The parent needs to know the identity of the child in order to terminate them, thus the pid of the child is returned to the parent. Such systems do not allow a child to exist if its parent has terminated. If a process terminates, then all its children must also terminate.
+            \bigbreak \noindent 
+            This is referred to as \textbf{cascading termination}. It is normally initiated by the operating system.
+        \item \textbf{Interprocess Communication}: Processes executing concurrently in the operating system may be either independent processes or cooperating processes.
+            \bigbreak \noindent 
+            A process is \textbf{independent} if it does not share data with any other processes executing in the system.
+            \bigbreak \noindent 
+            A process is \textbf{cooperating} if it can affect or be affected by the other processes executing in the system.
+            \bigbreak \noindent 
+            Several reasons for providing an environment that allows process cooperation:
+            \begin{itemize}
+                \item \textbf{Information sharing}: Since several applications may be interested in the same piece of information (e.g., copying and pasting), we must provide an environment to allow concurrent access to such information.
+                \item \textbf{Computation speedup}: If we want a particular task to run faster, we must break it into subtasks, each of which will be executing in parallel with the others.
+                \item \textbf{Modularity}: We may want to construct the system in a modular fashion, dividing the system functions into separate processes or threads
+            \end{itemize}
+            Cooperating processes require an \textbf{interprocess communication (IPC)} mechanism that will allow them to exchange data (send data and receive data from each other).
+            \bigbreak \noindent 
+            The two models of interprocess communication – shared memory and message passing.
+        \item \textbf{Synchronization}: Communication between processes takes place through calls to send() and receive primitives. There are different design options for implementing each primitive.
+            \bigbreak \noindent 
+            Message passing may be blocking or non-blocking also known as synchronous and asynchronous.
+            \begin{itemize}
+                \item \textbf{Blocking send}: The sending process is blocked until the message is received by the receiving process or by the mailbox.
+                \item \textbf{Nonblocking send}: The sending process sends the message and resumes operation.
+                \item \textbf{Blocking receive}: The receiver blocks until a message is available.
+                \item \textbf{Nonblocking receive}: The receiver retrieves either a valid message or null.
+            \end{itemize}
+        \item \textbf{Zero capacity}: The queue has a max length of zero; thus, the link cannot have any messages waiting in it. In this case, the sender must block until the recipient receives a message.
+        \item \textbf{Pipes}: A pipe acts as a conduit allowing two processes to communicate. 
+            \bigbreak \noindent 
+            When implementing a pipe, 4 issues must be considered:
+            \begin{enumerate}
+                \item Does the pipe allow bidirectional communication, or is communication unidirectional.
+                \item If two-way communication is allowed, is it half duplex (data can travel only one way at a time) or full duplex (data can travel in both directions at the same time).
+                \item Must a relationship (such as parent-child) exist between the communicating processes?
+                \item Can the pipes communicate over a network, or must the communicating processes reside on the same machine?
+            \end{enumerate}
+        \item \textbf{Ordinary pipes}:  Ordinary pipes allow two processes to communicate in standard producerconsumer fashion: the producer writes to one end of the pipe (the write end) and the consumer reads from the other end (the read end). This makes ordinary pipes unidirectional, allowing only one-way communication.
+            \bigbreak \noindent 
+            If two-way communication is required, two pipes must be used, with each pipe sending data in a different direction.
+            \bigbreak \noindent 
+            ON UNIX systems, ordinary pipes are constructed using the function:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                pipe(int fd[]);
+            \end{cppcode}
+        \item \textbf{Named pipes}: Communication can be bidirectional, and no parent-child relationship is required. Once a named pipe is established, several processes can use it for communication. In a typical scenario, a named pipe has several writers. Named pipes continue to exist after communicating processes have finished.
+            \bigbreak \noindent 
+            FIFO in UNIX systems. Once created, they appear as typical files in the file system. A FIFO is created with the mkfifo() system call and manipulated with the ordinary open(), read(), write(), and close() system calls. It will continue to exist until it is explicitly deleted.
+            \bigbreak \noindent 
+            FIFOs allow bidrectional communication, but only half-duplex transmission is permitted. If data must travel in both directions, two FIFOs are typically used.
+            \bigbreak \noindent 
+            The communicating processes must reside on the same machine. Sockets are used for intermachine communication.
+        \item \textbf{Sockets}: A socket is defined as an endpoint for communication. A pair of processes communicating over a network employs a pair of sockets. One for each process
+            \bigbreak \noindent 
+            A socket is identified by an IP address concatenated with a port number. Sockets use a client-server architecture. The server waits for incoming client requests by listening to a specified port.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Threads and concurrency}
+    \begin{itemize}
+               \item \textbf{Benefits}: 
+            \begin{enumerate}
+                \item \textbf{Responsiveness}: Multithreading an interactive application may allow a program to continue running even if part of it is blocked or is performing a lengthy operation, thereby increasing responsiveness to the user. This quality is especially useful in designing user interfaces. 
+                \item \textbf{Resource sharing}: Processes can share resources only through techniques such as shared memory and message passing. Such techniques must be explicitly arranged by the programmer. However, threads share the memory and the resources of the process to which they belong by default. The benefit of sharing code and data is that it allows an application to have several different threads of activity within the same address space.
+                \item \textbf{Economy}: Allocating memory and resources for process creation is costly. Because threads share the resources of the process to which they belong, it is more economical to create and context-switch threads. Empirically gauging the difference in overhead can be difficult, but in general thread creation consumes less time and memory than process creation. Additionally, context switching is typically faster between threads than between processes.
+                \item \textbf{Scalability}: The benefits of multithreading can be even greater in a multiprocessor architecture, where threads may be running in parallel on different processing cores. A single-threaded process can run on only one processor, regardless how many are available.
+            \end{enumerate}
+         \item \textbf{User threads and kernel threads}: Support for threads may be provided either at the user level, for \textbf{user threads}, or by the kernel, for \textbf{kernel threads}. User threads are supported above the kernel and are managed without kernel support, whereas kernel threads are supported and managed directly by the operating system. Virtually all contemporary operating systems—including Windows, Linux, and macOS— support kernel threads.
+        \item \textbf{Types of parallelism}: In general, there are two types of parallelism:
+            \begin{enumerate}
+                \item \textbf{Data parallelism} focuses on distributing subsets of the same data across multiple computing cores and performing the same operation on each core
+                \item \textbf{Task parallelism} involves distributing not data but tasks (threads) across multiple computing cores. Each thread is performing a unique operation. Different threads may be operating on the same data, or they may be operating on different data.  
+            \end{enumerate}
+            However, data and task parallelism are not mutually exclusive, and an application may in fact use a hybrid of these two strategies.
+        \item \textbf{Multithreading models}: Ultimately, a relationship must exist between user threads and kernel threads
+            \begin{enumerate}
+                \item \textbf{Many-to-one model}: The many-to-one model maps many user-level threads to one kernel thread. Thread management is done by the thread library in user space, so it is efficient. However, the entire process will block if a thread makes a blocking system call. 
+                    \bigbreak \noindent 
+                    Because only one thread can access the kernel at a time, multiple threads are unable to run in parallel on multicore systems.
+                    \bigbreak \noindent 
+                    Very few systems continue to use the model because of its inability to take advantage of multiple processing cores, which have now become standard on most computer systems.
+                \item \textbf{One-to-One model}: The one-to-one model  maps each user thread to a kernel thread.  It provides more concurrency than the many-to-one model by allowing another thread to run when a thread makes a blocking system call. It also allows multiple threads to run in parallel on multiprocessors. The only drawback to this model is that creating a user thread requires creating the corresponding kernel thread, and a large number of kernel threads may burden the performance of a system. Linux, along with the family of Windows operating systems, implement the one-to-one model.
+                \item \textbf{Many-to-Many model}:  Multiplexes many user-level threads to a smaller or equal number of kernel threads. The number of kernel threads may be specific to either a particular application or a particular machine
+
+            \end{enumerate}
+
+        \item \textbf{The Two Level Model}: One variation on the many-to-many model still multiplexes many userlevel threads to a smaller or equal number of kernel threads but also allows a user-level thread to be bound to a kernel thread. This variation is sometimes referred to as the two-level model
+        \item \textbf{Asynchronous threading and synchronous threading}: 
+            \begin{itemize}
+                \item With \textbf{asynchronous threading}, once the parent creates a child thread, the parent resumes its execution, so that the parent and child execute concurrently and independently of one another. Because the threads are independent, there is typically little data sharing between them. 
+                \item \textbf{Synchronous threading} occurs when the parent thread creates one or more children and then must wait for all of its children to terminate before it resumes. Here, the threads created by the parent perform work concurrently, but the parent cannot continue until this work has been completed. Once each thread has finished its work, it terminates and joins with its parent. Only after all of the children have joined can the parent resume execution. Typically, synchronous threading involves significant data sharing among threads.
+            \end{itemize}
+        \item \textbf{Thread pools}: One issue with thread creation is the time it takes to created them. Also, We have not placed a bound on the number of threads concurrently active in the system. Unlimited threads could exhaust system resources, such as CPU time or memory. One solution to this problem is to use a \textbf{thread pool}.
+            \bigbreak \noindent 
+            The general idea behind a thread pool is to create a number of threads at start-up and place them into a pool, where they sit and wait for work. When a server receives a request, rather than creating a thread, it instead submits the request to the thread pool and resumes waiting for additional requests.
+            \bigbreak \noindent 
+            If there is an available thread in the pool, it is awakened, and the request is serviced immediately. If the pool contains no available thread, the task is queued until one becomes free. Once a thread completes its service, it returns to the pool and awaits more work. Thread pools work well when the tasks submitted to the pool can be executed asynchronously.
+            \bigbreak \noindent 
+            Thread pools offer these benefits:
+            \begin{enumerate}
+                \item Servicing a request with an existing thread is often faster than waiting to create a thread.
+                \item A thread pool limits the number of threads that exist at any one point. This is particularly important on systems that cannot support a large number of concurrent threads.
+                \item Separating the task to be performed from the mechanics of creating the task allows us to use different strategies for running the task. For example, the task could be scheduled to execute after a time delay or to execute periodically.
+            \end{enumerate}
+            \bigbreak \noindent 
+            The number of threads in the pool can be set heuristically based on factors such as the number of CPUs in the system, the amount of physical memory, and the expected number of concurrent client requests. s. More sophisticated threadpool architectures can dynamically adjust the number of threads in the pool according to usage patterns. Such architectures provide the further benefit of having a smaller pool— thereby consuming less memory—when the load on the system is low
+        \item \textbf{Signal Handling}: A signal is used in UNIX systems to notify a process that a particular event has occurred. A signal may be received either synchronously or asynchronously, depending on the source of and the reason for the event being signaled. All signals, whether synchronous or asynchronous, follow the same pattern:
+            \begin{enumerate}
+                \item A signal is generated by the occurrence of a particular event.
+                \item The signal is delivered to a process.
+                \item Once delivered, the signal must be handled.
+            \end{enumerate}
+        \item \textbf{Thread Cancellation}: Thread cancellation involves terminating a thread before it has completed. For example, if multiple threads are concurrently searching through a database and one thread returns the result, the remaining threads might be canceled.
+            \bigbreak \noindent 
+            A thread that is to be canceled is often referred to as the \textbf{target thread}. Cancellation of a target thread may occur in two different scenarios:
+            \begin{enumerate}
+                \item \textbf{Asynchronous cancellation}: One thread immediately terminates the target thread.
+                \item \textbf{Deferred cancellation}: The target thread periodically checks whether it should terminate, allo
+            \end{enumerate}
+        \item \textbf{Thread-Local Storage}: Threads belonging to a process share the data of the process. Indeed, this data sharing provides one of the benefits of multithreaded programming. However, in some circumstances, each thread might need its own copy of certain data. We will call such data \textbf{thread-local storage (or TLS)}.
+            \bigbreak \noindent 
+            It is easy to confuse TLS with local variables. However, local variables are visible only during a single function invocation, whereas TLS data are visible across function invocations.
+            \bigbreak \noindent 
+            In some ways, TLS is similar to static data; the difference is that TLS data are unique to each thread. (In fact, TLS is usually declared as static.) Most thread libraries and compilers provide support for TLS.
+        \item \textbf{Scheduler Activations}: A final issue to be considered with multithreaded programs concerns communication between the kernel and the thread library, which may be required by the many-to-many and two-level models. Such coordination allows the number of kernel threads to be dynamically adjusted to help ensure the best performance.
+            \bigbreak \noindent 
+            Many systems implementing either the many-to-many or the two-level model place an intermediate data structure between the user and kernel threads. This data structure— typically known as a \textbf{lightweight process}, or \textbf{LWP}
+            \bigbreak \noindent 
+            To the user-thread library, the LWP appears to be a virtual processor on which the application can schedule a user thread to run. Each LWP is attached to a kernel thread, and it is kernel threads that the operating system schedules to run on physical processors. If a kernel thread blocks (such as while waiting for an I/O operation to complete), the LWP blocks as well. Up the chain, the user-level thread attached to the LWP also blocks.
+
+    \end{itemize}
+
+
+
+\end{document}

@@ -413,7 +413,7 @@ html`
     \end{itemize}
 
     \pagebreak 
-    \subsection{JS}
+    \subsection{Javascript}
     \begin{itemize}
         \item \textbf{Var, let, and const}:  
             \begin{itemize}
@@ -678,6 +678,15 @@ html`
                 \item Integrated layout algorithms
                 \item Focus on interaction support
             \end{itemize}
+        \item \textbf{Creating and returning svg in observable}
+            \bigbreak \noindent 
+            \begin{jscode}
+            {
+                let svg = d3.create("svg")
+
+                return svg.node();
+            }
+            \end{jscode}
         \item \textbf{Data Binding (Selections)}: D3 can bind arrays or objects directly to DOM elements.
             \bigbreak \noindent 
             \begin{jscode}
@@ -1258,6 +1267,29 @@ html`
             \end{jscode}
             \bigbreak \noindent 
             means “Apply the axis generator to this <g> element, causing it to create ticks, labels, and lines inside it.”
+            \bigbreak \noindent 
+            We can also apply a transform to the group element
+            \bigbreak \noindent 
+            \begin{jscode}
+                let xAxis = d3.axisBottom(xScale);
+                svg.append("g").attr("transform", `translate(${margin.left},${H})`).call(xAxis);
+            \end{jscode}
+            \bigbreak \noindent 
+            And for a $y$-axis,
+            \bigbreak \noindent 
+            \begin{jscode}
+                let yAxis = d3.axisLeft(yScale);
+                svg.append("g").attr("transform", `translate(${margin.left}, 0)`).call(yAxis);
+            \end{jscode}
+        \item \textbf{Targeting the axis text}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                let xAxis = d3.axisBottom(xScale);
+                svg.append("g")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .attr()...
+            \end{cppcode}
         \item \textbf{Adding text}: 
             \bigbreak \noindent 
             \begin{jscode}
@@ -1276,13 +1308,194 @@ html`
             If a value is specified, sets the inner HTML to the specified value on all selected elements, replacing any existing child elements. If the value is a constant, then all elements are given the same inner HTML; otherwise, if the value is a function, it is evaluated for each selected element, in order, being passed the current datum (d), the current index (i), and the current group (nodes), with this as the current DOM element (nodes[i]). The function’s return value is then used to set each element’s inner HTML. A null value will clear the content.
             \bigbreak \noindent 
             If a value is not specified, returns the inner HTML for the first (non-null) element in the selection. This is generally useful only if you know the selection contains exactly one element.
+        \item \textbf{Date object}: The JavaScript Date object is a built-in utility for working with dates and times
+            \begin{itemize}
+                \item \textbf{new Date():} Creates an object for the current date and time in the local time zone.
+                \item \textbf{new Date(timestamp):} Creates a date from a specified number of milliseconds since the epoch.
+                \item \textbf{new Date(dateString):} Parses a date string (e.g., ISO 8601 format like "2023-12-25T10:00:00").
+                \item \textbf{new Date(year, month, day, hours, minutes, seconds, milliseconds):} Creates a date from specific components. Note that months are zero-indexed (0 for January, 11 for December).
+            \end{itemize}
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule 
+                 \textbf{Category} 	&\textbf{Method Examples (Local Time)}	&\textbf{Description} \\
+                    \midrule
+                    Get	&getFullYear(), getMonth(), getDate(), getHours(), getMinutes(), getSeconds(), getMilliseconds()	&Retrieve specific components of the date.\\[2ex]
+                    Set	&setFullYear(), setMonth(), setDate(), setHours(), setMinutes(), setSeconds(), setMilliseconds()	&Modify specific components of the date.\\[2ex]
+                    Utility	&getTime(), setTime(milliseconds), Date.now(), toISOString(), toLocaleString()	&Get/set the timestamp, get current time as timestamp, format the date as a string. \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+        \item \textbf{Margins}: We create a group element inside the root svg, then apply a transform based on set margins
+            \bigbreak \noindent 
+            \begin{jscode}
+                {
+                    const svg = d3.create("svg");
+                    const group = svg.append("g");
+
+                    let margin = {left: 50, right: 25, bottom: 50, top: 0}
+
+                    let W = 600, H = 400;
+                    svg.attr("width", W+margin.left+margin.right).attr("height", H+margin.top+margin.bottom);
+
+                    group.attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+                    return svg.node();
+                }
+            \end{jscode}
+
 
 
 
     \end{itemize}
 
+        \pagebreak 
+    \subsection{Observable Plot}
+    \begin{itemize}
+        \item \textbf{Intro}: Created by the creators of D3, observable Plot follows a grammar-of-graphics style approach:
+            \begin{itemize}
+                \item You describe what you want to visualize
+                \item The library determines how to render it
+                \item Plots are composed from marks applied to data
+            \end{itemize}
+            A typical plot consists of:
+            \begin{itemize}
+                \item Data
+                \item Encodings (x, y, color, etc.)
+                \item Marks (bars, dots, lines, etc.)
+                \item Optional transforms (grouping, binning, aggregation)
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{jscode}
+                const plot = Plot.plot({
+                    marks: [
+                        Plot.barY(data, { x: "date", y: "count" })
+                    ]
+                });
+
+                document.body.append(plot);
+            \end{jscode}
+        \item \textbf{Marks}: Marks define how data is rendered.
+            \begin{itemize}
+                \item \textbf{Bars}: 
+                \item \textbf{Dots / scatter}: 
+                \item \textbf{Lines}:
+                \item \textbf{Areas}:
+            \end{itemize}
+        \item \textbf{Automatic Aggregation}: Plot can compute statistics for you. For example, counting occurrences
+            \bigbreak \noindent 
+            \begin{jscode}
+            Plot.barY(data, Plot.groupX({ y: "count" }, { x: "crash_type" }))
+            \end{jscode}
+            \bigbreak \noindent 
+            This groups rows by crash\_type and counts them.
+        \item \textbf{Encodings}: Encodings map data fields to visual properties. Common channels are 
+            \begin{itemize}
+                \item x — horizontal position
+                \item y — vertical position
+                \item color — categorical or quantitative color
+                \item fill / stroke — appearance
+                \item size — point size
+                \item opacity
+            \end{itemize}
+        \item \textbf{Faceting and Grouping}: You can split data into panels or aggregate within categories.
+            \bigbreak \noindent 
+            \begin{jscode}
+                Plot.barY(
+                    data,
+                    Plot.groupX({ y: "count" }, { x: "date" })
+                )
+            \end{jscode}
+            \bigbreak \noindent 
+            Notice that we use \textit{count} above, but we also have options
+            \begin{itemize}
+                \item \textbf{count} - the number of observations in each group
+                \item \textbf{sum} - the sum of values
+                \item \textbf{proportion} - like sum, but divided by the total
+                \item \textbf{proportion-facet} - like sum, but divided by the facet’s total
+                \item \textbf{min} - the minimum value
+                \item \textbf{max} - the maximum value
+                \item \textbf{mean} - the mean (average) value
+                \item \textbf{median} - the median value
+                \item \textbf{mode} - the value with the most occurrences
+                \item \textbf{variance} - an unbiased estimator of population variance
+                \item \textbf{deviation} - the standard deviation
+                \item \textbf{first} - the first value (in input order)
+                \item \textbf{last} - the last value (in input order)
+            \end{itemize}
+        \item \textbf{Axes and Scales}: Plot automatically creates axes based on data types.
+            \bigbreak \noindent 
+            \begin{jscode}
+            Plot.plot({
+                x: { label: "Date" },
+                y: { label: "Number of crashes" },
+                marks: [...]
+            })
+            \end{jscode}
+    \end{itemize}
+
+
     \pagebreak 
     \unsect{The what why and how}
+    \subsection{What}
+    \begin{itemize}
+        \item \textbf{Semantics}: Real world meaning of the data
+        \item \textbf{Type}: Structural or mathematical interpretation. Both semantics and type often require metadata
+            \begin{itemize}
+                \item \texbf{Item (also Nodes):} an entity
+                \item \texbf{Link:} relationship between two items
+                \item \texbf{Attribute:} property of an item
+                \item \texbf{Position:} location in space
+                \item \texbf{Grid:} how data is sampled
+            \end{itemize}
+        \item \textbf{Dataset types}: 
+            \begin{itemize}
+                \item Tables
+                \item multidimensional data
+                \item Networks (graphs)
+                \item Fields (continuous)
+                \item Geometry (spatial)
+                \item trees
+            \end{itemize}
+        \item \textbf{Ordering direction}
+            \begin{itemize}
+                \item \textbf{Sequential}:
+                \item \textbf{Diverging}: Left and right directions from a common start point
+                \item \textbf{Cyclic}
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Why?}
+    \begin{itemize}
+        \item \textbf{Actions}: 
+            \begin{itemize}
+                \item \texbf{Analyze}: Discover, present, enjoy
+                \item \texbf{Produce}: Annotate, record, derive
+                \item \texbf{Search}: Lookup, browse, locate, explore
+                \item \texbf{Query}: Identify, compare, summarize
+            \end{itemize}
+        \item \textbf{Targets}:
+            \begin{itemize}
+                \item \textbf{All data}: Trends, outliers, features
+                \item \textbf{Attributes}: 
+                    \begin{itemize}
+                        \item \textbf{One}: Distribution, extremes
+                        \item \textbf{Many}: Dependency, correlation, similarity
+                    \end{itemize}
+                \item \textbf{Network data}: Topology, paths
+                \item \textbf{Spatial data}: Shape
+            \end{itemize}
+        \item \textbf{Visualization for Consumption}: Discover new knowledge, present known information, enjoy. Asking good questions is very important, answers often lead to more questions.
+        \item \textbf{Measuring User Experience in Visualization}
+            \begin{itemize}
+                \item \textbf{Memorability}:
+                \item \textbf{Engagement}:
+                \item \textbf{Enjoyment}:
+            \end{itemize}
+        \item \textbf{ISOTYPE visualization}: The technique of stacking icons to represent data
+    \end{itemize}
+    \pagebreak 
     \subsection{How}
     \begin{itemize}
         \item \textbf{Marks and channels}:
@@ -1300,14 +1513,281 @@ html`
                 \item Lines have a length, cannot easily encode attribute as length
                 \item Maps with boundaries have area, changing size can be problematic
             \end{itemize}
+            \bigbreak \noindent 
+        \item \textbf{Channels}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/2.png}
+            \begin{itemize}
+                \item \textbf{Identity}: What or where
+                \item \textbf{Magnitude}: How much
+            \end{itemize}
         \item \textbf{Bertin - Visual Variables}: 
             \bigbreak \noindent 
             \fig{.8}{./figures/1.png}
         \item \textbf{More visual channels}:
             \bigbreak \noindent 
             \fig{.8}{./figures/1061.png}
+        \item \textbf{Mark types}: Can have marks for items and links
+            \begin{itemize}
+                \item \textbf{Connection} $\implies$ pairwise relationship
+                \item \textbf{Containment} $\implies$ hierarchical relationship
+            \end{itemize}
+        \item \textbf{Marks as items / nodes}: Points, lines, areas
+        \item \textbf{Marks as links}: Containment, connection
+        \item \textbf{Expressiveness and Effectiveness}: 
+            \begin{itemize}
+                \item \textbf{Expressiveness Principle:} all data from the dataset and nothing more should be shown. Don’t encode categorical data in a way that implies an ordering 
+                \item \textbf{Effectiveness Principle:} the most important attributes should be the most salient
+            \end{itemize}
+        \item \textbf{Saliency}: How noticeable something is.
+        \item \textbf{Mackinlay's Ranking of Perceptual Tasks}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/4.png}
+        \item \textbf{Iliinsky's Best Uses, +Ordering, +NumValues}
+            \bigbreak \noindent 
+            \fig{.8}{./figures/5.png}
+        \item \textbf{Discriminability}: Discriminability in data visualization refers to the number of distinct, identifiable steps or levels a visual channel (e.g., color, size, position) can reliably convey to the viewer. It limits how many data categories or magnitudes can be represented before differences become indistinguishable
+        \item \textbf{Separability}: Separable means each individual channel can be distinguished
+        \item \textbf{Integral}: Means the channels are perceived together
+        \item \textbf{Relative vs. Absolute Judgments (Weber's law)}: We judge based on relative, not absolute differences. The amount of perceived difference is relative to the objects magnitude. 
+
+
     \end{itemize}
-    
+
+
+    \pagebreak 
+    \subsection{Tabular data}
+    \begin{itemize}
+         \item \textbf{Visualization of tables}: Items and attributes. For now, attributes are not known to be positions.
+            \begin{itemize}
+                \item \textbf{Keys}: Key is an independent attribute that is unique and identifies them Keys are categorical / ordinal
+                \item \textbf{Values}: Tells some aspect of an item. Values are categorical / ordinal / quantitative
+                \item \textbf{Levels}: Unique values of categorical or ordered attributes
+            \end{itemize}
+        \item \textbf{Arrange Tables}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/6.png}
+        \item \textbf{Express values: Scatterplots}: Two quantitative values, find trends, clusters, or outliers. Marks at spatial position in horizontal and vertical directions.
+            \begin{itemize}
+                \item \textbf{Correlation}: Dependence between two attributes. Indicated by lines, could be positive or negative.
+            \end{itemize}
+        \item \textbf{Categorical regions}: Spatial position can be used for categorical attributes. Use \textbf{regions}, distinct contiguous bounded areas, to encode categorical attributes.
+            \bigbreak \noindent 
+            Three operations on the regions:
+            \begin{enumerate}
+                \item Separate (use categorical attribute)
+                \item Align
+                \item Order
+            \end{enumerate}
+            Alignment and order can use same or different attribute, some ordered attributes.
+        \item \textbf{List alignment; Bar charts}: One quantitative, one categorical. Task is to lookup and compare values. Marks are lines, channels are vertical position (quantitative), and horizontal position (categorical).
+            \bigbreak \noindent 
+            The ordering criteria for the x-axis is alphabetical or using quantitative attribute (bar heights sorted). Scalability is hundreds.
+        \item \textbf{Stacked Bar Charts}: Multidimensional table; one quantitative, \textbf{two} categorical.
+            \begin{itemize}
+                \item \textbf{Task}: lookup values, part-to-whole relationship, trends 
+                \item \textbf{How}: Line marks, position, subcomponent line marks: length and color.
+                \item \textbf{Scalability}: Main axis (hundreds)
+            \end{itemize}
+        \item \textbf{Streamgraphs}: Include a time attribute. A streamgraph is a variation of a stacked area chart. Instead of plotting values against a conventional Y axis, the streamgraph offsets the baseline of each “stack” to make it symmetrical around the X axis.
+            \begin{itemize}
+                \item \textbf{Data:} multidimensional table, one quantitative attribute (count), one ordered key attribute (time), one categorical key attribute 
+                    \bigbreak \noindent 
+                    plus a  derived attribute; layer ordering (quantitative)
+                \item \textbf{Task:} analyze trends in time, find (maxmial) outliers
+                \item \textbf{How:} derived position+geometry, length, color
+                \item \textbf{Scalability:} more categories than stacked bar charts
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/8.png}
+        \item \textbf{Dot and Line Charts}: one quantitative attribute, one ordered attribute
+            \begin{itemize}
+                \item \textbf{Task}: Lookup values, find outliers and trends
+                \item \textbf{How}: Point mark and positions
+                \item \textbf{Line charts}: Add connection mark (line)
+            \end{itemize}
+            Similar to scatterplots but allows ordered attributes
+            \bigbreak \noindent 
+            \fig{.6}{./figures/7.png}
+            \bigbreak \noindent 
+            \textbf{Note:} Trends in line charts are more apparent because we are using angle as a channel 
+        \item \textbf{Heatmaps}: Two keys, one quantitative attribute 
+            \begin{itemize}
+                \item \textbf{Task:} Find clusters, outliers, summarize 
+                \item \textbf{How:} area marks in grid, color encoding of quantitative attribute
+            \end{itemize}
+            Red-green color scales often used, be aware of colorblindness
+        \item \textbf{Cluster Heatmap}: Data and task same as Heatmap
+            \begin{itemize}
+                \item \textbf{How}: Area marks but matrix is ordered by cluster hierarchies
+            \end{itemize}
+        \item \textbf{Dendrogram:} a visual encoding of tree data with leaves aligned
+        \item \textbf{Scatterplot Matrix}: A matrix of scatterplots. 
+            \begin{itemize}
+                \item \textbf{Data}: Many quantitative attributes
+                \item \textbf{Derived data}: Names of attributes
+            \end{itemize}
+        \item \textbf{Radial axis}: Polar coordinates (angle + position along the line at that angle)
+            \bigbreak \noindent 
+            \fig{.6}{./figures/9.png}
+            \begin{itemize}
+                \item Radial bar charts
+                \item Pie charts
+                \item Donut charts
+            \end{itemize}
+        \item \textbf{Part-of-whole relative comparisons}: 
+            \begin{itemize}
+                \item \textbf{Normalized stacked bar chart}
+                \item \textbf{Pie chart}:
+            \end{itemize}
+            \fig{.6}{./figures/10.png}
+        \item \textbf{Pie chart vs bar chart}: Angle channel is lower precision then position in bar charts. \textbf{We do not read pie charts by angle}, we read pie charts by area, and area is harder to judge than position. Screens are usually not round.
+
+
+       
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Color and colormaps}
+    \begin{itemize}
+        \item \textbf{Color is a perceptive property:} color depends on the eyes and brain
+        \item \textbf{Visible light}: Visible light is a small portion of the electromagnetic spectrum which is composed of waves that at various frequencies (wavelengths), all traveling at the speed of light
+        \item \textbf{Important}: We need to be aware of colorblindness when encoding via color
+            \bigbreak \noindent 
+            Our brains may misinterpret color (surrounding colors matter!) even if we aren't colorblind
+            \bigbreak \noindent 
+            Be careful! Don't assume that adding color always works the way you intended
+            \bigbreak \noindent 
+            Use known colormaps when possible
+        \item \textbf{Color model and color space}: Representation of color using some basis, color space is a collection of color models used for some task.
+        \item \textbf{Color gamut}: Subset of colors, defined by corners of color space
+        \item Hue-Saturation-Lightness (HSL) is more intuitive and useful
+            \begin{itemize}
+                \item Hue captures pure colors
+                \item Saturation captures the amount of white mixed with the color
+                \item Lightness captures the amount of black mixed with a color
+            \end{itemize}
+            HSL color pickers are often circular
+        \item \textbf{Luminance}: It describes the amount of light that passes through, is emitted from, or is reflected from a particular area, and falls within a given solid angle
+        \item \textbf{RGB}: Uses three numbers to represent color (red, blue, green)
+        \item \textbf{Colormaps}: A colormap specifies a mapping between colors and data values
+            \bigbreak \noindent 
+            Colormap should follow the expressiveness principle
+            \bigbreak \noindent 
+            \fig{.6}{./figures/11.png}
+        \item \textbf{Categorical vs. Ordered}: Hue has no implicit ordering, use for categorical data. Saturation and luminance do: Use for ordered data.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/12.png}
+        \item \textbf{Categorical Colormap Guidelines}: Don't use too many colors ($\sim 12$), remember your background has a color too. Nameable colors help. Be aware of luminance. Think about other marks you might wish to use in the visualization.
+            \bigbreak \noindent 
+            Often, fewer colors are better. Don't let viewers combine colors because they can't tell the difference. Make the combinations yourself. Also, can use "other" category to reduce the number of colors.
+        \item \textbf{Ordered Colormaps}: Used for ordinal or quantitative attributes
+            \begin{itemize}
+                \item \textbf{Sequential}: $[0,N]$
+                \item \textbf{Diverging}: $[-N, m, N]$, where $m$ is the midpoint, usually $0$. Midpoint should be meaningful. 
+            \end{itemize}
+            Can use hue, saturation, and luminance. Can be \textbf{continuous (smooth)}, or \textbf{segmented (sharp boundaries)}. Segmented matches with ordinal attributes, can be used with quantitative data too.
+        \item \textbf{Types of Tasks}: Locate/Explore & Identify: Highest Point (Global, In Region), 275m
+            \begin{itemize}
+                \item \textbf{Locate/Explore and Compare:} Height Compare/Rank
+                \item \textbf{Explore and Identify:} Steepest
+                \item \textbf{Lookup and Identify:} Lookup
+                \item \textbf{Explore and Compare:} Steepness Compare/Rank
+                \item \textbf{Browse and Summarize:} Average Height
+                \item \textbf{Browse and Compare:} Compare Average Height
+                \item \textbf{Combination:} Steepest at 355m
+            \end{itemize}
+
+        \item \textbf{Note}: Don't Use Rainbow Colormaps, other colormaps work better. Rainbow colormaps (often called “jet” colormaps) are widely discouraged in data visualization because they introduce perceptual distortions that can mislead interpretation. The problem is not aesthetic; it is rooted in human visual perception and color science.
+            \bigbreak \noindent 
+            A good colormap should change perceptually uniformly with the data. That is, equal changes in data values should appear as equal visual changes.
+            \bigbreak \noindent 
+            Rainbow colormaps violate this property.
+            \begin{itemize}
+                \item Some regions (e.g., yellow–green) appear much brighter than others.
+                \item Other transitions (e.g., blue $\to$ cyan) appear subtle even when the data difference is large.
+            \end{itemize}
+            Small differences in certain ranges appear exaggerated. Large differences in other ranges appear suppressed.
+            \bigbreak \noindent 
+            Also, rainbow maps introduce false gradients that do not exist in the data.
+            \begin{itemize}
+                \item \textbf{Issues:}
+                    \begin{itemize}
+                        \item Order is unclear
+                        \item Luminance issues
+                        \item Artifacts from discontinuities in luminance
+                    \end{itemize}
+                \item Attempts to fix:
+                    \begin{itemize}
+                        \item Isoluminant rainbow
+                        \item Turbo
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Main ideas}:
+            \begin{enumerate}
+                \item \textbf{Don't dance around the color wheel}
+                \item \textbf{Warm colors and blue}
+                \item \textbf{Avoid too little contrast to background}
+            \end{enumerate}
+        \item \textbf{Bivariate Colormaps}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/13.png}
+        \item \textbf{Uncertaintly can map to saturation (bivariate colormap)}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/14.png}
+        \item \textbf{Value-Suppressing Uncertainty Palette (VSUP)}:  Same channels, binned differently.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/15.png}
+            \begin{itemize}
+                \item Legend shape has no significant effect
+                \item Some indication that people avoid high uncertainty with VSUPs
+                \item Tradeoff is that people do choose targets with higher danger when using a VSUP
+                \item VSUPs present uncertainty information simultaneously (superimposed) instead of juxtaposed
+                \item VSUPs encode value and uncertainty via discrete, quantized bins instead of continuously
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Geospatial data}
+    \begin{itemize}
+        \item \textbf{Spatial data}: Has positions, may also have non-spatial attributes associated with items
+        \item \textbf{Cartography}: Science of drawing maps
+        \item \textbf{Goals}: Respect cartographic principles, understand data with geographic references with the visualization principles
+        \item \textbf{Adding Data}: 
+            \begin{itemize}
+                \item \textbf{Discrete}: A value is associated with a specific position
+                    \begin{itemize}
+                        \item Size
+                        \item Color hue
+                        \item Charts
+                    \end{itemize}
+                \item \textbf{Continuous}:  Each spatial position has a value (fields)
+                    \begin{itemize}
+                        \item Heatmap
+                        \item Isolines
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Isolines}: 
+            \begin{itemize}
+                \item Scalar fields:
+                \begin{itemize}
+                    \item value at each location
+                    \item sampled on grids
+                \end{itemize}
+            \end{itemize}
+            Isolines use derived data from the scalar field, interpret field as representing continuous values, derived data is geometry: new lines that represent the same attribute value
+        \item \textbf{Choropleth (Two Hues)}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/16.png}
+            \begin{itemize}
+                \item \textbf{Data:} geographic geometry data & one quantitative attribute per region
+                \item \textbf{Tasks:} trends, patterns, comparisons
+                \item \textbf{How:} area marks from given geometry, color hue/saturation/luminance
+                \item \textbf{Scalability:} thousands of regions 
+            \end{itemize}
+
+    \end{itemize}
 
 
 
