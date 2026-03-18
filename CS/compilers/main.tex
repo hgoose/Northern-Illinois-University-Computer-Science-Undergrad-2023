@@ -1482,6 +1482,7 @@ print(expr1, expr2,...);
                     \end{itemize}
                 \item Logical
                     \begin{itemize}
+                        \item $\sim$ (not)
                         \item \&\& 
                         \item ||
                     \end{itemize}
@@ -1526,6 +1527,75 @@ print(expr1, expr2,...);
         The AST for the expression \texttt{print(4<7, 4+7, "hello");} would be
         \bigbreak \noindent 
         \fig{1}{./figures/23.png}
+    \item \textbf{Defining a boolean}: Recall that for our language, we have no boolean type, but we have the type \texttt{int4}. Thus, we will use this type to handle booleans. For our purposes, we will say that one is true and zero is false. So, we only care about the first byte, and in that first byte, the first bit.
+    \item \textbf{Syntax diagrams and grammar for arithmetic, relational, and logical expressions}: First, let's come up with a simple grammar that handles these types of expressions, with correct precedence and associativity.
+        \begin{align*}
+            A &\to A \text{ or } B \mid B\\
+            B &\to B \text{ and } C \mid C\\
+            C &\to\; \sim C \mid D \\
+            D &\to F == F \mid F \ne F \mid E\\
+            E &\to F < F \mid F \leq F \mid F > F \mid F \geq F \mid F \\
+            F &\to F + G \mid F - G \mid G\\
+            G &\to G * H \mid G / H \mid G \text{ mod } H \mid H\\
+            H &\to \neg I \mid \oplus I \mid I\\
+            I &\to I \land J \mid J\\
+            J &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false }
+        .\end{align*}
+        A few notes
+        \begin{enumerate}
+            \item Equality checks return a boolean, so allowing chains here would lead to incorrect semantics
+            \item Same for the other relational operators, we do not want to allow something like
+                \begin{align*}
+                    (a < b) < d
+                \end{align*}
+                For our purposes, we don't want to allow arithmetic or comparisons with boolean constants. If one operand is a boolean, the operator better be logical. 
+            \item We call unary negation $\neg$, and unary plus $\oplus$
+        \end{enumerate}
+        The syntax diagrams for this grammar would be 
+        \bigbreak \noindent 
+        % https://jacquev6.github.io/DrawGrammar/
+        % A = A, "or", B | B;
+        % B = B, "and", C | C;
+        % C = "~", C | D;
+        % D = F, "==", F | F, "!=", F | E;
+        % E = F, "<", F | F, "<=", F | F, ">", F | F, ">=", F | F;
+        % F = F, "+", G | F, "-", G | G;
+        % G = G, "*", H | G, "/", H | G, "mod", H | H;
+        % H = "uneg", 'I' | "uplus", 'I' | 'I';
+        % I = 'I', '^', J | J;
+        % J = "(", A, ")" | int | true | false;
+        \begin{minipage}[ht]{0.47\textwidth}
+            \fig{.7}{./figures/24.png}
+        \end{minipage}
+        \begin{minipage}[h]{0.47\textwidth}
+            \fig{.7}{./figures/25.png}
+        \end{minipage}
+        \bigbreak \noindent 
+         Although we do implement some semantic checks directly in the parser, it is best to allow expressions that obey syntax but disobey semantic rules to be accepted by the parser, and leave the complaining to the semantic checks after parsing is completed. However, some semantic rules are very simple to implement directly in grammar. For example, making the operands of relational operators go directly to the grammar rule that begins arithmetic expressions. 
+         \bigbreak \noindent 
+         We could conceive of a grammar that does implement semantic checks in regards to operands and their requite operands. For example, in our language we require that the operands of a logical operator must be logical (true / false), and the operands of a relational or arithmetic operand must be arithmetic. In this system, it then follows that there can only be at most one relational operator per expression. 
+         \bigbreak \noindent 
+         Note that the result of a logical or relational expression is a boolean, and the result of an arithmetic expression is arithmetic.
+         \bigbreak \noindent 
+         The following grammar enforces not only precedence and associativity, but also types of operands.
+        \begin{align*}
+            A &\to W \mid B \\
+            W &\to W \text{ or } X \mid X \\
+            X &\to X \text{ and } Y \mid Y\\
+            Y &\to\; \sim Y \mid D^{\prime}\\
+            B &\to D \\
+            D &\to F == F \mid F \ne F \mid E\\
+            E &\to F < F \mid F \leq F \mid F > F \mid F \geq F \mid F \\
+            D^{\prime} &\to F == F \mid F \ne F \mid E^{\prime}\\
+            E^{\prime} &\to F < F \mid F \leq F \mid F > F \mid F \geq F \mid Z\\
+            Z &\to (A) \mid \text{ true } \mid \text{ false } \\
+            F &\to F + G \mid F - G \mid G\\
+            G &\to G * H \mid G / H \mid G \text{ mod } H \mid H\\
+            H &\to \neg I \mid \oplus I \mid I\\
+            I &\to I \land J \mid J\\
+            J &\to (F) \mid \text{int} 
+        .\end{align*}
+        Although it's best to maintain strict separation between parsing and semantic analyzing. Let grammars / parsing shape the language, and the semantic analyzer check if statements that assume that shape make sense.
 
 
 
@@ -2206,6 +2276,63 @@ if (errno) {
             \textbf{Important note}: For JIT code that ends with RET, the total number of pushes must equal the total number of pops. In 64-bit mode (IA-32e), RET always pops its return address from the current stack pointer (RSP). If your JIT code has done a net extra push (i.e., stack not balanced), then RET will pop your arithmetic value (e.g., 10) and try to jump to address 0x000000000000000A, instant crash.
 
 
+        \item \textbf{FLAGS (EFLAGS and RFLAGS)}: EFLAGS and RFLAGS are the status/control flag registers of x86.
+            \bigbreak \noindent 
+            They hold individual bit flags that record arithmetic results, processor state, and certain control settings. 
+            \bigbreak \noindent 
+            These names come from register width across x86 generations.
+            \begin{itemize}
+                \item FLAGS = original 16-bit register on 8086
+                \item EFLAGS = 32-bit version in 32-bit x86
+                \item RFLAGS = 64-bit version in x86-64 / IA-32e
+            \end{itemize}
+            Conceptually, they are the same logical register extended over time. In 64-bit mode, almost all meaningful flag bits are still in the low portion; the upper bits of RFLAGS are mostly reserved.
+            \begin{enumerate}
+                \item \textbf{Status flags}: These reflect the result of arithmetic/logical operations.
+                    \begin{itemize}
+                        \item CF - Carry Flag
+                        \item PF - Parity Flag
+                        \item AF - Auxiliary Carry Flag
+                        \item ZF - Zero Flag
+                        \item SF - Sign Flag
+                        \item OF - Overflow Flag
+                    \end{itemize}
+                \item \textbf{Control flags}: These reflect the result of arithmetic/logical operations.
+                    \begin{itemize}
+                        \item DF - Direction Flag
+                        \item IF - Interrupt Enable Flag
+                        \item TF - Trap Flag
+                    \end{itemize}
+                \item \textbf{System / Privilege flags}: These are used by the operating system, virtualization, tasking, privilege transitions, and related machinery
+                    \begin{itemize}
+                        \item IOPL
+                        \item NT
+                        \item RF
+                        \item VM
+                        \item AC
+                        \item VIF
+                        \item VIP
+                        \item ID
+                    \end{itemize} 
+            \end{enumerate}
+            Only some flags have dedicated instructions to directly set or clear them. Many do not, and are instead changed only as a side effect of other instructions, or only by restoring a saved flags value.
+            \begin{itemize}
+                \item CLC - clear carry flag (CF := 0)
+                \item STC - set carry flag (CF := 1)
+                \item CMC - complement carry flag (CF := $\sim$CF)
+                \item CLD - clear direction flag (DF := 0)
+                \item STD - set direction flag (DF := 1)
+                \item CLI - clear interrupt flag (IF := 0)
+                \item STI - set interrupt flag (IF := 1)
+            \end{itemize}
+            We can push / pop the FLAGS register with \texttt{pushfq, popfq}. Even though POPFQ exists, not every bit in RFLAGS can necessarily be changed arbitrarily:
+            \begin{itemize}
+                \item some bits are reserved
+                \item some bits are fixed
+                \item some bits are privileged
+                \item some bits may ignore writes in user mode
+            \end{itemize}
+            So pushfq / popfq gives you a whole-register interface, but not unrestricted control over every bit.
         \item \textbf{The TEST instruction}: The TEST instruction in IA-32e (the 64-bit extension of the x86 architecture) performs a bitwise logical AND between two operands without storing the result. Its sole purpose is to update the condition flags in RFLAGS. Given
             \bigbreak \noindent 
             \begin{cppcode}
@@ -2280,6 +2407,23 @@ if (errno) {
             \end{cppcode}
             \bigbreak \noindent 
             assuming we want our operands to be 32-bit.
+        \item \textbf{Compare instruction}: The compare instruction perform a subtraction
+            \begin{align*}
+                \text{op}_{1} - \text{op}_{2}
+            \end{align*}
+            but does not store the result anywhere. It only updates the status flags in RFLAGS, and those flags are then used by conditional jumps like JE, JL, JG, JB, and so on.
+        \item \textbf{SETcc}: SETcc is the x86 family of set-on-condition instructions. It evaluates a condition based on the current flags in EFLAGS / RFLAGS, and writes:
+            \begin{itemize}
+                \item 1 if the condition is true
+                \item 0 if the condition is false
+            \end{itemize}
+            into a \textbf{single byte operand}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                cmp eax, ebx
+                sete al
+            \end{cppcode}
+            sets AL = 1 if they are equal, zero otherwise.
         \item \textbf{Fast exponentiation}: The FE algorithm leverages the idea that  for $a\in \mathbb{Z}$, $b \in \mathbb{Z}_{ \geq 0}$,
             \begin{align*}
                 a^{b} = \begin{cases}
@@ -2679,6 +2823,29 @@ if (errno) {
             \end{cppcode}
             \bigbreak \noindent 
             and the encoding is 8906.
+        \item \textbf{Booleans}: We use an 8-bit register (low order 8) to store boolean values. In our language, a boolean can only be zero or one, so in that register, only the LSB is of concern. For example, we may use AL.
+        \item \textbf{Code generation for relational operations}: Consider an expression
+            \begin{align*}
+                e_{1}e_{2}<
+            .\end{align*}
+            Using our stack based model,
+            \begin{cppcode}
+            push   |$e_{1}$|
+            push   |$e_{2}$|
+            pop    eax
+            pop    ecx
+            cmp    ecx, eax
+            setl   al
+            \end{cppcode}
+        \item \textbf{Short circuiting}: The idea is that for two logical operands, we could jump over the evaluation of the second operand depending on the result of the first. For example, for $e_{1} \text{ and } e_{2}$, we have $e_{1}$ whose expression was evaluated and set AL with the above logic. Then,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                TEST AL,1    
+                JZ ...
+            \end{cppcode}
+            \bigbreak \noindent 
+            where the jump jumps over the evaluation of $e_{2}$.
+
 
 
 
