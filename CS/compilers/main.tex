@@ -24,7 +24,7 @@
 
 % Change the title
 \hypersetup{
-    pdftitle={Comilers}
+    pdftitle={Compliers}
 }
 
 \begin{document}
@@ -1364,6 +1364,7 @@ print(expr1, expr2,...);
             \fig{.5}{./figures/20.png}
             \bigbreak \noindent 
             \textbf{Note:} Syntax diagrams are closely related to parsing, but they are not themselves part of the parsing process. Instead, they are a method for specifying the syntax of a language, which a parser then implements.
+        \item \textbf{Code diagrams}: Code diagrams are comprised of \textbf{code blocks}, which are a essentially a black box for certain operations. Between these code blocks is the actual code that we are concerned with.
         \item \textbf{Statement blocks and their AST representation}: In compiler theory, a statement block is a syntactic construct that groups multiple statements so they can be treated as a single statement within the language grammar and semantics.
             \bigbreak \noindent 
             A statement block is a sequence of statements enclosed by delimiters (such as \{\} in C-like languages) that forms a single compound statement. Formally, a grammar rule might look like
@@ -1601,6 +1602,171 @@ print(expr1, expr2,...);
 
 
     \end{itemize}
+
+    \pagebreak 
+    \subsection{Decisions}
+    \begin{itemize}
+        \item \textbf{If statement syntax diagram}: A simple naive syntax diagram for if-else statements is
+            \bigbreak \noindent 
+            \fig{.4}{./figures/26.png}
+            \bigbreak \noindent 
+            Note that a syntax diagram does not have to correspond one-to-one with individual BNF production rules. It can instead correspond to a larger syntactic category. This is essentially a simplified form of
+            \bigbreak \noindent 
+            \fig{.5}{./figures/27.png}
+            \bigbreak \noindent 
+            And, conventionally statement blocks are handled in the following way
+            \bigbreak \noindent 
+            \fig{.5}{./figures/28.png}
+            \bigbreak \noindent 
+            Note that we also changed how \texttt{else} is handled. Additionally, these diagrams don't account for the fact that a statement could be $\varepsilon$. So in the language defined above, a statement cannot be empty.
+            \bigbreak \noindent 
+            A grammar up to this point could be 
+            \begin{align*}
+                \text{STMT} &\to \text{IF } \mid \text{ ASSIGN } \mid \text{ DECLARE } \mid \text{ BLOCK }\\
+                \text{IF} &\to  \text{if (EXPR) STMT ELSE } \\
+                \text{ELSE} &\to \text{else STMT } \mid \varepsilon\\
+                \text{BLOCK} &\to \{\text{STMTLIST}\} \\
+                \text{STMTLIST} &\to \text{STMT STMTLIST } \mid \varepsilon \\
+                \text{ASSIGN} &\to  \text{ident := EXPR; }\\
+                \text{DECLARE} &\to \text{TYPE ident; } \\
+                \text{TYPE} &\to \text{int4} \\
+                \text{EXPR} &\to  A \\
+                A &\to A \text{ or } B \mid B\\
+                B &\to B \text{ and } C \mid C\\
+                C &\to\; \sim C \mid D \\
+                D &\to F == F \mid F \ne F \mid E\\
+                E &\to F < F \mid F \leq F \mid F > F \mid F \geq F \mid F \\
+                F &\to F + G \mid F - G \mid G\\
+                G &\to G * H \mid G / H \mid G \text{ mod } H \mid H\\
+                H &\to \neg I \mid \oplus I \mid I\\
+                I &\to I \land J \mid J\\
+                J &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false } \mid \text{ ident }
+            .\end{align*}
+            Note that a statement block is itself a statement.
+        \item \textbf{The dangling else problem}: The dangling else problem is the ambiguity that appears when your grammar allows both
+            \bigbreak \noindent 
+            \begin{cppcode}
+            if (EXPR) STMT
+            \end{cppcode}
+            \bigbreak \noindent 
+            and
+            \bigbreak \noindent 
+            \begin{cppcode}
+            if (EXPR) STMT ELSE STMT
+            \end{cppcode}
+            \bigbreak \noindent 
+            because then an else may have more than one possible if to attach to. For example, 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if (a < 10) 
+                    if (a > 2)
+                else
+                    ...
+            \end{cppcode}
+            \bigbreak \noindent 
+            So, which if should the \texttt{else} be attached to? In most languages, the else will attach to the very last if. Without accounting for this problem, our grammar would be ambiguous. 
+            \bigbreak \noindent 
+            One way to fix this problem is to enforce blocks after if statements. Another is to use the \textbf{MATCHED/UNMATCHED} construct.
+        \item \textbf{Matched / unmatched construct}: This is the standard compiler-theory solution. We split statements into two categories
+            \begin{enumerate}
+                \item \textbf{Matched statements}: Every \texttt{if} inside already has its \texttt{else}
+                \item \textbf{Unmatched statements}: There is an \texttt{if} still waiting for an \texttt{else}
+            \end{enumerate}
+            The idea is that an \texttt{else} is only allowed to pair with the closest \texttt{if} that is still unmatched.
+            \bigbreak \noindent 
+            A standard version is
+            \begin{align*}
+                \text{STMT}      &\to \text{ MATCHED } \mid  \text{ UNMATCHED} \\
+                \text{MATCHED}   &\to \text{ ASSIGN } \mid \text{ DECLARE } \mid \text{ BLOCK} \mid \texttt{ if (EXPR) MATCHED else MATCHED} \\
+                \texttt{UNMATCHED} &\to \text{ if (EXPR) STMT} \mid \text{ if (EXPR) MATCHED else UNMATCHED}
+            .\end{align*}
+            So, 
+            \begin{itemize}
+                \item A statement is matched if every if in it already has a partner else.
+                \item A statement is unmatched if somewhere at the outer edge there is an if with no else yet.
+            \end{itemize}
+            Now, the grammar is
+            \begin{align*}
+                \text{STMT}      &\to \text{ MATCHED } \mid  \text{ UNMATCHED} \\
+                \text{MATCHED}   &\to \text{ ASSIGN } \mid \text{ DECLARE } \mid \text{ BLOCK} \mid \texttt{ if (EXPR) MATCHED else MATCHED} \\
+                \texttt{UNMATCHED} &\to \text{ if (EXPR) STMT} \mid \text{ if (EXPR) MATCHED else UNMATCHED} \\
+                \text{BLOCK} &\to \{\text{STMTLIST}\} \\
+                \text{STMTLIST} &\to \text{STMT STMTLIST } \mid \varepsilon \\
+                \text{ASSIGN} &\to  \text{ident := EXPR; }\\
+                \text{DECLARE} &\to \text{TYPE ident; } \\
+                \text{TYPE} &\to \text{int4} \\
+                \text{EXPR} &\to  A \\
+                A &\to A \text{ or } B \mid B\\
+                B &\to B \text{ and } C \mid C\\
+                C &\to\; \sim C \mid D \\
+                D &\to F == F \mid F \ne F \mid E\\
+                E &\to F < F \mid F \leq F \mid F > F \mid F \geq F \mid F \\
+                F &\to F + G \mid F - G \mid G\\
+                G &\to G * H \mid G / H \mid G \text{ mod } H \mid H\\
+                H &\to \neg I \mid \oplus I \mid I\\
+                I &\to I \land J \mid J\\
+                J &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false } \mid \text{ ident }
+            ,\end{align*}
+            which produces the following syntax diagrams.
+            \bigbreak \noindent 
+            \begin{minipage}[ht]{0.55\textwidth}
+                \fig{.5}{./figures/30.png} 
+            \end{minipage}
+            \begin{minipage}[ht]{0.47\textwidth}
+                \fig{.5}{./figures/31.png} 
+            \end{minipage}
+            \bigbreak \noindent 
+            \begin{minipage}[ht]{0.25\textwidth}
+                \fig{.5}{./figures/32.png}
+            \end{minipage}
+            \begin{minipage}[ht]{0.47\textwidth} \end{minipage}
+        \item \textbf{Else if}: We remark that the above grammar does handle \texttt{else if}, an else if (...) ... is not usually a separate primitive grammar form. It is just:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            else STMT
+            \end{cppcode}
+            \bigbreak \noindent 
+            Where stmt happens to be another \texttt{if}. So, something like 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            if (a) s1 else if (b) s2 else s3
+            \end{cppcode}
+            \bigbreak \noindent 
+            is parsed as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            if (a) s1 else [ if (b) s2 else s3 ]
+            \end{cppcode}
+        \item \textbf{AST for if statements}: Consider the naive grammar that supports decision statements
+            \begin{align*}
+                \text{STMT } &\to \text{BLOCK } \mid \text{ ASSIGN } \mid \text{ DECLARE} \mid \text{ \varepsilon} \\
+                \text{BLOCK } &\to \{ \text{STMTLIST}\} \\
+                \text{STMTLIST } &\to \text{STMT SMTLIST} \mid \varepsilon \\
+                \text{IF } &\to \text{if (EXPR) STMT } \mid \text{if (EXPR) STMT \text{else} STMT } 
+            .\end{align*}
+            Then, for 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if (b < 10) {
+                    b := b +5;
+                    print("b: ", b);
+                } else if (b > 20) {
+                    b := b-10;
+                    print("else if");
+                } else 
+                    print("Something else");
+            \end{cppcode}
+            \bigbreak \noindent 
+            The AST would then be 
+            \bigbreak \noindent 
+            \fig{.8}{./figures/33.png}
+
+
+
+
+
+    \end{itemize}
+
 
     \pagebreak 
     \unsect{Intel x86-64 architecture and code generation}
@@ -2845,10 +3011,55 @@ if (errno) {
             \end{cppcode}
             \bigbreak \noindent 
             where the jump jumps over the evaluation of $e_{2}$.
+        \end{itemize}
+
+        \pagebreak 
+        \unsect{Optimizations}
+        \begin{itemize}
+            \item \textbf{Unary negation}: One very simple optimization that we can do when parsing is to collapse the unary negation operation on an integer constant. For example, 
+                \bigbreak \noindent 
+                \fig{1}{./figures/34.png}
+                \bigbreak \noindent 
+                becomes simply $-5$.
+            \item \textbf{Constant folding}: Constant folding is a compiler optimization where the compiler evaluates expressions made entirely of constants at compile time instead of generating code to compute them at run time. For example, with
+                \bigbreak \noindent 
+                \begin{cppcode}
+                x := 3 + 4 * 2;
+                \end{cppcode}
+                \bigbreak \noindent 
+                the compiler can compute 4 * 2 = 8, then 3 + 8 = 11, and replace the expression with
+                \bigbreak \noindent 
+                \begin{cppcode}
+                x := 11
+                \end{cppcode}
+                \bigbreak \noindent 
+                This is called “folding” because the compiler collapses a constant expression subtree into a single constant node.
+            \item \textbf{Dead code elimination}: Dead code elimination is an optimization that removes code which cannot affect the program’s observable behavior.
+                \begin{itemize}
+                    \item \textbf{Unreachable code}: Suppose we have
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                            if (false) {
+                                x := 5;
+                            }
+                        \end{cppcode}
+                        \bigbreak \noindent 
+                        The body can never be executed, so it is dead code.
+                    \item \textbf{Executed but useless}: Consider
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                            x := 3 + 4;
+                            x := 9;
+                        \end{cppcode}
+                        \bigbreak \noindent 
+                        The first assignment is never read before being overwritten, so the first assignment is dead.
+                \end{itemize}
+                So dead code elimination is broader than just “removing unreachable statements.” It also includes removing useless computations and stores.
 
 
 
 
+        \end{itemize}
 
 
 
