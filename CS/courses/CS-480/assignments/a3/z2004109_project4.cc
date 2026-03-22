@@ -6,11 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
-#include <exception>
-
-static constexpr int MAX_TIME = 500;
-static constexpr int IN_USE = 5;
-static constexpr int HOW_OFTEN = 25;
+#include <regex>
 
 using std::string;
 
@@ -19,14 +15,45 @@ struct PROC;
 typedef unsigned int uint;
 typedef std::pair<char, int> Data;
 typedef std::vector<Data> History;
-typedef std::deque<PROC> Queue;
+typedef std::deque<PROC*> Queue;
 
-static Queue Q_entry;
-static Queue Q_ready;
-static Queue Q_input;
-static Queue Q_output;
+static constexpr int MAX_TIME = 500;
+static constexpr int IN_USE = 5;
+static constexpr int HOW_OFTEN = 25;
 
-inline bool bad_input() { puts("Unwell input"); exit(EXIT_FAILURE); return true; }
+namespace ACTIVE {
+    PROC* active,
+        * IActive,
+        * Oactive;
+
+    bool is_active,
+         is_IActive,
+         is_OActive;
+}
+
+namespace QUEUE {
+    Queue entry,
+         ready,
+         input,
+         output;
+
+    int in_play() {
+        return ACTIVE::is_active 
+            + ACTIVE::is_IActive 
+            + ACTIVE::is_OActive 
+            + QUEUE::ready.size() 
+            + QUEUE::input.size() 
+            + QUEUE::output.size();
+    }
+}
+
+static uint next_id;
+
+namespace ERROR {
+    inline bool bad_input() { puts("Unwell input"); exit(EXIT_FAILURE); return true; }
+    inline bool validate_first(string& first) { return std::regex_match(first, std::regex("^\\w+\\s+\\d+$")); }
+    inline bool validate_second(string& second) { return std::regex_match(second, std::regex("^(\\s*[CcIiOo]\\s+\\d+)*\\s*(\\s*[Nn]\\s+\\d+)+$")); }
+}
 
 /* 
     // The structure of a process
@@ -61,7 +88,9 @@ inline bool bad_input() { puts("Unwell input"); exit(EXIT_FAILURE); return true;
  */
 struct PROC {
     string process_name{};
-    int process_id{};
+    uint process_id{next_id++};
+
+    uint arrival_time{};
 
     History history;
     size_t sub{};
@@ -76,17 +105,12 @@ struct PROC {
     uint o_count{};
 
     PROC() = default;
-    PROC(string process_name, int process_id, History history) 
+    PROC(string process_name, int arrival_time, History history) 
         : process_name(process_name),
-        process_id(process_id),
+        arrival_time(arrival_time),
         history(history)
     {}
 };
-
-// Just wanted an excuse to use regular expressions
-bool validate_first(string& first) {
-
-}
 
 // Populates the entry queue from an well-formed input file of processes.
 // A well-formed input consists of pairs of lines, where the first line contains
@@ -98,85 +122,96 @@ bool validate_first(string& first) {
 //      2. The process id cannot be sent into four bytes interpreted as an integer
 //      3. The line that contains burst info from a process is missing
 //      4. A (type, amount) pair is missing either the type or the amount
+//      5. The burst line is not terminated by a sequence of (N, [0-9]) pairs
 //
 // Un-well input is cause for termination
-void populate_entry(const char* file) {
+static void populate_entry(const char* file) {
     std::ifstream input(file);
 
-    // Get the line that has name and id
+    // Get the line that has name and arrival time
     string proc_info{}, burst_info{};
     while (std::getline(input, proc_info)) {
-        // Good first line
         if (proc_info.size()) {
-            // Get the line with burst info, skip over blank lines
+            ERROR::validate_first(proc_info) || ERROR::bad_input();
+
             do {
                 std::getline(input,burst_info);
             } while (burst_info.empty());
-        // If the first line was blank we skip
+
+            ERROR::validate_second(burst_info) || ERROR::bad_input();
         } else continue;
 
-        // Find the space that separates name from id
+        // Skip initial space before the process name
+        size_t start = 0;
+        while (proc_info[start] == ' ') ++start;
+
+        // Find the space that separates name from arrival time, guaranteed to exist at this point. 
+        // Then, extract the process name
         size_t space = proc_info.find(' ');
+        string process_name = proc_info.substr(start,space);
 
-        // No space \implies bad input
-        space != std::string::npos || bad_input();
-
-        // Skip over all whitespace
-        while (proc_info[space++] == ' ');
-
-        string process_name = proc_info.substr(0,space);
-
-        int process_id{};
-        try {
-            int process_id = stoi(proc_info.substr(space));
-        } catch (std::exception& e) {
-            // Process id was bad
-            bad_input();
-        }
+        // Move to start of arrival time, then extract it. Stoi is guaranteed no throw
+        while (proc_info[space] == ' ') ++space;
+        uint arrival_time = stoi(proc_info.substr(space));
 
         History history;
 
         std::istringstream word_reader(burst_info);
         string s_type{}, s_amount{};
 
-        // Get all pairs (type, amount)
-        char type{};
-        int amount{};
+        // Get all pairs (type, amount), re enforces no errors will occur in the stoi
+        char type{}; int amount{};
         while (word_reader >> s_type >> s_amount) {
-            // Either the type is a single character or we terminate
-            s_type.size() == 1 || bad_input();
             type = s_type[0];
-
-            try {
-                amount = stoi(s_amount);
-            } catch (std::exception& e) {
-                // Burst time is malformed
-                bad_input();
-            }
-            // All is good
-            history.push_back(std::make_pair(type, amount));
+            amount = stoi(s_amount);
+            history.emplace_back(std::make_pair(type, amount));
         }
 
-        PROC proc = PROC(process_name, process_id, history);
+        PROC* proc = new PROC(process_name, arrival_time, history);
 
-        History tmp = proc.history;
-
-        for (size_t i{}; i < tmp.size(); ++i) {
-            std::cout << tmp[i].first << ' ' << tmp[i].second << ' ';
-        }
-        puts("");
+        QUEUE::entry.push_back(proc);
     }
+}
+
+// Gets the next process pointer from the entry queue, then pops the queue.
+// Returns: 
+//          - nullptr on empty queue
+//          - pointer to next process otherwise
+static PROC* next_entry() {
+    if (QUEUE::entry.empty()) return nullptr;
+
+    PROC* next = QUEUE::entry.front();
+    QUEUE::entry.pop_front();
+    return next;
 }
 
 // Elegant scheduler
 void esch(const char* file) {
     uint timer{};
 
+    if (QUEUE::entry.empty()) return;
+
+    // FIGURE OUT EXIT CONDITION LATER
+    for (;;) {
+        // Put the first few processes in the ready queue
+        PROC* curr = next_entry();
+        while (curr && curr->arrival_time <= timer && QUEUE::in_play() < IN_USE) {
+            QUEUE::ready.push_front(curr); 
+            curr = next_entry();
+
+            ++timer;
+        }
+    }
+
     populate_entry(file);
-    
 }
 
 int main(int argc, char** argv) {
+
+    // std::vector<std::string> names{"input", "names.txt", "output_fcfs", "small", "small_output_fcfs", "tiny", "tiny_output_fcfs"};
+    // for (const auto& name : names) {
+    //     esch(name.data());
+    // }
 
     if (argc != 2) {
         std::cout << "Usage: ./z2004109_project4 <input>\n";
