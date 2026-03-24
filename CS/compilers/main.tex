@@ -1767,6 +1767,112 @@ print(expr1, expr2,...);
 
     \end{itemize}
 
+    \pagebreak 
+    \subsection{Scope}
+    \begin{itemize}
+        \item \textbf{Intro}: In compiler theory, scope is the region of a program in which a declared name is valid and can be referred to by its identifier.
+            \bigbreak \noindent 
+            When semantic analysis uses symbol tables, scope determines where an identifier binding is visible. A binding is the association between a name and its meaning, such as:
+            \begin{itemize}
+                \item variable name $\to$ type and storage information
+                \item function name $\to$ parameter types and return type
+                \item class name $\to$ type definition
+            \end{itemize}
+            Scope lets the compiler answer questions such as:
+            \begin{itemize}
+                \item Has this identifier been declared?
+                \item Which declaration does this use refer to?
+                \item Is this identifier being used outside its lifetime/visibility region?
+                \item Is this declaration a legal redeclaration, or is it a conflict?
+            \end{itemize}
+            So scope checking is one of the main tasks of semantic analysis.
+        \item \textbf{Implementing scope}: You typically implement scope by maintaining a stack of environments, where each environment is a symbol table for one lexical region.
+            \bigbreak \noindent 
+            When the compiler enters a new block, function, loop body, or similar construct, it creates a new scope. When it leaves that construct, it destroys that scope. Name lookup searches from the innermost scope outward.
+            \bigbreak \noindent 
+            A common design is:
+            \begin{itemize}
+                \item one symbol table per scope
+                \item a stack of those tables
+                \item lookup that searches from top to bottom
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Loops}
+    \begin{itemize}
+        \item \textbf{A for loop can be translated into a while loop}: Consider 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            for (a; b; c) ...
+            \end{cppcode}
+            \bigbreak \noindent 
+            this is the same as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            a;
+            while (b) {
+                .
+                .
+                .
+                c;
+            }
+            \end{cppcode}
+        \item \textbf{For loops}: Consider the syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            for (|$val$| to |$val$| step |$val$|)
+            \end{cppcode}
+            \bigbreak \noindent 
+            where each \textit{val} is a integer constant, variable, or expression. The syntax diagram is then
+            \bigbreak \noindent 
+            \fig{.45}{./figures/35.png}
+            \bigbreak \noindent 
+            and the AST is 
+            \bigbreak \noindent 
+            \fig{.5}{./figures/for.png}
+            \bigbreak \noindent 
+            Next, consider the syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            for (a; b; c) ...
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, the syntax diagram is
+            \bigbreak \noindent 
+            \fig{.6}{./figures/36.png}
+            \bigbreak \noindent 
+            and the AST is
+            \bigbreak \noindent 
+            \fig{.5}{./figures/for2.png}
+        \item \textbf{While loops}: Consider the syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            while (Expression)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The syntax diagram is 
+            \bigbreak \noindent 
+            \fig{.8}{./figures/37.png}
+            \bigbreak \noindent 
+            And the AST is
+            \bigbreak \noindent 
+            \fig{.6}{./figures/while.png}
+        \item \textbf{Do while}: Consider The syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+                do ... while (Expression);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, we have
+            \bigbreak \noindent 
+            \fig{.6}{./figures/38.png} 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/dowhile.png} 
+
+    \end{itemize}
+
+
 
     \pagebreak 
     \unsect{Intel x86-64 architecture and code generation}
@@ -3011,6 +3117,53 @@ if (errno) {
             \end{cppcode}
             \bigbreak \noindent 
             where the jump jumps over the evaluation of $e_{2}$.
+        \item \textbf{Looping}: Consider a for loop with the syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            for (a; b; c) ..
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, the code diagram is 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/39.png}
+            \bigbreak \noindent 
+            Alternatively, 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/40.png}
+            \bigbreak \noindent 
+            If we have the while loop syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            while (Expression) ...
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then the code diagram would look like
+            \bigbreak \noindent 
+            \fig{.6}{./figures/41.png}
+            \bigbreak \noindent 
+            And for the do-while syntax
+            \bigbreak \noindent 
+            \begin{cppcode}
+            do ... while (expression);
+            \end{cppcode}
+            \bigbreak \noindent 
+            We have the code diagram 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/42.png}
+            \bigbreak \noindent 
+            Notice the simplicity of the do-while code. Since this code is so simple, it is efficient to use this same structure for the while loop as well. To achieve this, we simply place an unconditional jump before the body's code, straight to the expression. This jump will happen only once, before the loop begins. Thus, a \texttt{while} loop has the code diagram
+            \bigbreak \noindent 
+            \fig{.6}{./figures/43.png}
+            \bigbreak \noindent 
+            We can do the same for a for loop.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/44.png}
+            \bigbreak \noindent 
+            Thus, all loops are usually \texttt{do-while}s under the hood.
+
+
+
+
         \end{itemize}
 
         \pagebreak 

@@ -17232,6 +17232,95 @@ indicate which strong entity the weak entity depends upon.
 
     \end{itemize}
 
+    \pagebreak 
+    \subsubsection{Virtual memory}
+    \begin{itemize}
+        \item \textbf{Intro}: The requirement that instructions must be in physical memory to be executed seems both necessary and reasonable; but it is also unfortunate, since it limits the size of a program to the size of physical memory. In fact, an examination of real programs shows us that, in many cases, the entire program is not needed. For instance, consider the following:
+            \begin{enumerate}
+                \item Programs often have code to handle unusual error conditions. Since these errors seldom, if ever, occur in practice, this code is almost never executed.
+                \item Arrays, lists, and tables are often allocated more memory than they actually need. An array may be declared 100 by 100 elements, even though it is seldom larger than 10 by 10 elements.
+                \item Certain options and features of a program may be used rarely. For instance, the routines on U.S. government computers that balance the budget have not been used in many years.
+            \end{enumerate}
+            Even in those cases where the entire program is needed, it may not all be needed at the same time
+            \bigbreak \noindent 
+            The ability to execute a program that is only partially in memory would confer many benefits:
+            \begin{enumerate}
+                \item A program would no longer be constrained by the amount of physical memory that is available. Users would be able to write programs for an extremely large virtual address space, simplifying the programming task.
+                \item Because each program could take less physical memory, more programs could be run at the same time, with a corresponding increase in CPU utilization and throughput but with no increase in response time or turnaround time
+                \item Less I/O would be needed to load or swap portions of programs into memory, so each program would run faster.
+            \end{enumerate}
+            Thus, running a program that is not entirely in memory would benefit both the system and its users
+        \item \textbf{Virtual memory}: Virtual memory involves the separation of logical memory as perceived by developers from physical memory. This separation allows an extremely large virtual memory to be provided for programmers when only a smaller physical memory is available
+        \item \textbf{Virtual address space (VAS)}: The virtual address space of a process refers to the logical (or virtual) view of how a process is stored in memory. Typically, this view is that a process begins at a certain logical address—say, address 0—and exists in contiguous memory
+            \bigbreak \noindent 
+            It is up to the MMU to map logical pages to physical page frames in memory.
+        \item \textbf{Sparse address spaces}: Recall that we allow the heap to grow upward in memory as it is used for dynamic memory allocation. Similarly, we allow for the stack to grow downward in memory through successive function calls. The large blank space (or hole) between the heap and the stack is part of the virtual address space but will require actual physical pages only if the heap or stack grows. Virtual address spaces that include holes are known as \textbf{sparse address spaces}.
+            \bigbreak \noindent 
+            Using a sparse address space is beneficial because the holes can be filled as the stack or heap segments grow or if we wish to dynamically link libraries (or possibly other shared objects) during program execution.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1085.png}
+        \item \textbf{Page sharing}: In addition to separating logical memory from physical memory, virtual memory allows files and memory to be shared by two or more processes through page sharing. This leads to the following benefits
+            \begin{enumerate}
+                \item System libraries such as the standard C library can be shared by several processes through mapping of the shared object into a virtual address space. Although each process considers the libraries to be part of its virtual address space, the actual pages where the libraries reside in physical memory are shared by all the processes. Typically, a library is mapped read-only into the space of each process that is linked with it.
+                \item Similarly, processes can share memory. Recall that two or more processes can communicate through the use of shared memory. Virtual memory allows one process to create a region of memory that it can share with another process. Processes sharing this region consider it part of their virtual address space, yet the actual physical pages of memory are shared, much as is illustrated in Figure 10.3.
+                \item Pages can be shared during process creation with the \texttt{fork()} system call, thus speeding up process creation.
+            \end{enumerate}
+        \item \textbf{Mapping shared pages into virtual address spaces}: A shared read-only page is mapped by having multiple page-table entries, possibly in different processes, point to the same physical frame.
+        \item \textbf{Demand paging}: Demand paging is a virtual memory management technique where pages are loaded from secondary storage (disk) into main memory (RAM) only when they are referenced by a running process, rather than loading the entire program at once. We may not initially need the entire program in memory
+            \bigbreak \noindent 
+            With demand-paged virtual memory, pages are loaded only when they are \textbf{demanded} during program execution. By loading only the portions of programs that are needed, memory is used more efficiently.
+            \bigbreak \noindent 
+            As a result, while a process is executing, some pages will be in memory, and some will be in secondary storage. Thus, we need some form of hardware support to distinguish between the two. The valid – invalid bit scheme can be used for this purpose. This time, however, when the bit is set to “valid,” the associated page is both legal and in memory. If the bit is set to “invalid,” the page either is not valid (that is, not in the logical address space of the process) or is valid but is currently in secondary storage
+            \bigbreak \noindent 
+            The page-table entry for a page that is brought into memory is set as usual, but the page-table entry for a page that is not currently in memory is simply marked invalid.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/1086.png}
+        \item \textbf{Page fault}: But what happens if the process tries to access a page that was not brought into memory? Access to a page marked invalid causes a page fault. The paging hardware, in translating the address through the page table, will notice that the invalid bit is set, causing a trap to the operating system. This trap is the result of the operating system’s failure to bring the desired page into memory. The procedure for handling this page fault is straightforward
+            \begin{enumerate}
+                \item We check an internal table (usually kept with the process control block) for this process to determine whether the reference was a valid or an invalid memory access.
+                \item If the reference was invalid, we terminate the process. If it was valid but we have not yet brought in that page, we now page it in.
+                \item We find a free frame (by taking one from the free-frame list, for example).
+                \item We schedule a secondary storage operation to read the desired page into the newly allocated frame.
+                \item When the storage read is complete, we modify the internal table kept with the process and the page table to indicate that the page is now in memory.
+                \item We restart the instruction that was interrupted by the trap. The process can now access the page as though it had always been in memory.
+            \end{enumerate}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/1087.png}
+        \item \textbf{Pure demand paging}: In the extreme case, we can start executing a process with no pages in memory. When the operating system sets the instruction pointer to the first instruction of the process, which is on a non-memory-resident page, the process immediately faults for the page. After this page is brought into memory, the process continues to execute, faulting as necessary until every page that it needs is in memory. At that point, it can execute with no more faults. This scheme is pure demand paging: never bring a page into memory until it is required.
+        \item \textbf{Locality of reference}: Theoretically, some programs could access several new pages of memory with each instruction execution (one page for the instruction and many for data), possibly causing multiple page faults per instruction. This situation would result in unacceptable system performance. Fortunately, analysis of running processes shows that this behavior is exceedingly unlikely. Programs tend to have locality of reference, which results in reasonable performance from demand paging.
+            \bigbreak \noindent 
+            Locality of reference is the tendency of computer programs to access a small, localized set of data or instructions repeatedly over a short period.
+        \item \textbf{Hardware for demand paging}: The hardware to support demand paging is the same as the hardware for paging and swapping:
+            \begin{itemize}
+                \item \textbf{Page table}: This table has the ability to mark an entry invalid through a valid –invalid bit or a special value of protection bits.
+                \item \textbf{Secondary memory}: This memory holds those pages that are not present in main memory. The secondary memory is usually a high-speed disk or NVM device. It is known as the swap device, and the section of storage used for this purpose is known as \textbf{swap space}. Swap-space allocation is discussed later 
+            \end{itemize}
+        \item \textbf{Restarting}: A crucial requirement for demand paging is the ability to restart any instruction after a page fault. Because we save the state (registers, condition code, instruction counter) of the interrupted process when the page fault occurs, we must be able to restart the process in exactly the same place and state, except that the desired page is now in memory and is accessible. In most cases, this requirement is easy to meet. A page fault may occur at any memory reference. If the page fault occurs on the instruction fetch, we can restart by fetching the instruction again. If a page fault occurs while we are fetching an operand, we must fetch and decode the instruction again and then fetch the operand.
+            \bigbreak \noindent 
+            The major difficulty arises when one instruction may modify several different locations. For example, consider the IBM System 360/370 MVC (move character) instruction, which can move up to 256 bytes from one location to another (possibly overlapping) location. If either block (source or destination) straddles a page boundary, a page fault might occur after the move is partially done. In addition, if the source and destination blocks overlap, the source block may have been modified, in which case we cannot simply restart the instruction.
+            \bigbreak \noindent 
+            This problem can be solved in two different ways. 
+            \begin{enumerate}
+                \item In one solution, the microcode computes and attempts to access both ends of both blocks. If a page fault is going to occur, it will happen at this step, before anything is modified. The move can then take place; we know that no page fault can occur, since all the relevant pages are in memory. 
+                \item The other solution uses temporary registers to hold the values of overwritten locations. If there is a page fault, all the old values are written back into memory before the trap occurs. This action restores memory to its state before the instruction was started, so that the instruction can be repeated.
+            \end{enumerate}
+            \bigbreak \noindent 
+            This is by no means the only architectural problem resulting from adding paging to an existing architecture to allow demand paging, but it illustrates some of the difficulties involved. Paging is added between the CPU and the memory in a computer system. It should be entirely transparent to a process. Thus, people often assume that paging can be added to any system. Although this assumption is true for a non-demand-paging environment, where a page fault represents a fatal error, it is not true where a page fault means only that an additional page must be brought into memory and the process restarted.
+        \item \textbf{Free-Frame List}: When a page fault occurs, the operating system must bring the desired page from secondary storage into main memory. To resolve page faults, most operating systems maintain a \textbf{free-frame list}, a pool of free frames for satisfying such requests
+        \item \textbf{Zero-fill-on-demand}: Operating systems typically allocate free frames using a technique known as \textbf{zero-fill-on-demand} . Zero-fillon-demand frames are “zeroed-out” before being allocated, thus erasing their previous contents
+            \bigbreak \noindent 
+            When a system starts up, all available memory is placed on the free-frame list. As free frames are requested (for example, through demand paging), the size of the free-frame list shrinks. At some point, the list either falls to zero or falls below a certain threshold, at which point it must be repopulated.
+
+
+
+
+
+
+
+
+
+    \end{itemize}
+
 
 
 
