@@ -17310,6 +17310,240 @@ indicate which strong entity the weak entity depends upon.
         \item \textbf{Zero-fill-on-demand}: Operating systems typically allocate free frames using a technique known as \textbf{zero-fill-on-demand} . Zero-fillon-demand frames are “zeroed-out” before being allocated, thus erasing their previous contents
             \bigbreak \noindent 
             When a system starts up, all available memory is placed on the free-frame list. As free frames are requested (for example, through demand paging), the size of the free-frame list shrinks. At some point, the list either falls to zero or falls below a certain threshold, at which point it must be repopulated.
+        \item \textbf{Performance of demand paging}: Demand paging can significantly affect the performance of a computer system. If we let $\alpha$ be the \textit{memory-access time}, $\beta$ be the page fault time, and $p$ be the probability of a page fault, then the \textit{effective access time} $\gamma$ is 
+            \begin{align*}
+                \gamma = \alpha(1-p) + p\beta
+            .\end{align*}
+            Note that we expect $p$ to be close to zero. To compute the effective access time, we must know how much time is needed to service a page fault. A page fault causes the following sequence to occur:
+            \begin{enumerate}
+                \item Trap to the operating system.
+                \item Save the registers and process state.
+                \item Determine that the interrupt was a page fault.
+                \item Check that the page reference was legal, and determine the location of the page in secondary storage.
+                \item Issue a read from the storage to a free frame:
+                    \begin{enumerate}[label=(\alph*)]
+                        \item Wait in a queue until the read request is serviced.
+                        \item Wait for the device seek and/or latency time.
+                        \item Begin the transfer of the page to a free frame.
+                    \end{enumerate}
+                \item While waiting, allocate the CPU core to some other process.
+                \item Receive an interrupt from the storage I/O subsystem (I/O completed).
+                \item Save the registers and process state for the other process (if step 6 is executed).
+                \item Determine that the interrupt was from the secondary storage device.
+                \item Correct the page table and other tables to show that the desired page is now in memory.
+                \item Wait for the CPU core to be allocated to this process again.
+                \item Restore the registers, process state, and new page table, and then resume the interrupted instruction.
+            \end{enumerate}
+            Although, not all of these steps are necessary in every case.  In any case, there are three major task components of the page-fault service time:
+            \begin{enumerate}
+                \item Service the page-fault interrupt
+                \item Read in the page
+                \item Restart the process
+            \end{enumerate}
+            The first and third tasks can be reduced, with careful coding, to several hundred instructions. These tasks may take from 1 to 100 microseconds each.
+            \bigbreak \noindent 
+            With an average page-fault service time of $8$ ms and a MAT of $200$ ns, the effective access time is
+            \begin{align*}
+                200(1-p) + 8p = 200 + 7,999,800p\; \text{ns}
+            .\end{align*}
+            We see, then, that the effective access time is directly proportional to the page-fault rate. If one access out of 1,000 causes a page fault, the effective access time is 8.2 microseconds. The computer will be slowed down by a factor of 40 because of demand paging!
+            \bigbreak \noindent 
+            In sum, it is important to keep the page-fault rate low in a demand-paging system. Otherwise, the effective access time increases, slowing process execution dramatically
+            \bigbreak \noindent 
+            An additional aspect of demand paging is the handling and overall use of swap space. I/O to swap space is generally faster than that to the file system. It is faster because swap space is allocated in much larger blocks, and file lookups and indirect allocation methods are not used
+            \bigbreak \noindent 
+            One option for the system to gain better paging throughput is by copying an entire file image into the swap space at process startup and then performing demand paging from the swap space. The obvious disadvantage of this approach is the copying of the file image at program start-up. 
+            \bigbreak \noindent 
+            A second option—and one practiced by several operating systems, including Linux and Windows—is to demand-page from the file system initially but to write the pages to swap space as they are replaced. This approach will ensure that only needed pages are read from the file system but that all subsequent paging is done from swap space
+        \item \textbf{Anonymous memory}: Some systems attempt to limit the amount of swap space used through demand paging of binary executable files. Demand pages for such files are brought directly from the file system. However, when page replacement is called for, these frames can simply be overwritten (because they are never modified), and the pages can be read in from the file system again if needed. Using this approach, the file system itself serves as the backing store. However, swap space must still be used for pages not associated with a file (known as \textbf{anonymous memory}); these pages include the stack and heap for a process. This method appears to be a good compromise and is used in several systems, including Linux and BSD UNIX.
+        \item \textbf{Copy-on-write}: Recall that the fork() system call creates a child process that is a duplicate of its parent. Traditionally, fork() worked by creating a copy of the parent’s address space for the child, duplicating the pages belonging to the parent. However, considering that many child processes invoke the exec() system call immediately after creation, the copying of the parent’s address space may be unnecessary. Instead, we can use a technique known as \textbf{copy-on-write}, which works by allowing the parent and child processes initially to share the same pages. These shared pages are marked as copy-on-write pages, meaning that if either process writes to a shared page, a copy of the shared page is created.
+            \bigbreak \noindent 
+            Obviously, when the copy-on-write technique is used, only the pages that are modified by either process are copied; all unmodified pages can be shared by the parent and child processes. 
+            \bigbreak \noindent 
+            Note, too, that only pages that can be modified need be marked as copy-on-write. Pages that cannot be modified (pages containing executable code) can be shared by the parent and child. Copy-on-write is a common technique used by several operating systems, including Windows, Linux, and MacOS.
+        \item \textbf{vfork()}: Several versions of UNIX (including Linux, macOS, and BSD UNIX) provide a variation of the fork() system call—vfork() (for virtual memory fork)— that operates differently from fork() with copy-on-write. With vfork(), the parent process is suspended, and the child process uses the address space of the parent. Because vfork() does not use copy-on-write, if the child process changes any pages of the parent’s address space, the altered pages will be visible to the parent once it resumes. Therefore, vfork() must be used with caution to ensure that the child process does not modify the address space of the parent. vfork() is intended to be used when the child process calls exec() immediately after creation. Because no copying of pages takes place, 
+            \bigbreak \noindent 
+            vfork() is an extremely efficient method of process creation and is sometimes used to implement UNIX command-line shell interfaces.
+        \item \textbf{Over-allocating and page replacement}: If we increase our degree of multiprogramming, we are \textbf{over-allocating} memory. If we run six processes, each of which is ten pages in size but actually uses only five pages, we have higher CPU utilization and throughput, with ten frames to spare. It is possible, however, that each of these processes, for a particular data set, may suddenly try to use all ten of its pages, resulting in a need for sixty frames when only forty are available.
+            \bigbreak \noindent 
+            Further, consider that system memory is not used only for holding program pages. Buffers forI/O also consume a considerable amount of memory. This use can increase the strain on memory-placement algorithms. Deciding how much memory to allocate to I/O and how much to program pages is a significant challenge. Some systems allocate a fixed percentage of memory for I/O buffers, whereas others allow both processes and the I/O subsystem to compete for all system memory.
+            \bigbreak \noindent 
+            Over-allocation of memory manifests itself as follows. While a process is executing, a page fault occurs. The operating system determines where the desired page is residing on secondary storage but then finds that there are no free frames on the free-frame list; all memory is in use.
+            \bigbreak \noindent 
+            The operating system has several options at this point. It could terminate the process. However, demand paging is the operating system’s attempt to improve the computer system’s utilization and throughput. Users should not be aware that their processes are running on a paged system—paging should be logically transparent to the user. So this option is not the best choice.
+            \bigbreak \noindent 
+            The operating system could instead use standard swapping and swap out a process, freeing all its frames and reducing the level of multiprogramming. However, standard swapping is no longer used by most operating systems due to the overhead of copying entire processes between memory and swap space. Most operating systems now combine swapping pages with \textbf{page replacement}.
+        \item \textbf{Basic page replacement}: Page replacement takes the following approach. If no frame is free, we find one that is not currently being used and free it. We can free a frame by writing its contents to swap space and changing the page table (and all other tables) to indicate that the page is no longer in memory. We can now use the freed frame to hold the page for which the process faulted. We modify the page-fault service routine to include page replacement.
+            \begin{enumerate}
+                \item Find the location of the desired page on secondary storage.
+                \item Find a free frame:
+                    \begin{enumerate}[label=(\alph*)]
+                        \item If there is a free frame, use it.
+                        \item If there is no free frame, use a page-replacement algorithm to select a victim frame.
+                        \item Write the victim frame to secondary storage (if necessary); change the page and frame tables accordingly.
+                    \end{enumerate}
+                \item Read the desired page into the newly freed frame; change the page and frame tables.
+                \item Continue the process from where the page fault occurred
+            \end{enumerate}
+            Notice that, if no frames are free, two page transfers (one for the page-out and one for the page-in) are required. This situation effectively doubles the page-fault service time and increases the effective access time accordingly.
+            \bigbreak \noindent 
+            We can reduce this overhead by using a \textbf{modify (dirty) bit}. When this scheme is used, each page or frame has a modify bit associated with it in the hardware. The modify bit for a page is set by the hardware whenever any byte in the page is written into, indicating that the page has been modified. When we select a page for replacement, we examine its modify bit. If the bit is set, we know that the page has been modified since it was read in from secondary storage. In this case, we must write the page to storage. If the modify bit is not set, however, the page has not been modified since it was read into memory. In this case, we need not write the memory page to storage: it is already there.
+            \bigbreak \noindent 
+            This technique also applies to read-only pages (for example, pages of binary code). Such pages cannot be modified; thus, they may be discarded when desired. This scheme can significantly reduce the time required to service a page fault, since it reduces I/O time by one-half if the page has not been modified.
+        \item \textbf{Frame-allocation, and page-replacement algorithms}: We must solve two major problems to implement demand paging: we must develop a frame-allocation algorithm and a page-replacement algorithm. That is, if we have multiple processes in memory, we must decide how many frames to allocate to each process; and when page replacement is required, we must select the frames that are to be replaced. Even slight improvements in demand-paging methods yield large gains in system performance, since I/O is quite expensive.
+            \bigbreak \noindent
+            In general, we want the one with the lowest page-fault rate.
+        \item \textbf{Reference string}: We evaluate an algorithm by running it on a particular string of memory references and computing the number of page faults. The string of memory references is called a \textbf{reference string}.
+            \bigbreak \noindent 
+            We can generate reference strings artificially (by using a random-number generator, for example), or we can trace a given system and record the address of each memory reference. The latter choice produces a large number of data (on the order of 1 million addresses per second). To reduce the number of data, we use two facts.
+            \begin{enumerate}
+                \item First, for a given page size (and the page size is generally fixed by the hardware or system), we need to consider only the page number, rather than the entire address. Second, if we have a reference to a page $p$, then any references to page $p$ that \textbf{\textit{immediately}} follow will never cause a page fault. Page $p$ will be in memory after the first reference, so the immediately following references will not fault.
+                    \bigbreak \noindent 
+                    For example, the address sequence
+                    \begin{align*}
+                        &0100, 0432, 0101, 0612, 0102, 0103, 0104, 0101, 0611, 0102, 0103, \\
+                        &0104, 0101, 0610, 0102, 0103, 0104, 0101, 0609, 0102, 0105
+                    \end{align*}
+                    at 100 bytes per page, reduces to the following reference string
+                    \begin{align*}
+                        1,4,1,6,1,6,1,6,1,6,1
+                    .\end{align*}
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        std::vector<int> final;
+                        std::vector<int> vec{100, 432, 101, 612, 102, 103, 104, 101, 611, 102, 103, 104, 101, 610, 102, 103, 104, 101, 609, 102, 105};
+
+                        size_t page_size = 100; for (auto& i : vec) { i = i/page_size; }
+                        size_t t = 1; int last = vec[0]; final.push_back(last);
+                        while (t < vec.size()) {
+                            size_t tt = t+1; while (tt < vec.size() && vec[tt] == last) ++tt;
+
+                            if (tt == vec.size()) break;
+
+                            final.push_back(vec[tt]);
+                            t = tt;
+                            last = vec[t];
+                    }
+                \end{cppcode}
+                \item To determine the number of page faults for a particular reference string and page-replacement algorithm, we also need to know the number of page frames available. Obviously, as the number of frames available increases, the number of page faults decreases. For the reference string considered previously, for example, if we had three or more frames, we would have only three faults— one fault for the first reference to each page. In contrast, with only one frame available, we would have a replacement with every reference, resulting in eleven faults.
+                    \bigbreak \noindent  
+                    As the number of frames increases, the number of page faults drops to some minimal level.  Of course, adding physical memory increases the number of frames.
+            \end{enumerate}
+            \bigbreak \noindent 
+            \fig{.5}{./figures/1088.png}
+            \bigbreak \noindent 
+            \textbf{Note:} For the following algorithms, we use the reference string
+            \begin{align*}
+                7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1
+            \end{align*}
+            for memory with there frames.
+        \item \textbf{FIFO page replacement}: The simplest page-replacement algorithm is a first-in, first-out (FIFO) algorithm. A FIFO replacement algorithm associates with each page the time when that page was brought into memory. When a page must be replaced, the oldest page is chosen.
+            \bigbreak \noindent 
+            We can also just create a FIFO queue to hold all pages in memory, we then replace the page at the head of the queue.  When a page is brought into memory, we insert it at the tail of the queue.
+            \bigbreak \noindent 
+            For our example reference string, our three frames are initially empty. The first three references (7, 0, 1) cause page faults and are brought into these empty frames. The next reference (2) replaces page 7, because page 7 was brought in first. Since 0 is the next reference and 0 is already in memory, we have no fault for this reference. The first reference to 3 results in replacement of page 0, since it is now first in line. Because of this replacement, the next reference, to 0, will fault. Page 1 is then replaced by page 0, etc. Every time a fault occurs, we show which pages are in our three frames. There are fifteen faults altogether.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1089.png}
+            \bigbreak \noindent 
+            The FIFO page-replacement algorithm is easy to understand and program. However, its performance is not always good. On the one hand, the page replaced may be an initialization module that was used a long time ago and is no longer needed. On the other hand, it could contain a heavily used variable that was initialized early and is in constant use.
+        \item \textbf{Belady's anomaly}: The figure below shows the curve of page faults for this reference string versus the number of available frames. Notice that the number of faults for four frames (ten) is greater than the number of faults for three frames (nine)! This most unexpected result is known as \textbf{Belady’s anomaly}: for some page-replacement algorithms, the page-fault rate may increase as the number of allocated frames increases. We would expect that giving more memory to a process would improve its performance. In some early research, investigators noticed that this assumption was not always true. Belady’s anomaly was discovered as a result.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1090.png}
+        \item \textbf{Optimal page replacement}: One result of the discovery of Belady’s anomaly was the search for an optimal page-replacement algorithm— the algorithm that has the lowest page-fault rate of all algorithms and will never suffer from Belady’s anomaly. Such an algorithm does exist and has been called \textbf{OPT} or \textbf{MIN}. It is simply this:
+            \begin{center}
+                Replace the page that will not be used for the longest period of time
+            \end{center}
+            Use of this page-replacement algorithm guarantees the lowest possible pagefault rate for a fixed number of frames.
+            \bigbreak \noindent 
+            Unfortunately, the optimal page-replacement algorithm is difficult to implement, because it requires future knowledge of the reference string. As a result, the optimal algorithm is used mainly for comparison studies. For instance, it may be useful to know that, although a new algorithm is not optimal, it is within 12.3 percent of optimal at worst and within 4.7 percent on average.
+        \item \textbf{Least recently used (LRU) page replacement}: If we use the recent past as an approximation of the near future, then we can replace the page that has not been used for the longest period of time. This approach is the least recently used (LRU) algorithm.
+            \bigbreak \noindent 
+            LRU replacement associates with each page the time of that page’s last use. When a page must be replaced, LRU chooses the page that has not been used for the longest period of time. We can think of this strategy as the optimal page-replacement algorithm looking backward in time, rather than forward.
+            \bigbreak \noindent 
+            Behold this fact... If we let $S^{R}$ be the reverse of a reference string $S$, then the page-fault rate for the OPT algorithm on $S$ is the same as the page-fault rate for the OPT algorithm on $S^{R}$. Similarly, the page-fault rate for the LRU algorithm on $S$ is the same as the page-fault rate for the LRU algorithm on $S^{R}$.
+            \bigbreak \noindent 
+            The LRU policy is often used as a page-replacement algorithm and is considered to be good. The major problem is how to implement LRU replacement. An LRU page-replacement algorithm may require substantial hardware assistance. The problem is to determine an order for the frames defined by the time of last use. Two implementations are feasible:
+            \begin{enumerate}
+                \item \textbf{Counters}: In the simplest case, we associate with each page-table entry a time-of-use field and add to the CPU a logical clock or counter. The clock is incremented for every memory reference. Whenever a reference to a page is made, the contents of the clock register are copied to the time-of-use field in the page-table entry for that page. In this way, we always have the “time” of the last reference to each page. We replace the page with the smallest time value. This scheme requires a search of the page table to find the LRU page and a write to memory (to the time-of-use field in the page table) for each memory access. The times must also be maintained when page tables are changed (due to CPU scheduling). Overflow of the clock must be considered.
+                \item \textbf{Stack}: Another approach to implementing LRU replacement is to keep a stack of page numbers. Whenever a page is referenced, it is removed from the stack and put on the top. In this way, the most recently used page is always at the top of the stack, and the least recently used page is always at the bottom (Figure 10.16). Because entries must be removed from the middle of the stack, it is best to implement this approach by using a doubly linked list with a head pointer and a tail pointer. Removing a page and putting it on the top of the stack then requires changing six pointers at worst. Each update is a little more expensive, but there is no search for a replacement; the tail pointer points to the bottom of the stack, which is the LRU page. This approach is particularly appropriate for software or microcode implementations of LRU replacement.
+            \end{enumerate}
+        \item \textbf{Stack algorithms}: Like optimal replacement, LRU replacement does not suffer from Belady’s anomaly. Both belong to a class of page-replacement algorithms, called \textbf{stack algorithms}, that can never exhibit Belady’s anomaly. A stack algorithm is an algorithm for which it can be shown that the set of pages in memory for $n$ frames is always a subset of the set of pages that would be in memory with $n+1$ frames.
+            \bigbreak \noindent 
+            For LRU replacement, the set of pages in memory would be the $n$ most recently referenced pages. If the number of frames is increased, these $n$ pages will still be the most recently referenced and so will still be in memory
+            \bigbreak \noindent 
+            Note that neither implementation of LRU would be conceivable without hardware assistance beyond the standard TLB registers. The updating of the clock fields or stack must be done for every memory reference. If we were to use an interrupt for every reference to allow software to update such data structures, it would slow every memory reference by a factor of at least ten, hence slowing every process by a factor of ten. Few systems could tolerate that level of overhead for memory management.
+        \item \textbf{LRU-Approximation Page Replacement (reference bits)}: Not many computer systems provide sufficient hardware support for true LRU page replacement. In fact, some systems provide no hardware support, and other page-replacement algorithms (such as a FIFO algorithm) must be used. Many systems provide some help, however, in the form of a \textbf{reference bit}. The reference bit for a page is set by the hardware whenever that page is referenced (either a read or a write to any byte in the page). Reference bits are associated with each entry in the page table.
+            \bigbreak \noindent 
+            Initially, all bits are cleared (to 0) by the operating system. As a process executes, the bit associated with each page referenced is set (to 1) by the hardware. After some time, we can determine which pages have been used and which have not been used by examining the reference bits, although we do not know the order of use. This information is the basis for many page-replacement algorithms that approximate LRU replacement.
+        \item \textbf{Additional-Reference-Bits Algorithm}: We can gain additional ordering information by recording the reference bits at regular intervals. We can keep an 8-bit byte for each page in a table in memory. At regular intervals (say, every 100 milliseconds), a timer interrupt transfers control to the operating system. The operating system shifts the reference bit for each page into the high-order bit of its 8-bit byte, shifting the other bits right by 1 bit and discarding the low-order bit. These 8-bit shift registers contain the history of page use for the last eight time periods. If the shift register contains 00000000, for example, then the page has not been used for eight time periods. A page that is used at least once in each period has a shift register value of 11111111. A page with a history register value of 11000100 has been used more recently than one with a value of 01110111. If we interpret these 8-bit bytes as unsigned integers, the page with the lowest number is the LRU page, and it can be replaced. Notice that the numbers are not guaranteed to be unique, however. We can either replace (swap out) all pages with the smallest value or use the FIFO method to choose among them.
+            \bigbreak \noindent 
+            The number of bits of history included in the shift register can be varied, of course, and is selected (depending on the hardware available) to make the updating as fast as possible. In the extreme case, the number can be reduced to zero, leaving only the reference bit itself. This algorithm is called the \textbf{second-chance page-replacement algorithm}.
+        \item \textbf{More on 8-bit history field (shift register)}: Each page has:
+            \begin{itemize}
+                \item a reference bit  $R$, set to 1 by hardware whenever that page is accessed
+                \item an 8-bit history field stored by the OS
+            \end{itemize}
+            Then, every fixed time interval, such as every 100 ms, the OS does this for every page:
+            \begin{enumerate}
+                \item Shift the 8-bit history right by one position.
+                \item Insert the current reference bit into the leftmost bit.
+                \item Clear the reference bit for the next interval.
+            \end{enumerate}
+            Suppose a page has history
+            \begin{align*}
+                11000100
+            .\end{align*}
+            Read this from left to right as:
+            \begin{itemize}
+                \item used in the most recent interval
+                \item used in the interval before that
+                \item not used for the next three intervals
+                \item used once
+                \item then not used twice
+            \end{itemize}
+            The leftmost bits are more recent, because each new reference bit is shifted into the high-order bit.
+        \item \textbf{Second-Chance Algorithm}: The basic algorithm of second-chance replacement is a FIFO replacement algorithm. When a page has been selected, however, we inspect its reference bit. If the value is 0, we proceed to replace this page; but if the reference bit is set to 1, we give the page a second chance and move on to select the next FIFO page. When a page gets a second chance, its reference bit is cleared, and its arrival time is reset to the current time. Thus, a page that is given a second chance will not be replaced until all other pages have been replaced (or given second chances). In addition, if a page is used often enough to keep its reference bit set, it will never be replaced.
+            \bigbreak \noindent 
+            One way to implement the second-chance algorithm (sometimes referred to as the \textbf{clock algorithm}) is as a circular queue. A pointer (that is, a hand on the clock) indicates which page is to be replaced next. When a frame is needed, the pointer advances until it finds a page with a 0 reference bit. As it advances, it clears the reference bits
+            \bigbreak \noindent 
+            Once a victim page is found, the page is replaced, and the new page is inserted in the circular queue in that position. Notice that, in the worst case, when all bits are set, the pointer cycles through the whole queue, giving each page a second chance. It clears all the reference bits before selecting the next page for replacement. Second-chance replacement degenerates to FIFO replacement if all bits are set.
+        \item \textbf{Enhanced Second-Chance Algorithm}: We can enhance the second-chance algorithm by considering the reference bit and the modify bit as an ordered pair. With these two bits, we have the following four possible classes:
+            \begin{enumerate}
+                \item (0, 0) neither recently used nor modified—best page to replace
+                \item (0, 1) not recently used but modified—not quite as good, because the page will need to be written out before replacement
+                \item (1, 0) recently used but clean—probably will be used again soon
+                \item (1, 1) recently used and modified—probably will be used again soon, and the page will be need to be written out to secondary storage before it can be replaced
+            \end{enumerate}
+            Each page is in one of these four classes. When page replacement is called for, we use the same scheme as in the clock algorithm; but instead of examining whether the page to which we are pointing has the reference bit set to 1, we examine the class to which that page belongs. We replace the first page encountered in the lowest nonempty class. Notice that we may have to scan the circular queue several times before we find a page to be replaced. The major difference between this algorithm and the simpler clock algorithm is that here we give preference to those pages that have been modified in order to reduce the number of I/Os required.
+        \item \textbf{Counting-Based Page Replacement}: There are many other algorithms that can be used for page replacement. For example, we can keep a counter of the number of references that have been made to each page and develop the following two schemes.
+            \begin{enumerate}
+                \item The least frequently used (LFU) page-replacement algorithm requires that the page with the smallest count be replaced. The reason for this selection is that an actively used page should have a large reference count. A problem arises, however, when a page is used heavily during the initial phase of a process but then is never used again. Since it was used heavily, it has a large count and remains in memory even though it is no longer needed. One solution is to shift the counts right by 1 bit at regular intervals, forming an exponentially decaying average usage count.
+                \item The most frequently used (MFU) page-replacement algorithm is based on the argument that the page with the smallest count was probably just brought in and has yet to be used.
+            \end{enumerate}
+            As you might expect, neither MFU nor LFU replacement is common. The implementation of these algorithms is expensive, and they do not approximate OPT replacement well.
+        \item \textbf{Page-Buffering Algorithms}: Other procedures are often used in addition to a specific page-replacement algorithm. For example, systems commonly keep a pool of free frames. When a page fault occurs, a victim frame is chosen as before. However, the desired page is read into a free frame from the pool before the victim is written out. This procedure allows the process to restart as soon as possible, without waiting for the victim page to be written out. When the victim is later written out, its frame is added to the free-frame pool
+            \bigbreak \noindent 
+            An expansion of this idea is to maintain a list of modified pages. Whenever the paging device is idle, a modified page is selected and is written to secondary storage. Its modify bit is then reset. This scheme increases the probability that a page will be clean when it is selected for replacement and will not need to be written out.
+            \bigbreak \noindent 
+            Another modification is to keep a pool of free frames but to remember which page was in each frame. Since the frame contents are not modified when a frame is written to secondary storage, the old page can be reused directly from the free-frame pool if it is needed before that frame is reused. No I/O is needed in this case. When a page fault occurs, we first check whether the desired page is in the free-frame pool. If it is not, we must select a free frame and read into it
+        \item \textbf{Applications and Page Replacement}: In certain cases, applications accessing data through the operating system’s virtual memory perform worse than if the operating system provided no buffering at all. A typical example is a database, which provides its own memory management and I/O buffering. Applications like this understand their memory use and storage use better than does an operating system that is implementing algorithms for general-purpose use. Furthermore, if the operating system is buffering I/O and the application is doing so as well, then twice the memory is being used for a set of I/O.
+            \bigbreak \noindent 
+            Some operating systems give special programs the ability to use a secondary storage partition as a large sequential array of logical blocks, without any file-system data structures. This array is sometimes called the raw disk, and I/O to this array is termed raw I/O. Raw I/O bypasses all the file-system services, such as file I/O demand paging, file locking, prefetching, space allocation, file names, and directories. Note that although certain applications are more efficient when implementing their own special-purpose storage services on a raw partition, most applications perform better when they use the regular file-system services.
+        \item \textbf{Allocation of Frames}: We turn next to the issue of allocation. How do we allocate the fixed amount of free memory among the various processes? If we have 93 free frames and two processes, how many frames does each process get?
+            \bigbreak \noindent 
+            Consider a simple case of a system with 128 frames. The operating system may take 35, leaving 93 frames for the user process. Under pure demand paging, all 93 frames would initially be put on the free-frame list. When a user process started execution, it would generate a sequence of page faults. The first 93 page faults would all get free frames from the free-frame list. When the free-frame list was exhausted, a page-replacement algorithm would be used to select one of the 93 in-memory pages to be replaced with the 94th, and so on. When the process terminated, the 93 frames would once again be placed on the free-frame list
+            \bigbreak \noindent 
+            There are many variations on this simple strategy. We can require that the operating system allocate all its buffer and table space from the free-frame list. When this space is not in use by the operating system, it can be used to support user paging. We can try to keep three free frames reserved on the free-frame list at all times. Thus, when a page fault occurs, there is a free frame available to page into. While the page swap is taking place, a replacement can be selected, which is then written to the storage device as the user process continues to execute. Other variants are also possible, but the basic strategy is clear: the user process is allocated any free frame.
+        \item \textbf{Minimum Number of Frames}: Our strategies for the allocation of frames are constrained in various ways. We cannot, for example, allocate more than the total number of available frames (unless there is page sharing). We must also allocate at least a minimum number of frames. Here, we look more closely at the latter requirement.
+            \bigbreak \noindent 
+            Recall that when a page fault occurs before an executing instruction is complete, the instruction must be restarted. Consequently, we must have enough frames to hold all the different pages that any single instruction can reference.
+            \bigbreak \noindent 
+            For example, consider a machine in which all memory-reference instructions may reference only one memory address. In this case, we need at least one frame for the instruction and one frame for the memory reference. In addition, if one-level indirect addressing is allowed (for example, a load instruction on frame 16 can refer to an address on frame 0, which is an indirect reference to frame 23), then paging requires at least three frames per process. 
+            \bigbreak \noindent 
+            The minimum number of frames is defined by the computer architecture. For example, if the move instruction for a given architecture includes more than one word for some addressing modes, the instruction itself may straddle two frames. In addition, if each of its two operands may be indirect references, a total of six frames are required.
+            \bigbreak \noindent 
+            Whereas the minimum number of frames per process is defined by the architecture, the maximum number is defined by the amount of available physical memory. In between, we are still left with significant choice in frame allocation.
+
 
 
 

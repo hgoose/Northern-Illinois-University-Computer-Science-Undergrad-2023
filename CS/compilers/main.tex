@@ -3167,6 +3167,127 @@ if (errno) {
         \end{itemize}
 
         \pagebreak 
+        \subsection{Functions}
+        \begin{itemize}
+            \item \textbf{Register arguments}: Under the x86-64 System V ABI, the first six integer or pointer arguments are passed in registers:
+                \begin{itemize}
+                    \item rdi
+                    \item rsi
+                    \item rdx
+                    \item rcx
+                    \item r8
+                    \item r9
+                \end{itemize}
+                Floating-point arguments go in xmm0 through xmm7 in the usual cases. If there are more arguments than available argument registers, the extras are passed on the stack by the caller. So, most small function calls never need stack-passed arguments at all.
+            \item \textbf{Stack frames (System V ABI)}:  In the System V ABI, a stack frame is the portion of the stack a function uses for its own execution state while it runs. In the calling-functions context, the frame exists to support argument passing beyond register capacity, storage for local variables, saved registers, temporary spill space, and a stable place to return to when the function finishes.
+                \bigbreak \noindent 
+                For x86-64 System V specifically, the calling convention defines who places arguments where, what must be preserved across calls, and what stack alignment rules must hold at a call site. That is what gives stack frames their shape.
+                \bigbreak \noindent 
+                Suppose that $A$ calls function $B$, at a high level:
+                \begin{enumerate}
+                    \item $A$ prepares arguments.
+                    \item $A$ ensures the stack is aligned correctly.
+                    \item $A$ executes call $B$.
+                    \item The call instruction pushes the return address onto the stack and jumps to $B$.
+                    \item $B$ runs, possibly building its own stack frame.
+                    \item $B$ returns with ret, which pops the return address and jumps back to $A$.
+                \end{enumerate}
+                So the stack frame of $B$ begins only after control has entered $B$.
+                \bigbreak \noindent 
+                A stack frame is the region of the stack belonging to one function call. That region may contain:
+                \begin{itemize}
+                    \item the return address
+                    \item the saved old frame pointer
+                    \item local variables
+                    \item spilled registers
+                    \item saved callee-saved registers
+                    \item temporary storage
+                \end{itemize}
+            \item \textbf{rsp, rbp}: rsp and rbp are both stack-related registers, but they play different roles.
+                \bigbreak \noindent 
+                \begin{itemize}
+                    \item \textbf{rsp}: is the stack pointer. It always tracks the current top of the stack. Since the x86-64 stack grows downward, pushing something onto the stack decreases rsp, and popping something increases it. So rsp is the register that reflects the stack’s live, current position at every moment.
+                    \item \textbf{rbp}: rbp is traditionally the frame pointer. It does not have to be used, but when it is used, it serves as a stable reference point for the current function’s stack frame. 
+                \end{itemize}
+                The issue is that rsp can move during the function. If the function pushes registers, allocates locals, or reserves temporary space, the value of rsp changes. That makes it less convenient as a fixed reference point. That is why many functions do this at the beginning:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                push rbp
+                mov rbp, rsp
+                sub rsb,32
+                \end{cppcode}
+                \begin{itemize}
+                    \item push rbp saves the caller’s frame pointer
+                    \item mov rbp, rsp makes rbp point to the base of the new frame
+                    \item sub rsp, 32 reserves 32 bytes for local storage
+                \end{itemize}
+                So the usual mental model is:
+                \begin{itemize}
+                    \item rbp = stable anchor for this frame
+                    \item rsp = moving top of stack
+                \end{itemize}
+                The stack might look like this 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    higher addresses
+                    -------------------------
+                    arguments passed on stack
+                    return address
+                    saved old rbp      <- rbp
+                    local variable 1
+                    local variable 2
+                    temporary space
+                    -------------------------
+                    lower addresses    <- rsp
+                \end{cppcode}
+            \item \textbf{Restoration}: At the end of the function, the epilogue often looks like this:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                mov rsp, rbp
+                pop rbp
+                ret
+                \end{cppcode}
+                \bigbreak \noindent 
+                Or equivalently,
+                \bigbreak \noindent 
+                \begin{cppcode}
+                leave
+                ret
+                \end{cppcode}
+                \bigbreak \noindent 
+                \begin{itemize}
+                    \item mov rsp, rbp discards the local variable space all at once
+                \end{itemize}
+                Other registers are handled according to the ABI’s save convention. The central question is: Who is responsible for preserving a register’s value across a function call?
+                \begin{enumerate}
+                    \item \textbf{Caller-saved registers}: These are also called volatile or call-clobbered registers. 
+                        \bigbreak \noindent 
+                        If the caller has a value in one of these registers and still needs that value after making a function call, the caller must save it before the call and restore it afterward.
+                        \bigbreak \noindent 
+                        In System V x86-64, the general-purpose caller-saved registers are:
+                        \begin{itemize}
+                            \item rax, rcx, rdx, rsi, rdi
+                            \item r8, r9, r10, r11
+                        \end{itemize}
+                        So if a function $f$ is using, say, r10, and then it calls $g$, it must assume $g$ is allowed to overwrite r10.
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                            mov r10, 123
+                            push r10
+                            call g
+                            pop r10
+                        \end{cppcode}
+                    \item \textbf{Callee-saved registers}: These are also called nonvolatile or call-preserved registers. If the callee wants to use one of these, then the callee must save the old value and restore it before returning.
+                        \bigbreak \noindent 
+                        In System V x86-64, the general-purpose callee-saved registers are:
+                        \begin{itemize}
+                            \item rbx, rbp
+                            \item r12, r13, r14, r15
+                        \end{itemize}
+                \end{enumerate}
+        \end{itemize}
+
+        \pagebreak 
         \unsect{Optimizations}
         \begin{itemize}
             \item \textbf{Unary negation}: One very simple optimization that we can do when parsing is to collapse the unary negation operation on an integer constant. For example, 
@@ -3208,9 +3329,6 @@ if (errno) {
                         The first assignment is never read before being overwritten, so the first assignment is dead.
                 \end{itemize}
                 So dead code elimination is broader than just “removing unreachable statements.” It also includes removing useless computations and stores.
-
-
-
 
         \end{itemize}
 
