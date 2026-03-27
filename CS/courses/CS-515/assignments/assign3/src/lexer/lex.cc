@@ -88,7 +88,7 @@ Error lex_init(const char*  src_code) {
 }
 
 // Gets the next token
-Error get_token(Token& t, bool& begin) {
+Error get_token(Token& t) {
     // Reset token
     t.id = TOKEN_NULL;
     t.lexeme = "";
@@ -117,14 +117,7 @@ Error get_token(Token& t, bool& begin) {
     // Either we get first valid (non white space) character, or hit EOF
     for (;;) {
         int rc{};
-        if (begin) {
-            // Get first char and error code
-            rc = buffer_get_cur_char(curr_char);
-            begin = false;
-        } else {
-            // Get next char and error code
-            rc = buffer_get_next_char(curr_char);
-        }
+        rc = buffer_get_next_char(curr_char);
 
         // At this point EOF is fine, haven't started token yet
         if (rc == NCC_EOF) {
@@ -410,7 +403,7 @@ Error get_token(Token& t, bool& begin) {
             }
 
         }
-        get_token(t, begin);
+        get_token(t);
 
     // Possible identifier
     } else if (('a' <= curr_char && curr_char <= 'z') || ('A' <= curr_char && curr_char <= 'Z') || (curr_char == '_')) {

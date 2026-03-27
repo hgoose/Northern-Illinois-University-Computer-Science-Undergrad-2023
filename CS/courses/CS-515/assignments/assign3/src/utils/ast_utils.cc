@@ -29,7 +29,7 @@ void syntax_error() {
     print_error(err);
 }
 
-// Simulate building the AST from the parse tree, but only check for errors, see below function
+// Simulate building the AST from the parse tree for expressions, but only check for errors, see below function
 // for details
 bool is_st_valid(AST_NODE* root, bool accept_empty) {
     if (!root) return accept_empty;
@@ -108,7 +108,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
     }
 }
 
-// Elegantly converts a parse tree to an abstract syntax tree
+// Elegantly converts a parse tree to an abstract syntax tree (for expressions only)
 AST_NODE* pttoast(AST_NODE* root) {
     AST_NODE* ast_root = nullptr;
 

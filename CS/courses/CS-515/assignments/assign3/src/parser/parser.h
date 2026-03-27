@@ -13,7 +13,6 @@
 
 // Lookahead token
 extern Token next_token;
-extern bool begin;
 
 // INITIALIZATION
 Error parser_init(const char* src_code);

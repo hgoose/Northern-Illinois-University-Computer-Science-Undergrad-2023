@@ -51,7 +51,6 @@
 #include "tree_eval.h"
 
 Token next_token;
-bool begin = true;
 
 static void inhouse_cleanup(AST_NODE*& parse_tree);
 
@@ -77,9 +76,9 @@ Error parser_init(const char* src_code) {
 void parse() {
     Error e;
 
-    for (;;) {
-        begin = true;   
+    get_token(next_token);
 
+    for (;;) {
         if (next_token.id == TOKEN_IDENT) {
             if (next_token.identifier == "print") {
                 AST_NODE* root = parse_print(e);
@@ -93,86 +92,97 @@ void parse() {
 }
 
 // Generate all parse trees
-void _parse() {
-    Error e;
-    for(;;) {
-        // Brittle flag usage, no time to fix
-        begin = true;
-
-        // Reject the tree, current token can not start a valid ast
-        if (next_token.id != TOKEN_NULL && next_token.id != TOKEN_UPLUS 
-                && next_token.id != TOKEN_UNEG && next_token.id != TOKEN_LPAREN 
-                && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
-        ) {
-            e.error = NCC_SYNTAX_ERROR;
-            e.line = next_token.line_no;
-            e.col = next_token.col_no;
-            print_error(e);
-
-            // Current token is not valid, get next
-            handle_lex_error(get_token(next_token, begin));
-        }
-
-        // Try to create the next AST
-        AST_NODE* curr = next_parse(e); if (!curr) continue;
-
-        // Tree is valid, output, evaluate, free
-        ast_out(curr);
-        evaluate_expr(curr);
-        free_tree(curr);
-    }
-
-    parser_cleanup();
-}
-
-AST_NODE* next_parse(Error& err) {
-    // Get the next token unless the token we are on is a valid start to an expression
-    if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
-            && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER 
-    ) {
-        // Get the first token
-        err = get_token(next_token, begin);
-        if (invalid_lookahead() || handle_lex_error(err)) {
-            get_token(next_token,begin);
-            return nullptr;
-        }
-    } 
-    begin = false;
-
-    // Exit parser on EOF
-    if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
-
-    // Empty tree, no expression
-    if (next_token.id == TOKEN_EOF) {
-        return nullptr;
-    }
-
-    // Call start state
-    AST_NODE* parse_root = E(err);
-
-    // Convert parse tree to AST
-    AST_NODE* ast_root = pttoast(parse_root);
-
-    // Delete the parse tree
-    inhouse_cleanup(parse_root);
-
-    return ast_root;
-}
+// void parse() {
+//     Error e;
+//     for(;;) {
+//         // Reject the tree, current token can not start a valid ast
+//         if (next_token.id != TOKEN_NULL && next_token.id != TOKEN_UPLUS 
+//                 && next_token.id != TOKEN_UNEG && next_token.id != TOKEN_LPAREN 
+//                 && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
+//         ) {
+//             e.error = NCC_SYNTAX_ERROR;
+//             e.line = next_token.line_no;
+//             e.col = next_token.col_no;
+//             print_error(e);
+//
+//             // Current token is not valid, get next
+//             handle_lex_error(get_token(next_token));
+//         }
+//
+//         // Try to create the next AST
+//         AST_NODE* curr = next_parse(e); if (!curr) continue;
+//
+//         // Tree is valid, output, evaluate, free
+//         ast_out(curr);
+//         evaluate_expr(curr);
+//         free_tree(curr);
+//     }
+//
+//     parser_cleanup();
+// }
+//
+// AST_NODE* next_parse(Error& err) {
+//     // Get the next token unless the token we are on is a valid start to an expression
+//     if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
+//             && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER 
+//     ) {
+//         // Get the first token
+//         err = get_token(next_token);
+//         if (invalid_lookahead() || handle_lex_error(err)) {
+//             get_token(next_token);
+//             return nullptr;
+//         }
+//     } 
+//
+//     // Exit parser on EOF
+//     if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
+//
+//     // Empty tree, no expression
+//     if (next_token.id == TOKEN_EOF) {
+//         return nullptr;
+//     }
+//
+//     // Call start state
+//     AST_NODE* parse_root = E(err);
+//
+//     // Convert parse tree to AST
+//     AST_NODE* ast_root = pttoast(parse_root);
+//
+//     // Delete the parse tree
+//     inhouse_cleanup(parse_root);
+//
+//     return ast_root;
+// }
 
 AST_NODE* parse_print(Error& err) {
     AST_NODE* print_root = new AST_NODE();
 
-    get_token(next_token, begin);
-
-    begin = false;
+    get_token(next_token);
 
     if (next_token.id != TOKEN_LPAREN) {
         return nullptr;
     }
     
-    get_token(next_token,begin);
+    get_token(next_token);
 
-    AST_NODE* expr;
+    if (next_token.id == TOKEN_RPAREN) {
+        return nullptr;
+    }
+
+    AST_NODE* expr = E(err);
+    print_root->add_child(expr);
+
+    get_token(next_token);
+
+    if (next_token.id != TOKEN_RPAREN) {
+        return nullptr;
+    }
+
+    get_token(next_token);
+
+    if (next_token.id != TOKEN_SEMICOLON) {
+        return nullptr;
+    }
 
     return print_root;
 }
@@ -195,7 +205,7 @@ AST_NODE* E(Error& err) {
 
             // Get next token
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token, begin))
+            	handle_lex_error(get_token(next_token))
             ) {
             	return nullptr;
             }
@@ -258,7 +268,7 @@ AST_NODE* T(Error& err) {
                next_token.id == TOKEN_MOD) {
             Token op = next_token;
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token, begin))
+            	handle_lex_error(get_token(next_token))
             ) {
             	return nullptr;
             }
@@ -318,7 +328,7 @@ AST_NODE* N(Error& err) {
         }
 
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token, begin))
+        	handle_lex_error(get_token(next_token))
         ) {
         	return nullptr;
         }
@@ -375,7 +385,7 @@ AST_NODE* FP(Error& err) {
         here->node_type = NODE_TYPE::EXP;
 
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token, begin))
+        	handle_lex_error(get_token(next_token))
         ) {
         	return nullptr;
         }
@@ -428,7 +438,7 @@ AST_NODE* S(Error& err) {
         here->data_type = TYPE::_INT4;
 
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token, begin))
+        	handle_lex_error(get_token(next_token))
         ) {
         	return nullptr;
         }
@@ -436,7 +446,7 @@ AST_NODE* S(Error& err) {
     } else if (next_token.id == TOKEN_LPAREN) {
         // Eat lparen
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token, begin))
+        	handle_lex_error(get_token(next_token))
         ) {
         	return nullptr;
         }
@@ -454,7 +464,7 @@ AST_NODE* S(Error& err) {
         // Otherwise eat the )
         else {
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token,begin))
+            	handle_lex_error(get_token(next_token))
             ) {
             	return nullptr;
             }

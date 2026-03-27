@@ -15,9 +15,9 @@ using std::string;
 int src_line_no = 1;
 int src_col_no = 1;
 
-static size_t curr_pos = 0;
+static int curr_pos = -1;
 static char* buffer = nullptr;
-static size_t buff_size = 0;
+static int buff_size = 0;
 
 static vector<size_t> line_start;
 static vector<size_t> line_sizes;
@@ -131,7 +131,7 @@ int buffer_next_char(void) {
         ++src_line_no; 
         src_col_no = 1;
     } else {
-        ++src_col_no;
+        if (curr_pos != 0) ++src_col_no;
     }
 
     // No error
@@ -223,7 +223,7 @@ int buffer_cleanup(void) {
     src_col_no = 1;
 
     // Current position in buffer is zero
-    curr_pos = 0;
+    curr_pos = -1;
 
     // Clear line starts
     line_start.clear();
