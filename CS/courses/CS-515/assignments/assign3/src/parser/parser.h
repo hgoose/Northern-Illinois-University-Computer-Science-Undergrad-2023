@@ -1,6 +1,6 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 3
 
 #ifndef PARSER_H
 #define PARSER_H
@@ -25,6 +25,7 @@ int parse();
 AST_NODE* next_parse(Error& err);
 
 AST_NODE* parse_print(Error&);
+AST_NODE* parse_read(Error&);
 
 // PRODUCTION RULES
 AST_NODE* E(Error& err);

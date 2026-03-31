@@ -16,6 +16,9 @@
 #define  NCC_EXPECTED_RPAREN      -12
 #define  NCC_EXPECTED_EXPRESSION  -13
 #define  NCC_STR_TABLE_OVERFLOW   -14
+#define  NCC_INVALID_OPERAND_TYPE -15
+
+struct Token;
 
 struct Error
 {
@@ -23,8 +26,13 @@ struct Error
   int line, col;
 };
 
-const char* error_string(int err);
-void print_error(const Error & e);
+const char* error_string(int);
+void print_error(const Error&);
+
 void set_print_token_error(Error&, int);
+void set_print_token_error(Error&&, int);
+void set_print_token_error(Error&, const Token&, int);
+void set_print_token_error(Error&&, const Token&, int);
+
 
 #endif /* NCC_ERROR_H */

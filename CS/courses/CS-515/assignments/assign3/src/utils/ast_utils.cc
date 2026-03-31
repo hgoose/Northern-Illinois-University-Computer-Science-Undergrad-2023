@@ -56,27 +56,45 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             // Add to the stack
             children.push(curr); 
         } 
-        // Unary operator, check for a single child
+        // Unary operator, check for a single child of the correct type
         else if (curr->token.id == TOKEN_UPLUS || curr->token.id == TOKEN_UNEG) {
             if (children.empty()) {
+                return false;
+            }
+
+            // Type check
+            AST_NODE* operand = children.top();
+            if (operand->data_type != TYPE::_INT4) {
+                set_print_token_error(Error{}, operand->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
 
             children.pop();
             children.push(curr);
         }
-        // Check that for a binary operator, we have two children available
+        // Check that for a binary operator, we have two children available and they 
+        // are of the correct type (int4)
         else {
             if (children.empty()) {
                 return false;
             }
-            children.pop();
+            AST_NODE* left = children.top(); children.pop();
 
             if (children.empty()) {
                 return false;
             }
-            children.pop();
+            AST_NODE* right = children.top(); children.pop(); 
             
+            if (left->data_type != TYPE::_INT4) {
+                set_print_token_error(Error{}, left->token, NCC_INVALID_OPERAND_TYPE);
+                return false;
+            }
+
+            if (right->data_type != TYPE::_INT4) {
+                set_print_token_error(Error{}, right->token, NCC_INVALID_OPERAND_TYPE);
+                return false;
+            }
+
             children.push(curr);
         }
     }
@@ -105,7 +123,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
         || p->token.id == TOKEN_UNEG
         || p->token.id == TOKEN_UPLUS
     ) {
-        terminals.push(p);
+        terminals.push(new AST_NODE(*p));
     }
 }
 

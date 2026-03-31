@@ -33,6 +33,11 @@ void print_string(const char* c) {
     std::cout << c;
 }
 
+int read_int() {
+    int a; std::cin >> a; 
+    return a;
+}
+
 // Loads a 32-bit integer into the program to be used as an operand
 size_t load_imm32(int x) {
     for (int i=0; i<4; ++i) {
@@ -265,7 +270,7 @@ size_t IA32e_construct_ret() {
     return 1;
 }
 
-// Call some C++ function that takes a single integer argument
+// Call some C++ function that takes a single integer argument, and returns void
 // FF /2
 size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
     size_t byte_count{};
@@ -279,6 +284,8 @@ size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
     return byte_count;
 }
 
+// Call some C++ function that takes a single char* argument, and returns void
+// FF /2
 size_t IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
     const char* c = STR_TABLE::emit_string(st_entry);
 

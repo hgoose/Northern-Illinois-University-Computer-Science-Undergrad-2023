@@ -28,7 +28,6 @@ const std::vector<std::string> token_names = {
     "TOKEN_UNEG", "TOKEN_UPLUS" 
 };
 
-
 // Prints a token
 void print_token(const Token& t) {
     // Guaranteed values of interest

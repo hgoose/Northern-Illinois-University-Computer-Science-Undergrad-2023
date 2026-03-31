@@ -32,8 +32,15 @@ struct AST_NODE {
 
     std::list<AST_NODE*> children;
 
-    AST_NODE(Token token) : token(token) {}
     AST_NODE() = default;
+
+    AST_NODE(Token token) : token(token) {}
+    AST_NODE(const AST_NODE& other) {
+        token = other.token;
+        data_type = other.data_type;
+        node_type = other.node_type;
+        entry = other.entry;
+    }
 
     void add_child(AST_NODE* child) {
         children.push_back(child);

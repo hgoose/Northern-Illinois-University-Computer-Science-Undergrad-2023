@@ -2,7 +2,9 @@
 #include "parser.h"
 #include "error.h"
 
-STR_TABLE_ENTRY::STR_TABLE_ENTRY(size_t offset) : offset(offset) {}
+STR_TABLE_ENTRY::STR_TABLE_ENTRY(size_t offset) 
+    : offset(offset) 
+{}
 
 const char* STR_TABLE::emit_string(STR_TABLE_ENTRY& entry) {
     return (entry.vi 

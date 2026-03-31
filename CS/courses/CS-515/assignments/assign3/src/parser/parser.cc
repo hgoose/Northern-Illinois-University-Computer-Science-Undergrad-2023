@@ -1,45 +1,6 @@
-// ELEGANT LL(1) PARSING
+// ELEGANT PARSING
 // Nate Warner z2004109
-// Assignment 2
-//
-/* <remark>
-    The classic left-recursive CFG for arithmetic expressions
-    that encodes associativity and precedence
-        E \to E + T | E - T | T \\
-        T \to T * N | T / N | T MOD N | N \\
-        N \to -F | +F | F \\
-        F \to F ^ S | S \\
-        S \to (E) | int
-
-    Has been converted to an LL(1) grammar using the idea that 
-    left-recursion on production rules of the form
-        A \to A\alpha_1 | \cdots | A\alpha_k | \beta
-
-    can be eliminated by the transform
-        A \to \beta A' \\
-        A' \to \alpha_1 A' | \cdots \alpha_k A' | \varepsilon
-
-    The fully transformed CFG is then
-        E  \to TE' \\
-        E' \to +TE' | -TE' | \varepsilon \\
-        T  \to NT' \\
-        T' \to *NT' | /NT' | MOD NT' | \varepsilon \\
-        N \to \oplus F | \neg F | F \\
-        F \to SF' \\
-        F' \to ^SF' | \varepsilon \\
-        S \to (E) | int
-
-    Note that here, we will say that \oplus is unary plus, and \neg is unary negation, 
-    although we make no such distinction in the parse tree or ast (they will just be +,-), 
-    although the token type will reflect this
-
-    To choose a production \alpha_i given the current lookahead token $a$,
-        1. If a \in FIRST(\alpha_i), choose \alpha_i, otherwise
-        2. If alpha_k derives \varepsilon (\varepsilon \in FIRST(\alpha_k)) then choose alpha_k if a \in FOLLOW(A)
-
-    NOTE: We call next_token t to save some typing in comments
-
-</remark> */
+// Assignment 3
 
 #include <algorithm>
 #include <iostream>
@@ -91,9 +52,15 @@ int parse() {
     for (;;) {
         if (next_token.id == TOKEN_IDENT) {
             if (next_token.identifier == "print") {
-                program_tree->add_children(parse_print(e));
+                AST_NODE* print = parse_print(e);
+                if (print) {
+                    program_tree->add_children(print);
+                }
             } else if (next_token.identifier == "read") {
-
+                AST_NODE* read = parse_read(e);
+                if (read) {
+                    program_tree->add_children(read);
+                }
             } else if (next_token.identifier == "int4") {
 
             }
@@ -125,69 +92,6 @@ int parse() {
 
     return 0;
 }
-
-// Generate all parse trees
-// void parse() {
-//     Error e;
-//     for(;;) {
-//         // Reject the tree, current token can not start a valid ast
-//         if (next_token.id != TOKEN_NULL && next_token.id != TOKEN_UPLUS 
-//                 && next_token.id != TOKEN_UNEG && next_token.id != TOKEN_LPAREN 
-//                 && next_token.id != TOKEN_INTEGER && next_token.id != TOKEN_EOF 
-//         ) {
-//             e.error = NCC_SYNTAX_ERROR;
-//             e.line = next_token.line_no;
-//             e.col = next_token.col_no;
-//             print_error(e);
-//
-//             // Current token is not valid, get next
-//             handle_lex_error(get_token(next_token));
-//         }
-//
-//         // Try to create the next AST
-//         AST_NODE* curr = next_parse(e); if (!curr) continue;
-//
-//         // Tree is valid, output, evaluate, free
-//         ast_out(curr);
-//         evaluate_expr(curr);
-//         free_tree(curr);
-//     }
-//
-//     parser_cleanup();
-// }
-//
-// AST_NODE* next_parse(Error& err) {
-//     // Get the next token unless the token we are on is a valid start to an expression
-//     if (next_token.id != TOKEN_UPLUS && next_token.id != TOKEN_UNEG 
-//             && next_token.id != TOKEN_LPAREN && next_token.id != TOKEN_INTEGER 
-//     ) {
-//         // Get the first token
-//         err = get_token(next_token);
-//         if (invalid_lookahead() || handle_lex_error(err)) {
-//             get_token(next_token);
-//             return nullptr;
-//         }
-//     } 
-//
-//     // Exit parser on EOF
-//     if (err.error == NCC_EOF || err.error == NCC_UNEXPECTED_EOF) exit(1);
-//
-//     // Empty tree, no expression
-//     if (next_token.id == TOKEN_EOF) {
-//         return nullptr;
-//     }
-//
-//     // Call start state
-//     AST_NODE* parse_root = E(err);
-//
-//     // Convert parse tree to AST
-//     AST_NODE* ast_root = pttoast(parse_root);
-//
-//     // Delete the parse tree
-//     inhouse_cleanup(parse_root);
-//
-//     return ast_root;
-// }
 
 AST_NODE* parse_print(Error& err) {
     AST_NODE* print_root = new AST_NODE();
@@ -221,6 +125,12 @@ AST_NODE* parse_print(Error& err) {
 
     // Process all expressions, add as children to print node
     AST_NODE* expr = E(err);
+    AST_NODE* ast_expr = pttoast(expr);
+
+    // Toss out the print statement if the expression does not form a 
+    // syntactically and semantically valid AST
+    if (!ast_expr) return nullptr;
+
     print_root->add_child(pttoast(expr));
 
     while (next_token.id == TOKEN_COMMA) {
@@ -254,6 +164,10 @@ AST_NODE* parse_print(Error& err) {
     }
 
     return print_root;
+}
+
+AST_NODE* parse_read(Error& e) {
+    return nullptr;
 }
 
 AST_NODE* E(Error& err) {

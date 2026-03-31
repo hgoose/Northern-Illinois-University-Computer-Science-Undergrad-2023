@@ -23,6 +23,7 @@ const char* error_string(int err) {
         case NCC_EXPECTED_RPAREN: return "expected )";
         case NCC_EXPECTED_EXPRESSION: return "expected expression, none provided";
         case NCC_STR_TABLE_OVERFLOW: return "string table overrun";
+        case NCC_INVALID_OPERAND_TYPE: return "invalid operand type";
         default: return "unknown error";
     }
 }
@@ -57,10 +58,36 @@ void print_error(const Error& e) {
     // }
 }
 
+// Sets and print error, uses current parsing token
 void set_print_token_error(Error& e, int error) {
     e.error = error;
     e.line = next_token.line_no;
     e.col = next_token.col_no;
+
+    print_error(e);
+}
+
+void set_print_token_error(Error&& e, int error) {
+    e.error = error;
+    e.line = next_token.line_no;
+    e.col = next_token.col_no;
+
+    print_error(e);
+}
+
+// Requests a specific taken
+void set_print_token_error(Error& e, const Token& token, int error) {
+    e.error = error;
+    e.line = token.line_no;
+    e.col = token.col_no;
+
+    print_error(e);
+}
+
+void set_print_token_error(Error&& e, const Token& token, int error) {
+    e.error = error;
+    e.line = token.line_no;
+    e.col = token.col_no;
 
     print_error(e);
 }
