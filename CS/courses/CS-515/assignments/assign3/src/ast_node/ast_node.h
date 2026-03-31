@@ -1,12 +1,14 @@
 // Nate warner 
 // CS 515
 // Assignment 2
-
 #ifndef NCC_ASTNODE_H
 #define NCC_ASTNODE_H
 
 #include <list>
+#include <string>
+
 #include "token.h"
+#include "ncc_strings.h"
 
 enum NODE_TYPE : unsigned int {
     _null, ADD, SUB, MULT, 
@@ -22,6 +24,8 @@ enum TYPE : unsigned int {
 
 struct AST_NODE {
     Token token{};
+
+    STR_TABLE_ENTRY entry{};
 
     TYPE data_type{};
     NODE_TYPE node_type{};
@@ -44,6 +48,15 @@ struct AST_NODE {
         token = Token{};
         data_type = TYPE{};
         node_type = NODE_TYPE{};
+    }
+
+    std::string str_node_type() {
+        return std::vector<std::string>{
+                "_null", "ADD", "SUB", "MULT", 
+                "DIV", "MOD", "EXP", "UPLUS", 
+                "UNEG", "DECL", "ASSIGN", "print", 
+                "READ", "Statement block", "INT", "VAR", "STR"
+        }[node_type];
     }
 };
 

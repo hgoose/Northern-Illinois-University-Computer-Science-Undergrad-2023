@@ -1,5 +1,5 @@
-#ifndef SYMTABLE_H
-#define SYMTABLE_H
+#ifndef NCC_SYMTABLE_H
+#define NCC_SYMTABLE_H
 
 #include <unordered_map>
 #include <string>

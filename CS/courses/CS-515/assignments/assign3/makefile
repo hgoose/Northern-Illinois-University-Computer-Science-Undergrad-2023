@@ -1,5 +1,5 @@
 CXX      = g++
-CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer -Isrc/parser -Isrc/codegen -Isrc/utils -Isrc/symbols -g
+CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer -Isrc/parser -Isrc/codegen -Isrc/utils -Isrc/ncc_symbols -Isrc/ncc_strings -Isrc/ast_node -g
 
 TARGET   = bin/ncc
 OBJDIR   = obj
@@ -16,7 +16,8 @@ SRC = \
 	src/utils/ast_utils.cc \
 	src/codegen/codegen.cc \
 	src/codegen/tree_eval.cc \
-	src/symbols/symtable.cc
+	src/ncc_symbols/symtable.cc \
+	src/ncc_strings/ncc_strings.cc 
 	
 
 OBJ = $(SRC:%=$(OBJDIR)/%.o)

@@ -8,30 +8,27 @@
 #include <iostream> 
 #include <cstdlib> 
 
+#include "token.h"
+
 using std::cout;
 
 int main(int argc, const char* argv[]) {
 
     // Check that a filename was provided
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <filename>\n";
-        return 1;
-    }
+    // if (argc < 2) {
+    //     std::cerr << "Usage: " << argv[0] << " <filename>\n";
+    //     return 1;
+    // }
 
     // The filename is the first argument after program name
-    const char* filename = argv[1];
-    // const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign3/tests/pt_testdata/test";
+    // const char* filename = argv[1];
+    const char* filename = "/home/datura/niu/CS/courses/CS-515/assignments/assign3/tests/pet_testdata/test";
 
     Error err = lex_init(filename);
     print_error(err);
 
     // Examine the token stream
-    // Token t; bool begin = true;
-    // while (!lex_eof()) {
-    //     get_token(t,begin);
-    //
-    //     cout << (t.id != -1 ? token_names[t.id] : "stop") << ", " << t.lexeme << "\n";
-    // }
+    // Token t; while (!lex_eof()) { get_token(t); cout << (t.id != -1 ? token_names[t.id] : "stop") << ", " << t.lexeme << "\n"; }
 
     // Run the parser test driver
     parser_test(filename);

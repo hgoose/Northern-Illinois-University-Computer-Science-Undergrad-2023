@@ -95,6 +95,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
     });
 
     if (p->token.id == TOKEN_INTEGER 
+        || p->token.id == TOKEN_STRING
         || p->token.id == TOKEN_PLUS 
         || p->token.id == TOKEN_MINUS 
         || p->token.id == TOKEN_MULT
@@ -104,7 +105,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
         || p->token.id == TOKEN_UNEG
         || p->token.id == TOKEN_UPLUS
     ) {
-        terminals.push(new AST_NODE(p->token));
+        terminals.push(p);
     }
 }
 
@@ -178,6 +179,7 @@ void ast_preorder(AST_NODE* root) {
         ast_preorder(it);
     });
 }
+
 void ast_inorder(AST_NODE* root) {
     if (!root) return;
 
@@ -219,7 +221,7 @@ void r_ast_out(AST_NODE* node, int depth) {
         std::cout << "  ";
 
     // Integer node
-    if (node->token.id == TOKEN_INTEGER) {
+    if (node->token.id == TOKEN_INTEGER || node->token.id == TOKEN_STRING) {
         std::cout << node->token.lexeme << "\n";
     }
     // Operator node
@@ -230,11 +232,15 @@ void r_ast_out(AST_NODE* node, int depth) {
              node->token.id == TOKEN_MOD   ||
              node->token.id == TOKEN_EXP   ||
              node->token.id == TOKEN_UNEG  ||
-             node->token.id == TOKEN_UPLUS 
+             node->token.id == TOKEN_UPLUS
     ) {
         std::cout << node->token.lexeme
                   << " (" << op_name(node->token.id) << ")"
                   << "\n";
+    } else if (node->node_type == NODE_TYPE::PRINT ||
+               node->node_type == NODE_TYPE::BLOCK
+    ) {
+        std::cout << node->str_node_type() << '\n';
     }
     // Other internal nodes (if any) (useful for debugging, this should not hit)
     else {

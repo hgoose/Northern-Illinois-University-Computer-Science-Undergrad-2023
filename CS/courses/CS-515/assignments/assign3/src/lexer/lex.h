@@ -2,7 +2,8 @@
 #define  LEXICAL_ANALYZER_H
 
 #include "error.h"
-#include "token.h"
+
+struct Token;
 
 Error lex_init(const char*  src_code);
 

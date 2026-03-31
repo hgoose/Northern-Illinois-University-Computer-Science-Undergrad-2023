@@ -2,6 +2,9 @@
 // CS 515
 // Assignment 2
 
+#ifndef PARSER_H
+#define PARSER_H
+
 #include "ast_node.h"
 #include "error.h"
 
@@ -18,7 +21,7 @@ extern Token next_token;
 Error parser_init(const char* src_code);
 
 // PARSING AND GENERATING ASTS
-void parse();
+int parse();
 AST_NODE* next_parse(Error& err);
 
 AST_NODE* parse_print(Error&);
@@ -39,3 +42,5 @@ void parser_cleanup();
 
 // ERROR HANDLING FOR LEXER
 bool handle_lex_error(const Error& err);
+
+#endif

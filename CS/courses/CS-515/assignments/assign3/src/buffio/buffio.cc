@@ -124,7 +124,10 @@ int buffer_next_char(void) {
     if (curr_pos >= buff_size) return NCC_EOF;
 
     // Otherwise, advance
-    char current_char = buffer[curr_pos];
+    char current_char{};
+    if (curr_pos >= 0) {
+        char current_char = buffer[curr_pos];
+    }
     ++curr_pos;
 
     if (current_char == '\n') {

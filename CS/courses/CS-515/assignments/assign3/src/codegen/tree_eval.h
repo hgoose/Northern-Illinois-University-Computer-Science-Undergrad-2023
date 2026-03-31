@@ -5,8 +5,9 @@
 #ifndef TREE_EVAL_H
 #define TREE_EVAL_H
 
-#include "ast_node.h"
+struct AST_NODE;
 
 void evaluate_expr(AST_NODE* root);
+void evaluate_print(AST_NODE*);
 
 #endif

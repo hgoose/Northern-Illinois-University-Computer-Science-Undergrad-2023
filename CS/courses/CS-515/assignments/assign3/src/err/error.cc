@@ -2,6 +2,7 @@
 // error.cc
 
 #include "error.h"
+#include "parser.h"
 
 #include <iostream>
 using std::cerr;
@@ -20,6 +21,8 @@ const char* error_string(int err) {
         case NCC_INVALID_NUMBER: return "invalid number";
         case NCC_SYNTAX_ERROR:   return "Syntax error";
         case NCC_EXPECTED_RPAREN: return "expected )";
+        case NCC_EXPECTED_EXPRESSION: return "expected expression, none provided";
+        case NCC_STR_TABLE_OVERFLOW: return "string table overrun";
         default: return "unknown error";
     }
 }
@@ -52,4 +55,12 @@ void print_error(const Error& e) {
     //     }
     //     cerr << "^\n";
     // }
+}
+
+void set_print_token_error(Error& e, int error) {
+    e.error = error;
+    e.line = next_token.line_no;
+    e.col = next_token.col_no;
+
+    print_error(e);
 }

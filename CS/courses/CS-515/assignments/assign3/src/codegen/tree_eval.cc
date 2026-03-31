@@ -8,17 +8,19 @@
 #include "token.h"
 
 #include <cstdlib>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+
+size_t byte_count = 0;
 
 // POST ORDER EVALUATION OF THE AST
-static void r_evaluate_expr(AST_NODE* p, size_t& byte_count) {
+static void r_evaluate_expr(AST_NODE* p) {
     // NOOP
     if (!p) return;
 
     // POST ORDER
-    std::for_each(p->children.begin(), p->children.end(), [&byte_count](auto it) -> void {
-        r_evaluate_expr(it, byte_count);
+    std::for_each(p->children.begin(), p->children.end(), [](auto it) -> void {
+        r_evaluate_expr(it);
     });
 
     // PUSH INTEGERS TO THE STACK
@@ -84,35 +86,27 @@ void evaluate_expr(AST_NODE* root) {
     // Noop on empty tree
     if (!root) return;
 
-    size_t byte_count = 0;
-
-    // Initialize program space
-    if (pspace_init() == -1) {
-        std::cerr << "Error requesting address space for this expression\n";
-        return;
-    }
-
     // Evaluate expression
-    r_evaluate_expr(root, byte_count);
+    r_evaluate_expr(root);
 
     // Extra pop so that the stack is empty,
     // otherwise when ret looks in the stack for the return address
     // it grabs the value in EAX and tries to jump to that location,
     // major seg fault
     byte_count+=IA32e_pop(REGISTER::EAX);
-
-    // Add a RET instruction
-    byte_count+=IA32e_construct_ret();
     
-    std::cout << "Code size: " << byte_count << " bytes.\n";
-    std::cout << "Code execution: \n";
+    // Call print_int with value in accumulator
+    byte_count+=IA32e_call_void_sia(print_int, REGISTER::EAX);
+}
 
-    // Execute program
-    std::cout << IA32e_exec() << "\n\n";
+void evaluate_print(AST_NODE* root) {
+    if (!root) return;
 
-    // Reclaim address space
-    if (pspace_reclaim() == -1) {
-        std::cerr << "Error reclaiming address space for this expression\n";
-        return;
-    }
+    std::for_each(root->children.begin(), root->children.end(), [](AST_NODE* it) -> void {
+        if (it->entry.vi) {
+            byte_count += IA32e_call_void_sca(print_string, it->entry);             
+        } else {
+            evaluate_expr(it);
+        }
+    });
 }

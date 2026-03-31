@@ -14,6 +14,8 @@
 #define  NCC_INVALID_NUMBER       -10
 #define  NCC_SYNTAX_ERROR         -11
 #define  NCC_EXPECTED_RPAREN      -12
+#define  NCC_EXPECTED_EXPRESSION  -13
+#define  NCC_STR_TABLE_OVERFLOW   -14
 
 struct Error
 {
@@ -23,5 +25,6 @@ struct Error
 
 const char* error_string(int err);
 void print_error(const Error & e);
+void set_print_token_error(Error&, int);
 
 #endif /* NCC_ERROR_H */

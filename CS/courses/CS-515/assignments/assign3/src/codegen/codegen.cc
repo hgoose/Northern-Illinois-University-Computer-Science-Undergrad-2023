@@ -1,11 +1,14 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 3
 
-#include "codegen.h"
-#include <cstdlib>
 #include <cstdlib>
 #include <sys/mman.h>
+#include <cstdlib>
+#include <iostream>
+
+#include "ncc_strings.h"
+#include "codegen.h"
 
 // Two meg should suffice
 static constexpr size_t PROG_SIZE = 2 * 1024 * 1024;
@@ -15,6 +18,20 @@ static unsigned char* prog;
 
 // Offset into the address space
 static size_t p_offset;
+
+void dump() {
+    for (size_t i{}; i<p_offset; ++i) {
+        std::cout << std::hex << prog[i];
+    }
+}
+
+void print_int(int a) {
+    std::cout << a; 
+}
+
+void print_string(const char* c) {
+    std::cout << c;
+}
 
 // Loads a 32-bit integer into the program to be used as an operand
 size_t load_imm32(int x) {
@@ -94,6 +111,26 @@ size_t IA32e_mov_rimm32(REGISTER dest, int src) {
     load_imm32(src);
 
     return 5;
+}
+
+// REX.W + B8+ rd io
+// NOTE: If dest is R8-R15, REX.B = 1, zero otherwise. In any case, 
+// REX.R = REX.X = 0, and REX.W = 1
+size_t IA32e_mov_rimm64(REGISTER dest, long long src) {
+    prog[p_offset++] = gen_rex(WIDE_ON, (REGISTER) REX_R_ZERO, dest);
+    prog[p_offset++] = 0xB8 + dest;
+    load_imm64(src);
+
+    return 10;
+}
+
+// REX.W + B8+ rd io
+size_t IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
+    prog[p_offset++] = gen_rex(WIDE_ON, (REGISTER) REX_R_ZERO, dest);
+    prog[p_offset++] = 0xB8 + dest;
+    load_imm64(src);
+
+    return 10;
 }
 
 // 29 /r SUB r/m32, r32
@@ -228,8 +265,35 @@ size_t IA32e_construct_ret() {
     return 1;
 }
 
+// Call some C++ function that takes a single integer argument
+// FF /2
+size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
+    size_t byte_count{};
+
+    byte_count += IA32e_mov_rr(REGISTER::EDI, src);
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f);
+
+    prog[p_offset++] = 0xFF; ++byte_count;
+    prog[p_offset++] = gen_modrm(REGISTER::ECX, (REGISTER) 2); ++byte_count;
+
+    return byte_count;
+}
+
+size_t IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
+    const char* c = STR_TABLE::emit_string(st_entry);
+
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f); 
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::EDI, (std::uintptr_t) c); 
+
+    prog[p_offset++] = 0xFF; ++byte_count; 
+    prog[p_offset++] = gen_modrm(REGISTER::ECX, (REGISTER) 2); ++byte_count;
+
+    return byte_count;
+}
+
 // Add a return instruction and execute program, returns value in the accumulator
 int IA32e_exec() {
+    prog[p_offset++] = 0xc3;
     return ((int(*)(void))prog)();
 }
 

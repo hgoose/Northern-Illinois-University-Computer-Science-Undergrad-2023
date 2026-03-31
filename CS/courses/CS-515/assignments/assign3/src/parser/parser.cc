@@ -42,6 +42,7 @@
 </remark> */
 
 #include <algorithm>
+#include <iostream>
 
 #include "parser.h"
 #include "error.h"
@@ -49,6 +50,7 @@
 #include "ast_node.h"
 #include "ast_utils.h"
 #include "tree_eval.h"
+#include "codegen.h"
 
 Token next_token;
 
@@ -73,7 +75,15 @@ Error parser_init(const char* src_code) {
     return err;
 }
 
-void parse() {
+int parse() {
+    if (pspace_init() == -1) {
+        std::cerr << "Error requesting address space\n";
+        return -1;
+    }
+
+    AST_NODE* program_tree = new AST_NODE();
+    program_tree->node_type = NODE_TYPE::BLOCK;
+
     Error e;
 
     get_token(next_token);
@@ -81,14 +91,39 @@ void parse() {
     for (;;) {
         if (next_token.id == TOKEN_IDENT) {
             if (next_token.identifier == "print") {
-                AST_NODE* root = parse_print(e);
+                program_tree->add_children(parse_print(e));
             } else if (next_token.identifier == "read") {
 
             } else if (next_token.identifier == "int4") {
 
             }
         }
+
+        get_token(next_token);
+
+        if (next_token.id == TOKEN_EOF) break;
     }
+
+
+    ast_out(program_tree);
+
+    std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* it) -> void {
+        if (it && it->node_type == NODE_TYPE::PRINT) {
+            evaluate_print(it);
+        }
+    });
+
+    std::cout << "Code size: " << byte_count << " bytes.\n";
+    std::cout << "Code execution: \n";
+
+    int res = IA32e_exec();
+
+    if (pspace_reclaim() == -1) {
+        std::cerr << "Did not succeed in reclaiming allocated program space\n";
+        return -1;
+    }
+
+    return 0;
 }
 
 // Generate all parse trees
@@ -156,31 +191,65 @@ void parse() {
 
 AST_NODE* parse_print(Error& err) {
     AST_NODE* print_root = new AST_NODE();
+    print_root->node_type = NODE_TYPE::PRINT;
 
+    // Lexer error
     get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(err)) {
+        return nullptr;
+    }
 
+    // Missing ( after print
     if (next_token.id != TOKEN_LPAREN) {
+        set_print_token_error(err, NCC_SYNTAX_ERROR);
+
         return nullptr;
     }
     
-    get_token(next_token);
+    // Lexer error
+    err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(err)) {
+        return nullptr;
+    }
 
+    // Empty print
     if (next_token.id == TOKEN_RPAREN) {
+        set_print_token_error(err, NCC_EXPECTED_EXPRESSION);
+
         return nullptr;
     }
 
+    // Process all expressions, add as children to print node
     AST_NODE* expr = E(err);
-    print_root->add_child(expr);
+    print_root->add_child(pttoast(expr));
 
-    get_token(next_token);
+    while (next_token.id == TOKEN_COMMA) {
+        err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(err)) {
+            return nullptr;
+        }
 
+        expr = E(err);
+        print_root->add_child(pttoast(expr));
+    }
+
+    // Missing ) after expressions
     if (next_token.id != TOKEN_RPAREN) {
+        set_print_token_error(err, NCC_SYNTAX_ERROR);
+
         return nullptr;
     }
 
-    get_token(next_token);
+    // Lexer error
+    err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(err)) {
+        return nullptr;
+    }
 
+    // Missing semicolon after )
     if (next_token.id != TOKEN_SEMICOLON) {
+        set_print_token_error(err, NCC_SYNTAX_ERROR);
+
         return nullptr;
     }
 
@@ -193,7 +262,8 @@ AST_NODE* E(Error& err) {
     // t \in FIRST(TE'). Removed E' for this fold operation, left folds
     // +,- so that these operations are not right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
-        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER || 
+        next_token.id == TOKEN_STRING) {
         
         // Get lhs sub tree
         left = T(err);
@@ -258,7 +328,8 @@ AST_NODE* T(Error& err) {
 
     // Left folds *,/,mod, since the grammar I have makes these operations right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
-        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+        next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER ||
+        next_token.id == TOKEN_STRING) {
 
         left = N(err);
 
@@ -336,7 +407,10 @@ AST_NODE* N(Error& err) {
         left = F(err);
     } 
     // t \in FIRST(F)
-    else if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+    else if (next_token.id == TOKEN_LPAREN 
+            || next_token.id == TOKEN_INTEGER 
+            || next_token.id == TOKEN_STRING
+    ) {
         left = F(err);
     } 
 
@@ -362,7 +436,7 @@ AST_NODE* F(Error& err) {
 	AST_NODE* left{}, *right{};
 
     // t \in FIRST(SF')
-    if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER) {
+    if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER || next_token.id == TOKEN_STRING) {
         left = S(err);
         right = FP(err);
     } 
@@ -473,6 +547,15 @@ AST_NODE* S(Error& err) {
         here->token = next_token;
         here->node_type = NODE_TYPE::STR;
         here->data_type = TYPE::_STRING;
+
+        here->entry = STR_TABLE::add_string(next_token.str, err);
+        here->entry.vi = true;
+
+        if (invalid_lookahead() || 
+        	handle_lex_error(get_token(next_token))
+        ) {
+        	return nullptr;
+        }
     }
 
     // Only attach S->(E) if that path is validated, otherwise delete the subtree
