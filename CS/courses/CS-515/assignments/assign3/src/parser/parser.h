@@ -24,8 +24,9 @@ Error parser_init(const char* src_code);
 int parse();
 AST_NODE* next_parse(Error& err);
 
-AST_NODE* parse_print(Error&);
-AST_NODE* parse_read(Error&);
+AST_NODE* parse_print();
+AST_NODE* parse_read();
+AST_NODE* parse_decl();
 
 // PRODUCTION RULES
 AST_NODE* E(Error& err);

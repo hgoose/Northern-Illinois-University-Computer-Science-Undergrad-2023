@@ -24,6 +24,10 @@ const char* error_string(int err) {
         case NCC_EXPECTED_EXPRESSION: return "expected expression, none provided";
         case NCC_STR_TABLE_OVERFLOW: return "string table overrun";
         case NCC_INVALID_OPERAND_TYPE: return "invalid operand type";
+        case NCC_INT_TABLE_OVERFLOW: return "integer table overrun";
+        case NCC_VARIABLE_NAME_RESERVED: return "attempted to create a variable using a reserved name";
+        case NCC_SYMBOL_ALREADY_EXISTS: return "variable already exists";
+        case NCC_INVALID_IDENTIFIER: return "invalid identifier";
         default: return "unknown error";
     }
 }

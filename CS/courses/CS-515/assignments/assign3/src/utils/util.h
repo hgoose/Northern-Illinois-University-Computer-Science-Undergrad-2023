@@ -9,6 +9,6 @@ void read_file_to_file(const char* infile, const char* outfile);
 int parse_hex6_codepoint(const std::string& hex6, uint32_t& value);
 int encode_utf8(uint32_t cp, std::string& out);
 std::string hex6_to_utf8(const std::string& hex6);
-
+void goto_next_semicolon();
 
 #endif

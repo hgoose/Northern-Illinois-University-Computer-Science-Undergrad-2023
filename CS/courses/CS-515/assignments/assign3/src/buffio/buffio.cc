@@ -126,7 +126,7 @@ int buffer_next_char(void) {
     // Otherwise, advance
     char current_char{};
     if (curr_pos >= 0) {
-        char current_char = buffer[curr_pos];
+        current_char = buffer[curr_pos];
     }
     ++curr_pos;
 

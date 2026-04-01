@@ -9,7 +9,6 @@
 
 #include <cstdlib>
 #include <algorithm>
-#include <iostream>
 
 size_t byte_count = 0;
 
@@ -109,4 +108,9 @@ void evaluate_print(AST_NODE* root) {
             evaluate_expr(it);
         }
     });
+}
+
+void init_var(AST_NODE* root) {
+    AST_NODE* var = root->children.front();
+
 }

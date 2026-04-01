@@ -2976,7 +2976,11 @@ if (errno) {
                 CALL RSI
             \end{cppcode}
             \bigbreak \noindent 
-            \textbf{Note:} The System V ABI dictates that the first six integer or pointer arguments are passed in RDI, RSI, RDX, RCX, R8, and R9 in that order. This is why our argument was placed into EDI. The functions address being placed into ESI was not determined by any conventions.
+            \textbf{Note:} The System V ABI dictates that the first six integer or pointer arguments are passed in 
+            \begin{itemize}
+                \item RDI, RSI, RDX, RCX, R8, and R9 
+            \end{itemize}
+            in that order. This is why our argument was placed into EDI. The functions address being placed into ESI was not determined by any conventions.
             \bigbreak \noindent 
             For the first instruction, we use the 64-bit MOV, since our functions address is 64-bit:
             \bigbreak \noindent 
@@ -3019,6 +3023,80 @@ if (errno) {
 
                 prog[p_offset++] = C3; // RET 
             \end{cppcode}
+        \item \textbf{Return values in call instructions}: Suppose we have
+            \begin{align*}
+                struct A {
+                    int a,b,c,d,e;
+                };
+
+                A fn(int x) {
+                }
+            .\end{align*}
+            and we want to write a call instruction to call this function
+            \bigbreak \noindent 
+            \begin{cppcode}
+            mov   rcx, fn
+            call  rcx
+            \end{cppcode}
+            \bigbreak \noindent 
+            Under the System V ABI, if the return value is small enough to fit in a register, then the callee will put the return value into the accumulator. However, if the return value is of type MEMORY, then the caller is responsible 
+            for putting the address of a space in memory for the return value in rdi. Then, the callee puts the return value in the provided buffer, and may place the address of the buffer in eax for the caller.
+            \bigbreak \noindent 
+            In the case of MEMORY return type, the first argument moves to RSI.
+            \bigbreak \noindent 
+            A return value can use registers only if its ABI classification is not MEMORY. For common integer/pointer/float aggregates, that often means it must fit into at most two eightbytes, but size alone is not the whole rule
+            \begin{itemize}
+                \item INTEGER-class pieces use RAX, then RDX
+                \item SSE-class pieces use XMM0, then XMM1
+                \item If the type is classified as MEMORY, the caller passes a hidden pointer in RDI instead.
+            \end{itemize}
+            Consider a structure
+            \bigbreak \noindent 
+            \begin{cppcode}
+                struct A {
+                    long x,y,z;
+                };
+
+                A fn(int a) {}
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that the class of the return value is MEMORY. \texttt{fn} is effectively called like this at the ABI level:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void fn(A* retbuf, int a);
+            \end{cppcode}
+            \bigbreak \noindent 
+            A simple caller-side sketch looks like this:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                sub     rsp, 24          ; make space for A
+                lea     rdi, [rsp]       ; hidden return buffer
+                mov     esi, 123         ; a = 123
+                call    fn
+                ; now [rsp], [rsp+8], [rsp+16] hold x,y,z
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that \texttt{lea} is \textit{load effective address}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ; fn(A* retbuf, int a)
+                ; RDI = retbuf
+                ; ESI = a
+
+                movsxd  rax, esi
+                mov     [rdi],     rax       ; retbuf->x = a
+                lea     rcx, [rax+1]
+                mov     [rdi+8],   rcx       ; retbuf->y = a + 1
+                lea     rcx, [rax+2]
+                mov     [rdi+16],  rcx       ; retbuf->z = a + 2
+
+                mov     rax, rdi             ; return same pointer per ABI
+                ret
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that \texttt{movsxd} is move with Sign-Extend Doubleword. It is a 64-bit mode (x86-64) instruction that copies a 32-bit (doubleword) source operand to a 64-bit (quadword) destination register while preserving its signed value by sign-extending the most significant bit.
+            \bigbreak \noindent 
+            \textbf{Note:} If a C++ object has a non-trivial copy constructor or non-trivial destructor, it is passed by invisible reference
         \item \textbf{IA-32e indirect addressing}: Consider an instruction with operands $r/m32$, $r32$. Up to this point, we have not dealt with operands that refer to a memory location. How do we construct the ModR/m byte when an operand is a memory location. Furthermore, a memory location is 64-bit... how do we encode this?
             \bigbreak \noindent 
             To deal with this issue, we must learn about how IA-32e does indirect addressing. We place the memory address into a register, and then use that register in the encoding. If the instruction is

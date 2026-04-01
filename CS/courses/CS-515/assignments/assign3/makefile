@@ -1,5 +1,10 @@
 CXX      = g++
-CXXFLAGS = -std=c++23 -Isrc -Itests -Itests/drivers -Isrc/buffio -Isrc/err -Isrc/lexer -Isrc/parser -Isrc/codegen -Isrc/utils -Isrc/ncc_symbols -Isrc/ncc_strings -Isrc/ast_node -g
+CXXFLAGS = -std=c++23 -g \
+			-Isrc -Itests -Itests/drivers \
+			-Isrc/buffio -Isrc/err -Isrc/lexer \
+			-Isrc/parser -Isrc/codegen -Isrc/utils \
+			-Isrc/ncc_symbols -Isrc/ncc_strings -Isrc/ast_node \
+			-Isrc/ncc_integers
 
 TARGET   = bin/ncc
 OBJDIR   = obj
@@ -14,10 +19,12 @@ SRC = \
 	src/buffio/buffio.cc \
 	src/parser/parser.cc \
 	src/utils/ast_utils.cc \
+	src/ast_node/ast_node.cc \
 	src/codegen/codegen.cc \
 	src/codegen/tree_eval.cc \
 	src/ncc_symbols/symtable.cc \
-	src/ncc_strings/ncc_strings.cc 
+	src/ncc_strings/ncc_strings.cc \
+	src/ncc_integers/ncc_integers.cc
 	
 
 OBJ = $(SRC:%=$(OBJDIR)/%.o)

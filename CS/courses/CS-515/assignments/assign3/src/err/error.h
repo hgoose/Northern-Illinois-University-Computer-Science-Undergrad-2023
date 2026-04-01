@@ -1,6 +1,8 @@
 #ifndef NCC_ERROR_H
 #define NCC_ERROR_H
 
+#define CRITICAL                    1
+
 #define  NCC_OK                     0
 #define  NCC_FILE_NOT_FOUND        -1
 #define  NCC_EOF                   -2
@@ -17,6 +19,10 @@
 #define  NCC_EXPECTED_EXPRESSION  -13
 #define  NCC_STR_TABLE_OVERFLOW   -14
 #define  NCC_INVALID_OPERAND_TYPE -15
+#define  NCC_INT_TABLE_OVERFLOW   -16
+#define  NCC_VARIABLE_NAME_RESERVED -17
+#define  NCC_SYMBOL_ALREADY_EXISTS -18
+#define  NCC_INVALID_IDENTIFIER    -19
 
 struct Token;
 

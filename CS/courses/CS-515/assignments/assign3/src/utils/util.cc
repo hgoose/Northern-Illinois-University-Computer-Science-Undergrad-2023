@@ -5,6 +5,9 @@
 #include "buffio.h"
 #include "util.h"
 #include "error.h"
+#include "lex.h"
+#include "token.h"
+#include "parser.h"
 
 #include <cstdint>
 #include <fstream>
@@ -214,6 +217,13 @@ int encode_utf8(uint32_t cp, std::string& out) {
     }
 
     return NCC_OK; 
+}
+
+void goto_next_semicolon() {
+   while (next_token.id != TOKEN_SEMICOLON && next_token.id != TOKEN_EOF) {
+       Error e = get_token(next_token);
+       print_error(e);
+   } 
 }
 
 // Calls parse_hex6_codepoint and encode_utf8, we get returned the utf8 representation

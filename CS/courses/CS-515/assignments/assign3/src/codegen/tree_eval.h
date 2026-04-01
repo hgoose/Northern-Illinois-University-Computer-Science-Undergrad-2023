@@ -9,5 +9,6 @@ struct AST_NODE;
 
 void evaluate_expr(AST_NODE* root);
 void evaluate_print(AST_NODE*);
+void init_val(AST_NODE*);
 
 #endif

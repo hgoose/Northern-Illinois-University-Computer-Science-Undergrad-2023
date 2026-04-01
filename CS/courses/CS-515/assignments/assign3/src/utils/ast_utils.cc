@@ -64,7 +64,7 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
 
             // Type check
             AST_NODE* operand = children.top();
-            if (operand->data_type != TYPE::_INT4) {
+            if (operand->data_type != TYPE::INT4) {
                 set_print_token_error(Error{}, operand->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
@@ -85,12 +85,12 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             }
             AST_NODE* right = children.top(); children.pop(); 
             
-            if (left->data_type != TYPE::_INT4) {
+            if (left->data_type != TYPE::INT4) {
                 set_print_token_error(Error{}, left->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
 
-            if (right->data_type != TYPE::_INT4) {
+            if (right->data_type != TYPE::INT4) {
                 set_print_token_error(Error{}, right->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
@@ -241,6 +241,8 @@ void r_ast_out(AST_NODE* node, int depth) {
     // Integer node
     if (node->token.id == TOKEN_INTEGER || node->token.id == TOKEN_STRING) {
         std::cout << node->token.lexeme << "\n";
+    } else if (node->token.id == TOKEN_IDENT && !is_reserved(node->token)) {
+        std::cout << "Variable: " << node->token.identifier << '\n';
     }
     // Operator node
     else if (node->token.id == TOKEN_PLUS  ||
@@ -256,10 +258,11 @@ void r_ast_out(AST_NODE* node, int depth) {
                   << " (" << op_name(node->token.id) << ")"
                   << "\n";
     } else if (node->node_type == NODE_TYPE::PRINT ||
-               node->node_type == NODE_TYPE::BLOCK
+               node->node_type == NODE_TYPE::BLOCK ||
+               node->node_type == NODE_TYPE::DECL
     ) {
         std::cout << node->str_node_type() << '\n';
-    }
+    } 
     // Other internal nodes (if any) (useful for debugging, this should not hit)
     else {
         std::cout << "?\n";

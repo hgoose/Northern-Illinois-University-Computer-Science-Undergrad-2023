@@ -1,9 +1,9 @@
 #include "ncc_strings.h"
-#include "parser.h"
 #include "error.h"
 
-STR_TABLE_ENTRY::STR_TABLE_ENTRY(size_t offset) 
-    : offset(offset) 
+STR_TABLE_ENTRY::STR_TABLE_ENTRY(bool vi, size_t offset) 
+    : vi(vi),
+    offset(offset) 
 {}
 
 const char* STR_TABLE::emit_string(STR_TABLE_ENTRY& entry) {
@@ -13,8 +13,7 @@ const char* STR_TABLE::emit_string(STR_TABLE_ENTRY& entry) {
    );
 }
 
-STR_TABLE_ENTRY STR_TABLE::add_string(std::string& str, Error& err) {
-
+STR_TABLE_ENTRY STR_TABLE::add_string(std::string& str) {
     size_t off = used;
     bool _overflow{};
     for (const auto& ch : str) {
@@ -22,13 +21,13 @@ STR_TABLE_ENTRY STR_TABLE::add_string(std::string& str, Error& err) {
         str_table[used++] = ch; 
     } 
     if (overflow() || _overflow) {
-        err.error = NCC_STR_TABLE_OVERFLOW;
-        err.line = next_token.line_no;
-        err.col = next_token.col_no;
+        set_print_token_error(Error{}, NCC_STR_TABLE_OVERFLOW);
+
+        return STR_TABLE_ENTRY{};
     }
     str_table[used++] = '\0';
 
-    return STR_TABLE_ENTRY(off);
+    return STR_TABLE_ENTRY(VALID, off);
 }
 
 bool STR_TABLE::overflow() {

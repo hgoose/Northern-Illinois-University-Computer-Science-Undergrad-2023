@@ -12,6 +12,9 @@
 #include "ast_utils.h"
 #include "tree_eval.h"
 #include "codegen.h"
+#include "ncc_integers.h"
+#include "symtable.h"
+#include "util.h"
 
 Token next_token;
 
@@ -52,17 +55,20 @@ int parse() {
     for (;;) {
         if (next_token.id == TOKEN_IDENT) {
             if (next_token.identifier == "print") {
-                AST_NODE* print = parse_print(e);
+                AST_NODE* print = parse_print();
                 if (print) {
                     program_tree->add_children(print);
                 }
             } else if (next_token.identifier == "read") {
-                AST_NODE* read = parse_read(e);
+                AST_NODE* read = parse_read();
                 if (read) {
                     program_tree->add_children(read);
                 }
             } else if (next_token.identifier == "int4") {
-
+                AST_NODE* declare = parse_decl();
+                if (declare) {
+                    program_tree->add_children(declare);
+                }
             }
         }
 
@@ -75,8 +81,11 @@ int parse() {
     ast_out(program_tree);
 
     std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* it) -> void {
-        if (it && it->node_type == NODE_TYPE::PRINT) {
+        if (!it) return;
+        if (it->node_type == NODE_TYPE::PRINT) {
             evaluate_print(it);
+        } else if (it->node_type == NODE_TYPE::DECL) {
+            init_var(it);
         }
     });
 
@@ -93,81 +102,148 @@ int parse() {
     return 0;
 }
 
-AST_NODE* parse_print(Error& err) {
+AST_NODE* parse_print() {
+    Error lex_error{}, expr_error{};
+
     AST_NODE* print_root = new AST_NODE();
     print_root->node_type = NODE_TYPE::PRINT;
 
     // Lexer error
-    get_token(next_token);
-    if (invalid_lookahead() || handle_lex_error(err)) {
+    lex_error = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_error)) {
+        goto_next_semicolon();
         return nullptr;
     }
 
     // Missing ( after print
     if (next_token.id != TOKEN_LPAREN) {
-        set_print_token_error(err, NCC_SYNTAX_ERROR);
-
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
         return nullptr;
     }
     
     // Lexer error
-    err = get_token(next_token);
-    if (invalid_lookahead() || handle_lex_error(err)) {
+    lex_error = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_error)) {
+        goto_next_semicolon();
         return nullptr;
     }
 
     // Empty print
     if (next_token.id == TOKEN_RPAREN) {
-        set_print_token_error(err, NCC_EXPECTED_EXPRESSION);
-
+        set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
+        goto_next_semicolon();
         return nullptr;
     }
 
     // Process all expressions, add as children to print node
-    AST_NODE* expr = E(err);
+    AST_NODE* expr = E(expr_error);
     AST_NODE* ast_expr = pttoast(expr);
 
     // Toss out the print statement if the expression does not form a 
     // syntactically and semantically valid AST
-    if (!ast_expr) return nullptr;
+    if (!ast_expr) {
+        goto_next_semicolon();
+        return nullptr;
+    }
 
     print_root->add_child(pttoast(expr));
 
     while (next_token.id == TOKEN_COMMA) {
-        err = get_token(next_token);
-        if (invalid_lookahead() || handle_lex_error(err)) {
+        lex_error = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_error)) {
+            goto_next_semicolon();
             return nullptr;
         }
 
-        expr = E(err);
+        expr = E(expr_error);
         print_root->add_child(pttoast(expr));
     }
 
     // Missing ) after expressions
     if (next_token.id != TOKEN_RPAREN) {
-        set_print_token_error(err, NCC_SYNTAX_ERROR);
-
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
         return nullptr;
     }
 
     // Lexer error
-    err = get_token(next_token);
-    if (invalid_lookahead() || handle_lex_error(err)) {
+    lex_error = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_error)) {
+        goto_next_semicolon();
         return nullptr;
     }
 
     // Missing semicolon after )
     if (next_token.id != TOKEN_SEMICOLON) {
-        set_print_token_error(err, NCC_SYNTAX_ERROR);
-
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
         return nullptr;
     }
 
     return print_root;
 }
 
-AST_NODE* parse_read(Error& e) {
-    return nullptr;
+AST_NODE* parse_read() {
+    AST_NODE* read_root = new AST_NODE();
+    read_root->node_type = NODE_TYPE::READ;
+
+    return read_root;
+}
+
+AST_NODE* parse_decl() {
+    Error lex_err{};
+
+    AST_NODE* declare_root = new AST_NODE();
+    declare_root->node_type = NODE_TYPE::DECL;
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        return nullptr;
+    }
+
+    // Variable name must be an identifier token
+    if (next_token.id != TOKEN_IDENT) {
+        set_print_token_error(Error{}, NCC_INVALID_IDENTIFIER);
+        goto_next_semicolon();
+        return nullptr;
+    }
+
+    // Variable name is reserved
+    if (is_reserved(next_token)) {
+        set_print_token_error(Error{}, NCC_VARIABLE_NAME_RESERVED);
+        goto_next_semicolon();
+        return nullptr;
+    }
+
+    // Put into symbol table 
+    SYMINFO* entry = SYMTABLE::add_symbol(SYMINFO(next_token.identifier, SYMTYPE::VAR));
+    if (!entry) {
+        set_print_token_error(Error{}, NCC_SYMBOL_ALREADY_EXISTS);
+        goto_next_semicolon();
+        return nullptr; 
+    }
+
+    AST_NODE* var = new AST_NODE(next_token);
+    var->syminfo = entry;
+
+    declare_root->add_children(var);
+
+    // Look for semicolon
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_SEMICOLON) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        return nullptr;
+    }
+
+    return declare_root;
 }
 
 AST_NODE* E(Error& err) {
@@ -423,7 +499,7 @@ AST_NODE* S(Error& err) {
     if (next_token.id == TOKEN_INTEGER) {
         here->token = next_token;
         here->node_type = NODE_TYPE::INT;
-        here->data_type = TYPE::_INT4;
+        here->data_type = TYPE::INT4;
 
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
@@ -460,10 +536,16 @@ AST_NODE* S(Error& err) {
     } else if (next_token.id == TOKEN_STRING) {
         here->token = next_token;
         here->node_type = NODE_TYPE::STR;
-        here->data_type = TYPE::_STRING;
+        here->data_type = TYPE::STRING;
 
-        here->entry = STR_TABLE::add_string(next_token.str, err);
-        here->entry.vi = true;
+        STR_TABLE_ENTRY entry = STR_TABLE::add_string(next_token.str);
+
+        // Attempted to overrun the internal string table
+        if (entry.vi == INVALID) {
+            return nullptr;
+        }
+
+        here->entry = entry;
 
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
