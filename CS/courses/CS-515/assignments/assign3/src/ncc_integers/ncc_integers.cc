@@ -6,7 +6,11 @@ INT_TABLE_ENTRY::INT_TABLE_ENTRY(bool vi, size_t offset)
     offset(offset) 
 {}
 
-const int* INT_TABLE::emit_int(INT_TABLE_ENTRY& entry) {
+int* INT_TABLE::emit_int(size_t offset) {
+    return emit_int(INT_TABLE_ENTRY{true, offset});
+}
+
+int* INT_TABLE::emit_int(const INT_TABLE_ENTRY& entry) {
     return (entry.vi 
             ? &int_table[entry.offset] 
             : nullptr
@@ -19,8 +23,7 @@ INT_TABLE_ENTRY INT_TABLE::add_int(int x) {
         set_print_token_error(Error{}, NCC_INT_TABLE_OVERFLOW);
         return INT_TABLE_ENTRY{};
     }
-    int_table[used] = x;
-    used+=4;
+    int_table[used++] = x;
 
     return INT_TABLE_ENTRY(VALID, off);
 }

@@ -7,8 +7,10 @@
 
 struct AST_NODE;
 
-void evaluate_expr(AST_NODE* root);
+void evaluate_expr(AST_NODE*);
+void evaluate_print_expr(AST_NODE*);
 void evaluate_print(AST_NODE*);
-void init_val(AST_NODE*);
+void init_var(AST_NODE*);
+void update_var(AST_NODE*);
 
 #endif

@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "ncc_strings.h"
+#include "ncc_integers.h"
 #include "codegen.h"
 
 // Two meg should suffice
@@ -36,6 +37,12 @@ void print_string(const char* c) {
 int read_int() {
     int a; std::cin >> a; 
     return a;
+}
+
+size_t load_imm8(int x) {
+    prog[p_offset++] = x & 0xff; 
+
+    return 1;
 }
 
 // Loads a 32-bit integer into the program to be used as an operand
@@ -85,15 +92,15 @@ size_t IA32e_push_imm32(int x) {
 }
 
 // FF /6 PUSH r/m32
-size_t IA32e_push(REGISTER src) {
+size_t IA32e_push32(REGISTER src) {
     prog[p_offset++] = 0xFF;
-    prog[p_offset++] = gen_modrm(src, (REGISTER)(6));
+    prog[p_offset++] = gen_modrm_rr(src, (REGISTER)(6));
 
     return 2;
 }
 
 // 8F /0 POP r/m32, pop the top of the stack into dest
-size_t IA32e_pop(REGISTER dest) {
+size_t IA32e_pop32(REGISTER dest) {
     unsigned int mod = (0b11 << 0x6) | dest; 
 
     prog[p_offset++] = 0x8F;
@@ -103,92 +110,135 @@ size_t IA32e_pop(REGISTER dest) {
 }
 
 // 89 /r MOV r/m32 r32
-size_t IA32e_mov_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_mov_rr32(REGISTER dest, REGISTER src) {
     prog[p_offset++] = 0x89;
-    prog[p_offset++] = gen_modrm(dest, src);
+    prog[p_offset++] = gen_modrm_rr(dest, src);
 
     return 2;
 }
 
+// REX.W 89 /r MOV r/m64 r64
+size_t IA32e_mov_rr64(REGISTER dest, REGISTER src) {
+    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
+    prog[p_offset++] = 0x89;
+    prog[p_offset++] = gen_modrm_rr(dest, src);
+
+    return 3;
+}
+
 // B8+rd id MOV r32, imm32
 size_t IA32e_mov_rimm32(REGISTER dest, int src) {
-    prog[p_offset++] = 0xB8 + dest;
+    prog[p_offset++] = 0xB8 + (dest & 0x7);
     load_imm32(src);
 
     return 5;
 }
 
-// REX.W + B8+ rd io
+// REX.W + B8+ rd io MOV r64, imm64
 // NOTE: If dest is R8-R15, REX.B = 1, zero otherwise. In any case, 
 // REX.R = REX.X = 0, and REX.W = 1
 size_t IA32e_mov_rimm64(REGISTER dest, long long src) {
-    prog[p_offset++] = gen_rex(WIDE_ON, (REGISTER) REX_R_ZERO, dest);
-    prog[p_offset++] = 0xB8 + dest;
+    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
+    prog[p_offset++] = 0xB8 + (dest & 0x7);
     load_imm64(src);
 
     return 10;
 }
 
-// REX.W + B8+ rd io
-size_t IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
-    prog[p_offset++] = gen_rex(WIDE_ON, (REGISTER) REX_R_ZERO, dest);
-    prog[p_offset++] = 0xB8 + dest;
+// REX.W + B8+ rd io MOV r64, imm64
+size_t IA32e_mov_rimm64_sizet(REGISTER dest, size_t src) {
+    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
+    prog[p_offset++] = 0xB8 + (dest & 0x7);
     load_imm64(src);
 
     return 10;
+}
+
+// REX.W + B8+ rd io MOV r64, imm64
+size_t IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
+    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
+    prog[p_offset++] = 0xB8 + (dest & 0x7);
+    load_imm64(src);
+
+    return 10;
+}
+
+// REX.W + 89 /r MOV r/m64, r64
+//
+// Note: Specifically when dest is a memory location 
+// inside a register (no displacement), so mod = 00
+size_t IA32e_mov_mr64_nodisp(REGISTER dest, REGISTER src) {
+    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
+    prog[p_offset++] = 0x89;
+    prog[p_offset++] = gen_modrm_norr_nodisp(dest, src);
+
+    return 3;
+}
+
+// REX.W + 89 /r MOV r/m64, r64
+//
+// Note: Specifically when dest is a memory location 
+// inside a register (no displacement), so mod = 01
+size_t IA32e_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
+    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
+    prog[p_offset++] = 0x89;
+    prog[p_offset++] = gen_modrm_norr_disp8(dest, src);
+    load_imm8(disp);
+
+    return 4;
 }
 
 // 29 /r SUB r/m32, r32
-size_t IA32e_sub_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_sub_rr32(REGISTER dest, REGISTER src) {
     prog[p_offset++] = 0x29;
-    prog[p_offset++] = gen_modrm(dest,src);
+    prog[p_offset++] = gen_modrm_rr(dest,src);
 
     return 2;
 }
 
 // 01 /r ADD r/m32, r32
-size_t IA32e_add_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_add_rr32(REGISTER dest, REGISTER src) {
     prog[p_offset++] = 0x01;
-    prog[p_offset++] = gen_modrm(dest, src);
+    prog[p_offset++] = gen_modrm_rr(dest, src);
 
     return 2;
 }
 
 // 0F AF /r IMUL r32, r/m32
-size_t IA32e_mult_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_mult_rr32(REGISTER dest, REGISTER src) {
     prog[p_offset++] = 0x0F;
     prog[p_offset++] = 0xAF;
-    prog[p_offset++] = gen_modrm(src, dest);
+    prog[p_offset++] = gen_modrm_rr(src, dest);
 
     return 3;
 }
 
 
 // F7 /7 IDIV r/m32
-size_t IA32e_div_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_div_rr32(REGISTER dest, REGISTER src) {
     size_t byte_count = 0;
 
     // MOV EAX, dest
-    byte_count += IA32e_mov_rr(REGISTER::EAX, dest);
+    byte_count += IA32e_mov_rr32(REGISTER::EAX, dest);
 
     // CDQ
     prog[p_offset++] = 0x99; ++byte_count;
 
     // IDIV src
     prog[p_offset++] = 0xF7; ++byte_count;
-    prog[p_offset++] = gen_modrm(src, (REGISTER)(7)); ++byte_count;
+    prog[p_offset++] = gen_modrm_rr(src, (REGISTER)(7)); ++byte_count;
 
     return byte_count;
 }
 
-size_t IA32e_modulo_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_modulo_rr32(REGISTER dest, REGISTER src) {
     size_t byte_count = 0;
 
     // DIV src (dest in eax)
-    byte_count += IA32e_div_rr(dest, src);
+    byte_count += IA32e_div_rr32(dest, src);
 
     // Move remainder into accumulator
-    byte_count += IA32e_mov_rr(REGISTER::EAX, REGISTER::EDX);
+    byte_count += IA32e_mov_rr32(REGISTER::EAX, REGISTER::EDX);
 
     return byte_count;
 }
@@ -243,21 +293,21 @@ size_t IA32e_fast_exp() {
     prog[p_offset++] = 0x8b;
     prog[p_offset++] = 0xc0;
 
-    return 47 + IA32e_push(REGISTER::EAX);
+    return 47 + IA32e_push32(REGISTER::EAX);
 }
 
 // 31 /r XOR r/m32, r32
-size_t IA32e_xor_rr(REGISTER dest, REGISTER src) {
+size_t IA32e_xor_rr32(REGISTER dest, REGISTER src) {
     prog[p_offset++] = 0x31;
-    prog[p_offset++] = gen_modrm(dest, src);
+    prog[p_offset++] = gen_modrm_rr(dest, src);
 
     return 2;
 }
 
 // 87 /r XCHG r/m32, r32
-size_t IA32e_xchg(REGISTER r1, REGISTER r2) {
+size_t IA32e_xchg32(REGISTER r1, REGISTER r2) {
     prog[p_offset++] = 0x87;
-    prog[p_offset++] = gen_modrm(r1, r2);
+    prog[p_offset++] = gen_modrm_rr(r1, r2);
 
     return 2;
 }
@@ -270,16 +320,30 @@ size_t IA32e_construct_ret() {
     return 1;
 }
 
+// FF /2
+size_t IA32e_call(REGISTER reg) {
+    size_t byte_count{};
+
+    if (reg >= REGISTER::R8) {
+        prog[p_offset++] = gen_rex_r(WIDE_ON, reg); 
+        ++byte_count;
+    }
+
+    prog[p_offset++] = 0xFF; ++byte_count;
+    prog[p_offset++] = gen_modrm_rr(reg, (REGISTER) 2); ++byte_count;
+    
+    return byte_count;
+}
+
 // Call some C++ function that takes a single integer argument, and returns void
 // FF /2
 size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
     size_t byte_count{};
 
-    byte_count += IA32e_mov_rr(REGISTER::EDI, src);
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f);
+    byte_count += IA32e_mov_rr32(REGISTER::EDI, src);
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
 
-    prog[p_offset++] = 0xFF; ++byte_count;
-    prog[p_offset++] = gen_modrm(REGISTER::ECX, (REGISTER) 2); ++byte_count;
+    byte_count += IA32e_call(REGISTER::ECX);
 
     return byte_count;
 }
@@ -287,13 +351,34 @@ size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
 // Call some C++ function that takes a single char* argument, and returns void
 // FF /2
 size_t IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
+    size_t byte_count{};
+
     const char* c = STR_TABLE::emit_string(st_entry);
 
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f); 
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::EDI, (std::uintptr_t) c); 
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f); 
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RDI, (std::uintptr_t) c); 
 
-    prog[p_offset++] = 0xFF; ++byte_count; 
-    prog[p_offset++] = gen_modrm(REGISTER::ECX, (REGISTER) 2); ++byte_count;
+    byte_count += IA32e_call(REGISTER::RCX);
+
+    return byte_count;
+}
+
+// Calls INT_TABLE::emit_int(size_t offset), which returns a pointer to the region in memory in which the variable
+// in question resides. When this function returns, that pointer will be in r10 and we can update the value
+// that it points to.
+//
+// mov  rdi, offset 
+// mov  r10, INT_TABLE::emit_int
+// call r10
+// mov  r10,eax
+size_t IA32e_get_int(size_t offset) {
+    size_t byte_count{};
+
+    byte_count += IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
+    byte_count += IA32e_mov_rimm64_ptr(REGISTER::R10, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
+    byte_count += IA32e_call(REGISTER::R10);
+
+    byte_count += IA32e_mov_rr64(REGISTER::R10, REGISTER::RAX);
 
     return byte_count;
 }

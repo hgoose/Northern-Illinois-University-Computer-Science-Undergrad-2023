@@ -3,15 +3,16 @@
 #include <string>
 #include <cstddef>
 
-SYMLOCATION::SYMLOCATION(LOCATION_TYPE location_type, size_t location, size_t stack_offset, const std::string& reg_label) 
+SYMLOCATION::SYMLOCATION(LOCATION_TYPE location_type, size_t int_table_offset, size_t stack_offset, const std::string& reg_label) 
     : location_type(location_type),
-    location(location),
+    int_table_offset(int_table_offset),
     stack_offset(stack_offset),
     reg_label(reg_label) 
 {}
 
-SYMINFO::SYMINFO(const std::string& name, SYMTYPE type) 
+SYMINFO::SYMINFO(const std::string& name, TYPE data_type, SYMTYPE type) 
     : name(name),
+    data_type(data_type),
     type(type)
 {
     exists = true;

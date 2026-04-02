@@ -22,11 +22,11 @@ Error parser_init(const char* src_code);
 
 // PARSING AND GENERATING ASTS
 int parse();
-AST_NODE* next_parse(Error& err);
 
 AST_NODE* parse_print();
 AST_NODE* parse_read();
 AST_NODE* parse_decl();
+AST_NODE* parse_assign();
 
 // PRODUCTION RULES
 AST_NODE* E(Error& err);

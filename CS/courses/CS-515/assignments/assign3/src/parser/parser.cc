@@ -54,23 +54,35 @@ int parse() {
 
     for (;;) {
         if (next_token.id == TOKEN_IDENT) {
+            // Print statement
             if (next_token.identifier == "print") {
                 AST_NODE* print = parse_print();
                 if (print) {
                     program_tree->add_children(print);
                 }
-            } else if (next_token.identifier == "read") {
+            } 
+            // Read statement
+            else if (next_token.identifier == "read") {
                 AST_NODE* read = parse_read();
                 if (read) {
                     program_tree->add_children(read);
                 }
-            } else if (next_token.identifier == "int4") {
+            } 
+            // Variable declaration
+            else if (next_token.identifier == "int4") {
                 AST_NODE* declare = parse_decl();
                 if (declare) {
                     program_tree->add_children(declare);
                 }
+            } 
+            // Variable assignment? 
+            else {
+                AST_NODE* assign = parse_assign();
+                if (assign) {
+                    program_tree->add_children(assign);
+                }
             }
-        }
+        } 
 
         get_token(next_token);
 
@@ -82,10 +94,13 @@ int parse() {
 
     std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* it) -> void {
         if (!it) return;
+
         if (it->node_type == NODE_TYPE::PRINT) {
             evaluate_print(it);
         } else if (it->node_type == NODE_TYPE::DECL) {
             init_var(it);
+        } else if (it->node_type == NODE_TYPE::ASSIGN) {
+            update_var(it);
         }
     });
 
@@ -112,6 +127,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -119,6 +135,7 @@ AST_NODE* parse_print() {
     if (next_token.id != TOKEN_LPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
     
@@ -126,6 +143,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -133,6 +151,7 @@ AST_NODE* parse_print() {
     if (next_token.id == TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -144,6 +163,7 @@ AST_NODE* parse_print() {
     // syntactically and semantically valid AST
     if (!ast_expr) {
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -153,17 +173,25 @@ AST_NODE* parse_print() {
         lex_error = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_error)) {
             goto_next_semicolon();
+            delete print_root;
             return nullptr;
         }
 
         expr = E(expr_error);
-        print_root->add_child(pttoast(expr));
+        ast_expr = pttoast(expr);
+        if (!ast_expr) {
+            goto_next_semicolon();
+            delete print_root;
+            return nullptr;
+        }
+        print_root->add_child(ast_expr);
     }
 
     // Missing ) after expressions
     if (next_token.id != TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -171,6 +199,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -178,6 +207,7 @@ AST_NODE* parse_print() {
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
+        delete print_root;
         return nullptr;
     }
 
@@ -191,7 +221,7 @@ AST_NODE* parse_read() {
     return read_root;
 }
 
-AST_NODE* parse_decl() {
+AST_NODE* parse_decl_int4() {
     Error lex_err{};
 
     AST_NODE* declare_root = new AST_NODE();
@@ -200,6 +230,7 @@ AST_NODE* parse_decl() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
+        delete declare_root;
         return nullptr;
     }
 
@@ -207,6 +238,7 @@ AST_NODE* parse_decl() {
     if (next_token.id != TOKEN_IDENT) {
         set_print_token_error(Error{}, NCC_INVALID_IDENTIFIER);
         goto_next_semicolon();
+        delete declare_root;
         return nullptr;
     }
 
@@ -214,14 +246,17 @@ AST_NODE* parse_decl() {
     if (is_reserved(next_token)) {
         set_print_token_error(Error{}, NCC_VARIABLE_NAME_RESERVED);
         goto_next_semicolon();
+        delete declare_root;
         return nullptr;
     }
 
     // Put into symbol table 
     SYMINFO* entry = SYMTABLE::add_symbol(SYMINFO(next_token.identifier, SYMTYPE::VAR));
+    entry->data_type = TYPE::INT4;
     if (!entry) {
         set_print_token_error(Error{}, NCC_SYMBOL_ALREADY_EXISTS);
         goto_next_semicolon();
+        delete declare_root;
         return nullptr; 
     }
 
@@ -234,16 +269,79 @@ AST_NODE* parse_decl() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
+        delete declare_root;
         return nullptr;
     }
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
+        delete declare_root;
         return nullptr;
     }
 
     return declare_root;
+}
+
+AST_NODE* parse_assign() {
+    AST_NODE* assign_root = new AST_NODE();
+    assign_root->node_type = NODE_TYPE::ASSIGN;
+
+    Error lex_err{}, expr_err{};
+
+    AST_NODE* var_node = new AST_NODE();
+    var_node->token = next_token;
+    var_node->node_type = NODE_TYPE::VAR;
+    var_node->symbol_type = SYMTYPE::VAR;
+
+    assign_root->add_children(var_node);
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete assign_root;
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_ASSIGN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        delete assign_root;
+        return nullptr;
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete assign_root;
+        return nullptr;
+    }
+
+    AST_NODE* expr = E(expr_err);
+    AST_NODE* ast_expr = pttoast(expr);
+
+    if (!ast_expr) {
+        goto_next_semicolon();
+        delete assign_root;
+        return nullptr;
+    }
+
+    assign_root->add_children(ast_expr);
+
+    // lex_err = get_token(next_token);
+    // if (invalid_lookahead() || handle_lex_error(lex_err)) {
+    //     goto_next_semicolon();
+    //     delete assign_root;
+    //     return nullptr;
+    // }
+
+    if (next_token.id != TOKEN_SEMICOLON) {
+        goto_next_semicolon();
+        delete assign_root;
+        return nullptr;
+    }
+
+    return assign_root;
 }
 
 AST_NODE* E(Error& err) {
@@ -278,6 +376,7 @@ AST_NODE* E(Error& err) {
 
             // Has previous token as its token (the operator)
             node->token = op;
+            node->is_operator = true;
             if (op.id == TOKEN_PLUS) {
                 node->node_type = NODE_TYPE::ADD;
             } else {
@@ -338,6 +437,7 @@ AST_NODE* T(Error& err) {
 
             AST_NODE* node = new AST_NODE();
             node->token = op;
+            node->is_operator = true;
 
             if (op.id == TOKEN_MULT) {
                 node->node_type = NODE_TYPE::MULT;
@@ -381,6 +481,7 @@ AST_NODE* N(Error& err) {
     // t \in FIRST(\neg F) or t \in FIRST(\oplus F)
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG) {
         here->token = next_token;
+        here->is_operator = true;
 
         if (next_token.id == TOKEN_UPLUS) {
             here->node_type = NODE_TYPE::UPLUS;
@@ -447,6 +548,7 @@ AST_NODE* FP(Error& err) {
         // Consume exponentiation
         here->token = next_token;
         here->node_type = NODE_TYPE::EXP;
+        here->is_operator = true;
 
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
@@ -504,6 +606,7 @@ AST_NODE* S(Error& err) {
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
         ) {
+            delete here;
         	return nullptr;
         }
     // Token is LPAREN, so we choose S -> (E), make sure to eat the parenthesis
@@ -512,6 +615,7 @@ AST_NODE* S(Error& err) {
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
         ) {
+            delete here;
         	return nullptr;
         }
 
@@ -530,6 +634,7 @@ AST_NODE* S(Error& err) {
             if (invalid_lookahead() || 
             	handle_lex_error(get_token(next_token))
             ) {
+                delete here;
             	return nullptr;
             }
         }
@@ -550,8 +655,25 @@ AST_NODE* S(Error& err) {
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
         ) {
+            delete here;
         	return nullptr;
         }
+    } 
+    // Variable
+    else if (next_token.id == TOKEN_IDENT) {
+        here->token = next_token;
+        here->node_type = NODE_TYPE::VAR;
+
+        // Search the symbol table
+        SYMINFO* syminfo = SYMTABLE::get_symbol(next_token.identifier, SYMTYPE::VAR);
+
+        if (!syminfo) {
+            set_print_token_error(Error{}, NCC_UNKNOWN_VARIABLE);
+            delete here;
+            return nullptr;
+        }
+
+        here->data_type = syminfo->data_type;
     }
 
     // Only attach S->(E) if that path is validated, otherwise delete the subtree

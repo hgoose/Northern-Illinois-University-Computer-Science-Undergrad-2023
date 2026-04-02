@@ -12,6 +12,7 @@ bool is_st_valid(AST_NODE* root, bool accept_empty);
 
 // Parse tree to ast
 AST_NODE* pttoast(AST_NODE* root);
+TYPE assign_types(AST_NODE*);
 
 // Traversals
 void ast_preorder(AST_NODE* root);

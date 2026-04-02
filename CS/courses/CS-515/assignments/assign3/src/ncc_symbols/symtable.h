@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <list>
 
+enum class TYPE : unsigned int;
+
 enum class SYMTYPE : unsigned int {
     null, VAR
 };
@@ -15,7 +17,8 @@ enum LOCATION_TYPE : unsigned int {
 
 struct SYMLOCATION {
     LOCATION_TYPE location_type{};
-    size_t location{};
+    size_t int_table_offset{};
+    size_t address{};
     size_t stack_offset{};
     std::string reg_label{};
 
@@ -28,10 +31,12 @@ struct SYMINFO {
     SYMTYPE type{};
     SYMLOCATION location{};
 
+    TYPE data_type;
+
     bool exists{};
 
     SYMINFO() = default;
-    SYMINFO(const std::string& name, SYMTYPE type);
+    SYMINFO(const std::string& name, TYPE data_type, SYMTYPE type);
     SYMINFO(const std::string& name, SYMTYPE type, const SYMLOCATION& location);
 };
 

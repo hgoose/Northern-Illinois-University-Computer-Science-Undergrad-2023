@@ -2103,6 +2103,8 @@ if (errno) {
                 \item \textbf{10}:	Memory operand + 32-bit displacement (16-bit in 16-bit mode)
                 \item \textbf{11}:	Register operand (no memory access)
             \end{itemize}
+            Note that if we had a displacement, then that displacement would go after the ModR/M byte in the encoding.
+            \bigbreak \noindent 
             The reg field usually selects a register operand. 
             \begin{itemize}
                 \item \textbf{000}:	EAX
@@ -2466,6 +2468,13 @@ if (errno) {
                 \item \textbf{REX.X}: Extends the index field in the SIB byte, only meaningful if a SIB byte is present, otherwise leave zero
                 \item \textbf{REX.B}: Extends the r /m field of the modr /m byte. Place the high order bit of the r / m register mask into this bit.
             \end{itemize}
+            Note that REX.B also deals with a opcode-embedded register field like B8+rd. So, for an instruction like
+            \bigbreak \noindent 
+            \begin{cppcode}
+            REX.W + b8+rd io mov r64,imm64
+            \end{cppcode}
+            \bigbreak \noindent 
+            REX.W = 1, REX.R = 0, REX.X = 0, and REX.B is the high order bit of r64.
         \item \textbf{Recall: Fast exponentiation}: Uses the identity that
             \begin{align*}
                a^{b} = \begin{cases}
@@ -3097,6 +3106,8 @@ if (errno) {
             Note that \texttt{movsxd} is move with Sign-Extend Doubleword. It is a 64-bit mode (x86-64) instruction that copies a 32-bit (doubleword) source operand to a 64-bit (quadword) destination register while preserving its signed value by sign-extending the most significant bit.
             \bigbreak \noindent 
             \textbf{Note:} If a C++ object has a non-trivial copy constructor or non-trivial destructor, it is passed by invisible reference
+            \bigbreak \noindent 
+            If you define a constructor yourself, it is considered non-trivial, even if it doesn't do anything
         \item \textbf{IA-32e indirect addressing}: Consider an instruction with operands $r/m32$, $r32$. Up to this point, we have not dealt with operands that refer to a memory location. How do we construct the ModR/m byte when an operand is a memory location. Furthermore, a memory location is 64-bit... how do we encode this?
             \bigbreak \noindent 
             To deal with this issue, we must learn about how IA-32e does indirect addressing. We place the memory address into a register, and then use that register in the encoding. If the instruction is

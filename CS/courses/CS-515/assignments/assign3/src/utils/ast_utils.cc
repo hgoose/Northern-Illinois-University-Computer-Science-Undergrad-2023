@@ -85,12 +85,12 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             }
             AST_NODE* right = children.top(); children.pop(); 
             
-            if (left->data_type != TYPE::INT4) {
+            if (left->data_type != TYPE::INT4 && !left->is_operator) {
                 set_print_token_error(Error{}, left->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
 
-            if (right->data_type != TYPE::INT4) {
+            if (right->data_type != TYPE::INT4 && !right->is_operator) {
                 set_print_token_error(Error{}, right->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
@@ -186,7 +186,46 @@ AST_NODE* pttoast(AST_NODE* root) {
         ast_root = curr;
     }
 
+    assign_types(ast_root);
+
     return ast_root;
+}
+
+TYPE assign_types(AST_NODE* root) {
+    if (!root) return TYPE::null;
+
+    TYPE here_type = root->data_type;
+
+    auto child = root->children.begin();
+
+    TYPE left_type, right_type;
+
+    AST_NODE* left{}, *right{};
+
+    if (*child) left = *child;
+    ++child;
+    if (*child) right = *child;
+
+    left_type = assign_types(left);
+    right_type = assign_types(right);
+
+    if (left_type != TYPE::null && right_type != TYPE::null) {
+        TYPE bigger = (left_type > right_type ? left_type : right_type);
+        root->data_type = bigger;
+        return bigger;
+    } 
+
+    else if (left_type != TYPE::null && right_type == TYPE::null) {
+        root->data_type = left_type;
+        return left_type;
+    } 
+
+    else if (left_type == TYPE::null && right_type != TYPE::null) {
+        root->data_type = right_type;
+        return right_type;
+    }
+
+    return here_type;
 }
 
 void ast_preorder(AST_NODE* root) {
@@ -259,7 +298,8 @@ void r_ast_out(AST_NODE* node, int depth) {
                   << "\n";
     } else if (node->node_type == NODE_TYPE::PRINT ||
                node->node_type == NODE_TYPE::BLOCK ||
-               node->node_type == NODE_TYPE::DECL
+               node->node_type == NODE_TYPE::DECL ||
+               node->node_type == NODE_TYPE::ASSIGN 
     ) {
         std::cout << node->str_node_type() << '\n';
     } 

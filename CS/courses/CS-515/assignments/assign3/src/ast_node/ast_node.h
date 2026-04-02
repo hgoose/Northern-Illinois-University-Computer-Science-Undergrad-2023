@@ -27,7 +27,7 @@ enum class TYPE : unsigned int {
 
 extern std::unordered_set<std::string> reserved_words;
 
-extern bool is_reserved(const Token& t);
+bool is_reserved(const Token& t);
 
 struct AST_NODE {
     Token token{};
@@ -35,8 +35,12 @@ struct AST_NODE {
     STR_TABLE_ENTRY entry{};
     SYMINFO* syminfo{};
 
+    SYMTYPE symbol_type{};
+
     TYPE data_type{};
     NODE_TYPE node_type{};
+
+    bool is_operator{};
 
     std::list<AST_NODE*> children;
 
@@ -49,6 +53,7 @@ struct AST_NODE {
         node_type = other.node_type;
         entry = other.entry;
         syminfo = other.syminfo;
+        is_operator = other.is_operator;
     }
 
     void add_child(AST_NODE* child) {
@@ -64,6 +69,9 @@ struct AST_NODE {
         token = Token{};
         data_type = TYPE{};
         node_type = NODE_TYPE{};
+        is_operator = false;
+        syminfo = nullptr;
+        entry = STR_TABLE_ENTRY{};
     }
 
     std::string str_node_type() {

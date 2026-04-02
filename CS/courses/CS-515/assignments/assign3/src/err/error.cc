@@ -28,6 +28,7 @@ const char* error_string(int err) {
         case NCC_VARIABLE_NAME_RESERVED: return "attempted to create a variable using a reserved name";
         case NCC_SYMBOL_ALREADY_EXISTS: return "variable already exists";
         case NCC_INVALID_IDENTIFIER: return "invalid identifier";
+        case NCC_UNKNOWN_VARIABLE: return "variable has not be declared";
         default: return "unknown error";
     }
 }
