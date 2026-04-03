@@ -24,6 +24,7 @@
 #define  NCC_SYMBOL_ALREADY_EXISTS -18
 #define  NCC_INVALID_IDENTIFIER    -19
 #define  NCC_UNKNOWN_VARIABLE      -20
+#define  NCC_EXPECTED_VAR          -21
 
 struct Token;
 

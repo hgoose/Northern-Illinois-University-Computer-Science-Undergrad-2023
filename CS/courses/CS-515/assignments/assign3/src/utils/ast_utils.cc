@@ -114,6 +114,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
 
     if (p->token.id == TOKEN_INTEGER 
         || p->token.id == TOKEN_STRING
+        || p->token.id == TOKEN_IDENT
         || p->token.id == TOKEN_PLUS 
         || p->token.id == TOKEN_MINUS 
         || p->token.id == TOKEN_MULT
@@ -281,7 +282,7 @@ void r_ast_out(AST_NODE* node, int depth) {
     if (node->token.id == TOKEN_INTEGER || node->token.id == TOKEN_STRING) {
         std::cout << node->token.lexeme << "\n";
     } else if (node->token.id == TOKEN_IDENT && !is_reserved(node->token)) {
-        std::cout << "Variable: " << node->token.identifier << '\n';
+        std::cout << "Var: " << node->token.identifier << '\n';
     }
     // Operator node
     else if (node->token.id == TOKEN_PLUS  ||
@@ -299,7 +300,8 @@ void r_ast_out(AST_NODE* node, int depth) {
     } else if (node->node_type == NODE_TYPE::PRINT ||
                node->node_type == NODE_TYPE::BLOCK ||
                node->node_type == NODE_TYPE::DECL ||
-               node->node_type == NODE_TYPE::ASSIGN 
+               node->node_type == NODE_TYPE::ASSIGN ||
+               node->node_type == NODE_TYPE::READ
     ) {
         std::cout << node->str_node_type() << '\n';
     } 

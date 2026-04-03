@@ -70,7 +70,7 @@ int parse() {
             } 
             // Variable declaration
             else if (next_token.identifier == "int4") {
-                AST_NODE* declare = parse_decl();
+                AST_NODE* declare = parse_decl_int4();
                 if (declare) {
                     program_tree->add_children(declare);
                 }
@@ -89,20 +89,21 @@ int parse() {
         if (next_token.id == TOKEN_EOF) break;
     }
 
+    std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* statement) -> void {
+        if (!statement) return;
 
-    ast_out(program_tree);
-
-    std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* it) -> void {
-        if (!it) return;
-
-        if (it->node_type == NODE_TYPE::PRINT) {
-            evaluate_print(it);
-        } else if (it->node_type == NODE_TYPE::DECL) {
-            init_var(it);
-        } else if (it->node_type == NODE_TYPE::ASSIGN) {
-            update_var(it);
+        if (statement->node_type == NODE_TYPE::PRINT) {
+            evaluate_print(statement);
+        } else if (statement->node_type == NODE_TYPE::DECL) {
+            init_var(statement);
+        } else if (statement->node_type == NODE_TYPE::ASSIGN) {
+            update_var(statement);
+        } else if (statement->node_type == NODE_TYPE::READ) {
+            process_read(statement);
         }
     });
+
+    ast_out(program_tree);
 
     std::cout << "Code size: " << byte_count << " bytes.\n";
     std::cout << "Code execution: \n";
@@ -122,6 +123,7 @@ AST_NODE* parse_print() {
 
     AST_NODE* print_root = new AST_NODE();
     print_root->node_type = NODE_TYPE::PRINT;
+    print_root->token = next_token;
 
     // Lexer error
     lex_error = get_token(next_token);
@@ -216,7 +218,77 @@ AST_NODE* parse_print() {
 
 AST_NODE* parse_read() {
     AST_NODE* read_root = new AST_NODE();
+
     read_root->node_type = NODE_TYPE::READ;
+    read_root->token = next_token;
+
+    Error lex_err{};
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete read_root;
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_LPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        delete read_root;
+        return nullptr;
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete read_root;
+        return nullptr;
+    }
+
+    if (next_token.id == TOKEN_RPAREN || next_token.id != TOKEN_IDENT) {
+        set_print_token_error(Error{}, NCC_EXPECTED_VAR);
+        goto_next_semicolon();
+        delete read_root;
+        return nullptr;
+    }
+
+    AST_NODE* var_node = new AST_NODE(next_token);
+    var_node->symbol_type = SYMTYPE::VAR;
+    var_node->node_type = NODE_TYPE::VAR;
+
+    read_root->add_children(var_node);
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete read_root;
+        delete var_node;
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_RPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        delete read_root;
+        delete var_node;
+        return nullptr;
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        delete read_root;
+        delete var_node;
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_SEMICOLON) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        delete read_root;
+        delete var_node;
+        return nullptr;
+    }
 
     return read_root;
 }
@@ -226,6 +298,7 @@ AST_NODE* parse_decl_int4() {
 
     AST_NODE* declare_root = new AST_NODE();
     declare_root->node_type = NODE_TYPE::DECL;
+    declare_root->token = next_token;
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
@@ -251,8 +324,7 @@ AST_NODE* parse_decl_int4() {
     }
 
     // Put into symbol table 
-    SYMINFO* entry = SYMTABLE::add_symbol(SYMINFO(next_token.identifier, SYMTYPE::VAR));
-    entry->data_type = TYPE::INT4;
+    SYMINFO* entry = SYMTABLE::add_symbol(SYMINFO(next_token.identifier, TYPE::INT4, SYMTYPE::VAR));
     if (!entry) {
         set_print_token_error(Error{}, NCC_SYMBOL_ALREADY_EXISTS);
         goto_next_semicolon();
@@ -270,6 +342,7 @@ AST_NODE* parse_decl_int4() {
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
         delete declare_root;
+        delete var;
         return nullptr;
     }
 
@@ -277,6 +350,7 @@ AST_NODE* parse_decl_int4() {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
         delete declare_root;
+        delete var;
         return nullptr;
     }
 
@@ -328,13 +402,6 @@ AST_NODE* parse_assign() {
 
     assign_root->add_children(ast_expr);
 
-    // lex_err = get_token(next_token);
-    // if (invalid_lookahead() || handle_lex_error(lex_err)) {
-    //     goto_next_semicolon();
-    //     delete assign_root;
-    //     return nullptr;
-    // }
-
     if (next_token.id != TOKEN_SEMICOLON) {
         goto_next_semicolon();
         delete assign_root;
@@ -351,7 +418,7 @@ AST_NODE* E(Error& err) {
     // +,- so that these operations are not right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER || 
-        next_token.id == TOKEN_STRING) {
+        next_token.id == TOKEN_STRING || next_token.id == TOKEN_IDENT) {
         
         // Get lhs sub tree
         left = T(err);
@@ -418,7 +485,7 @@ AST_NODE* T(Error& err) {
     // Left folds *,/,mod, since the grammar I have makes these operations right associative
     if (next_token.id == TOKEN_UPLUS || next_token.id == TOKEN_UNEG ||
         next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER ||
-        next_token.id == TOKEN_STRING) {
+        next_token.id == TOKEN_STRING || next_token.id == TOKEN_IDENT) {
 
         left = N(err);
 
@@ -492,6 +559,7 @@ AST_NODE* N(Error& err) {
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
         ) {
+            delete here;
         	return nullptr;
         }
     
@@ -501,6 +569,7 @@ AST_NODE* N(Error& err) {
     else if (next_token.id == TOKEN_LPAREN 
             || next_token.id == TOKEN_INTEGER 
             || next_token.id == TOKEN_STRING
+            || next_token.id == TOKEN_IDENT
     ) {
         left = F(err);
     } 
@@ -527,7 +596,11 @@ AST_NODE* F(Error& err) {
 	AST_NODE* left{}, *right{};
 
     // t \in FIRST(SF')
-    if (next_token.id == TOKEN_LPAREN || next_token.id == TOKEN_INTEGER || next_token.id == TOKEN_STRING) {
+    if (next_token.id == TOKEN_LPAREN 
+        || next_token.id == TOKEN_INTEGER 
+        || next_token.id == TOKEN_STRING 
+        || next_token.id == TOKEN_IDENT
+    ) {
         left = S(err);
         right = FP(err);
     } 
@@ -553,6 +626,7 @@ AST_NODE* FP(Error& err) {
         if (invalid_lookahead() || 
         	handle_lex_error(get_token(next_token))
         ) {
+            delete here;
         	return nullptr;
         }
 
@@ -647,6 +721,7 @@ AST_NODE* S(Error& err) {
 
         // Attempted to overrun the internal string table
         if (entry.vi == INVALID) {
+            delete here;
             return nullptr;
         }
 
@@ -672,8 +747,15 @@ AST_NODE* S(Error& err) {
             delete here;
             return nullptr;
         }
-
+        here->syminfo = syminfo;
         here->data_type = syminfo->data_type;
+
+        if (invalid_lookahead() ||
+            handle_lex_error(get_token(next_token))
+        ){
+            delete here;
+            return nullptr;
+        }
     }
 
     // Only attach S->(E) if that path is validated, otherwise delete the subtree

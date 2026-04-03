@@ -1439,6 +1439,7 @@ print(expr1, expr2,...);
             Note that we say \textit{location} here instead of \textit{address} because the location may be referring to a register.
             \bigbreak \noindent 
             \textbf{Note about interpreters}: In interpreters, variables are structures whose type is determined / can be changed dynamically at runtime, and interpreters may not make use of a symbol tables. To change information about a variable at runtime, for example the type, we simply need to change the type property of the structure that defines it.
+        \item \textbf{Const}: Note that const is something enforced at the symbol table level. As far as the CPU and x86-64 is concerned, memory is read-write, nothing is constant. It is the job of the compiler to enforce what can / cannot be changed.
         \item \textbf{Variables declarations}: For the purposes of our compiler, we introduce a type \texttt{int4}, a four byte integer. Then, we may see variable declarations of the form
             \bigbreak \noindent 
             \begin{cppcode}
@@ -3374,6 +3375,132 @@ if (errno) {
                             \item r12, r13, r14, r15
                         \end{itemize}
                 \end{enumerate}
+            \item \textbf{Stack alignment}: In x86-64, stack alignment means the stack pointer must be positioned on a specific byte boundary at certain times, usually a 16-byte boundary. So,
+                \begin{align*}
+                    \text{rsp} \equiv 0 \pmod{16}
+                .\end{align*}
+                Thus, the stack pointer is a multiple of 16. In normal x86-64 function calling, the important rule is this:
+                \begin{itemize}
+                    \item Before a call instruction, the caller must arrange things so the callee sees the expected alignment.
+                    \item Since call pushes an 8-byte return address, the stack shifts by 8 bytes when control enters the called function.
+                \end{itemize}
+                Under the System V AMD64 ABI used on Linux and most Unix-like systems, the usual convention is:
+                \begin{itemize}
+                    \item Just before call, the caller makes rsp 16-byte aligned
+                    \item After call pushes the return address, inside the callee at entry:
+                        \begin{align*}
+                            \text{rsp} \equiv 8 \pmod{16}
+                        .\end{align*}
+                \end{itemize}
+                The general idea is:
+                \begin{itemize}
+                    \item Check what rsp mod 16 currently is.
+                    \item Subtract enough bytes so that before call, rsp \% 16 == 0.
+                    \item Restore it afterward with add rsp, same\_amount.
+                \end{itemize}
+                So, 
+                \begin{align*}
+                    N = \text{rsp} \text{ mod } 16 =  \text{rsp } \& 0xF
+                ,\end{align*}
+                since $N < 16$ and $16$ is a power of $2$.
+            \item \textbf{Caller saved registers}: In x86-64 assembly, caller-saved (also known as volatile or call-clobbered) registers are those that a called function (the callee) is permitted to modify or overwrite without restoring their original values. If the calling function (the caller) needs the data in these registers to remain intact after a function call, it is responsible for saving them (typically by pushing them onto the stack) before making the call
+                \bigbreak \noindent 
+                Those registers are
+                \begin{itemize}
+                    \item RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11
+                    \item XMM0 – XMM15
+                \end{itemize}
+            \item \textbf{Callee saved registers}: In x86-64 assembly, callee-saved registers (also known as non-volatile or call-preserved registers) are those whose values must be preserved across a function call. If a called function (the callee) needs to use one of these registers, it is responsible for saving the original value (typically by pushing it onto the stack) and restoring it before returning to the caller. 
+                \bigbreak \noindent 
+                Those registers are the ones not marked as caller saved, 
+                \begin{itemize}
+                    \item RBX, RSP, RBP, R12, R13, R14, R15
+                \end{itemize}
+            \item \textbf{Caller prologue / epilogue (stack based)}: Suppose we wanted to use a stack model for the caller / callee. The prologue / epilogue for the caller would look something like
+                \bigbreak \noindent 
+                Prologue:
+                \begin{enumerate}
+                    \item Push arguments onto the stack in reverse order
+                    \item Save caller saved registers
+                \end{enumerate}
+                Epilogue:
+                \begin{enumerate}
+                    \item Adjust stack pointer for arguments
+                    \item Restore call-clobbered registers
+                \end{enumerate}
+                \textbf{Note:} In practice, some arguments (small arguments like pointers and integers) can go into registers, while others (like large arguments) go into the stack memory.
+            \item \textbf{Callee prologue / epilogue}: Then, for the callee:
+                \bigbreak \noindent 
+                Prologue:
+                \begin{enumerate}
+                    \item Push rbp onto the stack
+                    \item \texttt{mov rbp, rsp}
+                    \item Make room for local vars (\texttt{sub rsp, k})
+                    \item Initialize local vars
+                \end{enumerate}
+                Epilogue:
+                \begin{enumerate}
+                    \item \texttt{mov rsp, rbp}
+                    \item \texttt{pop rbp}
+                    \item \texttt{ret}
+                \end{enumerate}
+            \item \textbf{Spilling}: Spilling means the compiler or code generator has to temporarily move a value from a register to memory, usually the stack, because there are not enough registers available. That memory location is called a \textbf{spill slot}.
+            \item \textbf{Stack frame}: The stack frame for a function looks something like
+                \bigbreak \noindent 
+                \fig{.8}{./figures/45.png}
+            \item \textbf{Using the stack for return values}: For large structs or objects, the caller usually reserves space and passes the address of that space to the callee. The callee writes the result there. So,
+                \bigbreak \noindent 
+                \begin{cppcode}
+                Big make_big();
+                \end{cppcode}
+                \bigbreak \noindent 
+                May get implemented more like
+                \bigbreak \noindent 
+                \begin{cppcode}
+                void make_big(Big* hidden_return_slot);
+                \end{cppcode}
+                \bigbreak \noindent 
+                The caller does something like:
+                \begin{itemize}
+                    \item reserve stack space for the returned object
+                    \item pass the address of that space to the callee
+                    \item callee fills it in
+                    \item caller reads the result from that stack space
+                \end{itemize}
+                So the returned value lives in stack memory owned by the caller.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    sub rsp, 32          ; reserve space for returned object
+                    lea rdi, [rsp]       ; pass pointer to return slot
+                    call make_big
+                    ; now [rsp]..[rsp+31] contains the returned struct
+                \end{cppcode}
+            \item \textbf{Note: Size qualifiers}: Assembly size qualifiers tell the assembler how large the memory operand is.
+                \begin{itemize}
+                    \item byte ptr = 1 byte = 8 bits
+                    \item word ptr = 2 bytes = 16 bits
+                    \item dword ptr = 4 bytes = 32 bits
+                    \item qword ptr = 8 bytes = 64 bits
+                    \item tword ptr = 10 bytes, often for x87 extended precision values
+                    \item xmmword ptr = 16 bytes
+                    \item ymmword ptr = 32 bytes
+                    \item zmmword ptr = 64 bytes
+                \end{itemize}
+                It is not a cast. It is more like a type annotation for the memory operand.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                mov dword ptr [rdi], 5
+                \end{cppcode}
+                \bigbreak \noindent 
+                says
+                \begin{itemize}
+                    \item take the address in rdi
+                    \item look at the memory there
+                    \item treat that destination as a 4-byte object
+                    \item store 5 into it
+                \end{itemize}
+
+
         \end{itemize}
 
         \pagebreak 
@@ -3418,6 +3545,7 @@ if (errno) {
                         The first assignment is never read before being overwritten, so the first assignment is dead.
                 \end{itemize}
                 So dead code elimination is broader than just “removing unreachable statements.” It also includes removing useless computations and stores.
+            \item \textbf{Common subexpression elimination (CSE)}: Common Subexpression Elimination (CSE) is a compiler optimization that identifies identical expressions computed multiple times and replaces them with a single calculation stored in a temporary variable
 
         \end{itemize}
 

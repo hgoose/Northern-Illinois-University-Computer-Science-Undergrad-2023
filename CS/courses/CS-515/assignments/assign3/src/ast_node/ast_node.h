@@ -36,7 +36,6 @@ struct AST_NODE {
     SYMINFO* syminfo{};
 
     SYMTYPE symbol_type{};
-
     TYPE data_type{};
     NODE_TYPE node_type{};
 
@@ -54,6 +53,7 @@ struct AST_NODE {
         entry = other.entry;
         syminfo = other.syminfo;
         is_operator = other.is_operator;
+        symbol_type = other.symbol_type;
     }
 
     void add_child(AST_NODE* child) {

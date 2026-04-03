@@ -20,6 +20,13 @@ static unsigned char* prog;
 // Offset into the address space
 static size_t p_offset;
 
+size_t byte_count = 0;
+
+void load_byte(unsigned char byte) {
+    prog[p_offset++] = byte;
+    ++byte_count;
+}
+
 void dump() {
     for (size_t i{}; i<p_offset; ++i) {
         std::cout << std::hex << prog[i];
@@ -39,28 +46,24 @@ int read_int() {
     return a;
 }
 
-size_t load_imm8(int x) {
-    prog[p_offset++] = x & 0xff; 
-
-    return 1;
+void load_imm8(int x) {
+    load_byte(x & 0xff);
 }
 
 // Loads a 32-bit integer into the program to be used as an operand
-size_t load_imm32(int x) {
+void load_imm32(int x) {
     for (int i=0; i<4; ++i) {
-        prog[p_offset++] = x & 0xff; x>>=0x8;
+        load_byte(x & 0xff);
+        x>>=0x8;
     } 
-
-    return 4;
 }
 
 // Loads a 64-bit integer into the program
-size_t load_imm64(long long x) {
+void load_imm64(long long x) {
     for (int i=0; i<8; ++i) {
-        prog[p_offset++] = x & 0xff; x>>=0x8;
+        load_byte(x & 0xff);
+        x>>=0x8;
     } 
-
-    return 8;
 }
 
 int pspace_init() {
@@ -82,285 +85,298 @@ int pspace_init() {
 }
 
 // FF /6 PUSH r/m32, push a value onto the stack
-size_t IA32e_push_imm32(int x) {
-    size_t byte_count = 0;
-
-    prog[p_offset++] = 0x68; ++byte_count;
-    byte_count+=load_imm32(x); 
-
-    return byte_count;
+void IA32e_push_imm32(int x) {
+    load_byte(0x68);
+    load_imm32(x); 
 }
 
 // FF /6 PUSH r/m32
-size_t IA32e_push32(REGISTER src) {
-    prog[p_offset++] = 0xFF;
-    prog[p_offset++] = gen_modrm_rr(src, (REGISTER)(6));
+void IA32e_pushr32(REGISTER src) {
+    if (src >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, src));
+    }
 
-    return 2;
+    load_byte(0xFF);
+    load_byte(gen_modrm_rr(src, (REGISTER)(6)));
+}
+
+// FF /6 PUSH r/m32
+void IA32e_pushm32(REGISTER src) {
+    if (src >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, src));
+    }
+
+    load_byte(0xFF);
+    load_byte(gen_modrm_norr_nodisp(src, (REGISTER)(6)));
 }
 
 // 8F /0 POP r/m32, pop the top of the stack into dest
-size_t IA32e_pop32(REGISTER dest) {
-    unsigned int mod = (0b11 << 0x6) | dest; 
+void IA32e_popr32(REGISTER dest) {
+    if (dest >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, dest));
+    }
 
-    prog[p_offset++] = 0x8F;
-    prog[p_offset++] = mod;
-
-    return 2;
+    load_byte(0x8F);
+    load_byte(gen_modrm_rr(dest, (REGISTER)0));
 }
 
 // 89 /r MOV r/m32 r32
-size_t IA32e_mov_rr32(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = 0x89;
-    prog[p_offset++] = gen_modrm_rr(dest, src);
+void IA32e_mov_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
 
-    return 2;
+    load_byte(0x89);
+    load_byte(gen_modrm_rr(dest, src));
 }
 
 // REX.W 89 /r MOV r/m64 r64
-size_t IA32e_mov_rr64(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
-    prog[p_offset++] = 0x89;
-    prog[p_offset++] = gen_modrm_rr(dest, src);
-
-    return 3;
+void IA32e_mov_rr64(REGISTER dest, REGISTER src) {
+    load_byte(gen_rex_rr(WIDE_ON, dest, src));
+    load_byte(0x89);
+    load_byte(gen_modrm_rr(dest, src));
 }
 
 // B8+rd id MOV r32, imm32
-size_t IA32e_mov_rimm32(REGISTER dest, int src) {
-    prog[p_offset++] = 0xB8 + (dest & 0x7);
-    load_imm32(src);
+void IA32e_mov_rimm32(REGISTER dest, int src) {
+    if (dest >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, dest));
+    }
 
-    return 5;
+    load_byte(0xB8 + (dest & 0x7));
+    load_imm32(src);
 }
 
 // REX.W + B8+ rd io MOV r64, imm64
 // NOTE: If dest is R8-R15, REX.B = 1, zero otherwise. In any case, 
 // REX.R = REX.X = 0, and REX.W = 1
-size_t IA32e_mov_rimm64(REGISTER dest, long long src) {
-    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
-    prog[p_offset++] = 0xB8 + (dest & 0x7);
+void IA32e_mov_rimm64(REGISTER dest, long long src) {
+    load_byte(gen_rex_r(WIDE_ON, dest));
+    load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
-
-    return 10;
 }
 
 // REX.W + B8+ rd io MOV r64, imm64
-size_t IA32e_mov_rimm64_sizet(REGISTER dest, size_t src) {
-    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
-    prog[p_offset++] = 0xB8 + (dest & 0x7);
+void IA32e_mov_rimm64_sizet(REGISTER dest, size_t src) {
+    load_byte(gen_rex_r(WIDE_ON, dest));
+    load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
-
-    return 10;
 }
 
 // REX.W + B8+ rd io MOV r64, imm64
-size_t IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
-    prog[p_offset++] = gen_rex_r(WIDE_ON, dest);
-    prog[p_offset++] = 0xB8 + (dest & 0x7);
+void IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
+    load_byte(gen_rex_r(WIDE_ON, dest));
+    load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
-
-    return 10;
 }
 
 // REX.W + 89 /r MOV r/m64, r64
 //
 // Note: Specifically when dest is a memory location 
 // inside a register (no displacement), so mod = 00
-size_t IA32e_mov_mr64_nodisp(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
-    prog[p_offset++] = 0x89;
-    prog[p_offset++] = gen_modrm_norr_nodisp(dest, src);
+void IA32e_mov_mr64_nodisp(REGISTER dest, REGISTER src) {
+    load_byte(gen_rex_rr(WIDE_ON, dest, src));
+    load_byte(0x89);
+    load_byte(gen_modrm_norr_nodisp(dest, src));
+}
 
-    return 3;
+// 8B /r MOV r64, r/m64
+void IA32e_mov_rm32_nodisp(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, src, dest));
+    }
+    load_byte(0x8B);
+    load_byte(gen_modrm_norr_nodisp(src, dest));
 }
 
 // REX.W + 89 /r MOV r/m64, r64
 //
 // Note: Specifically when dest is a memory location 
 // inside a register (no displacement), so mod = 01
-size_t IA32e_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
-    prog[p_offset++] = gen_rex_rr(WIDE_ON, dest, src);
-    prog[p_offset++] = 0x89;
-    prog[p_offset++] = gen_modrm_norr_disp8(dest, src);
+void IA32e_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
+    load_byte(gen_rex_rr(WIDE_ON, dest, src));
+    load_byte(0x89);
+    load_byte(gen_modrm_norr_disp8(dest, src));
     load_imm8(disp);
-
-    return 4;
 }
 
 // 29 /r SUB r/m32, r32
-size_t IA32e_sub_rr32(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = 0x29;
-    prog[p_offset++] = gen_modrm_rr(dest,src);
+void IA32e_sub_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
 
-    return 2;
+    load_byte(0x29);
+    load_byte(gen_modrm_rr(dest,src));
 }
 
 // 01 /r ADD r/m32, r32
-size_t IA32e_add_rr32(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = 0x01;
-    prog[p_offset++] = gen_modrm_rr(dest, src);
+void IA32e_add_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
 
-    return 2;
+    load_byte(0x01);
+    load_byte(gen_modrm_rr(dest, src));
 }
 
 // 0F AF /r IMUL r32, r/m32
-size_t IA32e_mult_rr32(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = 0x0F;
-    prog[p_offset++] = 0xAF;
-    prog[p_offset++] = gen_modrm_rr(src, dest);
+void IA32e_mult_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
 
-    return 3;
+    load_byte(0x0F);
+    load_byte(0xAF);
+    load_byte(gen_modrm_rr(src, dest));
 }
 
 
 // F7 /7 IDIV r/m32
-size_t IA32e_div_rr32(REGISTER dest, REGISTER src) {
-    size_t byte_count = 0;
-
+void IA32e_div_rr32(REGISTER dest, REGISTER src) {
     // MOV EAX, dest
-    byte_count += IA32e_mov_rr32(REGISTER::EAX, dest);
+    IA32e_mov_rr32(REGISTER::EAX, dest);
 
     // CDQ
-    prog[p_offset++] = 0x99; ++byte_count;
+    load_byte(0x99);
+
+    if (src >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, src));
+    }
 
     // IDIV src
-    prog[p_offset++] = 0xF7; ++byte_count;
-    prog[p_offset++] = gen_modrm_rr(src, (REGISTER)(7)); ++byte_count;
-
-    return byte_count;
+    load_byte(0xF7); 
+    load_byte(gen_modrm_rr(src, (REGISTER)(7)));
 }
 
-size_t IA32e_modulo_rr32(REGISTER dest, REGISTER src) {
-    size_t byte_count = 0;
-
+void IA32e_modulo_rr32(REGISTER dest, REGISTER src) {
     // DIV src (dest in eax)
-    byte_count += IA32e_div_rr32(dest, src);
+    IA32e_div_rr32(dest, src);
 
     // Move remainder into accumulator
-    byte_count += IA32e_mov_rr32(REGISTER::EAX, REGISTER::EDX);
-
-    return byte_count;
+    IA32e_mov_rr32(REGISTER::EAX, REGISTER::EDX);
 }
 
 // The fast exponentiation algorithm in IA-32e
-size_t IA32e_fast_exp() {
-    prog[p_offset++] = 0x45;  // XOR R8, R8  // e = 0
-    prog[p_offset++] = 0x31;
-    prog[p_offset++] = 0xc0;
-    prog[p_offset++] = 0x41;  // POP R10      // get a
-    prog[p_offset++] = 0x8f;
-    prog[p_offset++] = 0xc2;
-    prog[p_offset++] = 0x41;  // POP R9     // get b
-    prog[p_offset++] = 0x8f;
-    prog[p_offset++] = 0xc1;
-    prog[p_offset++] = 0x45;  // TEST R10, R10 // if (b < 0)
-    prog[p_offset++] = 0x85;
-    prog[p_offset++] = 0xd2;
-    prog[p_offset++] = 0x7c;  // JL          // if (b < 0) jump to end
-    prog[p_offset++] = 0x1e;
-    prog[p_offset++] = 0x41;  // INC R8      // e = 1
-    prog[p_offset++] = 0xff;
-    prog[p_offset++] = 0xc0;
-    prog[p_offset++] = 0x45;  // TEST R10, R10 // start of while loop
-    prog[p_offset++] = 0x85;
-    prog[p_offset++] = 0xd2;
-    prog[p_offset++] = 0x74;  // JE          // if (b = 0) exit loop, 
-    prog[p_offset++] = 0x16;
-    prog[p_offset++] = 0x41;  // TEST R10, 1 // if (b & 1)
-    prog[p_offset++] = 0xf7;
-    prog[p_offset++] = 0xc2;
-    prog[p_offset++] = 0x01;
-    prog[p_offset++] = 0x00;
-    prog[p_offset++] = 0x00;
-    prog[p_offset++] = 0x00;
-    prog[p_offset++] = 0x74; // JE  if(b & 1) is 0, jump over next IMUL
-    prog[p_offset++] = 0x04;
-    prog[p_offset++] = 0x45; // IMUL R8, R9  // e = e * a
-    prog[p_offset++] = 0x0f;
-    prog[p_offset++] = 0xaf;
-    prog[p_offset++] = 0xc1;
-    prog[p_offset++] = 0x45; // IMUL R9, R9  // a = a * a
-    prog[p_offset++] = 0x0f;
-    prog[p_offset++] = 0xaf;
-    prog[p_offset++] = 0xc9;
-    prog[p_offset++] = 0x41; // SAR R10, 1   // b >>= 1
-    prog[p_offset++] = 0xd1;
-    prog[p_offset++] = 0xfa;
-    prog[p_offset++] = 0xeb; // JMP   // back to start of while loop
-    prog[p_offset++] = 0xe5;
-    prog[p_offset++] = 0x41; // MOV EAX, R8  // move result (e = a^b) to EAX
-    prog[p_offset++] = 0x8b;
-    prog[p_offset++] = 0xc0;
+void IA32e_fast_exp() {
+    load_byte(0x45);  // XOR R8, R8  // e = 0
+    load_byte(0x31);
+    load_byte(0xc0);
+    load_byte(0x41);  // POP R10      // get a
+    load_byte(0x8f);
+    load_byte(0xc2);
+    load_byte(0x41);  // POP R9     // get b
+    load_byte(0x8f);
+    load_byte(0xc1);
+    load_byte(0x45);  // TEST R10, R10 // if (b < 0)
+    load_byte(0x85);
+    load_byte(0xd2);
+    load_byte(0x7c);  // JL          // if (b < 0) jump to end
+    load_byte(0x1e);
+    load_byte(0x41);  // INC R8      // e = 1
+    load_byte(0xff);
+    load_byte(0xc0);
+    load_byte(0x45);  // TEST R10, R10 // start of while loop
+    load_byte(0x85);
+    load_byte(0xd2);
+    load_byte(0x74);  // JE          // if (b = 0) exit loop, 
+    load_byte(0x16);
+    load_byte(0x41);  // TEST R10, 1 // if (b & 1)
+    load_byte(0xf7);
+    load_byte(0xc2);
+    load_byte(0x01);
+    load_byte(0x00);
+    load_byte(0x00);
+    load_byte(0x00);
+    load_byte(0x74); // JE  if(b & 1) is 0, jump over next IMUL
+    load_byte(0x04);
+    load_byte(0x45); // IMUL R8, R9  // e = e * a
+    load_byte(0x0f);
+    load_byte(0xaf);
+    load_byte(0xc1);
+    load_byte(0x45); // IMUL R9, R9  // a = a * a
+    load_byte(0x0f);
+    load_byte(0xaf);
+    load_byte(0xc9);
+    load_byte(0x41); // SAR R10, 1   // b >>= 1
+    load_byte(0xd1);
+    load_byte(0xfa);
+    load_byte(0xeb); // JMP   // back to start of while loop
+    load_byte(0xe5);
+    load_byte(0x41); // MOV EAX, R8  // move result (e = a^b) to EAX
+    load_byte(0x8b);
+    load_byte(0xc0);
 
-    return 47 + IA32e_push32(REGISTER::EAX);
+    IA32e_pushr32(REGISTER::EAX);
 }
 
 // 31 /r XOR r/m32, r32
-size_t IA32e_xor_rr32(REGISTER dest, REGISTER src) {
-    prog[p_offset++] = 0x31;
-    prog[p_offset++] = gen_modrm_rr(dest, src);
+void IA32e_xor_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
 
-    return 2;
+    load_byte(0x31);
+    load_byte(gen_modrm_rr(dest, src));
 }
 
 // 87 /r XCHG r/m32, r32
-size_t IA32e_xchg32(REGISTER r1, REGISTER r2) {
-    prog[p_offset++] = 0x87;
-    prog[p_offset++] = gen_modrm_rr(r1, r2);
+void IA32e_xchg32(REGISTER r1, REGISTER r2) {
+    if (r1 >= REGISTER::R8 || r2 >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, r1, r2));
+    }
 
-    return 2;
+    load_byte(0x87);
+    load_byte(gen_modrm_rr(r1, r2));
 }
 
 
 // C3 RET 
-size_t IA32e_construct_ret() {
-    prog[p_offset++] = 0xc3;
-
-    return 1;
+void IA32e_construct_ret() {
+    load_byte(0xc3);
 }
 
 // FF /2
-size_t IA32e_call(REGISTER reg) {
-    size_t byte_count{};
-
+void IA32e_call(REGISTER reg) {
     if (reg >= REGISTER::R8) {
-        prog[p_offset++] = gen_rex_r(WIDE_ON, reg); 
-        ++byte_count;
+        load_byte(gen_rex_r(WIDE_ON, reg)); 
     }
 
-    prog[p_offset++] = 0xFF; ++byte_count;
-    prog[p_offset++] = gen_modrm_rr(reg, (REGISTER) 2); ++byte_count;
-    
-    return byte_count;
+    load_byte(0xFF);
+    load_byte(gen_modrm_rr(reg, (REGISTER) 2));
 }
 
 // Call some C++ function that takes a single integer argument, and returns void
 // FF /2
-size_t IA32e_call_void_sia(void(*f)(int), REGISTER src) {
-    size_t byte_count{};
+void IA32e_call_void_sia(void(*f)(int), REGISTER src) {
+    IA32e_mov_rr32(REGISTER::EDI, src);
+    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
 
-    byte_count += IA32e_mov_rr32(REGISTER::EDI, src);
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
+    IA32e_call(REGISTER::RCX);
+}
 
-    byte_count += IA32e_call(REGISTER::ECX);
+// Get the argument through the memory address in a register
+void IA32e_call_void_sia_indirect(void(*f)(int), REGISTER src) {
+    IA32e_mov_rm32_nodisp(REGISTER::EDI, src);
+    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
 
-    return byte_count;
+    IA32e_call(REGISTER::RCX);
+}
+
+void IA32e_call_int_zia(int(*f)(void)) {
+    IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f);
+    IA32e_call(REGISTER::ECX);
 }
 
 // Call some C++ function that takes a single char* argument, and returns void
 // FF /2
-size_t IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
-    size_t byte_count{};
-
+void IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
     const char* c = STR_TABLE::emit_string(st_entry);
 
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f); 
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::RDI, (std::uintptr_t) c); 
+    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f); 
+    IA32e_mov_rimm64_ptr(REGISTER::RDI, (std::uintptr_t) c); 
 
-    byte_count += IA32e_call(REGISTER::RCX);
-
-    return byte_count;
+    IA32e_call(REGISTER::RCX);
 }
 
 // Calls INT_TABLE::emit_int(size_t offset), which returns a pointer to the region in memory in which the variable
@@ -371,21 +387,28 @@ size_t IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
 // mov  r10, INT_TABLE::emit_int
 // call r10
 // mov  r10,eax
-size_t IA32e_get_int(size_t offset) {
-    size_t byte_count{};
+void IA32e_get_int_for_assign(size_t offset) {
+    IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
+    IA32e_mov_rimm64_ptr(REGISTER::R10, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
+    IA32e_call(REGISTER::R10);
 
-    byte_count += IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
-    byte_count += IA32e_mov_rimm64_ptr(REGISTER::R10, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
-    byte_count += IA32e_call(REGISTER::R10);
+    IA32e_mov_rr64(REGISTER::R10, REGISTER::RAX);
+}
 
-    byte_count += IA32e_mov_rr64(REGISTER::R10, REGISTER::RAX);
+// Use R11
+void IA32e_get_int_for_expr(size_t offset) {
+    IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
+    IA32e_mov_rimm64_ptr(REGISTER::R11, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
+    IA32e_call(REGISTER::R11);
 
-    return byte_count;
+    IA32e_mov_rr64(REGISTER::R11, REGISTER::RAX);
 }
 
 // Add a return instruction and execute program, returns value in the accumulator
 int IA32e_exec() {
-    prog[p_offset++] = 0xc3;
+    load_byte(0xc3);
+    // dump();
+    // return 0;
     return ((int(*)(void))prog)();
 }
 

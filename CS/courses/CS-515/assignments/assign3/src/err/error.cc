@@ -3,6 +3,7 @@
 
 #include "error.h"
 #include "parser.h"
+#include "buffio.h"
 
 #include <iostream>
 using std::cerr;
@@ -29,6 +30,7 @@ const char* error_string(int err) {
         case NCC_SYMBOL_ALREADY_EXISTS: return "variable already exists";
         case NCC_INVALID_IDENTIFIER: return "invalid identifier";
         case NCC_UNKNOWN_VARIABLE: return "variable has not be declared";
+        case NCC_EXPECTED_VAR: return "expected variable, none provided";
         default: return "unknown error";
     }
 }
@@ -52,15 +54,15 @@ void print_error(const Error& e) {
 
     // More verbose error reporting, reports source line and shows column position
     
-    // string line{};
-    // if (get_src_line(e.line, line) == NCC_OK)  {
-    //     cerr << line << '\n';
-    //
-    //     for (int i=0; i<e.col; ++i) {
-    //         cerr << ' ';
-    //     }
-    //     cerr << "^\n";
-    // }
+    std::string line{};
+    if (get_src_line(e.line, line) == NCC_OK)  {
+        cerr << line << '\n';
+
+        for (int i=1; i<e.col; ++i) {
+            cerr << '-';
+        }
+        cerr << "^\n\n";
+    }
 }
 
 // Sets and print error, uses current parsing token

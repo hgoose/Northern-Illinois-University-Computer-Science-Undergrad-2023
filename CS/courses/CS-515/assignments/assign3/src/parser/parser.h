@@ -25,7 +25,7 @@ int parse();
 
 AST_NODE* parse_print();
 AST_NODE* parse_read();
-AST_NODE* parse_decl();
+AST_NODE* parse_decl_int4();
 AST_NODE* parse_assign();
 
 // PRODUCTION RULES

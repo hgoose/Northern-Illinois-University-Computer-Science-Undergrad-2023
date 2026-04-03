@@ -12,5 +12,6 @@ void evaluate_print_expr(AST_NODE*);
 void evaluate_print(AST_NODE*);
 void init_var(AST_NODE*);
 void update_var(AST_NODE*);
+void process_read(AST_NODE*);
 
 #endif

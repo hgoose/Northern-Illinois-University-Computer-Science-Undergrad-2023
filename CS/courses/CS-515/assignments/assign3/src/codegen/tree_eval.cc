@@ -8,111 +8,122 @@
 #include "token.h"
 #include "ncc_integers.h"
 #include "error.h"
+#include "ast_utils.h"
 
 #include <cstdlib>
 #include <algorithm>
 #include <iostream>
 
-size_t byte_count = 0;
-
 // POST ORDER EVALUATION OF THE AST
-static void r_evaluate_expr(AST_NODE* p) {
+static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
     // NOOP
     if (!p) return;
 
     // POST ORDER
-    std::for_each(p->children.begin(), p->children.end(), [](auto it) -> void {
-        r_evaluate_expr(it);
+    std::for_each(p->children.begin(), p->children.end(), [&pushed](auto it) -> void {
+        r_evaluate_expr(it, pushed);
     });
 
     // PUSH INTEGERS TO THE STACK
     if (p->token.id == TOKEN_INTEGER) {
-        byte_count+=IA32e_push_imm32(p->token.integer);
+        IA32e_push_imm32(p->token.integer);
+        ++pushed;
     } 
+    else if (p->token.id == TOKEN_IDENT) {
+        // Get a pointer to the variable in r11, 
+        // then push that value to the stack
+        IA32e_get_int_for_expr(p->syminfo->location.int_table_offset);
+        IA32e_pushm32(REGISTER::R11);
+        ++pushed;
+    }
     // RUN CODE FOR UNARY NEGATION
     else if (p->token.id == TOKEN_UNEG) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_xor_rr32(REGISTER::ECX, REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_sub_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_xor_rr32(REGISTER::ECX, REGISTER::ECX);
+        IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_sub_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
     } 
     // RUN CODE FOR BINARY ADDITION
     else if (p->token.id == TOKEN_PLUS) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_pop32(REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_add_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::ECX);
+        // IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_add_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
     }
     // RUN CODE FOR BINARY SUBTRACTION
     else if (p->token.id == TOKEN_MINUS) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_pop32(REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_sub_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::ECX);
+        IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_sub_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
     }
     // RUN CODE FOR BINARY MULTIPLICATION
     else if (p->token.id == TOKEN_MULT) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_pop32(REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_mult_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::ECX);
+        // IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_mult_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
        
     }
     // RUN CODE FOR BINARY DIVISION
     else if (p->token.id == TOKEN_DIV) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_pop32(REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_div_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::ECX);
+        IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_div_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
     }
     // RUN CODE FOR BINARY MODULUS
     else if (p->token.id == TOKEN_MOD) {
-        byte_count+=IA32e_pop32(REGISTER::EAX);
-        byte_count+=IA32e_pop32(REGISTER::ECX);
-        byte_count+=IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_modulo_rr32(REGISTER::EAX, REGISTER::ECX);
-        byte_count+=IA32e_push32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::EAX);
+        IA32e_popr32(REGISTER::ECX);
+        IA32e_xchg32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_modulo_rr32(REGISTER::EAX, REGISTER::ECX);
+        IA32e_pushr32(REGISTER::EAX);
+        ++pushed;
     }
     // RUN CODE FOR SUPER FAST EXPONENTIATION
     else if (p->token.id == TOKEN_EXP) {
-        byte_count+=IA32e_fast_exp();
+        IA32e_fast_exp();
+        ++pushed;
     }
+
 }
 
 void evaluate_expr(AST_NODE* root) {
     // Noop on empty tree
     if (!root) return;
 
-    // Evaluate expression
-    r_evaluate_expr(root);
+    unsigned int pushed{};
 
-    // Extra pop so that the stack is empty,
-    // otherwise when ret looks in the stack for the return address
-    // it grabs the value in EAX and tries to jump to that location,
-    // major seg fault
-    byte_count+=IA32e_pop32(REGISTER::EAX);
+    // Evaluate expression
+    r_evaluate_expr(root, pushed);
+
+    if (pushed > 0) IA32e_popr32(REGISTER::EAX);
 }
 
 void evaluate_print_expr(AST_NODE* root) {
     // Noop on empty tree
     if (!root) return;
 
-    // Evaluate expression
-    r_evaluate_expr(root);
+    unsigned int pushed{};
 
-    // Extra pop so that the stack is empty,
-    // otherwise when ret looks in the stack for the return address
-    // it grabs the value in EAX and tries to jump to that location,
-    // major seg fault
-    byte_count+=IA32e_pop32(REGISTER::EAX);
-    
+    // Evaluate expression
+    r_evaluate_expr(root, pushed);
+
+    if (pushed > 0) IA32e_popr32(REGISTER::EAX);
+
     // Call print_int with value in accumulator
-    byte_count+=IA32e_call_void_sia(print_int, REGISTER::EAX);
+    IA32e_call_void_sia(print_int, REGISTER::EAX);
 }
 
 void evaluate_print(AST_NODE* root) {
@@ -122,7 +133,7 @@ void evaluate_print(AST_NODE* root) {
         if (!it) return;
 
         if (it->entry.vi) {
-            byte_count += IA32e_call_void_sca(print_string, it->entry);             
+            IA32e_call_void_sca(print_string, it->entry);             
         } else {
             evaluate_print_expr(it);
         }
@@ -158,7 +169,6 @@ void update_var(AST_NODE* root) {
     ++child;
     if (*child) ast_expr = *child;
 
-
     SYMINFO* symbol = SYMTABLE::get_symbol(var->token.identifier, var->symbol_type);
 
     // No symbol found
@@ -167,15 +177,45 @@ void update_var(AST_NODE* root) {
         return;
     }
 
+    var->syminfo = symbol;
+
     // Otherwise, the symbol is found in the symbol table, so we update it
     
     // After this call, address of symbol is in r10
-    byte_count += IA32e_get_int(symbol->location.int_table_offset);
-
-    // Now, evaluate the expression given by root and move that value to the address in r10
-
-    // Result in eax
+    IA32e_get_int_for_assign(symbol->location.int_table_offset);
+    //
+    // // Now, evaluate the expression given by root and move that value to the address in r10
+    //
+    // // Result in eax
     evaluate_expr(ast_expr);
 
-    byte_count += IA32e_mov_mr64_nodisp(REGISTER::R10, REGISTER::EAX);
+    IA32e_mov_mr64_nodisp(REGISTER::R10, REGISTER::EAX);
+}
+
+void process_read(AST_NODE* root) {
+    if (!root) return;
+
+    AST_NODE* var = root->children.front();
+
+    SYMINFO* symbol = SYMTABLE::get_symbol(var->token.identifier, var->symbol_type);
+
+    if (!symbol) {
+        set_print_token_error(Error{}, var->token, NCC_UNKNOWN_VARIABLE);
+        return;
+    }
+
+    var->syminfo = symbol;
+
+    // Return value in EAX
+    IA32e_call_int_zia(read_int);
+
+    // Move return value to a non call clobbered register (r12)
+    IA32e_mov_rr32(REGISTER::R12, REGISTER::EAX);
+
+    // Call IA32e_get_int to get the location of the variable. 
+    // Pointer to this location in r10 after call
+    IA32e_get_int_for_assign(symbol->location.int_table_offset);
+
+    // Now, mov [r10], r12
+    IA32e_mov_mr64_nodisp(REGISTER::R10, REGISTER::R12);
 }
