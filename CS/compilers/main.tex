@@ -3504,6 +3504,106 @@ if (errno) {
         \end{itemize}
 
         \pagebreak 
+        \subsection{kD memory}
+        \begin{itemize}
+            \item \textbf{Indexing functions}: Consider a $2$-D array in the context of a row-major memory layout
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    A[m][n]
+                \end{cppcode}
+                \bigbreak \noindent 
+                Suppose we wanted to index into this array, how would we do it
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    A[i][j]?
+                \end{cppcode}
+                \bigbreak \noindent 
+                We have $m$ arrays of $n$ elements, so the indexing function would be
+                \begin{align*}
+                    in + j
+                .\end{align*}
+                 We need to jump over $n$ elements $i$ times to reach $i$th inner array, then we can access item $j$ in that block.
+                 \bigbreak \noindent 
+                 For a 3-D array,
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     A[m][n][r]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 we have
+                 \bigbreak \noindent 
+                 \begin{align*}
+                    inr + jr + k = (in+j)r + k
+                 .\end{align*}
+                 for an indexing
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     A[i][j][k]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 In general, for 
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     A[|$n_{1}$|]|$\cdots$|[|$n_{m}$|]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 the indexing function for 
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     A[|$i_{1}$|]|$\cdots$|[|$i_{m}$|]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 is
+                 \begin{align*}
+                     &i_{1}(n_{2}\cdots n_{m}) + i_{2}(n_{3} \ldots n_{m}) + \cdots + i_{k}(n_{k+1}\cdots n_{m}) + \ldots + i_{m-1}n_{m} + i_{m} \\
+                     &=\sum_{k=1}^{m}i_{k}\prod_{j=k+1}^{m}n_{j}
+                 .\end{align*}
+                 This is called the \textbf{row-major linearization formula} for a zero-based array.
+                 \bigbreak \noindent 
+                 For column major, $A[m][n]$ would be indexed ($A[i][j]$) with
+                 \begin{align*}
+                     jm + i
+                 .\end{align*}
+                 In this case there are $m$ columns, and $n$ rows. For 
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     A[m][n][r], A[i][j][k]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 The indexing in column-major order would be
+                 \begin{align*}
+                     knm  + jm + i
+                 .\end{align*}
+                 Thus, for
+                 \begin{cppcode}
+                     A[|$n_{1}$|]|$\cdots$|[|$n_{m}$|], A[|$i_{1}$|]|$\cdots$|[|$i_{m}$|]
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 We have the indexing function
+                 \begin{align*}
+                     &i_{m}(n_{m-1}\cdots n_{1}) + i_{m-1}(n_{m-2}\cdots n_{1}) + \ldots + i_{m-k}(n_{m-(k+1)}\cdots n_{1}) + \ldots + i_{2}n_{1} + i_{1} \\
+                     &=\sum_{k=1}^{m}i_{k}\prod_{j=1}^{k-1}n_{j}
+                 .\end{align*}
+                 This works because in column-major layout:
+                 \begin{itemize}
+                     \item $i_{1}$ varies fastest,
+                     \item then $i_{2} $ 
+                     \item then $i_{3} $
+                     \item and so on
+                 \end{itemize}
+                 Notice that in both formulas, either $n_{1}$ (row-major) is never used, or $n_{m}$ (column-major) is never used. That is exactly why, in a function parameter, the compiler must know the later dimensions, but not the first one. For example, in c++ 
+                 \bigbreak \noindent 
+                 \begin{cppcode}
+                     void fn(int arr[][10]);
+                 \end{cppcode}
+                 \bigbreak \noindent 
+                 is valid.
+
+
+
+        \end{itemize}
+
+        \pagebreak 
         \unsect{Optimizations}
         \begin{itemize}
             \item \textbf{Unary negation}: One very simple optimization that we can do when parsing is to collapse the unary negation operation on an integer constant. For example, 
@@ -3545,7 +3645,111 @@ if (errno) {
                         The first assignment is never read before being overwritten, so the first assignment is dead.
                 \end{itemize}
                 So dead code elimination is broader than just “removing unreachable statements.” It also includes removing useless computations and stores.
-            \item \textbf{Common subexpression elimination (CSE)}
+            \item \textbf{Common subexpression elimination (CSE)}: common subexpression elimination (CSE) is a compiler optimization that searches for instances of identical expressions (i.e., they all evaluate to the same value), and analyzes whether it is worthwhile replacing them with a single variable holding the computed value. 
+            \item \textbf{Loop unrolling}: Loop unrolling is a compiler optimization where the compiler reduces the number of loop-control operations by duplicating the loop body.
+                \bigbreak \noindent 
+                Instead of executing one iteration per pass through the loop, the compiler makes each pass do several iterations’ worth of work.
+                \bigbreak \noindent 
+                Suppose we have
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int i = 0; i < 8; i++) {
+                        a[i] = a[i] + 1;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                A compiler might unroll it by a factor of 4 into something like:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int i = 0; i < 8; i += 4) {
+                        a[i]     = a[i] + 1;
+                        a[i + 1] = a[i + 1] + 1;
+                        a[i + 2] = a[i + 2] + 1;
+                        a[i + 3] = a[i + 3] + 1;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Now the loop branch, comparison, and increment happen fewer times
+                \bigbreak \noindent 
+                There is usually also a cleanup loop, because the iteration count may not be a multiple of the unroll factor. For example, unroll by 4:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int i = 0;
+                    for (; i + 3 < n; i += 4) {
+                        body(i);
+                        body(i + 1);
+                        body(i + 2);
+                        body(i + 3);
+                    }
+                    for (; i < n; i++) {
+                        body(i);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                The second loop handles the leftover iterations. This is often called the remainder loop or epilogue loop.
+            \item \textbf{Full unrolling}: Full unrolling means the compiler removes the loop entirely when the trip count is known and small. For example:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int i = 0; i < 4; i++) {
+                        sum += x[i];
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                may become
+                \bigbreak \noindent 
+                \begin{cppcode}
+                sum += x[0];
+                sum += x[1];
+                sum += x[2];
+                sum += x[3];
+                \end{cppcode}
+                \bigbreak \noindent 
+                \textbf{Partial unrolling} means the compiler unrolls by some factor, such as 2, 4, or 8, but keeps a loop.
+            \item \textbf{Row / column major memory layout}: Row-major and column-major describe how a multidimensional array is laid out in linear memory.
+                \bigbreak \noindent 
+                A 2D array is not actually stored as a grid in RAM. It is stored as one contiguous sequence of elements. The only question is: which dimension varies fastest in memory? Suppose we have the matrix
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    A[3][4]
+                \end{cppcode}
+                \bigbreak \noindent 
+                In \textbf{row-major layout}, the entire first row is stored first, then the second row, then the third row:
+                \bigbreak \noindent 
+                In \textbf{column-major layout}, the entire first column is stored first, then the second column, then the third, and so on:
+                \bigbreak \noindent 
+                In most C and C++ contexts, built-in multidimensional arrays are row-major. In Fortran, the conventional layout is column-major.
+                \bigbreak \noindent 
+                Modern CPUs and caches work best when memory is accessed contiguously. If your loop walks through memory in the same order that the array is stored, you get better spatial locality, fewer cache misses, and usually better performance.
+            \item \textbf{Loop reordering}: Modern CPUs and caches work best when memory is accessed contiguously. If your loop walks through memory in the same order that the array is stored, you get better spatial locality, fewer cache misses, and usually better performance. 
+                \bigbreak \noindent 
+                Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int j = 0; j < M; j++) {
+                        for (int i = 0; i < N; i++) {
+                            A[i][j] = f(A[i][j]);
+                        }
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                For row-major storage, this is often better because the inner loop now moves through contiguous elements.
+                \bigbreak \noindent 
+                For column-major storage, the opposite is usually true. There you often want the row index to vary fastest in the inner loop.
+                \bigbreak \noindent 
+                The compiler may take into account which loop ordering is best for the given memory layout, and try to reorder to speed things up. This is only legal when the reorder preserves semantics. If there are dependencies between iterations, you may not be allowed to swap loops.
+            \item \textbf{Code hoisting}: If there are dependencies between iterations, you may not be allowed to swap loops.
+                \bigbreak \noindent 
+                In compiler theory, this usually means taking an expression that would otherwise be executed multiple times and placing it in a location where it can be computed once and reused.
+                \bigbreak \noindent 
+                The most common case is loop-invariant code hoisting, also called \textbf{loop-invariant code motion}. Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int i = 0; i < n; i++) {
+                        y[i] = x[i] * (a + b);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                If a + b does not change during the loop, then computing it every iteration is wasteful. A compiler can hoist it outside the loop:
 
         \end{itemize}
 
