@@ -3598,6 +3598,68 @@ if (errno) {
                  \end{cppcode}
                  \bigbreak \noindent 
                  is valid.
+        \item \textbf{Address from offset}: The indexing function returns an offset from the address of the first byte of the space. To get the address, we use
+            \begin{align*}
+                A + I(i_{1}, i_{2}, \dots, i_{m}) \cdot \text{sizeof}(T)
+            \end{align*}
+            where \texttt{typeof}($A$) = $T$ and $I$ is the indexing function.
+        \item \textbf{Finding offset example (row-major)}: Consider an array with dimensions
+            \begin{align*}
+                A[7][10][5][3][8]
+            \end{align*}
+            indexed at
+            \begin{align*}
+                A[6][3][2][0][4]
+            .\end{align*}
+            So, the offset is 
+            \begin{align*}
+                6(10)(5)(3)(8) + 3(5)(3)(8) + 2(3)(8) + 0(8) + 4 = 7612
+            .\end{align*}
+            Note that we can factor this into
+            \begin{align*}
+                (((6 \cdot 10 + 3) \cdot 5 + 2) \cdot 3 + 0) \cdot  8 + 4
+            .\end{align*}
+        \item \textbf{Indices from offset (row-major)}: Let's start at offset $7612$ (using the same array), and figure out the indices. Looking at the factored form, we see that we can start right to left, undoing the multiplication and getting the added term from the remainder.
+            \begin{align*}
+                7612 / 8 &= 951\; \text{r } 4 \\
+                951 / 3 &= 317\; \text{r } 0 \\
+                 317/ 5 &= 63\; \text{r } 2 \\
+                 63/ 10 &= 6\; \text{r } 3 \\
+                 6/ 7 &= 0\; \text{r } 6
+            .\end{align*}
+            Thus, the indices are indeed
+            \begin{align*}
+                A[6][3][2][0][4]
+            .\end{align*}
+        \item \textbf{Bound checking}: Note that in designing a language specification, we need to consider what happens when a provided index is out of bounds.
+        \item \textbf{Arrays with custom index bounds (row-major)}: Consider the syntax
+            \begin{align*}
+                A[\ell_{1}..u_{1}][\ell_{2}..u_{2}]\cdots[\ell_{m}..u_{m}]
+            .\end{align*}
+            So, instead of the index intervals being from $[0,u)$, we let them be $[\ell, u)$, where $\ell < u$.
+            \bigbreak \noindent 
+            Let's take 
+            \begin{align*}
+                a[17..24][-5..-2][-2..3][0..9][1..10]
+            \end{align*}
+            as an example. First, we need to find the size of each interval
+            \begin{align*}
+                \norm{I_{1}} &= \norm{[17..24)} = 7 \\
+                \norm{I_{2}} &= \norm{[-5..-2)} = 3 \\
+                \norm{I_{3}} &= \norm{[-2..3)} = 5 \\
+                \norm{I_{4}} &= \norm{[0..9)} = 9 \\
+                \norm{I_{5}} &= \norm{[1..10)} = 9 
+            .\end{align*}
+            Then, in the index function, for the index
+            \begin{align*}
+                A[i_{1}][i_{2}][i_{3}][i_{4}][i_{5}]
+            ,\end{align*}
+            we get
+            \begin{align*}
+                \sum_{k=1}^{5}(i_{k} - \ell_{k})\prod_{j=k+1}^{5}\norm{I_{j}}
+            .\end{align*}
+            To find the indices from an offset, we proceed in the same fashion as before, but add the lower bounds to the remainder to get the true index.
+
 
 
 
@@ -3750,6 +3812,51 @@ if (errno) {
                 \end{cppcode}
                 \bigbreak \noindent 
                 If a + b does not change during the loop, then computing it every iteration is wasteful. A compiler can hoist it outside the loop:
+            \item \textbf{Strength reduction}: Strength reduction is a compiler optimization where an expensive operation is replaced with an equivalent cheaper one.
+                \bigbreak \noindent 
+                The classic case is replacing multiplication, division, or exponentiation with additions, subtractions, shifts, or increments when the result is the same.
+                \bigbreak \noindent 
+                Instead of 
+                \begin{align*}
+                    x = y \cdot  8
+                ,\end{align*}
+                a compiler may use a left shift
+                \begin{align*}
+                    x = y << 3
+                .\end{align*}
+                Another common example appears in loops. Suppose you have:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    for (int i = 0; i < n; i++) {
+                        a[i] = *(base + i * 4);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                If each iteration recomputes $i \cdot  4$, that multiplication can be reduced to repeated addition by maintaining a running address:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    p = base;
+                    for (int i = 0; i < n; i++) {
+                        a[i] = *p;
+                        p = p + 4;
+                    }
+                \end{cppcode}
+                Similarly, division by a power of two can be replaced by a right shift.
+                \begin{align*}
+                    x / 2^{k} = x>>k
+                .\end{align*}
+                Intuitively, can can reduce multiplication and division even if the factor is not a power of two. For example, consider
+                \begin{align*}
+                    x \cdot 9
+                ,\end{align*}
+                we can reduce to 
+                \begin{align*}
+                    x \cdot (8+1) = x \cdot (2^{3} + 1) = x<<3 + x
+                .\end{align*}
+                Similarly, 
+                \begin{align*}
+                    x \cdot 6 = x\cdot (4+2) = x<<2 + x<<1
+                .\end{align*}
 
         \end{itemize}
 
