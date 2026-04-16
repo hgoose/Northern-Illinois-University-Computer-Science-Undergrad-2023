@@ -955,7 +955,15 @@
                 \item \textbf{R:} construct a Rightmost derivation in reverse
             \end{itemize}
             They start from the input and reduce it back to the start symbol. These parsers are \textbf{bottom up}
-        \item \textbf{Left-recursion elimination}: For a rule of the form
+        \item \textbf{Left-recursion elimination}: Consider the grammar that supports arithmetic expressions
+            \begin{align*}
+                E &\to E + T \mid E - T \mid T\\
+                T &\to T * F \mid T / F \mid T \text{ mod } F \mid F\\
+                N &\to \neg F \mid \oplus F \mid F\\
+                F &\to F \land S \mid S\\
+                S &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false }
+            .\end{align*}
+            For a rule of the form
             \begin{align*}
                 A &\to A\alpha_{1} \ \mid \ A\alpha_{2} \ \mid \ \cdots \ \mid \ \beta
             \end{align*}
@@ -997,6 +1005,15 @@
                 S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var}
             .\end{align*}
             Notice that the rules that are not left recursive can remain the same.
+        \item \textbf{Left-factoring}: Left-recursion elimination is a technique used to transform a grammar into one more suitable for LL(1) parsing. However, it is not always enough. Consider 
+            \begin{align*}
+                A &\to \alpha\beta_{1} \mid \alpha\beta_{2} 
+            .\end{align*}
+            Both alternatives begin with the same prefix $\alpha$. A predictive parser looking only at the next token cannot choose between them yet, because both look the same at the start. So we factor out the common prefix:
+            \begin{align*}
+                A &\to \alpha A^{\prime} \\
+                A^{\prime} &\to \beta_{1} \mid \beta_{2}
+            .\end{align*}
         \item \textbf{LL(1) grammars}: A context-free grammar is called LL(1) if it can be parsed by a deterministic LL(1) parser. That is, using left-to-right scanning, leftmost derivation, and one token of lookahead with no backtracking. Thus, LL(1) is a subclass of CFGs.
             \bigbreak \noindent 
             If a CFG is LL(1), there exists a deterministic predictive parser that, at every step, can choose the correct production using only the next input symbol. No guessing. No backtracking. No multiple possibilities.
@@ -1598,6 +1615,152 @@ print(expr1, expr2,...);
             J &\to (F) \mid \text{int} 
         .\end{align*}
         Although it's best to maintain strict separation between parsing and semantic analyzing. Let grammars / parsing shape the language, and the semantic analyzer check if statements that assume that shape make sense.
+    \item \textbf{LL(1) grammar for logical, relational, and arithmetic}: Recall that we already defined the LL(1) grammar for arithmetic somewhere above. The grammar 
+        \begin{align*}
+            A &\to A \text{ or } B \mid B\\
+            B &\to B \text{ and } C \mid C\\
+            C &\to\; \sim C \mid D \\
+            D &\to E == E \mid E \ne E \mid G\\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E \\
+            E &\to E + T \mid E - T \mid T\\
+            T &\to T * F \mid T / F \mid T \text{ mod } F \mid F\\
+            N &\to \neg F \mid \oplus F \mid F\\
+            F &\to F \land S \mid S\\
+            S &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false } \mid \text{string} \mid \text{var}
+        \end{align*}
+        is simply an extension of that grammar. The transform 
+        \begin{align*}
+            A &\to A\alpha_{1} \mid \cdots \mid A\alpha_{2} \mid \beta \equiv A \to \beta A^{\prime},\; A^{\prime} \to \alpha_{1}A^{\prime} \mid \cdots \mid \alpha_{k}A^{\prime} \mid \epsilon
+        \end{align*}
+        on productions $E$ through $S$ yielded
+        \begin{align*}
+            E &\to TE^{\prime} \\
+            E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+            T &\to NT^{\prime} \\
+            T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+            N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
+            F &\to SF^{\prime} \\
+            F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+            S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
+        .\end{align*}
+        Now, we must perform that same transform on the upper half
+        \begin{align*}
+            A &\to A \text{ or } B \mid B\\
+            B &\to B \text{ and } C \mid C\\
+            C &\to\; \sim C \mid D \\
+            D &\to E == E \mid E \ne E \mid G\\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E 
+        ,\end{align*}
+        as well as find its first + follow sets. We have 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to E == E \mid E \ne E \mid G \\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
+        .\end{align*}
+        Notice however that after left-recursion elimination, the upper-half grammar would not be LL(1), since multiple productions begin with the same non-terminal ($E$). Thus, we left-factor. The productions
+        \begin{align*}
+            D &\to E == E \mid E \ne E \mid G  \\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
+        \end{align*}
+        Are left-factored to
+        \begin{align*}
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid G\\
+            G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        \bigbreak \noindent 
+        Thus, we have
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid G\\
+            G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        Which, can be simplified to 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        Thus, the full grammar is 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon\\
+            E &\to TE^{\prime} \\
+            E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+            T &\to NT^{\prime} \\
+            T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+            N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
+            F &\to SF^{\prime} \\
+            F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+            S &\to (A) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
+        ,\end{align*}
+        which is LL(1). Recall that the first and follow sets for the arithmetic part were
+         \begin{align*}
+                \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
+                \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \text{FIRST}(S) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
+                \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
+                \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
+            .\end{align*}
+            \begin{align*}
+                \text{FOLLOW}(E) &= \{\$, )\}\\
+                \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) = \{\$, )\}\\
+                \text{FOLLOW}(T) &= \text{FIRST}(E^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(E) = \{+,-,\$, )\}\\
+                \text{FOLLOW}(T^{\prime}) &= \text{FOLLOW}(T) = \{+,-,\$,)\}\\
+                \text{FOLLOW}(N) &= \text{FIRST}(T^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(T^{\prime}) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F) &= \text{FOLLOW}(N) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F^{\prime}) &= \text{FOLLOW}(F) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(S) &= \text{FIRST}(F^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(F) = \{\land, *, /, \text{MOD}, +, -, \$, )\}\\
+            .\end{align*}
+            With sequences
+            \begin{align*}
+                \text{FIRST}(\varepsilon) &= \{\varepsilon\}\\
+                \text{FIRST}(TE^{\prime}) &= \{+,-,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(+TE^{\prime}) &= \{+\}\\
+                \text{FIRST}(-TE^{\prime}) &= \{-\}\\
+                \text{FIRST}(NT^{\prime}) &= \{+,-,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(*NT^{\prime}) &= \{*\}\\
+                \text{FIRST}(/NT^{\prime}) &= \{/\}\\
+                \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
+                \text{FIRST}(\oplus N) &= \{\oplus\}\\
+                \text{FIRST}(\neg N) &= \{\neg\} \\
+                \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
+                \text{FIRST}((E)) &= \{(\}\\
+                \text{FIRST}(\text{int}) &= \{\text{int}\}\\
+                \text{FIRST}(\text{var}) &= \{\text{var}\} \\
+                \text{FIRST}(\text{true}) &= \{\text{true}\} \\
+                \text{FIRST}(\text{false}) &= \{\text{false}\} \\
+                \text{FIRST}(\text{string}) &= \{\text{string}\}
+            .\end{align*}
+            Observe that we add booleans and strings. The set of terminals is now 
+            \begin{align*}
+                V_{T} = \{\text{or}, \text{and}, \sim, ==, \ne, <, \leq, >, \geq, \oplus, \neg, +, -, *, /, \\
+                    \text{MOD}, \land, (, ), \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
+            .\end{align*}
+
+
 
 
 
