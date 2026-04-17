@@ -1,6 +1,6 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 4
 
 #include "tree_eval.h"
 #include "ast_node.h"
@@ -94,6 +94,7 @@ static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
     // RUN CODE FOR SUPER FAST EXPONENTIATION
     else if (p->token.id == TOKEN_EXP) {
         IA32e_fast_exp();
+        IA32e_pushr32(REGISTER::EAX);
         ++pushed;
     }
 
@@ -183,13 +184,16 @@ void update_var(AST_NODE* root) {
     
     // After this call, address of symbol is in r10
     IA32e_get_int_for_assign(symbol->location.int_table_offset);
+    
+    // Fast exp uses R10, evaluate_expr could clobber it 
+    IA32e_mov_rr64(REGISTER::R15, REGISTER::R10);
     //
     // // Now, evaluate the expression given by root and move that value to the address in r10
     //
     // // Result in eax
     evaluate_expr(ast_expr);
 
-    IA32e_mov_mr64_nodisp(REGISTER::R10, REGISTER::EAX);
+    IA32e_mov_mr64_nodisp(REGISTER::R15, REGISTER::EAX);
 }
 
 void process_read(AST_NODE* root) {

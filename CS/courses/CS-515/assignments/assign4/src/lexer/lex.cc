@@ -1,6 +1,6 @@
 // Nate Warner z2004109
 // CS 490D/515
-// Assignment 1
+// Assignment 4
 // lex.cc
 
 #include "token.h"

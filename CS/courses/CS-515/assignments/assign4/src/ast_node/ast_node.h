@@ -1,6 +1,6 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 4
 #ifndef NCC_ASTNODE_H
 #define NCC_ASTNODE_H
 
@@ -114,6 +114,32 @@ struct AST_NODE {
                 "UNEG", "declare", "assign", "print", 
                 "read", "Statement block", "INT", "VAR", "STR"
         }[(int)node_type];
+    }
+
+    bool operator_is_arithmetic() {
+        return node_type == NODE_TYPE::ADD ||
+            node_type == NODE_TYPE::SUB ||
+            node_type == NODE_TYPE::UPLUS ||
+            node_type == NODE_TYPE::UNEG ||
+            node_type == NODE_TYPE::MULT ||
+            node_type == NODE_TYPE::DIV ||
+            node_type == NODE_TYPE::MOD ||
+            node_type == NODE_TYPE::EXP;
+    }
+
+    bool operator_is_relational() {
+        return node_type == NODE_TYPE::LESS ||
+            node_type == NODE_TYPE::LEQ ||
+            node_type == NODE_TYPE::GREATER ||
+            node_type == NODE_TYPE::GEQ ||
+            node_type == NODE_TYPE::EQ ||
+            node_type == NODE_TYPE::NEQ;
+    }
+
+    bool operator_is_logical() {
+        return node_type == NODE_TYPE::NOT ||
+            node_type == NODE_TYPE::AND ||
+            node_type == NODE_TYPE::OR;
     }
 };
 

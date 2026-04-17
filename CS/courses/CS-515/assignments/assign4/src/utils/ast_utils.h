@@ -1,13 +1,15 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 4
 
 #ifndef NCC_AST_UTILS_H
 #define NCC_AST_UTILS_H
 
 #include "ast_node.h"
 
-void syntax_error();
+struct Error;
+
+void syntax_error(Error& err);
 bool is_st_valid(AST_NODE* root, bool accept_empty);
 
 // Parse tree to ast

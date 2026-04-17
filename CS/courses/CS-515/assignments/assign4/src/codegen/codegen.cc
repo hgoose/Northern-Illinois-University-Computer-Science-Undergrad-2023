@@ -1,6 +1,6 @@
 // Nate warner 
 // CS 515
-// Assignment 3
+// Assignment 4
 
 #include <cstdlib>
 #include <sys/mman.h>
@@ -306,8 +306,6 @@ void IA32e_fast_exp() {
     load_byte(0x41); // MOV EAX, R8  // move result (e = a^b) to EAX
     load_byte(0x8b);
     load_byte(0xc0);
-
-    IA32e_pushr32(REGISTER::EAX);
 }
 
 // 31 /r XOR r/m32, r32

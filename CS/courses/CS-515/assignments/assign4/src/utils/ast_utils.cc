@@ -1,6 +1,6 @@
 // Nate warner 
 // CS 515
-// Assignment 2
+// Assignment 4
 
 #include "ast_utils.h"
 #include "ast_node.h"
@@ -12,7 +12,6 @@
 #include <stack>
 #include <iostream>
 #include <algorithm>
-using std::cout;
 
 // Functions local to this unit
 static void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals);
@@ -20,8 +19,7 @@ static void r_ast_out(AST_NODE* node, int depth);
 static const char* op_name(int id);
 
 // Outputs syntax error
-void syntax_error() {
-    Error err;
+void syntax_error(Error& err) {
     err.error = NCC_SYNTAX_ERROR;
     err.line = next_token.line_no;
     err.col = next_token.col_no;
@@ -43,17 +41,8 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
         AST_NODE* curr = terminals.front();
         terminals.pop();
 
-        // Not an operator, although if integer would also work
-        if (curr->token.id != TOKEN_PLUS
-            && curr->token.id != TOKEN_MINUS
-            && curr->token.id != TOKEN_MULT
-            && curr->token.id != TOKEN_DIV
-            && curr->token.id != TOKEN_MOD
-            && curr->token.id != TOKEN_EXP
-            && curr->token.id != TOKEN_UNEG
-            && curr->token.id != TOKEN_UPLUS
-        ) {
-            // Add to the stack
+        if (curr->is_operator == !OPERATOR) {
+            // Add operand to the stack
             children.push(curr); 
         } 
         // Unary operator, check for a single child of the correct type
@@ -72,9 +61,11 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             children.pop();
             children.push(curr);
         }
-        // Check that for a binary operator, we have two children available and they 
-        // are of the correct type (int4)
-        else {
+        // Check that for a binary arithmetic operator, we have two children available and they 
+        // are of the correct type (int4).
+        // 
+        // A a A -> A
+        else if (curr->operator_is_arithmetic()){
             if (children.empty()) {
                 return false;
             }
@@ -96,6 +87,14 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             }
 
             children.push(curr);
+        } 
+        // A r A -> L
+        else if (curr->operator_is_relational()) {
+
+        }
+        // (L | (A r A)) \ell (L | (A r A)) -> L
+        else if (curr->operator_is_logical()) {
+
         }
     }
 
@@ -112,6 +111,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
         gen_queue(it, terminals);
     });
 
+    // Set of terminals
     if (p->token.id == TOKEN_INTEGER 
         || p->token.id == TOKEN_STRING
         || p->token.id == TOKEN_IDENT
@@ -143,7 +143,9 @@ AST_NODE* pttoast(AST_NODE* root) {
 
     // Can't make a valid AST for the whole tree for whatever reason, 
     // through out the tree
-    if (!is_st_valid(root, ACCEPT_EMPTY)) return nullptr;
+    if (!is_st_valid(root, ACCEPT_EMPTY)) {
+        return nullptr;
+    }
 
     // This can proceed with no errors thanks to the call above
     while (!terminals.empty()) {
@@ -232,7 +234,7 @@ TYPE assign_types(AST_NODE* root) {
 void ast_preorder(AST_NODE* root) {
     if (!root) return;
 
-    cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
+    std::cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
     std::for_each(root->children.begin(), root->children.end(), [](auto& it) -> void {
         ast_preorder(it);
     });
@@ -242,7 +244,7 @@ void ast_inorder(AST_NODE* root) {
     if (!root) return;
 
     std::for_each(root->children.begin(), root->children.end(), [&root](auto& it) -> void {
-        cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
+            std::cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
         ast_inorder(it);
     });
 
@@ -253,7 +255,7 @@ void ast_postorder(AST_NODE* root) {
     std::for_each(root->children.begin(), root->children.end(), [](auto& it) -> void {
         ast_postorder(it);
     });
-    cout << (root->token.id != -1 ? root->token.lexeme : "Empty") << ", ";
+    std::cout << (root->token.id != -1 ? root->token.lexeme : "Empty") << ", ";
 
 }
 
@@ -320,6 +322,6 @@ void r_ast_out(AST_NODE* node, int depth) {
 void ast_out(AST_NODE* root) {
     if (!root) return;
 
-    cout << "Code tree:\n";
+    std::cout << "Code tree:\n";
     r_ast_out(root, 0);
 }

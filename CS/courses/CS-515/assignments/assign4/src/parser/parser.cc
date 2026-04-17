@@ -128,7 +128,12 @@ static bool invalid_lookahead() {
         next_token.id != TOKEN_RPAREN && next_token.id != TOKEN_NULL && 
         next_token.id != TOKEN_EOF && next_token.id != TOKEN_IDENT &&
         next_token.id != TOKEN_COMMA && next_token.id != TOKEN_SEMICOLON &&
-        next_token.id != TOKEN_ASSIGN && next_token.id != TOKEN_STRING;
+        next_token.id != TOKEN_ASSIGN && next_token.id != TOKEN_STRING &&
+        next_token.id != TOKEN_OR && next_token.id != TOKEN_AND && 
+        next_token.id != TOKEN_NOT && next_token.id != TOKEN_LESS &&
+        next_token.id != TOKEN_LESS_EQ && next_token.id != TOKEN_GREATER &&
+        next_token.id != TOKEN_GREATER_EQ && next_token.id != TOKEN_EQUAL &&
+        next_token.id != TOKEN_NOT_EQUAL; 
 }
 
 // Initialize the parser. 
@@ -229,7 +234,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -237,7 +242,7 @@ AST_NODE* parse_print() {
     if (next_token.id != TOKEN_LPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
     
@@ -245,7 +250,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -253,7 +258,7 @@ AST_NODE* parse_print() {
     if (next_token.id == TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -261,11 +266,13 @@ AST_NODE* parse_print() {
     AST_NODE* expr = E(expr_error);
     AST_NODE* ast_expr = pttoast(expr);
 
+    free_tree(expr);
+
     // Toss out the print statement if the expression does not form a 
     // syntactically and semantically valid AST
     if (!ast_expr) {
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -275,7 +282,7 @@ AST_NODE* parse_print() {
         lex_error = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_error)) {
             goto_next_semicolon();
-            delete print_root;
+            free_tree(print_root);
             return nullptr;
         }
 
@@ -283,7 +290,7 @@ AST_NODE* parse_print() {
         ast_expr = pttoast(expr);
         if (!ast_expr) {
             goto_next_semicolon();
-            delete print_root;
+            free_tree(print_root);
             return nullptr;
         }
         print_root->add_child(ast_expr);
@@ -293,7 +300,7 @@ AST_NODE* parse_print() {
     if (next_token.id != TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -301,7 +308,7 @@ AST_NODE* parse_print() {
     lex_error = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_error)) {
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -309,7 +316,7 @@ AST_NODE* parse_print() {
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete print_root;
+        free_tree(print_root);
         return nullptr;
     }
 
@@ -327,28 +334,28 @@ AST_NODE* parse_read() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete read_root;
+        free_tree(read_root);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_LPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete read_root;
+        free_tree(read_root);
         return nullptr;
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete read_root;
+        free_tree(read_root);
         return nullptr;
     }
 
     if (next_token.id == TOKEN_RPAREN || next_token.id != TOKEN_IDENT) {
         set_print_token_error(Error{}, NCC_EXPECTED_VAR);
         goto_next_semicolon();
-        delete read_root;
+        free_tree(read_root);
         return nullptr;
     }
 
@@ -361,32 +368,32 @@ AST_NODE* parse_read() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete read_root;
-        delete var_node;
+        free_tree(read_root);
+        free_tree(var_node);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete read_root;
-        delete var_node;
+        free_tree(read_root);
+        free_tree(var_node);
         return nullptr;
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete read_root;
-        delete var_node;
+        free_tree(read_root);
+        free_tree(var_node);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete read_root;
-        delete var_node;
+        free_tree(read_root);
+        free_tree(var_node);
         return nullptr;
     }
 
@@ -403,7 +410,7 @@ AST_NODE* parse_decl_int4() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete declare_root;
+        free_tree(declare_root);
         return nullptr;
     }
 
@@ -411,7 +418,7 @@ AST_NODE* parse_decl_int4() {
     if (next_token.id != TOKEN_IDENT) {
         set_print_token_error(Error{}, NCC_INVALID_IDENTIFIER);
         goto_next_semicolon();
-        delete declare_root;
+        free_tree(declare_root);
         return nullptr;
     }
 
@@ -419,7 +426,7 @@ AST_NODE* parse_decl_int4() {
     if (is_reserved(next_token)) {
         set_print_token_error(Error{}, NCC_VARIABLE_NAME_RESERVED);
         goto_next_semicolon();
-        delete declare_root;
+        free_tree(declare_root);
         return nullptr;
     }
 
@@ -428,7 +435,7 @@ AST_NODE* parse_decl_int4() {
     if (!entry) {
         set_print_token_error(Error{}, NCC_SYMBOL_ALREADY_EXISTS);
         goto_next_semicolon();
-        delete declare_root;
+        free_tree(declare_root);
         return nullptr; 
     }
 
@@ -441,16 +448,16 @@ AST_NODE* parse_decl_int4() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete declare_root;
-        delete var;
+        free_tree(declare_root);
+        free_tree(var);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete declare_root;
-        delete var;
+        free_tree(declare_root);
+        free_tree(var);
         return nullptr;
     }
 
@@ -473,38 +480,41 @@ AST_NODE* parse_assign() {
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete assign_root;
+        free_tree(assign_root);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_ASSIGN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete assign_root;
+        free_tree(assign_root);
         return nullptr;
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
         goto_next_semicolon();
-        delete assign_root;
+        free_tree(assign_root);
         return nullptr;
     }
 
     AST_NODE* expr = E(expr_err);
     AST_NODE* ast_expr = pttoast(expr);
 
+    free_tree(expr);
+
     if (!ast_expr) {
         goto_next_semicolon();
-        delete assign_root;
+        free_tree(assign_root);
         return nullptr;
     }
 
     assign_root->add_children(ast_expr);
 
     if (next_token.id != TOKEN_SEMICOLON) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
         goto_next_semicolon();
-        delete assign_root;
+        free_tree(assign_root);
         return nullptr;
     }
 
@@ -527,7 +537,7 @@ AST_NODE* A() {
         left = B();
         right = AP();
     } else {
-        delete here;
+        free_tree(here);
         return nullptr;
     }
 
@@ -537,7 +547,7 @@ AST_NODE* A() {
 }
 
 AST_NODE* AP() {
-    AST_NODE* here;
+    AST_NODE* here{};
     AST_NODE* left{}, *right{};
 
     // FIRST(or BA')
@@ -547,13 +557,13 @@ AST_NODE* AP() {
         left = B();
         right = AP();
     } 
-    // \epsilon \in FIRST(\varepsilon), so check if t (current token) \in FOLLOW(AP)
-    else {
-             
+    // \epsilon \in FIRST(\varepsilon), so check if next_token \in FOLLOW(AP). 
+    else if (next_token.id == TOKEN_RPAREN){ 
     }
 
 
 
+    here->add_children(left, right);
     return here;
 }
 
@@ -595,9 +605,11 @@ AST_NODE* E(Error& err) {
             Token op = next_token;
 
             // Get next token
+            Error tmp_err = get_token(next_token);
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token))
+            	handle_lex_error(tmp_err)
             ) {
+                err = tmp_err;
             	return nullptr;
             }
 
@@ -616,30 +628,13 @@ AST_NODE* E(Error& err) {
                 node->node_type = NODE_TYPE::SUB;
             }
 
-            // Attach left and right only if they make valid ASTs
-            bool left_valid{}, right_valid{};
-            if (is_st_valid(left, ACCEPT_EMPTY)) {
-                node->add_child(left);
-                left_valid = true;
-            } else free_tree(left);
-
-            if (is_st_valid(rhs, NO_ACCEPT_EMPTY)) {
-                node->add_child(rhs);
-                right_valid = true;
-            } else free_tree(rhs);
-
-            // Current node is an operator that requires two operands, 
-            // so left and right must be valid
-            if (!left_valid || !right_valid) {
-                // Don't worry about syntax errors at this level, bottom levels handle them
-                
-                // If we don't have two valid operands, remove operator
-                node->clear();
-            }
+            node->add_children(left, rhs);
 
             left = node;
         }
         return left;
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
     }
 
     return nullptr;
@@ -660,9 +655,12 @@ AST_NODE* T(Error& err) {
                next_token.id == TOKEN_DIV  ||
                next_token.id == TOKEN_MOD) {
             Token op = next_token;
+
+            Error tmp_err = get_token(next_token);
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token))
+            	handle_lex_error(tmp_err)
             ) {
+                err = tmp_err;
             	return nullptr;
             }
 
@@ -680,24 +678,13 @@ AST_NODE* T(Error& err) {
                 node->node_type = NODE_TYPE::MOD;
             }
 
-            bool left_valid{}, right_valid{};
-            if (is_st_valid(left, ACCEPT_EMPTY)) {
-                node->add_child(left);
-                left_valid = true;
-            } else free_tree(left);
-
-            if (is_st_valid(rhs, NO_ACCEPT_EMPTY)) {
-                node->add_child(rhs);
-                right_valid = true;
-            } else free_tree(rhs);
-
-            if (!left_valid || !right_valid) {
-                node->clear();
-            }
+            node->add_children(left, rhs);
 
             left = node;
         }
         return left;
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
     }
 
     return nullptr;
@@ -722,10 +709,12 @@ AST_NODE* N(Error& err) {
             here->node_type = NODE_TYPE::UNEG;
         }
 
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token))
+        	handle_lex_error(tmp_error)
         ) {
-            delete here;
+            err = tmp_error;
+            free_tree(here);
         	return nullptr;
         }
     
@@ -738,21 +727,13 @@ AST_NODE* N(Error& err) {
             || next_token.id == TOKEN_IDENT
     ) {
         left = F(err);
-    } 
-
-    // Check if left tree is valid, must have at least one terminal
-    bool left_valid{};
-    if (is_st_valid(left, NO_ACCEPT_EMPTY)) {
-        here->add_child(left);
-        left_valid = true;
-    } else free_tree(left);
-
-    // If the left subtree is not valid, this operator is not valid
-    if (!left_valid) {
-        syntax_error();
-        here->clear();
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        free_tree(here);
+        return nullptr;
     }
 
+    here->add_child(left);
     return here;
 }
 
@@ -769,12 +750,13 @@ AST_NODE* F(Error& err) {
     ) {
         left = S(err);
         right = FP(err);
-    } 
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        free_tree(here);
+        return nullptr;
+    }
 
-    // This level is not concerned with verification of left and right subtrees
-    here->add_child(left);
-    here->add_child(right);
-
+    here->add_children(left, right);
     return here;
 }
 
@@ -789,10 +771,12 @@ AST_NODE* FP(Error& err) {
         here->node_type = NODE_TYPE::EXP;
         here->is_operator = true;
 
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token))
+        	handle_lex_error(tmp_error)
         ) {
-            delete here;
+            err = tmp_error;
+            free_tree(here);
         	return nullptr;
         }
 
@@ -802,36 +786,31 @@ AST_NODE* FP(Error& err) {
     } 
     // F' -> \varepsilon nullable, so consider FOLLOW(F') = FOLLOW(N). If
     // t \in FOLLOW(F'), annihilate this node (take F' \to \varepsilon)
-    else if (next_token.id == TOKEN_MULT
-            || next_token.id == TOKEN_DIV
-            || next_token.id == TOKEN_MOD
-            || next_token.id == TOKEN_PLUS
-            || next_token.id == TOKEN_MINUS
-            || next_token.id == TOKEN_EOF
-            || next_token.id == TOKEN_RPAREN
-    ) {
-        delete here;
+    else {
+        free_tree(here);
         return nullptr;
-    } 
+    }
+    // else if (next_token.id == TOKEN_MULT
+    //         || next_token.id == TOKEN_DIV
+    //         || next_token.id == TOKEN_MOD
+    //         || next_token.id == TOKEN_PLUS
+    //         || next_token.id == TOKEN_MINUS
+    //         || next_token.id == TOKEN_EOF
+    //         || next_token.id == TOKEN_RPAREN
+    // ) {
+    //     free_tree(here);
+    //     return nullptr;
+    // } else {
+    //     free_tree(here);
+    //     return nullptr;
+    // }
 
-    // Determine whether left and right subtrees are valid
-    bool left_valid{}, right_valid{};
-    if (is_st_valid(left, NO_ACCEPT_EMPTY)) {
-        here->add_child(left);
-        left_valid = true;
-    } else free_tree(left);
-
-    // We are not concerned with right subtree validation at this level
-    here->add_child(right);
-
-    // If right operand is missing for the exponentiation (left subtree), 
-    // throw out operator (exp)
-    if (!left_valid) here->clear();
-
+    here->add_children(left, right);
     return here;
 }
 
 AST_NODE* S(Error& err) {
+
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{};
 
@@ -843,19 +822,23 @@ AST_NODE* S(Error& err) {
         here->node_type = NODE_TYPE::INT;
         here->data_type = TYPE::INT4;
 
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token))
+        	handle_lex_error(tmp_error)
         ) {
-            delete here;
+            err = tmp_error;
+            free_tree(here);
         	return nullptr;
         }
     // Token is LPAREN, so we choose S -> (E), make sure to eat the parenthesis
     } else if (next_token.id == TOKEN_LPAREN) {
         // Eat lparen
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token))
+        	handle_lex_error(tmp_error)
         ) {
-            delete here;
+            err = tmp_error;
+            free_tree(here);
         	return nullptr;
         }
 
@@ -871,10 +854,12 @@ AST_NODE* S(Error& err) {
         } 
         // Otherwise eat the )
         else {
+            Error tmp_error = get_token(next_token);
             if (invalid_lookahead() || 
-            	handle_lex_error(get_token(next_token))
+            	handle_lex_error(tmp_error)
             ) {
-                delete here;
+                err = tmp_error;
+                free_tree(here);
             	return nullptr;
             }
         }
@@ -887,16 +872,18 @@ AST_NODE* S(Error& err) {
 
         // Attempted to overrun the internal string table
         if (entry.vi == INVALID) {
-            delete here;
+            free_tree(here);
             return nullptr;
         }
 
         here->entry = entry;
 
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() || 
-        	handle_lex_error(get_token(next_token))
+        	handle_lex_error(tmp_error)
         ) {
-            delete here;
+            err = tmp_error;
+            free_tree(here);
         	return nullptr;
         }
     } 
@@ -910,25 +897,26 @@ AST_NODE* S(Error& err) {
 
         if (!syminfo) {
             set_print_token_error(Error{}, NCC_UNKNOWN_VARIABLE);
-            delete here;
+            free_tree(here);
             return nullptr;
         }
         here->syminfo = syminfo;
         here->data_type = syminfo->data_type;
 
+        Error tmp_error = get_token(next_token);
         if (invalid_lookahead() ||
-            handle_lex_error(get_token(next_token))
+            handle_lex_error(tmp_error)
         ){
-            delete here;
+            err = tmp_error;
+            free_tree(here);
             return nullptr;
         }
+    } else {
+        free_tree(here);
+        return nullptr;
     }
 
-    // Only attach S->(E) if that path is validated, otherwise delete the subtree
-    if (is_st_valid(left, ACCEPT_EMPTY)) {
-        here->add_child(left);
-    } else free_tree(left);
-
+    here->add_child(left);
     return here;
 }
 
