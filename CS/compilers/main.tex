@@ -1615,224 +1615,231 @@ print(expr1, expr2,...);
             J &\to (F) \mid \text{int} 
         .\end{align*}
         Although it's best to maintain strict separation between parsing and semantic analyzing. Let grammars / parsing shape the language, and the semantic analyzer check if statements that assume that shape make sense.
-    % \item \textbf{LL(1) grammar for logical, relational, and arithmetic}: Recall that we already defined the LL(1) grammar for arithmetic somewhere above. The grammar 
-    %     \begin{align*}
-    %         A &\to A \text{ or } B \mid B\\
-    %         B &\to B \text{ and } C \mid C\\
-    %         C &\to\; \sim C \mid D \\
-    %         D &\to E == E \mid E \ne E \mid G\\
-    %         G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E \\
-    %         E &\to E + T \mid E - T \mid T\\
-    %         T &\to T * F \mid T / F \mid T \text{ mod } F \mid F\\
-    %         N &\to \neg F \mid \oplus F \mid F\\
-    %         F &\to F \land S \mid S\\
-    %         S &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false } \mid \text{string} \mid \text{var}
-    %     \end{align*}
-    %     is simply an extension of that grammar. The transform 
-    %     \begin{align*}
-    %         A &\to A\alpha_{1} \mid \cdots \mid A\alpha_{2} \mid \beta \equiv A \to \beta A^{\prime},\; A^{\prime} \to \alpha_{1}A^{\prime} \mid \cdots \mid \alpha_{k}A^{\prime} \mid \epsilon
-    %     \end{align*}
-    %     on productions $E$ through $S$ yielded
-    %     \begin{align*}
-    %         E &\to TE^{\prime} \\
-    %         E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
-    %         T &\to NT^{\prime} \\
-    %         T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
-    %         N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
-    %         F &\to SF^{\prime} \\
-    %         F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
-    %         S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
-    %     .\end{align*}
-    %     Now, we must perform that same transform on the upper half
-    %     \begin{align*}
-    %         A &\to A \text{ or } B \mid B\\
-    %         B &\to B \text{ and } C \mid C\\
-    %         C &\to\; \sim C \mid D \\
-    %         D &\to E == E \mid E \ne E \mid G\\
-    %         G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E 
-    %     ,\end{align*}
-    %     as well as find its first + follow sets. We have 
-    %     \begin{align*}
-    %         A &\to BA^{\prime} \\
-    %         A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
-    %         B &\to CB^{\prime} \\
-    %         B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
-    %         C &\to\; \sim C \mid D\\
-    %         D &\to E == E \mid E \ne E \mid G \\
-    %         G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
-    %     .\end{align*}
-    %     Notice however that after left-recursion elimination, the upper-half grammar would not be LL(1), since multiple productions begin with the same non-terminal ($E$). Thus, we left-factor. The productions
-    %     \begin{align*}
-    %         D &\to E == E \mid E \ne E \mid G  \\
-    %         G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
-    %     \end{align*}
-    %     Are left-factored to
-    %     \begin{align*}
-    %         D &\to ED^{\prime} \\
-    %         D^{\prime} &\to ==E \mid \ne E \mid G\\
-    %         G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
-    %     .\end{align*}
-    %     \bigbreak \noindent 
-    %     Thus, we have
-    %     \begin{align*}
-    %         A &\to BA^{\prime} \\
-    %         A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
-    %         B &\to CB^{\prime} \\
-    %         B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
-    %         C &\to\; \sim C \mid D\\
-    %         D &\to ED^{\prime} \\
-    %         D^{\prime} &\to ==E \mid \ne E \mid G\\
-    %         G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
-    %     .\end{align*}
-    %     Which, can be simplified to 
-    %     \begin{align*}
-    %         A &\to BA^{\prime} \\
-    %         A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
-    %         B &\to CB^{\prime} \\
-    %         B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
-    %         C &\to\; \sim C \mid D\\
-    %         D &\to ED^{\prime} \\
-    %         D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon
-    %     .\end{align*}
-    %     Thus, the full grammar is 
-    %     \begin{align*}
-    %         A &\to BA^{\prime} \\
-    %         A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
-    %         B &\to CB^{\prime} \\
-    %         B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
-    %         C &\to\; \sim C \mid D\\
-    %         D &\to ED^{\prime} \\
-    %         D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon\\
-    %         E &\to TE^{\prime} \\
-    %         E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
-    %         T &\to NT^{\prime} \\
-    %         T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
-    %         N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
-    %         F &\to SF^{\prime} \\
-    %         F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
-    %         S &\to (A) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
-    %     ,\end{align*}
-    %     which is LL(1). Recall that the first and follow sets for the arithmetic part were
-    %      \begin{align*}
-    %             \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
-    %             \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \left\{\oplus, \neg\right\} \cup \text{FIRST}(S) \\
-    %                             &= \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
-    %             \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
-    %             \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
-    %         .\end{align*}
-    %         \begin{align*}
-    %             \text{FOLLOW}(E) &= \{\$, )\}\\
-    %             \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) = \{\$, )\}\\
-    %             \text{FOLLOW}(T) &= \text{FIRST}(E^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(E) = \{+,-,\$, )\}\\
-    %             \text{FOLLOW}(T^{\prime}) &= \text{FOLLOW}(T) = \{+,-,\$,)\}\\
-    %             \text{FOLLOW}(N) &= \text{FIRST}(T^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(T^{\prime}) = \{*, /, \text{MOD}, +, -, \$, )\}\\
-    %             \text{FOLLOW}(F) &= \text{FOLLOW}(N) = \{*, /, \text{MOD}, +, -, \$, )\}\\
-    %             \text{FOLLOW}(F^{\prime}) &= \text{FOLLOW}(F) = \{*, /, \text{MOD}, +, -, \$, )\}\\
-    %             \text{FOLLOW}(S) &= \text{FIRST}(F^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(F) = \{\land, *, /, \text{MOD}, +, -, \$, )\}
-    %         .\end{align*}
-    %         With sequences
-    %         \begin{align*}
-    %             \text{FIRST}(\varepsilon) &= \{\varepsilon\}\\
-    %             \text{FIRST}(TE^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(+TE^{\prime}) &= \{+\}\\
-    %             \text{FIRST}(-TE^{\prime}) &= \{-\}\\
-    %             \text{FIRST}(NT^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(*NT^{\prime}) &= \{*\}\\
-    %             \text{FIRST}(/NT^{\prime}) &= \{/\}\\
-    %             \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
-    %             \text{FIRST}(\oplus N) &= \{\oplus\}\\
-    %             \text{FIRST}(\neg N) &= \{\neg\} \\
-    %             \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
-    %             \text{FIRST}((E)) &= \{(\}\\
-    %             \text{FIRST}(\text{int}) &= \{\text{int}\}\\
-    %             \text{FIRST}(\text{var}) &= \{\text{var}\} \\
-    %             \text{FIRST}(\text{true}) &= \{\text{true}\} \\
-    %             \text{FIRST}(\text{false}) &= \{\text{false}\} \\
-    %             \text{FIRST}(\text{string}) &= \{\text{string}\}
-    %         .\end{align*}
-    %         Observe that we add booleans and strings. The set of terminals is now 
-    %         \begin{align*}
-    %             V_{T} = \{\text{or}, \text{and}, \sim, ==, \ne, <, \leq, >, \geq, \oplus, \neg, +, -, *, /, \\
-    %                 \text{MOD}, \land, (, ), \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
-    %         .\end{align*}
-    %         The first sets for the full grammar are
-    %         \begin{align*}
-    %             \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
-    %             \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \left\{\oplus, \neg\right\} \cup \text{FIRST}(S) \\
-    %                             &= \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
-    %             \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
-    %             \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(D^{\prime}) &= \left\{==,\ne,<, \leq,>, \geq,\varepsilon\right\} \\
-    %             \text{FIRST}(D) &= \text{FIRST}(E) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(C) &= \left\{\sim\right\} \cup \text{FIRST}(D) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(B^{\prime}) &= \left\{\text{and}, \varepsilon\right\} \\
-    %             \text{FIRST}(B) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(A^{\prime}) &= \left\{\text{or}, \varepsilon\right\} \\
-    %             \text{FIRST}(A) &= \text{FIRST}(B) =\{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} 
-    %         .\end{align*}
-    %         With follow sets
-    %         \begin{align*}
-    %             \text{FOLLOW}(A) &= \left\{), \$\right\} \\
-    %             \text{FOLLOW}(A^{\prime}) &= \text{FOLLOW}(A) = \left\{), \$\right\} \\
-    %             \text{FOLLOW}(B) &= \text{FIRST}(A^{\prime}) - \left\{\varepsilon\right\} \cup \text{FOLLOW}(A) = \left\{\text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(B^{\prime}) &= \text{FOLLOW}(B) = \left\{\text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(C) &= \text{FIRST}(B^{\prime}) - \left\{\varepsilon\right\}\cup \text{FOLLOW}(B^{\prime}) \cup \text{FOLLOW}(B) = \left\{\text{and}, \text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(D) &= \text{FOLLOW}(C) = \left\{\text{and}, \text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(D^{\prime}) &= \text{FOLLOW}(D) = \left\{\text{and}, \text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(E) &= \text{FIRST}(D^{\prime}) \cup \text{FOLLOW}(D) \cup \text{FOLLOW}(D^{\prime}) \\
-    %                              &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) \\
-    %                                       &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
-    %             \text{FOLLOW}(T) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
-    %             \text{FOLLOW}(T^{\prime}) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
-    %             \text{FOLLOW}(N) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
-    %             \text{FOLLOW}(F) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
-    %             \text{FOLLOW}(F^{\prime}) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
-    %             \text{FOLLOW}(S) &= \left\{\land, *, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} 
-    %         .\end{align*}
-    %         Now, the first sets for the sequences are
-    %         \begin{align*}
-    %             \text{FIRST}(\varepsilon) &= \left\{\varepsilon\right\}  \\
-    %             \text{FIRST}(BA^{\prime}) &= \text{FIRST}(B) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(\text{or} BA^{\prime}) &= \left\{\text{or}\right\} \\
-    %             \text{FIRST}(CB^{\prime}) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(\text{and}CB^{\prime}) &= \left\{\text{and}\right\} \\
-    %             \text{FIRST}(\sim C) &= \left\{\sim\right\} \\
-    %             \text{FIRST}(D) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(ED^{\prime}) &= \text{FIRST}(E) =  \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
-    %             \text{FIRST}(==E) &= \left\{==\right\} \\
-    %             \text{FIRST}(\ne E) &= \left\{\ne\right\} \\
-    %             \text{FIRST}(<E) &= \left\{<\right\} \\
-    %             \text{FIRST}(\leq E) &= \left\{\leq\right\} \\
-    %             \text{FIRST}(>E) &= \left\{>\right\} \\
-    %             \text{FIRST}(\geq E) &= \left\{\geq\right\} \\
-    %             \text{FIRST}(TE^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(+TE^{\prime}) &= \{+\}\\
-    %             \text{FIRST}(-TE^{\prime}) &= \{-\}\\
-    %             \text{FIRST}(NT^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(*NT^{\prime}) &= \{*\}\\
-    %             \text{FIRST}(/NT^{\prime}) &= \{/\}\\
-    %             \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
-    %             \text{FIRST}(\oplus N) &= \{\oplus\}\\
-    %             \text{FIRST}(\neg N) &= \{\neg\} \\
-    %             \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
-    %             \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
-    %             \text{FIRST}((A)) &= \{(\}\\
-    %             \text{FIRST}(\text{int}) &= \{\text{int}\}\\
-    %             \text{FIRST}(\text{var}) &= \{\text{var}\} \\
-    %             \text{FIRST}(\text{true}) &= \{\text{true}\} \\
-    %             \text{FIRST}(\text{false}) &= \{\text{false}\} \\
-    %             \text{FIRST}(\text{string}) &= \{\text{string}\}
-    %         .\end{align*}
+    \item \textbf{LL(1) grammar for logical, relational, and arithmetic}: Recall that we already defined the LL(1) grammar for arithmetic somewhere above. The grammar 
+        \begin{align*}
+            A &\to A \text{ or } B \mid B\\
+            B &\to B \text{ and } C \mid C\\
+            C &\to\; \sim C \mid D \\
+            D &\to E == E \mid E \ne E \mid G\\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E \\
+            E &\to E + T \mid E - T \mid T\\
+            T &\to T * F \mid T / F \mid T \text{ mod } F \mid F\\
+            N &\to \neg F \mid \oplus F \mid F\\
+            F &\to F \land S \mid S\\
+            S &\to (A) \mid \text{int} \mid \text{ true } \mid \text{ false } \mid \text{string} \mid \text{var}
+        \end{align*}
+        is simply an extension of that grammar. The transform 
+        \begin{align*}
+            A &\to A\alpha_{1} \mid \cdots \mid A\alpha_{2} \mid \beta \equiv A \to \beta A^{\prime},\; A^{\prime} \to \alpha_{1}A^{\prime} \mid \cdots \mid \alpha_{k}A^{\prime} \mid \epsilon
+        \end{align*}
+        on productions $E$ through $S$ yielded
+        \begin{align*}
+            E &\to TE^{\prime} \\
+            E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+            T &\to NT^{\prime} \\
+            T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+            N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
+            F &\to SF^{\prime} \\
+            F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+            S &\to (E) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
+        .\end{align*}
+        Now, we must perform that same transform on the upper half
+        \begin{align*}
+            A &\to A \text{ or } B \mid B\\
+            B &\to B \text{ and } C \mid C\\
+            C &\to\; \sim C \mid D \\
+            D &\to E == E \mid E \ne E \mid G\\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E 
+        ,\end{align*}
+        as well as find its first + follow sets. We have 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to E == E \mid E \ne E \mid G \\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
+        .\end{align*}
+        Notice however that after left-recursion elimination, the upper-half grammar would not be LL(1), since multiple productions begin with the same non-terminal ($E$). Thus, we left-factor. The productions
+        \begin{align*}
+            D &\to E == E \mid E \ne E \mid G  \\
+            G &\to E < E \mid E \leq E \mid E > E \mid E \geq E \mid E
+        \end{align*}
+        Are left-factored to
+        \begin{align*}
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid G\\
+            G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        \bigbreak \noindent 
+        Thus, we have
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid G\\
+            G&\to <E\mid \leq E \mid >E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        Which, can be simplified to 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon
+        .\end{align*}
+        Thus, the full grammar is 
+        \begin{align*}
+            A &\to BA^{\prime} \\
+            A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+            B &\to CB^{\prime} \\
+            B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+            C &\to\; \sim C \mid D\\
+            D &\to ED^{\prime} \\
+            D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon\\
+            E &\to TE^{\prime} \\
+            E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+            T &\to NT^{\prime} \\
+            T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+            N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
+            F &\to SF^{\prime} \\
+            F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+            S &\to (A) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
+        ,\end{align*}
+        which is LL(1). Recall that the first and follow sets for the arithmetic part were
+         \begin{align*}
+                \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
+                \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \left\{\oplus, \neg\right\} \cup \text{FIRST}(S) \\
+                                &= \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
+                \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
+                \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
+            .\end{align*}
+            \begin{align*}
+                \text{FOLLOW}(E) &= \{\$, )\}\\
+                \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) = \{\$, )\}\\
+                \text{FOLLOW}(T) &= \text{FIRST}(E^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(E) = \{+,-,\$, )\}\\
+                \text{FOLLOW}(T^{\prime}) &= \text{FOLLOW}(T) = \{+,-,\$,)\}\\
+                \text{FOLLOW}(N) &= \text{FIRST}(T^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(T^{\prime}) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F) &= \text{FOLLOW}(N) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(F^{\prime}) &= \text{FOLLOW}(F) = \{*, /, \text{MOD}, +, -, \$, )\}\\
+                \text{FOLLOW}(S) &= \text{FIRST}(F^{\prime}) \setminus \{\varepsilon\} \cup \text{FOLLOW}(F) = \{\land, *, /, \text{MOD}, +, -, \$, )\}
+            .\end{align*}
+            With sequences
+            \begin{align*}
+                \text{FIRST}(\varepsilon) &= \{\varepsilon\}\\
+                \text{FIRST}(TE^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(+TE^{\prime}) &= \{+\}\\
+                \text{FIRST}(-TE^{\prime}) &= \{-\}\\
+                \text{FIRST}(NT^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(*NT^{\prime}) &= \{*\}\\
+                \text{FIRST}(/NT^{\prime}) &= \{/\}\\
+                \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
+                \text{FIRST}(\oplus N) &= \{\oplus\}\\
+                \text{FIRST}(\neg N) &= \{\neg\} \\
+                \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
+                \text{FIRST}((E)) &= \{(\}\\
+                \text{FIRST}(\text{int}) &= \{\text{int}\}\\
+                \text{FIRST}(\text{var}) &= \{\text{var}\} \\
+                \text{FIRST}(\text{true}) &= \{\text{true}\} \\
+                \text{FIRST}(\text{false}) &= \{\text{false}\} \\
+                \text{FIRST}(\text{string}) &= \{\text{string}\}
+            .\end{align*}
+            Observe that we add booleans and strings. The set of terminals is now 
+            \begin{align*}
+                V_{T} = \{\text{or}, \text{and}, \sim, ==, \ne, <, \leq, >, \geq, \oplus, \neg, +, -, *, /, \\
+                    \text{MOD}, \land, (, ), \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}
+            .\end{align*}
+            The first sets for the full grammar are
+            \begin{align*}
+                \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
+                \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \left\{\oplus, \neg\right\} \cup \text{FIRST}(S) \\
+                                &= \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
+                \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
+                \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(D^{\prime}) &= \left\{==,\ne,<, \leq,>, \geq,\varepsilon\right\} \\
+                \text{FIRST}(D) &= \text{FIRST}(E) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(C) &= \left\{\sim\right\} \cup \text{FIRST}(D) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(B^{\prime}) &= \left\{\text{and}, \varepsilon\right\} \\
+                \text{FIRST}(B) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(A^{\prime}) &= \left\{\text{or}, \varepsilon\right\} \\
+                \text{FIRST}(A) &= \text{FIRST}(B) =\{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} 
+            .\end{align*}
+            With follow sets
+            \begin{align*}
+                \text{FOLLOW}(A) &= \left\{), \$\right\} \\
+                \text{FOLLOW}(A^{\prime}) &= \text{FOLLOW}(A) = \left\{), \$\right\} \\
+                \text{FOLLOW}(B) &= \text{FIRST}(A^{\prime}) - \left\{\varepsilon\right\} \cup \text{FOLLOW}(A) = \left\{\text{or}, ), \$\right\} \\
+                \text{FOLLOW}(B^{\prime}) &= \text{FOLLOW}(B) = \left\{\text{or}, ), \$\right\} \\
+                \text{FOLLOW}(C) &= \text{FIRST}(B^{\prime}) - \left\{\varepsilon\right\}\cup \text{FOLLOW}(B^{\prime}) \cup \text{FOLLOW}(B) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+                \text{FOLLOW}(D) &= \text{FOLLOW}(C) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+                \text{FOLLOW}(D^{\prime}) &= \text{FOLLOW}(D) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+                \text{FOLLOW}(E) &= \text{FIRST}(D^{\prime}) \cup \text{FOLLOW}(D) \cup \text{FOLLOW}(D^{\prime}) \\
+                                 &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
+                \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) \\
+                                          &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
+                \text{FOLLOW}(T) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+                \text{FOLLOW}(T^{\prime}) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+                \text{FOLLOW}(N) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+                \text{FOLLOW}(F) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+                \text{FOLLOW}(F^{\prime}) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+                \text{FOLLOW}(S) &= \left\{\land, *, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} 
+            .\end{align*}
+            Now, the first sets for the sequences are
+            \begin{align*}
+                \text{FIRST}(\varepsilon) &= \left\{\varepsilon\right\}  \\
+                \text{FIRST}(BA^{\prime}) &= \text{FIRST}(B) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(\text{or} BA^{\prime}) &= \left\{\text{or}\right\} \\
+                \text{FIRST}(CB^{\prime}) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(\text{and}CB^{\prime}) &= \left\{\text{and}\right\} \\
+                \text{FIRST}(\sim C) &= \left\{\sim\right\} \\
+                \text{FIRST}(D) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(ED^{\prime}) &= \text{FIRST}(E) =  \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+                \text{FIRST}(==E) &= \left\{==\right\} \\
+                \text{FIRST}(\ne E) &= \left\{\ne\right\} \\
+                \text{FIRST}(<E) &= \left\{<\right\} \\
+                \text{FIRST}(\leq E) &= \left\{\leq\right\} \\
+                \text{FIRST}(>E) &= \left\{>\right\} \\
+                \text{FIRST}(\geq E) &= \left\{\geq\right\} \\
+                \text{FIRST}(TE^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(+TE^{\prime}) &= \{+\}\\
+                \text{FIRST}(-TE^{\prime}) &= \{-\}\\
+                \text{FIRST}(NT^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(*NT^{\prime}) &= \{*\}\\
+                \text{FIRST}(/NT^{\prime}) &= \{/\}\\
+                \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
+                \text{FIRST}(\oplus N) &= \{\oplus\}\\
+                \text{FIRST}(\neg N) &= \{\neg\} \\
+                \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+                \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
+                \text{FIRST}((A)) &= \{(\}\\
+                \text{FIRST}(\text{int}) &= \{\text{int}\}\\
+                \text{FIRST}(\text{var}) &= \{\text{var}\} \\
+                \text{FIRST}(\text{true}) &= \{\text{true}\} \\
+                \text{FIRST}(\text{false}) &= \{\text{false}\} \\
+                \text{FIRST}(\text{string}) &= \{\text{string}\}
+            .\end{align*}
+            Recall the selection rule for LL(1) given the lookahead token $a$ is 
+            \begin{enumerate}
+                \item If $a \in \text{FIRST}(\alpha_{i}) $, choose the production $\alpha_{i}$, otherwise
+                \item If $\varepsilon \in \text{FIRST}(\alpha_{k})$, and $a \in \text{FOLLOW}(A)$, choose $\alpha_{k}$,
+                \item Otherwise, syntax error.
+            \end{enumerate}
+
 
 
 
