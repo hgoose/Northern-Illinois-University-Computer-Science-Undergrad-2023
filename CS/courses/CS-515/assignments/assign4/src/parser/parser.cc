@@ -1,6 +1,104 @@
 // ELEGANT PARSING
 // Nate Warner z2004109
-// Assignment 3
+// Assignment 4
+ 
+/* EXPRESSION SPEC
+ *
+    CFG:
+        A &\to BA^{\prime} \\
+        A^{\prime} &\to \text{or } BA^{\prime} \mid \varepsilon \\
+        B &\to CB^{\prime} \\
+        B^{\prime} &\to \text{and }CB^{\prime} \mid \varepsilon \\
+        C &\to\; \sim C \mid D\\
+        D &\to ED^{\prime} \\
+        D^{\prime} &\to ==E \mid \ne E \mid <E \mid \leq E \mid > E \mid \geq E \mid \varepsilon\\
+        E &\to TE^{\prime} \\
+        E^{\prime} &\to +TE^{\prime} \ \mid \ -TE^{\prime} \ \mid \ \varepsilon \\
+        T &\to NT^{\prime} \\
+        T^{\prime} &\to *NT^{\prime} \ \mid \ /NT^{\prime} \ \mid \ \text{ MOD } NT^{\prime} \ \mid \ \varepsilon \\
+        N &\to \oplus N \ \mid \ \neg N \ \mid \ F \\
+        F &\to SF^{\prime} \\
+        F^{\prime} &\to \land SF^{\prime} \ \mid \ \varepsilon\\
+        S &\to (A) \ \mid \ \text{int} \ \mid \ \text{var} \mid \text{true} \mid \text{false} \mid \text{string}
+
+    FIRST:
+        \text{FIRST}(S) &= \{(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(F^{\prime}) &= \{\land, \varepsilon\} \\
+        \text{FIRST}(F) &=  \text{FIRST}(S) = \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(N) &= \{\oplus,\neg\} \cup \text{FIRST}(F) = \left\{\oplus, \neg\right\} \cup \text{FIRST}(S) \\
+        &= \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(T^{\prime}) &= \{*, /, \text{MOD}, \varepsilon\} \\
+        \text{FIRST}(T) &= \text{FIRST}(N) = \{\oplus,\neg,(,\text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(E^{\prime}) &= \{+,-,\epsilon\} \\
+        \text{FIRST}(E) &=\text{FIRST}(T) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(D^{\prime}) &= \left\{==,\ne,<, \leq,>, \geq,\varepsilon\right\} \\
+        \text{FIRST}(D) &= \text{FIRST}(E) = \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(C) &= \left\{\sim\right\} \cup \text{FIRST}(D) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(B^{\prime}) &= \left\{\text{and}, \varepsilon\right\} \\
+        \text{FIRST}(B) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(A^{\prime}) &= \left\{\text{or}, \varepsilon\right\} \\
+        \text{FIRST}(A) &= \text{FIRST}(B) =\{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} 
+
+    FOLLOW: 
+        \text{FOLLOW}(A) &= \left\{), \$\right\} \\
+        \text{FOLLOW}(A^{\prime}) &= \text{FOLLOW}(A) = \left\{), \$\right\} \\
+        \text{FOLLOW}(B) &= \text{FIRST}(A^{\prime}) - \left\{\varepsilon\right\} \cup \text{FOLLOW}(A) = \left\{\text{or}, ), \$\right\} \\
+        \text{FOLLOW}(B^{\prime}) &= \text{FOLLOW}(B) = \left\{\text{or}, ), \$\right\} \\
+        \text{FOLLOW}(C) &= \text{FIRST}(B^{\prime}) - \left\{\varepsilon\right\}\cup \text{FOLLOW}(B^{\prime}) \cup \text{FOLLOW}(B) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+        \text{FOLLOW}(D) &= \text{FOLLOW}(C) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+        \text{FOLLOW}(D^{\prime}) &= \text{FOLLOW}(D) = \left\{\text{and}, \text{or}, ), \$\right\} \\
+        \text{FOLLOW}(E) &= \text{FIRST}(D^{\prime}) \cup \text{FOLLOW}(D) \cup \text{FOLLOW}(D^{\prime}) \\
+        &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
+        \text{FOLLOW}(E^{\prime}) &= \text{FOLLOW}(E) \\
+        &= \left\{==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\
+        \text{FOLLOW}(T) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+        \text{FOLLOW}(T^{\prime}) &= \left\{+, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+        \text{FOLLOW}(N) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+        \text{FOLLOW}(F) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+        \text{FOLLOW}(F^{\prime}) &= \left\{*, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} \\ 
+        \text{FOLLOW}(S) &= \left\{\land, *, /, \text{MOD}, +, -, ==, \ne, <, \leq, >, \geq, \text{and}, \text{or}, ), \$\right\} 
+
+    FIRST of sequences:
+        \text{FIRST}(\varepsilon) &= \left\{\varepsilon\right\}  \\
+        \text{FIRST}(BA^{\prime}) &= \text{FIRST}(B) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(\text{or} BA^{\prime}) &= \left\{\text{or}\right\} \\
+        \text{FIRST}(CB^{\prime}) &= \text{FIRST}(C) = \{\sim, \oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(\text{and}CB^{\prime}) &= \left\{\text{and}\right\} \\
+        \text{FIRST}(\sim C) &= \left\{\sim\right\} \\
+        \text{FIRST}(D) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(ED^{\prime}) &= \text{FIRST}(E) =  \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\} \\
+        \text{FIRST}(==E) &= \left\{==\right\} \\
+        \text{FIRST}(\ne E) &= \left\{\ne\right\} \\
+        \text{FIRST}(<E) &= \left\{<\right\} \\
+        \text{FIRST}(\leq E) &= \left\{\leq\right\} \\
+        \text{FIRST}(>E) &= \left\{>\right\} \\
+        \text{FIRST}(\geq E) &= \left\{\geq\right\} \\
+        \text{FIRST}(TE^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+        \text{FIRST}(+TE^{\prime}) &= \{+\}\\
+        \text{FIRST}(-TE^{\prime}) &= \{-\}\\
+        \text{FIRST}(NT^{\prime}) &= \{\oplus,\neg,(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+        \text{FIRST}(*NT^{\prime}) &= \{*\}\\
+        \text{FIRST}(/NT^{\prime}) &= \{/\}\\
+        \text{FIRST}(\text{MOD}NT^{\prime}) &= \{\text{MOD}\}\\
+        \text{FIRST}(\oplus N) &= \{\oplus\}\\
+        \text{FIRST}(\neg N) &= \{\neg\} \\
+        \text{FIRST}(SF^{\prime}) &= \{(, \text{int}, \text{var}, \text{true}, \text{false}, \text{string}\}\\
+        \text{FIRST}(\land SF^{\prime}) &= \{\land\}\\
+        \text{FIRST}((A)) &= \{(\}\\
+        \text{FIRST}(\text{int}) &= \{\text{int}\}\\
+        \text{FIRST}(\text{var}) &= \{\text{var}\} \\
+        \text{FIRST}(\text{true}) &= \{\text{true}\} \\
+        \text{FIRST}(\text{false}) &= \{\text{false}\} \\
+        \text{FIRST}(\text{string}) &= \{\text{string}\}
+
+    Recall the selection rule (considering current level A \to \alpha_1 | ... | \alpha_k)
+        \begin{enumerate}
+            \item If $a \in \text{FIRST}(\alpha_{i}) $, choose the production $\alpha_{i}$, otherwise
+            \item If $\varepsilon \in \text{FIRST}(\alpha_{k})$, and $a \in \text{FOLLOW}(A)$, choose $\alpha_{k}$,
+            \item Otherwise, syntax error.
+        \end{enumerate}
+*/
+
 
 #include <algorithm>
 #include <iostream>
@@ -411,6 +509,72 @@ AST_NODE* parse_assign() {
     }
 
     return assign_root;
+}
+
+AST_NODE* A() {
+    AST_NODE* here = new AST_NODE();
+    AST_NODE* left{}, *right{};
+
+    // FIRST(BA')
+    if (next_token.id == TOKEN_NOT 
+            || next_token.id == TOKEN_UPLUS
+            || next_token.id == TOKEN_UNEG
+            || next_token.id == TOKEN_LPAREN
+            || next_token.id == TOKEN_INTEGER
+            || next_token.id == TOKEN_STRING
+            || next_token.id == TOKEN_IDENT // true, false, or var
+    ) {
+        left = B();
+        right = AP();
+    } else {
+        delete here;
+        return nullptr;
+    }
+
+    here->add_children(left, right);
+
+    return here;
+}
+
+AST_NODE* AP() {
+    AST_NODE* here;
+    AST_NODE* left{}, *right{};
+
+    // FIRST(or BA')
+    if (next_token.id == TOKEN_OR) {
+        here = new AST_NODE(next_token, NODE_TYPE::OR, OPERATOR);
+
+        left = B();
+        right = AP();
+    } 
+    // \epsilon \in FIRST(\varepsilon), so check if t (current token) \in FOLLOW(AP)
+    else {
+             
+    }
+
+
+
+    return here;
+}
+
+AST_NODE* B() {
+    return nullptr;
+}
+
+AST_NODE* BP() {
+    return nullptr;
+}
+
+AST_NODE* C() {
+    return nullptr;
+}
+
+AST_NODE* D() {
+    return nullptr;
+}
+
+AST_NODE* DP() {
+    return nullptr;
 }
 
 AST_NODE* E(Error& err) {

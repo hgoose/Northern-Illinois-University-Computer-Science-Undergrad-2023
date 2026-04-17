@@ -12,17 +12,22 @@
 #include "ncc_strings.h"
 #include "symtable.h"
 
+#define OPERATOR true
 
 enum class NODE_TYPE : unsigned int {
-    null, ADD, SUB, MULT, 
+    null, NOT, AND, OR,
+    LESS, LEQ, GREATER,
+    GEQ, EQ, NEQ,
+    ADD, SUB, MULT, 
     DIV, MOD, EXP, 
     UPLUS, UNEG, DECL, 
     ASSIGN, PRINT, READ, 
-    BLOCK, INT, VAR, STR
+    BLOCK, INT, VAR, STR, 
+    BOOL
 };
 
 enum class TYPE : unsigned int {
-    null, INT4, STRING
+    null, INT4, STRING, BOOL
 };
 
 extern std::unordered_set<std::string> reserved_words;
@@ -30,22 +35,46 @@ extern std::unordered_set<std::string> reserved_words;
 bool is_reserved(const Token& t);
 
 struct AST_NODE {
+    // Always set upon consumption
     Token token{};
 
-    STR_TABLE_ENTRY entry{};
-    SYMINFO* syminfo{};
+    // Set upon consume if consumed token is an operator
+    bool is_operator{};
 
-    SYMTYPE symbol_type{};
-    TYPE data_type{};
+    // Set upon consumption
     NODE_TYPE node_type{};
 
-    bool is_operator{};
+    // Set if going in symbol table
+    SYMTYPE symbol_type{};
+
+    // Data type will be found later for operators,
+    // for var, int, bool, or string nodes set this
+    TYPE data_type{};
+
+    // If consumed token is a string constant
+    STR_TABLE_ENTRY entry{};
+
+    // If consumed token is a variable
+    SYMINFO* syminfo{};
 
     std::list<AST_NODE*> children;
 
     AST_NODE() = default;
 
     AST_NODE(Token token) : token(token) {}
+
+    AST_NODE(Token token, NODE_TYPE node_type, bool is_operator=false) 
+        : token(token),
+          node_type(node_type),
+          is_operator(is_operator)
+    {}
+
+    AST_NODE(Token token, NODE_TYPE node_type, TYPE data_type) 
+        : token(token),
+          node_type(node_type),
+          data_type(data_type)
+    {}
+
     AST_NODE(const AST_NODE& other) {
         token = other.token;
         data_type = other.data_type;
@@ -67,9 +96,10 @@ struct AST_NODE {
 
     void clear() {
         token = Token{};
-        data_type = TYPE{};
-        node_type = NODE_TYPE{};
         is_operator = false;
+        node_type = NODE_TYPE{};
+        data_type = TYPE{};
+        symbol_type = SYMTYPE{};
         syminfo = nullptr;
         entry = STR_TABLE_ENTRY{};
     }
@@ -77,6 +107,9 @@ struct AST_NODE {
     std::string str_node_type() {
         return std::vector<std::string>{
                 "_null", "ADD", "SUB", "MULT", 
+                "NOT", "AND", "OR",
+                "LESS", "LEQ", "GREATER", "GEQ",
+                "EQUAL", "NEQ", 
                 "DIV", "MOD", "EXP", "UPLUS", 
                 "UNEG", "declare", "assign", "print", 
                 "read", "Statement block", "INT", "VAR", "STR"

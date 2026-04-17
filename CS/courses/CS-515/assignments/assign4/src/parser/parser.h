@@ -29,6 +29,13 @@ AST_NODE* parse_decl_int4();
 AST_NODE* parse_assign();
 
 // PRODUCTION RULES
+AST_NODE* A();
+AST_NODE* AP();
+AST_NODE* B();
+AST_NODE* BP();
+AST_NODE* C();
+AST_NODE* D();
+AST_NODE* DP();
 AST_NODE* E(Error& err);
 AST_NODE* EP(Error& err);
 AST_NODE* T(Error& err);

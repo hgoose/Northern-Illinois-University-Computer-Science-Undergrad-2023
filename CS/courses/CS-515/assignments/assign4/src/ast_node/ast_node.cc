@@ -4,7 +4,7 @@
 #include <cctype>
 
 std::unordered_set<std::string> reserved_words = {
-    "print", "read", "int4"
+    "print", "read", "int4", "while", "if", "else", "true", "false"
 };
 
 bool is_reserved(const Token& t) {
