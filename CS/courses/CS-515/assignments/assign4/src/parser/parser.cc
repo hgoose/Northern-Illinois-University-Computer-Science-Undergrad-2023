@@ -521,7 +521,8 @@ AST_NODE* parse_assign() {
     return assign_root;
 }
 
-AST_NODE* A() {
+// A -> BA'
+AST_NODE* A(Error& err) {
     AST_NODE* here = new AST_NODE();
     AST_NODE* left{}, *right{};
 
@@ -534,8 +535,8 @@ AST_NODE* A() {
             || next_token.id == TOKEN_STRING
             || next_token.id == TOKEN_IDENT // true, false, or var
     ) {
-        left = B();
-        right = AP();
+        left = B(err);
+        right = AP(err);
     } else {
         free_tree(here);
         return nullptr;
@@ -546,7 +547,8 @@ AST_NODE* A() {
     return here;
 }
 
-AST_NODE* AP() {
+// A' -> or BA' | \varepsilon
+AST_NODE* AP(Error& err) {
     AST_NODE* here{};
     AST_NODE* left{}, *right{};
 
@@ -554,39 +556,186 @@ AST_NODE* AP() {
     if (next_token.id == TOKEN_OR) {
         here = new AST_NODE(next_token, NODE_TYPE::OR, OPERATOR);
 
-        left = B();
-        right = AP();
+        Error tmp_error = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(tmp_error)) {
+            err = tmp_error; 
+            return nullptr;
+        }
+
+        left = B(err);
+        right = AP(err);
     } 
     // \epsilon \in FIRST(\varepsilon), so check if next_token \in FOLLOW(AP). 
-    else if (next_token.id == TOKEN_RPAREN){ 
+    else {
+        return nullptr;
     }
-
 
 
     here->add_children(left, right);
     return here;
 }
 
-AST_NODE* B() {
-    return nullptr;
+// B -> CB'
+AST_NODE* B(Error& err) {
+    AST_NODE* here = new AST_NODE();
+    AST_NODE* left{}, *right{};
+
+    // Consider FIRST(CB')
+    if (next_token.id == TOKEN_NOT |
+        next_token.id == TOKEN_UNEG |
+        next_token.id == TOKEN_LPAREN |
+        next_token.id == TOKEN_INTEGER |
+        next_token.id == TOKEN_IDENT |
+        next_token.id == TOKEN_STRING
+    ) {
+        left = C(err);
+        right = BP(err);
+    } else {
+        free_tree(here);
+        return nullptr;
+    }
+
+
+    here->add_children(left, right);
+    return here;
 }
 
-AST_NODE* BP() {
-    return nullptr;
+// B' -> and CB' | \varepsilon
+AST_NODE* BP(Error& err) {
+    AST_NODE* here{};
+    AST_NODE* left{}, *right{};
+
+    // Consider FIRST(and CB')
+    if (next_token.id == TOKEN_AND) {
+        here = new AST_NODE(next_token, NODE_TYPE::AND, OPERATOR);
+
+        Error tmp_error = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(tmp_error)) {
+            err = tmp_error; 
+            return nullptr;
+        }
+
+        left = C(err);
+        right = BP(err);
+    } else {
+        return nullptr;
+    }
+
+
+    here->add_children(left, right);
+    return here;
 }
 
-AST_NODE* C() {
-    return nullptr;
+// C -> ~C | D
+AST_NODE* C(Error& err) {
+    AST_NODE* here = new AST_NODE();
+    AST_NODE* left{};
+
+    // Consider FIRST(~C) 
+    if (next_token.id == TOKEN_NOT) {
+        // Take ~C
+        here = new AST_NODE(next_token, NODE_TYPE::NOT, OPERATOR);
+
+        Error tmp_error = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(tmp_error)) {
+            err = tmp_error; 
+            return nullptr;
+        }
+
+        left = C(err);
+    }
+    // Consider FIRST(D)
+    else if (next_token.id == TOKEN_UPLUS ||
+            next_token.id == TOKEN_UNEG ||
+            next_token.id == TOKEN_LPAREN ||
+            next_token.id == TOKEN_INTEGER ||
+            next_token.id == TOKEN_IDENT ||
+            next_token.id == TOKEN_STRING
+    ) {
+        // Take D
+        left = D(err);
+
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        free_tree(here);
+        return nullptr;
+    }
+
+
+    here->add_children(left);
+    return here;
 }
 
-AST_NODE* D() {
-    return nullptr;
+// D -> ED'
+// FIRST(ED') = {uplus, uneg, (, int, var, true, false, string}
+AST_NODE* D(Error& err) {
+    AST_NODE* here = new AST_NODE();
+    AST_NODE* left{}, *right{};
+
+    // Consider FIRST(ED')
+    if (next_token.id == TOKEN_UPLUS ||
+        next_token.id == TOKEN_UNEG ||
+        next_token.id == TOKEN_LPAREN ||
+        next_token.id == TOKEN_INTEGER ||
+        next_token.id == TOKEN_IDENT ||
+        next_token.id == TOKEN_STRING
+    ) {
+        // Take ED'
+        left = E(err);
+        right = DP(err);
+    } else {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        free_tree(here);
+        return nullptr;
+    }
+
+    here->add_children(left, right);
+    return here;
 }
 
-AST_NODE* DP() {
-    return nullptr;
+// D' -> ==E | \ne E | <E | <=E | >E | >=E | \varepsilon
+// FIRST(==) = {==}
+// FIRST(\ne) = {\ne}
+// FIRST(<) = {<}
+// FIRST(<=) = {<=}
+// FIRST(>) = {>}
+// FIRST(>=) = {>=}
+AST_NODE* DP(Error& err) {
+    AST_NODE* here{};
+    AST_NODE* left{};
+
+    // Cleanup this abomination
+
+    // Consider these various first sets
+    if (next_token.id == TOKEN_EQUAL) {
+        // Take E and consume the token
+        here = new AST_NODE(next_token, NODE_TYPE::EQ, OPERATOR);
+    } else if (next_token.id == TOKEN_NOT_EQUAL) {
+        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+    }
+    else if (next_token.id == TOKEN_GREATER) {
+        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+    }
+    else if (next_token.id == TOKEN_GREATER_EQ) {
+        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+    }
+    else if (next_token.id == TOKEN_LESS) {
+        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+    }
+    else if (next_token.id == TOKEN_LESS_EQ) {
+        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+    }
+    // js annihilate the node
+    else {
+        return nullptr;
+    }
+    
+    left = E(err);
+    here->add_children(left);
+    return here;
 }
 
+// E -> TE'
 AST_NODE* E(Error& err) {
     AST_NODE* left = nullptr;
 
