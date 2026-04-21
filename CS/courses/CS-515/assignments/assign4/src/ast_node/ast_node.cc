@@ -27,8 +27,8 @@ AST_NODE* binary_arithmetic_type_compliance(AST_NODE* left, AST_NODE* right) {
     return nullptr;
 }
 
-AST_NODE* unary_arithmetic_type_compliance(AST_NODE* left) {
-    return (left->is_type_integral() ? nullptr : left);
+AST_NODE* unary_arithmetic_type_compliance(AST_NODE* child) {
+    return (child->is_type_integral() ? nullptr : child);
 }
 
 AST_NODE* binary_relational_type_compliance(AST_NODE* left, AST_NODE* right) {
@@ -44,8 +44,8 @@ AST_NODE* binary_logical_type_compliance(AST_NODE* left, AST_NODE* right) {
     return nullptr;
 }
 
-AST_NODE* unary_logical_type_compliance(AST_NODE* left) {
-    return (left->is_type_logical() ? nullptr : left);
+AST_NODE* unary_logical_type_compliance(AST_NODE* child) {
+    return (child->is_type_logical() ? nullptr : child);
 }
 
 // Fix this abomination

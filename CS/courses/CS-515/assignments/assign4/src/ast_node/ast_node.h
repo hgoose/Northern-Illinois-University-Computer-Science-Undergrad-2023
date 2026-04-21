@@ -39,10 +39,10 @@ NODE_TYPE get_node_type(const Token& t);
 
 // Returns the offender for error info (or nullptr if the types comply)
 AST_NODE* binary_arithmetic_type_compliance(AST_NODE* left, AST_NODE* right);
-AST_NODE* unary_arithmetic_type_compliance(AST_NODE* left);
+AST_NODE* unary_arithmetic_type_compliance(AST_NODE* child);
 AST_NODE* binary_relational_type_compliance(AST_NODE* left, AST_NODE* right);
 AST_NODE* binary_logical_type_compliance(AST_NODE* left, AST_NODE* right);
-AST_NODE* unary_logical_type_compliance(AST_NODE* left);
+AST_NODE* unary_logical_type_compliance(AST_NODE* child);
 
 struct AST_NODE {
     // Always set upon consumption

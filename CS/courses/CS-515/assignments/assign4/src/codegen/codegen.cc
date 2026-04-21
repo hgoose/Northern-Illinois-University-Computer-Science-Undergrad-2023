@@ -474,6 +474,12 @@ void x86_movzx_r32_r8_al(REGISTER dest) {
     load_byte(gen_modrm_rr((REGISTER) 0, dest));
 }
 
+// 34 ib XOR AL, imm8
+void x86_al_flip() {
+    load_byte(0x34);
+    load_imm8(1);
+}
+
 // Add a return instruction and execute program, returns value in the accumulator
 int x86_exec() {
     load_byte(0xc3);

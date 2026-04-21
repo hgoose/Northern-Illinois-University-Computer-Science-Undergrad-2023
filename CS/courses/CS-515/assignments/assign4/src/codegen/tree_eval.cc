@@ -90,8 +90,10 @@ static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
         x86_pushr32(REGISTER::EAX); ++pushed;
     } 
     else if (p->token.id == TOKEN_NOT) {
+        x86_popr32(REGISTER::EAX); --pushed;
+        x86_al_flip();
+        x86_pushr32(REGISTER::EAX); ++pushed;
     }
-        root->data_type = left->is_type_integral() ? (left_type > right_type ? left_type : right_type) : left_type;
     else if (p->token.id == TOKEN_AND) {
     }
     else if (p->token.id == TOKEN_OR) {

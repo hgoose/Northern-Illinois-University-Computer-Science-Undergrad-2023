@@ -187,15 +187,16 @@ TYPE assign_types(AST_NODE* root) {
 
     AST_NODE* left{}, *right{};
 
-    if (*child) left = *child;
+    if (child != root->children.end() && *child) left = *child;
     ++child;
-    if (*child) right = *child;
+    if (child != root->children.end() && *child) right = *child;
 
     left_type = assign_types(left);
     right_type = assign_types(right);
 
-    if (left_type == TYPE::TYPE_MISMATCH || right_type == TYPE::TYPE_MISMATCH) 
+    if (left_type == TYPE::TYPE_MISMATCH || right_type == TYPE::TYPE_MISMATCH)  {
         return TYPE::TYPE_MISMATCH;
+    }
 
     if (root->is_operator) {
         AST_NODE* offender = type_compliance(root, left, right);

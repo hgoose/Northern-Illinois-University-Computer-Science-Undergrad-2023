@@ -121,6 +121,7 @@ void x86_setge_al();
 void x86_sete_al();
 void x86_setne_al();
 void x86_movzx_r32_r8_al(REGISTER dest);
+void x86_al_flip();
 int x86_exec();
 
 #endif
