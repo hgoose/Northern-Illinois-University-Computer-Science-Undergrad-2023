@@ -14,6 +14,7 @@ bool is_st_valid(AST_NODE* root, bool accept_empty);
 
 // Parse tree to ast
 AST_NODE* pttoast(AST_NODE* root);
+AST_NODE* type_compliance(AST_NODE* parent, AST_NODE* left, AST_NODE* right);
 TYPE assign_types(AST_NODE*);
 
 // Traversals

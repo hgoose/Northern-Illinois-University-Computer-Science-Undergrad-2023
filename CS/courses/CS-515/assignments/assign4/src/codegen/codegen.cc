@@ -37,6 +37,10 @@ void print_int(int a) {
     std::cout << a; 
 }
 
+void print_bool(bool b) {
+    std::cout << std::boolalpha << b; 
+}
+
 void print_string(const char* c) {
     std::cout << c;
 }
@@ -85,13 +89,13 @@ int pspace_init() {
 }
 
 // FF /6 PUSH r/m32, push a value onto the stack
-void IA32e_push_imm32(int x) {
+void x86_push_imm32(int x) {
     load_byte(0x68);
     load_imm32(x); 
 }
 
 // FF /6 PUSH r/m32
-void IA32e_pushr32(REGISTER src) {
+void x86_pushr32(REGISTER src) {
     if (src >= REGISTER::R8) {
         load_byte(gen_rex_r(WIDE_OFF, src));
     }
@@ -101,7 +105,7 @@ void IA32e_pushr32(REGISTER src) {
 }
 
 // FF /6 PUSH r/m32
-void IA32e_pushm32(REGISTER src) {
+void x86_pushm32(REGISTER src) {
     if (src >= REGISTER::R8) {
         load_byte(gen_rex_r(WIDE_OFF, src));
     }
@@ -111,7 +115,7 @@ void IA32e_pushm32(REGISTER src) {
 }
 
 // 8F /0 POP r/m32, pop the top of the stack into dest
-void IA32e_popr32(REGISTER dest) {
+void x86_popr32(REGISTER dest) {
     if (dest >= REGISTER::R8) {
         load_byte(gen_rex_r(WIDE_OFF, dest));
     }
@@ -121,7 +125,7 @@ void IA32e_popr32(REGISTER dest) {
 }
 
 // 89 /r MOV r/m32 r32
-void IA32e_mov_rr32(REGISTER dest, REGISTER src) {
+void x86_mov_rr32(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, dest, src));
     }
@@ -131,14 +135,14 @@ void IA32e_mov_rr32(REGISTER dest, REGISTER src) {
 }
 
 // REX.W 89 /r MOV r/m64 r64
-void IA32e_mov_rr64(REGISTER dest, REGISTER src) {
+void x86_mov_rr64(REGISTER dest, REGISTER src) {
     load_byte(gen_rex_rr(WIDE_ON, dest, src));
     load_byte(0x89);
     load_byte(gen_modrm_rr(dest, src));
 }
 
 // B8+rd id MOV r32, imm32
-void IA32e_mov_rimm32(REGISTER dest, int src) {
+void x86_mov_rimm32(REGISTER dest, int src) {
     if (dest >= REGISTER::R8) {
         load_byte(gen_rex_r(WIDE_OFF, dest));
     }
@@ -150,21 +154,21 @@ void IA32e_mov_rimm32(REGISTER dest, int src) {
 // REX.W + B8+ rd io MOV r64, imm64
 // NOTE: If dest is R8-R15, REX.B = 1, zero otherwise. In any case, 
 // REX.R = REX.X = 0, and REX.W = 1
-void IA32e_mov_rimm64(REGISTER dest, long long src) {
+void x86_mov_rimm64(REGISTER dest, long long src) {
     load_byte(gen_rex_r(WIDE_ON, dest));
     load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
 }
 
 // REX.W + B8+ rd io MOV r64, imm64
-void IA32e_mov_rimm64_sizet(REGISTER dest, size_t src) {
+void x86_mov_rimm64_sizet(REGISTER dest, size_t src) {
     load_byte(gen_rex_r(WIDE_ON, dest));
     load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
 }
 
 // REX.W + B8+ rd io MOV r64, imm64
-void IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
+void x86_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
     load_byte(gen_rex_r(WIDE_ON, dest));
     load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
@@ -174,14 +178,14 @@ void IA32e_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
 //
 // Note: Specifically when dest is a memory location 
 // inside a register (no displacement), so mod = 00
-void IA32e_mov_mr64_nodisp(REGISTER dest, REGISTER src) {
+void x86_mov_mr64_nodisp(REGISTER dest, REGISTER src) {
     load_byte(gen_rex_rr(WIDE_ON, dest, src));
     load_byte(0x89);
     load_byte(gen_modrm_norr_nodisp(dest, src));
 }
 
 // 8B /r MOV r64, r/m64
-void IA32e_mov_rm32_nodisp(REGISTER dest, REGISTER src) {
+void x86_mov_rm32_nodisp(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, src, dest));
     }
@@ -193,7 +197,7 @@ void IA32e_mov_rm32_nodisp(REGISTER dest, REGISTER src) {
 //
 // Note: Specifically when dest is a memory location 
 // inside a register (no displacement), so mod = 01
-void IA32e_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
+void x86_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
     load_byte(gen_rex_rr(WIDE_ON, dest, src));
     load_byte(0x89);
     load_byte(gen_modrm_norr_disp8(dest, src));
@@ -201,7 +205,7 @@ void IA32e_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp) {
 }
 
 // 29 /r SUB r/m32, r32
-void IA32e_sub_rr32(REGISTER dest, REGISTER src) {
+void x86_sub_rr32(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, dest, src));
     }
@@ -211,7 +215,7 @@ void IA32e_sub_rr32(REGISTER dest, REGISTER src) {
 }
 
 // 01 /r ADD r/m32, r32
-void IA32e_add_rr32(REGISTER dest, REGISTER src) {
+void x86_add_rr32(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, dest, src));
     }
@@ -221,7 +225,7 @@ void IA32e_add_rr32(REGISTER dest, REGISTER src) {
 }
 
 // 0F AF /r IMUL r32, r/m32
-void IA32e_mult_rr32(REGISTER dest, REGISTER src) {
+void x86_mult_rr32(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, dest, src));
     }
@@ -233,9 +237,9 @@ void IA32e_mult_rr32(REGISTER dest, REGISTER src) {
 
 
 // F7 /7 IDIV r/m32
-void IA32e_div_rr32(REGISTER dest, REGISTER src) {
+void x86_div_rr32(REGISTER dest, REGISTER src) {
     // MOV EAX, dest
-    IA32e_mov_rr32(REGISTER::EAX, dest);
+    x86_mov_rr32(REGISTER::EAX, dest);
 
     // CDQ
     load_byte(0x99);
@@ -249,16 +253,16 @@ void IA32e_div_rr32(REGISTER dest, REGISTER src) {
     load_byte(gen_modrm_rr(src, (REGISTER)(7)));
 }
 
-void IA32e_modulo_rr32(REGISTER dest, REGISTER src) {
+void x86_modulo_rr32(REGISTER dest, REGISTER src) {
     // DIV src (dest in eax)
-    IA32e_div_rr32(dest, src);
+    x86_div_rr32(dest, src);
 
     // Move remainder into accumulator
-    IA32e_mov_rr32(REGISTER::EAX, REGISTER::EDX);
+    x86_mov_rr32(REGISTER::EAX, REGISTER::EDX);
 }
 
 // The fast exponentiation algorithm in IA-32e
-void IA32e_fast_exp() {
+void x86_fast_exp() {
     load_byte(0x45);  // XOR R8, R8  // e = 0
     load_byte(0x31);
     load_byte(0xc0);
@@ -309,7 +313,7 @@ void IA32e_fast_exp() {
 }
 
 // 31 /r XOR r/m32, r32
-void IA32e_xor_rr32(REGISTER dest, REGISTER src) {
+void x86_xor_rr32(REGISTER dest, REGISTER src) {
     if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, dest, src));
     }
@@ -319,7 +323,7 @@ void IA32e_xor_rr32(REGISTER dest, REGISTER src) {
 }
 
 // 87 /r XCHG r/m32, r32
-void IA32e_xchg32(REGISTER r1, REGISTER r2) {
+void x86_xchg32(REGISTER r1, REGISTER r2) {
     if (r1 >= REGISTER::R8 || r2 >= REGISTER::R8) {
         load_byte(gen_rex_rr(WIDE_OFF, r1, r2));
     }
@@ -330,12 +334,12 @@ void IA32e_xchg32(REGISTER r1, REGISTER r2) {
 
 
 // C3 RET 
-void IA32e_construct_ret() {
+void x86_construct_ret() {
     load_byte(0xc3);
 }
 
 // FF /2
-void IA32e_call(REGISTER reg) {
+void x86_call(REGISTER reg) {
     if (reg >= REGISTER::R8) {
         load_byte(gen_rex_r(WIDE_ON, reg)); 
     }
@@ -346,35 +350,42 @@ void IA32e_call(REGISTER reg) {
 
 // Call some C++ function that takes a single integer argument, and returns void
 // FF /2
-void IA32e_call_void_sia(void(*f)(int), REGISTER src) {
-    IA32e_mov_rr32(REGISTER::EDI, src);
-    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
+void x86_call_void_sia(void(*f)(int), REGISTER src) {
+    x86_mov_rr32(REGISTER::EDI, src);
+    x86_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
 
-    IA32e_call(REGISTER::RCX);
+    x86_call(REGISTER::RCX);
+}
+
+void x86_call_void_sba(void(*f)(bool), REGISTER src) {
+    x86_mov_rr32(REGISTER::EDI, src);
+    x86_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
+
+    x86_call(REGISTER::RCX);
 }
 
 // Get the argument through the memory address in a register
-void IA32e_call_void_sia_indirect(void(*f)(int), REGISTER src) {
-    IA32e_mov_rm32_nodisp(REGISTER::EDI, src);
-    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
+void x86_call_void_sia_indirect(void(*f)(int), REGISTER src) {
+    x86_mov_rm32_nodisp(REGISTER::EDI, src);
+    x86_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f);
 
-    IA32e_call(REGISTER::RCX);
+    x86_call(REGISTER::RCX);
 }
 
-void IA32e_call_int_zia(int(*f)(void)) {
-    IA32e_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f);
-    IA32e_call(REGISTER::ECX);
+void x86_call_int_zia(int(*f)(void)) {
+    x86_mov_rimm64_ptr(REGISTER::ECX, (std::uintptr_t) f);
+    x86_call(REGISTER::ECX);
 }
 
 // Call some C++ function that takes a single char* argument, and returns void
 // FF /2
-void IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
+void x86_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
     const char* c = STR_TABLE::emit_string(st_entry);
 
-    IA32e_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f); 
-    IA32e_mov_rimm64_ptr(REGISTER::RDI, (std::uintptr_t) c); 
+    x86_mov_rimm64_ptr(REGISTER::RCX, (std::uintptr_t) f); 
+    x86_mov_rimm64_ptr(REGISTER::RDI, (std::uintptr_t) c); 
 
-    IA32e_call(REGISTER::RCX);
+    x86_call(REGISTER::RCX);
 }
 
 // Calls INT_TABLE::emit_int(size_t offset), which returns a pointer to the region in memory in which the variable
@@ -385,25 +396,86 @@ void IA32e_call_void_sca(void(*f)(const char*), STR_TABLE_ENTRY& st_entry) {
 // mov  r10, INT_TABLE::emit_int
 // call r10
 // mov  r10,eax
-void IA32e_get_int_for_assign(size_t offset) {
-    IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
-    IA32e_mov_rimm64_ptr(REGISTER::R10, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
-    IA32e_call(REGISTER::R10);
+void x86_get_int_for_assign(size_t offset) {
+    x86_mov_rimm64_sizet(REGISTER::RDI, offset);
+    x86_mov_rimm64_ptr(REGISTER::R10, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
+    x86_call(REGISTER::R10);
 
-    IA32e_mov_rr64(REGISTER::R10, REGISTER::RAX);
+    x86_mov_rr64(REGISTER::R10, REGISTER::RAX);
 }
 
 // Use R11
-void IA32e_get_int_for_expr(size_t offset) {
-    IA32e_mov_rimm64_sizet(REGISTER::RDI, offset);
-    IA32e_mov_rimm64_ptr(REGISTER::R11, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
-    IA32e_call(REGISTER::R11);
+void x86_get_int_for_expr(size_t offset) {
+    x86_mov_rimm64_sizet(REGISTER::RDI, offset);
+    x86_mov_rimm64_ptr(REGISTER::R11, (std::uintptr_t)(int*(*)(size_t))INT_TABLE::emit_int);
+    x86_call(REGISTER::R11);
 
-    IA32e_mov_rr64(REGISTER::R11, REGISTER::RAX);
+    x86_mov_rr64(REGISTER::R11, REGISTER::RAX);
+}
+
+// 39 /r CMP r/m32, r32
+void x86_cmp_rr32(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
+    load_byte(0x39);
+    load_byte(gen_modrm_rr(dest, src));
+}
+
+// 0F 9C /0 SETL r/m8
+void x86_setl_al() {
+    load_byte(0x0F);
+    load_byte(0x9C);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F 9E /0 SETLE r/m8
+void x86_setle_al() {
+    load_byte(0x0F);
+    load_byte(0x9E);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F 9F /0 SETG r/m8
+void x86_setg_al() {
+    load_byte(0x0F);
+    load_byte(0x9F);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F 9D /0 SETGE r/m8
+void x86_setge_al() {
+    load_byte(0x0F);
+    load_byte(0x9D);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F 94 /0 SETE r/m8
+void x86_sete_al() {
+    load_byte(0x0F);
+    load_byte(0x94);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F 95 /0 SETNE r/m8
+void x86_setne_al() {
+    load_byte(0x0F);
+    load_byte(0x95);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
+// 0F B6 /r MOVZX r32, r/m8
+void x86_movzx_r32_r8_al(REGISTER dest) {
+    if (dest >= REGISTER::R8) {
+        load_byte(gen_rex_r(WIDE_OFF, dest));
+    }
+    load_byte(0x0F);
+    load_byte(0xB6);
+    load_byte(gen_modrm_rr((REGISTER) 0, dest));
 }
 
 // Add a return instruction and execute program, returns value in the accumulator
-int IA32e_exec() {
+int x86_exec() {
     load_byte(0xc3);
     // dump();
     // return 0;

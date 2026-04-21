@@ -14,6 +14,8 @@
 
 #define OPERATOR true
 
+struct AST_NODE;
+
 enum class NODE_TYPE : unsigned int {
     null, NOT, AND, OR,
     LESS, LEQ, GREATER,
@@ -27,12 +29,20 @@ enum class NODE_TYPE : unsigned int {
 };
 
 enum class TYPE : unsigned int {
-    null, INT4, STRING, BOOL
+    null, INT4, STRING, BOOL, TYPE_MISMATCH
 };
 
 extern std::unordered_set<std::string> reserved_words;
 
 bool is_reserved(const Token& t);
+NODE_TYPE get_node_type(const Token& t);
+
+// Returns the offender for error info (or nullptr if the types comply)
+AST_NODE* binary_arithmetic_type_compliance(AST_NODE* left, AST_NODE* right);
+AST_NODE* unary_arithmetic_type_compliance(AST_NODE* left);
+AST_NODE* binary_relational_type_compliance(AST_NODE* left, AST_NODE* right);
+AST_NODE* binary_logical_type_compliance(AST_NODE* left, AST_NODE* right);
+AST_NODE* unary_logical_type_compliance(AST_NODE* left);
 
 struct AST_NODE {
     // Always set upon consumption
@@ -50,6 +60,9 @@ struct AST_NODE {
     // Data type will be found later for operators,
     // for var, int, bool, or string nodes set this
     TYPE data_type{};
+
+    bool boolean{};
+    bool is_boolean{};
 
     // If consumed token is a string constant
     STR_TABLE_ENTRY entry{};
@@ -83,6 +96,8 @@ struct AST_NODE {
         syminfo = other.syminfo;
         is_operator = other.is_operator;
         symbol_type = other.symbol_type;
+        boolean = other.boolean;
+        is_boolean = other.is_boolean;
     }
 
     void add_child(AST_NODE* child) {
@@ -94,53 +109,23 @@ struct AST_NODE {
         ((children.push_back(args)), ...);
     }
 
-    void clear() {
-        token = Token{};
-        is_operator = false;
-        node_type = NODE_TYPE{};
-        data_type = TYPE{};
-        symbol_type = SYMTYPE{};
-        syminfo = nullptr;
-        entry = STR_TABLE_ENTRY{};
-    }
+    void clear();
+    std::string str_node_type();
+    bool is_statement();
+    bool operator_is_arithmetic();
+    bool operator_is_binary_arithmetic();
+    bool operator_is_unary_arithmetic();
+    bool operator_is_relational();
+    bool operator_is_binary_relational();
+    bool operator_is_logical();
+    bool operator_is_binary_logical();
+    bool operator_is_unary_logical();
+    bool operator_is_binary();
+    bool operator_is_unary();
+    bool is_terminal();
 
-    std::string str_node_type() {
-        return std::vector<std::string>{
-                "_null", "ADD", "SUB", "MULT", 
-                "NOT", "AND", "OR",
-                "LESS", "LEQ", "GREATER", "GEQ",
-                "EQUAL", "NEQ", 
-                "DIV", "MOD", "EXP", "UPLUS", 
-                "UNEG", "declare", "assign", "print", 
-                "read", "Statement block", "INT", "VAR", "STR"
-        }[(int)node_type];
-    }
-
-    bool operator_is_arithmetic() {
-        return node_type == NODE_TYPE::ADD ||
-            node_type == NODE_TYPE::SUB ||
-            node_type == NODE_TYPE::UPLUS ||
-            node_type == NODE_TYPE::UNEG ||
-            node_type == NODE_TYPE::MULT ||
-            node_type == NODE_TYPE::DIV ||
-            node_type == NODE_TYPE::MOD ||
-            node_type == NODE_TYPE::EXP;
-    }
-
-    bool operator_is_relational() {
-        return node_type == NODE_TYPE::LESS ||
-            node_type == NODE_TYPE::LEQ ||
-            node_type == NODE_TYPE::GREATER ||
-            node_type == NODE_TYPE::GEQ ||
-            node_type == NODE_TYPE::EQ ||
-            node_type == NODE_TYPE::NEQ;
-    }
-
-    bool operator_is_logical() {
-        return node_type == NODE_TYPE::NOT ||
-            node_type == NODE_TYPE::AND ||
-            node_type == NODE_TYPE::OR;
-    }
+    bool is_type_integral(); 
+    bool is_type_logical();
 };
 
 #endif

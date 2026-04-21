@@ -31,6 +31,7 @@ const char* error_string(int err) {
         case NCC_INVALID_IDENTIFIER: return "invalid identifier";
         case NCC_UNKNOWN_VARIABLE: return "variable has not be declared";
         case NCC_EXPECTED_VAR: return "expected variable, none provided";
+        case NCC_UNACCEPTABLE_TYPE_MISMATCH: return "type mismatch cannot be justified";
         default: return "unknown error";
     }
 }

@@ -211,7 +211,7 @@ int parse() {
     std::cout << "Code size: " << byte_count << " bytes.\n";
     std::cout << "Code execution: \n";
 
-    int res = IA32e_exec();
+    int res = x86_exec();
 
     if (pspace_reclaim() == -1) {
         std::cerr << "Did not succeed in reclaiming allocated program space\n";
@@ -263,7 +263,7 @@ AST_NODE* parse_print() {
     }
 
     // Process all expressions, add as children to print node
-    AST_NODE* expr = E(expr_error);
+    AST_NODE* expr = A(expr_error);
     AST_NODE* ast_expr = pttoast(expr);
 
     free_tree(expr);
@@ -276,7 +276,7 @@ AST_NODE* parse_print() {
         return nullptr;
     }
 
-    print_root->add_child(pttoast(expr));
+    print_root->add_child(ast_expr);
 
     while (next_token.id == TOKEN_COMMA) {
         lex_error = get_token(next_token);
@@ -286,8 +286,18 @@ AST_NODE* parse_print() {
             return nullptr;
         }
 
-        expr = E(expr_error);
+        // Comma with no expression
+        if (next_token.id == TOKEN_RPAREN) {
+            set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
+            goto_next_semicolon();
+            free_tree(print_root);
+            return nullptr;
+        }
+
+        expr = A(expr_error);
         ast_expr = pttoast(expr);
+        free_tree(expr);
+
         if (!ast_expr) {
             goto_next_semicolon();
             free_tree(print_root);
@@ -498,7 +508,7 @@ AST_NODE* parse_assign() {
         return nullptr;
     }
 
-    AST_NODE* expr = E(expr_err);
+    AST_NODE* expr = A(expr_err);
     AST_NODE* ast_expr = pttoast(expr);
 
     free_tree(expr);
@@ -704,28 +714,26 @@ AST_NODE* DP(Error& err) {
     AST_NODE* here{};
     AST_NODE* left{};
 
-    // Cleanup this abomination
-
     // Consider these various first sets
-    if (next_token.id == TOKEN_EQUAL) {
+    if (next_token.id == TOKEN_EQUAL ||
+        next_token.id == TOKEN_NOT_EQUAL ||
+        next_token.id == TOKEN_GREATER ||
+        next_token.id == TOKEN_GREATER_EQ ||
+        next_token.id == TOKEN_LESS ||
+        next_token.id == TOKEN_LESS_EQ
+
+    ) {
         // Take E and consume the token
-        here = new AST_NODE(next_token, NODE_TYPE::EQ, OPERATOR);
-    } else if (next_token.id == TOKEN_NOT_EQUAL) {
-        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
+        here = new AST_NODE(next_token, get_node_type(next_token), OPERATOR);
+
+        Error tmp_error = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(tmp_error)) {
+            goto_next_semicolon();
+            err = tmp_error;
+            return nullptr;
+        }
     }
-    else if (next_token.id == TOKEN_GREATER) {
-        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
-    }
-    else if (next_token.id == TOKEN_GREATER_EQ) {
-        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
-    }
-    else if (next_token.id == TOKEN_LESS) {
-        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
-    }
-    else if (next_token.id == TOKEN_LESS_EQ) {
-        here = new AST_NODE(next_token, NODE_TYPE::NEQ, OPERATOR);
-    }
-    // js annihilate the node
+    // Otherwise annihilate the node
     else {
         return nullptr;
     }
@@ -963,7 +971,7 @@ AST_NODE* S(Error& err) {
     AST_NODE* here = new AST_NODE();
 	AST_NODE* left{};
 
-    // Consider FIRST((E)), FIRST(int), nothing nullable
+    // Consider FIRST((A)), FIRST(int), nothing nullable
     
     // t \in FIRST(int), token must be TOKEN_INTEGER, nothing to call.
     if (next_token.id == TOKEN_INTEGER) {
@@ -991,7 +999,7 @@ AST_NODE* S(Error& err) {
         	return nullptr;
         }
 
-        left = E(err);
+        left = A(err);
 
         // If next token is not ), error
         if (next_token.id != TOKEN_RPAREN) {
@@ -1038,34 +1046,55 @@ AST_NODE* S(Error& err) {
     } 
     // Variable
     else if (next_token.id == TOKEN_IDENT) {
-        here->token = next_token;
-        here->node_type = NODE_TYPE::VAR;
+        // Could be true or false
+        if (next_token.identifier == "true" ||
+            next_token.identifier == "false"
+        ) {
+            here = new AST_NODE(next_token, NODE_TYPE::BOOL, TYPE::BOOL); 
+            here->boolean = next_token.identifier == "true" 
+                ? true 
+                : false;
+            here->is_boolean = true;
 
-        // Search the symbol table
-        SYMINFO* syminfo = SYMTABLE::get_symbol(next_token.identifier, SYMTYPE::VAR);
+            Error tmp_error = get_token(next_token);
+            if (invalid_lookahead() || 
+                handle_lex_error(tmp_error)
+            ) {
+                err = tmp_error;
+                free_tree(here);
+                return nullptr;
+            }
+        } else {
+            here->token = next_token;
+            here->node_type = NODE_TYPE::VAR;
 
-        if (!syminfo) {
-            set_print_token_error(Error{}, NCC_UNKNOWN_VARIABLE);
-            free_tree(here);
-            return nullptr;
+            // Search the symbol table
+            SYMINFO* syminfo = SYMTABLE::get_symbol(next_token.identifier, SYMTYPE::VAR);
+
+            if (!syminfo) {
+                set_print_token_error(Error{}, NCC_UNKNOWN_VARIABLE);
+                free_tree(here);
+                return nullptr;
+            }
+            here->syminfo = syminfo;
+            here->data_type = syminfo->data_type;
+
+            Error tmp_error = get_token(next_token);
+            if (invalid_lookahead() ||
+                    handle_lex_error(tmp_error)
+               ){
+                err = tmp_error;
+                free_tree(here);
+                return nullptr;
+            }
         }
-        here->syminfo = syminfo;
-        here->data_type = syminfo->data_type;
 
-        Error tmp_error = get_token(next_token);
-        if (invalid_lookahead() ||
-            handle_lex_error(tmp_error)
-        ){
-            err = tmp_error;
-            free_tree(here);
-            return nullptr;
-        }
     } else {
         free_tree(here);
         return nullptr;
     }
 
-    here->add_child(left);
+    if (left) here->add_child(left);
     return here;
 }
 

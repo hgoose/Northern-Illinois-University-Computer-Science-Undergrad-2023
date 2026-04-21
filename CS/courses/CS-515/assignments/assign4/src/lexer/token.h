@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 /*******     Token  id  values   ******/
 #define TOKEN_NULL               0
@@ -51,7 +52,15 @@
 #define ESC_BACKSPACE            8
 #define EMPTY                    0
 
-extern const std::vector<std::string> token_names;
+namespace TOKEN_STRUCTURES {
+    extern const std::vector<std::string> token_names;
+    extern const std::unordered_set<int> terminals; 
+    extern const std::unordered_set<int> binary_arithmetic_operators;
+    extern const std::unordered_set<int> unary_arithmetic_operators;
+    extern const std::unordered_set<int> binary_relational_operators;
+    extern const std::unordered_set<int> binary_logical_operators;
+    extern const std::unordered_set<int> unary_logical_operators;
+};
 
 struct Token
 {

@@ -46,56 +46,33 @@ bool is_st_valid(AST_NODE* root, bool accept_empty) {
             children.push(curr); 
         } 
         // Unary operator, check for a single child of the correct type
-        else if (curr->token.id == TOKEN_UPLUS || curr->token.id == TOKEN_UNEG) {
+        // a A -> A | L \ell -> L
+        else if (curr->operator_is_unary()) { 
             if (children.empty()) {
-                return false;
-            }
-
-            // Type check
-            AST_NODE* operand = children.top();
-            if (operand->data_type != TYPE::INT4) {
-                set_print_token_error(Error{}, operand->token, NCC_INVALID_OPERAND_TYPE);
                 return false;
             }
 
             children.pop();
             children.push(curr);
         }
-        // Check that for a binary arithmetic operator, we have two children available and they 
-        // are of the correct type (int4).
-        // 
-        // A a A -> A
-        else if (curr->operator_is_arithmetic()){
+        // Check that for a binary operator, we have two children available 
+        // A a A -> A | A r A -> L | (L | (A r A) \ell (L | (A r A)) -> L)
+        //
+        // Note: I can't remember if I just made this syntax up or if I've seen it somewhere. 
+        // Capital letters denote the type of operand, lowercase denote the type of operator, \mid is "or".
+        else if (curr->operator_is_binary()) {
             if (children.empty()) {
                 return false;
             }
-            AST_NODE* left = children.top(); children.pop();
+            children.pop();
 
             if (children.empty()) {
                 return false;
             }
-            AST_NODE* right = children.top(); children.pop(); 
-            
-            if (left->data_type != TYPE::INT4 && !left->is_operator) {
-                set_print_token_error(Error{}, left->token, NCC_INVALID_OPERAND_TYPE);
-                return false;
-            }
-
-            if (right->data_type != TYPE::INT4 && !right->is_operator) {
-                set_print_token_error(Error{}, right->token, NCC_INVALID_OPERAND_TYPE);
-                return false;
-            }
+            children.pop(); 
 
             children.push(curr);
         } 
-        // A r A -> L
-        else if (curr->operator_is_relational()) {
-
-        }
-        // (L | (A r A)) \ell (L | (A r A)) -> L
-        else if (curr->operator_is_logical()) {
-
-        }
     }
 
     // Valid tree if the stack is allowed to be empty, if not we must
@@ -111,19 +88,7 @@ void gen_queue(AST_NODE* p, std::queue<AST_NODE*>& terminals) {
         gen_queue(it, terminals);
     });
 
-    // Set of terminals
-    if (p->token.id == TOKEN_INTEGER 
-        || p->token.id == TOKEN_STRING
-        || p->token.id == TOKEN_IDENT
-        || p->token.id == TOKEN_PLUS 
-        || p->token.id == TOKEN_MINUS 
-        || p->token.id == TOKEN_MULT
-        || p->token.id == TOKEN_DIV 
-        || p->token.id == TOKEN_MOD
-        || p->token.id == TOKEN_EXP
-        || p->token.id == TOKEN_UNEG
-        || p->token.id == TOKEN_UPLUS
-    ) {
+    if (p->is_terminal()) {
         terminals.push(new AST_NODE(*p));
     }
 }
@@ -154,19 +119,11 @@ AST_NODE* pttoast(AST_NODE* root) {
 
         // Not an operator, although if integer would also work
         // add to the stack
-        if (curr->token.id != TOKEN_PLUS
-            && curr->token.id != TOKEN_MINUS
-            && curr->token.id != TOKEN_MULT
-            && curr->token.id != TOKEN_DIV
-            && curr->token.id != TOKEN_MOD
-            && curr->token.id != TOKEN_EXP
-            && curr->token.id != TOKEN_UNEG
-            && curr->token.id != TOKEN_UPLUS
-        ) {
+        if (curr->is_operator == !OPERATOR) {
             children.push(curr); 
         } 
         // Unary operator, grab a single child
-        else if (curr->token.id == TOKEN_UPLUS || curr->token.id == TOKEN_UNEG) {
+        else if (curr->operator_is_unary()) {
             AST_NODE* right = children.top(); children.pop();
             curr->add_child(right);
 
@@ -174,7 +131,7 @@ AST_NODE* pttoast(AST_NODE* root) {
             children.push(curr);
         }
         // Binary operator, attach stack top to right, stack top-1 to left
-        else {
+        else if (curr->operator_is_binary()){
             AST_NODE* right = children.top(); children.pop();
             AST_NODE* left = children.top(); children.pop();
             
@@ -184,14 +141,39 @@ AST_NODE* pttoast(AST_NODE* root) {
             // Throw this node onto the stack
             children.push(curr);
 
-        }
+        } 
         // Track top most node, which is the root
         ast_root = curr;
     }
 
-    assign_types(ast_root);
+    return assign_types(ast_root) == TYPE::TYPE_MISMATCH ? nullptr : ast_root;
+}
 
-    return ast_root;
+AST_NODE* type_compliance(AST_NODE* parent, AST_NODE* left, AST_NODE* right) {
+    AST_NODE* offender{};
+
+    if (parent->operator_is_binary_arithmetic()) {
+        AST_NODE* offender = 
+            binary_arithmetic_type_compliance(left, right);
+
+    } else if (parent->operator_is_unary_arithmetic()) {
+        AST_NODE* offender = 
+            unary_arithmetic_type_compliance(left);
+
+    } else if (parent->operator_is_binary_relational()) {
+        AST_NODE* offender = 
+            binary_relational_type_compliance(left, right);
+
+    } else if (parent->operator_is_binary_logical()) {
+        AST_NODE* offender = 
+            binary_logical_type_compliance(left, right);
+
+    } else if (parent->operator_is_unary_logical()) {
+        AST_NODE* offender = 
+            unary_logical_type_compliance(left);
+    }
+
+    return offender;
 }
 
 TYPE assign_types(AST_NODE* root) {
@@ -212,20 +194,26 @@ TYPE assign_types(AST_NODE* root) {
     left_type = assign_types(left);
     right_type = assign_types(right);
 
-    if (left_type != TYPE::null && right_type != TYPE::null) {
-        TYPE bigger = (left_type > right_type ? left_type : right_type);
-        root->data_type = bigger;
-        return bigger;
-    } 
+    if (left_type == TYPE::TYPE_MISMATCH || right_type == TYPE::TYPE_MISMATCH) 
+        return TYPE::TYPE_MISMATCH;
 
-    else if (left_type != TYPE::null && right_type == TYPE::null) {
-        root->data_type = left_type;
-        return left_type;
-    } 
+    if (root->is_operator) {
+        AST_NODE* offender = type_compliance(root, left, right);
+        if (offender) {
+            set_print_token_error(Error{}, offender->token, NCC_UNACCEPTABLE_TYPE_MISMATCH);
+            return TYPE::TYPE_MISMATCH;
+        }
 
-    else if (left_type == TYPE::null && right_type != TYPE::null) {
-        root->data_type = right_type;
-        return right_type;
+        if (root->operator_is_arithmetic()) {
+            root->data_type = left_type > right_type ? left_type : right_type;
+        } else if (root->operator_is_relational()) {
+            root->data_type = TYPE::BOOL;
+        } else if (root->operator_is_logical()) {
+            root->data_type = TYPE::BOOL;
+        }
+
+        return root->data_type;
+
     }
 
     return here_type;
@@ -234,7 +222,7 @@ TYPE assign_types(AST_NODE* root) {
 void ast_preorder(AST_NODE* root) {
     if (!root) return;
 
-    std::cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
+    std::cout << (root->token.id != -1 ? TOKEN_STRUCTURES::token_names[root->token.id] : "Empty") << ", ";
     std::for_each(root->children.begin(), root->children.end(), [](auto& it) -> void {
         ast_preorder(it);
     });
@@ -244,7 +232,7 @@ void ast_inorder(AST_NODE* root) {
     if (!root) return;
 
     std::for_each(root->children.begin(), root->children.end(), [&root](auto& it) -> void {
-            std::cout << (root->token.id != -1 ? token_names[root->token.id] : "Empty") << ", ";
+            std::cout << (root->token.id != -1 ? TOKEN_STRUCTURES::token_names[root->token.id] : "Empty") << ", ";
         ast_inorder(it);
     });
 
@@ -269,6 +257,15 @@ const char* op_name(int id) {
         case TOKEN_EXP:   return "exp";
         case TOKEN_UNEG:  return "neg";
         case TOKEN_UPLUS: return "pos";
+        case TOKEN_LESS: return "less than";
+        case TOKEN_LESS_EQ: return "less than or equal";
+        case TOKEN_GREATER: return "greater than";
+        case TOKEN_GREATER_EQ: return "greater than or equal";
+        case TOKEN_EQUAL: return "equal";
+        case TOKEN_NOT_EQUAL: return "not equal";
+        case TOKEN_NOT: return "not";
+        case TOKEN_AND: return "and";
+        case TOKEN_OR: return "or";
         default:          return "";
     }
 }
@@ -283,28 +280,18 @@ void r_ast_out(AST_NODE* node, int depth) {
     // Integer node
     if (node->token.id == TOKEN_INTEGER || node->token.id == TOKEN_STRING) {
         std::cout << node->token.lexeme << "\n";
+    } 
+    else if (node->is_boolean == true) {
+        std::cout << std::boolalpha << node->boolean << '\n'; 
     } else if (node->token.id == TOKEN_IDENT && !is_reserved(node->token)) {
         std::cout << "Var: " << node->token.identifier << '\n';
     }
     // Operator node
-    else if (node->token.id == TOKEN_PLUS  ||
-             node->token.id == TOKEN_MINUS ||
-             node->token.id == TOKEN_MULT  ||
-             node->token.id == TOKEN_DIV   ||
-             node->token.id == TOKEN_MOD   ||
-             node->token.id == TOKEN_EXP   ||
-             node->token.id == TOKEN_UNEG  ||
-             node->token.id == TOKEN_UPLUS
-    ) {
+    else if (node->is_operator == OPERATOR) {
         std::cout << node->token.lexeme
                   << " (" << op_name(node->token.id) << ")"
                   << "\n";
-    } else if (node->node_type == NODE_TYPE::PRINT ||
-               node->node_type == NODE_TYPE::BLOCK ||
-               node->node_type == NODE_TYPE::DECL ||
-               node->node_type == NODE_TYPE::ASSIGN ||
-               node->node_type == NODE_TYPE::READ
-    ) {
+    } else if (node->is_statement()) {
         std::cout << node->str_node_type() << '\n';
     } 
     // Other internal nodes (if any) (useful for debugging, this should not hit)

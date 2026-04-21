@@ -25,6 +25,7 @@
 #define  NCC_INVALID_IDENTIFIER    -19
 #define  NCC_UNKNOWN_VARIABLE      -20
 #define  NCC_EXPECTED_VAR          -21
+#define  NCC_UNACCEPTABLE_TYPE_MISMATCH -22
 
 struct Token;
 

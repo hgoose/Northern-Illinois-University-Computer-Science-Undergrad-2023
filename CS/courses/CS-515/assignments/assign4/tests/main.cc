@@ -28,7 +28,7 @@ int main(int argc, const char* argv[]) {
     print_error(err);
 
     // Examine the token stream
-    // Token t; while (!lex_eof()) { get_token(t); cout << (t.id != -1 ? token_names[t.id] : "stop") << ", " << t.lexeme << "\n"; }
+    // Token t; while (!lex_eof()) { get_token(t); cout << (t.id != -1 ? TOKEN_STRUCTURES::token_names[t.id] : "stop") << ", " << t.lexeme << "\n"; }
 
     // Run the parser test driver
     parser_test(filename);
