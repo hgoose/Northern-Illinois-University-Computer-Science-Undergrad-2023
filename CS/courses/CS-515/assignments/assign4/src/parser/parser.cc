@@ -173,12 +173,10 @@ int parse() {
             } else if (next_token.identifier == "if") {
                 statement_root = parse_if();
                 if (statement_root) {
-                    ast_postorder(statement_root);
                 }
             } else if (next_token.identifier == "while") {
                 statement_root = parse_while();
                 if (statement_root) {
-                    ast_postorder(statement_root);
                 }
             }
             // Variable assignment? 
@@ -191,9 +189,16 @@ int parse() {
             }
 
             // If and while end at the start of the next statement
-            if (statement_root->node_type != NODE_TYPE::IF && statement_root->node_type != NODE_TYPE::WHILE) {
+            if (statement_root && statement_root->node_type != NODE_TYPE::IF && statement_root->node_type != NODE_TYPE::WHILE) {
                 if (invalid_lookahead() || handle_lex_error(get_token(next_token))) {
                     goto_next_semicolon(); 
+                }
+            }
+
+            if (!statement_root) {
+                if (next_token.id == TOKEN_SEMICOLON) {
+                    invalid_lookahead();
+                    handle_lex_error(get_token(next_token));
                 }
             }
         } 
@@ -212,6 +217,10 @@ int parse() {
             update_var(statement);
         } else if (statement->node_type == NODE_TYPE::READ) {
             process_read(statement);
+        } else if (statement->node_type == NODE_TYPE::IF) {
+            process_if(statement);
+        } else if (statement->node_type == NODE_TYPE::WHILE) {
+            process_while(statement);
         }
     });
 
@@ -334,7 +343,7 @@ AST_NODE* parse_print() {
     // Missing semicolon after )
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        // goto_next_semicolon();
         free_tree(print_root);
         return nullptr;
     }
@@ -410,7 +419,7 @@ AST_NODE* parse_read() {
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        // goto_next_semicolon();
         free_tree(read_root);
         free_tree(var_node);
         return nullptr;
@@ -474,7 +483,7 @@ AST_NODE* parse_decl_int4() {
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        // goto_next_semicolon();
         free_tree(declare_root);
         free_tree(var);
         return nullptr;
@@ -532,7 +541,7 @@ AST_NODE* parse_assign() {
 
     if (next_token.id != TOKEN_SEMICOLON) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        // goto_next_semicolon();
         free_tree(assign_root);
         return nullptr;
     }
@@ -585,19 +594,38 @@ AST_NODE* parse_else() {
         }
     }
 
+    bool broken_noblock{};
+    bool dont_move{};
     if (!empty) {
         do {
+            dont_move = false;
             AST_NODE* statement = get_statement();
             if (statement) {
                 else_root->add_child(statement);
             }
 
+            if (statement->node_type == NODE_TYPE::IF || 
+                    statement->node_type == NODE_TYPE::WHILE
+            ) {
+                dont_move = true;
+            }
+
+            if (!block && !statement) {
+                broken_noblock = true;
+            }
+
             if (block) {
-                lex_err = get_token(next_token);
-                if (invalid_lookahead() || handle_lex_error(lex_err)) {
-                    goto_next_semicolon();
-                    free_tree(else_root);
-                    return nullptr;
+                if (next_token.id == TOKEN_RBRACE) {
+                    break;
+                }
+
+                if (!dont_move) {
+                    lex_err = get_token(next_token);
+                    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                        goto_next_semicolon();
+                        free_tree(else_root);
+                        return nullptr;
+                    }
                 }
 
                 if (next_token.id == TOKEN_EOF) {
@@ -615,11 +643,13 @@ AST_NODE* parse_else() {
 
     }
 
-    lex_err = get_token(next_token);
-    if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
-        free_tree(else_root);
-        return nullptr;
+    if (!broken_noblock && !dont_move || block) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(else_root);
+            return nullptr;
+        }
     }
 
     return else_root;
@@ -634,26 +664,26 @@ AST_NODE* parse_if() {
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_if();
         free_tree(if_root);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_LPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        skip_if();
         free_tree(if_root);
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_if();
         free_tree(if_root);
         return nullptr;
     }
 
     if (next_token.id == TOKEN_RPAREN) {
-        goto_next_semicolon();
+        skip_if();
         set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
         free_tree(if_root);
         return nullptr;
@@ -664,7 +694,7 @@ AST_NODE* parse_if() {
     free_tree(expr);
 
     if (!ast_expr) {
-        goto_next_semicolon();
+        skip_if();
         free_tree(ast_expr);
         free_tree(if_root);
         return nullptr;
@@ -672,7 +702,7 @@ AST_NODE* parse_if() {
 
     if (ast_expr->data_type != TYPE::BOOL) {
         set_print_token_error(Error{}, ast_expr->token, NCC_NON_LOGICAL_CONDITION);
-        goto_next_semicolon();
+        skip_if();
         free_tree(ast_expr);
         free_tree(if_root);
         return nullptr;
@@ -682,13 +712,13 @@ AST_NODE* parse_if() {
 
     if (next_token.id != TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        skip_if();
         free_tree(if_root);
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_if();
         free_tree(if_root);
         return nullptr;
     }
@@ -696,7 +726,7 @@ AST_NODE* parse_if() {
     if (next_token.id == TOKEN_SEMICOLON) {
         lex_err = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_err)) {
-            goto_next_semicolon();
+            skip_if();
             free_tree(if_root);
             return nullptr;
         }
@@ -707,7 +737,7 @@ AST_NODE* parse_if() {
     if (block) {
         lex_err = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_err)) {
-            goto_next_semicolon();
+            skip_if();
             free_tree(if_root);
             return nullptr;
         }
@@ -718,16 +748,20 @@ AST_NODE* parse_if() {
         empty = true;
     }
 
-    bool on_else{};
+    bool dont_move{};
     if (!empty) {
         do {
+            dont_move = false;
             AST_NODE* statement = get_statement();
             if (statement) {
                 if_root->add_child(statement);
             } 
 
-            if (next_token.identifier == "else") {
-                on_else = true;
+            if (next_token.identifier == "else" || 
+                    statement->node_type == NODE_TYPE::IF || 
+                    statement->node_type == NODE_TYPE::WHILE
+            ) {
+                dont_move = true;
             }
 
             if (block) {
@@ -735,31 +769,33 @@ AST_NODE* parse_if() {
                     break;
                 }
 
-                lex_err = get_token(next_token);
-                if (invalid_lookahead() || handle_lex_error(lex_err)) {
-                    goto_next_semicolon();
-                    free_tree(if_root);
-                    return nullptr;
+                if (!dont_move) {
+                    lex_err = get_token(next_token);
+                    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                        skip_if();
+                        free_tree(if_root);
+                        return nullptr;
+                    }
                 }
 
                 if (next_token.id == TOKEN_EOF) {
-                    goto_next_semicolon();
+                    skip_if();
                     set_print_token_error(Error{}, NCC_UNEXPECTED_EOF); 
                     free_tree(if_root);
                     return nullptr;
                 }
 
                 if (next_token.id == TOKEN_RBRACE) break;
-            }
+            } 
 
         } while (block);
 
     }
 
-    if (!on_else) {
+    if (!empty && !dont_move || block) {
         lex_err = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_err)) {
-            goto_next_semicolon();
+            skip_if();
             free_tree(if_root);
             return nullptr;
         }
@@ -784,27 +820,27 @@ AST_NODE* parse_while() {
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_while();
         free_tree(while_root);
         return nullptr;
     }
 
     if (next_token.id != TOKEN_LPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        skip_while();
         free_tree(while_root);
         return nullptr;
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_while();
         free_tree(while_root);
         return nullptr;
     }
 
     if (next_token.id == TOKEN_RPAREN) {
-        goto_next_semicolon();
+        skip_while();
         set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
         free_tree(while_root);
         return nullptr;
@@ -815,7 +851,7 @@ AST_NODE* parse_while() {
     free_tree(expr);
 
     if (!ast_expr) {
-        goto_next_semicolon();
+        skip_while();
         free_tree(ast_expr);
         free_tree(while_root);
         return nullptr;
@@ -823,7 +859,7 @@ AST_NODE* parse_while() {
 
     if (ast_expr->data_type != TYPE::BOOL) {
         set_print_token_error(Error{}, ast_expr->token, NCC_NON_LOGICAL_CONDITION);
-        goto_next_semicolon();
+        skip_while();
         free_tree(ast_expr);
         free_tree(while_root);
         return nullptr;
@@ -833,13 +869,13 @@ AST_NODE* parse_while() {
 
     if (next_token.id != TOKEN_RPAREN) {
         set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
-        goto_next_semicolon();
+        skip_while();
         free_tree(while_root);
     }
 
     lex_err = get_token(next_token);
     if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
+        skip_while();
         free_tree(while_root);
         return nullptr;
     }
@@ -848,7 +884,7 @@ AST_NODE* parse_while() {
     if (next_token.id == TOKEN_SEMICOLON) {
         lex_err = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_err)) {
-            goto_next_semicolon();
+            skip_while();
             free_tree(while_root);
             return nullptr;
         }
@@ -859,7 +895,7 @@ AST_NODE* parse_while() {
     if (block) {
         lex_err = get_token(next_token);
         if (invalid_lookahead() || handle_lex_error(lex_err)) {
-            goto_next_semicolon();
+            skip_while();
             free_tree(while_root);
             return nullptr;
         }
@@ -870,25 +906,36 @@ AST_NODE* parse_while() {
         empty = true;
     }
 
+    bool dont_move{};
     if (!empty) do {
+        dont_move = false;
         AST_NODE* statement = get_statement();
         if (statement) {
             while_root->add_child(statement);
         }
+
+        if (statement->node_type == NODE_TYPE::IF || 
+                statement->node_type == NODE_TYPE::WHILE
+        ){
+            dont_move = true;
+        }
+
         if (block) {
             if (next_token.id == TOKEN_RBRACE) {
                 break;
             }
 
-            lex_err = get_token(next_token);
-            if (invalid_lookahead() || handle_lex_error(lex_err)) {
-                goto_next_semicolon();
-                free_tree(while_root);
-                return nullptr;
+            if (!dont_move) {
+                lex_err = get_token(next_token);
+                if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                    skip_while();
+                    free_tree(while_root);
+                    return nullptr;
+                }
             }
 
             if (next_token.id == TOKEN_EOF) {
-                goto_next_semicolon();
+                skip_while();
                 set_print_token_error(Error{}, NCC_UNEXPECTED_EOF); 
                 free_tree(while_root);
                 return nullptr;
@@ -899,11 +946,13 @@ AST_NODE* parse_while() {
 
     } while (block);
 
-    lex_err = get_token(next_token);
-    if (invalid_lookahead() || handle_lex_error(lex_err)) {
-        goto_next_semicolon();
-        free_tree(while_root);
-        return nullptr;
+    if (!empty && !dont_move || block)  {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            skip_while();
+            free_tree(while_root);
+            return nullptr;
+        }
     }
 
     return while_root;

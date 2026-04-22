@@ -158,12 +158,7 @@ void evaluate_expr(AST_NODE* root) {
 
     if (pushed == 0) return;
 
-    // Result in EAX
-    // if (root->is_type_integral()) {
-    // } 
-
     x86_popr32(REGISTER::EAX); --pushed;
-    // Otherwise result in AL
 
     for (unsigned int i{}; i<pushed; ++i) {
         x86_popr32(REGISTER::EBX);
@@ -187,10 +182,10 @@ void evaluate_print_expr(AST_NODE* root) {
     if (root->is_type_integral()) {
         // Call print_int with value in accumulator
         x86_call_void_sia(print_int, REGISTER::EAX);
-        return;
+    } else if (root->is_type_logical()) {
+        // Call print_bool with value in accumulator (al)
+        x86_call_void_sba(print_bool, REGISTER::EAX);
     }
-
-    x86_call_void_sba(print_bool, REGISTER::EAX);
 
     for (unsigned int i{}; i<pushed; ++i) {
         x86_popr32(REGISTER::EBX);
@@ -263,7 +258,7 @@ void update_var(AST_NODE* root) {
     // // Result in eax
     evaluate_expr(ast_expr);
 
-    x86_mov_mr64_nodisp(REGISTER::R15, REGISTER::EAX);
+    x86_mov_mr32_nodisp(REGISTER::R15, REGISTER::EAX);
 }
 
 void process_read(AST_NODE* root) {
@@ -312,24 +307,92 @@ void dispatch_statement(AST_NODE* root) {
     }
 }
 
+// Eval condition -> al
+// test al, 1
+// jz   ____ <- save location, generate code for statements (plus uncond jump)
+//      ^       and learn the total size. Then, insert the rel32 
+//              jump size. (Save first byte then increment poffset by four)
+//
+//  Then, below all statements inside the if, we co
 void process_if(AST_NODE* root) {
     if (!root) return;
 
-    AST_NODE* condition;
+    AST_NODE* condition{};
 
-    auto it = root->children.begin();
-    if (it != root->children.end()) {
-        condition = *(it++);
+    auto if_child = root->children.begin();
+    if (if_child != root->children.end()) {
+        condition = *(if_child++);
     } else return;
 
-    while (it != root->children.end()) {
-        
-        if ((*it)->node_type == NODE_TYPE::ELSE) {
+    evaluate_expr(condition);
+    x86_test_al_imm8(0x1);
+    size_t jz_rel32_start = x86_jz_rel32_missing();
+
+    int start = get_current_position();
+
+    bool has_else{};
+    AST_NODE* else_node{};
+    while (if_child != root->children.end()) {
+        dispatch_statement(*if_child);
+        if ((*if_child)->node_type == NODE_TYPE::ELSE) {
+            has_else = true;
+            else_node = (*if_child);
             break;
         }
+
+        ++if_child;
+    }
+    size_t jmp_rel32_start = x86_jmp_rel32_missing();
+
+    int end = get_current_position();
+    int jz_jump_size = end - start;
+
+    load_imm32_at(jz_rel32_start, jz_jump_size);
+
+    if (has_else) {
+        int else_start = get_current_position();
+        auto else_child = else_node->children.begin(); 
+        while (else_child != else_node->children.end()) {
+            dispatch_statement(*else_child);
+            ++else_child;
+        }
+
+        int else_end = get_current_position();
+        int jmp_size = else_end - else_start;
+
+        load_imm32_at(jmp_rel32_start, jmp_size);
     }
 }
 
 void process_while(AST_NODE* root) {
+    if (!root) return;
 
+    AST_NODE* condition{};
+
+    auto while_child = root->children.begin();
+    if (while_child != root->children.end()) {
+        condition = *(while_child++);
+    } else return;
+
+    size_t jmp_start = x86_jmp_rel32_missing();
+
+    int body_start = get_current_position();
+    while (while_child != root->children.end()) {
+        dispatch_statement(*while_child);
+        ++while_child;
+    }
+    int body_end = get_current_position();
+    int body_size = body_end - body_start;
+
+    load_imm32_at(jmp_start, body_size);
+
+    int condition_start = get_current_position();
+    evaluate_expr(condition);
+    x86_test_al_imm8(0x1);
+    int condition_end = get_current_position();
+
+    int condition_plus_test_size = condition_end - condition_start;
+
+    // +6 is the size of the jnz itself
+    x86_jnz_rel32(-(body_size + condition_plus_test_size + 6));
 }

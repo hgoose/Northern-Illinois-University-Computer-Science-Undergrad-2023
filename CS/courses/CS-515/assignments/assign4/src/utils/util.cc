@@ -226,6 +226,110 @@ void goto_next_semicolon() {
    } 
 }
 
+void goto_next_rbrace() {
+   while (next_token.id != TOKEN_RBRACE && next_token.id != TOKEN_EOF) {
+       Error e = get_token(next_token);
+       print_error(e);
+   } 
+}
+
+void goto_semi_or_else() {
+    while (next_token.id != TOKEN_SEMICOLON &&
+            next_token.id != TOKEN_EOF &&
+            next_token.identifier != "else"
+    ) {
+        Error e = get_token(next_token);
+        print_error(e);
+    }
+}
+
+void skip_block() {
+    int lbrace_count = 1;
+    Error e{};
+    while (lbrace_count > 0) {
+        e = get_token(next_token);
+        print_error(e);
+
+        if (next_token.id == TOKEN_RBRACE) {
+            --lbrace_count;
+        }
+
+        if (next_token.id == TOKEN_LBRACE) {
+            ++lbrace_count;
+        }
+
+        if (next_token.id == TOKEN_EOF) break;
+    }
+}
+
+void skip_if() {
+    int lbrace_count{};
+    Error e{};
+
+    while (next_token.id != TOKEN_SEMICOLON && next_token.id != TOKEN_EOF) {
+        if (next_token.id == TOKEN_LBRACE) {
+            ++lbrace_count;
+            break;
+        }
+
+        e = get_token(next_token);
+        print_error(e);
+    }
+
+    if (lbrace_count == 0) {
+        goto_semi_or_else();
+    } else {
+        e = get_token(next_token);
+        print_error(e);
+        skip_block();
+    }
+
+    if (next_token.identifier != "else") {
+        e = get_token(next_token);
+        print_error(e);
+    } else {
+        e = get_token(next_token);
+        print_error(e);
+
+        if (next_token.id == TOKEN_LBRACE) {
+            skip_block();
+        } else {
+            goto_next_semicolon();
+        }
+
+        e = get_token(next_token);
+        print_error(e);
+    }
+
+}
+
+void skip_while() {
+    int lbrace_count{};
+    Error e{};
+
+    while (next_token.id != TOKEN_SEMICOLON && next_token.id != TOKEN_EOF) {
+        if (next_token.id == TOKEN_LBRACE) {
+            ++lbrace_count;
+            break;
+        }
+
+        e = get_token(next_token);
+        print_error(e);
+    }
+
+    if (lbrace_count == 0) {
+        return; 
+    }
+
+    e = get_token(next_token);
+    print_error(e);
+
+    skip_block();
+
+    e = get_token(next_token);
+    print_error(e);
+}
+
 // Calls parse_hex6_codepoint and encode_utf8, we get returned the utf8 representation
 std::string hex6_to_utf8(const std::string& hex6) {
     uint32_t cp{};

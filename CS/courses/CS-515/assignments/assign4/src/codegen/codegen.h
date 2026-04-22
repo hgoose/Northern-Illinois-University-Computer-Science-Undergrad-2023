@@ -43,6 +43,7 @@ enum REGISTER_8BIT : unsigned int {
 extern size_t byte_count;
 
 void load_byte(unsigned char byte);
+void load_byte_at(size_t pos, unsigned char byte);
 
 void dump();
 
@@ -53,6 +54,7 @@ int read_int();
 
 void load_imm8(int x);
 void load_imm32(int x);
+void load_imm32_at(size_t pos, long long x);
 void load_imm64(long long x);
 
 inline unsigned int gen_modrm_rr(REGISTER rm, REGISTER r) {
@@ -93,6 +95,7 @@ void x86_mov_rimm32(REGISTER dest, int src);
 void x86_mov_rimm64(REGISTER dest, long long src);
 void x86_mov_rimm64_sizet(REGISTER dest, size_t src);
 void x86_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src);
+void x86_mov_mr32_nodisp(REGISTER dest, REGISTER src);
 void x86_mov_mr64_nodisp(REGISTER dest, REGISTER src);
 void x86_mov_mr64_disp8(REGISTER dest, REGISTER src, int disp);
 void x86_sub_rr32(REGISTER dest, REGISTER src);
@@ -125,10 +128,15 @@ void x86_movzx_r32_r8_al(REGISTER dest);
 void x86_al_flip();
 void x86_test_al_imm8(int x);
 void x86_jz_rel8(int disp);
+size_t x86_jz_rel32_missing();
+size_t x86_jmp_rel32_missing();
 void x86_jnz_rel8(int disp);
+void x86_jnz_rel32(int disp);
 void x86_test_rm8_imm8(REGISTER_8BIT rm, int x);
 void x86_short_circuit_and(REGISTER_8BIT b); 
 void x86_short_circuit_or(REGISTER_8BIT b); 
+size_t move_program_pointer(size_t dx);
+size_t get_current_position();
 int x86_exec();
 
 #endif

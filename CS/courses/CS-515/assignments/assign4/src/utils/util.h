@@ -10,5 +10,8 @@ int parse_hex6_codepoint(const std::string& hex6, uint32_t& value);
 int encode_utf8(uint32_t cp, std::string& out);
 std::string hex6_to_utf8(const std::string& hex6);
 void goto_next_semicolon();
+void goto_next_rbrace();
+void skip_if();
+void skip_while();
 
 #endif

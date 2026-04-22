@@ -27,6 +27,11 @@ void load_byte(unsigned char byte) {
     ++byte_count;
 }
 
+void load_byte_at(size_t pos, unsigned char byte) {
+    prog[pos] = byte;
+    ++byte_count;
+}
+
 void dump() {
     for (size_t i{}; i<p_offset; ++i) {
         std::cout << std::hex << prog[i];
@@ -60,6 +65,13 @@ void load_imm32(int x) {
         load_byte(x & 0xff);
         x>>=0x8;
     } 
+}
+
+void load_imm32_at(size_t pos, long long x) {
+    for (int i=0; i<4; ++i) {
+        load_byte_at(pos++, x & 0xff);
+        x>>=0x8;
+    }
 }
 
 // Loads a 64-bit integer into the program
@@ -172,6 +184,15 @@ void x86_mov_rimm64_ptr(REGISTER dest, std::uintptr_t src) {
     load_byte(gen_rex_r(WIDE_ON, dest));
     load_byte(0xB8 + (dest & 0x7));
     load_imm64(src);
+}
+
+// 89 /r MOV r/m32, r32
+void x86_mov_mr32_nodisp(REGISTER dest, REGISTER src) {
+    if (dest >= REGISTER::R8 || src >= REGISTER::R8) {
+        load_byte(gen_rex_rr(WIDE_OFF, dest, src));
+    }
+    load_byte(0x89);
+    load_byte(gen_modrm_norr_nodisp(dest, src));
 }
 
 // REX.W + 89 /r MOV r/m64, r64
@@ -499,10 +520,36 @@ void x86_jz_rel8(int disp) {
     load_imm8(disp);
 }
 
+// 0F 84 cd JZ rel32
+size_t x86_jz_rel32_missing() {
+    load_byte(0x0F);
+    load_byte(0x84);
+    size_t tmp = p_offset;
+    move_program_pointer(0x4);
+
+    return tmp;
+}
+
+// E9 cd JMP rel32
+size_t x86_jmp_rel32_missing() {
+    load_byte(0xE9);
+    size_t tmp = p_offset;
+    move_program_pointer(0x4);
+
+    return tmp;
+}
+
 // 75 cb JNZ rel8
 void x86_jnz_rel8(int disp) {
     load_byte(0x75);
     load_imm8(disp);
+}
+
+// 0F 85 cd JNZ rel32
+void x86_jnz_rel32(int disp) {
+    load_byte(0x0F);
+    load_byte(0x85);
+    load_imm32(disp);
 }
 
 // F6 /0 ib TEST r/m8, imm8
@@ -540,6 +587,18 @@ void x86_short_circuit_or(REGISTER_8BIT b) {
     x86_jnz_rel8(0x6);
     x86_test_rm8_imm8(b, 1); // 3 bytes
     x86_setnz_al(); // 3 bytes
+}
+
+size_t move_program_pointer(size_t dx) {
+    for (size_t i{}; i < dx; ++i) {
+        ++p_offset;
+    } 
+
+    return p_offset;
+}
+
+size_t get_current_position() {
+    return p_offset;
 }
 
 // Add a return instruction and execute program, returns value in the accumulator
