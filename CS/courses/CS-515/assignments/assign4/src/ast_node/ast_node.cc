@@ -111,7 +111,8 @@ std::string AST_NODE::str_node_type() {
             "EQUAL", "NEQ", 
             "DIV", "MOD", "EXP", "UPLUS", 
             "UNEG", "declare", "assign", "print", 
-            "read", "Statement block", "INT", "VAR", "STR"
+            "read", "Statement block", "INT", "VAR", "STR",
+            "bool", "if", "else", "while" 
     }[(int)node_type];
 }
 
@@ -120,7 +121,10 @@ bool AST_NODE::is_statement() {
         node_type == NODE_TYPE::DECL ||
         node_type == NODE_TYPE::ASSIGN ||
         node_type == NODE_TYPE::READ ||
-        node_type == NODE_TYPE::BLOCK;
+        node_type == NODE_TYPE::BLOCK ||
+        node_type == NODE_TYPE::IF ||
+        node_type == NODE_TYPE::ELSE ||
+        node_type == NODE_TYPE::WHILE;
 }
 
 bool AST_NODE::operator_is_arithmetic() {

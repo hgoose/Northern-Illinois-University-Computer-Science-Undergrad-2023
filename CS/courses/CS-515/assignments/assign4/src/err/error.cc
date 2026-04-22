@@ -23,6 +23,7 @@ const char* error_string(int err) {
         case NCC_SYNTAX_ERROR:   return "Syntax error";
         case NCC_EXPECTED_RPAREN: return "expected )";
         case NCC_EXPECTED_EXPRESSION: return "expected expression, none provided";
+        case NCC_EXPECTED_STATEMENT: return "expected statement, none provided";
         case NCC_STR_TABLE_OVERFLOW: return "string table overrun";
         case NCC_INVALID_OPERAND_TYPE: return "invalid operand type";
         case NCC_INT_TABLE_OVERFLOW: return "integer table overrun";
@@ -32,6 +33,7 @@ const char* error_string(int err) {
         case NCC_UNKNOWN_VARIABLE: return "variable has not be declared";
         case NCC_EXPECTED_VAR: return "expected variable, none provided";
         case NCC_UNACCEPTABLE_TYPE_MISMATCH: return "type mismatch cannot be justified";
+        case NCC_NON_LOGICAL_CONDITION: return "the provided expression cannot be interpreted as logical";
         default: return "unknown error";
     }
 }

@@ -14,6 +14,8 @@
 // No terminals in a subtree is acceptable
 #define ACCEPT_EMPTY    1
 
+#define IS_ELSE true
+
 // Lookahead token
 extern Token next_token;
 
@@ -27,6 +29,11 @@ AST_NODE* parse_print();
 AST_NODE* parse_read();
 AST_NODE* parse_decl_int4();
 AST_NODE* parse_assign();
+AST_NODE* parse_if();
+AST_NODE* parse_else();
+AST_NODE* parse_while();
+
+AST_NODE* get_statement();
 
 // PRODUCTION RULES
 AST_NODE* A(Error& err);

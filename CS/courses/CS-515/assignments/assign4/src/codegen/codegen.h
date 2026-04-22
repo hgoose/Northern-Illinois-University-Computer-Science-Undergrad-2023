@@ -120,8 +120,15 @@ void x86_setg_al();
 void x86_setge_al();
 void x86_sete_al();
 void x86_setne_al();
+void x86_setnz_al();
 void x86_movzx_r32_r8_al(REGISTER dest);
 void x86_al_flip();
+void x86_test_al_imm8(int x);
+void x86_jz_rel8(int disp);
+void x86_jnz_rel8(int disp);
+void x86_test_rm8_imm8(REGISTER_8BIT rm, int x);
+void x86_short_circuit_and(REGISTER_8BIT b); 
+void x86_short_circuit_or(REGISTER_8BIT b); 
 int x86_exec();
 
 #endif

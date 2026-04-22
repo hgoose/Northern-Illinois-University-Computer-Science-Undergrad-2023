@@ -95,8 +95,22 @@ static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
         x86_pushr32(REGISTER::EAX); ++pushed;
     }
     else if (p->token.id == TOKEN_AND) {
+        x86_popr32(REGISTER::ECX); --pushed;
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        // Result in al
+        x86_short_circuit_and(REGISTER_8BIT::CL);
+        x86_movzx_r32_r8_al(REGISTER::EAX);
+        x86_pushr32(REGISTER::EAX); ++pushed;
     }
     else if (p->token.id == TOKEN_OR) {
+        x86_popr32(REGISTER::ECX); --pushed;
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        // Result in al
+        x86_short_circuit_or(REGISTER_8BIT::CL);
+        x86_movzx_r32_r8_al(REGISTER::EAX);
+        x86_pushr32(REGISTER::EAX); ++pushed;
     }
     else if (p->token.id == TOKEN_LESS ||
             p->token.id == TOKEN_LESS_EQ ||
@@ -278,4 +292,44 @@ void process_read(AST_NODE* root) {
 
     // Now, mov [r10], r12
     x86_mov_mr64_nodisp(REGISTER::R10, REGISTER::R12);
+}
+
+void dispatch_statement(AST_NODE* root) {
+    if (!root) return;
+
+    if (root->node_type == NODE_TYPE::PRINT) {
+        evaluate_print(root);
+    } else if (root->node_type == NODE_TYPE::READ) {
+        process_read(root);
+    } else if (root->node_type == NODE_TYPE::DECL) {
+        init_var(root);
+    } else if (root->node_type == NODE_TYPE::ASSIGN) {
+        update_var(root);
+    } else if (root->node_type == NODE_TYPE::IF) {
+        process_if(root);
+    } else if (root->node_type == NODE_TYPE::WHILE) {
+        process_while(root);
+    }
+}
+
+void process_if(AST_NODE* root) {
+    if (!root) return;
+
+    AST_NODE* condition;
+
+    auto it = root->children.begin();
+    if (it != root->children.end()) {
+        condition = *(it++);
+    } else return;
+
+    while (it != root->children.end()) {
+        
+        if ((*it)->node_type == NODE_TYPE::ELSE) {
+            break;
+        }
+    }
+}
+
+void process_while(AST_NODE* root) {
+
 }

@@ -464,6 +464,13 @@ void x86_setne_al() {
     load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
 }
 
+// 0F 95 SETNZ r/m8
+void x86_setnz_al() {
+    load_byte(0x0F);
+    load_byte(0x95);
+    load_byte(gen_modrm_rr(REGISTER_8BIT::AL, (REGISTER_8BIT)0));
+}
+
 // 0F B6 /r MOVZX r32, r/m8
 void x86_movzx_r32_r8_al(REGISTER dest) {
     if (dest >= REGISTER::R8) {
@@ -478,6 +485,61 @@ void x86_movzx_r32_r8_al(REGISTER dest) {
 void x86_al_flip() {
     load_byte(0x34);
     load_imm8(1);
+}
+
+// A8 ib TEST AL, imm8
+void x86_test_al_imm8(int x) {
+    load_byte(0xA8);
+    load_imm8(x);
+}
+
+// 74 cb JZ rel8
+void x86_jz_rel8(int disp) {
+    load_byte(0x74);
+    load_imm8(disp);
+}
+
+// 75 cb JNZ rel8
+void x86_jnz_rel8(int disp) {
+    load_byte(0x75);
+    load_imm8(disp);
+}
+
+// F6 /0 ib TEST r/m8, imm8
+void x86_test_rm8_imm8(REGISTER_8BIT rm, int x) {
+    load_byte(0xF6);
+    load_byte(gen_modrm_rr(rm, (REGISTER_8BIT)0));
+    load_imm8(x);
+}
+
+// Computes a & b with short circuiting, result in al
+// a in AL is assumed
+//
+// test al,1
+// jz ___ (a=0, jump to end)
+// test b,1 (a=1)
+// jnz ___ (a=1, b=1, jump to bottom)
+// xor eax, eax (a=1, b=0)
+void x86_short_circuit_and(REGISTER_8BIT b) {
+    x86_test_al_imm8(0x1);
+    x86_jz_rel8(0x8);
+    x86_test_rm8_imm8(b, 1); // 3 bytes
+    x86_jnz_rel8(0x2); // 3 bytes
+    x86_xor_rr32(REGISTER::EAX, REGISTER::EAX); // 2 bytes
+}
+
+// Computes a | b with short circuiting, result in al
+// a in AL is assumed
+//
+// test al, 1
+// jnz ___ (a=1, jump to bottom)
+// test b,1 (a=0)
+// setnz al (a=0, b=1, set al to one)
+void x86_short_circuit_or(REGISTER_8BIT b) {
+    x86_test_al_imm8(0x1);
+    x86_jnz_rel8(0x6);
+    x86_test_rm8_imm8(b, 1); // 3 bytes
+    x86_setnz_al(); // 3 bytes
 }
 
 // Add a return instruction and execute program, returns value in the accumulator

@@ -133,7 +133,8 @@ static bool invalid_lookahead() {
         next_token.id != TOKEN_NOT && next_token.id != TOKEN_LESS &&
         next_token.id != TOKEN_LESS_EQ && next_token.id != TOKEN_GREATER &&
         next_token.id != TOKEN_GREATER_EQ && next_token.id != TOKEN_EQUAL &&
-        next_token.id != TOKEN_NOT_EQUAL; 
+        next_token.id != TOKEN_NOT_EQUAL && next_token.id != TOKEN_LBRACE  &&
+        next_token.id != TOKEN_RBRACE;
 }
 
 // Initialize the parser. 
@@ -157,37 +158,45 @@ int parse() {
 
     for (;;) {
         if (next_token.id == TOKEN_IDENT) {
+            AST_NODE* statement_root{};
             // Print statement
             if (next_token.identifier == "print") {
-                AST_NODE* print = parse_print();
-                if (print) {
-                    program_tree->add_children(print);
-                }
+                statement_root = parse_print();
             } 
             // Read statement
             else if (next_token.identifier == "read") {
-                AST_NODE* read = parse_read();
-                if (read) {
-                    program_tree->add_children(read);
-                }
+                statement_root = parse_read();
             } 
             // Variable declaration
             else if (next_token.identifier == "int4") {
-                AST_NODE* declare = parse_decl_int4();
-                if (declare) {
-                    program_tree->add_children(declare);
+                statement_root = parse_decl_int4();
+            } else if (next_token.identifier == "if") {
+                statement_root = parse_if();
+                if (statement_root) {
+                    ast_postorder(statement_root);
                 }
-            } 
+            } else if (next_token.identifier == "while") {
+                statement_root = parse_while();
+                if (statement_root) {
+                    ast_postorder(statement_root);
+                }
+            }
             // Variable assignment? 
             else {
-                AST_NODE* assign = parse_assign();
-                if (assign) {
-                    program_tree->add_children(assign);
+                statement_root = parse_assign();
+            }
+
+            if (statement_root) {
+                program_tree->add_children(statement_root);
+            }
+
+            // If and while end at the start of the next statement
+            if (statement_root->node_type != NODE_TYPE::IF && statement_root->node_type != NODE_TYPE::WHILE) {
+                if (invalid_lookahead() || handle_lex_error(get_token(next_token))) {
+                    goto_next_semicolon(); 
                 }
             }
         } 
-
-        get_token(next_token);
 
         if (next_token.id == TOKEN_EOF) break;
     }
@@ -529,6 +538,375 @@ AST_NODE* parse_assign() {
     }
 
     return assign_root;
+}
+
+// Statement list
+AST_NODE* get_statement() {
+
+    if (next_token.identifier == "print") {
+        return parse_print();
+    } else if (next_token.identifier == "read") {
+        return parse_read();
+    } else if (next_token.identifier == "int4") {
+        return parse_decl_int4();
+    } else if (next_token.identifier == "if") {
+        return parse_if();
+    } else if (next_token.identifier == "while") {
+        return parse_while();
+    } 
+
+    return parse_assign();
+}
+
+AST_NODE* parse_else() {
+    AST_NODE* else_root = new AST_NODE();
+    else_root->node_type = NODE_TYPE::ELSE;
+    else_root->token = next_token;
+
+    Error lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(else_root);
+        return nullptr;
+    }
+
+    bool block = next_token.id == TOKEN_LBRACE ? true : false;
+    bool empty{};
+    if (block) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(else_root);
+            return nullptr;
+        }
+
+        if (next_token.id == TOKEN_RBRACE) {
+            empty = true;
+        }
+    }
+
+    if (!empty) {
+        do {
+            AST_NODE* statement = get_statement();
+            if (statement) {
+                else_root->add_child(statement);
+            }
+
+            if (block) {
+                lex_err = get_token(next_token);
+                if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                    goto_next_semicolon();
+                    free_tree(else_root);
+                    return nullptr;
+                }
+
+                if (next_token.id == TOKEN_EOF) {
+                    goto_next_semicolon();
+                    set_print_token_error(Error{}, NCC_UNEXPECTED_EOF); 
+                    free_tree(else_root);
+                    return nullptr;
+                }
+
+                if (next_token.id == TOKEN_RBRACE) {
+                    break;
+                }
+            }
+        } while (block);
+
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(else_root);
+        return nullptr;
+    }
+
+    return else_root;
+}
+
+AST_NODE* parse_if() {
+    AST_NODE* if_root = new AST_NODE(); 
+    if_root->token = next_token;
+    if_root->node_type = NODE_TYPE::IF;
+
+    Error lex_err{}, expr_err{};
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_LPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        free_tree(if_root);
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    if (next_token.id == TOKEN_RPAREN) {
+        goto_next_semicolon();
+        set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    AST_NODE* expr = A(expr_err);
+    AST_NODE* ast_expr = pttoast(expr);
+    free_tree(expr);
+
+    if (!ast_expr) {
+        goto_next_semicolon();
+        free_tree(ast_expr);
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    if (ast_expr->data_type != TYPE::BOOL) {
+        set_print_token_error(Error{}, ast_expr->token, NCC_NON_LOGICAL_CONDITION);
+        goto_next_semicolon();
+        free_tree(ast_expr);
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    if_root->add_child(ast_expr);
+
+    if (next_token.id != TOKEN_RPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        free_tree(if_root);
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(if_root);
+        return nullptr;
+    }
+
+    if (next_token.id == TOKEN_SEMICOLON) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(if_root);
+            return nullptr;
+        }
+        return if_root;
+    }
+
+    bool block = next_token.id == TOKEN_LBRACE ? true : false;
+    if (block) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(if_root);
+            return nullptr;
+        }
+    }
+
+    bool empty{};
+    if (next_token.id == TOKEN_RBRACE || next_token.identifier == "else") {
+        empty = true;
+    }
+
+    bool on_else{};
+    if (!empty) {
+        do {
+            AST_NODE* statement = get_statement();
+            if (statement) {
+                if_root->add_child(statement);
+            } 
+
+            if (next_token.identifier == "else") {
+                on_else = true;
+            }
+
+            if (block) {
+                if (next_token.id == TOKEN_RBRACE) {
+                    break;
+                }
+
+                lex_err = get_token(next_token);
+                if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                    goto_next_semicolon();
+                    free_tree(if_root);
+                    return nullptr;
+                }
+
+                if (next_token.id == TOKEN_EOF) {
+                    goto_next_semicolon();
+                    set_print_token_error(Error{}, NCC_UNEXPECTED_EOF); 
+                    free_tree(if_root);
+                    return nullptr;
+                }
+
+                if (next_token.id == TOKEN_RBRACE) break;
+            }
+
+        } while (block);
+
+    }
+
+    if (!on_else) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(if_root);
+            return nullptr;
+        }
+    }
+
+    bool has_else = next_token.identifier == "else" ? true : false;
+    if (has_else) {
+        AST_NODE* else_root = parse_else();
+        if (else_root) {
+            if_root->add_child(else_root);
+        }
+    } 
+
+    return if_root;
+}
+
+AST_NODE* parse_while() {
+    AST_NODE* while_root = new AST_NODE();
+    while_root->node_type = NODE_TYPE::WHILE;
+
+    Error lex_err{}, expr_err{};
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    if (next_token.id != TOKEN_LPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    if (next_token.id == TOKEN_RPAREN) {
+        goto_next_semicolon();
+        set_print_token_error(Error{}, NCC_EXPECTED_EXPRESSION);
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    AST_NODE* expr = A(expr_err);
+    AST_NODE* ast_expr = pttoast(expr);
+    free_tree(expr);
+
+    if (!ast_expr) {
+        goto_next_semicolon();
+        free_tree(ast_expr);
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    if (ast_expr->data_type != TYPE::BOOL) {
+        set_print_token_error(Error{}, ast_expr->token, NCC_NON_LOGICAL_CONDITION);
+        goto_next_semicolon();
+        free_tree(ast_expr);
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    while_root->add_child(ast_expr);
+
+    if (next_token.id != TOKEN_RPAREN) {
+        set_print_token_error(Error{}, NCC_SYNTAX_ERROR);
+        goto_next_semicolon();
+        free_tree(while_root);
+    }
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    // Explicitly empty while 
+    if (next_token.id == TOKEN_SEMICOLON) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(while_root);
+            return nullptr;
+        }
+        return while_root;
+    }
+
+    bool block = next_token.id == TOKEN_LBRACE ? true : false;
+    if (block) {
+        lex_err = get_token(next_token);
+        if (invalid_lookahead() || handle_lex_error(lex_err)) {
+            goto_next_semicolon();
+            free_tree(while_root);
+            return nullptr;
+        }
+    }
+
+    bool empty{};
+    if (next_token.id == TOKEN_RBRACE) {
+        empty = true;
+    }
+
+    if (!empty) do {
+        AST_NODE* statement = get_statement();
+        if (statement) {
+            while_root->add_child(statement);
+        }
+        if (block) {
+            if (next_token.id == TOKEN_RBRACE) {
+                break;
+            }
+
+            lex_err = get_token(next_token);
+            if (invalid_lookahead() || handle_lex_error(lex_err)) {
+                goto_next_semicolon();
+                free_tree(while_root);
+                return nullptr;
+            }
+
+            if (next_token.id == TOKEN_EOF) {
+                goto_next_semicolon();
+                set_print_token_error(Error{}, NCC_UNEXPECTED_EOF); 
+                free_tree(while_root);
+                return nullptr;
+            }
+
+            if (next_token.id == TOKEN_RBRACE) break;
+        }
+
+    } while (block);
+
+    lex_err = get_token(next_token);
+    if (invalid_lookahead() || handle_lex_error(lex_err)) {
+        goto_next_semicolon();
+        free_tree(while_root);
+        return nullptr;
+    }
+
+    return while_root;
 }
 
 // A -> BA'

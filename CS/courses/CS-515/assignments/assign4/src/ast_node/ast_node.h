@@ -25,7 +25,7 @@ enum class NODE_TYPE : unsigned int {
     UPLUS, UNEG, DECL, 
     ASSIGN, PRINT, READ, 
     BLOCK, INT, VAR, STR, 
-    BOOL
+    BOOL, IF, ELSE, WHILE
 };
 
 enum class TYPE : unsigned int {
@@ -75,6 +75,11 @@ struct AST_NODE {
     AST_NODE() = default;
 
     AST_NODE(Token token) : token(token) {}
+
+    AST_NODE(Token token, NODE_TYPE node_type) 
+        : token(token),
+          node_type(node_type)
+    {}
 
     AST_NODE(Token token, NODE_TYPE node_type, bool is_operator=false) 
         : token(token),

@@ -26,6 +26,8 @@
 #define  NCC_UNKNOWN_VARIABLE      -20
 #define  NCC_EXPECTED_VAR          -21
 #define  NCC_UNACCEPTABLE_TYPE_MISMATCH -22
+#define  NCC_EXPECTED_STATEMENT    -23
+#define  NCC_NON_LOGICAL_CONDITION -24
 
 struct Token;
 
