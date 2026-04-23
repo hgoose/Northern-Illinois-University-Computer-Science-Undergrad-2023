@@ -206,6 +206,9 @@ int parse() {
         if (next_token.id == TOKEN_EOF) break;
     }
 
+    x86_pushr64(REGISTER::R12);
+    x86_pushr64(REGISTER::R15);
+
     std::for_each(program_tree->children.begin(), program_tree->children.end(), [](AST_NODE* statement) -> void {
         if (!statement) return;
 

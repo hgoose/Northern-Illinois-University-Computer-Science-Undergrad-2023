@@ -116,6 +116,13 @@ void x86_pushr32(REGISTER src) {
     load_byte(gen_modrm_rr(src, (REGISTER)(6)));
 }
 
+// FF /6 PUSH r/m64
+void x86_pushr64(REGISTER src) {
+    load_byte(gen_rex_r(WIDE_ON, src));
+    load_byte(0xFF);
+    load_byte(gen_modrm_rr(src, (REGISTER)6));
+}
+
 // FF /6 PUSH r/m32
 void x86_pushm32(REGISTER src) {
     if (src >= REGISTER::R8) {
@@ -132,6 +139,13 @@ void x86_popr32(REGISTER dest) {
         load_byte(gen_rex_r(WIDE_OFF, dest));
     }
 
+    load_byte(0x8F);
+    load_byte(gen_modrm_rr(dest, (REGISTER)0));
+}
+
+// 8F /0 POP r/m64
+void x86_popr64(REGISTER dest) {
+    load_byte(gen_rex_r(WIDE_ON, dest));
     load_byte(0x8F);
     load_byte(gen_modrm_rr(dest, (REGISTER)0));
 }
@@ -525,7 +539,17 @@ size_t x86_jz_rel32_missing() {
     load_byte(0x0F);
     load_byte(0x84);
     size_t tmp = p_offset;
-    move_program_pointer(0x4);
+    load_imm32(0);
+
+    return tmp;
+}
+
+// 0F 85 cd JNZ rel32
+size_t x86_jnz_rel32_missing() {
+    load_byte(0x0F);
+    load_byte(0x85);
+    size_t tmp = p_offset;
+    load_imm32(0);
 
     return tmp;
 }
@@ -534,7 +558,7 @@ size_t x86_jz_rel32_missing() {
 size_t x86_jmp_rel32_missing() {
     load_byte(0xE9);
     size_t tmp = p_offset;
-    move_program_pointer(0x4);
+    load_imm32(0);
 
     return tmp;
 }
@@ -559,36 +583,6 @@ void x86_test_rm8_imm8(REGISTER_8BIT rm, int x) {
     load_imm8(x);
 }
 
-// Computes a & b with short circuiting, result in al
-// a in AL is assumed
-//
-// test al,1
-// jz ___ (a=0, jump to end)
-// test b,1 (a=1)
-// jnz ___ (a=1, b=1, jump to bottom)
-// xor eax, eax (a=1, b=0)
-void x86_short_circuit_and(REGISTER_8BIT b) {
-    x86_test_al_imm8(0x1);
-    x86_jz_rel8(0x8);
-    x86_test_rm8_imm8(b, 1); // 3 bytes
-    x86_jnz_rel8(0x2); // 3 bytes
-    x86_xor_rr32(REGISTER::EAX, REGISTER::EAX); // 2 bytes
-}
-
-// Computes a | b with short circuiting, result in al
-// a in AL is assumed
-//
-// test al, 1
-// jnz ___ (a=1, jump to bottom)
-// test b,1 (a=0)
-// setnz al (a=0, b=1, set al to one)
-void x86_short_circuit_or(REGISTER_8BIT b) {
-    x86_test_al_imm8(0x1);
-    x86_jnz_rel8(0x6);
-    x86_test_rm8_imm8(b, 1); // 3 bytes
-    x86_setnz_al(); // 3 bytes
-}
-
 size_t move_program_pointer(size_t dx) {
     for (size_t i{}; i < dx; ++i) {
         ++p_offset;
@@ -603,6 +597,8 @@ size_t get_current_position() {
 
 // Add a return instruction and execute program, returns value in the accumulator
 int x86_exec() {
+    x86_popr64(REGISTER::R15);
+    x86_popr64(REGISTER::R12);
     load_byte(0xc3);
     // dump();
     // return 0;

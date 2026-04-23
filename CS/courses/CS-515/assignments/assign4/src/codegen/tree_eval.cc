@@ -14,12 +14,88 @@
 #include <algorithm>
 #include <iostream>
 
-// POST ORDER EVALUATION OF THE AST
-static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
+static void r_evaluate_expr(AST_NODE* p, int& pushed) {
     // NOOP
     if (!p) return;
 
-    // POST ORDER
+    if (p->token.id == TOKEN_AND) {
+        AST_NODE* left{}, *right{};
+
+        auto it = p->children.begin();
+        if (it != p->children.end()) {
+            left = *it;
+            ++it;
+        } else return;
+
+        if (it != p->children.end()) {
+            right = *it;
+        } else return;
+
+        // evaluate lhs
+        r_evaluate_expr(left, pushed);
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        // if lhs == 0, result is false; skip rhs
+        x86_test_al_imm8(1);
+        size_t jz_false = x86_jz_rel32_missing();
+
+        int jz_start = get_current_position();
+
+        // evaluate rhs only if lhs was true
+        r_evaluate_expr(right, pushed);
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        int jz_end = get_current_position();
+
+        x86_pushr32(REGISTER::EAX); ++pushed;
+
+        int jz_size = jz_end - jz_start;
+        load_imm32_at(jz_false, jz_size);
+
+        return;
+    }
+
+    if (p->token.id == TOKEN_OR) {
+        AST_NODE* left{}, *right{};
+
+        auto it = p->children.begin();
+        if (it != p->children.end()) {
+            left = *it;
+            ++it;
+        } else return;
+
+        if (it != p->children.end()) {
+            right = *it;
+        } else return;
+
+        // evaluate lhs
+        r_evaluate_expr(left, pushed);
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        // if lhs != 0, result is true, skip rhs
+        x86_test_al_imm8(1);
+        size_t jnz_true = x86_jnz_rel32_missing();
+
+        int jnz_start = get_current_position();
+
+        // evaluate rhs only if lhs was false
+        r_evaluate_expr(right, pushed);
+        x86_popr32(REGISTER::EAX); --pushed;
+
+        x86_test_al_imm8(1);
+        x86_setnz_al();
+        x86_movzx_r32_r8_al(REGISTER::EAX);
+        int jnz_end = get_current_position();
+
+        x86_pushr32(REGISTER::EAX); ++pushed;
+
+        int jnz_jump_size = jnz_end - jnz_start;
+
+        load_imm32_at(jnz_true, jnz_jump_size);
+
+        return;
+    }
+
     std::for_each(p->children.begin(), p->children.end(), [&pushed](auto it) -> void {
         r_evaluate_expr(it, pushed);
     });
@@ -94,24 +170,6 @@ static void r_evaluate_expr(AST_NODE* p, unsigned int& pushed) {
         x86_al_flip();
         x86_pushr32(REGISTER::EAX); ++pushed;
     }
-    else if (p->token.id == TOKEN_AND) {
-        x86_popr32(REGISTER::ECX); --pushed;
-        x86_popr32(REGISTER::EAX); --pushed;
-
-        // Result in al
-        x86_short_circuit_and(REGISTER_8BIT::CL);
-        x86_movzx_r32_r8_al(REGISTER::EAX);
-        x86_pushr32(REGISTER::EAX); ++pushed;
-    }
-    else if (p->token.id == TOKEN_OR) {
-        x86_popr32(REGISTER::ECX); --pushed;
-        x86_popr32(REGISTER::EAX); --pushed;
-
-        // Result in al
-        x86_short_circuit_or(REGISTER_8BIT::CL);
-        x86_movzx_r32_r8_al(REGISTER::EAX);
-        x86_pushr32(REGISTER::EAX); ++pushed;
-    }
     else if (p->token.id == TOKEN_LESS ||
             p->token.id == TOKEN_LESS_EQ ||
             p->token.id == TOKEN_GREATER ||
@@ -152,15 +210,17 @@ void evaluate_expr(AST_NODE* root) {
     // Noop on empty tree
     if (!root) return;
 
-    unsigned int pushed{};
+    int pushed{};
 
     r_evaluate_expr(root, pushed);
 
     if (pushed == 0) return;
 
-    x86_popr32(REGISTER::EAX); --pushed;
+    if (pushed > 0) {
+        x86_popr32(REGISTER::EAX); --pushed;
+    }
 
-    for (unsigned int i{}; i<pushed; ++i) {
+    for (int i{}; i<pushed; ++i) {
         x86_popr32(REGISTER::EBX);
     }
 }
@@ -169,7 +229,7 @@ void evaluate_print_expr(AST_NODE* root) {
     // Noop on empty tree
     if (!root) return;
 
-    unsigned int pushed{};
+    int pushed{};
 
     // Evaluate expression
     r_evaluate_expr(root, pushed);
@@ -187,7 +247,7 @@ void evaluate_print_expr(AST_NODE* root) {
         x86_call_void_sba(print_bool, REGISTER::EAX);
     }
 
-    for (unsigned int i{}; i<pushed; ++i) {
+    for (int i{}; i<pushed; ++i) {
         x86_popr32(REGISTER::EBX);
     }
 }
@@ -286,7 +346,7 @@ void process_read(AST_NODE* root) {
     x86_get_int_for_assign(symbol->location.int_table_offset);
 
     // Now, mov [r10], r12
-    x86_mov_mr64_nodisp(REGISTER::R10, REGISTER::R12);
+    x86_mov_mr32_nodisp(REGISTER::R10, REGISTER::R12);
 }
 
 void dispatch_statement(AST_NODE* root) {
