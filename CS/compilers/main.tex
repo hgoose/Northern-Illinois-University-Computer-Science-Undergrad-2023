@@ -4178,7 +4178,7 @@ if (errno) {
         \end{itemize}
 
         \pagebreak 
-        \subsection{Additional information}
+        \unsect{Additional information}
         \begin{itemize}
             \item \textbf{-S on the GNU compiler}: Consider a C program
                 \bigbreak \noindent 
@@ -4199,6 +4199,139 @@ if (errno) {
                 \bigbreak \noindent 
                 The -S flag in g++ (or gcc) tells the compiler to stop after generating assembly code and not proceed to assembling or linking. Thus, we can pass this flag to examine the generated assembly instructions (in AT\&T syntax).
         \end{itemize}
+
+        \pagebreak 
+        \subsection{Structures / clasess and more on types}
+        \begin{itemize}
+            \item \textbf{Type information}: Currently, we just have an integer ID for the type in the symbol table. Realistically, it should be more involved. Here we introduce the \textit{type table}
+            \item \textbf{Type table}: Ideally we would create some structure called the \textit{type table}, which holds the name of the type and the type \textit{\textbf{kind}}. The type kind could be
+                \begin{itemize}
+                    \item \textbf{Basic}: Primitive types
+                    \item \textbf{Array}: For contiguous memory
+                    \item \textbf{Struct / record}: For structures / classes
+                    \item \textbf{Unions}: For union types
+                \end{itemize}
+                if the kind is array, then it would point to some additional information such as
+                \begin{itemize}
+                    \item Element type,
+                    \item Dimension, 
+                    \item Index bounds
+                \end{itemize}
+                If the kind is struct / record, it would point to the additional information
+                \begin{itemize}
+                    \item List of fields
+                \end{itemize}
+                Where each field points to the information
+                \begin{itemize}
+                    \item Name,
+                    \item Type, 
+                    \item Offset from the beginning
+                \end{itemize}
+            \item \textbf{Struct sizes / padding}: It's important to note that the size of a type must be aligned on a boundary of that size. Consider the structure
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct S {
+                        char d;
+                        int a,b,c;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                Since placing $a$ (four bytes) directly after $d$ (one byte) would imply that $a$ is not on a dword boundary, three bytes of padding are introduced after the byte that contains $d$. Thus, the structure is 16 bytes.
+                \bigbreak \noindent 
+                Next, consider the structure
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct S{
+                        double f;
+                        int a,b,c;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                Here, the size is 24. No internal padding is needed between the fields, but padding is needed at the end to ensure that in contiguous storage such as arrays, the next entry starts on a quad word (8 byte) boundary, since the structure begins with a double (8 bytes).
+                \bigbreak \noindent 
+                Thus, the order of fields matters for deducing the size of the structure. Some compiles might swap order for you, but this can introduce bugs if you do I /O tha tassumes order of fields, or if we move to a different architecture with different padding / alignment rules.
+                \bigbreak \noindent 
+                Modern compilers do not rearrange fields.
+                \bigbreak \noindent 
+                \textbf{Note:} Adding methods does not change the size of a structure. Methods are placed elsewhere in memory (defined once), and they contain a hidden first argument (this pointer) so that it knows the instance that is invoking it.
+            \item \textbf{Inheritence}: Note that inheritence adds some complexity with sizing structures. Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct S {
+                        int a;
+                        char b;
+                        int c;
+                        double f;
+                        double f1(int a);
+                        double f2(int b);
+                    };
+
+                    struct T : public S{
+                        int t1;
+                        char c2;
+                        int t2;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                So, since an intstance of $T$ is a instance of $S$ (with additional members), the size of the $T$ is the size of $S$ plus the size of $T - S$. In this situation, it should be clear that contiguous storage alignment / padding is dependent $S$ and $T$.
+            \item \textbf{Polymorphism}: Ideas
+                \begin{itemize}
+                    \item Base class pointer
+                    \item Virtual keyword (introduces vtable)
+                    \item Hidden vptr to the vtable (adds 8 bytes)
+                \end{itemize}
+                Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct S {
+                        int a;
+                        char b;
+                        int c;
+                        double f;
+
+                        virtual double f1(int a);
+                        double f2(int b);
+
+                        virtual ~S() = default;
+                    };
+
+                    struct T : public S {
+                        int t1;
+                        char c2;
+                        int t2;
+
+                        override double f1(int a);
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                Since $S$ has a virtual method, and $T$ inherits from $S$, both classes get a hidden vptr that points to a structure called the \textit{vtable}.
+                \bigbreak \noindent 
+                The vtable is one per class and holds function pointers to the classes virtual methods. Each instance gets its own vptr. When base class pointers are used
+                \bigbreak \noindent 
+                \begin{cppcode}
+                S s;
+                T t;
+                S* p1 = &s;
+                p1->f1(7);
+                \end{cppcode}
+                \bigbreak \noindent 
+                The dynamic type $T$ is used (at runtime) to look into that types vtable and grab the associated function pointer. Note that this is why the destructor must be marked virtual, so that it becomes an entry in the vtable.
+                \bigbreak \noindent 
+                If the virtual method is $S$ is pure,
+                \bigbreak \noindent 
+                \begin{cppcode}
+                virtual double f1(int a) = 0;
+                \end{cppcode}
+                \bigbreak \noindent 
+                Then that entry in $S$'s vtable gets replaced with nullptr, and so it cannot be called through a base class pointer that has dynamic type $S$, in this case only the overrides can be called.
+
+
+
+
+
+        \end{itemize}
+
+
 
 
 
