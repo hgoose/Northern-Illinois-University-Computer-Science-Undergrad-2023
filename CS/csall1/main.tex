@@ -18560,12 +18560,309 @@ indicate which strong entity the weak entity depends upon.
             \item The kernel transfers data or return codes to the address space of the requesting process and moves the process from the wait queue back to the ready queue.
             \item Moving the process to the ready queue unblocks the process. When the scheduler assigns the process to the CPU, the process resumes execution at the completion of the system call.
         \end{enumerate}
+    \end{itemize}
 
+    \pagebreak 
+    \subsection{File systems}
+    \subsubsection{File system interface}
+    \begin{itemize}
+        \item \textbf{File}: A named collection of related information this is recorded on secondary storage. Contiguous logical address space. Abstract data type
+        \item \textbf{File attributes}: 
+            \begin{itemize}
+                \item \textbf{Name.} The symbolic file name is the only information kept in human-readable form.
+                \item \textbf{Identifier }. This unique tag, usually a number, identifies the file within the file system; it is the non-human-readable name for the file.
+                \item \textbf{Type}. This information is needed for systems that support different types of files.
+                \item \textbf{Location}. This information is a pointer to a device and to the location of the file on that device.
+                \item \textbf{Size}. The current size of the file (in bytes, words, or blocks) and possibly the maximum allowed size are included in this attribute.
+                \item \textbf{Protection}. Access-control information determines who can do reading, writing, executing, and so on.
+                \item \textbf{Timestamps and user identification}. This information may be kept for creation, last modification, and last use. These data can be useful for protection, security, and usage monitoring.
+            \end{itemize}
+        \item \textbf{File operations}: 
+            \begin{itemize}
+                \item \textbf{Creating a file}. Two steps are necessary to create a file. First, space in the file system must be found for the file. We discuss how to allocate space for the file in Chapter 14. Second, an entry for the new file must be made in a directory.
+                \item \textbf{Opening a file}. Rather than have all file operations specify a file name, causing the operating system to evaluate the name, check access permissions, and so on, all operations except create and delete require a file open() first. If successful, the open call returns a file handle that is used as an argument in the other calls.
+                \item \textbf{Writing a file}. To write a file, we make a system call specifying both the open file handle and the information to be written to the file. The system must keep a \textbf{write pointer} to the location in the file where the next write is to take place if it is sequential. The write pointer must be updated whenever a write occurs.
+                \item \textbf{Reading a file}. To read from a file, we use a system call that specifies the file handle and where (in memory) the next block of the file should be put. Again, the system needs to keep a \textbf{read pointer} to the location in the file where the next read is to take place, if sequential. Once the read has taken place, the read pointer is updated. Because a process is usually either reading from or writing to a file, the current operation location can be kept as a per-process \textbf{current-file-position pointer}. Both the read and write operations use this same pointer, saving space and reducing system complexity.
+                \item \textbf{Repositioning within a file}. The current-file-position pointer of the open file is repositioned to a given value. Repositioning within a file need not involve any actual I/O. This file operation is also known as a \textbf{file seek}.
+                \item \textbf{Deleting a file}. To delete a file, we search the directory for the named file. Having found the associated directory entry, we release all file space, so that it can be reused by other files, and erase or mark as free the directory entry. Note that some systems allow \textbf{hard links}—multiple names (directory entries) for the same file. In this case the actual file contents is not deleted until the last link is deleted.
+                \item \textbf{Truncating a file}. The user may want to erase the contents of a file but keep its attributes. Rather than forcing the user to delete the file and then recreate it, this function allows all attributes to remain unchanged—except for file length. The file can then be reset to length zero, and its file space can be released.
+            \end{itemize}
+        \item \textbf{Open-file table}: . The operating system keeps a table, called the \textbf{open-file table}, containing information about all open files. When a file operation is requested, the file is specified via an index into this table, so no searching is required. When the file is no longer being actively used, it is closed by the process, and the operating system removes its entry from the open-file table, potentially releasing locks. create() and delete() are system calls that work with closed rather than open files.
+            \bigbreak \noindent 
+            The open file table has a fixed length, so there is a fixed limit on the number of concurrently open files.
+        \item \textbf{Information associated with an open file}: 
+            \begin{itemize}
+                \item \textbf{File pointer}: Track the last read-write location, unique to the process.
+                \item \textbf{File open count}: Decide when the system can remove the entry. System wide
+                    \bigbreak \noindent 
+                    As files are closed, the operating system must reuse its open-file table entries, or it could run out of space in the table. Multiple processes may have opened a file, and the system must wait for the last file to close before removing the open-file table entry. The file-open count tracks the number of opens and closes and reaches zero on the last close. The system can then remove the entry.
+                \item \textbf{Location}: Most file operations require the system to read or write data within the file. The information needed to locate the file (wherever it is located, be it on mass storage, on a file server across the network, or on a RAM drive) is kept in memory so that the system does not have to read it from the directory structure for each operation.
+                \item \textbf{Access rights}: Each process opens a file in an access mode. This information is stored on the per-process table so the operating system can allow or deny subsequent I/O requests.
+            \end{itemize}
+        \item \textbf{Two level open file table}:
+            \begin{itemize}
+                \item Per-process open-file table (pointer + access rights)
+                \item System-wide open-file table (open count + location)
+            \end{itemize}
+        \item \textbf{File types}:
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1112.png}
+            \bigbreak \noindent 
+            For data, we could have
+            \begin{itemize}
+                \item Numeric, character, or binary
+            \end{itemize}
+            \textbf{Note:} System dependent. For example, Unix does not enforce extension hints
+        \item \textbf{Line feed}: A line feed (LF) is a control character used in computing to indicate the end of a line of text and move the cursor or print head down to the next line
+        \item \textbf{Carriage control}: Carriage control refers to characters or instructions that manage the vertical spacing and positioning of paper in line printers, determining how many lines to skip before printing.
+        \item \textbf{Carriage return}: A carriage return (\r, ASCII 13) is a control character that moves the cursor or print head back to the beginning of the current line.
+        \item \textbf{File structure}: File types also can be used to indicate the internal structure of the file. Source and object files have structures that match the expectations of the programs that read them. Further, certain files must conform to a required structure that is understood by the operating system. For example, the operating system requires that an executable file have a specific structure so that it can determine where in memory to load the file and what the location of the first instruction is. Some operating systems extend this idea into a set of system-supported file structures, with sets of special operations for manipulating files with those structures.
+            \bigbreak \noindent 
+            This point brings us to one of the disadvantages of having the operating system support multiple file structures: it makes the operating system large and cumbersome. If the operating system defines five different file structures, it needs to contain the code to support these file structures. In addition, it may be necessary to define every file as one of the file types supported by the operating system. When new applications require information structured in ways not supported by the operating system, severe problems may result.
+            \bigbreak \noindent 
+            For example, assume that a system supports two types of files: text files (composed of ASCII characters separated by a carriage return and line feed) and executable binary files. Now, if we (as users) want to define an encrypted file to protect the contents from being read by unauthorized people, we may find neither file type to be appropriate. The encrypted file is not ASCII text lines but rather is (apparently) random bits. Although it may appear to be a binary file, it is not executable. As a result, we may have to circumvent or misuse the operating system’s file-type mechanism or abandon our encryption scheme.
+            \bigbreak \noindent 
+            Some operating systems impose (and support) a minimal number of file structures. This approach has been adopted in UNIX, Windows, and others. UNIX considers each file to be a sequence of 8-bit bytes; no interpretation of these bits is made by the operating system. This scheme provides maximum flexibility but little support. Each application program must include its own code to interpret an input file as to the appropriate structure. However, all operating systems must support at least one structure— that of an executable file—so that the system is able to load and run programs.
+        \item \textbf{Access methods}: 
+            \begin{enumerate}
+                \item \textbf{Sequential access}: The simplest access method is sequential access. Information in the file is processed in order, one record after the other. This mode of access is by far the most common; for example, editors and compilers usually access files in this fashion.
+                    \bigbreak \noindent 
+                    Reads and writes make up the bulk of the operations on a file. A read operation—read next()—reads the next portion of the file and automatically advances a file pointer, which tracks the I/O location. Similarly, the write operation—write next()—appends to the end of the file and advances to the end of the newly written material (the new end of file). Such a file can be reset to the beginning, and on some systems, a program may be able to skip forward or backward n records for some integer n—perhaps only for $n = 1$.
+                \item \textbf{Direct access}: Another method is \textbf{direct access} (or \textbf{relative access}). Here, a file is made up of \textbf{fixed-length logical records} that allow programs to read and write records rapidly in no particular order. The direct-access method is based on a disk model of a file, since disks allow random access to any file block. For direct access, the file is viewed as a numbered sequence of blocks or records. we may read block 14, then read block 53, and then write block 7. There are no restrictions on the order of reading or writing for a direct-access file.
+            \end{enumerate}
+        \item \textbf{Inode}: An inode is the file system’s internal record for a file. A file name is not the file itself. A directory maps a file name to an inode number, and the inode number points to the inode. The inode stores the file’s metadata and where the file’s data blocks are located on disk.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                directory entry:
+                  "notes.txt" -> inode 5172
 
+                inode 5172:
+                  file type: regular file
+                  permissions: rw-r--r--
+                  owner/group
+                  size
+                  timestamps
+                  link count
+                  pointers to data blocks
 
+                data blocks:
+                  actual file contents
+            \end{bashcode}
+            \bigbreak \noindent 
+            The inode usually stores things like:
+            \begin{itemize}
+                \item \textbf{File type}: regular file, directory, symbolic link, device file, etc.
+                \item \textbf{Permissions}: read/write/execute bits.
+                \item \textbf{Owner and group.}
+                \item \textbf{File size.}
+                \item \textbf{Timestamps}: access, modification, status-change times.
+                \item \textbf{Link count}: how many directory entries refer to this inode.
+                \item Pointers or extents describing where the file’s contents are stored.
+            \end{itemize}
+            The inode does not usually store the file name. The file name lives in the directory. This is why hard links are possible: two different names can point to the same inode.
+        \item \textbf{Directory structure}: A collection of nodes containing information about all files. A symbol table that translates file names into their directory entries
+        \item \textbf{Operations on directories}:
+            \begin{itemize}
+                \item Search for a file
+                \item Create a file
+                \item Delete a file
+                \item List a directory
+                \item Rename a file
+                \item Traverse the file system
+            \end{itemize}
+        \item \textbf{Goals when organizing the directory logically}: 
+            \begin{itemize}
+                \item \textbf{Efficiency}: Locating a file quickly
+                \item \textbf{Naming}: Convenient to users, two users can have the same name for different files. Also, the same file can have several names
+                \item \textbf{Grouping}: Logical grouping of files by properties
+            \end{itemize}
+        \item \textbf{Single-level directory}: The simplest directory structure is the single-level directory. All files are contained in the same directory, which is easy to support and understand.
+            \bigbreak \noindent 
+            A single-level directory has significant limitations, however, when the number of files increases or when the system has more than one user. Since all files are in the same directory, they must have unique names. If two users call their data file test.txt, then the unique-name rule is violated
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item Naming problem
+                \item Grouping problem
+            \end{itemize}
+        \item \textbf{Two-level directory}: In the two-level directory structure, each user has his own \textbf{user file directory (UFD)}. The UFDs have similar structures, but each lists only the files of a single user. When a user job starts or a user logs in, the system’s \textbf{master file directory (MFD)} is searched. The MFD is indexed by user name or account number, and each entry points to the UFD for that user
+            \bigbreak \noindent 
+            When a user refers to a particular file, only his own UFD is searched. Thus, different users may have files with the same name, as long as all the file names within each UFD are unique. To create a file for a user, the operating system searches only that user’s UFD to ascertain whether another file of that name exists. To delete a file, the operating system confines its search to the local UFD; thus, it cannot accidentally delete another user’s file that has the same name.
+            \bigbreak \noindent 
+            Although the two-level directory structure solves the name-collision problem, it still has disadvantages. This structure effectively isolates one user from another. Isolation is an advantage when the users are completely independent but is a disadvantage when the users want to cooperate on some task and to access one another’s files. Some systems simply do not allow local user files to be accessed by other users.
+            \begin{itemize}
+                \item Path name
+                \item Can have the same file name for different users
+                \item Efficient searching
+                \item No grouping capability (each user can't organize the files)
+            \end{itemize}
+        \item \textbf{Tree-structured directory}: Once we have seen how to view a two-level directory as a two-level tree, the natural generalization is to extend the directory structure to a tree of arbitrary height. This generalization allows users to create their own subdirectories and to organize their files accordingly. A tree is the most common directory structure. The tree has a root directory, and every file in the system has a unique path name.
+            \bigbreak \noindent 
+            A directory (or subdirectory) contains a set of files or subdirectories. In many implementations, a directory is simply another file, but it is treated in a special way. All directories have the same internal format. One bit in each directory entry defines the entry as a file (0) or as a subdirectory (1).
+            \bigbreak \noindent 
+            Special system calls are used to create and delete directories. In this case the operating system (or the file system code) implements another file format, that of a directory.
+            \begin{itemize}
+                \item Efficient searching
+                \item Grouping capability
+                \item Current directory (working directory)
+                \item Absolute or relative path name
+                \item Creating a new file is done in the working directory
+                \item Delete a file 
+                \item Creating a new subdirectory is done in current directory
+            \end{itemize}
+        \item \textbf{Acyclic-Graph Directories}: Consider two programmers who are working on a joint project. The files associated with that project can be stored in a subdirectory, separating them from other projects and files of the two programmers. But since both programmers are equally responsible for the project, both want the subdirectory to be in their own directories. In this situation, the common subdirectory should be shared. A shared directory or file exists in the file system in two (or more) places at once. 
+            \bigbreak \noindent 
+            A tree structure prohibits the sharing of files or directories. An acyclic graph— that is, a graph with no cycles—allows directories to share subdirectories and files
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1113.png}
+        \item \textbf{UNIX hard and soft links}: A hard link is essentially an additional name for an existing file. Every file in Linux starts with at least one hard link (its original filename)
+            \bigbreak \noindent 
+            A soft link is a special file that contains the path to another file or directory, similar to a shortcut in Windows or an alias in macOS
+            \bigbreak \noindent 
+            Hard link point to the file content, soft link points to the file name
+        \item \textbf{Links In AGDs}: Shared files and subdirectories can be implemented in several ways. A common way, exemplified by UNIX systems, is to create a new directory entry called a link. A link is effectively a pointer to another file or subdirectory. For example, a link may be implemented as an absolute or a relative path name. When a reference to a file is made, we search the directory. If the directory entry is marked as a link, then the name of the real file is included in the link information. We resolve the link by using that path name to locate the real file. Links are easily identified by their format in the directory entry (or by having a special type on systems that support types) and are effectively indirect pointers. The operating system ignores these links when traversing directory trees to preserve the acyclic structure of the system.
+            \begin{itemize}
+                \item \textbf{Deletion}: if the original file is deleted, the space for the file is deallocated, introduces dangling links
+                    \bigbreak \noindent 
+                    Alternatively, we could keep a reference count (hardlinks)
+                \item \textbf{Traversal}: Traverse algorithm needed to avoid searching component twice for performance. Every time a new link is added, use a cycle detection algorithm to determine whether it is okay (expensive).
+                    \bigbreak \noindent 
+                    Or, allow only links to files and not subdirectories. Or, let the traversal ignore links.
+            \end{itemize}
+        \item \textbf{General Graph Directory}: A serious problem with using an acyclic-graph structure is ensuring that there are no cycles. If we start with a two-level directory and allow users to create subdirectories, a tree-structured directory results. It should be fairly easy to see that simply adding new files and subdirectories to an existing tree-structured directory preserves the tree-structured nature. However, when we add links, the tree structure is destroyed, resulting in a simple graph structure
+            \bigbreak \noindent 
+            The primary advantage of an acyclic graph is the relative simplicity of the algorithms to traverse the graph and to determine when there are no more references to a file. We want to avoid traversing shared sections of an acyclic graph twice, mainly for performance reasons. If we have just searched a major shared subdirectory for a particular file without finding it, we want to avoid searching that subdirectory again; the second search would be a waste of time.
+            \bigbreak \noindent 
+            If cycles are allowed to exist in the directory, we likewise want to avoid searching any component twice, for reasons of correctness as well as performance. A poorly designed algorithm might result in an infinite loop continually searching through the cycle and never terminating. One solution is to limit arbitrarily the number of directories that will be accessed during a search.
+            \bigbreak \noindent 
+            A similar problem exists when we are trying to determine when a file can be deleted. With acyclic-graph directory structures, a value of 0 in the reference count means that there are no more references to the file or directory, and the file can be deleted. However, when cycles exist, the reference count may not be 0 even when it is no longer possible to refer to a directory or file. This anomaly results from the possibility of self-referencing (or a cycle) in the directory structure. In this case, we generally need to use a \textbf{garbage collection} scheme to determine when the last reference has been deleted and the disk space can be reallocated. Garbage collection involves traversing the entire file system, marking everything that can be accessed. Then, a second pass collects everything that is not marked onto a list of free space. (A similar marking procedure can be used to ensure that a traversal or search will cover everything in the file system once and only once.) Garbage collection for a disk-based file system, however, is extremely time consuming and is thus seldom attempted.
+            \bigbreak \noindent 
+            Garbage collection is necessary only because of possible cycles in the graph. Thus, an acyclic-graph structure is much easier to work with. The difficulty is to avoid cycles as new links are added to the structure. How do we know when a new link will complete a cycle? There are algorithms to detect cycles in graphs; however, they are computationally expensive, especially when the graph is on disk storage. A simpler algorithm in the special case of directories and links is to bypass links during directory traversal. Cycles are avoided, and no extra overhead is incurred.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1114.png}
+        \item \textbf{Memory-Mapped Files}: There is one other method of accessing files, and it is very commonly used. Consider a sequential read of a file on disk using the standard system calls open(), read(), and write(). Each file access requires a system call and disk access. Alternatively, we can use the virtual memory techniques discussed in Chapter 10 to treat file I/O as routine memory accesses. This approach, known as memory mapping a file, allows a part of the virtual address space to be logically associated with the file. As we shall see, this can lead to significant performance increases.
+            \bigbreak \noindent 
+            Memory mapping a file is accomplished by mapping a disk block to a page (or pages) in memory. Initial access to the file proceeds through ordinary demand paging, resulting in a page fault. However, a page-sized portion of the file is read from the file system into a physical page (some systems may opt to read in more than a page-sized chunk of memory at a time). Subsequent reads and writes to the file are handled as routine memory accesses. Manipulating files through memory rather than incurring the overhead of using the read() and write() system calls simplifies and speeds up file access and usage.
+            \bigbreak \noindent 
+            Note that writes to the file mapped in memory are not necessarily immediate (synchronous) writes to the file on secondary storage. Generally, systems update the file based on changes to the memory image only when the file is closed. Under memory pressure, systems will have any intermediate changes to swap space to not lose them when freeing memory for other uses. When the file is closed, all the memory-mapped data are written back to the file on secondary storage and removed from the virtual memory of the process.
+            \bigbreak \noindent 
+            Multiple processes may be allowed to map the same file concurrently, to allow sharing of data.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1115.png}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{File system implementation}
+    \begin{itemize}
+        \item \textbf{Recall blocks}: Transfer unit between memory and disk, one or more sectors.
+        \item \textbf{Layers}: The file system is organized into layers
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1116.png}
+        \item \textbf{File control block}: Storage structure consisting of information about a file
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1117.png}
+        \item \textbf{File system structure}: 
+            \begin{itemize}
+                \item \textbf{Boot control block}: to boot the OS
+                \item \textbf{Volume control block}: Volume details
+                \item \textbf{Directory}: Structure to organize the files. In Unix, file name + inode numbers
+                \item \textbf{Per file file control block}: In Unix, an inode
+            \end{itemize}
+        \item \textbf{In memory structure}: 
+            \begin{itemize}
+                \item \textbf{In-memory directory structure cache:} Holds the directory information of recently accessed directories
+                \item \textbf{System-wide open-file table}: A copy of FCB of each open file
+                \item \textbf{Per-process open-file table}: A pointer for each open file to the appropriate entry in the system wide open-file table, etc.
+                \item \textbf{Mount table}: In-memory mount table for information on mounted volume
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1118.png}
+        \item \textbf{Directory implementation}: 
+            \begin{enumerate}
+                \item \textbf{Linear list} of file names with pointer to the data blocks. Simple to program, time-consuming to execute. Many operating systems provide a software cache.
+                \item \textbf{Hash table}: Linear list with hash data structure. Decreases directory search time. Fixed size
+            \end{enumerate}
+        \item \textbf{Allocation methods}: An allocation method refers to how disk blocks are allocated for files
+            \begin{itemize}
+                \item Contiguous allocation 
+                \item Linked allocation
+                \item Indexed allocation
+            \end{itemize}
+        \item \textbf{Contiguous allocation}: Each file occupies a set of contiguous blocks on the disk. In this case, only starting location (block number) and length (number of blocks) is needed. 
+            \begin{itemize}
+                \item Fast
+                \item Random access
+                \item Wasteful of space (dynamic storage-allocation problem) (external fragmentation)
+                \item Files cannot grow
+            \end{itemize}
+        \item \textbf{Linked allocation}:  Each file is a linked list of disk blocks, blocks may be scattered anywhere on the disk
+            \begin{itemize}
+                \item Simple, need only starting address
+                \item Free-space management system, no waste of space
+                \item No efficient random access
+            \end{itemize}
+        \item \textbf{File-allocation table (FAT)}: Variation of linked allocation
+            \begin{itemize}
+                \item \textbf{Fat}: A section at the beginning of the volumes contains the table, one entry for each disk block and indexed by block number
+                \item Improve random access
+                \item Used by MS-DOS and OS/2
+            \end{itemize}
+        \item \textbf{Indexed allocation}: Each file has its own index block, similar to paging.
+            \bigbreak \noindent 
+            \fig{.8}{./figures/1119.png}
+            \begin{itemize}
+                \item Support random access
+                \item Dynamic access without external fragmentation
+                \item Overhead of index block 
+            \end{itemize}
+        \item \textbf{How large should an index block be?}
+            \begin{itemize}
+                \item \textbf{Linked scheme}: Link together several index blocks
+                    \bigbreak \noindent 
+                    An index block is normally one storage block. Thus, it can be read and written directly by itself. To allow for large files, we can link together several index blocks. For example, an index block might contain a small header giving the name of the file and a set of the first 100 disk-block addresses. The next address (the last word in the index block) is null (for a small file) or is a pointer to another index block (for a large file).
+                \item \textbf{Multilevel index}: 
+                    A variant of linked representation uses a first-level index block to point to a set of second-level index blocks, which in turn point to the file blocks. To access a block, the operating system uses the first-level index to find a second-level index block and then uses that block to find the desired data block. This approach could be continued to a third or fourth level, depending on the desired maximum file size. With 4,096-byte blocks, we could store 1,024 four-byte pointers in an index block. Two levels of indexes allow 1,048,576 data blocks and a file size of up to 4 GB.
+                \item \textbf{Combined}:  Another alternative, used in UNIX-based file systems, is to keep the first, say, 15 pointers of the index block in the file’s inode. The first 12 of these pointers point to \textbf{direct blocks}; that is, they contain addresses of blocks that contain data of the file. Thus, the data for small files (of no more than 12 blocks) do not need a separate index block. If the block size is 4 KB, then up to 48 KB of data can be accessed directly. The next three pointers point to \textbf{indirect blocks}. The first points to a \textbf{single indirect block}, which is an index block containing not data but the addresses of blocks that do contain data. The second points to a \textbf{double indirect block}, which contains the address of a block that contains the addresses of blocks that contain pointers to the actual data blocks. The last pointer contains the address of a \textbf{triple indirect block}.
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1120.png}
+            \fc{Multilevel index}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1121.png}
+        \item \textbf{Free-space management}: Manage a list of free-space to reuse disallocated blocks. A simple approach is a bit vector. Easy to calculate the block numbers if hardware provides an instruction to get the offset of the first 1 bit. Not possible to keep in memory for large disks.
+            \begin{itemize}
+                \item \textbf{Linked list (free list)}: Cannot get contiguous space easily, no waste of space
+                \item \textbf{Grouping}: Stored addresses of $n$ free blocks in the first free block. Faster to find many free blocks than linked list
+                \item \textbf{Counting}: Keep address of the first free block and the number $n$ of free contiguous blocks after it.
+            \end{itemize}
 
 
     \end{itemize}
+
+    \pagebreak 
+    \subsubsection{File system internals}
+    \begin{itemize}
+        \item \textbf{File system mounting}: A file system must be mounted before it can be accessed. An un-mounted file system is mounted at a mount point, then it is said to be mounted.
+            \bigbreak \noindent 
+            An unmounted storage media is a raw block device.
+        \item \textbf{Virtual file systems}: Provide an object-oriented way of implementing file systems. VFS allows the same system call interface to be used for different types of file systems. The API is to the VFS interface, rather than any specific type of file system.
+            \bigbreak \noindent 
+            (Linux implementation) The common file model of VFS consists of the following object types
+            \begin{itemize}
+                \item \textbf{Superblock object}: Info of a mounted file system. Usually corresponds to a file system control block
+                \item \textbf{inode object}: Info about a specific file. Usually corresponds to a file control block. Each inode object is associated with an inode number, which uniquely identifies the file within the file system.
+                \item \textbf{dentry object}: Info about the linking of a directory entry with the corresponding file
+                \item \textbf{file object}: Info about the interaction between an open file and a process. Exists only in kernel memory during the period each process accesses a file. Operations of the file object are
+                    \begin{itemize}
+                        \item open(), close()
+                        \item read(), write()
+                        \item mmap()
+                        \item etc...
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Network file system (NFS)}: Skipped here but in the slides.
+    \end{itemize}
+
 
 
 
