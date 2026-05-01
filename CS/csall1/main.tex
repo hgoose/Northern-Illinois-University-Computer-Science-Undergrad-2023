@@ -18860,7 +18860,143 @@ indicate which strong entity the weak entity depends upon.
                         \item etc...
                     \end{itemize}
             \end{itemize}
-        \item \textbf{Network file system (NFS)}: Skipped here but in the slides.
+        \item \textbf{Network file system (NFS)}: An implementation and a specification of a software system for accessing remote files across LANs or WANs.
+            \bigbreak \noindent 
+            Interconnected workstations viewed as a set of independent machines with independent file systems, which allows sharing among these file systems in a transparent manner (user mobility)
+            \bigbreak \noindent 
+            A remote directory (server) is mounted over a local file system directory. The mounted directory looks like an integral subtree of the local file system
+            \bigbreak \noindent 
+            Files in the remote directory can then be accessed in a transparent manner. Potentially, any file system (or directory within a file system), can be mounted remotely on top of any local directory
+            \bigbreak \noindent 
+            NFS is designed to operate in a heterogeneous environment of different machines, operating systems, and network architectures; the NFS specifications are independent of these media.
+        \item \textbf{Two protocols in NFS}: The NFS spec distinguishes between the services provided by a mount mechanism and the actual remote-file-access services.
+            \bigbreak \noindent 
+            Each consists of a set of remote procedure calls (RPCs)
+            \begin{itemize}
+                \item \textbf{Mount protocol}: Establish connection
+                \item \textbf{NFS protocol}: Remote file operations
+            \end{itemize}
+        \item \textbf{NFS mount protocol}: Establishes initial logical connection between server and client. Mount operation includes name of remote directory to be mounted and name of server machine storing it.
+            \begin{itemize}
+                \item Mount request is mapped to corresponding RPC and forwarded to mount server
+                \item Export list specifies local file systems that server exports for mounting, along with names of machines that are permitted to mount them
+            \end{itemize}
+            Normally done when the client boots.
+        \item \textbf{File handle}: Following a mount request that conforms to its export list, the server returns a \textit{file handle}. 
+            \begin{itemize}
+                \item \textbf{File handle}: A file-system identifier, and an inode number to identify the mounted directory within the exported file system.
+            \end{itemize}
+            The NFS server creates it, then passes it back to the client for it to access the file. The client never looks at the contents of the file handler since it only makes sense to the server. Normal user processes never deal with file handles. NFS client and server code passes them back and forth.
+        \item \textbf{NFS protocol}: Provides a set of remote procedure calls for remote file operations. The procedures support the following operations
+            \begin{itemize}
+                \item Searching for a file within a directory
+                \item reading a set of directory entries
+                \item manipulating links and directories
+                \item accessing file attributes
+                \item reading and writing files
+            \end{itemize}
+            \textbf{Note}: No open() / close() because NFS servers are stateless.
+        \item \textbf{Stateful vs stateless}: NFS servers are stateless. Each request has to provide a full set of arguments. Server never knows if the client is really going to reference the file after it looks it up.
+            \bigbreak \noindent 
+            Modified data must be committed to the server's disk before results are returned to the client. 
+            \begin{itemize}
+                \item May loose the advantages of caching on server. 
+                \item Simplifies server crash recovery
+            \end{itemize}
+        \item \textbf{NFS remote operations}: Nearly one-to-one correspondence between regular UNIX syscalls and the NFS protocol RPCs (except open,close). In practice, NFS client employs caching (client side) techniques for the sake of performance.
+            \begin{itemize}
+                \item \textbf{File-block cache}: When a file is opened, the kernel checks with the remote server whether to fetch or revalidate the cached attributes. Cached file blocks are used only if the corresponding cached attributes are up to date.
+                \item \textbf{File-attribute (inode-information) cache}: The attribute cache is updated whenever new attributes arrive from the server
+            \end{itemize}
+        \item \textbf{Three major layers of NFS architecture}: 
+            \begin{itemize}
+                \item \textbf{UNIX file-system interface}
+                \item \textbf{Virtual file system (VFS) layer}: Distinguishes local files from remote ones, and local files are further distinguished according to their file-system types.
+                    \begin{itemize}
+                        \item The VFS activates file-system-specific operations to handle local requests according to their file-system types
+                        \item Calls the NFS protocol procedures for remote requests. 
+                    \end{itemize}
+                \item \textbf{NFS service layer}: Bottom layer of the architecture; implements the NFS protocol
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1121.png}
+
+
+    \end{itemize}
+
+
+
+    \pagebreak 
+    \subsection{Security}
+    \begin{itemize}
+        \item \textbf{Difference between protection and security}:
+            \begin{itemize}
+                \item \textbf{Security}: A measure of confidence that the integrity of a system and its data will be preserved.
+                \item \textbf{Protection}: Mechanism (How). Control the access of processes and users to the resources defined by a computer system.
+            \end{itemize}
+        \item \textbf{Security}: 
+            \begin{itemize}
+                \item Cryptography
+                    \begin{itemize}
+                        \item Secret-key algorithm
+                        \item Public-key algorithm
+                    \end{itemize}
+                \item Authentication
+                \item Threats 
+                \item Intrusion detection
+            \end{itemize}
+        \item \textbf{The four-layered model of security}: 
+            \bigbreak \noindent 
+            \fig{.7}{./figures/1123.png}
+        \item \textbf{Cryptography}: Elements:
+            \begin{itemize}
+                \item \textbf{Plaintext}: The messages to be encrypted 
+                \item \textbf{Key}: The function / parameter to transform the plaintext
+                \item \textbf{Ciphertext}: output of the encryption process
+                \item \textbf{Cryptography}: the art of devising ciphers
+            \end{itemize}
+        \item \textbf{Encryption}: Process in which a plaintext is transformed into a ciphertext by the use of a key. Decryption is the reverse process
+        \item \textbf{Substitution ciphers}: In cryptography, a substitution cipher is a method of encrypting that creates the ciphertext by replacing units of the plaintext in a defined manner, with the help of a key; the "units" may be single letters, pairs of letters, triplets of letters, mixtures of the above, and so forth. If each letter in a symbol set is shifted $k$ times, $k$ becomes the key.
+        \item \textbf{Public key algorithm (asymmetric key)}: Encryption and decryption were different, and the decryption key could not be derived from the encryption key. There are three requirements
+            \begin{enumerate}
+                \item $D(E(P)) = P$, so if you decrypt the encryption of $P$, you get $P$
+                \item It is exceedingly difficult to deduce $D$ from $E$
+                \item E cannot be broken by a chosen plaintext attack
+            \end{enumerate}
+            Used for encryption, authentication, confidentiality, and key distribution.
+            \bigbreak \noindent 
+            For example, suppose Alice and Bob require a secure channel. Suppose Alice holds public key $E_{a}$ and private key $D_{a}$, and Bob holds public key $E_{b}$ and private key $D_{b}$. If bob wants to receive secret messages, he publishes his public key. No one can read message $P$ other than bob
+        \item \textbf{Authentication}: The technique by which a process verifies that its communication partner is who it is supposed to be. Can be based on cryptography, but different from encryption for protecting contents.
+            \bigbreak \noindent 
+            Authentication is also a different concept from authorization (what the person can do). Digit signatures are used for authentication and message integrity. Certificate authority is the channel to deliver the public keys.
+            \bigbreak \noindent 
+            For authentication, the public / private key channel can be reversed. If bob uses his private key to encrypt a message, and is the only one who holds that key, then Alice can use the public key to decrypt and be sure that it was Bob who encrypted it.
+        \item \textbf{Passwords}: Authentication is often implemented using passwords. It can also be implemented using biometrics.
+        \item \textbf{Threat examples}:
+            \begin{itemize}
+                \item \textbf{Worms}: Self-replicating program causing the infected machines to labor under huge loads
+                \item \textbf{Virus}: A sequence of code that is inserted into other executable code
+                \item \textbf{Trojan horse}: Program that resembles a program that the user wishes to run, but secretly does something else unrelated to the advertised purpose.
+                \item \textbf{back door}: Specific user identifier or password that circumvents normal security procedures. It could be included in a compiler.
+            \end{itemize}
+        \item \textbf{Denial of service}: 
+            \begin{itemize}
+                \item \textbf{Network based}: service overloading (network requests / message flooding)
+                \item \textbf{System-based}: Two many processes, disk full, inode problem
+            \end{itemize}
+        \item \textbf{Intrusion detection}: Detect attempts to intrude into computer systems
+            \bigbreak \noindent 
+            Detection methods are:
+            \begin{itemize}
+                \item Auditing and logging
+                \item Tripwire (Unix software that checks if certain files and directories have been altered)
+                \item Statistical view of intrusion detection: detect anomaly using statistical methods 
+            \end{itemize}
+
+
+
+
+
     \end{itemize}
 
 

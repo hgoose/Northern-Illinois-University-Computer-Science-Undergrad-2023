@@ -1007,8 +1007,677 @@ html`
                 \item \textbf{How:} area marks from given geometry, color hue/saturation/luminance
                 \item \textbf{Scalability:} thousands of regions 
             \end{itemize}
+        \item \textbf{Dasymetric} dot density is a map technique for showing counts, such as population, by placing dots only in areas where the phenomenon could realistically exist.
+            \bigbreak \noindent 
+            A regular dot density map might scatter population dots randomly across an entire county or census tract. That can be misleading because it may place people in lakes, forests, industrial zones, airports, or farmland.
+        \item \textbf{Cartogram}: A cartogram is a map where geographic areas are resized or distorted based on a data value instead of their actual land area.
+            \bigbreak \noindent 
+            For example, in a population cartogram, countries or states with larger populations are drawn larger, while places with smaller populations are drawn smaller. India would appear very large, while a geographically large but sparsely populated country may shrink.
+            \begin{itemize}
+                \item \textbf{Contiguous cartogram}: Areas stay connected to their neighbors, but their shapes are distorted.
+                \item \textbf{Non-contiguous cartogram}: Areas keep their general shape but are resized and may no longer touch neighboring areas.
+                \item \textbf{Dorling cartogram}: Each area is replaced by a circle, and the circle size represents the data value.
+            \end{itemize}
+            \begin{itemize}
+                \item \textbf{Data:} geographic geometry data \& two quantitative attributes (one part-of-whole)
+                \item \textbf{Derived data:} new geometry derived from the part-of-whole attribute
+                \item \textbf{Tasks:} trends, comparisons, part-of-whole
+                \item \textbf{How:} area marks from derived geometry, color hue/saturation/luminance
+                \item \textbf{Scalability:} thousands of regions
+                \item \textbf{Design choices:}
+                    \begin{itemize}
+                    \item Colormap
+                    \item Geometric deformation
+                \end{itemize}
+            \end{itemize}
+        \item \textbf{Hexagonal cartogram}: A hexagonal cartogram is a cartogram where each geographic unit is represented by a hexagon, usually with all hexagons the same size.
 
     \end{itemize}
+
+    \pagebreak 
+    \subsection{Networks}
+    \begin{itemize}
+        \item \textbf{Networks (graphs)}: Nodes and edges connecting the nodes. Formally, $G = (V,E)$ is a set of nodes $V$ and a set of edges $E$ where each edge connects two nodes
+            \bigbreak \noindent 
+            Nodes are items, edges connect the items together. Both nodes and edges may have attributes.
+        \item \textbf{Arrange networks and trees}: 
+            \begin{itemize}
+                \item \textbf{Node-link diagrams}: Connection marks, used for networks and trees
+                \item \textbf{Adjacency matrix}: Derived table, used for networks and trees
+                \item \textbf{Enclosure}: Containment marks, used for trees.
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/17.png}
+            \begin{itemize}
+                \item \textbf{Data:} nodes and edges 
+                \item \textbf{Task:} understand connectivity, paths, structure (topology)
+                \item \textbf{Encoding:} nodes as point marks, connections as line marks
+                \item \textbf{Scalability:} hundreds, …but high density of links can be problematic! 
+            \end{itemize}
+        \item \textbf{Adjacency matrix}: Change network to tabular data and use a matrix representation 
+            \begin{itemize}
+                \item \textbf{Derived data:} nodes are keys, edges are boolean values
+                \item \textbf{Task:} lookup connections, find well connected clusters
+                \item \textbf{Scalability:} millions of edges
+            \end{itemize}
+            Can encode edge weight, too
+        \item \textbf{Node-Link or Adjacency Matrix?}: For most tasks, node-link is better for small graphs and adjacency better for large graphs. Multi-link paths are hard with adjacency matrices. Immediate connectivity or neighbors are ok, estimating size (nodes & edges also ok) 
+            \bigbreak \noindent 
+            People tend to be more familiar with node-link diagrams. Link density is a problem with node-link but not with adjacency matrices
+        \item \textbf{Arc diagram}: An arc diagram is a network visualization method that places nodes along a single linear axis (horizontal or vertical) and draws edges as circular arcs
+            \bigbreak \noindent 
+            \fig{.7}{./figures/18.png}
+        \item \textbf{Network Layout}: Need to use spatial position when designing network visualizations. Otherwise, nodes can occlude each other, links hard to distinguish
+            \bigbreak \noindent 
+            Possible metrics:
+            \begin{itemize}
+                \item Edge crossings
+                \item Node overlaps
+                \item Total area
+            \end{itemize}
+        \item \textbf{Force-directed layout}: Nodes push away from each other but edges are springs that pull them together 
+            \begin{itemize}
+                \item \textbf{Weakness:} Nondeterminism, algorithm may produce difference results each time it runs
+            \end{itemize}
+        \item \textbf{Constraint-Based Optimization (CoLa)}: 
+            \begin{itemize}
+                \item Higher quality layout
+                \item More stable in interactive applications (no "jitter")
+                \item Allows user specified constraints such as alignments and grouping
+                \item Can avoid overlapping nodes
+                \item Provides flow layout for directed graphs
+                \item May be less scalable to very large graphs
+                \item Can route edges around nodes
+            \end{itemize}
+        \item \textbf{Hierarchical edge bundling (HEB)}: Hierarchical edge bundling is a data visualization technique designed to reduce visual clutter when displaying complex, interconnected relationships (adjacency relations) between elements that also belong to a hierarchical structure (tree structure). It works by curving the connection lines (edges) to follow the underlying tree hierarchy, bundling them together along common paths and fanning them out at their endpoints, similar to how electrical cables are bundled.
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Trees}
+    \begin{itemize}
+        \item \textbf{Trees}: Trees are directed acyclic networks. Each edge has a direction: the origin is the parent, the destination is the child. Cannot get back to a node after leaving it. Each node has at most one parent node. A tree has a root.
+            \bigbreak \noindent 
+            Can consider enclosure in trees using parent-child relationships
+            \bigbreak \noindent 
+            \fig{.7}{./figures/19.png}
+        \item \textbf{Spacing trees}: 
+            \begin{enumerate}
+                \item \textbf{Idea I}: Partition space for each node recursively
+                \item \textbf{Idea II}: Don't waste space (overlapping parent nodes is ok)
+            \end{enumerate}
+        \item \textbf{Reingold-Tilford Algorithm}:
+            \begin{itemize}
+                \item Recurse on left and right subtrees
+                \item Shift subtree over as long as it doesn’t overlap
+                \item Place parent centered above the subtrees
+                \item Originally, only binary trees, extended by Walker
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/20.png}
+        \item \textbf{Icicle Plot}: 
+            \begin{itemize}
+                \item Line marks
+                \item Vertical position shows depth
+                \item Horizontal position shows links and sibling order
+                \item Scalability: 1 pixel leaves, but harder to label
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/21.png}
+        \item \textbf{Radial node-link}: Use polar coordinates instead of rectilinear (same algorithms work for drawing)
+            \begin{itemize}
+                \item \textbf{Benefit:} space usage, labels
+            \end{itemize}
+            \fig{.7}{./figures/22.png}
+        \item \textbf{Sunburst}: Icicle plot in a radial layout, intuitive navigation.
+            \bigbreak \noindent 
+            \fig{.7}{./figures/23.png}
+        \item \textbf{Indented Outline}: Use horizontal position to show depth, vertical positions show sibling/order
+            \bigbreak \noindent 
+            \fig{.7}{./figures/24.png}
+        \item \textbf{Treemap}: A treemap is a data visualization tool that displays hierarchical (tree-structured) data using nested rectangles. It represents large, complex datasets by dividing a main rectangle into smaller, colored rectangles (branches and leaves), where the size of each rectangle is proportional to its numerical value, allowing for quick, high-level pattern recognition. 
+            \bigbreak \noindent 
+            \fig{.5}{./figures/25.png}
+            \begin{itemize}
+                \item \textbf{Marks:} Containment marks instead of connection marks, area marks (rectangles)
+                \item Encodes some attribute of the items as the size of the rectangles
+                \item Not as easy to see the intermediate rectangles
+                \item Scalability: millions of leaf nodes and links possible
+            \end{itemize}
+            Need a layout algorithm
+        \item \textbf{Layout Algorithms}: 
+            \begin{enumerate}
+                \item \textbf{Slice or dice}:  Divide horizontally (slice), divide vertically (dice). Bad aspect ratio, very skinny rectangles. Makes it harder to compare sizes, see labels, and select rectangles. We want rectangles that are closer to squares.
+                \item \textbf{Slice and dice}: Split at each level into strips, at each step, orientation of division changes. This is better, but some rectangles still have bad aspect ratio.
+                \item \textbf{Strip}: Consider aspect ratio when adding rectangles. Do one row at a time by processing rectangles in sorted order by size.
+                    Check if adding the next rectangle to the row improves aspect ratio. When it doesn't, go to next row
+                    \bigbreak \noindent 
+                    With this, last rectangles have bad aspect ratios. The solution is to look ahead to decide if it would be better to add to previous rows.
+                \item \textbf{Squarify}: Choose divisions (x/y) based on the width/height of region in order to maintain good aspect ratios
+                    \begin{itemize}
+                        \item Use left and right side
+                        \item Process large rectangles first
+                    \end{itemize}
+                    Ordering not preserved which may cause issues if the data is updated
+                    \begin{enumerate}
+                        \item Start with a rectangular display region.
+                        \item Sort the data values, usually from largest to smallest.
+                        \item Add items one at a time into a temporary row or column.
+                        \item After adding each item, check whether the rectangles in that row become more square or more skinny.
+                        \item Keep adding items while the aspect ratios improve.
+                        \item Once adding another item would make the row worse, lay out the current row and start a new row in the remaining space.
+                        \item Repeat until all items are placed.
+                    \end{enumerate}
+            \end{enumerate}
+            \textbf{Note:} Aspect ratio is width / height.
+        \item \textbf{Cushioned treemap}: Cushion treemaps are a specialized data visualization technique that applies shading to traditional, nested, space-filling treemap rectangles, making them appear as "cushions".  Each rectangle is textured with a radial gradient (light in the center, darker at the edges) to create a 3D effect. Because the "cushion" shading clearly separates nodes, it is easier to understand complex hierarchies, such as file structures in tools like SequoiaView.
+            \bigbreak \noindent 
+            \fig{.5}{./figures/26.png}
+        \item \textbf{Marimekko chart}: A Marimekko chart (or Mekko chart) is a two-dimensional, stacked bar chart that uses varying column widths and segment heights to visualize data proportions simultaneously, effectively acting as a 100\% stacked bar graph.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/27.png}
+            \bigbreak \noindent 
+            A Marimekko chart is basically a normalized stacked bar chart with variable bar widths.
+            \begin{itemize}
+                \item In a 100\% stacked bar chart, every bar has the same width, and each bar is normalized vertically to 100\%.
+                \item In a Marimekko chart, each bar is still normalized vertically to 100\%, but the bar width also encodes data, usually the total size of that category.
+            \end{itemize}
+        \item \textbf{Nested Circles}: Looks more like cluster diagram, but shows hierarchy
+            \begin{itemize}
+                \item Containment shown by the layering of semi-transparent circles
+                \item Labeling becomes more difficult
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/28.png}
+        \item \textbf{Compound Networks / GrouseFlocks}: Add a hierarchy to the network (e.g. from clustering)
+            \begin{itemize}
+                \item \textbf{GrouseFlocks:} uses nested circles with colors
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.7}{./figures/29.png}
+            
+
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Design}
+    \begin{itemize}
+        \item \textbf{Tufte's integrity principles}: 
+            \begin{itemize}
+                \item Show data variation, not design variation
+                \item Clear, detailed, and thorough labeling and appropriate scales
+                \item Size of the graphic effect should be directly proportional to the numerical quantities ("lie factor")
+            \end{itemize}
+        \item \textbf{Avoid chartjunk}
+        \item \textbf{Maximize data-to-ink ratio}
+        \item \textbf{No unjustified 3D}: Occlusion hides information, tilted text isn't legible, perspective distortion dangers. Although 3D can help with shape perception
+        \item \textbf{Four Nested Levels of Design}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/30.png}
+        \item \textbf{Potential problems at each level}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/31.png}
+        \item \textbf{Five stage, designs-stage methodology}: 
+            \begin{enumerate}
+                \item Meet with client and consider task; or contemplate task on own.
+                \item Ideate and sketch small ideas.
+                \item Sketch and plan three alternative designs.
+                \item Consider solutions with client; or deliberate on own.
+                \item Generate realization sheet, and implement prototype. Discuss with client and re-iterate if necessary
+            \end{enumerate}
+            The process is 
+            \begin{center}
+                Ideation $\to$ alternative designs $\to$ realization
+            \end{center}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/32.png}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Interaction}
+    \begin{itemize}
+        \item \textbf{Interaction}: The view changes over time. Changes can affect almost any aspect of the visualization
+            \begin{itemize}
+                \item encoding
+                \item arrangement
+                \item ordering
+                \item viewpoint
+                \item attributes being shown
+                \item aggregation level
+            \end{itemize}
+        \item \textbf{Overview}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/33.png}
+        \item \textbf{Sorting}: Allow user to find patterns by reordering the data. Note that categorical attributes don't really need sorting
+            \begin{itemize}
+                \item We can compare these attributes no matter what order
+                \item Instead, sort categorical attribute based on an ordered attribute
+            \end{itemize}
+        \item \textbf{Slope Graphs (bump charts)}: A slopegraph is a specialized line chart that compares changes in numerical values for multiple entities across two distinct categories or time points. By connecting data points with straight lines, it enables quick identification of increases (slopes up), decreases (slopes down), and ranking changes. They are best for showing "before and after" scenarios. Connection marks
+        \item \textbf{Animated transitions}: Jump cuts are hard to follow. Animations help users maintain sense of context between two states.,
+        \item \textbf{Design Considerations}: 
+            \begin{enumerate}
+                \item \textbf{Congruence (Expressiveness):}
+                    \begin{itemize}
+                        \item Use consistent semantic-syntactic mappings
+                        \item Respect semantic correspondence
+                        \item Avoid ambiguity
+                    \end{itemize}
+                \item \textbf{Apprehension (Effectiveness):}
+                    \begin{itemize}
+                        \item Group similar transitions
+                        \item Minimize occlusion
+                        \item Maximize predictability
+                        \item Use simple transitions
+                        \item Use staging for complex transitions
+                        \item Transitions as long as needed, but no longer
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{Selection}: Selection is often used to initiate other changes. User needs to select something to drive the next change
+        \item \textbf{Highlighting}: Selection is the user action, change selected items visual encoding
+        \item \textbf{Responsiveness Required}: Delays are perceived by users. Interaction should happen quick.
+        \item \textbf{Navigation}: Fix the layout of all visual elements but provide methods for the viewpoint to change
+            \begin{itemize}
+                \item \textbf{Camera analogy:} only certain features visible in a frame
+                    \begin{itemize}
+                        \item Zooming
+                        \item Panning (aka scrolling)
+                        \item Translating
+                        \item Rotating (rare in 2D, important in 3D)
+                    \end{itemize}
+            \end{itemize}
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Multiple views}
+    \begin{itemize}
+        \item Sometimes data is best examined in more than one view
+            \begin{itemize}
+                \item Clutter/visual overload
+                \item Different attributes (cannot show all attributes in one view)
+                \item Different scales (task requires overview or detail)
+                \item Different encodings (no single encoding is optimal for all tasks)
+            \end{itemize}
+        \item \textbf{Design patterns}: 
+            \begin{itemize}
+                \item \textbf{Juxtaposition:} side-by-side
+                \item \textbf{Superimposition:} layers
+                \item \textbf{Overloading:} vis meshed with another
+                \item \textbf{Nesting:} vis inside a vis (recursive vis)
+                \item \textbf{Integration:} "merge" views + links
+            \end{itemize}
+            \fig{.6}{./figures/34.png}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/35.png}
+        \item \textbf{Juxtaposition Guidelines}: 
+            \begin{itemize}
+                \item Benefits:
+                    \begin{itemize}
+                        \item The component visualizations are independent and can be composed without interference
+                        \item Easy to implement
+                    \end{itemize}
+                \item Drawbacks:
+                    \begin{itemize}
+                        \item Implicit visual linking is not always easy to see, particularly when multiple objects are selected
+                        \item Space is divided between the views, yielding less space for each view
+                    \end{itemize}
+                \item Applications: Use for heterogeneous datasets consisting of many different types of data, or for where different independent visualizations need to be combined.
+            \end{itemize}
+        \item \textbf{Integration Guidelines}: 
+            \begin{itemize}
+                \item \textbf{Benefits:}
+                    \begin{itemize}
+                        \item Easy to perceive one-to-one and one-to-many relations between items in components
+                        \item Visualizations are less independent compared to juxtaposed views, but still separate
+                    \end{itemize}
+                \item \textbf{Drawbacks:}
+                    \begin{itemize}
+                        \item Extra visual clutter added to the overall view
+                        \item Display space is split between the views
+                        \item Some dependencies exist between views to allow for the visual linking
+                    \end{itemize}
+                \item \textbf{Applications:} Use for heterogeneous datasets where correlation and comparisons between views is particularly important.
+            \end{itemize}
+        \item \textbf{Superimposition Guidelines}: 
+            \begin{itemize}
+                \item \textbf{Benefits:}
+                    \begin{itemize}
+                        \item Allows direct comparison in the same visual space.
+                    \end{itemize}
+                \item \textbf{Drawbacks:}
+                    \begin{itemize}
+                        \item May cause occlusion and high visual clutter.
+                        \item The client visualization must share the same spatial mapping as the host visualization.
+                    \end{itemize}
+                \item \textbf{Applications:} In settings where comparison is common, or where the component visualization views need to be as large as possible (potentially the entire available space).
+            \end{itemize}
+        \item \textbf{Overloading Guidelines}
+            \begin{itemize}
+                \item Benefits:
+                    \begin{itemize}
+                        \item The client visualization does not have to share the same coordinate space as the host visualization
+                        \item This also yield more flexibility and control over visual clutter
+                    \end{itemize}
+                \item \textbf{Drawbacks:}
+                    \begin{itemize}
+                        \item Visual clutter is increased
+                        \item Visual design dependencies between components are significant
+                    \end{itemize}
+                \item \textbf{Applications:} Situations where one visualization can be folded into another to yield a compact (and complex) result.
+            \end{itemize}
+        \item \textbf{Nesting Guidelines}: 
+            \begin{itemize}
+                \item \textbf{Benefits:}
+                    \begin{itemize}
+                        \item Very compact representation
+                        \item Easy correlation
+                    \end{itemize}
+                \item \textbf{Drawbacks:}
+                    \begin{itemize}
+                        \item Limited space for the client visualizations
+                        \item Clutter is high
+                        \item Visual design dependencies are high
+                    \end{itemize}
+                \item \textbf{Applications:} Situations that call for augmenting a particular visual representation with additional mapping
+            \end{itemize}
+        \item \textbf{Design Space}: 
+            \begin{itemize}
+                \itme \textbf{Visualizations:} the techniques or idioms used
+                \item \textbf{Spatial relation:} relationship between visual structures in display space
+                \item \textbf{Data relation:} visual relationship between items in different views
+                    \begin{itemize}
+                        \item None: No relation
+                        \item Item-item: One-to-one
+                        \item Item-group: One-to-many
+                        \item Item-dimension: Item in one view is a scale in another
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Multiple Views}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/36.png}
+        \item \textbf{Multiform Views}: The same data visualized in different ways.
+            \begin{itemize}
+                \item Does not need to be a totally different encoding (all choices need not be disjoint), e.g. horizontal positions could be the same
+                \item One view becomes cluttered with too many attributes
+                \item Consumes more screen space
+                \item Allows greater separability between channels
+            \end{itemize}
+        \item \textbf{Linked highlighting}: Linked highlighting—often referred to as linking and brushing—is an interactive data visualization technique where selecting or hovering over a data point in one view automatically highlights the same or related data across all other open views.
+        \item \textbf{Small multiples}: Same encoding, but different data in each view (e.g. SPLOM)
+        \item \textbf{Interaction with Multiform \& Small Multiples}: Key interaction with multiform and small multiples: \textbf{brushing} (also called linked highlighting). Want to understand correspondences between representation in the different views
+        \item \textbf{Overview-Detail (with Zoom-Filter)}: Detail involves some subset of the full dataset. Involves user selection or filtering of some type
+        \item \textbf{Partitioned Views}: Split dataset into groups and visualize each group
+        \item \textbf{Glyphs, Views, and Regions}: 
+            \begin{itemize}
+                \item Glyphs are composed of multiple marks
+                \item Views are a contiguous region of space
+                \item A region is usually associated with a group of data
+                \item Blurry lines of distinction between them
+            \end{itemize}
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Filtering}
+    \begin{itemize}
+        \item \textbf{Reducing Complexity}: Too many items or attributes lead to visual clutter. Interaction and Multiple Views can help, but often lose the ability to start understanding an entire dataset at first glance
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{Reduction}: Techniques to show less data to reduce complexity. Can reduce items or attributes (both are elements)
+                \item \textbf{Filtering:}: Eliminate elements from the current view. "Out of sight, out of mind"   
+                \item \textbf{Aggregation:} replace elements with a new element that represents the replaced elements 
+            \end{itemize}
+            Another method is \textbf{focus+context:} show details in the context of an overview
+        \item \textbf{Filtering}
+            \begin{itemize}
+                \item \textbf{Item filtering:} most common, eliminate marks for filtered items 
+                \item \textbf{Attribute filtering:}
+                    \begin{itemize}
+                        \item attributes often mapped to different channels
+                        \item if mapped to same channel, allows many attributes (e.g. parallel coordinates, star plots), can filter
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Filter vs. Query}: Queries start with an empty set of items and add items, filters start with all items and remove items
+        \item \textbf{Scented widgets}: Scented widgets are user interface controls (like sliders, buttons, or menus) enhanced with embedded, small-scale visualizations (data "scents") that provide navigation cues and context.
+            \bigbreak \noindent 
+            They help because the user can see the distribution of the data before filtering
+        \item \textbf{Dynamic Filters}: Interaction need not be with the visualization itself. Users interact with widgets that control which items are shown 
+        \item \textbf{Star plots (radar charts)}: A star plot (or radar chart) displays multivariate data as equi-angular spokes radiating from a center, representing observations with multiple variables. Each star represents one data point, with spoke lengths proportional to variable magnitude, connecting to form shapes that highlight similarities, differences, and outliers. 
+            \begin{itemize}
+                \item Use:
+                    \begin{itemize}
+                        \item Compare variables
+                        \item Similarities/differences of items
+                        \item Locate outliers
+                    \end{itemize}
+                \item \textbf{Considerations:}:
+                    \begin{itemize}
+                        \item Order of axes
+                        \item Too many axes cause problems
+                    \end{itemize}
+            \end{itemize}
+            \fig{.6}{./figures/37.png}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Aggregation \& focus + context}
+    \begin{itemize}
+        \item \textbf{Histograms}: Often shown without space between (continuity). Choice of number of bins
+            \bigbreak \noindent 
+            \fig{.7}{./figures/38.png}
+        \item \textbf{Spatial aggregation}: 
+            \bigbreak \noindent 
+            \fig{.7}{./figures/39.png}
+        \item \textbf{Modifiable Areal Unit Problem}: How you draw boundaries impacts the type of aggregation you get. Similar to bins in histograms
+        \item \textbf{Aggregation: Boxplots}: 
+            \begin{itemize}
+                \item Show \textbf{distribution}
+                \item Single value (e.g. mean, max, min, quartiles) doesn't convey everything
+                \item Created by John Tukey
+                \item Show \textbf{spread} and \textbf{skew} of data
+                \item Best for \textbf{unimodal} data
+                \item Variations like vase plot for multimodal data
+                \item Aggregation here involves many different marks
+            \end{itemize}
+            \fig{.7}{./figures/40.png}
+            \bigbreak \noindent 
+            A problem is that multiple distributions can yield the same boxplot.
+        \item \textbf{Dimensionality Reduction}: 
+            \begin{itemize}
+                \item \textbf{Attribute Aggregation:} Use fewer attributes (dimensions) to represent items
+                \item Combine attributes in a way that is more instructive than examining each individual attribute
+            \end{itemize}
+        \item \textbf{Focus+Context}: Show everything at once but compress regions that are not the current focus
+            \begin{itemize}
+                \item                 User shouldn't lose sight of the overall picture
+                \item                 May involve some aggregation in non-focused regions
+                \item                 "Nonliteral navigation" like semantic zooming 
+             
+            \end{itemize}
+            \begin{itemize}
+                \item Elision
+                \item Superimposition: more directly tied than with layers
+                \item Distortion
+            \end{itemize}
+            \fig{.7}{./figures/41.png}
+        \item \textbf{How does distortion help}: Distortion helps by giving more screen space to the user’s current focus while still preserving surrounding context.
+            \bigbreak \noindent 
+            For example, a fisheye view enlarges the area near the cursor and compresses distant areas. This lets users inspect local detail without completely losing the global structure.
+        \item \textbf{Degree of Interest Function}: 
+            \begin{align*}
+                \text{DOI} = I(x) - D(x,y)
+            .\end{align*}
+            \begin{itemize}
+                \item I: interest function
+                \item D: distance (semantic or spatial)
+                \item x: location of item
+                \item y: current focus point (could be more than one) 
+            \end{itemize}
+            Interactive: y changes
+        \item \textbf{Distortion Choices}: 
+            \begin{itemize}
+                \item How many focus regions? One or Multiple
+                \item Shape of the focus?
+                    \begin{itemize}
+                        \item Radial
+                        \item Rectangular
+                        \item Other
+                    \end{itemize}
+                \item Extent of the focus
+                    \begin{itemize}
+                        \item Constrained similar to magic lenses
+                        \item Entire view changes
+                    \end{itemize}
+                \item Type of interaction: Geometric, moveable lenses, rubber sheet
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{ISO surfacing and volume rendering}
+    \begin{itemize}
+        \item \textbf{Scivis and infovis}: Two subfields of visualization 
+            \begin{itemize}
+                \item Scivis deals with data where the spatial position is given with data
+                    \begin{itemize}
+                        \item Usually continuous data
+                        \item Often displaying physical phenonema
+                        \item Techniques like isosurfacing, volume rendering, vector field vis
+                    \end{itemize}
+                \item In Infovis, the data has no set spatial representation, designer chooses how to visually represent data
+            \end{itemize}
+        \item \textbf{Fields:} 
+            \begin{itemize}
+                \item Values come from a \textbf{continuous} domain, infinitely many values
+                \item \textbf{Sampled} at certain positions to approximate the entire domain
+                \item Positions are often aligned in \textbf{grids}
+                \item Often measurements of natural or simulated phenomena
+                \item Examples: temperature, wind speed, tissue density, pressure, speed, electrical conductance
+            \end{itemize}
+            \fig{.7}{./figures/42.png}
+        \item \textbf{Grids}: Remember we have continuous data and want to sample it in order to understand the entire domain
+            \bigbreak \noindent 
+            Possible schemes:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/43.png}
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{Geometry:} the spatial positions of the data (points)
+                \item \textbf{Topology:} how the points are connected (cells)
+            \end{itemize}
+            Type of grid determines how much data needs to be stored for both geometry and topology
+        \item \textbf{Nearest neighbor interpolation}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/44.png}
+        \item \textbf{Linear interpolation}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/45.png}
+        \item \textbf{Dimensions of Data}: 
+            \begin{itemize}
+                \item 1-Dimension: data along a line
+                    \begin{itemize}
+                        \item \textbf{Example:} temperature along my drive from Massachusetts to Illinois
+                    \end{itemize}
+                \item 2-Dimensional: data on a plane
+                    \begin{itemize}
+                        \item \textbf{Example:} temperature on the surface of a pond
+                    \end{itemize}
+                \item 3-Dimensional: data in our normal world (data in a volume)
+                    \begin{itemize}
+                        \item \textbf{Example:} temperature at every point in the room 
+                    \end{itemize}
+            \end{itemize}
+            Complexity increases as we add dimensions Vis complexity also increases. Often, want to be able to see phenomena as we see them in real life settings
+        \item \textbf{Isolines and isosurfaces}: Isolines are lines on a map connecting points of equal value, such as elevation (contour lines), temperature (isotherms), or pressure (isobars). They visualize three-dimensional data on two-dimensional maps, with closer lines indicating steeper gradients. 
+            \bigbreak \noindent 
+            An isosurface is a three-dimensional analog of an isoline. It is a surface that represents points of a constant value (e.g. pressure, temperature, velocity, density) within a volume of space; in other words, it is a level set of a continuous function whose domain is 3-space.
+            \bigbreak \noindent 
+            That constant value is called an \textbf{isovalue}.
+        \item \textbf{Voxels and cells}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/46.png}
+        \item \textbf{Visualizing volume (3D) data}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/47.png}
+            \bigbreak \noindent 
+            Given an isovalue, we want to draw the isocontours corresponding to that value
+            \begin{itemize}
+                \item Remember we only have values defined at grid points
+                \item How do we get isolines or isosurfaces from that data?
+                \item Can we use the ideas from interpolation?
+            \end{itemize}
+        \item \textbf{Isosurfacing and volume rendering}: 
+            \begin{itemize}
+                \item \textbf{ISOsurfacing}: compute a surface (triangles) and use standard computer graphics to render the triangles
+                \item \textbf{Volume rendering}: compute the pixels shown directly from the volume information
+            \end{itemize}
+        \item \textbf{Types of volume rendering algorithms}: 
+            \begin{itemize}
+                \item \textbf{Ray casting}: Similar to ray tracing, but use rays from the viewer
+                \item \textbf{Splatting:} Object-order, voxels splat onto the image plane
+                \item \textbf{Shear Warp:}: Object-space, slice-based, parallel viewing rays
+                \item \textbf{Texture-Based:}
+                    \begin{itemize}
+                        \item 2D Slices: stack of texture maps
+                        \item 3D Textures
+                    \end{itemize}
+            \end{itemize}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Vector field visualization}
+    \begin{itemize}
+        \item \textbf{Glyphs}: Represent each vector with a symbol. Hedgehogs are primitive glyphs (glyph is a line) 
+            \bigbreak \noindent 
+            For vector fields, can encode direction, magnitude, scalar value
+            \begin{itemize}
+                \item \textbf{Good:}
+                    \begin{itemize}
+                        \item Show precise local measures
+                        \item Can encode scalar information as color
+                    \end{itemize}
+                \item \textbf{Bad:}
+                    \begin{itemize}
+                        \item Possible sampling issues
+                        \item Clutter (Occlusion): Can remove some points to help
+                        \item Clutter is worse in higher dimensions
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Streamlines and variants}: 
+            \begin{itemize}
+                \item Trace a line along the direction of the vectors
+                \item Streamlines are always tangent to the vector field
+                \item Basic Particle Tracing:
+                    \begin{enumerate}
+                        \item Set a starting point (seed)
+                        \item Take a step in the direction of the vector at that point
+                        \item Adjust direction based on the vector where you are now
+                        \item Go to Step 2 and Repeat
+                    \end{enumerate}
+            \end{itemize}
+        \item \textbf{Steady vs. Unsteady flows}: In unsteady flows, the vector field changes over time. We use a variant of the streamline called \textbf{pathlines}, and also \textbf{streaklines}
+            \bigbreak \noindent 
+            Streaklines and pathlines are flow visualization techniques that are identical in steady flow but differ in unsteady (changing) flow. A pathline is the actual trajectory traced by a single, specific fluid particle over a period of time, while a streakline is the instantaneous line formed by all particles that have passed through a single, fixed point.
+    \end{itemize}
+
+
 
     \pagebreak 
     \unsect{D3}

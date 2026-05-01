@@ -3947,6 +3947,15 @@ if (errno) {
                 \begin{align*}
                     s = 2^{s_{1}s_{0}}
                 .\end{align*}
+            \item \textbf{Note:} The SIB byte always follows the ModR/M byte. The general encoding ordering is 
+                \begin{center}
+                    prefixes \\
+                    opcode \\
+                    ModR/M \\
+                    SIB \\
+                    displacement \\
+                    immediate
+                \end{center}
             \item \textbf{REX with SIB}: Recall that when a SIB byte is present, r/m in ModR/M is fixed at 100. Thus, REX.X is the high order bit of the index register, and REX.B is the high order bit of the base register.
             \item \textbf{Array indexing with SIB}: Consider an integer array \texttt{int A[500];} indexed at $i$. The indexing function is then
                 \begin{align*}
@@ -4198,6 +4207,8 @@ if (errno) {
                 \end{cppcode}
                 \bigbreak \noindent 
                 The -S flag in g++ (or gcc) tells the compiler to stop after generating assembly code and not proceed to assembling or linking. Thus, we can pass this flag to examine the generated assembly instructions (in AT\&T syntax).
+            \item \textbf{-E on the GNU compiler}: Will give you the source file after preprocessor work has been done
+            \item \textbf{The cpp command}: The C preprocessor
         \end{itemize}
 
         \pagebreak 
@@ -4328,6 +4339,207 @@ if (errno) {
 
 
 
+
+        \end{itemize}
+
+        \pagebreak 
+        \subsubsection{More on the symbol table}
+        \begin{itemize}
+            \item \textbf{Scope stack}: Some name spaces, especially those in block-structured languages, are scopestructured. These scopes work in stack fashion: there is a stack of scope elements, one for each scope entered, and all actions are performed on the top element(s). The rules are simple:
+                \begin{itemize}
+                    \item a new empty scope element is stacked upon scope entry;
+                    \item declared identifiers are entered in the top scope element;
+                    \item applied identifiers are looked up in the scope elements from top to bottom; and
+                    \item the top element is removed upon scope exit, thus removing all declarations from that scope.
+                \end{itemize}
+            \item \textbf{Naive implementation (linked lists)}: 
+                A naive implementation of a scope-structured name space is shown in Figure 11.2; on the left is the scope stack, on the right the linked lists of declaration information records, one for each name declared in each scope. The capital P in a record for a name stands for the properties attached to the name in the declaration.
+                \bigbreak \noindent 
+                Five levels of scope have been shown; they represent a possible constellation for a C program: level 0 is the library level, level 1 the program (routine declaration) level, level 2 the formal parameter level, level 3 the local variable level and level 4 a subblock.
+                \bigbreak \noindent 
+                \fig{.6}{./figures/46.png}
+                \bigbreak \noindent 
+                The organization shown in Figure 11.2 is simple and intuitive, but lacks two features essential for use in a practical compiler: it has no provisions for name spaces and it does not use the fast symbol table access
+                \bigbreak \noindent 
+                Access speed is obtained by using a hash table
+                \bigbreak \noindent 
+                \fig{.6}{./figures/47.png}
+                \bigbreak \noindent 
+                The decl field points to a stack of declarations of identifier $I$ in the general name space, implemented as a linked list of declaration information records. Each declaration information record is marked with its scope level, and the linked list is sorted on scope level. The top record is the identification sought: the declaration information of identifier $I$ can be retrieved as Identify($I$).decl. This implements part of the scope stack and provides declaration identification in constant time. Further fields in the IdentificationInfo record provide access to information about $I$ in other name spaces.
+                \bigbreak \noindent 
+                \fig{.6}{./figures/48.png}
+                \bigbreak \noindent 
+                These two diagrams represent complementary layers of a symbol table implementation:
+                \begin{itemize}
+                    Hash table (Fig. 11.4) $\to$ fast lookup by identifier name
+                    Scope stack (Fig. 11.5) $\to$ management of nested scopes and lifetimes
+                \end{itemize}
+                A correct compiler design uses both simultaneously, not as alternatives.
+                \bigbreak \noindent 
+                You maintain:
+                \begin{itemize}
+                    \item A global hash table mapping name $\to$ Id.info
+                    \item Each Id.info contains a stack (linked list) of declarations, one per scope level
+                    \item A scope stack that tracks what was declared at each level
+                \end{itemize}
+                Suppose you declare int x; at level 3:
+                \begin{enumerate}
+                    \item Lookup $x$ in hash table
+                    \item Create new declaration node:
+                        \begin{itemize}
+                            \item level = 3
+                            \item next = current head of x’s declaration list
+                        \end{itemize}
+                    \item Update:
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                        hash["x"].decl = new_node
+                        \end{cppcode}
+                    \item Add $x$ to scope stack[level 3], This is shadowing if $x$ already existed.
+                \end{enumerate}
+                When resolving x:
+                \begin{itemize}
+                    \item Hash lookup $\to$ Id.info
+                    \item Take top of declaration list
+                \end{itemize}
+                That is always the closest (innermost) scope. When exiting a scope, this is where the scope stack is essential.
+                \bigbreak \noindent 
+                For current level $k$, 
+                \begin{enumerate}
+                    \item For each identifier id declared in scope $k$
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                        hash[id].decl = hash[id].decl->next
+                        \end{cppcode}
+                    \item Pop scope stack entry
+                    \item level--
+                    
+                \end{enumerate}
+
+
+
+
+
+
+        \end{itemize}
+
+        \pagebreak 
+        \subsubsection{Coroutines}
+        \begin{itemize}
+            \item \textbf{Coroutines}: A coroutine is a function that can pause execution and later resume from the same point, keeping its local state. 
+                A coroutine works like this:
+                \begin{center}
+                    start \\
+                    do some work \\
+                    pause \\
+                    resume later \\
+                    continue with same local variables \\
+                    pause again \\
+                    resume again \\
+                    finish
+                \end{center}
+                \bigbreak \noindent 
+                So the idea is 
+                \begin{center}
+                    function + saved execution state + ability to suspend/resume
+                \end{center}
+                \bigbreak \noindent 
+                In C++, coroutines are functions that use one of these keywords:
+                \begin{cppcode}
+                    co_await
+                    co_yield
+                    co_return
+                \end{cppcode}
+                \bigbreak \noindent 
+                For example, 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    generator<int> count() {
+                        co_yield 1;
+                        co_yield 2;
+                        co_yield 3;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                This does not return all values at once. It produces:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    1
+                    pause
+                    2
+                    pause
+                    3
+                    finish
+                \end{cppcode}
+                \bigbreak \noindent 
+                That is why coroutines are useful for generators, async I/O, and state machines.
+                \bigbreak \noindent 
+                \textbf{Note:} A coroutine is not necessarily a thread. A thread is scheduled by the OS and can run independently. A coroutine usually runs on the same thread and only switches when it explicitly suspends.
+            \item \textbf{Implementing coroutines}: At the compiler level, coroutines are implemented by lowering a single function into a state machine plus a heap-allocated frame. The original control flow is split into resumable segments, and execution state is explicitly stored.
+                \bigbreak \noindent 
+                A coroutine like
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    generator<int> f() {
+                        int x = 1;
+                        co_yield x;
+                        x++;
+                        co_yield x;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                is conceptually rewritten into something like:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct coroutine_frame {
+                        int state;
+                        int x;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                and a resume function:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void resume(coroutine_frame* f) {
+                        switch (f->state) {
+                            case 0:
+                            f->x = 1;
+                            f->state = 1;
+                            yield(f->x);
+                            return;
+
+                            case 1:
+                            f->x++;
+                            f->state = 2;
+                            yield(f->x);
+                            return;
+
+                            case 2:
+                            destroy(f);
+                            return;
+                        }
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Each co\_yield or co\_await becomes:
+                \begin{itemize}
+                    \item store state
+                    \item save locals into the frame
+                    \item return control to caller 
+                \end{itemize}
+                Unlike a normal function stack frame, a coroutine frame:
+                \begin{itemize}
+                    \item lives beyond the function call
+                    \item is typically allocated on the heap
+                    \item contains:
+                    \begin{itemize}
+                        \item local variables
+                        \item parameters
+                        \item instruction pointer (encoded as state)
+                        \item promise object (C++-specific)
+                    \end{itemize}
+            \end{itemize}
+            This is why coroutines can resume later—state is preserved explicitly. Thus, instead of a \texttt{call} instruction being invoked, we use a \texttt{jmp} instruction.
 
         \end{itemize}
 
