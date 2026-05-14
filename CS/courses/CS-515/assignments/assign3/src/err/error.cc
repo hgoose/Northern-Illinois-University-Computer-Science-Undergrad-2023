@@ -1,6 +1,6 @@
-// Nate warner z2004109
+/ Nate warner z2004109
 // error.cc
-
+x
 #include "error.h"
 #include "parser.h"
 #include "buffio.h"
