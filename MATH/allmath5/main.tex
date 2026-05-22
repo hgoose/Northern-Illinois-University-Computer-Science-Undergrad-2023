@@ -59,6 +59,144 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
+    \unsect{Combinatorics}
+    \bigbreak \noindent 
+    \subsection{Introduction}
+    \begin{itemize}
+        \item \textbf{What is combinatorics?}: Combinatorics is a collection of techniques and a language for the study of finite or countably infinite discrete structures. Given a set of elements and possibly some structure on that set, typical questions are
+            \begin{itemize}
+                \item Does a specific arrangement of the elements exists?
+                \item How many such arrangemets are there?
+                \item What properties do these arrangements have?
+                \item Which one of the arrangemetns is maximal, minimal, or optimal according to some criterion?
+            \end{itemize}
+        \item \textbf{Counting the number of subsets for a set}: Let $[n] = \{1,2,...,n\} $, and let $f(n)$ be the number of subsets of $[n]$. Then $f(n) = 2^{n}$. For any particular subset of $[n]$, each element is either in that subset or not. Thus, to construct a subset, we have to make one of two choices for each element of $[n]$. Furthermore, these choices are independent of each other. Hence, the total number of choices, and consequently the total number of subsets is 
+            \begin{align*}
+                \underbrace{2\times2\times...\times2}_{n} = 2^{n}
+            .\end{align*}
+        \item \textbf{Number of subsets without consecutive integers}: For a sequence $[n] = \{1,...,n\}$ we can count the number of subsets given by $f(n)$, that do not contain consecutive integers with the recurrence relation
+            \begin{align*}
+                f(n) = f(n-1) + f(n-2)
+            .\end{align*}
+            We consider two cases
+            \begin{enumerate}
+                \item $n$ in not included in the subsets
+                \item $n$ is included in the subsets. In this case, we build the subsets considering the subsequence $[n-2]  = \{1,...,n-2\}$. Note that if we include $n$, we must exclude $n-1$, because $n-1$ and $n$ are consecutive, this will become cleare in the upcoming example.
+            \end{enumerate}
+            \bigbreak \noindent 
+            Consider the sequence $[n] = \{1,2,3,4\}$. By the relation above, 
+            \begin{align*}
+                f(4) &= f(3) + f(2) 
+            .\end{align*}
+            Before we are able to compute this, we must define our base cases. 
+            \begin{align*}
+                f(n) &= \begin{cases}
+                    3 & \text{if } n = 2 \\
+                    2 & \text{if } n =1
+                \end{cases}
+            .\end{align*}
+            If $n=2$, we have $\{1,2\}$, and the allowed subsets are $\varnothing, \{1\}, \{2\} $. If we have $n=1$, the subsets are $\{\varnothing, \{1\}\} $. Thus
+            \begin{align*}
+                f(4) &= f(3) + f(2) = f(2) + f(1) + f(2)  \\
+                     &= 3 + 2 + 3 = 8               
+            .\end{align*}
+            Let's explicitly break up the given sequence so we can see whats going on. In the first case, $n$ is excluded, thus the sequence becomes $\{1,2,3\}$. If $n$ is included, the sequence becomes $\{1,2\}$, where we build the subsets of $\{1,2\}$, and then add 4 to each one. Thus,
+            \begin{align*}
+                \{1,2,3\} + \{1,2\} &= \{1,2,3\}  + \varnothing + \{1\} + \{2\} \\
+                                    &= \{1,2,3\} + \{4\} + \{1,4\} + \{2,4\}
+            .\end{align*}
+            Since the sequence $\{1,2,3\}$ in not a base case, we must split this one up aswell, we have
+            \begin{align*}
+                \{1,2,3\} &= \{1,2\} + \{1\}  + \{4\} + \{1,4\} + \{2,4\} \\
+                          &=  \varnothing + \{1\} + \{2\} + \varnothing + \{1\} + \{4\} + \{1,4\} + \{2,4\} \\
+                          &= \varnothing + \{1\} + \{2\} + \{3\} + \{1,3\} + \{4\} + \{1,4\} + \{2,4\} 
+            .\end{align*}
+            Thus, we conclude all "good" subsets of $[n]$ either have $n$ or don't have $n$. The ones that don't have $n$ are exactly the "good" subsets of $[n-1]$. The "good" subsets of $[n]$ that include $n$ are exactly the "good" subsets of $[n-2]$ together with $n$. Thus $f(n) = f(n-1) + f(n-2) $ $\blacksquare$
+            
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Induction and recurrence relations}
+    \begin{itemize}
+        \item \textbf{Principal of Mathematical Induction}: Given an infinite sequence of propositions
+            \begin{align*}
+                P_{1}, P_{2}, P_{3},...P_{n},...,
+            .\end{align*}
+            In order to prove that all of them are true, it is enough to show two things
+            \begin{enumerate}
+                \item \textbf{The base case:} $P_{1}$ is true
+                \item \textbf{The inductive step}: For all positive integers $k$, if $P_{k}$ is true, then so is $P_{k+1}$
+            \end{enumerate}
+            \bigbreak \noindent 
+            \textbf{Example}: Show that 
+            \begin{align*}
+                1 + 2 + 3 + ... + n = \frac{n(n+1)}{2}
+            .\end{align*}
+            \textbf{Base case}:
+            \begin{align*}
+                1 &= \frac{1(1+1)}{2} = \frac{2}{2} = 1
+            .\end{align*}
+            \bigbreak \noindent 
+            \textbf{Inductive step}: $P_{k}$ is given by
+            \begin{align*}
+                1 + 2 + 3 + ... + k = \frac{k(k+1)}{2}
+            .\end{align*}
+            \bigbreak \noindent 
+            $P_{k+1}$ is given by
+            \begin{align*}
+                1 + 2 + 3 + ... + k + k+1 = \frac{k+1(k+2)}{2}
+            .\end{align*}
+            If $1+2+3+...+k  = \frac{k(k+1)}{2}$, then
+            \begin{align*}
+                1 + 2 + 3 + ... + k + k+1 &= \frac{k+1(k+2)}{2} \\
+                \frac{k(k+1)}{2} + k + 1 &= \frac{k+1(k+2)}{2} \\
+                \frac{k(k+1) + 2k + 2}{2} &= \frac{k^{2} + 3k + 2}{2} \\
+                \frac{k^{2} + 3k  + 2}{2} &= \frac{k^{2} + 3k + 2}{2}
+            .\end{align*}
+            Thus, we have showed that $P_{k} \implies P_{k+1}$ $\blacksquare$.
+            \bigbreak \noindent 
+            \textbf{Note}: Our aim is not to directly prove $P_{k+1}$, but to prove that $P_{k}$ implies $P_{k+1}$. In the inductive step we assume $P_{k}$ to be true, then show under this assumption, $P_{k+1}$ is also true.
+        \item \textbf{Understanding gauss's formula for the sum of the first $n$ natural numbers}: Suppose we want to find the sum $1+2+3+...+(n-1)+n$. We could have discovered the formula that we proved above by first writing the sum twice
+            \begin{align*}
+                &1 + 2  + 3 + ... + (n-1) + n \\
+                &n + (n-1) + (n-2) + ... + 2 + 1
+            .\end{align*}
+            The sum of the two numbres in each column is $n+1$, and there are $n$ columns, so the total sum is $n(n+1)$, it then follows that the actual sum is $\frac{1}{2}n(n+1)$
+        \item \textbf{Trianglular numbers}: The sequence of integers
+            \begin{align*}
+                &1
+                &3 = 1+2 \\
+                &6 = 1 + 2  + 3 \\
+                &10 = 1 + 2 + 3 + 4 \\
+                &15  = 1 + 2 + 3 + 4 + 5  \\
+                &...
+            .\end{align*}
+            Are called \textit{triangular numbers}. If you were to make a triangle of dots out of the sum, where the highest number is the base, the second highest is the layer ontop of the base, etc, you would form a triangle.
+        \item \textbf{Strong induction}: Given an infinite sequence of propositions
+            \begin{align*}
+                P_{1}, P_{2}, P_{3}, ..., P_{n}
+            .\end{align*}
+            In order to demonstrate that all of them are true, it is enough to know two things.
+            \begin{enumerate}
+                \item \textbf{The base case}: $P_{1}$ is true
+                \item \textbf{The inductive step}: For all integers $k \geq 1$, if $P_{1}, P_{2}, P_{3},...,P_{k}$ are true, then so is $P_{k+1}$
+            \end{enumerate}
+        \item \textbf{Pingala-fibonacci numbers}: Define a sequence of positive integers as follows: $F_{0} = 0, F_{1} = 1$, and for $n=2,3,... $ we have
+            \begin{align*}
+                F_{n} = F_{n-2} + F_{n-1}
+            .\end{align*}
+            This sequence is also known as \textit{the fibonacci sequence}.
+        \item \textbf{Lucas numbers}: Change the initial values on the fibonacci sequence. Let $L_{0} = 2, L_{1} = 1$, and $L_{n} = L_{n-2} + L_{n-1}$. Then, we get the \textit{Lucas numbers}
+            \begin{align*}
+                2,1,3,4,7,11,18,29,47,...
+            .\end{align*}
+        \begin{align*}
+            \mathcal{L}
+        .\end{align*}
+
+    \end{itemize}
+
+    \pagebreak 
     \unsect{The Fourier Transform}
     \begin{itemize}
         \item \textbf{The Fourier Transform}: The Fourier transform is a tool that rewrites a function in terms of its frequency content. Instead of describing a signal by “what value it has at each time,” the Fourier transform describes it by “how much of each frequency is present.”
@@ -493,7 +631,7 @@
             (2). Since all numbers divide $0$, and $d \leq \left\lvert a \right\rvert $ for any number $d$ that divides $a$, the GCD is therefore $\left\lvert a \right\rvert $. $\endpf$
 
         \item \textbf{Relatively prime}: Let $a,b \in \mathbb{Z} $, not both zero. Then, we say that $a,b$ are \textbf{relatively prime} if $(a,b) =1$.
-        \item \textbf{Theorem 2.5}: Let $a$ and $b$ be integers, not both 0. Then, there exists integers $u,v$ such that 
+        \item \textbf{Theorem 2.5: \textit{B\'ezout's identity}}: Let $a$ and $b$ be integers, not both 0. Then, there exists integers $u,v$ such that 
             \begin{align*}
                 (a,b) = au + bv
             .\end{align*}
@@ -817,7 +955,7 @@
             ,\end{align*}
             and if $b \in [a]$, $[a] = [b]$. Thus, for the equivalence relation $a \equiv b \pmod{n}$, let $a \in \mathbb{Z}$, then the equivalence class $[a]$ is 
             \begin{align*}
-                [a] = \left\{b \in \mathbb{Z}:\; a \equiv b \pmod{n}\right\}        
+                [a] &= \left\{b \in \mathbb{Z}:\; a \equiv b \pmod{n}\right\} = \left\{a + nk:\; k \in \mathbb{Z}\right\}
             .\end{align*}
             So, the integers $b \in \mathbb{Z}$ with the same remainder when divided by $n$ makes up the equivalence class for $a$. $\endpf$
         \item \textbf{Definition 2.6}: Let $n \geq 2$ be an integer. The set of integers modulo $n$, denoted $ \mathbb{Z}_{n}$ is the set of equivalence classes of $ \mathbb{Z}$ with respect to the equivalence relation $a \equiv b \pmod{n}$. We call these the \textbf{congruence classes} modulo $n$. Specifically,  
@@ -899,6 +1037,9 @@
                 *:\; S \times S \to S
             .\end{align*}
             $*$ is well-defined on $S$ if for every $a,b \in S$, $a*b$ exists, is unique, and is also an element of $S$.
+        \item \textbf{Checking well-definedness}: You must show well-definedness whenever your definition uses representatives of equivalence classes. As well as for defining operations on a set.
+            \bigbreak \noindent 
+            In general, whenever you define an operation on a set, you should at least know that it is well-defined. You should check well-definedness especially when the rule involves choices, representatives, cases, or possible ambiguity.
         \item \textbf{Theorem 2.10}: For any integer $ n \geq 2$, addition and multiplication on $ \mathbb{Z}_{n}$ are well-defined.
             \bigbreak \noindent 
             \textbf{\textit{Proof.}} Suppose that $a_{1} \equiv a_{2} \pmod{n}$ and $b_{1} \equiv b_{n} \pmod{n}$. Then, 
@@ -1046,7 +1187,227 @@
             .\end{align*}
             Thus, $q^{-1} = \frac{1}{q}$.
         \item \textbf{Example}: Let $n \geq 2$ be positive integer. Let $U(n)$ denote the set of all elements $a \in \mathbb{Z}_{n}$ such that $(a,n) = 1$.
+            \bigbreak \noindent 
+            So,
+            \begin{align*}
+                U(n) = \left\{a \in \mathbb{Z}_{n}:\; (a,n) = 1\right\}
+            .\end{align*}
+            First, lets check that the condition $(a,n) = 1$ is well-defined. Thus, if 
+            \begin{align*}
+                a \equiv b \pmod{n}
+            \end{align*}
+            with $(a,n)=1$, we should see that $(b,n) =1$. Well, we have
+            \begin{align*}
+                a &= b + nk, \\
+                au + nv &= 1
+            .\end{align*}
+            So,
+            \begin{align*}
+                (b+nk)u + nv &= bu + nku + nv = bu + n(ku+v) =1  
+            .\end{align*}
+            Thus, $(b,n) = 1$. Alternately, since $a$ is a linear combination of $b$ and $n$, then if we let $c$ be a divisor of $b$ and $n$, we can invoke lemma 2.1 to get that
+            \begin{align*}
+                c \mid b(1) + nk
+            .\end{align*}
+            So, $c \mid a$. Now, $c$ divides both $a$ and $n$, but the only common divisor for $a$ and $n$ is 1. Thus, $c=1$. Now, notice that we choose an arbitrary divisor for $b$ and $n$, and deduced that it must be one. Thus, $b$ and $n$ have no common divisor other than 1, so
+            \begin{align*}
+                (b,n) = 1
+            .\end{align*}
+            $\endpf$. 
+            \bigbreak \noindent 
+            Now that we have well-definedness, we can claim that $U(n)$ forms an abelian group under multiplication in $ \mathbb{Z}_{n}$.
+            \bigbreak \noindent 
+            First, we check for closure. If $a,b \in U(n)$, then we should see that $ab \in U(n)$. So, we require that
+            \begin{align*}
+                (ab,n) = 1
+            .\end{align*}
+            In fact, we see this to be true by Corollary 2.5. We also know multiplication in $ \mathbb{Z}_{n} $ to be both associative and commutative, and $1 \in U(n)$ is the identity. But, what about inverses? For a residue class $a$, we call $[b] = a^{-1}$ if 
+            \begin{align*}
+                ab \equiv 1 \pmod{n}
+            .\end{align*}
+            In other words, 
+            \begin{align*}
+                ab = 1 + nk,\; k \in \mathbb{Z}
+            .\end{align*}
+            Notice that since $(a,n) = 1$, 
+            \begin{align*}
+                au + nv = 1 \implies au = 1 - nv = 1 + nk
+            .\end{align*}
+            Thus, $u = a^{-1}$.
+        \item \textbf{Example}: Let $n$ be a positive integer, and
+            \begin{align*}
+                (G, \cdot ) = (\left\{w \in \mathbb{C}:\; w^{n} = 1\right\}, \cdot)
+            .\end{align*}
+            If $w,z \in G$, then
+            \begin{align*}
+                (wz)^{n} = w^{n}z^{n} = 1(1) = 1
+            .\end{align*}
+            So, we have closure. Next, we know that multiplication is both associative and commutative, and $1 \in G$ is the identity. Now, for $w \in G$, $\frac{1}{w} \in \mathbb{C}$, and
+            \begin{align*}
+                \left(\frac{1}{w}\right)^{n} = \frac{1}{w^{n}} = \frac{1}{1} = 1
+            .\end{align*}
+            So, $\frac{1}{w} \in G$, and $\frac{1}{w} = w^{-1}$, since
+            \begin{align*}
+                w\left(\frac{1}{w}\right) = 1
+            .\end{align*}
+        \item \textbf{Trivial group}: We call the group that consists of just the identity element the \textbf{trivial group}.
+        \item \textbf{General linear group}: The set of all non-singular matrices in $M_{n}(\mathbb{R})$ ($\mathbb{R}^{n\times n}$) is called the \textbf{general linear group} over $\mathbb{R}$, and denoted $GL_{n}(\mathbb{R}) $. It is a group under matrix multiplication. The identity matrix $I_{n}$ is the identity of $GL_{n}(\mathbb{R})$. Also, if $A,B \in GL_{n}(\mathbb{R})$,  then
+            \begin{align*}
+                AB(B^{-1}A^{-1}) = A(BB^{-1})A = I_{n}
+            ,\end{align*}
+            and
+            \begin{align*}
+                (B^{-1}A^{-1})AB = I_{n}
+            .\end{align*}
+            So, we have closure. Also, we know that matrix multiplication is associative, and by definition every element of $A$ has an inverse. Notice that
+            \begin{align*}
+                (A^{-1})^{-1} = A
+            ,\end{align*}
+            so $A^{-1} \in GL_{n}(\mathbb{R})$. Thus, this is indeed a group. However, we know that matrix multiplication is not generally commutative, so the group is nonabelian.
+        \item \textbf{Definition 3.3 (\textit{direct product})}: Let $G$ be a group with operation $\ast$ and $H$ group with operation \bullet. On the Cartesian product $G\times H$, define an operation $\diamond$ via
+            \begin{align*}
+                (g_{1}, h_{1}) \diamond (g_{2}h_{2}) = (g_{1} \ast g_{2}, h_{1} \bullet h_{2})
+            \end{align*}
+            for all $g_{i} \in G$, $h_{i} \in H$. Under this operation, we call $G\times H$ the \textbf{direct product} of $G$ and $H$.
+            \bigbreak \noindent 
+            \textbf{Note:} So, the underlying set is the Cartesian product, with operation $\diamond$. Thus, the group is
+            \begin{align*}
+                (G\times H, \diamond)
+            .\end{align*}
+        \item \textbf{Theorem 3.1}: The direct product of two groups is a group.
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Assume that $(G, \ast)$ and $(H, \bullet)$ are groups. Then, let $(G\times H, \diamond)$ be the direct product. 
+            \bigbreak \noindent 
+            If $a_{1}, a_{2} \in G\times H$, then $a_{1} = (g_{1}, h_{1})$, and $a_{2} = (g_{2}, h_{2})$. Now, 
+            \begin{align*}
+                a_{1} \diamond a_{2} = (g_{1}, h_{1}) \diamond (g_{2}, h_{2}) = (g_{1} \ast g_{2}, h_{1} \bullet h_{2})
+            .\end{align*}
+            Since $G,H$ are groups, $g_{1} \ast g_{2} \in G$, and $h_{1} \bullet h_{2} \in H$, so
+            \begin{align*}
+                (g_{1} \ast g_{2}, h_{1} \bullet h_{2}) \in G \times H
+            .\end{align*}
+            Thus, we have closure. Now, let $a_{1}, a_{2}, a_{3} \in G\times H $, we have
+            \begin{align*}
+                ((g_{1}, h_{1}) \diamond (g_{2}, h_{2})) \diamond (g_{3}, h_{3}) &= (g_{1} \ast g_{2}, h_{1} \bullet h_{2}) \diamond (g_{3}, h_{3}) \\
+                                                                                 &= (g_{1} \ast g_{2} \ast g_{3}, h_{1} \bullet h_{2} \bullet h_{3})
+            ,\end{align*}
+            with
+            \begin{align*}
+                (g_{1}, h_{1}) \diamond ((g_{2}, h_{2}) \diamond (g_{3}, h_{3})) &= (g_{1}, h_{1}) \diamond (g_{2} \ast g_{3}, h_{2} \bullet h_{3}) \\
+                                                                                 &= (g_{1} \ast g_{2} \ast g_{3}, h_{1} \bullet h_{2} \bullet h_{3})
+            .\end{align*}
+            So, we have associativity. If $e_{G} \in G$, and $e_{H} \in H$ are the identities for $G$ and $H$, then its painfully obvious that
+            \begin{align*}
+                (e_{G}, e_{H})
+            \end{align*}
+            is the identity for $G \times H$. Furthermore, $(g^{-1}, h^{-1})$ is the inverse. $\endpf$
 
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{A few basic properties}
+    \begin{itemize}
+        \item \textbf{Notation change}: From now on, when working inside a group, we will suppress the symbol for the group operation. So, we will write $ab$ instead of $a\ast b$. Although, if the operation is addition, the \textbf{multiplicative notation} would be confusing. In that case, we will use the \textbf{additive notation}, and continue with $a + b$
+            \bigbreak \noindent 
+            Further, if the operation is addition, we will write $0$ instead of $e$, and $-a$ instead of $a^{-1}$.
+        \item \textbf{Theorem 3.2}: Let $G$ be a group. Then, 
+            \begin{enumerate}
+                \item the identity of $G$ is unique, and
+                \item if $a\in G$, then $a^{-1}$ is unique.
+            \end{enumerate}
+            \textbf{\textit{Proof.}} (1) Suppose that $G$ is a group, and $e,f$ are identities in $G$. Then,
+            \begin{align*}
+                ef &= f, \\
+                ef &= e
+            .\end{align*}
+            Thus, $e = f$. Now, suppose that for $a \in G$, $b,c$ are both inverses for $a$. Then,
+            \begin{align*}
+                bac &= (ba)c = ec = c, \\
+                bac &= b(ac) = be = b
+            .\end{align*}
+            Thus, $c = b$.
+        \item \textbf{Theorem 3.3}: In any group, $(ab)c = a(bc)$. Thus, we can write $abc$ without any ambiguity. But, we would like to be able to write $abcd$, for instance. This brings us to the following theorem
+            \bigbreak \noindent 
+            Let $G$ be any group, and $a_{1}, a_{2}, \dots, a_{n} \in G$. Then, regardless of how the product $a_{1}a_{2}\cdots a_{n}$ is bracketed, the result equals 
+            \begin{align*}
+                (\cdots(((a_{1}a_{2})a_{3})a_{4})\cdots a_{n-1})a_{n}
+            .\end{align*}
+            \textbf{\textit{Proof.}} We proceed by strong induction upon $n$. If $n$ is 1 or 2, no bracketing is needed. If $n=3$, we have associativity from the definition of a group. So, let $n \geq 4$. Assume that the theorem is true for any product of fewer than $n$ group elements.
+            \bigbreak \noindent 
+            Let
+            \begin{align*}
+                w = a_{1} \cdots a_{n}
+            \end{align*}
+            be a product with any bracketing configuration. Then, let
+            \begin{align*}
+                 w =xy
+            \end{align*}
+            for $x = a_{1} \cdots a_{m}$, $y = a_{m+1} \cdots a_{n} $, each with some bracketing. By the inductive hypothesis,
+            \begin{align*}
+                x &= (\cdots((a_{1}a_{2})a_{3})\cdots a_{m-1})a_{m}, \\
+                y &= (\cdots((a_{m+1}a_{m+2})a_{m+3})\cdots a_{n-1})a_{n}
+            .\end{align*}
+            So,
+            \begin{align*}
+                w = xy =  ((\cdots((a_{1}a_{2})a_{3})\cdots a_{m})(\cdots((a_{m+1}a_{m+2})a_{m+3})\cdots a_{n-1}))a_{n}
+            .\end{align*}
+            Applying our inductive hypothesis to the product of the first $n-1$ terms, we obtain the desired bracketing. $\endpf$
+        \item \textbf{Theorem 3.4}: Let $G$ be a group, with $a,b \in G$. Then, 
+            \begin{enumerate}
+                \item $(a^{-1})^{-1}= a $
+                \item $(ab)^{-1} = b^{-1}a^{-1} $
+            \end{enumerate}
+            \textbf{\textit{Proof.}} Since
+            \begin{align*}
+                aa^{-1} = a^{-1}a = e
+            ,\end{align*}
+            $(a^{-1})^{-1}  = a$ by definition of the inverse. Next,
+            \begin{align*}
+                abb^{-1}a^{-1} &= aea^{-1} = aa^{-1} = e, \\
+                b^{-1}a^{-1}ab &= b^{-1}eb = b^{-1}b = e
+            .\end{align*}
+            Thus, $(ab)^{-1} = b^{-1}a^{-1}$. $\endpf$
+        \item \textbf{Theorem 3.5 (\textit{cancellation law}):} Let $G$ be a group and $a,b,c \in G$. If either $ab = ac$ or $ba = ca$, then $b = c$.
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Let $ab = ac$, then
+            \begin{align*}
+                a^{-1}ab = aa^{-1}ac \implies b = c
+            .\end{align*}
+            Similarly, if $ba = ca$, then
+            \begin{align*}
+                baa^{-1} = caa^{-1} \implies b = c
+            .\end{align*}
+            $\endpf$
+        \item \textbf{Corollary 3.1}: Let $G$ be a group, and $a,b \in G$. Then, there exists exactly one $c \in G$ such that $ac = b$, and exactly one $d \in G$ such that $da = b$.
+            \bigbreak \noindent 
+            \textbf{\textit{Proof.}} Let $a,b \in G$. Assume that there exists two elements $c,f \in G$ such that
+            \begin{align*}
+                ac = af = b
+            .\end{align*}
+            Then, by Theorem 3.5,
+            \begin{align*}
+                ac = af \implies c = f
+            .\end{align*}
+            Now, assume that $d,f \in G$ such that
+            \begin{align*}
+                da = fa = b
+            .\end{align*}
+            Then, 
+            \begin{align*}
+                da = fa \implies d = f
+            .\end{align*}
+            $\endpf$
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Powers and orders}
+    \begin{itemize}
+        \item \textbf{Definition 3.4}: If $G$ is a group, then its \textbf{order}, $\left\lvert G \right\rvert $, is the number of elements in the set $G$. We say that $G$ is a \textbf{finite group} if its order is finite; otherwise it is an \textbf{infinite group}.
+        \item \textbf{Powers of group elements}: Let $G$ be any group, and $a\in G$. Then, for any positive integer $n$, we let 
+            \begin{align*}
+                a^{n} = \underbrace{aa\cdots a}_{\text{$n$ times}}
+            .\end{align*}
 
 
 

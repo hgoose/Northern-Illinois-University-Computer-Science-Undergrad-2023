@@ -1,0 +1,362 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={Xlib}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{Xlib}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{1. Introduction}
+    \begin{itemize}
+        \item \textbf{The X Window System (X11)}:  The X Window System, often called X11, is the general windowing system design and protocol. It defines things like:
+            \begin{itemize}
+                \item how graphical programs communicate with a display server,
+                \item how windows are created, moved, resized, and drawn into,
+                \item how keyboard and mouse input is delivered,
+                \item how clients and the display server exchange messages.
+            \end{itemize}
+            There is a distinction between a specification/standard and a concrete program that implements it.
+        \item \textbf{X.Org display server}: The X.Org display server, usually called Xorg, is an actual open-source program that implements the X11 server side of that system. It is the software process that runs on your machine and speaks the X11 protocol to graphical applications
+        \item \textbf{X clients}: The X.Org display server, usually called Xorg, is an actual open-source program that implements the X11 server side of that system. It is the software process that runs on your machine and speaks the X11 protocol to graphical applications
+        \item \textbf{Windowing system}: A windowing system is the overall graphical environment model that lets programs use windows, input devices, and the screen in a coordinated way.
+        \item \textbf{Display server}: A display server is the actual program that sits between graphical applications and the hardware/display system.
+            \begin{itemize}
+                \item \textbf{Windowing system:} X Window System / X11
+                \item \textbf{Display server:}   X.Org Server
+            \end{itemize}
+            A display server is responsible for managing access to the screen, keyboard, mouse, touchpad, and sometimes GPU/display hardware. Graphical applications usually do not draw directly to the physical screen. Instead, they communicate with the display server.
+            \bigbreak \noindent 
+            A windowing system is broader. It is the architecture that defines how graphical applications, windows, input, drawing, and the display server/compositor interact.
+            \bigbreak \noindent 
+            It includes concepts such as:
+            \begin{itemize}
+                \item windows;
+                \item graphical clients;
+                \item input events;
+                \item drawing surfaces;
+                \item focus;
+                \item stacking order;
+                \item protocols for communication between apps and the graphical environment.
+            \end{itemize}
+        \item \textbf{Intro}: The X Window System is a network-transparent window system that was designed at MIT. X display servers run on computers with either monochrome or color bitmap display hardware. The server distributes user input to and accepts output requests from various client programs located either on the same machine or elsewhere in the network. Xlib is a C subroutine library that application programs (clients) use to interface with the window system by means of a stream connection. Although a client usually runs on the same machine as the X server it is talking to, this need not be the case. 
+            \bigbreak \noindent 
+            \textbf{Note:} Monochrome means \textbf{one color}. It describes any visual, design, or medium that is constructed using only a single base hue along with its various tints, tones, and shades. While black-and-white is the most common example, a monochrome palette can be built entirely around any color
+        \item \textbf{Network-transparent}: In general, network-transparent means that a system lets you use some resource over a network as if it were local, while hiding most of the networking details from the user or program.
+        \item \textbf{Color bitmap}: A color bitmap is an image represented as a rectangular grid of pixels, where each pixel stores color information. A color bitmap uses more bits per pixel so that each pixel can represent many possible colors. In a common 24-bit RGB color bitmap, each pixel stores three color components:
+            \begin{align*}
+                (R,G,B)
+            .\end{align*}
+            Each component uses 8 bits, so each ranges from 0 to 255.
+        \item \textbf{Screens and Display}: The X Window System supports one or more screens containing overlapping windows or subwindows. A screen is a physical monitor and hardware that can be color, grayscale, or monochrome. There can be multiple screens for each display or workstation. A single X server can provide display services for any number of screens. A set of screens for a single user with one keyboard and one pointer (usually a mouse) is called a \textbf{display}.
+        \item \textbf{Window hierarchy}: All the windows in an X server are arranged in strict hierarchies. At the top of each hierarchy is a root window, which covers each of the display screens. Each root window is partially or completely covered by child windows. All windows, except for root windows, have parents. There is usually at least one window for each application program. Child windows may in turn have their own children. In this way, an application program can create an arbitrarily deep tree on each screen. X provides graphics, text, and raster operations for windows.  
+            \bigbreak \noindent 
+            A child window can be larger than its parent. That is, part or all of the child window can extend beyond the boundaries of the parent, but all output to a window is clipped by its parent. 
+            \bigbreak \noindent 
+            That means X will only actually display the part of the child window that lies inside the parent window. Anything outside the parent’s visible rectangle is not drawn on the screen.
+            \bigbreak \noindent 
+            Children of a window have overlapping locations, one of the children is considered to be on top of or raised over the others, thus obscuring them. Output to areas covered by other windows is suppressed by the window system unless the window has backing store. 
+            \bigbreak \noindent 
+            Child windows obscure their parents, and graphic operations in the parent window usually are clipped by the children
+        \item \textbf{Border}: A window has a border zero or more pixels in width, which can be any pattern (pixmap) or solid color you like. A window usually but not always has a background pattern, which will be repainted by the window system when uncovered.
+        \item \textbf{Coordinates}: Each window and pixmap has its own coordinate system. The coordinate system has the X axis horizontal and the Y axis vertical with the origin [0, 0] at the upper-left corner. Coordinates are integral, in terms of pixels, and coincide with pixel centers. For a window, the origin is inside the border at the inside, upper-left corner.
+        \item \textbf{Expose event}: X does not guarantee to preserve the contents of windows. When part or all of a window is hidden and then brought back onto the screen, its contents may be lost. The server then sends the client program an Expose event to notify it that part or all of the window needs to be repainted. Programs must be prepared to regenerate the contents of windows on demand.
+        \item \textbf{Drawables}: X also provides off-screen storage of graphics objects, called pixmaps. Single plane (depth 1) pixmaps are sometimes referred to as bitmaps. Pixmaps can be used in most graphics functions interchangeably with windows and are used in various graphics operations to define patterns or tiles. Windows and pixmaps together are referred to as drawables.
+        \item \textbf{Xlib function requests}: Most of the functions in Xlib just add requests to an output buffer. These requests later execute asynchronously on the X server. Functions that return values of information stored in the server do not return (that is, they block) until an explicit reply is received or an error occurs. You can provide an error handler, which will be called when the error is reported.
+        \item \textbf{XSync}: If a client does not want a request to execute asynchronously, it can follow the request with a call to XSync, which blocks until all previously buffered asynchronous events have been sent and acted on. As an important side effect, the output buffer in Xlib is always flushed by a call to any function that returns a value from the server or waits for input.
+        \item \textbf{Resource ID}: Many Xlib functions will return an integer resource ID, which allows you to refer to objects stored on the X server. These can be of type \textbf{Window, Font, Pixmap, Colormap, Cursor, and GContext}, as defined in the file \textbf{<X11/X.h>}. These resources are created by requests and are destroyed (or freed) by requests or when connections are closed. Most of these resources are potentially sharable between applications, and in fact, windows are manipulated explicitly by window manager programs. Fonts and cursors are shared automatically across multiple screens. Fonts are loaded and unloaded as needed and are shared by multiple clients. Fonts are often cached in the server. Xlib provides no support for sharing graphics contexts between applications
+        \item \textbf{Client programs and events}: Client programs are informed of events. Events may either be side effects of a request (for example, restacking windows generates Expose ev ents) or completely asynchronous (for example, from the keyboard). A client program asks to be informed of events. Because other applications can send events to your application, programs must be prepared to handle (or ignore) events of all types.
+            \bigbreak \noindent 
+            Input events (for example, a key pressed or the pointer moved) arrive asynchronously from the server and are queued until they are requested by an explicit call (for example, \textbf{XNextEvent} or \textbf{XWindowEvent}). In addition, some library functions (for example, \textbf{XRaiseWindow}) generate Expose and \textbf{ConfigureRequest} events. These events also arrive asynchronously, but the client may wish to explicitly wait for them by calling \textbf{XSync} after calling a function that can cause the server to generate events.
+        \item \textbf{Errors}: Some functions return \textbf{Status}, an integer error indication. If the function fails, it returns a zero. If the function returns a status of zero, it has not updated the return arguments. Because C does not provide multiple return values, many functions must return their results by writing into clientpassed storage. By default, errors are handled either by a standard library function or by one that you provide. Functions that return pointers to strings return NULL pointers if the string does not exist.
+            \bigbreak \noindent 
+            The X server reports \textbf{protocol errors} at the time that it detects them. If more than one error could be generated for a given request, the server can report any of them.
+            \bigbreak \noindent 
+            Because Xlib usually does not transmit requests to the server immediately (that is, it buffers them), errors can be reported much later than they actually occur. For debugging purposes, howev er, Xlib provides a mechanism for forcing synchronous behavior. When synchronization is enabled, errors are reported as they are generated.
+            \bigbreak \noindent 
+            When Xlib detects an error, it calls an error handler, which your program can provide. If you do not provide an error handler, the error is printed, and your program terminates.
+        \item \textbf{Standard Header Files}: The following include files are part of the Xlib standard:
+            \begin{itemize}
+                \item \textbf{<X11/Xlib.h>}: This is the main header file for Xlib. The majority of all Xlib symbols are declared by including this file. This file also contains the preprocessor symbol XlibSpecificationRelease. This symbol is defined to have the 6 in this release of the standard. (Release 5 of Xlib was the first release to have this symbol.)
+                \item \textbf{<X11/X.h>}: This file declares types and constants for the X protocol that are to be used by applications. It is included automatically from <X11/Xlib.h>, so application code should never need to reference this file directly.
+                \item \textbf{<X11/Xcms.h>}: This file contains symbols for much of the color management facilities. All functions, types, and symbols with the prefix ‘‘Xcms’’, plus the Color Conversion Contexts macros, are declared in this file. <X11/Xlib.h> must be included before including this file.
+                \item \textbf{<X11/Xutil.h>}: This file declares various functions, types, and symbols used for inter-client communication and application utility functions, which are described in chapters 14 and 16. <X11/Xlib.h> must be included before including this file.
+                \item \textbf{<X11/Xresource.h>}: This file declares all functions, types, and symbols for the resource manager facilities. \textbf{<X11/Xlib.h>} must be included before including this file.
+                \item \textbf{<X11/Xatom.h>}: This file declares all predefined atoms, which are symbols with the prefix ‘‘XA\_’’.
+                \item \textbf{<X11/cursorfont.h>}: This file declares the cursor symbols for the standard cursor font. All cursor symbols have the prefix ‘‘XC\_’’.
+                \item \textbf{<X11/keysymdef.h>}: This file declares all standard KeySym values, which are symbols with the prefix ‘‘XK\_’’. The KeySyms are arranged in groups, and a preprocessor symbol controls inclusion of each group.
+                    The preprocessor symbol must be defined prior to inclusion of the file to obtain the associated values. The preprocessor symbols are 
+                    \begin{itemize}
+                        \item XK\_MISCELLANY
+                        \item XK\_XKB\_KEYS
+                        \item XK\_3270
+                        \item XK\_LATIN1
+                        \item XK\_LATIN2
+                        \item XK\_LATIN3
+                        \item XK\_LATIN4
+                        \item XK\_KATAKANA
+                        \item XK\_ARABIC
+                        \item XK\_CYRILLIC
+                        \item XK\_GREEK
+                        \item XK\_TECHNICAL
+                        \item XK\_SPECIAL
+                        \item XK\_PUBLISHING
+                        \item XK\_APL
+                        \item XK\_HEBREW
+                        \item XK\_THAI 
+                        \item XK\_KOREAN
+                    \end{itemize}
+                \item \textbf{<X11/keysym.h>}: This file defines the preprocessor symbols listed above and then includes \textbf{<X11/keysymdef.h>}.
+                \item \textbf{<X11/Xlibint.h>}: This file declares all the functions, types, and symbols used for extensions. This file automatically includes \textbf{<X11/Xlib.h>}.
+                \item \textbf{<X11/Xproto.h>}: This file declares types and symbols for the basic X protocol, for use in implementing extensions. It is included automatically from \textbf{<X11/Xlibint.h>}, so application and extension code should never need to reference this file directly.
+                \item \textbf{<X11/Xprotostr.h>}: This file declares types and symbols for the basic X protocol, for use in implementing extensions. It is included automatically from \textbf{<X11/Xproto.h>}, so application and extension code should never need to reference this file directly.
+                \item \textbf{<X11/X10.h>}: This file declares all the functions, types, and symbols used for the X10 compatibility functions.
+            \end{itemize}
+        \item \textbf{KeySyms}: A KeySym is X11’s symbolic meaning for a keyboard key.
+            \bigbreak \noindent 
+            A keyboard event gives you a \textbf{KeyCode}, which is closer to “which physical/logical key was pressed.” A \textbf{KeySym} is closer to “what symbol does that key currently mean?” The Xlib docs define a KeyCode as a physical or logical key code and a KeySym as the encoding of the symbol on the keycap.
+            \bigbreak \noindent 
+            A keycode by itself is not enough, because the same physical key can mean different things depending on keyboard layout and modifiers.
+        \item \textbf{Atoms}: An Atom is an integer ID that stands for a string name known to the X server.
+            \bigbreak \noindent 
+            X11 uses atoms heavily for \textbf{window properties, property types, selections}, and \textbf{ClientMessage} protocols. Xlib’s documentation describes a window property as named, typed data; the property name has a unique identifier called an atom, and property types are also represented using atoms.
+            \bigbreak \noindent 
+            Instead of constantly sending strings like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                "WM_DELETE_WINDOW"
+                "_NET_WM_NAME"
+                "UTF8_STRING"
+                "WM_PROTOCOLS"
+            \end{cppcode}
+            \bigbreak \noindent 
+            clients ask the server for an integer identifier:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Atom wm_delete = XInternAtom(display, "WM_DELETE_WINDOW", False);
+                Atom wm_protocols = XInternAtom(display, "WM_PROTOCOLS", False);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then they use those Atom values in later protocol requests.
+        \item \textbf{Extensions}: An \textbf{X extension} is an addition to the core X11 protocol. The core X protocol has a fixed set of requests, events, errors, and objects. Extensions allow the server and clients to support extra functionality without changing the original core protocol.
+            \bigbreak \noindent 
+            Examples include
+            \bigbreak \noindent 
+            \begin{cppcode}
+                RANDR     resizing/rotating screens, monitor layout
+                XRender   improved 2D rendering/compositing primitives
+                XInput2   advanced input devices/events
+                XFixes    fixes and additions to older X behavior
+                Composite off-screen window compositing support
+                Shape     non-rectangular windows
+                GLX       OpenGL integration with X
+            \end{cppcode}
+            \bigbreak \noindent 
+            Before using an extension, a client usually checks whether the server supports it. Xlib provides functions such as:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XQueryExtension(display, "RANDR", &major, &first_event, &first_error);
+            \end{cppcode}
+        \item \textbf{Generic values and types}: The following symbols are defined by Xlib and used throughout the manual.
+            \begin{itemize}
+                \item Xlib defines the type \textbf{Bool} and the Boolean values \textbf{True} and \textbf{False}.
+                \item \textbf{None} is the universal null resource ID or atom.
+                \item The type \textbf{XID} is used for generic resource IDs.
+                \item The type \textbf{XPointer} is defined to be char* and is used as a generic opaque pointer to data.
+            \end{itemize}
+        \item \textbf{Naming and Argument Conventions within Xlib}: Xlib follows a number of conventions for the naming and syntax of the functions. Given that you remember what information the function requires, these conventions are intended to make the syntax of the functions more predictable.
+            \bigbreak \noindent 
+            The major naming conventions are:
+            \begin{itemize}
+                \item To differentiate the X symbols from the other symbols, the library uses mixed case for external symbols. It leaves lowercase for variables and all uppercase for user macros, as per existing convention.
+                \item All Xlib functions begin with a capital X.
+                \item The beginnings of all function names and symbols are capitalized.
+                \item All user-visible data structures begin with a capital X. More generally, anything that a user might dereference begins with a capital X.
+                \item Macros and other symbols do not begin with a capital X. To distinguish them from all user symbols, each word in the macro is capitalized.
+                \item All elements of or variables in a data structure are in lowercase. Compound words, where needed, are constructed with underscores (\_).
+                \item The display argument, where used, is always first in the argument list.
+                \item All resource objects, where used, occur at the beginning of the argument list immediately after the display argument.
+                \item When a graphics context is present together with another type of resource (most commonly,adrawable), the graphics context occurs in the argument list after the other resource. Drawables outrank all other resources.
+                \item Source arguments always precede the destination arguments in the argument list.
+                \item The $x$ argument always precedes the $y$ argument in the argument list.
+                \item The width argument always precedes the height argument in the argument list.
+                \item Where the $x$, $y$, width, and height arguments are used together, the $x$ and $y$ arguments
+                \item always precede the width and height arguments.
+                \item Where a mask is accompanied with a structure, the mask always precedes the pointer to the structure in the argument list.
+            \end{itemize}
+        \item \textbf{Programming Considerations}: The major programming considerations are:
+            \begin{itemize}
+                \item Coordinates and sizes in X are actually 16-bit quantities. This decision was made to minimize the bandwidth required for a given lev el of performance. Coordinates usually are declared as an int in the interface. Values larger than 16 bits are truncated silently. Sizes (width and height) are declared as unsigned quantities.
+                \item Keyboards are the greatest variable between different manufacturers’ workstations. If you want your program to be portable, you should be particularly conservative here.
+                \item Many display systems have limited amounts of off-screen memory. If you can, you should minimize use of pixmaps and backing store.
+                \item The user should have control of his screen real estate. Therefore, you should write your applications to react to window management rather than presume control of the entire screen. What you do inside of your top-level window, however, is up to your application. For further information, see chapter 14 and the Inter-Client Communication Conventions
+            \end{itemize}
+        \item \textbf{Character Sets and Encodings}: Some of the Xlib functions make reference to specific character sets and character encodings. The following are the most common:
+            \begin{itemize}
+                \item \textbf{X Portable Character Set}: A basic set of 97 characters, which are assumed to exist in all locales supported by Xlib. This set contains the following characters:
+                    \begin{center}
+                        a..z \hspace{1em} A..Z \hspace{1em} 0..9 \\
+                        !"\#\$\%\&’()*+,-./:;<=>?@[\textbackslash]$\land$\_‘\{|\}˜ \\
+                        <space>, \hspace{1em} <tab>, \hspace{1em} <newline>
+                    \end{center}
+                    This set is the left/lower half of the graphic character set of ISO8859-1 plus space, tab, and newline. It is also the set of graphic characters in 7-bit ASCII plus the same three control characters. The actual encoding of these characters on the host is system dependent.
+                \item \textbf{Host Portable Character Encoding}: The encoding of the X Portable Character Set on the host. The encoding itself is not defined by this standard, but the encoding must be the same in all locales supported by Xlib on the host. If a string is said to be in the Host Portable Character Encoding, then it only contains characters from the X Portable Character Set, in the host encoding.
+                    \begin{itemize}
+                        \item \textbf{Latin-1}: The coded character set defined by the ISO8859-1 standard.
+                        \item \textbf{Latin Portable Character Encoding}: The encoding of the X Portable Character Set using the Latin-1 codepoints plus ASCII control characters. If a string is said to be in the Latin Portable Character Encoding, then it only contains characters from the X Portable Character Set, not all of Latin-1.
+                        \item \textbf{STRING Encoding}: Latin-1, plus tab and newline.
+                        \item \textbf{POSIX Portable Filename Character Set}: The set of 65 characters, which can be used in naming files on a POSIX-compliant host, that are correctly processed in all locales. The set is:
+                            \begin{align*}
+                                a..z \hspace{1em} A..Z \hspace{1em} 0..9 \hspace{1em} .\_-
+                            .\end{align*}
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{Formatting Conventions}: 
+            \begin{itemize}
+                \item Global symbols are printed in this special font. These can be either function names, symbols defined in include files, or structure names. When declared and defined, function arguments are printed in italics. In the explanatory text that follows, they usually are printed in regular type.
+                \item Each function is introduced by a general discussion that distinguishes it from other functions. The function declaration itself follows, and each argument is specifically explained. Although ANSI C function prototype syntax is not used, Xlib header files normally declare functions using function prototypes in ANSI C environments. General discussion of the function, if any is required, follows the arguments. Where applicable, the last paragraph of the explanation lists the possible Xlib error codes that the function can generate. 
+                \item To eliminate any ambiguity between those arguments that you pass and those that a function returns to you, the explanations for all arguments that you pass start with the word \textbf{specifies} or, in the case of multiple arguments, the word \textbf{specify}. The explanations for all arguments that are returned to you start with the word \textbf{returns} or, in the case of multiple arguments, the word \textbf{return}. The explanations for all arguments that you can pass and are returned start with the words \textbf{specifies} and \textbf{returns}.
+                \item Any pointer to a structure that is used to return a value is designated as such by the \_return suffix as part of its name. All other pointers passed to these functions are used for reading only. A few arguments use pointers to structures that are used for both input and output and are indicated by using the \_in\_out suffix.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{2. Display functions}
+    \begin{itemize}
+        \item \textbf{Intro}: Before your program can use a display, you must establish a connection to the X server. Once you have established a connection, you then can use the Xlib macros and functions discussed in this chapter to return information about the display. We will discuss how to 
+            \begin{itemize}
+                \item Open (connect to) the display
+                \item Obtain information about the display, image formats, or screens
+                \item Generate a \textbf{NoOperation} protocol request
+                \item Free client-created data
+                \item Close (disconnect from) a display
+                \item Use X Server connection close operations
+                \item Use Xlib with threads
+                \item Use internal connections
+            \end{itemize}
+        \item \textbf{Opening the Display}: To open a connection to the X server that controls a display, use \textbf{XOpenDisplay}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Display *XOpenDisplay(char* display_name)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display\_name} Specifies the hardware display name, which determines the display and communications domain to be used. On a POSIX-conformant system, if the display_name is NULL, it defaults to the value of the DISPLAY environment variable.
+            \end{itemize}
+            \textbf{Note:} The encoding and interpretation of the display name are implementation-dependent. Strings in the Host Portable Character Encoding are supported; support for other characters is implementation-dependent. On POSIX-conformant systems, the display name or DISPLAY environment variable can be a string in the format:
+            \begin{center}
+                \textit{protocol|hostname:number.screen\_number}
+            \end{center}
+            \begin{itemize}
+                \item \textbf{protocol}: Specifies a protocol family or an alias for a protocol family. Supported protocol families are implementation dependent. The protocol entry is optional. If protocol is not specified, the / separating protocol and hostname must also not be specified.
+                \item \textbf{hostname}: Specifies the name of the host machine on which the display is physically attached. You follow the hostname with either a single colon (:) or a double colon (::).
+                \item \textbf{number}: Specifies the number of the display server on that host machine. You may optionally follow this display number with a period (.). A single CPU can have more than one display. Multiple displays are usually numbered starting with zero.
+                \item \textbf{screen\_number}: Specifies the screen to be used on that server. Multiple screens can be controlled by a single X server. The screen\_number sets an internal variable that can be accessed by using the \textbf{DefaultScreen} macro or the \textbf{XDefaultScreen} function if you are using languages other than C 
+            \end{itemize}
+            For example, the following would specify screen 1 of display 0 on the machine named ‘‘dualheaded’’:
+            \begin{center}
+                dual-headed:0.1
+            \end{center}
+            The \textbf{XOpenDisplay} function returns a \textbf{Display} structure that serves as the connection to the X server and that contains all the information about that X server. \textbf{XOpenDisplay} connects your application to the X server through TCP or DECnet communications protocols, or through some local inter-process communication protocol. If the protocol is specified as "tcp", "inet", or "inet6", or if no protocol is specified and the hostname is a host machine name and a single colon (:) separates the hostname and display number, \textbf{XOpenDisplay} connects using \textbf{TCP streams}.
+            \bigbreak \noindent 
+            If the protocol is specified as "inet", TCP over IPv4 is used. If the protocol is specified as "inet6", TCP over IPv6 is used. Otherwise, the implementation determines which IP version is used. If the hostname and protocol are both not specified, Xlib uses whatever it believes is the fastest transport. If the hostname is a host machine name and a double colon (::) separates the hostname and display number, \textbf{XOpenDisplay} connects using DECnet. A single X server can support any or all of these transport mechanisms simultaneously. A particular Xlib implementation can support many more of these transport mechanisms.
+            \bigbreak \noindent 
+            If successful, \textbf{XOpenDisplay} returns a pointer to a \textbf{Display} structure, which is defined in \textbf{<X11/Xlib.h>.} If \textbf{XOpenDisplay} does not succeed, it returns NULL. After a successful call to \textbf{XOpenDisplay,} all of the screens in the display can be used by the client. The screen number specified in the display\_name argument is returned by the \textbf{DefaultScreen} macro (or the \textbf{XDefaultScreen} function). You can access elements of the \textbf{Display} and \textbf{Screen} structures only by using the information macros or functions.
+        \item \textbf{Obtaining Information about the Display, Image Formats, or Screens}: The Xlib library provides a number of useful macros and corresponding functions that return data from the Display structure. The macros are used for C programming, and their corresponding function equivalents are for other language bindings.
+            \bigbreak \noindent 
+            All other members of the Display structure (that is, those for which no macros are defined) are private to Xlib and must not be used. Applications must never directly modify or inspect these private members of the Display structure.
+        \item \textbf{Display Macros}: Applications should not directly modify any part of the Display and Screen structures. The members should be considered read-only, although they may change as the result of other operations on the display.
+
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{3. Window functions}
+
+    \pagebreak 
+    \unsect{4. Window information functions}
+
+    \pagebreak 
+    \unsect{5. Pixmap and cursor functions}
+
+    \pagebreak 
+    \unsect{6. Color management functions}
+
+    \pagebreak 
+    \unsect{7. Graphics context functions}
+
+    \pagebreak 
+    \unsect{8. Graphics functions}
+
+    \pagebreak 
+    \unsect{9. Window and session manager functions}
+
+    \pagebreak 
+    \unsect{10. Events}
+
+    \pagebreak 
+    \unsect{11. Event handling functions}
+
+    \pagebreak 
+    \unsect{12. Input device functions}
+
+
+
+
+
+    
+\end{document}
