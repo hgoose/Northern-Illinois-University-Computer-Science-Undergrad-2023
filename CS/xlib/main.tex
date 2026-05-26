@@ -1225,10 +1225,10 @@
             \begin{itemize}
                 \item \textbf{AsyncPointer}:	If the pointer is frozen by the client, pointer event processing continues as usual. If the pointer is frozen twice by the client on behalf of two separate grabs, AsyncPointer thaws for both. AsyncPointer has no effect if the pointer is not frozen by the client, but the pointer need not be grabbed by the client.
                 \item \textbf{SyncPointer}:	If the pointer is frozen and actively grabbed by the client, pointer event processing continues as usual until the next ButtonPress or ButtonRelease event is reported to the client. At this time, the pointer again appears to freeze. However, if the reported event causes the pointer grab to be released, the pointer does not freeze. SyncPointer has no effect if the pointer is not frozen by the client or if the pointer is not grabbed by the client.
-                \item \textbf{ReplayPointer}:	If the pointer is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabButton() or from a previous XAllowEvents() with mode SyncPointer but not from a XGrabPointer()), the pointer grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab_window of the grab just released. The request has no effect if the pointer is not grabbed by the client or if the pointer is not frozen as the result of an event.
+                \item \textbf{ReplayPointer}:	If the pointer is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabButton() or from a previous XAllowEvents() with mode SyncPointer but not from a XGrabPointer()), the pointer grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab\_window of the grab just released. The request has no effect if the pointer is not grabbed by the client or if the pointer is not frozen as the result of an event.
                 \item \textbf{AsyncKeyboard}:	If the keyboard is frozen by the client, keyboard event processing continues as usual. If the keyboard is frozen twice by the client on behalf of two separate grabs, AsyncKeyboard thaws for both. AsyncKeyboard has no effect if the keyboard is not frozen by the client, but the keyboard need not be grabbed by the client.
                 \item \textbf{SyncKeyboard}:	If the keyboard is frozen and actively grabbed by the client, keyboard event processing continues as usual until the next KeyPress or KeyRelease event is reported to the client. At this time, the keyboard again appears to freeze. However, if the reported event causes the keyboard grab to be released, the keyboard does not freeze. SyncKeyboard has no effect if the keyboard is not frozen by the client or if the keyboard is not grabbed by the client.
-                \item \textbf{ReplayKeyboard}:	If the keyboard is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabKey() or from a previous XAllowEvents() with mode SyncKeyboard but not from a XGrabKeyboard()), the keyboard grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab_window of the grab just released. The request has no effect if the keyboard is not grabbed by the client or if the keyboard is not frozen as the result of an event.
+                \item \textbf{ReplayKeyboard}:	If the keyboard is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabKey() or from a previous XAllowEvents() with mode SyncKeyboard but not from a XGrabKeyboard()), the keyboard grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab\_window of the grab just released. The request has no effect if the keyboard is not grabbed by the client or if the keyboard is not frozen as the result of an event.
                 \item \textbf{SyncBoth}:	If both pointer and keyboard are frozen by the client, event processing for both devices continues as usual until the next ButtonPress, ButtonRelease, KeyPress, or KeyRelease event is reported to the client for a grabbed device (button event for the pointer, key event for the keyboard), at which time the devices again appear to freeze. However, if the reported event causes the grab to be released, then the devices do not freeze (but if the other device is still grabbed, then a subsequent event for it will still cause both devices to freeze). SyncBoth has no effect unless both pointer and keyboard are frozen by the client. If the pointer or keyboard is frozen twice by the client on behalf of two separate grabs, SyncBoth thaws for both (but a subsequent freeze for SyncBoth will only freeze each device once).
                 \item \textbf{AsyncBoth}:	If the pointer and the keyboard are frozen by the client, event processing for both devices continues as usual. If a device is frozen twice by the client on behalf of two separate grabs, AsyncBoth thaws for both. AsyncBoth has no effect unless both pointer and keyboard are frozen by the client.
             \end{itemize}
@@ -1253,7 +1253,34 @@
             \end{cppcode}
             \bigbreak \noindent 
             So a grab is not guaranteed. 
-        \item \textbf{Save-set}:
+        \item \textbf{Save-set}: A save-set is a mechanism used mainly by window managers to avoid destroying or orphaning client windows if the window manager exits. This matters because window managers often reparent client windows.
+            \bigbreak \noindent 
+            Normally, an application creates a top-level window as a child of the root window:
+            \bigbreak \noindent 
+            \fig{1}{./figures/1.png}
+            \bigbreak \noindent 
+            A reparenting window manager inserts a frame window around it:
+            \bigbreak \noindent 
+            \fig{1}{./figures/2.png}
+            \bigbreak \noindent 
+            The application window is now a child of a window owned by the window manager. Now, we have a problem...
+            \begin{center}
+                \textit{If the window manager dies, what happens to the application windows inside its frame windows?}
+            \end{center}
+            Without protection, those client windows could be destroyed or left in a bad state when the frame windows disappear. So the window manager adds application windows to its save-set:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XAddToSaveSet(display, client_window)
+            \end{cppcode}
+            \bigbreak \noindent 
+            If the window manager exits or its connection to the X server closes, the server automatically reparents those save-set windows, usually back to a safe ancestor such as the root, and maps them if appropriate.
+            \bigbreak \noindent 
+            You can remove a window from the save-set with
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XRemoveFromSaveSet(display, client_window);
+            \end{cppcode}
+        \item \textbf{Superior and inferior}: A window's \textbf{inferiors} are its descendants. A window's \textbf{superiors} are its ancestors.
         \item \textbf{Using X Server Connection Close Operations}: When the X server’s connection to a client is closed either by an explicit call to \textbf{XCloseDisplay} or by a process that exits, the X server performs the following automatic operations:
             \begin{itemize}
                 \item It disowns all selections owned by the client (see \textbf{XSetSelectionOwner).}
@@ -1270,6 +1297,393 @@
                 \item It performs the appropriate free request on each nonwindow resource created by the client in the server (for example, \textbf{Font,} \textbf{Pixmap,} \textbf{Cursor,} \textbf{Colormap,} and \textbf{GContext).}
                 \item It frees all colors and colormap entries allocated by a client application
             \end{itemize}
+            Additional processing occurs when the last connection to the X server closes. An X server goes through a cycle of having no connections and having some connections. When the last connection to the X server closes as a result of a connection closing with the close\_mode of \textbf{DestroyAll,} the X server does the following:
+            \begin{itemize}
+                \item It resets its state as if it had just been started. The X server begins by destroying all linger- ing resources from clients that have terminated in \textbf{RetainPermanent} or \textbf{RetainTemporary} mode.
+                \item It deletes all but the predefined atom identifiers.
+                \item It deletes all properties on all root windows (see section 4.3).
+                \item It resets all device maps and attributes (for example, key click, bell volume, and acceleration) as well as the access control list.
+                \item It restores the standard root tiles and cursors.
+                \item It restores the default font path.
+                \item It restores the input focus to state \textbf{PointerRoot}
+            \end{itemize}
+            However, the X server does not reset if you close a connection with a close-down mode set to \textbf{RetainPermanent} or \textbf{RetainTemporary}
+        \item \textbf{Locking a display}: To lock a display in Xlib means take a mutex-like lock on the \texttt{Display*} so only one thread in your process uses that X connection at a time.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XLockDisplay(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            While the display is locked, other threads in the same process that try to use the same Display * will block until it is unlocked.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XUnlockDisplay(display)
+            \end{cppcode}
+        \item \textbf{Using Xlib with threads}: To initialize support for concurrent threads, use \textbf{XInitThreads}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XInitThreads();
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XInitThreads} function initializes Xlib support for concurrent threads. This function must be the first Xlib function a multi-threaded program calls, and it must complete before any other Xlib call is made. This function returns a nonzero status if initialization was successful; otherwise, it returns zero. On systems that do not support threads, this function always returns zero.
+            \bigbreak \noindent 
+            It is only necessary to call this function if multiple threads might use Xlib concurrently. If all calls to Xlib functions are protected by some other access mechanism (for example, a mutual exclusion lock in a toolkit or through explicit client programming), Xlib thread initialization is not required. It is recommended that single-threaded programs not call this function.
+            \bigbreak \noindent 
+            To lock a display across several Xlib calls, use \textbf{XLockDisplay}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void XLockDisplay(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XLockDisplay} function locks out all other threads from using the specified display. Other threads attempting to use the display will block until the display is unlocked by this thread. Nested calls to \textbf{XLockDisplay} work correctly; the display will not actually be unlocked until \textbf{XUnlockDisplay} has been called the same number of times as \textbf{XLockDisplay.} This function has no effect unless Xlib was successfully initialized for threads using \textbf{XInitThreads.}
+            \bigbreak \noindent 
+            To unlock a display, use XUnlockDisplay
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void XUnlockDisplay(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XUnlockDisplay} function allows other threads to use the specified display again. Any threads that have blocked on the display are allowed to continue. Nested locking works correctly; if \textbf{XLockDisplay} has been called multiple times by a thread, then \textbf{XUnlockDisplay} must be called an equal number of times before the display is actually unlocked. This function has no effect unless Xlib was successfully initialized for threads using \textbf{XInitThreads.}
+        \item \textbf{Using Internal Connections}: In addition to the connection to the X server, an Xlib implementation may require connections to other kinds of servers. Toolkits and clients that use multiple displays, or that use displays in combination with other inputs, need to obtain these additional connections to correctly block until input is available and need to process that input when it is available. Simple clients that use a single display and block for input in an Xlib event function do not need to use these facilities.
+            \bigbreak \noindent 
+            To track internal connections for a display, use \textbf{XAddConnectionWatch.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef void (*XConnectionWatchProc) (Display* display, XPointer client_data, int fd, Bool opening, XPointer watch_data)
+
+                Status XAddConnectionWatch (Display* display, XConnectionWatchProc procedure, XPointer client_data)
+            \end{cppcode}
+            \begin{itemize}
+                \item procedure Specifies the procedure to be called.
+                \item client\_data Specifies the additional client data.
+            \end{itemize}
+            The \textbf{XAddConnectionWatch} function registers a procedure to be called each time Xlib opens or closes an internal connection for the specified display. The procedure is passed the display, the specified client\_data, the file descriptor for the connection, a Boolean indicating whether the connection is being opened or closed, and a pointer to a location for private watch data. If opening is \textbf{True,} the procedure can store a pointer to private data in the location pointed to by watch\_data; when the procedure is later called for this same connection and opening is \textbf{False}, the location pointed to by watch\_data will hold this same private data pointer.
+            \bigbreak \noindent 
+            This function can be called at any time after a display is opened. If internal connections already exist, the registered procedure will immediately be called for each of them, before \textbf{XAddConnectionWatch} returns. \textbf{XAddConnectionWatch} returns a nonzero status if the procedure is successfully registered; otherwise, it returns zero
+            \bigbreak \noindent 
+            The registered procedure should not call any Xlib functions. If the procedure directly or indirectly causes the state of internal connections or watch procedures to change, the result is not defined. If Xlib has been initialized for threads, the procedure is called with the display locked and the result of a call by the procedure to any Xlib function that locks the display is not defined unless the executing thread has externally locked the display using \textbf{XLockDisplay}
+            \bigbreak \noindent 
+            To stop tracking internal connections for a display, use \textbf{XRemoveConnectionWatch.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XRemoveConnectionWatch (display, procedure, client_data)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XRemoveConnectionWatch} function removes a previously registered connection watch procedure. The client\_data must match the client\_data used when the procedure was initially reg- istered.
+            \bigbreak \noindent 
+            To process input on an internal connection, use \textbf{XProcessInternalConnection}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void XProcessInternalConnection(Display* display, int fd)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XProcessInternalConnection} function processes input available on an internal connection. This function should be called for an internal connection only after an operating system facility (for example, select or poll) has indicated that input is available; otherwise, the effect is not defined.
+            \bigbreak \noindent 
+            To obtain all of the current internal connections for a display, use \textbf{XInternalConnectionNumbers.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XInternalConnectionNumbers(Display* display, int** fd_return, int* count_return)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XInternalConnectionNumbers} function returns a list of the file descriptors for all internal connections currently open for the specified display. When the allocated list is no longer needed, free it by using \textbf{XFree.} This functions returns a nonzero status if the list is successfully allocated; otherwise, it returns zero.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{3. Window functions}
+    \begin{itemize}
+        \item \textbf{Intro}: In the $X$ Window System, a window is a rectangular area on the screen that lets you view graphic output. Client applications can display overlapping and nested windows on one or more screens that are driven by $X$ servers on one or more machines. Clients who want to create windows must first connect their program to the $X$ server by calling \textbf{XOpenDisplay.} This chapter begins with a discussion of visual types and window attributes. The chapter continues with a discussion of the Xlib functions you can use to:
+            \begin{itemize}
+                \item Create windows
+                \item Destroy windows
+                \item Map windows
+                \item Unmap windows
+                \item Configure windows
+                \item Change window stacking order
+                \item Change window attributes
+            \end{itemize}
+        \item \textbf{ICCCM / EWMH conventions}:
+            \begin{itemize}
+                \item \textbf{ICCCM (Inter-client communication conventions)}: The Inter-Client Communication Conventions Manual (ICCCM) is a foundational standard protocol for the X Window System. It establishes the rules that graphical applications (clients) must follow to cooperate, share resources (like cut and paste selections), and interact smoothly with window managers. 
+                    \bigbreak \noindent 
+                    The ICCCM focuses on a few core areas of client behavior to ensure a stable and predictable desktop experience:
+                    \begin{itemize}
+                        \item \textbf{Selections and Cut Buffers}: Defines how clients share data across the global X server, enabling universal copy and paste operations between different applications.
+                        \item \textbf{Window Manager Communication}: Establishes the rules for how applications request window sizes, positions, and decorations, ensuring that a window manager can successfully control top-level windows without relying on private protocols.
+                        \item \textbf{Session Management}: Provides protocols for applications to interact with session managers, allowing users to safely save their workspace state, restart programs, or shut down without losing functionality.
+                        \item \textbf{Shared Resources}: Details the conventions for sharing input focus and color maps, ensuring that apps don't compete or lock each other out of basic system resources.
+                    \end{itemize}
+                \item \textbf{EWMH (Extended window manager hints)}: EWMH stands for Extended Window Manager Hints. It is a standard for the X Window System that dictates how desktop environments, window managers, and applications communicate with one another. It builds upon older standards to let modern apps request specific behaviors (like going fullscreen or creating custom docks). 
+                    \bigbreak \noindent 
+                    The foundational standard for X11 communication (ICCCM) is notoriously complex and lacks the features we expect from modern operating systems, such as virtual desktops, docks, and window tabbing. EWMH bridges this gap by defining properties and messages (called "hints") that allow programs and the window manager to understand each other perfectly. 
+                    \bigbreak \noindent 
+                    Under EWMH, the window manager exposes specific pieces of information on the root window, and applications use those to request states or react to desktop events. Key functions include:
+                    \begin{itemize}
+                        \item \textbf{Window Types \& States}: Apps can declare what they are (e.g., a normal app, a dock, a splash screen, or a utility tool) or request states like \_NET\_WM\_STATE\_FULLSCREEN or \_NET\_WM\_STATE\_MODAL.
+                        \item \textbf{Virtual Desktops}: It defines protocols for managing workspaces, including how many virtual screens exist and which desktop a specific window lives on.
+                        \item \textbf{Window Tabbing \& Grouping}: It specifies how windows can be logically grouped together (often seen in advanced tiling or tabbed window managers).
+                        \item \textbf{Desktop Properties}: It standardizes the retrieval of desktop dimensions, work areas (reserving space for taskbars), and active window tracking. 
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    Developers working directly with window operations rely on specific EWMH messages (denoted by the \textbf{\_NET} prefix): 
+                    \begin{itemize}
+                        \item \textbf{\_NET\_ACTIVE\_WINDOW}: Tells the window manager to give focus to a specific window.
+                        \item \textbf{\_NET\_CLOSE\_WINDOW}: Requests a graceful closure of an application window.
+                        \item \textbf{\_NET\_WM\_PING}: Allows the window manager to check if an application has stopped responding.
+                    \end{itemize}
+            \end{itemize}
+            \textbf{Note:} EWMH is not standalone in the strict compliance sense. The EWMH spec explicitly says it builds on ICCCM, and that window managers and clients that aim to fulfill EWMH must also adhere to ICCCM, except where EWMH explicitly modifies ICCCM behavior.
+        \item \textbf{Opaque structures}: An opaque struct is a design pattern in C where a structure is declared but its internal fields are hidden from the user. The user only interacts with the struct via pointers and a provided set of API functions, making it the primary way to achieve encapsulation and object-oriented "data hiding" in C. 
+            \bigbreak \noindent 
+            A \textbf{transparent (exposed) struct} is the opposite. The fields are fully visible to the user.
+        \item \textbf{Visual types}: On some display hardware, it may be possible to deal with color resources in more than one way. For example, you may be able to deal with a screen of either 12-bit depth with arbitrary mapping of pixel to color (pseudo-color) or 24-bit depth with 8 bits of the pixel dedicated to each of red, green, and blue. These different ways of dealing with the visual aspects of the screen are called visuals. For each screen of the display, there may be a list of valid visual types supported at different depths of the screen. Because default windows and visual types are defined for each screen, most simple applications need not deal with this complexity. 
+            \bigbreak \noindent 
+            Xlib uses an opaque Visual structure that contains information about the possible color mapping. The visual utility functions use an \textbf{XVisualInfo} structure to return this information to an application. The members of this structure pertinent to this discussion are class, red\_mask, green\_mask, blue\_mask, bits\_per\_rgb, and colormap\_size. The class member specified one of the possible visual classes of the screen and can be \textbf{StaticGray,} \textbf{StaticColor,} \textbf{TrueColor,} \textbf{GrayScale,} \textbf{PseudoColor,} or \textbf{DirectColor.}
+            \bigbreak \noindent 
+            A pixel value in X11 is usually just an integer. The Visual tells Xlib and the X server what that integer means. For example, does the integer directly encode red/green/blue components? Or is it an index into a colormap? Are the colors fixed, or can the client modify them?
+            \bigbreak \noindent 
+            The \textbf{Visual} describes the color interpretation model available for windows and pixmaps of a certain depth.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    Visual *visual;
+                    VisualID visualid;
+                    int screen;
+                    int depth;
+                    int class;
+                    unsigned long red_mask;
+                    unsigned long green_mask;
+                    unsigned long blue_mask;
+                    int colormap_size;
+                    int bits_per_rgb;
+                } XVisualInfo;
+            \end{cppcode}
+            \bigbreak \noindent 
+            There is no direct “convert Visual* to XVisualInfo” function, but you can get the VisualID from the Visual *, then ask Xlib for the matching XVisualInfo.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                VisualID XVisualIDFromVisual(Visual* visual);
+                XVisualInfo* XGetVisualInfo(
+                    Display* display,
+                    long vinfo_mask,
+                    XVisualInfo* vinfo_template,
+                    int* nitems_return
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item vinfo\_mask	Specifies the visual mask value.
+                \item vinfo\_template	Specifies the visual attributes that are to be used in matching the visual structures.
+                \item nitems\_return	Returns the number of matching visual structures.
+            \end{itemize}
+            Regarding the vinfo\_mask: In Xlib, vinfo\_mask is a bitwise mask value used as an argument in the XGetVisualInfo function to specify which fields of an XVisualInfo template structure the X server should evaluate when searching for available window visuals. When you use XGetVisualInfo, you pass a template structure containing the display criteria you want. The vinfo\_mask tells the function exactly which of those template fields matter for your query
+            \begin{itemize}
+                \item \textbf{VisualNoMask}: No fields are matched (returns all available visuals)
+                \item \textbf{VisualIDMask}: Matches the explicit visualid 
+                \item \textbf{IDVisualScreenMask}: Matches the specified screen 
+                \item \textbf{numberVisualDepthMask}: Matches the pixel bit depth (e.g., 24-bit, 32-bit color)
+                \item \textbf{VisualClassMask}: Matches the color class (e.g., TrueColor, PseudoColor)
+                \item \textbf{VisualRedMaskMask}: Matches the red\_mask bit 
+                \item \textbf{positionsVisualGreenMaskMask}: Matches the green\_mask bit 
+                \item \textbf{positionsVisualBlueMaskMask}: Matches the blue\_mask bit 
+                \item \textbf{positionsVisualColormapSizeMask}: Matches the total entries in the colormap\_size
+                \item \textbf{VisualBitsPerRGBMask}: Matches the bits\_per\_rgb value
+                \item \textbf{VisualAllMask}: Combines all masks to check every field in the structure
+            \end{itemize}
+            For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XVisualInfo template;
+                template.screen = screen;
+                template.depth = 32;
+                template.class = TrueColor;
+
+                int nitems;
+                XVisualInfo *matches = XGetVisualInfo(
+                    dpy,
+                    VisualScreenMask | VisualDepthMask | VisualClassMask,
+                    &template,
+                    &nitems
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Class}: The class field tells you what kind of color model the visual uses. There are six visual classes
+                    \begin{enumerate}
+                        \item \textbf{StaticGray}: A StaticGray visual represents fixed grayscale colors. The pixel value selects a gray value from a read-only colormap.
+                            \bigbreak \noindent 
+                            You cannot change what gray value a pixel maps to. This is mostly relevant to old or limited displays.
+                        \item \textbf{GrayScale}: A GrayScale visual is like StaticGray, except the colormap entries can be changed. The colors are grayscale, but the client may allocate or change entries.
+                        \item \textbf{StaticColor}: A StaticColor visual uses a fixed color colormap. The pixel value indexes into a predefined table of colors. The client cannot redefine those colors.
+                        \item \textbf{PseudoColor}: A PseudoColor visual uses a modifiable colormap. For example, pixel value 42 does not inherently mean red or blue. It means “look at entry 42 in the colormap.”
+                            \bigbreak \noindent 
+                            The client may allocate/change colormap entries, depending on availability. This was common on older 8-bit indexed-color displays.
+                        \item \textbf{TrueColor}: A TrueColor visual means the pixel value directly contains RGB components. For example, with a common 24-bit / 32-bit visual.
+                            \begin{center}
+                                [pixel bits]: [[red bits] [green bits] [blue bits]]
+                            \end{center}
+                            The masks say where the components are stored. For example,
+                            \bigbreak \noindent 
+                            \begin{cppcode}
+                                red_mask   = 0x00ff0000
+                                green_mask = 0x0000ff00
+                                blue_mask  = 0x000000ff
+                            \end{cppcode}
+                            \bigbreak \noindent 
+                            So a pixel value like
+                            \begin{align*}
+                                0x00ff0000
+                            .\end{align*}
+                            means full red, zero green, zero blue.
+                            \bigbreak \noindent 
+                            In TrueColor, the mapping from component value to actual intensity is fixed. You cannot redefine what “red component 255” means. This is the usual modern visual class.
+                        \item \textbf{DirectColor}: DirectColor is similar to TrueColor because the pixel value contains separate red, green, and blue fields.
+                            \bigbreak \noindent 
+                            But instead of those fields directly giving final intensities, each component indexes into a separate modifiable lookup table.
+                    \end{enumerate}
+                    The main distinction is 
+                    \begin{itemize}
+                        \item \textbf{Static* classes}: colormap entries are fixed/read-only
+                        \item \textbf{Non-static classes}: colormap entries can be changed by the client
+                        \item \textbf{TrueColor / DirectColor}: pixel value contains separate RGB component fields
+                        \item \textbf{PseudoColor / StaticColor / GrayScale / StaticGray}: pixel value indexes into a colormap
+                    \end{itemize}
+                \item \textbf{red\_mask, green\_mask, blue\_mask}: Described above in the \textit{class} explanation.
+                \item \textbf{bits\_per\_rgb}: Tells you the number of significant bits used for each RGB value in the colormap. For example, if
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    bits_per_rgb = 8;
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    then each color component has 8 meaningful bits, giving values from 0 to 255.
+                \item \textbf{colormap\_size}: The number of entries available in the colormap for that visual.
+                    \bigbreak \noindent 
+                    For example, an 8-bit PseudoColor visual might have:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    colormap_size = 256; 
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    because 8-bit pixels can index 256 possible entries.
+                    \bigbreak \noindent 
+                    For TrueColor, the meaning is slightly different. It usually refers to the number of entries per primary color map, not the total number of possible RGB colors.
+                    \bigbreak \noindent 
+                    So for a 24-bit TrueColor visual with 8 bits per channel, you might see:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        colormap_size = 256; 
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Even though the visual can represent approximately
+                    \begin{align*}
+                        256^{3} = 16777216
+                    \end{align*}
+                    colors.
+            \end{itemize}
+            \textbf{Note:} An X11 client cannot define a custom \texttt{Visual}. A Visual is advertised by the X server as part of the screen’s capabilities. When your program connects to the X server, the server tells the client which visuals exist for each screen. Your program can then choose from those visuals, but it cannot create a new one.
+        \item \textbf{Top-level windows}: A top-level window is any window that is a direct subwindow of your screen's root window and is independently managed by your desktop's window manager.
+        \item \textbf{Window attributes}: All \textbf{InputOutput} windows have a border width of zero or more pixels, an optional background, an event suppression mask (which suppresses propagation of events from children), and a property list. The window border and background can be a solid color or a pattern, called a tile. All windows except the root have a parent and are clipped by their parent. If a window is stacked on top of another window, it obscures that other window for the purpose of input.
+            \bigbreak \noindent 
+            If a window has a background (almost all do), it obscures the other window for purposes of out- put. Attempts to output to the obscured area do nothing, and no input events (for example, pointer motion) are generated for the obscured area.
+            \bigbreak \noindent 
+            Both \textbf{InputOutput} and \textbf{InputOnly} windows have the following common attributes, which are the only attributes of an \textbf{InputOnly} window:
+            \begin{itemize}
+                \item win-gravity
+                \item event-mask
+                \item do-not-propagate-mask
+                \item override-redirect
+                \item cursor
+            \end{itemize}
+            If you specify any other attributes for an \textbf{InputOnly} window, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{InputOnly} windows are used for controlling input events in situations where \textbf{InputOutput} windows are unnecessary. \textbf{InputOnly} windows are invisible; can only be used to control such things as cursors, input event generation, and grabbing; and cannot be used in any graphics requests. Note that \textbf{InputOnly} windows cannot have \textbf{InputOutput} windows as inferiors
+            \bigbreak \noindent 
+            Windows have borders of a programmable width and pattern as well as a background pattern or tile. Pixel values can be used for solid colors. The background and border pixmaps can be destroyed immediately after creating the window if no further explicit references to them are to be made. The pattern can either be relative to the parent or absolute. If \textbf{ParentRelative,} the parent’s background is used.
+            \bigbreak \noindent 
+            When windows are first created, they are not visible (not mapped) on the screen. Any output to a window that is not visible on the screen and that does not have backing store will be discarded. An application may wish to create a window long before it is mapped to the screen. When a window is eventually mapped to the screen (using \textbf{XMapWindow),} the X server generates an Expose event for the window if backing store has not been maintained.
+            \bigbreak \noindent 
+            A window manager can override your choice of size, border width, and position for a top-level window. Your program must be prepared to use the actual size and position of the top window. It is not acceptable for a client application to resize itself unless in direct response to a human command to do so. Instead, either your program should use the space given to it, or if the space is too small for any useful work, your program might ask the user to resize the window. The border of your top-level window is considered fair game for window managers.
+            \bigbreak \noindent 
+            To set an attribute of a window, set the appropriate member of the \textbf{XSetWindowAttributes} structure and OR in the corresponding value bitmask in your subsequent calls to \textbf{XCreateWindow} and \textbf{XChangeWindowAttributes,} or use one of the other convenience functions that set the appropriate attribute. The symbols for the value mask bits and the \textbf{XSetWindowAttributes} structure are:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* Window attribute value mask bits */
+                #define CWBackPixmap        (1L<<0)
+                #define CWBackPixel         (1L<<1)
+                #define CWBorderPixmap      (1L<<2)
+                #define CWBorderPixel       (1L<<3)
+                #define CWBitGravity        (1L<<4)
+                #define CWWinGravity        (1L<<5)
+                #define CWBackingStore      (1L<<6)
+                #define CWBackingPlanes     (1L<<7)
+                #define CWBackingPixel      (1L<<8)
+                #define CWOverrideRedirect  (1L<<9)
+                #define CWSaveUnder         (1L<<10)
+                #define CWEventMask         (1L<<11)
+                #define CWDontPropagate     (1L<<12)
+                #define CWColormap          (1L<<13)
+                #define CWCursor            (1L<<14)
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    Pixmap background_pixmap;       /* background, None, or ParentRelative */
+                    unsigned long background_pixel; /* background pixel */
+                    Pixmap border_pixmap;           /* border of the window or CopyFromParent */
+                    unsigned long border_pixel;     /* border pixel value */
+                    int bit_gravity;                /* one of bit gravity values */
+                    int win_gravity;                /* one of the window gravity values */
+                    int backing_store;              /* NotUseful, WhenMapped, Always */
+                    unsigned long backing_planes;   /* planes to be preserved if possible */
+                    unsigned long backing_pixel;    /* value to use in restoring planes */
+                    Bool save_under;                /* should bits under be saved? (popups) */
+                    long event_mask;                /* set of events that should be saved */
+                    long do_not_propagate_mask;     /* set of events that should not propagate */
+                    Bool override_redirect;         /* boolean value for override_redirect */
+                    Colormap colormap;              /* color map to be associated with window */
+                    Cursor cursor;                  /* cursor to be displayed (or None) */
+                } XSetWindowAttributes;
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{background\_pixmap       }: Background\_pixmap is a pixmap resource used as a tiled background. It can be:
+                \item \textbf{long background\_pixel }:
+                \item \textbf{border\_pixmap           }:
+                \item \textbf{long border\_pixel     }:
+                \item \textbf{bit\_gravity                }:
+                \item \textbf{win\_gravity                }:
+                \item \textbf{backing\_store              }:
+                \item \textbf{long backing\_planes   }:
+                \item \textbf{long backing\_pixel    }:
+                \item \textbf{save\_under                }:
+                \item \textbf{event\_mask                }:
+                \item \textbf{do\_not\_propagate\_mask     }:
+                \item \textbf{override\_redirect         }:
+                \item \textbf{colormap              }:
+                \item \textbf{cursor                  }:
+            \end{itemize}
+            \bigbreak \noindent 
+            The following lists the defaults for each window attribute and indicates whether the attribute is applicable to \textbf{InputOutput} and \textbf{InputOnly} windows:
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXll@{}}
+                    \toprule
+                    \textbf{Attribute}& \textbf{Default}& \textbf{InputOutput}& \textbf{InputOnly} \\
+                    \midrule
+                    background-pixmap &None &Yes &No\\[2ex]
+                    background-pixel &Undefined &Yes &No\\[2ex]
+                    border-pixmap &CopyFromParent &Yes &No\\[2ex]
+                    border-pixel &Undefined &Yes &No\\[2ex]
+                    bit-gravity &ForgetGravity &Yes &No\\[2ex]
+                    win-gravity &NorthWestGravity &Yes &Yes\\[2ex]
+                    backing-store &NotUseful &Yes &No\\[2ex]
+                    backing-planes& All ones &Yes &No\\[2ex]
+                    backing-pixel &zero &Yes &No \\[2ex]
+                    save-under &False &Yes &No\\[2ex]
+                    event-mask &empty set &Yes &Yes\\[2ex]
+                    do-not-propagate-mask &empty set &Yes &Yes\\[2ex]
+                    override-redirect &False &Yes &Yes\\[2ex]
+                    colormap &CopyFromParent &Yes &No\\[2ex]
+                    cursor &None &Yes &Yes \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
 
 
 
@@ -1280,9 +1694,6 @@
 
 
     \end{itemize}
-
-    \pagebreak 
-    \unsect{3. Window functions}
 
     \pagebreak 
     \unsect{4. Window information functions}
