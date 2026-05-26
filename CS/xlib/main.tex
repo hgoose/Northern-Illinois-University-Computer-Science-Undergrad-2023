@@ -269,6 +269,11 @@
                 \item To eliminate any ambiguity between those arguments that you pass and those that a function returns to you, the explanations for all arguments that you pass start with the word \textbf{specifies} or, in the case of multiple arguments, the word \textbf{specify}. The explanations for all arguments that are returned to you start with the word \textbf{returns} or, in the case of multiple arguments, the word \textbf{return}. The explanations for all arguments that you can pass and are returned start with the words \textbf{specifies} and \textbf{returns}.
                 \item Any pointer to a structure that is used to return a value is designated as such by the \_return suffix as part of its name. All other pointers passed to these functions are used for reading only. A few arguments use pointers to structures that are used for both input and output and are indicated by using the \_in\_out suffix.
             \end{itemize}
+        \item \textbf{Clients}: A client is any program that connects to the $X$ server and sends it requests.
+            \bigbreak \noindent 
+            The X server controls the display, keyboard, mouse, screens, windows, pixmaps, graphics contexts, fonts, cursors, and other X resources. A client is a program using that server.
+            \bigbreak \noindent 
+            So in X, the “client” is not necessarily a remote machine. It is usually just a local process on your own computer.
 
     \end{itemize}
 
@@ -292,7 +297,7 @@
             Display *XOpenDisplay(char* display_name)
             \end{cppcode}
             \begin{itemize}
-                \item \textbf{display\_name} Specifies the hardware display name, which determines the display and communications domain to be used. On a POSIX-conformant system, if the display_name is NULL, it defaults to the value of the DISPLAY environment variable.
+                \item \textbf{display\_name} Specifies the hardware display name, which determines the display and communications domain to be used. On a POSIX-conformant system, if the display\_name is NULL, it defaults to the value of the DISPLAY environment variable.
             \end{itemize}
             \textbf{Note:} The encoding and interpretation of the display name are implementation-dependent. Strings in the Host Portable Character Encoding are supported; support for other characters is implementation-dependent. On POSIX-conformant systems, the display name or DISPLAY environment variable can be a string in the format:
             \begin{center}
@@ -316,7 +321,959 @@
         \item \textbf{Obtaining Information about the Display, Image Formats, or Screens}: The Xlib library provides a number of useful macros and corresponding functions that return data from the Display structure. The macros are used for C programming, and their corresponding function equivalents are for other language bindings.
             \bigbreak \noindent 
             All other members of the Display structure (that is, those for which no macros are defined) are private to Xlib and must not be used. Applications must never directly modify or inspect these private members of the Display structure.
+        \item \textbf{Planes}: In the X11 graphics model, a pixel value is not treated only as a color; it is also a group of bits. Each bit position is a plane. For example, on a drawable with depth 24, a pixel has 24 meaningful bits, so conceptually there are 24 planes.
+            \bigbreak \noindent 
+            Note that here \textbf{depth} is the number of meaningful bits used to represent one pixel’s value in a drawable.
+        \item \textbf{Plane mask}: A plane mask chooses which bit positions of the destination pixel value are affected.
+            \bigbreak \noindent 
+            Wherever the mask has a 1, that pixel bit plane may be changed. Wherever the mask has a 0, that pixel bit is preserved.
+        \item \textbf{Colormaps}: A colormap is an X server object that describes how pixel values map to actual colors. In Xlib, many drawing functions do not directly use RGB colors. They use pixel values. A colormap is what lets the X server interpret those pixel values as colors.
+            \begin{center}
+                Pixel value $\to$ colormap $\to$ actual display color
+            \end{center}
+        \item \textbf{Graphics contexts}: A graphics context in Xlib is an object that stores the drawing state used by graphics operations.
+            \bigbreak \noindent 
+            Instead of passing every drawing option directly to functions like XDrawLine, XFillRectangle, or XDrawString, Xlib groups many of those options into a \textbf{GC (graphics context)}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDrawLine(display, window, gc, x1, y1, x2, y2);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The coordinates are passed directly, but things like the line color, line width, fill style, clipping region, drawing function, font, and plane mask are taken from the gc.
+            \bigbreak \noindent 
+            The Xlib documentation describes a graphics context as holding most graphics operation attributes, including line width, line style, plane mask, foreground, background, tile, stipple, clipping region, end style, and join style. The internal contents of a GC are private to Xlib.
+        \item \textbf{Default screen}: The default screen in Xlib is the screen number that Xlib chooses as the main screen for a given \texttt{Display*}.
+        \item \textbf{Visuals}: A visual describes how a pixel value should be interpreted as a color on a particular screen.
+            \bigbreak \noindent 
+            The visual describes the format/rules for interpreting pixel values, while the colormap provides the actual color mapping data when that visual class uses a lookup table.
+            \begin{itemize}
+                \item \textbf{Visual}:  What kind of pixel-to-color interpretation is used
+                \item \textbf{Colormap}: The table/mapping used by that interpretation
+            \end{itemize}
+            The core Xlib visual classes are:
+            \begin{itemize}
+                \item StaticGray
+                \item GrayScale
+                \item StaticColor
+                \item PseudoColor
+                \item TrueColor
+                \item DirectColor
+            \end{itemize}
+            \bigbreak \noindent 
+            A \texttt{Visual*} is an Xlib object describing one supported color interpretation scheme.
         \item \textbf{Display Macros}: Applications should not directly modify any part of the Display and Screen structures. The members should be considered read-only, although they may change as the result of other operations on the display.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            AllPlanes
+            unsigned long XAllPlanes()
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a value with all bits set to 1 suitable for use in a plane argument to a procedure. 
+            \bigbreak \noindent 
+            Both BlackPixel and WhitePixel can be used in implementing a monochrome application. These pixel values are for permanently allocated entries in the default colormap. The actual RGB (red, green, and blue) values are settable on some screens and, in any case, may not actually be black or white. The names are intended to convey the expected relative intensity of the colors.
+            \begin{cppcode}
+            BlackPixel(display, screen_number) 
+            unsigned long XBlackPixel (display, screen_number)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item screen\_number Specifies the appropriate screen number on the host server.
+            \end{itemize}
+            Both return the black pixel value for the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WhitePixel (display, screen_number)
+                unsigned long XWhitePixel (display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the white pixel value for the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ConnectionNumber(display)
+            int XConnectionNumber(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a connection number for the specified display. On a POSIX-conformant system, this is the file descriptor of the connection.
+            \bigbreak \noindent 
+            Internally, Xlib is communicating with the X server over something like a Unix-domain socket or TCP socket, and ConnectionNumber exposes that descriptor.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultColormap(display, screen_number)
+            Colormap XDefaultColormap(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the default colormap ID for allocation on the specified screen. Most routine allocations of color should be made out of this colormap.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultDepth(display, screen_number)
+            int XDefaultDepth(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the depth (number of planes) of the default root window for the speciﬁed screen. Other depths may also be supported on this screen (see XMatchVisualInfo).
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int* XListDepths(display, screen_number, count_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item count\_return returns the number of depths
+            \end{itemize}
+            The \textbf{XListDepths}  function returns the array of depths that are available on the specified screen. If the specified screen\_number is valid and sufficient memory for the array can be allocated, \textbf{XListDepths} sets count\_return to the number of available depths. Otherwise, it does not set count\_return and returns NULL. To release the memory allocated for the array of depths, use \textbf{XFree.}
+            \bigbreak \noindent 
+            \textbf{XListDepths} ask the $X$ server:
+            \begin{center}
+                "\textit{For this screen, what drawable/window depths are supported}"
+            \end{center}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultGC(display, screen_number)
+            GC XDefaultGC(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the default graphics context for the root window of the specified screen. This GC is created for the convenience of simple applications and contains the default GC components with the foreground and background pixel values initialized to the black and white pixels for the screen, respectively. You can modify its contents freely because it is not used in any Xlib function. This GC should never be freed.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultRootWindow(display)
+            Window XDefaultRootWindow(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the root window for the default screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultScreenOfDisplay(display)
+            Screen* XDefaultScreenOfDisplay(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a pointer to the default screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ScreenOfDisplay(display, screen_number)
+            Screen* XScreenOfDisplay(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a pointer to the indicated screen
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultScreen(display)
+            int XDefaultScreen(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the default screen number referenced by the \textbf{XOpenDisplay} function. This macro or function should be used to retrieve the screen number in applications that will use only a single screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DefaultVisual(display, screen_number)
+            Visual* XDefaultVisual(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the default visual type for the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DisplayCells(display, screen_number)
+            int XDisplayCells(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the number of entries in the default colormap.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DisplayPlanes(display, screen_number)
+            int XDisplayPlanes(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the depth of the root window of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DisplayString(display)
+            char* XDisplayString(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the string that was passed to XOpenDisplay when the current display was opened. On POSIX-conformant systems, if the passed string was NULL, these return the value of the DIS- PLAY environment variable when the current display was opened. These are useful to applications that invoke the fork system call and want to open a new connection to the same display from the child process as well as for printing error messages.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            long XExtendedMaxRequestSize(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XExtendedMaxRequestSize} function returns zero if the specified display does not support an extended-length protocol encoding; otherwise, it returns the maximum request size (in 4-byte units) supported by the server using the extended-length encoding. The Xlib functions XDraw- Lines, \textbf{XDrawArcs,} \textbf{XFillPolygon,} \textbf{XChangeProperty,} \textbf{XSetClipRectangles,} and \textbf{XSetRegion} will use the extended-length encoding as necessary, if supported by the server. Use of the extended-length encoding in other Xlib functions (for example, \textbf{XDrawPoints,} \textbf{XDrawRectangles}, \textbf{XDrawSegments,} \textbf{XFillArcs,} \textbf{XFillRectangles,} \textbf{XPutImage)} is permitted but not required; an Xlib implementation may choose to split the data across multiple smaller requests instead.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            long XMaxRequestSize(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The XMaxRequestSize function returns the maximum request size (in 4-byte units) supported by the server without using an extended-length protocol encoding. Single protocol requests to the server can be no larger than this size unless an extended-length protocol encoding is supported by the server. The protocol guarantees the size to be no smaller than 4096 units (16384 bytes). Xlib automatically breaks data up into multiple protocol requests as necessary for the following functions: \textbf{XDrawPoints,} \textbf{XDrawRectangles,} \textbf{XDrawSegments,} \textbf{XFillArcs,} \textbf{XFillRectangles,} and \textbf{XPutImage}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            LastKnownRequestProcessed(display)
+            unsigned long XLastKnownRequestProcessed(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both extract the full serial number of the last request known by Xlib to have been processed by the X server. Xlib automatically sets this number when replies, events, and errors are received.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                NextRequest (display)
+                unsigned long XNextRequest (display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both extract the full serial number that is to be used for the next request. Serial numbers are maintained separately for each display connection.
+            \bigbreak \noindent 
+            \textbf{Note:} In Xlib, the \textbf{serial number} of a request is the sequence number assigned to each protocol request sent from your client to the X server.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ProtocolVersion(display)
+            int XProtocolVersion(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the major version number (11) of the X protocol associated with the connected dis play.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ProtocolRevision (display)
+                int XProtocolRevision (display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the minor protocol revision number of the X server.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                QLength (display)
+                int XQLength(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the length of the event queue for the connected display. Note that there may be more events that have not been read into the queue yet (see \textbf{XEventsQueued).}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                RootWindow(display, screen_number)
+                Window XRootWindow(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the root window. These are useful with functions that need a drawable of a particular screen and for creating top-level windows.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ScreenCount(display)
+            int XScreenCount(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the number of available screens.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ServerVendor (display)
+                char* XServerVendor (display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a pointer to a null-terminated string that provides some identification of the owner of the X server implementation. If the data returned by the server is in the Latin Portable Character Encoding, then the string is in the Host Portable Character Encoding. Otherwise, the contents of the string are implementation-dependent.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                VendorRelease (display)
+                int XVendorRelease (display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a number related to a vendor’s release of the X server.
+        \item \textbf{Image data formats}: In Xlib, \textbf{XY format} and \textbf{Z format} are two different memory layouts for image data. They mainly matter when using functions like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XGetImage(...)
+            XCreateImage(...)
+            XPutImage(...)
+            \end{cppcode}
+            \bigbreak \noindent 
+            and constants such as
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XYBitmap
+            XYPixmap
+            ZPixmap
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Z format (ZPixmap)}: ZPixmap stores pixels pixel-by-pixel. Each pixel value contains all of its plane bits together. For a 24-bit image, one pixel might contain something like: 
+                    \begin{center}
+                     RRRRRRRR \qquad GGGGGGGG \qquad BBBBBBBB                       
+                    \end{center}
+                    So the image is stored as a normal packed array of pixel values. This is usually the easiest format to understand and use. If you want to read or write individual pixels with \textbf{XGetPixel} / \textbf{XPutPixel,} ZPixmap is the common choice.
+                \item \textbf{XY format (XYPixmap)}: Instead of storing whole pixels together, it stores one bit-plane at a time. In a 4-bit-deep pixmap, each pixel has 4 bits. In XYPixmap, the image data is stored as separate planes.
+                    \begin{center}
+                        plane 0: bit 0 of every pixel \\
+                        plane 1: bit 1 of every pixel \\
+                        plane 2: bit 2 of every pixel \\
+                        plane 3: bit 3 of every pixel
+                    \end{center}
+                    So,
+                    \begin{center}
+                        plane 0: \qquad pixel0\_bit0 pixel1\_bit0 pixel2\_bit0 ... \\
+                        plane 1: \qquad pixel0\_bit1 pixel1\_bit1 pixel2\_bit1 ...\\
+                        plane 2: \qquad pixel0\_bit2 pixel1\_bit2 pixel2\_bit2 ...\\
+                        plane 3: \qquad pixel0\_bit3 pixel1\_bit3 pixel2\_bit3 ...
+                    \end{center}
+                    This is why it is called XY format: it stores bitmap-style x/y image planes, one plane after another.
+                \item \textbf{XY format (XYBitmap)}: XYBitmap is a special case of XY format for depth 1 images. A bitmap has only one bit per pixel. So, there is only one plane. This is used for masks, stipples, cursors, icons, and other monochrome data.
+            \end{itemize}
+        \item \textbf{Scanlines}: A scanline is one horizontal row of pixels in an image. If an image is 
+            \begin{align*}
+                \text{width } &= 640 \\
+                \text{height } &= 480
+            \end{align*}
+            then it has 480 scanlines, each containing 640 pixels. 
+            \bigbreak \noindent 
+            In Xlib, the scanline unit is the size, in bits, of the storage chunks used to represent a scanline, especially for bitmap/plane-style image data.
+            \bigbreak \noindent 
+            Suppose you have a 1-bit bitmap image
+            \bigbreak \noindent 
+            \begin{center}
+                pixel:   0 1 2 3 4 5 6 7 8 9 ... \\
+                value:   1 0 1 1 0 0 1 0 1 1 ...
+            \end{center}
+            The pixels are individual bits, but memory is addressed in bytes or words, not individual bits. So X needs to know how the bits are grouped.
+            \bigbreak \noindent 
+            If the scanline unit is 8, the scanline is grouped like this:
+            \begin{center}
+                bits 0-7   \qquad | \qquad bits 8-15  \qquad |\qquad  bits 16-23 \qquad| \qquad ...
+            \end{center}
+            That grouping affects how X interprets the bits in memory.
+            \bigbreak \noindent 
+            If the image width is not a multiple of the scanline unit/padding requirement, the scanline is padded at the end. The extra bits are not pixels; they are just unused storage so that the next scanline starts at the required boundary.
+        \item \textbf{Image format functions and macros}: Applications are required to present data to the X server in a format that the server demands. To help simplify applications, most of the work required to convert the data is provided by Xlib
+            \bigbreak \noindent 
+            The \textbf{XPixmapFormatValues} structure provides an interface to the pixmap format information that is returned at the time of a connection setup. It contains:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int depth;
+                    int bits_per_pixel;
+                    int scanline_pad;
+                } XPixmapFormatValues;
+            \end{cppcode}
+            \bigbreak \noindent 
+            To obtain the pixmap format information for a given display, use \textbf{XListPixmapFormats}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XPixmapFormatValues* XListPixmapFormats (display, count_return)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XListPixmapFormats} function returns an array of \textbf{XPixmapFormatValues} structures that describe the types of Z format images supported by the specified display. If insufficient memory is available, \textbf{XListPixmapFormats} returns NULL. To free the allocated storage for the \textbf{XPixmapFormatValues} structures, use \textbf{XFree.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            ImageByteOrder(display)
+            int XImageByteOrder(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both specify the required byte order for images for each scanline unit in XY format (bitmap) or for each pixel value in Z format. The macro or function can return either \textbf{LSBFirst} or \textbf{MSBFirst.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BitmapUnit (display)
+                int XBitmapUnit(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the size of a bitmap’s scanline unit in bits. The scanline is calculated in multiples of this value.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BitmapBitOrder (display)
+                int XBitmapBitOrder(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Within each bitmap unit, the left-most bit in the bitmap as displayed on the screen is either the least signifiant or most signifiant bit in the unit. This macro or function can return \textbf{LSBFirst} or \textbf{MSBFirst.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BitmapPad (display)
+                int XBitmapPad (display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Each scanline must be padded to a multiple of bits returned by this macro or function.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            DisplayHeight(display, screen_number)
+            int XDisplayHeight(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return an integer that describes the height of the screen in pixels.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DisplayHeightMM (display, screen_number)
+                int XDisplayHeightMM(display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the height of the specified screen in millimeters.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DisplayWidth (display, screen_number)
+                int XDisplayWidth (display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the width of the screen in pixels.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DisplayWidthMM (display, screen_number)
+                int XDisplayWidthMM (display, screen_number)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the width of the specified screen in millimeters.
+        \item \textbf{Backing stores}: A backing store is an optional server-side saved copy of a window’s contents.
+            \bigbreak \noindent 
+            Normally, if part of your window is covered and then uncovered, the X server may not remember what was there. Instead, it sends your program an Expose event telling you:
+            \begin{center}
+                "\textit{this part of your window became visible again; redraw it.}"
+            \end{center}
+            With backing store, the server may keep a copy of the obscured window contents. Then, when the window becomes visible again, the server can restore the pixels itself without requiring your client to redraw.
+            \bigbreak \noindent 
+            \textbf{Important:} backing store is only a hint. Your program must still handle Expose events correctly. The X server is allowed not to preserve the contents, especially if it decides the backing store would be too expensive.
+        \item \textbf{Save-unders}: A save-under is also a server-side pixel preservation hint, but it is used for a different purpose.
+            \bigbreak \noindent 
+            Backing store preserves the contents of the window itself.
+            \bigbreak \noindent 
+            Save-under preserves the contents of whatever is underneath a temporary window.
+            \bigbreak \noindent 
+            This is mainly for things like:
+            \begin{itemize}
+                \item menus
+                \item tooltips
+                \item popup windows
+                \item drag boxes
+                \item temporary overlays
+            \end{itemize}
+            Without save-under:
+            \begin{align*}
+                &\text{menu appears} \\
+                &\qquad\downarrow \\
+                &\text{menu covers part of another window} \\
+                &\qquad\downarrow \\
+                &\text{menu disappears} \\
+                &\qquad\downarrow \\
+                &\text{the window underneath may need Expose events and redraws}
+            \end{align*}
+            With save-under:
+            \begin{align*}
+                &\text{menu appears} \\
+                &\qquad\downarrow\\
+                &\text{server saves pixels underneath the menu} \\
+                &\qquad\downarrow \\
+                &\text{menu disappears} \\
+                &\qquad\downarrow \\
+                &\text{server restores the pixels underneath} \\
+            \end{align*}
+        \item \textbf{Event masks}: An event mask tells the X server which events your client wants to receive for a window. X is event-driven. Your program usually waits for events like:
+            \begin{itemize}
+                \item key press
+                \item mouse click
+                \item mouse movement
+                \item window exposure
+                \item resize
+                \item map/unmap
+                \item destroy
+                \item focus changes
+                \item property changes
+            \end{itemize}
+            But the server does not automatically send every possible event to every client. You select the events you care about using an event mask.
+            \bigbreak \noindent 
+            For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSelectInput(
+                    display,
+                    window,
+                    ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask
+                );
+            \end{cppcode}
+            \bigbreak \noindent 
+            If you want to redraw your window when it becomes visible or damaged, you must select:
+            \begin{cppcode}
+            ExposureMask
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then the server can send you \textbf{Expose} events.
+        \item \textbf{Screen information macros}: The following lists the C language macros, their corresponding function equivalents that are for other language bindings, and what data they both can return. These macros or functions all take a pointer to the appropriate screen structure.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                BlackPixelOfScreen (screen)
+                unsigned long XBlackPixelOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the black pixel value of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WhitePixelOfScreen (screen)
+                unsigned long XWhitePixelOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the white pixel value of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                CellsOfScreen (screen)
+                int XCellsOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the number of colormap cells in the default colormap of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DefaultColormapOfScreen (screen)
+                Colormap XDefaultColormapOfScreen (screen)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Screen* screen}: screen Specifies the appropriate Screen structure.
+            \end{itemize}
+            Both return the default colormap of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DefaultDepthOfScreen (screen)
+                int XDefaultDepthOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the depth of the root window.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DefaultGCOfScreen (screen)
+                GC XDefaultGCOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a default graphics context (GC) of the specified screen, which has the same depth as the root window of the screen. The GC must never be freed.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DefaultVisualOfScreen (screen)
+                Visual *XDefaultVisualOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the default visual of the specified screen. For information on visual types
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DoesBackingStore (screen)
+                int XDoesBackingStore(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a value indicating whether the screen supports backing stores. The value returned can be one of \textbf{WhenMapped,} \textbf{NotUseful,} or Always 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DoesSaveUnders (screen)
+                Bool XDoesSaveUnders (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return a Boolean value indicating whether the screen supports save unders. If \textbf{True,} the screen supports save unders. If \textbf{False,} the screen does not support save unders (see section 3.2.5).
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DisplayOfScreen (screen)
+                Display *XDisplayOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the display of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XScreenNumberOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XScreenNumberOfScreen} function returns the screen index number of the specified screen.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                EventMaskOfScreen (screen)
+                long XEventMaskOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the event mask of the root window for the specified screen at connection setup time.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WidthOfScreen (screen)
+                int XWidthOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the width of the specified screen in pixels.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                HeightOfScreen (screen)
+                int XHeightOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the height of the specified screen in pixels.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WidthMMOfScreen (screen)
+                int XWidthMMOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the width of the specified screen in millimeters.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                HeightMMOfScreen (screen)
+                int XHeightMMOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the height of the specified screen in millimeters.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MaxCmapsOfScreen (screen)
+                int XMaxCmapsOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the maximum number of installed colormaps supported by the specified screen
+            \bigbreak \noindent 
+            \begin{cppcode}
+                MinCmapsOfScreen (screen)
+                int XMinCmapsOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the minimum number of installed colormaps supported by the specified screen 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PlanesOfScreen (screen)
+                int XPlanesOfScreen(screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the depth of the root window.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                RootWindowOfScreen (screen)
+                Window XRootWindowOfScreen (screen)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both return the root window of the specified screen.
+        \item \textbf{Generating a NoOperation Protocol Request}: To execute a \textbf{NoOperation} protocol request, use \textbf{XNoOp}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XNoOp(display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XNoOp} function sends a \textbf{NoOperation} protocol request to the X server, thereby exercising the connection.
+        \item \textbf{Freeing client-created data}: To free in-memory data that was created by an Xlib function, use \textbf{XFree}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XFree(void* data)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XFree} function is a general-purpose Xlib routine that frees the specified data. You must use it to free any objects that were allocated by Xlib, unless an alternate function is explicitly specified for the object. A NULL pointer cannot be passed to this function.
+        \item \textbf{Closing the Display}: To close a display or disconnect from the X server, use \textbf{XCloseDisplay}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XCloseDisplay(Display* display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XCloseDisplay} function closes the connection to the X server for the display specified in the \textbf{Display} structure and destroys all windows, resource IDs (\textbf{Window,} \textbf{Font,} \textbf{Pixmap,} \textbf{Colormap,} \textbf{Cursor,} and \textbf{GContext),} or other resources that the client has created on this display, unless the close-down mode of the resource has been changed (see \textbf{XSetCloseDownMode).} Therefore, these windows, resource IDs, and other resources should never be referenced again or an error will be generated. Before exiting, you should call \textbf{XCloseDisplay} explicitly so that any pending errors are reported as \textbf{XCloseDisplay} performs a final \textbf{XSync} operation.
+            \bigbreak \noindent 
+            \textbf{XCloseDisplay} can generate a \textbf{BadGC} error.
+            \bigbreak \noindent 
+            Xlib provides a function to permit the resources owned by a client to survive after the client’s connection is closed. To change a client’s close-down mode, use \textbf{XSetCloseDownMode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetCloseDownMode (Display* display, int close_mode)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{close\_mode}: close\_mode Specifies the client close-down mode. You can pass \textbf{DestroyAll,} \textbf{RetainPermanent,} or \textbf{RetainTemporary.}
+            \end{itemize}
+            \bigbreak \noindent 
+            The \textbf{XSetCloseDownMode} defines what will happen to the client’s resources at connection close. A connection starts in \textbf{DestroyAll} mode.
+            \bigbreak \noindent 
+            \textbf{XSetCloseDownMode} can generate a \textbf{BadValue} error.
+        \item \textbf{Selections}: A selection is the X Window System’s mechanism for clipboard-like data transfer.
+            \bigbreak \noindent 
+            The important point is that the selected data is usually not stored in the X server. Instead, one client owns a selection, and another client requests that data from the owner.
+            \bigbreak \noindent 
+            Common selections are
+            \bigbreak \noindent 
+            \begin{cppcode}
+            PRIMARY
+            SECONDARY
+            CLIPBOARD
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{PRIMARY}    usually the currently highlighted text
+                \item \textbf{CLIPBOARD}  usually explicit copy/paste, like Ctrl+C / Ctrl+V
+                \item \textbf{SECONDARY}  older, rarely used
+            \end{itemize}
+            The selection itself is named by an Atom, for example
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Atom clipboard = XInternAtom(display, "CLIPBOARD", False);
+            \end{cppcode}
+            \bigbreak \noindent 
+            A client becomes the owner of a selection with
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetSelectionOwner(display, selection_atom, owner_window, timestamp);
+            \end{cppcode}
+            \bigbreak \noindent 
+            For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetSelectionOwner(display, clipboard, window, CurrentTime)
+            \end{cppcode}
+            \bigbreak \noindent 
+            You can ask who owns a selection with:
+            \bigbreak \noindent
+            \begin{cppcode}
+            Window owner = XGetSelectionOwner(display, clipboard) 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Another client requests the selection using:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XConvertSelection(
+                    display,
+                    selection,
+                    target,
+                    property,
+                    requestor,
+                    time
+                );
+            \end{cppcode}
+            \bigbreak \noindent 
+            This asks the selection owner:
+            \begin{center}
+                "\textit{Please convert your selection data to this target type and store it on this property of my window.}"
+            \end{center}
+            So the flow is
+            \begin{align*}
+                &\text{client A owns CLIPBOARD} \\
+                &\qquad\downarrow \\
+                &\text{client B calls XConvertSelection }\\
+                &\qquad\downarrow \\
+                &\text{client A receives SelectionRequest }\\
+                &\qquad\downarrow\\
+                &\text{client A writes data to a property on client B's window}\\
+                &\qquad\downarrow\\
+                &\text{client A sends SelectionNotify}\\
+                &\qquad\downarrow\\
+                &\text{client B reads the property}\\
+            .\end{align*}
+            This is why selections are more like negotiated inter-client data transfer than a simple global clipboard buffer.
+            \bigbreak \noindent 
+            The main events are 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SelectionClear
+            SelectionRequest
+            SelectionNotify
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{SelectionClear}: You lost ownership of the selection.
+                \item \textbf{SelectionRequest}: Another client is asking you for the selection data.
+                \item \textbf{SelectionNotify}: The selection conversion request completed.
+            \end{itemize}
+            A correct clipboard owner must handle \textbf{SelectionRequest.} If it exits, the selected data may disappear unless a clipboard manager has saved it.           
+        \item \textbf{Grabs}: A grab gives one client temporary exclusive control over some input.
+            \bigbreak \noindent 
+            There are two major kinds:
+            \begin{enumerate}
+                \item Pointer grabs
+                \item Keyboard grabs
+            \end{enumerate}
+            A grab can be \textbf{active} or \textbf{passive}. 
+            \begin{itemize}
+                \item \textbf{Active}: Happens immediately when you request it 
+                \item \textbf{Passive}: A passive grab does not take effect immediately. Instead, it activates when some input pattern occurs
+            \end{itemize}
+            For the pointer:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int XGrabPointer(
+                Display* display,
+                Window grab_window,
+                bool owner_events,
+                unsigned int event_mask,
+                int pointer_mode,
+                int keyboard_mode,
+                Window confine_to,
+                Cursor cursor,
+                Time time
+            );
+            \end{cppcode}
+            \begin{itemize}
+                \item display	Specifies the connection to the X server.
+                \item grab\_window	Specifies the grab window.
+                \item owner\_events	Specifies a Boolean value that indicates whether the pointer events are to be reported as usual or reported with respect to the grab window if selected by the event mask.
+                \item event\_mask	Specifies which pointer events are reported to the client. The mask is the bitwise inclusive OR of the valid pointer event mask bits.
+                \item pointer\_mode	Specifies further processing of pointer events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync.}
+                \item keyboard\_mode	Specifies further processing of keyboard events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync.}
+                \item confine\_to	Specifies the window to confine the pointer in or None.
+                \item cursor	Specifies the cursor that is to be displayed during the grab or None.
+                \item time	Specifies the time. You can pass either a timestamp or CurrentTime
+            \end{itemize}
+            \bigbreak \noindent 
+            The XGrabPointer() function actively grabs control of the pointer and returns GrabSuccess if the grab was successful. Further pointer events are reported only to the grabbing client. XGrabPointer() can generate \textbf{BadCursor,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            For the keyboard:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XGrabKeyboard(
+                    Display* display,
+                    Window grab_window,
+                    Bool owner_events,
+                    int pointer_mode,
+                    int keyboard_mode,
+                    Time time
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item display	Specifies the connection to the X server.
+                \item grab\_window	Specifies the grab window.
+                \item owner\_events	Specifies a Boolean value that indicates whether the keyboard events are to be reported as usual.
+                \item pointer\_mode	Specifies further processing of pointer events. You can pass GrabModeSync or GrabModeAsync.
+                \item keyboard\_mode	Specifies further processing of keyboard events. You can pass GrabModeSync or GrabModeAsync.
+                \item time	Specifies the time. You can pass either a timestamp or CurrentTime.
+            \end{itemize}
+            The \textbf{XGrabKeyboard()} function actively grabs control of the keyboard and generates \textbf{FocusIn} and \textbf{FocusOut} events. Further key events are reported only to the grabbing client.
+            \bigbreak \noindent 
+            Once a client has an active pointer grab, pointer events are directed according to the grab rules rather than normal window picking. Typical uses are
+            \begin{itemize}
+                \item menus
+                \item drag-and-drop
+                \item resizing a window
+                \item moving a window
+                \item modal interactions
+                \item screen lockers
+            \end{itemize}
+            For example, while dragging a scrollbar, you do not want pointer events to suddenly go to another window just because the pointer moved outside the scrollbar. A pointer grab lets the scrollbar continue receiving motion/release events until the drag finishes.
+            \bigbreak \noindent 
+            You release grabs with:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XUngrabPointer(display, time)
+            XUngrabKeyboard(display, time)
+            \end{cppcode}
+            \bigbreak \noindent 
+            A passive grab does not take effect immediately. Instead, it activates when some input pattern occurs.
+            \bigbreak \noindent 
+            For keyboard shortcuts:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XGrabKey(
+                    Display* display,
+                    int keycode,
+                    unsigned int modifiers,
+                    Window grab_window,
+                    Bool owner_events,
+                    int pointer_mode,
+                    int keyboard_mode
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item display	Specifies the connection to the X server.
+                \item keycode	Specifies the KeyCode or \textbf{AnyKey.}
+                \item modifiers	Specifies the set of keymasks or \textbf{AnyModifier.} The mask is the bitwise inclusive OR of the valid keymask bits.
+                \item grab\_window	Specifies the grab window.
+                \item owner\_events	Specifies a Boolean value that indicates whether the keyboard events are to be reported as usual.
+                \item pointer\_mode	Specifies further processing of pointer events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync.}
+                \item keyboard\_mode	Specifies further processing of keyboard events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync}
+            \end{itemize}
+            The \textbf{XGrabKey()} function establishes a passive grab on the keyboard. \textbf{XGrabKey()} can generate \textbf{BadAccess} , \textbf{BadValue} , and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            For mouse buttons:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XGrabButton(
+                    Display* display,
+                    unsigned int button,
+                    unsigned int modifiers,
+                    Window grab_window,
+                    Bool owner_events,
+                    unsigned int event_mask,
+                    int pointer_mode,
+                    int keyboard_mode,
+                    Window confine_to,
+                    Cursor cursor
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item display	Specifies the connection to the X server.
+                \item button	Specifies the pointer button that is to be grabbed or \textbf{AnyButton.}
+                \item modifiers	Specifies the set of keymasks or \textbf{AnyModifier.} The mask is the bitwise inclusive OR of the valid keymask bits.
+                \item grab\_window	Specifies the grab window.
+                \item owner\_events	Specifies a Boolean value that indicates whether the pointer events are to be reported as usual or reported with respect to the grab window if selected by the event mask.
+                \item event\_mask	Specifies which pointer events are reported to the client. The mask is the bitwise inclusive OR of the valid pointer event mask bits.
+                \item pointer\_mode	Specifies further processing of pointer events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync.}
+                \item keyboard\_mode	Specifies further processing of keyboard events. You can pass \textbf{GrabModeSync} or \textbf{GrabModeAsync.}
+                \item confine\_to	Specifies the window to confine the pointer in or None.
+                \item cursor	Specifies the cursor that is to be displayed or None.
+            \end{itemize}
+            The XGrabButton() function establishes a passive grab. \textbf{XGrabButton()} can generate \textbf{BadCursor,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            Xlib defines constants for the standard mouse buttons:
+            \begin{itemize}
+                \item \textbf{Button1}: Typically the left mouse button.
+                \item \textbf{Button2}: Typically the middle mouse button (or scroll wheel click).
+                \item \textbf{Button3}: Typically the right mouse button.
+                \item \textbf{Button4 / Button5}: Often assigned to the scroll wheel up/down actions.
+                \item \textbf{AnyButton}: A special constant used in functions like XGrabButton to indicate that the operation should apply to any mouse button
+            \end{itemize}
+            \bigbreak \noindent 
+            This is how a window manager can say:
+            \begin{center}
+                "\textit{When Mod1 + Button1 is pressed over this window, give me control.}"
+            \end{center}
+            \bigbreak \noindent 
+            The grab becomes active only when the specified key/button/modifier combination occurs.
+        \item \textbf{Keymask modifiers}: In Xlib, keymask modifiers are bitwise constants used to describe the state of modifier keys (like Shift, Control, or Alt) during an input event. These masks are commonly found in the state member of event structures such as XKeyEvent or used as arguments in functions like \textbf{XGrabKey.}
+            \begin{itemize}
+                \item \textbf{ShiftMask}: The Shift key is pressed.
+                \item \textbf{LockMask}: The Caps Lock key is active.
+                \item \textbf{ControlMask}: The Control key is pressed.
+                \item \textbf{Mod1Mask}: Usually mapped to Alt or Meta.
+                \item \textbf{Mod2Mask}: Often mapped to Num Lock.
+                \item \textbf{Mod3Mask}: Sometimes mapped to AltGr.
+                \item \textbf{Mod4Mask}: Commonly mapped to the Super/Windows key.
+                \item \textbf{Mod5Mask}: Often mapped to Scroll Lock or other custom modifiers.
+            \end{itemize}
+        \item \textbf{Synchronous vs asynchronous grabs}: Grabs can freeze or not freeze event processing. The modes are usually:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            GrabModeAsync
+            GrabModeSync
+            \end{cppcode}
+            \bigbreak \noindent 
+            With GrabModeAsync, events continue normally. With GrabModeSync, the server may freeze pointer or keyboard event processing until the grabbing client explicitly allows it to continue with:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XAllowEvents(
+                    Display* display, 
+                    int mode, 
+                    Time time
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item display	Specifies the connection to the X server.
+                \item event\_mode	Specifies the event mode. You can pass \textbf{AsyncPointer,} \textbf{SyncPointer,} \textbf{AsyncKeyboard,} \textbf{SyncKeyboard,} \textbf{ReplayPointer,} \textbf{ReplayKeyboard,} \textbf{AsyncBoth,} or \textbf{SyncBoth.}
+                \item time	Specifies the time. You can pass either a timestamp or CurrentTime.
+            \end{itemize}
+            The XAllowEvents() function releases some queued events if the client has caused a device to freeze. It has no effect if the specified time is earlier than the last-grab time of the most recent active grab for the client or if the specified time is later than the current X server time. Depending on the event\_mode argument, the following occurs:
+            \begin{itemize}
+                \item \textbf{AsyncPointer}:	If the pointer is frozen by the client, pointer event processing continues as usual. If the pointer is frozen twice by the client on behalf of two separate grabs, AsyncPointer thaws for both. AsyncPointer has no effect if the pointer is not frozen by the client, but the pointer need not be grabbed by the client.
+                \item \textbf{SyncPointer}:	If the pointer is frozen and actively grabbed by the client, pointer event processing continues as usual until the next ButtonPress or ButtonRelease event is reported to the client. At this time, the pointer again appears to freeze. However, if the reported event causes the pointer grab to be released, the pointer does not freeze. SyncPointer has no effect if the pointer is not frozen by the client or if the pointer is not grabbed by the client.
+                \item \textbf{ReplayPointer}:	If the pointer is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabButton() or from a previous XAllowEvents() with mode SyncPointer but not from a XGrabPointer()), the pointer grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab_window of the grab just released. The request has no effect if the pointer is not grabbed by the client or if the pointer is not frozen as the result of an event.
+                \item \textbf{AsyncKeyboard}:	If the keyboard is frozen by the client, keyboard event processing continues as usual. If the keyboard is frozen twice by the client on behalf of two separate grabs, AsyncKeyboard thaws for both. AsyncKeyboard has no effect if the keyboard is not frozen by the client, but the keyboard need not be grabbed by the client.
+                \item \textbf{SyncKeyboard}:	If the keyboard is frozen and actively grabbed by the client, keyboard event processing continues as usual until the next KeyPress or KeyRelease event is reported to the client. At this time, the keyboard again appears to freeze. However, if the reported event causes the keyboard grab to be released, the keyboard does not freeze. SyncKeyboard has no effect if the keyboard is not frozen by the client or if the keyboard is not grabbed by the client.
+                \item \textbf{ReplayKeyboard}:	If the keyboard is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a XGrabKey() or from a previous XAllowEvents() with mode SyncKeyboard but not from a XGrabKeyboard()), the keyboard grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (towards the root of) the grab_window of the grab just released. The request has no effect if the keyboard is not grabbed by the client or if the keyboard is not frozen as the result of an event.
+                \item \textbf{SyncBoth}:	If both pointer and keyboard are frozen by the client, event processing for both devices continues as usual until the next ButtonPress, ButtonRelease, KeyPress, or KeyRelease event is reported to the client for a grabbed device (button event for the pointer, key event for the keyboard), at which time the devices again appear to freeze. However, if the reported event causes the grab to be released, then the devices do not freeze (but if the other device is still grabbed, then a subsequent event for it will still cause both devices to freeze). SyncBoth has no effect unless both pointer and keyboard are frozen by the client. If the pointer or keyboard is frozen twice by the client on behalf of two separate grabs, SyncBoth thaws for both (but a subsequent freeze for SyncBoth will only freeze each device once).
+                \item \textbf{AsyncBoth}:	If the pointer and the keyboard are frozen by the client, event processing for both devices continues as usual. If a device is frozen twice by the client on behalf of two separate grabs, AsyncBoth thaws for both. AsyncBoth has no effect unless both pointer and keyboard are frozen by the client.
+            \end{itemize}
+            \bigbreak \noindent 
+            This is useful when a client wants to inspect an event before deciding whether it should be replayed or swallowed.
+            \bigbreak \noindent 
+            XAllowEvents() can generate a \textbf{BadValue} error.
+        \item \textbf{Grab result codes}: A grab can fail, for example
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int status = XGrabPointer(...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Possible result values include:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                GrabSuccess
+                AlreadyGrabbed
+                GrabInvalidTime
+                GrabNotViewable
+                GrabFrozen
+            \end{cppcode}
+            \bigbreak \noindent 
+            So a grab is not guaranteed. 
+        \item \textbf{Save-set}:
+        \item \textbf{Using X Server Connection Close Operations}: When the X server’s connection to a client is closed either by an explicit call to \textbf{XCloseDisplay} or by a process that exits, the X server performs the following automatic operations:
+            \begin{itemize}
+                \item It disowns all selections owned by the client (see \textbf{XSetSelectionOwner).}
+                \item It performs an \textbf{XUngrabPointer} and \textbf{XUngrabKeyboard} if the client has actively grabbed the pointer or the keyboard.
+                \item It performs an \textbf{XUngrabServer} if the client has grabbed the server.
+                \item It releases all passive grabs made by the client.
+                \item It marks all resources (including colormap entries) allocated by the client either as perma- nent or temporary, depending on whether the close-down mode is \textbf{RetainPermanent} or \textbf{RetainTemporary.} However, this does not prevent other client applications from explicitly destroying the resources (see \textbf{XSetCloseDownMode).}
+            \end{itemize}
+            When the close-down mode is \textbf{DestroyAll,} the X server destroys all of a client’s resources as fol- lows:
+            \begin{itemize}
+                \item It examines each window in the client’s save-set to determine if it is an inferior (subwin- dow) of a window created by the client. (The save-set is a list of other clients’ windows that are referred to as save-set windows.) If so, the X server reparents the save-set window to the closest ancestor so that the save-set window is not an inferior of a window created by the client. The reparenting leaves unchanged the absolute coordinates (with respect to the root window) of the upper-left outer corner of the save-set window.
+                \item It performs a \textbf{MapWindow} request on the save-set window if the save-set window is unmapped. The X server does this even if the save-set window was not an inferior of a window created by the client.
+                \item It destroys all windows created by the client.
+                \item It performs the appropriate free request on each nonwindow resource created by the client in the server (for example, \textbf{Font,} \textbf{Pixmap,} \textbf{Cursor,} \textbf{Colormap,} and \textbf{GContext).}
+                \item It frees all colors and colormap entries allocated by a client application
+            \end{itemize}
+
+
+
+
 
 
 
