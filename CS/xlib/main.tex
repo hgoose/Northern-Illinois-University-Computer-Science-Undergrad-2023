@@ -1642,21 +1642,146 @@
                 } XSetWindowAttributes;
             \end{cppcode}
             \begin{itemize}
-                \item \textbf{background\_pixmap       }: Background\_pixmap is a pixmap resource used as a tiled background. It can be:
-                \item \textbf{long background\_pixel }:
-                \item \textbf{border\_pixmap           }:
-                \item \textbf{long border\_pixel     }:
-                \item \textbf{bit\_gravity                }:
-                \item \textbf{win\_gravity                }:
-                \item \textbf{backing\_store              }:
-                \item \textbf{long backing\_planes   }:
-                \item \textbf{long backing\_pixel    }:
-                \item \textbf{save\_under                }:
-                \item \textbf{event\_mask                }:
-                \item \textbf{do\_not\_propagate\_mask     }:
-                \item \textbf{override\_redirect         }:
-                \item \textbf{colormap              }:
-                \item \textbf{cursor                  }:
+                \item \textbf{background\_pixmap}: Background\_pixmap is a pixmap resource used as a tiled background. It can be:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        None
+                        ParentRelative
+                        some_pixmap
+                    \end{cppcode}
+                    \begin{itemize}
+                        \item \textbf{None:} None means the window has no automatic background. X will not repaint the background for you.
+                        \item \textbf{ParentRelative}: ParentRelative means the window uses the parent window’s background. This is only valid for windows with the same depth as the parent.
+                        \item \textbf{real pixmap}: A real pixmap means the server tiles that pixmap across the window background.
+                    \end{itemize}
+                \item \textbf{long background\_pixel}: background\_pixel is simpler: it fills the background with one pixel value. The meaning of that pixel value depends on the window’s colormap and visual. In a TrueColor visual, it usually encodes RGB bits. In PseudoColor, it is an index into a colormap.
+                \item \textbf{border\_pixmap}: border\_pixmap uses a pixmap as the border pattern. It can also be CopyFromParent in some creation contexts.
+                \item \textbf{long border\_pixel}: border\_pixel uses a single pixel value for the border color.
+                    \bigbreak \noindent 
+                    The border is the X window border specified by the border_width argument to XCreateWindow. Many modern window managers ignore or replace client-side borders for top-level windows because they draw their own decorations.
+                \item \textbf{bit\_gravity}: Bit gravity controls what happens to the contents of the window when the window is resized.
+                    \bigbreak \noindent 
+                    For example, suppose your window gets larger. Should the old pixels stay in the upper-left corner? Center? Bottom-right? Or should X discard them?
+                    \bigbreak \noindent 
+                    Common values include
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        ForgetGravity
+                        NorthWestGravity
+                        NorthGravity
+                        NorthEastGravity
+                        WestGravity
+                        CenterGravity
+                        EastGravity
+                        SouthWestGravity
+                        SouthGravity
+                        SouthEastGravity
+                        StaticGravity
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    So,
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    attrs.bit_gravity = NorthWestGravity;
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This means that when the window is resized, X tries to keep the old pixel contents attached to the upper-left corner.
+                    \bigbreak \noindent 
+                    \textbf{ForgetGravity} means X does not preserve the old bits. You should repaint when you receive an Expose event.
+                    \bigbreak \noindent 
+                    In modern applications, you usually repaint explicitly instead of relying heavily on bit gravity.
+                \item \textbf{win\_gravity}: Window gravity controls what happens to a child window’s position when its parent is resized.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    attrs.win_gravity = SouthEastGravity;
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    means that when the parent resizes, $X$ tries to keep the child attached to the parent’s bottom-right region.
+                    \bigbreak \noindent 
+                    This matters mostly for child-window layout. It is not usually used as the primary layout mechanism in modern GUI toolkits.
+                    \bigbreak \noindent 
+                    A win-gravity of \textbf{UnmapGravity} is like \textbf{NorthWestGravity} (the window is not moved), except the child is also unmapped when the parent is resized, and an \textbf{UnmapNotify} event is generated.
+                \item \textbf{backing\_store}:  Backing store asks the $X$ server to preserve obscured or unmapped window contents, so that when the window becomes visible again, the server may restore pixels without requiring the client to repaint.
+                    \bigbreak \noindent 
+                    Possible values are
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        NotUseful
+                        WhenMapped
+                        Always
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    \begin{itemize}
+                        \item NotUseful means you do not request backing store.
+                        \item WhenMapped means the server may preserve contents while the window is mapped.
+                        \item Always means the server should try to preserve contents more aggressively.
+                    \end{itemize}
+                    However, this is only a hint. The server is not required to honor it. Modern systems often ignore backing store or implement it differently because compositors already keep window buffers.
+                \item \textbf{backing\_planes}: backing\_planes specifies which bit planes should be preserved.
+                \item \textbf{backing\_pixel}: backing\_pixel gives a fallback pixel value for restoring planes that were not preserved.
+                    \bigbreak \noindent 
+                    Most modern Xlib programs simply handle Expose events and repaint instead of relying on backing store.
+                \item \textbf{save\_under}: save\_under is a hint to the server that it should save the pixels underneath this window while it is visible.
+                    \bigbreak \noindent 
+                    This was intended for temporary popup windows, menus, tooltips, and similar small transient windows.
+                    \bigbreak \noindent 
+                    Like backing store, this is only a hint. The server may ignore it.
+                \item \textbf{event\_mask}: This selects which events your client wants to receive for this window.
+                    \bigbreak \noindent 
+                    Some common masks are
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        ExposureMask
+                        KeyPressMask
+                        KeyReleaseMask
+                        ButtonPressMask
+                        ButtonReleaseMask
+                        PointerMotionMask
+                        EnterWindowMask
+                        LeaveWindowMask
+                        StructureNotifyMask
+                        SubstructureNotifyMask
+                        SubstructureRedirectMask
+                        PropertyChangeMask
+                        FocusChangeMask
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    For example, if you do not select \textbf{KeyPressMask,} then your client will not receive \textbf{KeyPress} events for that window.
+                    \bigbreak \noindent 
+                    Some event masks are exclusive. For example, only one client can select \textbf{SubstructureRedirectMask} on a given window. That is how a window manager claims control over the root window’s child-window management.
+                \item \textbf{do\_not\_propagate\_mask}: This controls which input events should not propagate upward to ancestor windows.
+                    \bigbreak \noindent 
+                    In X, some events can propagate from a child window to its parent if no client selected them on the child.
+                    \bigbreak \noindent 
+                    For example, suppose a button press occurs in a child window. If nobody selected \textbf{ButtonPressMask} on that child, the event may propagate to the parent.
+                    \bigbreak \noindent 
+                    The \textbf{do\_not\_propagate\_mask} can stop that propagation.
+                \item \textbf{override\_redirect}: This tells the X server whether the window manager should be bypassed for this window. If true, then the window manager normally does not manage the window. That means no decorations, no placement policy, no focus policy, no normal reparenting, and no window-manager intervention.
+                \item \textbf{colormap}: This is the colormap associated with the window.
+                    \bigbreak \noindent 
+                    A colormap maps pixel values to actual colors, depending on the visual class.
+                    \bigbreak \noindent 
+                    For common TrueColor visuals, you usually use the default colormap:
+                    \bigbreak \noindent 
+                    But if you create a window using a non-default visual, you often need to create and assign a matching colormap:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        Colormap cmap = XCreateColormap(display, root, visual, AllocNone);
+                        attrs.colormap = cmap;
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This is especially important when creating windows with 32-bit ARGB visuals for transparency. The window’s visual and colormap must be compatible.
+                \item \textbf{cursor}: This specifies the cursor shown when the pointer is inside the window.
+                    \bigbreak \noindent 
+                    You can use a cursor created with functions like:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        XCreateFontCursor
+                        XCreatePixmapCursor
+                        XcursorLibraryLoadCursor
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    If the cursor is None, the cursor is inherited from the parent window.
             \end{itemize}
             \bigbreak \noindent 
             The following lists the defaults for each window attribute and indicates whether the attribute is applicable to \textbf{InputOutput} and \textbf{InputOnly} windows:
@@ -1685,7 +1810,106 @@
                 \end{tabularx}
             \end{center}
 
-
+        \item \textbf{Background Attribute}: Only \textbf{InputOutput} windows can have a background. You can set the background of an \textbf{InputOutput} window by using a pixel or a pixmap.
+        \item \textbf{Pixel centers}: In graphics, to \textbf{coincide with pixel centers} means that some geometric coordinate, such as a line, point, or sample location, falls exactly at the center of a pixel, not on the boundary between pixels.
+        \item \textbf{Creating Windows}: Xlib provides basic ways for creating windows, and toolkits often supply higher-level functions specifically for creating and placing top-level windows, which are discussed in the appropriate toolkit documentation. If you do not use a toolkit, however, you must provide some standard information or hints for the window manager by using the Xlib inter-client communication functions 
+            \bigbreak \noindent 
+            If you use Xlib to create your own top-level windows (direct children of the root window), you must observe the following rules so that all applications interact reasonably across the different styles of window management:
+            \begin{itemize}
+                \item You must never fight with the window manager for the size or placement of your top-level window.
+                \item You must be able to deal with whatever size window you get, even if this means that your application just prints a message like ‘‘Please make me bigger’’ in its window.
+                \item You should only attempt to resize or move top-level windows in direct response to a user request. If a request to change the size of a top-level window fails, you must be prepared to live with what you get. You are free to resize or move the children of top-level windows as necessary. (Toolkits often have facilities for automatic relayout.)
+                \item If you do not use a toolkit that automatically sets standard window properties, you should set these properties for top-level windows before mapping them.
+            \end{itemize}
+            \textbf{XCreateWindow} is the more general function that allows you to set specific window attributes when you create a window. \textbf{XCreateSimpleWindow} creates a window that inherits its attributes from its parent window.
+            \bigbreak \noindent 
+            The X server acts as if \textbf{InputOnly} windows do not exist for the purposes of graphics requests, exposure processing, and \textbf{VisibilityNotify} events. An \textbf{InputOnly} window cannot be used as a drawable (that is, as a source or destination for graphics requests). \textbf{InputOnly} and \textbf{InputOutput} windows act identically in other respects (properties, grabs, input control, and so on). Extension packages can define other classes of windows.
+            \bigbreak \noindent 
+            To create an unmapped window and set its window attributes, use \textbf{XCreateWindow}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Window XCreateWindow(
+                    Display* display, 
+                    Window parent,
+                    int x, y, 
+                    unsigned int width, height, 
+                    unsigned int border_width,
+                    int depth,
+                    unsigned int class,
+                    Visual* visual,
+                    unsigned long valuemask,
+                    XSetWindowAttributes* attributes
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{parent}: Specifies the parent window.
+                \item \textbf{$\mathbf{x}, \mathbf{y}$}: Specify the $x$ and $y$ coordinates, which are the top-left outside corner of the created window’s borders and are relative to the inside of the parent window’s borders.
+                \item \textbf{width, height}: Specify the width and height, which are the created window’s inside dimensions and do not include the created window’s borders. The dimensions must be nonzero, or a \textbf{BadValue} error results.
+                \item \textbf{border\_width}: Specifies the width of the created window’s border in pixels.
+                \item \textbf{depth}: Specifies the window’s depth. A depth of \textbf{CopyFromParent} means the depth is taken from the parent.
+                \item \textbf{class}: Specifies the created window’s class. You can pass \textbf{InputOutput,} \textbf{InputOnly,} or \textbf{CopyFromParent.} A class of \textbf{CopyFromParent} means the class is taken from the parent.
+                \item \textbf{visual}: Specifies the visual type. A visual of \textbf{CopyFromParent} means the visual type is taken from the parent.
+                \item \textbf{valuemask}: Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced.
+                \item \textbf{attributes}: Specifies the structure from which the values (as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure.
+            \end{itemize}
+            The \textbf{XCreateWindow} function creates an unmapped subwindow for a specified parent window, returns the window ID of the created window, and causes the X server to generate a \textbf{CreateNotify} event. The created window is placed on top in the stacking order with respect to siblings.
+            \bigbreak \noindent 
+            The coordinate system has the $X$ axis horizontal and the $Y$ axis vertical with the origin [0, 0] at the upper-left corner. Coordinates are integral, in terms of pixels, and coincide with pixel centers. Each window and pixmap has its own coordinate system. For a window, the origin is inside the border at the inside, upper-left corner.
+            \bigbreak \noindent 
+            The border\_width for an \textbf{InputOnly} window must be zero, or a \textbf{BadMatch} error results. For class \textbf{InputOutput,} the visual type and depth must be a combination supported for the screen, or a \textbf{BadMatch} error results. The depth need not be the same as the parent, but the parent must not be a window of class \textbf{InputOnly,} or a \textbf{BadMatch} error results. For an \textbf{InputOnly} window, the depth must be zero, and the visual must be one supported by the screen. If either condition is not met, a \textbf{BadMatch} error results. The parent window, however, may have any depth and class. If you specify any invalid window attribute for a window, a \textbf{BadMatch} error results.
+        \item \textbf{Creating simple windows}: The created window is not yet displayed (mapped) on the user’s display. To display the window, call \textbf{XMapWindow.} The new window initially uses the same cursor as its parent. A new cursor can be defined for the new window by calling \textbf{XDefineCursor.} The window will not be visible on the screen unless it and all of its ancestors are mapped and it is not obscured by any of its ancestors.
+            \bigbreak \noindent 
+            XCreateWindow can generate \textbf{BadAlloc,} \textbf{BadColor,} \textbf{BadCursor,} \textbf{BadMatch,} \textbf{BadPixmap,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To create an unmapped \textbf{InputOutput} subwindow of a given parent window, use \textbf{XCreateSimpleWindow}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Window XCreateSimpleWindow(
+                    Display* display,
+                    Window parent, 
+                    int x, y,
+                    unsigned int width, height,
+                    unsigned int border_width,
+                    unsigned long border,
+                    unsigned long background
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the $X$ server.
+                \item \textbf{parent}: Specifies the parent window.
+                \item \textbf{x, y}: Specify the $x$ and $y$ coordinates, which are the top-left outside corner of the new window’s borders and are relative to the inside of the parent window’s borders.
+                \item \textbf{width, height}: Specify the width and height, which are the created window’s inside dimensions and do not include the created window’s borders. The dimensions must be nonzero, or a \textbf{BadValue} error results.
+                \item \textbf{border\_width}: Specifies the width of the created window’s border in pixels.
+                \item \textbf{border}: Specifies the border pixel value of the window.
+                \item \textbf{background}: Specifies the background pixel value of the window.
+            \end{itemize}
+            \bigbreak \noindent 
+            The \textbf{XCreateSimpleWindow} function creates an unmapped \textbf{InputOutput} subwindow for a specified parent window, returns the window ID of the created window, and causes the X server to generate a \textbf{CreateNotify} event. The created window is placed on top in the stacking order with respect to siblings. Any part of the window that extends outside its parent window is clipped. The border\_width for an \textbf{InputOnly} window must be zero, or a \textbf{BadMatch} error results. \textbf{XCreateSimpleWindow} inherits its depth, class, and visual from its parent. All other window attributes, except background and border, have their default values.
+            \bigbreak \noindent 
+            \textbf{XCreateSimpleWindow} can generate \textbf{BadAlloc,} \textbf{BadMatch,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+        \item \textbf{Destroying Windows}: Xlib provides functions that you can use to destroy a window or destroy all subwindows of a window.
+            \bigbreak \noindent 
+            To destroy a window and all of its subwindows, use \textbf{XDestroyWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDestroyWindow(Display* display, Window w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XDestroyWindow} function destroys the specified window as well as all of its subwindows and causes the X server to generate a \textbf{DestroyNotify} event for each window. The window should never be referenced again. If the window specified by the w argument is mapped, it is unmapped automatically. The ordering of the \textbf{DestroyNotify} events is such that for any given window being destroyed, \textbf{DestroyNotify} is generated on any inferiors of the window before being generated on the window itself. The ordering among siblings and across \textbf{subhierarchies} is not otherwise constrained. If the window you specified is a root window, no windows are destroyed. Destroying a mapped window will generate Expose events on other windows that were obscured by the window being destroyed.
+            \bigbreak \noindent 
+            \textbf{XDestroyWindow} can generate a \textbf{BadWindow} error
+            \bigbreak \noindent 
+            To destroy all subwindows of a specified window, use \textbf{XDestroySubwindows}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDestroySubwindows(Display* display, Window w) 
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XDestroySubwindows} function destroys all inferior windows of the \textbf{speciﬁed} window, in bottom-to-top stacking order. It causes the X server to generate a \textbf{DestroyNotify} event for each window. If any mapped subwindows were actually destroyed, \textbf{XDestroySubwindows} causes the X server to generate \textbf{Expose} events on the specified window. This is much more efficient than deleting many windows one at a time because much of the work need be performed only once for all of the windows, rather than for each window. The subwindows should never be referenced again.
+            \bigbreak \noindent 
+            \textbf{XDestroySubwindows} can generate a \textbf{BadWindow} error.
+        \item \textbf{Mapping windows}:
 
 
 

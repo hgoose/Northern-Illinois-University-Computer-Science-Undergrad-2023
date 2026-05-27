@@ -58,14 +58,692 @@
     \end{titlepage}
     \tableofcontents
     \pagebreak 
-    \unsect{Local Repositories}
+    \unsect{Brief overview / introduction}
     \begin{itemize}
         \item \textbf{Local vs remote repos}
             \begin{itemize}
                 \item A \textbf{local repository} is a repository that is stored on a computer.
                 \item A \textbf{remote repository} is a repository that is hosted on a hosting service.
             \end{itemize}
-        \item \textbf{}
+        \item \textbf{Local repositories}: A local repository is represented by a hidden directory called .git that exists within a project directory. It contains all the data on the changes that have been made to the files in a project.
+            \bigbreak \noindent 
+            You should never touch any files or directories inside your .git directory. Doing this could have undesirable consequences for your repository. You should never delete this directory unless you want to delete your repository.
+        \item \textbf{git init}: git init creates a new empty Git repository, or reinitializes an existing one. In the normal case, it creates a .git/ directory containing Git’s object database, refs, tags, config, hooks/templates, and other repository metadata. Running git init again inside an existing repository is safe; Git will not overwrite existing repository data.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git init [-q | --quiet] 
+                         [--bare] 
+                         [--template=<template-directory>]
+                         [--separate-git-dir <git-dir>] 
+                         [--object-format=<format>]
+                         [--ref-format=<format>]
+                         [-b <branch-name> | --initial-branch=<branch-name>]
+                         [--shared[=<permissions>]] 
+                         [<directory>]
+            \end{bashcode}
+            \begin{itemize}
+                \item -q Suppress normal output. Git will only print errors and warnings. This is useful in scripts where you do not want the usual “Initialized empty Git repository...” message.
+                \item --bare Creates a bare repository. A bare repository has no working tree; it is essentially just the repository database itself. Instead of storing Git metadata inside .git/, the repository directory itself contains things like objects/, refs/, HEAD, and config. Git’s repository-layout documentation describes a bare repository as one “without its own working tree,” typically used for exchanging histories by pushing and fetching.
+                \item --template Tells Git where to copy template files from when initializing the repository. Templates can include default hook samples, info files, exclude patterns, and initial repository structure. Git chooses the template directory in this order: the --template argument, then $GIT\_TEMPLATE\_DIR, then init.templateDir, then the default template directory.
+                    \bigbreak \noindent 
+                    This is useful if you want every new repo to start with the same hooks or config-related files.
+                \item --separate-git-dir Stores the actual Git repository data somewhere other than .git/ in the working directory. Instead of creating a real .git/ directory, Git creates a .git text file that points to the actual repository directory. If used while reinitializing, Git moves the repository to the specified path
+                    \bigbreak \noindent 
+                    Stores the actual Git repository data somewhere other than .git/ in the working directory. Instead of creating a real .git/ directory, Git creates a .git text file that points to the actual repository directory. If used while reinitializing, Git moves the repository to the specified path
+                \item --object-format Chooses the hash algorithm used for Git objects. Valid values are currently sha1 and, if supported by your Git build, sha256. sha1 is the default. Git’s documentation also notes that SHA-256 repositories and SHA-1 repositories currently do not interoperate directly.
+                \item --ref-format Chooses how Git stores refs, such as branches and tags. Valid values are files and reftable. The default is files, meaning loose ref files plus packed-refs. reftable uses the newer reftable storage format.
+                \item -b Sets the name of the initial branch in the new repository. These two forms are equivalent. For example, this creates the repo with main as the initial branch name:
+                \item --shared Initializes the repository with permissions suitable for sharing among multiple users. This sets core.sharedRepository, causing files under \$GIT\_DIR to be created with the requested permissions. If --shared is not specified, Git uses the normal permissions determined by your system umask.
+                \item Tells Git where to initialize the repository. If the directory does not exist, Git creates it. If it does exist, Git initializes the repository inside it.
+            \end{itemize}
+        \item \textbf{The areas of Git}: There are four important areas to be aware of when you are working with Git:
+            \begin{enumerate}
+                \item \textbf{Working directory}: The actual files and folders you see and edit in your project directory.
+                \item \textbf{Staging area}: The intermediate area where you choose which changes will go into the next commit.
+                    \bigbreak \noindent 
+                    The staging area is also called the index. When you run
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git add main.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    you copy the current version of main.c from the working directory into the staging area.
+                    \bigbreak \noindent 
+                    This lets you prepare a commit carefully. For example, you might edit three files but stage only one of them.
+                    \bigbreak \noindent 
+                    You can inspect staged changes with:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        git diff --staged             
+                    \end{cppcode}
+                \item \textbf{Commit history}: The sequence of commits that record the project’s past states. A commit is a snapshot of the staged files, plus metadata such as author, date, commit message, and a pointer to the previous commit.
+                    \bigbreak \noindent 
+                    \begin{center}
+                        A --- B --- C
+                    \end{center}
+                    Here, $A$, $B$, and $C$ are commits. The latest commit on your branch is usually what HEAD points to.
+                    \bigbreak \noindent 
+                    You can view the commit history with
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        git log 
+                    \end{bashcode}
+                \item \textbf{Local repository}: The Git repository stored on your own machine. In a normal project, the local repository is mainly the .git directory
+                    \bigbreak \noindent 
+                    The .git/ directory contains Git’s internal database: commits, branches, tags, object files, configuration, refs, and the staging area.
+            \end{enumerate}
+        \item \textbf{Working tree}: The working tree is the set of actual project files that git has checked out for you to edit. For
+            \bigbreak \noindent 
+            \begin{bashcode}
+            myproject/
+              main.c
+              README.md
+              src/
+              .git/
+            \end{bashcode}
+            \bigbreak \noindent 
+            The working tree is 
+            \bigbreak \noindent 
+            \begin{bashcode}
+            main.c 
+            README.md
+            src/
+            \end{bashcode}
+        \item \textbf{git diff}: Git can show the difference between the working tree and the staging area with
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git diff
+            \end{bashcode}
+        \item \textbf{Tracked files}: A tracked file is a file Git already knows about.
+            \bigbreak \noindent 
+            More precisely, a file is tracked if it is already in Git’s repository history or currently in the index.
+            \bigbreak \noindent 
+            A tracked file is under Git’s management. It can be in states such as:
+            \begin{enumerate}
+                \item unmodified
+                \item modified
+                \item staged
+                \item deleted
+            \end{enumerate}
+        \item \textbf{git add -A}: Stages all additions, modifications, and deletions in the whole repository.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git add -A
+            \end{bashcode}
+            \bigbreak \noindent 
+            stages all changes in the entire repository, regardless of what directory you are currently in.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git add .
+            \end{bashcode}
+            \bigbreak \noindent 
+            stages changes only in the current directory and below.
+        \item \textbf{git restore, revert, and reset}: 
+            \begin{itemize}
+                \item \textbf{Restore}: git restore is mainly for undoing changes in your working tree or staging area. Use it when you want to throw away uncommitted changes.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git restore file.txt
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    This discards unstaged changes to file.txt in your working tree and restores it to the version currently in the staging area.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git restore --staged file.txt
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git restore --worktree file.txt
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    discards unstaged changes in the file and restores it from the index. Note that this is equivalent to 
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git restore file.txt
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    because --worktree is the default target for git restore.
+                \item \textbf{revert}: git revert undoes a commit by creating a new commit that applies the opposite changes.
+                    \bigbreak \noindent 
+                    Use it when the bad commit is already part of shared history, such as a branch you pushed to GitHub.
+                    \bigbreak \noindent 
+                    If commit \textbf{abc123} adds a line "\textit{hello}", then
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git revert abc123
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    creates a new commit that removes that line. The original commit still exists in history.
+                \item \textbf{Reset}: git reset moves the current branch pointer to another commit. Depending on the option, it may also change the staging area and working tree.
+                    \bigbreak \noindent 
+                    Use it when you want to move your branch backward or rewrite local history.
+            \end{itemize}
+        \item \textbf{Branches}: A branch in Git is a movable name that points to a commit. That is the core idea. Suppose history looks like this:
+            \begin{center}
+                A \texttt{--} B \texttt{--} C 
+            \end{center}
+            Suppose main is a branch, and points to commit $C$. When you make a new commit while on main, Git creates a new commit and moves main forward:
+            \bigbreak \noindent 
+            Branches let you work on a separate line of development without disturbing another line.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch -c feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            This creates a new branch called feature-login and switches to it. Now, both main and feature-login point to commit $C$. If you commit on feature-login, only that branch moves forward.
+            \begin{verbatim}
+                A -- B -- C
+                          ^
+                        main
+                            \
+                            D -- E
+                                 ^
+                           feature-login
+            \end{verbatim}
+        \item \textbf{HEAD}: HEAD means “where you currently are.” Usually, head points to a branch. If you make a commit, git moves the branch that HEAD is attached to 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git branch feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            Creates a branch but does not switch to it.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch -c feature-login
+            git checkout -b feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            Both create the branch and switch to it
+        \item \textbf{Merging branches}: Eventually, you usually want to bring the changes from one branch into another. Suppose you want to merge feature-login into main. First, switch to main.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Then, merge
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git merge feature-login.
+            \end{bashcode}
+            \bigbreak \noindent 
+            \begin{verbatim}
+               A -- B -- C -------- M
+                          \        /
+                           D -- E 
+            \end{verbatim}
+            \bigbreak \noindent 
+            $M$ is a merge commit. It combines the histories of main and feature-login. Sometimes Git can do a \textbf{fast-forward merge} instead:
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C -- D -- E
+                                    ^
+                                  main
+            \end{verbatim}
+            \bigbreak \noindent 
+            After merging a branch, you can delete the local branch name:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git branch -d feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            This deletes the branch pointer, not necessarily the commits. If the commits are already reachable from another branch, such as main, they are still part of history.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git branch -D feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            This deletes the branch even if Git thinks it has unmerged work.
+        \item \textbf{Local vs remote branches}: A local branch exists in your repository. A \textbf{remote-tracking branch} represents the state of a branch on a remote, such as GitHub.
+            \bigbreak \noindent 
+            origin/main means: My local record of what main looked like on the remote named origin.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git fetch
+            \end{bashcode}
+            \bigbreak \noindent 
+            updates remote-tracking branches.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git push origin feature-login
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git sends your local feature-login branch to the remote.
+        \item \textbf{Checkout vs switch}: Git checkout is the older, overloaded command. Switch is the newer, more specific command for switching branches.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git checkout main
+            git switch main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Both switch you to the main branch. But checkout can do multiple unrelated things. It can also restore files (seen below).
+        \item \textbf{Hunks}: In Git, a hunk is a contiguous block of changes inside a file. When Git shows a diff, it does not usually show the entire file. It shows only the changed regions, plus a little surrounding context. Each changed region is called a \textbf{hunk}.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                diff --git a/file.txt b/file.txt
+                index 83db48f..f735c2d 100644
+                --- a/file.txt
+                +++ b/file.txt
+                @@ -1,5 +1,5 @@
+                    line 1
+                    line 2
+                -old line
+                +new line
+                    line 4
+                    line 5
+            \end{bashcode}
+            \bigbreak \noindent 
+            This part is the hunk:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                @@ -1,5 +1,5 @@
+                    line 1
+                    line 2
+                -old line
+                +new line
+                    line 4
+                    line 5
+            \end{bashcode}
+            \begin{itemize}
+                \item The -old line means that line was removed.
+                \item The +new line means that line was added.
+            \end{itemize}
+            The unchanged lines around it are context, included so Git and humans can understand where the change belongs.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            @@ -1,5 +1,5 @@
+            \end{bashcode}
+            \bigbreak \noindent 
+            is the \textbf{hunk header}. It means:
+            \begin{bashcode}
+                -1,5   old file: starting at line 1, show 5 lines
+                +1,5   new file: starting at line 1, show 5 lines
+            \end{bashcode}
+            \bigbreak \noindent 
+            So the hunk describes a change from one version of the file to another.
+        \item \textbf{Patches}: A patch is a text representation of changes. In Git, a patch usually means a \textbf{diff file} that describes how to change one version of files into another version. 
+            \bigbreak \noindent 
+            A patch is made out of one or more \textbf{hunks}.
+            \bigbreak \noindent 
+            You can create a patch with
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git diff > changes.patch
+            \end{bashcode}
+            \bigbreak \noindent 
+            Someone else can apply it with
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git apply changes.patch
+            \end{bashcode}
+            \bigbreak \noindent 
+            That modifies their working tree using the changes described in the patch.
+        \item \textbf{Merges}: A merge in git combines changes from one branch into another branch.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch main
+            git merge feature
+            \end{bashcode}
+            \bigbreak \noindent 
+            This means: Take the changes from feature and integrate them into main.
+            \bigbreak \noindent 
+            A merge conflict happens when Git cannot automatically combine the changes. Suppose both branches changed the same line differently,
+            \bigbreak \noindent 
+            \begin{cppcode}
+            // main.c
+            int x = 10;
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{bashcode}
+            // feature.c
+            int x = 20;
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git cannot possibly know which one you want, so it marks the conflict in the file.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                <<<<<<< HEAD
+                int x = 10;
+                =======
+                int x = 20;
+                >>>>>>> feature
+            \end{bashcode}
+            \bigbreak \noindent 
+            This means
+            \bigbreak \noindent 
+            \begin{bashcode}
+                HEAD side:    your current branch, main
+                other side:   the branch being merged, feature
+            \end{bashcode}
+            \bigbreak \noindent 
+            You manually edit the file to the final version you want, then you stage the resolved file, and finish the merge with a commit.
+        \item \textbf{Cherry pick}:  git revert and git cherry-pick are almost opposites in spirit.
+            \bigbreak \noindent 
+            git cherry-pick copies a commit’s changes into your current branch. Use cherry-pick when you want to take one specific commit from another branch and apply it to your current branch.
+        \item \textbf{Tags}: You can attach a name to a commit using a tag.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git tag v1.0 a3f4c91
+            \end{bashcode}
+            \bigbreak \noindent 
+            Now, v1.0 refers to that commit.
+        \item \textbf{Stashing}: Git stash temporarily saves your uncommited changes somewhere inside git, then cleans your working tree. Use it when you are in the middle of work but need to switch branches, pull changes, or do something else without committing yet.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash
+            \end{bashcode}
+            \bigbreak \noindent 
+            This takes your current uncommitted changes and stores them in a stash entry.
+            \bigbreak \noindent 
+            Then your working tree goes back to a clean state.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash list
+            \end{bashcode}
+            \bigbreak \noindent 
+            lists the stashes
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash apply
+            \end{bashcode}
+            \bigbreak \noindent 
+            Brings back the most recent stash
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash pop
+            \end{bashcode}
+            \bigbreak \noindent 
+            Applies and removes from the list
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash apply <stash name>
+            \end{bashcode}
+            \bigbreak \noindent 
+            Applies a specific stash from the list.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash drop <name>
+            git stash clear
+            \end{bashcode}
+            \bigbreak \noindent 
+            Removes stashes from the list, or clears the list.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash --staged
+            \end{bashcode}
+            \bigbreak \noindent 
+            stashes only the staged changes. That means Git takes the changes currently in the index/staging area and puts them into a stash. Your unstaged working-tree changes are left alone.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash --keep-indexd 
+            \end{bashcode}
+            \bigbreak \noindent 
+            This stashes your unstaged changes, but keeps your staged changes in place.
+            \bigbreak \noindent 
+            In other words, the index is preserved.
+        \item \textbf{Staging area manipulations}: Staging is represented by a directory \textbf{index} instead .git. The commands that 
+            \begin{itemize}
+                \item \textbf{git add}: Stages file contents. More precisely, it copies the current content of selected working-directory files into the index, preparing that content for the next commit. git add -p stages selected hunks interactively. git add -A stages additions, modifications, and deletions.
+                \item \textbf{git rm}: Removes paths from the index. By default, it removes them from both the working tree and the index. With --cached, it removes them from the index only, leaving the file in your working directory 
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git rm file.c
+                    git rm --cached file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Use git rm --cached when you accidentally started tracking a file but want to keep the local copy.
+                \item \textbf{git mv}: Moves or renames a file and updates the index to record that change. The change is staged, but it still needs to be committed.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git mv oldname.c newname.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    This is roughly equivalent to
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        mv oldname.c newname.c
+                        git rm oldname.c
+                        git add newname.c
+                    \end{bashcode}
+                \item \textbf{git restore --staged}: Changes the index without necessarily changing the working directory. This is the modern command for “unstaging” something. By default, git restore --staged <path> restores the index version from HEAD.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git restore --staged file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    You can also restore both the index and working tree:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    git restore --staged --worktree file.c
+                    \end{cppcode}
+                \item \textbf{git reset}: git reset can move HEAD, reset the index, and sometimes reset the working tree depending on the mode.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git reset file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Unstages file.c
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git reset 
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Resets the whole index to HEAD, leaving the working directory alone
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git reset --mixed HEAD~1
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Moves HEAD and resets the index, but keeps working-directory changes. --mixed is the default reset mode.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git reset --hard HEAD
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Resets both the index and working tree to HEAD
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    git reset --soft HEAD
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Resets the working tree but \textbf{not} the index.
+                \item \textbf{git checkout}: git checkout is older and overloaded. It can affect the index in some forms but not others.
+                    \bigbreak \noindent 
+                    This form updates both the working tree and the index from another commit/tree:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git checkout main -- file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    That means: take file.c from main, put it into my working tree, and stage that version in the index.
+                    \bigbreak \noindent 
+                    Recall that \texttt{--} signals the end of command options. 
+                    \bigbreak \noindent 
+                    The form
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git checkout -- file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Restores the working-tree file from the index, so it affects the working directory, not the staging area.
+                \item \textbf{git switch}: Switching branches updates the working tree and the index to match the branch being checked out
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git switch main
+                    git switch feature
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    So while git switch is not normally thought of as a staging command, it does replace the index as part of changing branches
+                \item \textbf{git commit}: A plain commit reads the current index and creates a commit from it. The Git docs describe git commit as creating a new commit from the current contents of the index
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git commit -a
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Automatically stages modifications and deletions for already-tracked files before committing. It does not add brand-new untracked files. 
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git commit -p
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Lets you interactively choose hunks to include in the commit.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git commit file.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Commits the current content of the named tracked file, bypassing the normal “only what is already staged” behavior for that file.
+                \item \textbf{git apply --index}: Applies a patch to both the working tree and the index.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git apply --index patch patch.diff
+                    \end{bashcode}
+                \item \textbf{git apply --cached}: Applies a patch only to the index, leaving the working tree alone
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git apply --cached patch.diff
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Without --index or --cached, git apply applies the patch only to files in the working tree.
+                \item \textbf{git merge}: Merging updates the index and working tree when changes apply cleanly. If conflicts occur, the index stores special unmerged entries until you resolve them and stage the resolved files.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git merge feature
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    After conflict resolution,
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git add conflicted-file.c
+                    git commit
+                    \end{bashcode}
+                \item \textbf{git cherry-pick}: Applies the changes from an existing commit. If paths apply cleanly, they are updated in both the index and working tree. If conflicts occur, the index records multiple versions for conflicted paths.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        git cherry-pick abc123
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    After resolving conflicts:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git add file.c
+                    git cherry-pick --continue
+                    \end{bashcode}
+                \item \textbf{git revert}: Creates a new commit that reverses an earlier commit. With --no-commit/-n, it applies the reverse changes to the working tree and index without committing.
+                \item \textbf{git rebase}: Rebase repeatedly applies commits onto a new base. Internally, this affects the working tree and index as commits are replayed. If conflicts occur, you resolve files, stage them with git add, and continue:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git rebase main
+                    git add file.c
+                    git rebase --continue
+                    \end{bashcode}
+                \item \textbf{git pull}: git pull is essentially git fetch followed by either git merge or git rebase, depending on configuration/options. Because the merge/rebase part can update the index, git pull can affect the staging area indirectly.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git pull
+                    git pull --rebase
+                    \end{bashcode}
+                \item \textbf{git stash}: git stash records the current state of both the working directory and the index, then reverts the working directory to match HEAD.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        git stash
+
+                        git stash --staged
+                        git stash --keep-index
+                        git stash pop
+                        git stash apply
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    git stash pop and git stash apply can also modify the index depending on how the stash was created and applied.
+            \end{itemize}
+        \item \textbf{Low-level index manipulations}:
+            \begin{itemize}
+                \item \textbf{git update-index}: This is the direct plumbing command for modifying the index. It can add entries, remove entries, refresh stat information, change executable bits, set assume-unchanged, set skip-worktree, and more. Git’s own documentation says git update-index “modifies the index.”
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        git update-index --chmod=+x script.sh
+                        git update-index --assume-unchanged config.local
+                        git update-index --skip-worktree config.local
+                    \end{bashcode}
+                \item \textbf{git read-tree}: Low-level command for reading tree objects into the index. It is used internally by commands such as checkout, merge, and reset-like operations.
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                     git read-tree HEAD
+                    \end{bashcode}
+            \end{itemize}
+        \item \textbf{git ls-files}: git ls-files lists files that Git knows about in the index/staging area, and optionally files in the working tree
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files
+            \end{bashcode}
+            \bigbreak \noindent 
+            This prints the files that are currently tracked by Git, because tracked files are recorded in the index.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --others
+            \end{bashcode}
+            \bigbreak \noindent 
+            Shows untracked files
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --others --exclude-standard
+            \end{bashcode}
+            \bigbreak \noindent 
+            Shows untracked files, but respect .gitignore.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --ignored --others --exclude-standard
+            \end{bashcode}
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --deleted
+            \end{bashcode}
+            \bigbreak \noindent 
+            Shows deleted tracked files
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --modified
+            \end{bashcode}
+            \bigbreak \noindent 
+            Shows modified tracked files
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-files --unmerged
+            \end{bashcode}
+            \bigbreak \noindent 
+            Shows files with merge conflicts.
+        \item \textbf{git status}: Shows the current state of your repo relative to the current commit, usually HEAD.
+        \item \textbf{git log}: Shows the commit history
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git log
+            \end{bashcode}
+            \bigbreak \noindent 
+            Show recent commits only:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log -5
+            \end{bashcode}
+            \bigbreak \noindent 
+            Show commits affecting a specific file:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log -- main.c
+            \end{bashcode}
+            \bigbreak \noindent 
+            Show patches introduced by each commit:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log -p
+            \end{bashcode}
+            \bigbreak \noindent 
+            Show summary of changed files:
+            \begin{bashcode}
+                git log --stat
+            \end{bashcode}
+        \item \textbf{Upstreams}: 
+
+
+
     \end{itemize}
 
 
