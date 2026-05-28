@@ -308,6 +308,9 @@
             \end{bashcode}
             \bigbreak \noindent 
             Git sends your local feature-login branch to the remote.
+        \item \textbf{git fetch}: The git fetch command downloads the latest commits, files, and references from a remote repository into your local repository, but it does not merge or integrate them into your current working code.
+            \bigbreak \noindent 
+            It essentially acts as a safe, "read-only" check that updates Git's internal tracking records to mirror what is happening on the server. Because it never alters your local branches or working files, it is completely safe to run at any time without risking merge conflicts.
         \item \textbf{Checkout vs switch}: Git checkout is the older, overloaded command. Switch is the newer, more specific command for switching branches.
             \bigbreak \noindent 
             \begin{bashcode}
@@ -740,7 +743,211 @@
             \begin{bashcode}
                 git log --stat
             \end{bashcode}
-        \item \textbf{Upstreams}: 
+        \item \textbf{Tracking}: In Git, to \textbf{track} means: A local branch is linked to a remote branch so Git knows which remote branch it should compare, pull from, and push to by default.
+        \item \textbf{Upstreams}: An upstream is the remote branch that your local branch is configured to “track.”
+            \bigbreak \noindent 
+            For example, suppose you have:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            main
+            origin/main
+            \end{bashcode}
+            \bigbreak \noindent 
+            If your local \texttt{main} is tracking \texttt{origin/main}, then origin/main is the upstream of main. You can see this with
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git branch -vv
+            \end{bashcode}
+            \bigbreak \noindent 
+            \begin{bashcode}
+            * main  abc1234 [origin/main] Add parser notes
+            \end{bashcode}
+            \bigbreak \noindent 
+            So,  local branch main has upstream origin/main. The upstream matters because commands like these use it automatically.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git pull
+            git push 
+            git status
+            \end{bashcode}
+            \bigbreak \noindent 
+            If your branch has an upstream, then
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git push
+            \end{bashcode}
+            \bigbreak \noindent 
+            usually means
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git push origin main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Also,
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git pull
+            \end{bashcode}
+            \bigbreak \noindent 
+            usually means
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git fetch origin
+            git merge origin/main
+            \end{bashcode}
+        \item \textbf{Setting an upstream}: When you first push a local branch, you often use
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git push -u origin main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Or, equivalently
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git push --set-upstream origin main
+            \end{bashcode}
+            \bigbreak \noindent 
+            The -u means \textit{set upstream}.
+            \bigbreak \noindent 
+            You can also manually set an upstream:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git branch --set-upstream-to=origin/main main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Or, if already on main,
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git branch --set-upstream-to=origin/main
+            \end{bashcode}
+        \item \textbf{Upstreams and branches}: You do not always need to set an upstream for a branch.
+            \bigbreak \noindent 
+            You only need an upstream if you want Git to know which remote branch your local branch corresponds to for commands like:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git pull
+            git push
+            git status
+            \end{bashcode}
+            \bigbreak \noindent 
+            Suppose you create a local branch
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch -c feature
+            \end{bashcode}
+            \bigbreak \noindent 
+            At this point, feature is just local. It does not automatically have an upstream unless you created it from a remote branch in a tracking-aware way.
+            \bigbreak \noindent 
+            If you only want to work locally, no upstream is needed.
+            \bigbreak \noindent 
+            But if you want to push it, you usually do
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git push -u origin feature 
+            \end{bashcode}
+            \bigbreak \noindent 
+            This does two things
+            \begin{enumerate}
+                \item Creates / updates the remote branch
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    origin/feature
+                    \end{bashcode}
+                \item Sets your local branch \textbf{feature} to track \textbf{origin/feature}.
+            \end{enumerate}
+        \item \textbf{Remote-tracking branch}: A remote-tracking branch is Gits local record of a branch on a remote.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            origin/main
+            origin/dev
+            origin/feature-x
+            \end{bashcode}
+            \bigbreak \noindent 
+            These are not branches you usually edit directly. They are Git’s local snapshots of what the remote branches looked like the last time you fetched.
+            \bigbreak \noindent 
+            An \textbf{upstream} is a relationship between your local branch and one of those remote-tracking branches.
+        \item \textbf{Rebase}: A rebase moves your commits so that they appear to be based on a different commit. Suppose we have history
+            \begin{verbatim}
+                A---B---C  origin/main
+                    \
+                    D---E  feature
+            \end{verbatim}
+            \bigbreak \noindent 
+            You made commits $D$ and $E$ on feature, but meanwhile main advanced to $C$. If you run
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git switch feature
+            git rebase origin/main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git rewrites your branch like this:
+            \begin{verbatim}
+                A---B---C  origin/main
+                         \
+                          D'---E'  feature
+            \end{verbatim}
+            \bigbreak \noindent 
+            Your changes are replayed on top of the latest origin/main.
+            \bigbreak \noindent 
+            Notice the commits are now called $D^{\prime}$ and $E^{\prime}$, not $D$ and $E$. That is because rebasing creates new commits with new commit hashes.
+        \item \textbf{Rebase vs merge}: Both merge and rebase can bring one branch up to date with another branch, but they do it differently.
+            \begin{itemize}
+               \item \textbf{Merge}:  
+                   \bigbreak \noindent 
+                   \begin{bashcode}
+                   git merge origin/main
+                   \end{bashcode}
+                   \bigbreak \noindent 
+                   creates a new merge commit:
+                   \begin{verbatim}
+                       A---B----C  origin/main
+                           \     \
+                           D---E--M  feature 
+                   \end{verbatim}
+                   \bigbreak \noindent 
+                   The history preserves the fact that the branches diverged and were merged.
+                \item \textbf{Rebase}:  
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git rebase origin/main
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    rewrites the feature branch
+                    \begin{verbatim}
+                       A---B---C  origin/main
+                                \
+                                 D'---E'  feature 
+                    \end{verbatim}
+                    \bigbreak \noindent 
+                    The history looks linear, as if you started your feature branch from the latest main. Rebase is commonly used to keep a clean, linear history.
+                    \bigbreak \noindent 
+                    For example, before merging a feature branch, you might do:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git fetch origin
+                    git rebase origin/main
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    This updates your feature branch so your commits are placed after the newest commits on main.
+                \item \textbf{Rebasing with upstream}: If your branch has an upstream, you can do:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git pull --rebase
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    This means:
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    git fetch
+                    git rebase <upstream>
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    So instead of fetching and merging the upstream branch, Git fetches and rebases your local commits on top of it.
+                    
+                   
+            \end{itemize}
+            
+            
 
 
 

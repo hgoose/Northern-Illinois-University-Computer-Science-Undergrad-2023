@@ -1909,18 +1909,484 @@
             The \textbf{XDestroySubwindows} function destroys all inferior windows of the \textbf{speciﬁed} window, in bottom-to-top stacking order. It causes the X server to generate a \textbf{DestroyNotify} event for each window. If any mapped subwindows were actually destroyed, \textbf{XDestroySubwindows} causes the X server to generate \textbf{Expose} events on the specified window. This is much more efficient than deleting many windows one at a time because much of the work need be performed only once for all of the windows, rather than for each window. The subwindows should never be referenced again.
             \bigbreak \noindent 
             \textbf{XDestroySubwindows} can generate a \textbf{BadWindow} error.
-        \item \textbf{Mapping windows}:
+        \item \textbf{Window stacking order}: The window stacking order is the front-to-back ordering of sibling windows on the screen.
+            \bigbreak \noindent 
+            A window can have many child windows. Among those children, X keeps an ordering that determines which windows appear above or below the others when they overlap.
+            \bigbreak \noindent 
+            Think of it like a stack of sheets of paper:
+            \begin{align*}
+                &\text{Topmost window} \\
+                &\uparrow \\
+                &\mid \\
+                &\text{Window $C$} \\
+                &\text{Window $B$} \\
+                &\text{Window $A$} \\
+                &\mid \\
+                &\downarrow \\
+                &\text{Bottommost window}
+            .\end{align*}
+            If Window $C$ overlaps Window $B$, and Window $C$ is higher in the stacking order, then Window C visually covers that part of Window $B$.
+            \bigbreak \noindent 
+            The important point is that stacking order is defined relative to windows with the same parent.
+            \bigbreak \noindent 
+            \begin{verbatim}
+                Root window
+                    |-- A
+                    |-- B
+                    |-- C
+            \end{verbatim}
+            \bigbreak \noindent 
+            Here, $A$, $B$, and $C$ are siblings. Their stacking order determines which one appears above the others when they overlap.
+            \bigbreak \noindent 
+            But, if $A$ has children:
+            \begin{verbatim}
+                Root window
+                 |--A
+                 |  |--A1
+                 |  |--A2
+                 |--B
+                 |--C
+            \end{verbatim}
+            \bigbreak \noindent 
+            Then $A_{1}$ and $A_{2}$ have their own stacking order relative to each other. They are not directly stacked against $B$ and $C$; they are inside the subtree of $A$.
+            \bigbreak \noindent 
+            If two sibling windows overlap, the one higher in the stack obscures the lower one.
+            \bigbreak \noindent 
+            Top-level application windows are usually children of the root window. So the stacking order of top-level windows is the stacking order of the root window’s children.
+            \bigbreak \noindent 
+            A window manager manipulates this order constantly. When you focus a window, open a menu, raise a dialog, or move a window to the front, the window manager changes the stacking order.
+        \item \textbf{Mapping windows}: A window is considered mapped if an \textbf{XMapWindow} call has been made on it. It may not be visible on the screen for one of the following reasons:
+            \begin{itemize}
+                \item It is obscured by another opaque window.
+                \item One of its ancestors is not mapped.
+                \item It is entirely clipped by an ancestor.
+            \end{itemize}
+            Expose events are generated for the window when part or all of it becomes visible on the screen. A client receives the Expose events only if it has asked for them. Windows retain their position in the stacking order when they are unmapped.
+            \bigbreak \noindent 
+            A window manager may want to control the placement of subwindows. If \textbf{SubstructureRedirectMask} has been selected by a window manager on a parent window (usually a root window), a map request initiated by other clients on a child window is not performed, and the window manager is sent a \textbf{MapRequest} event. However, if the override-redirect flag on the child had been set to True (usually only on pop-up menus), the map request is performed.
+            \bigbreak \noindent 
+            A tiling window manager might decide to reposition and resize other clients’ windows and then decide to map the window to its final location. A window manager that wants to provide decoration might reparent the child into a frame first. Only a single client at a time can select for \textbf{SubstructureRedirectMask.}
+            \bigbreak \noindent 
+            Similarly, a single client can select for \textbf{ResizeRedirectMask} on a parent window. Then, any attempt to resize the window by another client is suppressed, and the client receives a \textbf{ResizeRequest} event.
+            \bigbreak \noindent 
+            To map a given window, use \textbf{XMapWindow}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XMapWindow(display, w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XMapWindow} function maps the window and all of its subwindows that have had map requests. Mapping a window that has an unmapped ancestor does not display the window but marks it as eligible for display when the ancestor becomes mapped. Such a window is called \textbf{unviewable.} When all its ancestors are mapped, the window becomes viewable and will be visible on the screen if it is not obscured by another window. This function has no effect if the window is already mapped.
+            \bigbreak \noindent 
+            If the override-redirect of the window is \textbf{False} and if some other client has selected \textbf{SubstructureRedirectMask} on the parent window, then the X server generates a \textbf{MapRequest} event, and the \textbf{XMapWindow} function does not map the window. Otherwise, the window is mapped, and the X server generates a \textbf{MapNotify} event.
+            \bigbreak \noindent 
+            If the window becomes viewable and no earlier contents for it are remembered, the X server tiles the window with its background. If the window’s background is undefined, the existing screen contents are not altered, and the X server generates zero or more \textbf{Expose} events. If backing-store was maintained while the window was unmapped, no \textbf{Expose} events are generated. If backing- store will now be maintained, a full-window exposure is always generated. Otherwise, only visible regions may be reported. Similar tiling and exposure take place for any newly viewable inferiors.
+            \bigbreak \noindent 
+            If the window is an InputOutput window, \textbf{XMapWindow} generates Expose events on each InputOutput window that it causes to be displayed. If the client maps and paints the window and if the client begins processing events, the window is painted twice. To avoid this, first ask for Expose events and then map the window, so the client processes input events as usual. The event list will include Expose for each window that has appeared on the screen. The client’s normal response to an Expose event should be to repaint the window. This method usually leads to simpler programs and to proper interaction with window managers.
+            \bigbreak \noindent 
+            \textbf{XMapWindow} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To map and raise a window, use \textbf{XMapRaised.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XMapRaised (display, w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XMapRaised} function essentially is similar to \textbf{XMapWindow} in that it maps the window and all of its subwindows that have had map requests. However, it also raises the specified window to the top of the stack. 
+            \bigbreak \noindent 
+            \textbf{XMapRaised} can generate multiple \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To map all subwindows for a specified window, use \textbf{XMapSubwindows.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XMapSubwindows (display, w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XMapSubwindows} function maps all subwindows for a specified window in top-to-bottom stacking order. The X server generates Expose events on each newly displayed window. This may be much more efficient than mapping many windows one at a time because the server needs to perform much of the work only once, for all of the windows, rather than for each window.
+            \bigbreak \noindent 
+            \textbf{XMapSubwindows} can generate a \textbf{BadWindow} error.
+        \item \textbf{Unmapping Windows}: Xlib provides functions that you can use to unmap a window or all subwindows.
+            \bigbreak \noindent 
+            To unmap a window, use \textbf{XUnmapWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUnmapWindow(display, w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XUnmapWindow} function unmaps the specified window and causes the X server to generate an \textbf{UnmapNotify} event. If the specified window is already unmapped, \textbf{XUnmapWindow} has no effect. Normal exposure processing on formerly obscured windows is performed. Any child window will no longer be visible until another map call is made on the parent. In other words, the subwindows are still mapped but are not visible until the parent is mapped. Unmapping a window will generate Expose events on windows that were formerly obscured by it. 
+            \bigbreak \noindent 
+            \textbf{XUnmapWindow} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To unmap all subwindows for a specified window, use \textbf{XUnmapSubwindows}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUnmapSubwindows (display, w)
+            \end{cppcode}
+            The \textbf{XUnmapSubwindows} function unmaps all subwindows for the specified window in bottom- to-top stacking order. It causes the X server to generate an \textbf{UnmapNotify} event on each subwindow and Expose events on formerly obscured windows. Using this function is much more efficient than unmapping multiple windows one at a time because the server needs to perform much of the work only once, for all of the windows, rather than for each window.
+            \bigbreak \noindent 
+            \textbf{XUnmapSubwindows} can generate a \textbf{BadWindow} error.
+        \item \textbf{Configuring Windows}: Xlib provides functions that you can use to move a window, resize a window, move and resize a window, or change a window’s border width. To change one of these parameters, set the appropriate member of the \textbf{XWindowChanges} structure and OR in the corresponding value mask in subsequent calls to \textbf{XConfigureWindow.} The symbols for the value mask bits and the \textbf{XWindowChanges} structure are
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* Configure window value mask bits */
+                #define CWX                 (1<<0)
+                #define CWY                 (1<<1)
+                #define CWWidth             (1<<2)
+                #define CWHeight            (1<<3)
+                #define CWBorderWidth       (1<<4)
+                #define CWSibling           (1<<5)
+                #define CWStackMode         (1<<6)
 
+                /* Values */
 
+                typedef struct {
+                    int x, y;
+                    int width, height;
+                    int border_width;
+                    Window sibling;
+                    int stack_mode;
+                } XWindowChanges;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The $x$ and $y$ members are used to set the window’s $x$ and $y$ coordinates, which are relative to the parent’s origin and indicate the position of the upper-left outer corner of the window. The width and height members are used to set the inside size of the window, not including the border, and must be nonzero, or a \textbf{BadValue} error results. Attempts to configure a root window have no effect.
+            \bigbreak \noindent 
+            The border\_width member is used to set the width of the border in pixels. Note that setting just the border width leaves the outer-left corner of the window in a fixed position but moves the absolute position of the window’s origin. If you attempt to set the border-width attribute of an \textbf{InputOnly} window nonzero, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{Note:} Inside the window, $(0,0)$ excludes the border. But when positioning the window relative to its parent, the position refers to the outer window, including the border.
+            \bigbreak \noindent 
+            The sibling member is used to set the sibling window for stacking operations. The stack\_mode member is used to set how the window is to be restacked and can be set to 
+            \begin{itemize}
+                \item \textbf{Above}: Places the window above another window. Without \textbf{sibling} specified, it raises the window to the top. With sibling specified, it places that window above its specified sibling.
+                \item \textbf{Below}: Places the window below another window. Without \textbf{sibling} specified, it raises the window to the bottom. With sibling specified, it places that window below its specified sibling.
+                \item \textbf{TopIf}: 
+                    Raises the window only if doing so is necessary. Informally: raise this window if it is currently being obscured.
+                    \bigbreak \noindent 
+                    Without sibling, X checks whether any sibling window is covering part of this window. If so, it raises the window to the top.
+                    \bigbreak \noindent 
+                    With sibling, X checks the relationship between this window and that sibling. If the sibling obscures this window, then this window is raised.
+                \item \textbf{BottomIf}: Lowers the window only if doing so is necessary.
+                    \bigbreak \noindent 
+                    Without sibling, X checks whether this window is covering any sibling. If so, it lowers the window to the bottom.
+                    \bigbreak \noindent 
+                    With sibling, X checks whether this window obscures the given sibling. If so, this window is lowered.
+                \item \textbf{Opposite}: This is conditional behavior based on whether the window is above or below another window.
+                    \bigbreak \noindent 
+                    Informally,
+                    \begin{itemize}
+                        \item if this window is being obscured, raise it;
+                        \item if this window is obscuring another window, lower it
+                    \end{itemize}
+                    Without sibling, X compares the window against its siblings generally.
+                    \bigbreak \noindent 
+                    With sibling, X compares the window specifically against that sibling.
+                    \bigbreak \noindent 
+                    So Opposite can act like either \textbf{TopIf} or \textbf{BottomIf,} depending on the current overlap and stacking relationship.
+            \end{itemize}
+            If you do not specify a sibling, then stacking is relative to the whole sibling stack. For example, specifying \textbf{Above} will mean that a window gets raised to the top of its sibling stack.
+            \bigbreak \noindent 
+            If you specify sibling, then the operation is relative to that sibling window.
+            \bigbreak \noindent 
+            The sibling must actually be a sibling of the window being configured. That means both windows must have the same parent.
+            \bigbreak \noindent 
+            If the override-redirect flag of the window is \textbf{False} and if some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a ConfigureRequest event, and no further processing is performed. Otherwise, if some other client has selected \textbf{ResizeRedirectMask} on the window and the inside width or height of the window is being changed, a \textbf{ResizeRequest} event is generated, and the current inside width and height are used instead. Note that the override-redirect flag of the window has no effect on \textbf{ResizeRedirectMask} and that Sub- \textbf{structureRedirectMask} on the parent has precedence over \textbf{ResizeRedirectMask} on the window.
+            \bigbreak \noindent 
+            When the geometry of the window is changed as specified, the window is restacked among sib- lings, and a \textbf{ConfigureNotify} event is generated if the state of the window actually changes. \textbf{GravityNotify} events are generated after \textbf{ConfigureNotify} events. If the inside width or height of the window has actually changed, children of the window are affected as specified.
+            \bigbreak \noindent 
+            If a window’s size actually changes, the window’s subwindows move according to their window gravity. Depending on the window’s bit gravity, the contents of the window also may be moved.
+            \bigbreak \noindent 
+            If regions of the window were obscured but now are not, exposure processing is performed on these formerly obscured windows, including the window itself and its inferiors. As a result of increasing the width or height, exposure processing is also performed on any new regions of the window and any regions where window contents are lost
+            \bigbreak \noindent 
+            The restack check (specifically, the computation for BottomIf, TopIf, and Opposite) is per- formed with respect to the window’s final size and position (as controlled by the other arguments of the request), not its initial position. If a sibling is specified without a stack\_mode, a Bad- Match error results.
+            \bigbreak \noindent 
+            Attempts to configure a root window have no effect.
+            \bigbreak \noindent 
+            To configure a window’s size, location, stacking, or border, use \textbf{XConfigureWindow}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values)
+            \end{cppcode}
+            \begin{itemize}
+                \item value\_mask Specifies which values are to be set using information in the values structure. This mask is the bitwise inclusive OR of the valid configure window values bits.
+                \item values Specifies the \textbf{XWindowChanges} structure.
+            \end{itemize}
+            The \textbf{XConfigureWindow} function uses the values specified in the \textbf{XWindowChanges} structure to reconfigure a window’s size, position, border, and stacking order. Values not specified are taken from the existing geometry of the window.
+            \bigbreak \noindent 
+            If a sibling is specified without a stack\_mode or if the window is not actually a sibling, a Bad- Match error results. Note that the computations for \textbf{BottomIf,} \textbf{TopIf,} and Opposite are performed with respect to the window’s final geometry (as controlled by the other arguments passed to \textbf{XConfigureWindow),} not its initial geometry. Any backing store contents of the window, its inferiors, and other newly visible windows are either discarded or changed to reflect the current screen contents (depending on the implementation).
+            \bigbreak \noindent 
+            \textbf{XConfigureWindow} can generate \textbf{BadMatch,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            \textbf{Note:} A call to XConfigureWindow does cause the window to move in the stack (if specified in the mask), with respect to the specified configuration.
+            \bigbreak \noindent 
+            To move a window without changing its size, use \textbf{XMoveWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XMoveWindow(display, w, x, y)
+            \end{cppcode}
+            \begin{itemize}
+                \item x, y Specify the x and y coordinates, which define the new location of the top-left pixel of the window’s border or the window itself if it has no border.
+            \end{itemize}
+            The \textbf{XMoveWindow} function moves the specified window to the specified x and y coordinates, but it does not change the window’s size, raise the window, or change the mapping state of the window. Moving a mapped window may or may not lose the window’s contents depending on if the window is obscured by non-children and if no backing store exists. If the contents of the window are lost, the X server generates Expose events. Moving a mapped window generates Expose events on any formerly obscured windows.
+            \bigbreak \noindent 
+            If the override-redirect flag of the window is False and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a ConfigureRequest event, and no further processing is performed. Otherwise, the window is moved.
+            \bigbreak \noindent 
+            \textbf{XMoveWindow} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To change a window’s size without changing the upper-left coordinate, use \textbf{XResizeWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height)
+            \end{cppcode}
+            \begin{itemize}
+                \item width, height Specify the width and height, which are the interior dimensions of the window after the call completes.
+            \end{itemize}
+            The \textbf{XResizeWindow} function changes the inside dimensions of the specified window, not including its borders. This function does not change the window’s upper-left coordinate or the origin and does not restack the window. Changing the size of a mapped window may lose its contents and generate \textbf{Expose} events. If a mapped window is made smaller, changing its size generates \textbf{Expose} events on windows that the mapped window formerly obscured.
+            \bigbreak \noindent 
+            If the override-redirect flag of the window is False and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a ConfigureRequest event, and no further processing is performed. If either width or height is zero, a \textbf{BadValue} error results.
+            \textbf{XResizeWindow} can generate \textbf{BadValue} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To change the size and location of a window, use \textbf{XMoveResizeWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int width, unsigned int height)
+            \end{cppcode}
+            \begin{itemize}
+                \item x, y Specify the x and y coordinates, which define the new position of the window relative to its parent.
+                \item width, height Specify the width and height, which define the interior size of the window.
+            \end{itemize}
+            The \textbf{XMoveResizeWindow} function changes the size and location of the specified window with- out raising it. Moving and resizing a mapped window may generate an \textbf{Expose} event on the window. Depending on the new size and location parameters, moving and resizing a window may generate \textbf{Expose} events on windows that the window formerly obscured.
+            \bigbreak \noindent 
+            If the override-redirect flag of the window is False and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a ConfigureRequest event, and no further processing is performed. Otherwise, the window size and location are changed.
+            \bigbreak \noindent 
+            \textbf{XMoveResizeWindow} can generate \textbf{BadValue} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To change the border width of a given window, use \textbf{XSetWindowBorderWidth.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBorderWidth (Display* display, Window w, unsigned int width)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XSetWindowBorderWidth} function sets the specified window’s border width to the specified width. 
+            \bigbreak \noindent 
+            \textbf{XSetWindowBorderWidth} can generate a \textbf{BadWindow} error.
+        \item \textbf{Changing Window Stacking Order}: Xlib provides functions that you can use to raise, lower, circulate, or restack windows. 
+            \bigbreak \noindent 
+            To raise a window so that no sibling window obscures it, use XRaiseWindow.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XRaiseWindow(display, w)
+            \end{cppcode}
+            The \textbf{XRaiseWindow} function raises the specified window to the top of the stack so that no sibling window obscures it. If the windows are regarded as overlapping sheets of paper stacked on a desk, then raising a window is analogous to moving the sheet to the top of the stack but leaving its x and y location on the desk constant. Raising a mapped window may generate \textbf{Expose} events for the window and any mapped subwindows that were formerly obscured.
+            \bigbreak \noindent 
+            If the override-redirect attribute of the window is \textbf{False} and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a ConfigureRequest event, and no processing is performed. Otherwise, the window is raised.
+            \bigbreak \noindent 
+            \textbf{XRaiseWindow} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To lower a window so that it does not obscure any sibling windows, use \textbf{XLowerWindow.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XLowerWindow(display, w)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XLowerWindow} function lowers the specified window to the bottom of the stack so that it does not obscure any sibling windows. If the windows are regarded as overlapping sheets of paper stacked on a desk, then lowering a window is analogous to moving the sheet to the bottom of the stack but leaving its x and y location on the desk constant. Lowering a mapped window will generate \textbf{Expose} events on any windows it formerly obscured.
+            \bigbreak \noindent 
+            If the override-redirect attribute of the window is \textbf{False} and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates a \textbf{ConfigureRequest} event, and no processing is performed. Otherwise, the window is lowered to the bottom of the stack.
+            \bigbreak \noindent 
+            \textbf{XLowerWindow} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To circulate a subwindow up or down, use \textbf{XCirculateSubwindows}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XCirculateSubwindows(Display* display, Window w, int direction)
+            \end{cppcode}
+            \begin{itemize}
+                \item direction Specifies the direction (up or down) that you want to circulate the window. You can pass \textbf{RaiseLowest} or \textbf{LowerHighest.}
+            \end{itemize}
+            The \textbf{XCirculateSubwindows} function circulates children of the specified window in the specified direction. If you specify \textbf{RaiseLowest,} \textbf{XCirculateSubwindows} raises the lowest mapped child (if any) that is occluded by another child to the top of the stack. If you specify \textbf{LowerHighest,} \textbf{XCirculateSubwindows} lowers the highest mapped child (if any) that occludes another child to the bottom of the stack. Exposure processing is then performed on formerly obscured windows. If some other client has selected \textbf{SubstructureRedirectMask} on the window, the X server generates a \textbf{CirculateRequest} event, and no further processing is performed. If a child is actually restacked, the X server generates a \textbf{CirculateNotify} event.
+            \bigbreak \noindent 
+            \textbf{XCirculateSubwindows} can generate \textbf{BadValue} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To raise the lowest mapped child of a window that is partially or completely occluded by another child, use \textbf{XCirculateSubwindowsUp.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XCirculateSubwindowsUp (display, w)
+            \end{cppcode}
+            The \textbf{XCirculateSubwindowsUp} function raises the lowest mapped child of the specified window that is partially or completely occluded by another child. Completely unobscured children are not affected. This is a convenience function equivalent to \textbf{XCirculateSubwindows} with \textbf{RaiseLowest} specified.
+            \bigbreak \noindent 
+            XCirculateSubwindowsUp can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To lower the highest mapped child of a window that partially or completely occludes another child, use \textbf{XCirculateSubwindowsDown}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XCirculateSubwindowsDown (display, w)
+            \end{cppcode}
+            The \textbf{XCirculateSubwindowsDown} function lowers the highest mapped child of the specified window that partially or completely occludes another child. Completely unobscured children are not affected. This is a convenience function equivalent to \textbf{XCirculateSubwindows} with \textbf{LowerHighest} specified.
+            \bigbreak \noindent 
+            \textbf{XCirculateSubwindowsDown} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+            To restack a set of windows from top to bottom, use \textbf{XRestackWindows.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XRestackWindows (Display* display, Window windows[], int nwindows);
+            \end{cppcode}
+            \begin{itemize}
+                \item windows Specifies an array containing the windows to be restacked.
+                \item nwindows Specifies the number of windows to be restacked.
+            \end{itemize}
+            The \textbf{XRestackWindows} function restacks the windows in the order specified, from top to bottom. The stacking order of the first window in the windows array is unaffected, but the other windows in the array are stacked underneath the first window, in the order of the array. The stacking order of the other windows is not affected. For each window in the window array that is not a child of the specified window, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            If the override-redirect attribute of a window is False and some other client has selected \textbf{SubstructureRedirectMask} on the parent, the X server generates \textbf{ConfigureRequest} events for each window whose override-redirect flag is not set, and no further processing is performed. Otherwise, the windows will be restacked in top-to-bottom order.
+            \bigbreak \noindent 
+            \textbf{XRestackWindows} can generate a \textbf{BadWindow} error.
+            \bigbreak \noindent 
+        \item \textbf{Changing window attributes}: Xlib provides functions that you can use to set window attributes. \textbf{XChangeWindowAttributes} is the more general function that allows you to set one or more window attributes provided by the XSetWindowAttributes structure. The other functions described in this section allow you to set one specific window attribute, such as a window’s background.
+            \bigbreak \noindent 
+            Recall the \textbf{XSetWindowAttributes} structure
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* Window attribute value mask bits */
+                #define CWBackPixmap        (1L<<0)
+                #define CWBackPixel         (1L<<1)
+                #define CWBorderPixmap      (1L<<2)
+                #define CWBorderPixel       (1L<<3)
+                #define CWBitGravity        (1L<<4)
+                #define CWWinGravity        (1L<<5)
+                #define CWBackingStore      (1L<<6)
+                #define CWBackingPlanes     (1L<<7)
+                #define CWBackingPixel      (1L<<8)
+                #define CWOverrideRedirect  (1L<<9)
+                #define CWSaveUnder         (1L<<10)
+                #define CWEventMask         (1L<<11)
+                #define CWDontPropagate     (1L<<12)
+                #define CWColormap          (1L<<13)
+                #define CWCursor            (1L<<14)
 
-
-
-
+                typedef struct {
+                    Pixmap background_pixmap;       /* background, None, or ParentRelative */
+                    unsigned long background_pixel; /* background pixel */
+                    Pixmap border_pixmap;           /* border of the window or CopyFromParent */
+                    unsigned long border_pixel;     /* border pixel value */
+                    int bit_gravity;                /* one of bit gravity values */
+                    int win_gravity;                /* one of the window gravity values */
+                    int backing_store;              /* NotUseful, WhenMapped, Always */
+                    unsigned long backing_planes;   /* planes to be preserved if possible */
+                    unsigned long backing_pixel;    /* value to use in restoring planes */
+                    Bool save_under;                /* should bits under be saved? (popups) */
+                    long event_mask;                /* set of events that should be saved */
+                    long do_not_propagate_mask;     /* set of events that should not propagate */
+                    Bool override_redirect;         /* boolean value for override_redirect */
+                    Colormap colormap;              /* color map to be associated with window */
+                    Cursor cursor;                  /* cursor to be displayed (or None) */
+                } XSetWindowAttributes;
+            \end{cppcode}
+            \bigbreak \noindent 
+            To change one or more attributes for a given window, use \textbf{XChangeWindowAttributes}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XChangeWindowAttributes(Display* display, Window w, unsigned long valuemask, XSetWindowAttributes* attributes)
+            \end{cppcode}
+            \begin{itemize}
+                \item valuemask Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced. The values and restrictions are the same as for XCreateWindow.
+                \item attributes Specifies the structure from which the values (as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure
+            \end{itemize}
+            Depending on the valuemask, the \textbf{XChangeWindowAttributes} function uses the window attributes in the XSetWindowAttributes structure to change the specified window attributes. Changing the background does not cause the window contents to be changed. To repaint the window and its background, use \textbf{XClearWindow.} Setting the border or changing the background such that the border tile origin changes causes the border to be repainted. Changing the background of a root window to None or \textbf{ParentRelative} restores the default background pixmap. Changing the border of a root window to \textbf{CopyFromParent} restores the default border pixmap. Changing the win-gravity does not affect the current position of the window. Changing the backing-store of an obscured window to \textbf{WhenMapped} or Always, or changing the backing-planes, backing-pixel, or save-under of a mapped window may have no immediate effect. Changing the colormap of a window (that is, defining a new map, not changing the contents of the existing map) generates a \textbf{ColormapNotify} event. Changing the colormap of a visible window may have no immediate effect on the screen because the map may not be installed (see \textbf{XInstallColormap).} Changing the cursor of a root window to None restores the default cursor. Whenever possible, you are encouraged to share colormaps.
+            \bigbreak \noindent 
+            Multiple clients can select input on the same window. Their event masks are maintained separately. When an event is generated, it is reported to all interested clients. However, only one client at a time can select for \textbf{SubstructureRedirectMask,} \textbf{ResizeRedirectMask,} and \textbf{ButtonPressMask.} If a client attempts to select any of these event masks and some other client has already selected one, a \textbf{BadAccess} error results. There is only one do-not-propagate-mask for a window, not one per client.
+            \bigbreak \noindent 
+            \textbf{XChangeWindowAttributes} can generate \textbf{BadAccess,} \textbf{BadColor,} \textbf{BadCursor,} \textbf{BadMatch,} \textbf{BadPixmap,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To set the background of a window to a given pixel, use \textbf{XSetWindowBackground}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBackground (Display* display, Window w, unsigned long background_pixel)
+            \end{cppcode}
+            \begin{itemize}
+                \item background\_pixel Specifies the pixel that is to be used for the background.
+            \end{itemize}
+            The \textbf{XSetWindowBackground} function sets the background of the window to the specified pixel value. Changing the background does not cause the window contents to be changed. \textbf{XSetWindowBackground} uses a pixmap of undefined size filled with the pixel value you passed. If you try to change the background of an \textbf{InputOnly} window, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{XSetWindowBackground} can generate \textbf{BadMatch} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To set the background of a window to a given pixmap, use \textbf{XSetWindowBackgroundPixmap.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBackgroundPixmap (Display* display, Window w, Pixmap background_pixmap)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{XSetWindowBackgroundPixmap} function sets the background pixmap of the window to the specified pixmap. The background pixmap can immediately be freed if no further explicit references to it are to be made. If \textbf{ParentRelative} is specified, the background pixmap of the window’s parent is used, or on the root window, the default background is restored. If you try to change the background of an \textbf{InputOnly} window, a \textbf{BadMatch} error results. If the background is set to None, the window has no defined background.
+            \bigbreak \noindent 
+            \textbf{XSetWindowBackgroundPixmap} can generate \textbf{BadMatch,} \textbf{BadPixmap,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            \textbf{Note}: \textbf{XSetWindowBackground} and \textbf{XSetWindowBackgroundPixmap} do not change the current contents of the window.
+            \bigbreak \noindent 
+            To change and repaint a window’s border to a given pixel, use \textbf{XSetWindowBorder.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBorder (display, w, unsigned long border_pixel)
+            \end{cppcode}
+            \begin{itemize}
+                \item border\_pixel Specifies the entry in the colormap.
+            \end{itemize}
+            The \textbf{XSetWindowBorder} function sets the border of the window to the pixel value you specify. If you attempt to perform this on an \textbf{InputOnly} window, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{XSetWindowBorder} can generate \textbf{BadMatch} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To change and repaint the border tile of a given window, use XSetWindowBorderPixmap.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBorderPixmap (display, w, Pixmap border_pixmap)
+            \end{cppcode}
+            \begin{itemize}
+                \item border\_pixmap Specifies the border pixmap or CopyFromParent.
+            \end{itemize}
+            The \textbf{XSetWindowBorderPixmap} function sets the border pixmap of the window to the pixmap you specify. The border pixmap can be freed immediately if no further explicit references to it are to be made. If you specify \textbf{CopyFromParent,} a copy of the parent window’s border pixmap is used. If you attempt to perform this on an \textbf{InputOnly} window, a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{XSetWindowBorderPixmap} can generate \textbf{BadMatch,} \textbf{BadPixmap,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To set the colormap of a given window, use \textbf{XSetWindowColormap.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowColormap (display, w, Colormap colormap)
+            \end{cppcode}
+            The \textbf{XSetWindowColormap} function sets the specified colormap of the specified window. The colormap must have the same visual type as the window, or a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            \textbf{XSetWindowColormap} can generate \textbf{BadColor,} \textbf{BadMatch,} and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To define which cursor will be used in a window, use \textbf{XDefineCursor}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XDefineCursor (display, w, Cursor cursor)
+            \end{cppcode}
+            \begin{itemize}
+                \item cursor Specifies the cursor that is to be displayed or None.
+            \end{itemize}
+            If a cursor is set, it will be used when the pointer is in the window. If the cursor is None, it is equivalent to \textbf{XUndefineCursor.} \textbf{XDefineCursor} can generate BadCursor and \textbf{BadWindow} errors.
+            \bigbreak \noindent 
+            To undefine the cursor in a given window, use \textbf{XUndefineCursor.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUndefineCursor (display, w)
+            \end{cppcode}
+            The \textbf{XUndefineCursor} function undoes the effect of a previous \textbf{XDefineCursor} for this window. When the pointer is in the window, the parent’s cursor will now be used. On the root window, the default cursor is restored.
+            \bigbreak \noindent 
+            \textbf{XUndefineCursor} can generate a \textbf{BadWindow} error.
 
     \end{itemize}
 
     \pagebreak 
     \unsect{4. Window information functions}
+    \begin{itemize}
+        \item \textbf{Intro}: After you connect the display to the X server and create a window, you can use the Xlib window information functions to:
+            \begin{itemize}
+                \item Obtain information about a window
+                \item Translate screen coordinates
+                \item Manipulate property lists
+                \item Obtain and change window properties
+                \item Manipulate selections
+            \end{itemize}
+        \item \textbf{Obtaining Window Information}:
+
+
+
+    \end{itemize}
 
     \pagebreak 
     \unsect{5. Pixmap and cursor functions}

@@ -111,6 +111,20 @@
     \pagebreak 
     \unsect{Introduction}
     \begin{itemize}
+        \item \textbf{Principles of OOP}:
+            \begin{enumerate}
+                \item \textbf{Encapsulation}: The practice of bundling data (variables) and the methods (functions) that operate on that data into a single unit (a class), while restricting direct access to some of the object's components.
+                \item \textbf{Abstraction}: The process of hiding complex implementation details and exposing only the essential features or functionalities to the user.
+                \item \textbf{Inheritance}:  A mechanism that allows one class (the child or subclass) to acquire the properties and behaviors of another class (the parent or superclass).
+                \item \textbf{Polymorphism}: The ability of different objects to respond to the same method call in their own unique way.
+            \end{enumerate}
+        \item \textbf{Parameterized types}: In object-oriented programming (OOP), a parameterized type—more commonly known as a generic or a template—is a class, interface, or method that is defined with placeholder variables in place of actual data types. This architectural feature enables developers to pass specific data types as arguments to a class or method at the time of instantiation or invocation. 
+        \item \textbf{Object acquaintance}: In Object-Oriented Programming (OOP), object acquaintance (often called an "association" or "using" relationship) is a loose connection where one object merely knows about another to perform a task. 
+            \begin{itemize}
+                \item \textbf{No Ownership}: The "acquainted" object is usually passed as a method parameter or stored in a temporary reference. It does not own the other object and is not responsible for its creation or destruction.
+                \item \textbf{Loosely Coupled}: It allows objects to collaborate and call methods on each other without being strictly tied to their lifecycles.
+                \item \textbf{Implementation}: It is typically implemented via pointers, references, or interfaces.
+            \end{itemize}
         \item \textbf{Objects}: In Object-Oriented Programming (OOP), an object is represented as a self-contained unit that combines state (data) and behavior (functions). It is a concrete instance of a blueprint known as a class.
             \begin{itemize}
                 \item \textbf{State:} Represented by attributes, fields, or properties.
@@ -272,6 +286,156 @@
         \item \textbf{Programming to an Interface, not an Implementation}:  Class inheritance is basically just a mechanism for extending an application's functionality by reusing functionality in parent classes. It lets you define a new kind of object rapidly in terms of an old one. It lets you get new implementations almost for free, inheriting most of what you need from existing classes.
             \bigbreak \noindent 
             However, implementation reuse is only half the story. Inheritance's ability to define families of objects with identical interfaces (usually by inheriting from an abstract class) is also important. Why? Because polymorphism depends on it.
+            \bigbreak \noindent 
+            When inheritance is used carefully (some will say properly), all classes derived from an abstract class will share its interface. This implies that a subclass merely adds or overrides operations and does not hide operations of the parent class. All subclasses can then respond to the requests in the interface of this abstract class, making them all subtypes of the abstract class.
+            \bigbreak \noindent 
+            There are two benefits to manipulating objects solely in terms of the interface defined by abstract classes:
+            \begin{enumerate}
+                \item Clients remain unaware of the specific types of objects they use, as long as the objects adhere to the interface that clients expect
+                \item Clients remain unaware of the classes that implement these objects. Clients only know about the abstract class(es) defining the interface.
+            \end{enumerate}
+            This so greatly reduces implementation dependencies between subsystems that it leads to the following principle of reusable object-oriented design:
+            \begin{center}
+                "\textit{program to an interface, not an implementation}"
+            \end{center}
+            Don't declare variables to be instances of particular concrete classes. Instead, commit only to an interface defined by an abstract class. You will find this to be a common theme of the design patterns in this book.
+            \bigbreak \noindent 
+            You have to instantiate concrete classes (that is, specify a particular implementation) somewhere in your system, of course, and the creational patterns (Abstract Factory (99), Builder (110), Factory Method (121), Prototype (133), and Singleton (144) let you do just that. By abstracting the process of object creation, these patterns give you different ways to associate an interface with its implementation transparently at instantiation. Creational patterns ensure that your system is written in terms of interfaces, not implementations.
+        \item \textbf{Inheritance versus Composition}: The two most common techniques for reusing functionality in object-oriented systems are class inheritance and object composition. As we've explained, class inheritance lets you define the implementation of one class in terms of another's. Reuse by subclassing is often referred to as white-box reuse. The term "white-box" refers to visibility: With inheritance, the internals of parent classes are often visible to subclasses.
+            \bigbreak \noindent 
+            Object composition is an alternative to class inheritance. Here, new functionality is obtained by assembling or composing objects to get more complex functionality. Object composition requires that the objects being composed have well-defined interfaces. This style of reuse is called black-box reuse, because no internal details of objects are visible. Objects appear only as "black boxes."
+            \bigbreak \noindent 
+            Inheritance and composition each have their advantages and disadvantages. Class inheritance is defined statically at compile-time and is straightforward to use, since it's supported directly by the programming language. Class inheritance also makes it easier to modify the implementation being reused. When a subclass overrides some but not all operations, it can affect the operations it inherits as well, assuming they call the overridden operations
+            \bigbreak \noindent 
+            But class inheritance has some disadvantages, too. First, you can't change the implementations inherited from parent classes at run-time, because inheritance is defined at compile-time. Second, and generally worse, parent classes often define at least part of their subclasses' physical representation. Because inheritance exposes a subclass to details of its parent's implementation, it's often said that "inheritance breaks encapsulation". he implementation of a subclass becomes so bound up with the implementation of its parent class that any change in the parent's implementation will force the subclass to change.
+            \bigbreak \noindent 
+            Implementation dependencies can cause problems when you're trying to reuse a subclass. Should any aspect of the inherited implementation not be appropriate for new problem domains, the parent class must be rewritten or replaced by something more appropriate. This dependency limits flexibility and ultimately reusability. One cure for this is to inherit only from abstract classes, since they usually provide little or no implementation.
+            \bigbreak \noindent 
+            Object composition is defined dynamically at run-time through objects acquiring references to other objects. Composition requires objects to respect each others' interfaces, which in turn requires carefully designed interfaces that don't stop you from using one object with many others. But there is a payoff. Because objects are accessed solely through their interfaces, we don't break encapsulation. Any object can be replaced at run-time by another as long as it has the same type. Moreover, because an object's implementation will be written in terms of object interfaces, there are substantially fewer implementation dependencies.
+            \bigbreak \noindent 
+            Object composition has another effect on system design. Favoring object composition over class inheritance helps you keep each class encapsulated and focused on one task. Your classes and class hierarchies will remain small and will be less likely to grow into unmanageable monsters. On the other hand, a design based on object composition will have more objects (if fewer classes), and the system's behavior will depend on their interrelationships instead of being defined in one class.
+            \bigbreak \noindent 
+            That leads us to our second principle of object-oriented design:
+            \begin{center}
+                "\textit{Favor object composition over class inheritance}"
+            \end{center}
+            Ideally, you shouldn't have to create new components to achieve reuse. You should be able to get all the functionality you need just by assembling existing components through object composition. But this is rarely the case, because the set of available components is never quite rich enough in practice. Reuse by inheritance makes it easier to make new components that can be composed with old ones. Inheritance and object composition thus work together.
+        \item \textbf{Delegation}: Delegation is a way of making composition as powerful for reuse as inheritance. In delegation, two objects are involved in handling a request: a receiving object delegates operations to its \textbf{delegate.}
+            \bigbreak \noindent 
+            This is analogous to subclasses deferring requests to parent classes. But with inheritance, an inherited operation can always refer to the receiving object through the this member variable in C++ and self in Smalltalk. To achieve the same effect with delegation, the receiver passes itself to the delegate to let the delegated operation refer to the receiver.
+            \bigbreak \noindent 
+            For example, instead of making class Window a subclass of Rectangle (because windows happen to be rectangular), the Window class might reuse the behavior of Rectangle by keeping a Rectangle instance variable and delegating Rectangle-specific behavior to it. In other words, instead of a Window being a Rectangle, it would have a Rectangle. Window must now forward requests to its Rectangle instance explicitly, whereas before it would have inherited those operations.
+            \bigbreak \noindent 
+            The following diagram depicts the Window class delegating its Area operation to a Rectangle instance.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/12.png}
+            \bigbreak \noindent 
+            The main advantage of delegation is that it makes it easy to compose behaviors at run-time and to change the way they're composed. Our window can become circular at run-time simply by replacing its Rectangle instance with a Circle instance, assuming Rectangle and Circle have the same type.
+            \bigbreak \noindent 
+            Delegation has a disadvantage it shares with other techniques that make software more flexible through object composition: Dynamic, highly parameterized software is harder to understand than more static software. There are also run-time inefficiencies, but the human inefficiencies are more important in the long run. Delegation is a good design choice only when it simplifies more than it complicates. It isn't easy to give rules that tell you exactly when to use delegation, because how effective it will be depends on the context and on how much experience you have with it. Delegation works best when it's used in highly stylized ways—that is, in standard patterns
+        \item \textbf{Inheritance versus Parameterized Types}: Another (not strictly object-oriented) technique for reusing functionality is through parameterized types, also known as generics (Ada, Eiffel) and templates (C++). This technique lets you define a type without specifying all the other types it uses. The unspecified types are supplied as parameters at the point of use. For example, a List class can be parameterized by the type of elements it contains. To declare a list of integers, you supply the type "integer" as a parameter to the List parameterized type. To declare a list of String objects, you supply the "String" type as a parameter. The language implementation will create a customized version of the List class template for each type of element.
+            \bigbreak \noindent 
+            Parameterized types give us a third way (in addition to class inheritance and object composition) to compose behavior in object-oriented systems. Many designs can be implemented using any of these three techniques. To parameterize a sorting routine by the operation it uses to compare elements, we could make the comparison one of:
+            \begin{enumerate}
+                \item an operation implemented by subclasses (an application of Template Method (360),
+                \item the responsibility of an object that's passed to the sorting routine (Strategy (349), or
+                \item an argument of a C++ template or Ada generic that specifies the name of the function to call to compare the elements.
+            \end{enumerate}
+            There are important differences between these techniques. Object composition lets you change the behavior being composed at run-time, but it also requires indirection and can be less efficient. Inheritance lets you provide default implementations for operations and lets subclasses override them. Parameterized types let you change the types that a class can use. But neither inheritance nor parameterized types can change at run-time. Which approach is best depends on your design and implementation constraints.
+            \bigbreak \noindent 
+            None of the patterns we see in this document concerns parameterized types, though we use them on occasion to customize a pattern's C++ implementation. Parameterized types aren't needed at all in a language like Smalltalk that doesn't have compile-time type checking
+        \item \textbf{Relating Run-Time and Compile-Time Structures}: An object-oriented program's run-time structure often bears little resemblance to its code structure. The code structure is frozen at compile-time; it consists of classes in fixed inheritance relationships. A program's run-time structure consists of rapidly changing networks of communicating objects. In fact, the two structures are largely independent. 
+            \bigbreak \noindent 
+            Consider the distinction between object aggregation and acquaintance and how differently they manifest themselves at compile- and run-times. Aggregation implies that one object owns or is responsible for another object. Generally we speak of an object having or being part of another object. Aggregation implies that an aggregate object and its owner have identical lifetimes.
+            \bigbreak \noindent 
+            Acquaintance implies that an object merely knows of another object. Sometimes acquaintance is called "association" or the "using" relationship. Acquainted objects may request operations of each other, but they aren't responsible for each other. Acquaintance is a weaker relationship than aggregation and suggests much looser coupling between objects.
+            \bigbreak \noindent 
+            In our diagrams, a plain arrowhead line denotes acquaintance. An arrowhead line with a diamond at its base denotes aggregation:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/13.png}
+            \bigbreak \noindent 
+            It's easy to confuse aggregation and acquaintance, because they are often implemented in the same way. In Smalltalk, all variables are references to other objects. There's no distinction in the programming language between aggregation and acquaintance. In C++, aggregation can be implemented by defining member variables that are real instances, but it's more common to define them as pointers or references to instances. Acquaintance is implemented with pointers and references as well.
+            \bigbreak \noindent 
+            Ultimately, acquaintance and aggregation are determined more by intent than by explicit language mechanisms. The distinction may be hard to see in the compile-time structure, but it's significant. Aggregation relationships tend to be fewer and more permanent than acquaintance. Acquaintances, in contrast, are made and remade more frequently, sometimes existing only for the duration of an operation. Acquaintances are more dynamic as well, making them more difficult to discern in the source code
+            \bigbreak \noindent 
+            With such disparity between a program's run-time and compile-time structures, it's clear that code won't reveal everything about how a system will work. The system's run-time structure must be imposed more by the designer than the language. The relationships between objects and their types must be designed with great care, because they determine how good or bad the run-time structure is.
+            \bigbreak \noindent 
+            Many design patterns (in particular those that have object scope) capture the distinction between compile-time and run-time structures explicitly. Composite (183) and Decorator (196) are especially useful for building complex run-time structures. Observer (326) involves run-time structures that are often hard to understand unless you know the pattern. Chain of Responsibility (251) also results in communication patterns that inheritance doesn't reveal. In general, the run-time structures aren't clear from the code until you understand the patterns.
+        \item \textbf{Designing for change}: The key to maximizing reuse lies in anticipating new requirements and changes to existing requirements, and in designing your systems so that they can evolve accordingly.
+            \bigbreak \noindent 
+            To design the system so that it's robust to such changes, you must consider how the system might need to change over its lifetime. A design that doesn't take change into account risks major redesign in the future. Those changes might involve class redefinition and reimplementation, client modification, and retesting.
+            \bigbreak \noindent 
+            Redesign affects many parts of the software system, and unanticipated changes are invariably expensive
+            \bigbreak \noindent 
+            Design patterns help you avoid this by ensuring that a system can change in specific ways. Each design pattern lets some aspect of system structure vary independently of other aspects, thereby making a system more robust to a particular kind of change.
+            \bigbreak \noindent 
+            Here are some common causes of redesign along with the design pattern(s) that address them:
+            \begin{enumerate}
+                \item Creating an object by specifying a class explicitly. Specifying a class name when you create an object commits you to a particular implementation instead of a particular interface. This commitment can complicate future changes. To avoid it, create objects indirectly.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Abstract Factory (99), Factory Method (121), Prototype (133).
+                    \end{itemize}
+                \item Dependence on specific operations. When you specify a particular operation, you commit to one way of satisfying a request. By avoiding hard-coded requests, you make it easier to change the way a request gets satisfied both at compile-time and at run-time.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Chain of Responsibility (251), Command (263).
+                    \end{itemize}
+                \item Dependence on hardware and software platform. External operating system interfaces and application programming interfaces (APIs) are different on different hardware and software platforms. Software that depends on a particular platform will be harder to port to other platforms. It may even be difficult to keep it up to date on its native platform. It's important therefore to design your system to limit its platform dependencies.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Abstract Factory (99), Bridge (171).
+                    \end{itemize}
+                \item Dependence on object representations or implementations. Clients that know how an object is represented, stored, located, or implemented might need to be changed when the object changes. Hiding this information from clients keeps changes from cascading.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Abstract Factory (99), Bridge (171), Memento (316), Proxy (233).
+                    \end{itemize}
+                \item Algorithmic dependencies. Algorithms are often extended, optimized, and replaced during development and reuse. Objects that depend on an algorithm will have to change when the algorithm changes. Therefore algorithms that are likely to change should be isolated.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Builder (110), Iterator (289), Strategy (349), Template Method (360), Visitor (366).
+                    \end{itemize}
+                \item Tight coupling. Classes that are tightly coupled are hard to reuse in isolation, since they depend on each other. Tight coupling leads to monolithic systems, where you can't change or remove a class without understanding and changing many other classes. The system becomes a dense mass that's hard to learn, port, and maintain. Loose coupling increases the probability that a class can be reused by itself and that a system can be learned, ported, modified, and extended more easily. Design patterns use techniques such as abstract coupling and layering to promote loosely coupled systems.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Abstract Factory (99), Bridge (171), Chain of Responsibility (251), Command (263), Facade (208), Mediator (305), Observer (326).
+                    \end{itemize}
+                \item Extending functionality by subclassing. Customizing an object by subclassing often isn't easy. Every new class has a fixed implementation overhead (initialization, finalization, etc.). Defining a subclass also requires an in-depth understanding of the parent class. For example, overriding one operation might require overriding another. An overridden operation might be required to call an inherited operation. And subclassing can lead to an explosion of classes, because you might have to introduce many new subclasses for even a simple extension. Object composition in general and delegation in particular provide flexible alternatives to inheritance for combining behavior. New functionality can be added to an application by composing existing objects in new ways rather than by defining new subclasses of existing classes. On the other hand, heavy use of object composition can make designs harder to understand. Many design patterns produce designs in which you can introduce customized functionality just by defining one subclass and composing its instances with existing ones.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Bridge (171), Chain of Responsibility (251), Composite (183), Decorator (196), Observer (326), Strategy (349).
+                    \end{itemize}
+                \item Inability to alter classes conveniently. Sometimes you have to modify a class that can't be modified conveniently. Perhaps you need the source code and don't have it (as may be the case with a commercial class library). Or maybe any change would require modifying lots of existing subclasses. Design patterns offer ways to modify classes in such circumstances.
+                    \begin{itemize}
+                        \item \textbf{Design patterns}: Adapter (157), Decorator (196), Visitor (366).
+                    \end{itemize}
+            \end{enumerate}
+        \item \textbf{Application Programs}: 
+            If you're building an application program such as a document editor or spreadsheet, then internal reuse, maintainability, and extension are high priorities. Internal reuse ensures that you don't design and implement any more than you have to. Design patterns that reduce dependencies can increase internal reuse. Looser coupling boosts the likelihood that one class of object can cooperate with several others. For example, when you eliminate dependencies on specific operations by isolating and encapsulating each operation, you make it easier to reuse an operation in different contexts. The same thing can happen when you remove algorithmic and representational dependencies too.
+            \bigbreak \noindent 
+            Design patterns also make an application more maintainable when they're used to limit platform dependencies and to layer a system. They enhance extensibility by showing you how to extend class hierarchies and how to exploit object composition. Reduced coupling also enhances extensibility. Extending a class in isolation is easier if the class doesn't depend on lots of other classes
+        \item \textbf{Toolkits}: Often an application will incorporate classes from one or more libraries of predefined classes called toolkits. A toolkit is a set of related and reusable classes designed to provide useful, general-purpose functionality. An example of a toolkit is a set of collection classes for lists, associative tables, stacks, and the like. The C++ I/O stream library is another example. Toolkits don't impose a particular design on your application; they just provide functionality that can help your application do its job. They let you as an implementer avoid recoding common functionality. Toolkits emphasize code reuse. They are the object-oriented equivalent of subroutine libraries.
+            \bigbreak \noindent 
+            Toolkit design is arguably harder than application design, because toolkits have to work in many applications to be useful. Moreover, the toolkit writer isn't in a position to know what those applications will be or their special needs.
+            \bigbreak \noindent 
+            That makes it all the more important to avoid assumptions and dependencies that can limit the toolkit's flexibility and consequently its applicability and effectiveness
+        \item \textbf{Frameworks}: A framework is a set of cooperating classes that make up a reusable design for a specific class of software. For example, a framework can be geared toward building graphical editors for different domains like artistic drawing, music composition, and mechanical CAD. Another framework can help you build compilers for different programming languages and target machines. Yet another might help you build financial modeling applications. You customize a framework to a particular application by creating application-specific subclasses of abstract classes from the framework.
+            \bigbreak \noindent 
+            The framework dictates the architecture of your application. It will define the overall structure, its partitioning into classes and objects, the key responsibilities thereof, how the classes and objects collaborate, and the thread of control. A framework predefines these design parameters so that you, the application designer/implementer, can concentrate on the specifics of your application. The framework captures the design decisions that are common to its application domain. Frameworks thus emphasize design reuse over code reuse, though a framework will usually include concrete subclasses you can put to work immediately.
+            \bigbreak \noindent 
+            Reuse on this level leads to an inversion of control between the application and the software on which it's based. When you use a toolkit (or a conventional subroutine library for that matter), you write the main body of the application and call the code you want to reuse. When you use a framework, you reuse the main body and write the code it calls. You'll have to write operations with particular names and calling conventions, but that reduces the design decisions you have to make
+            \bigbreak \noindent 
+            Not only can you build applications faster as a result, but the applications have similar structures. They are easier to maintain, and they seem more consistent to their users. On the other hand, you lose some creative freedom, since many design decisions have been made for you.
+            \bigbreak \noindent 
+            If applications are hard to design, and toolkits are harder, then frameworks are hardest of all. A framework designer gambles that one architecture will work for all applications in the domain. Any substantive change to the framework's design would reduce its benefits considerably, since the framework's main contribution to an application is the architecture it defines. Therefore it's imperative to design the framework to be as flexible and extensible as possible.
+            \bigbreak \noindent 
+            Furthermore, because applications are so dependent on the framework for their design, they are particularly sensitive to changes in framework interfaces. As a framework evolves, applications have to evolve with it. That makes loose coupling all the more important; otherwise even a minor change to the framework will have major repercussions.
+            \bigbreak \noindent 
+            The design issues just discussed are most critical to framework design. A framework that addresses them using design patterns is far more likely to achieve high levels of design and code reuse than one that doesn't. Mature frameworks usually incorporate several design patterns. The patterns help make the framework's architecture suitable to many different applications without redesign
+            \bigbreak \noindent 
+            An added benefit comes when the framework is documented with the design patterns it uses. People who know the patterns gain insight into the framework faster. Even people who don't know the patterns can benefit from the structure they lend to the framework's documentation. Enhancing documentation is important for all types of software, but it's particularly important for frameworks. Frameworks often pose a steep learning curve that must be overcome before they're useful. While design patterns might not flatten the learning curve entirely, they can make it less steep by making key elements of the framework's design more explicit.
+            \bigbreak \noindent 
+            Because patterns and frameworks have some similarities, people often wonder how or even if they differ. They are different in three major ways:
+            \begin{enumerate}
+                \item Design patterns are more abstract than frameworks. Frameworks can be embodied in code, but only examples of patterns can be embodied in code. A strength of frameworks is that they can be written down in programming languages and not only studied but executed and reused directly. In contrast, the design patterns in this book have to be implemented each time they're used. Design patterns also explain the intent, trade-offs, and consequences of a design.
+                \item Design patterns are smaller architectural elements than frameworks. A typical framework contains several design patterns, but the reverse is never true.
+                \item Design patterns are less specialized than frameworks. Frameworks always have a particular application domain. A graphical editor framework might be used in a factory simulation, but it won't be mistaken for a simulation framework. In contrast, the design patterns in this catalog can be used in nearly any kind of application. While more specialized design patterns than ours are certainly possible (say, design patterns for distributed systems or concurrent programming), even these wouldn't dictate an application architecture like a framework would.
+            \end{enumerate}
+        \item \textbf{How to select a design pattern}: 
 
 
 
