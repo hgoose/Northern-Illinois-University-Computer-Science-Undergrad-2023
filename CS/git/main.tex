@@ -929,6 +929,8 @@
                     \end{bashcode}
                     \bigbreak \noindent 
                     This updates your feature branch so your commits are placed after the newest commits on main.
+                \end{itemize}
+
                 \item \textbf{Rebasing with upstream}: If your branch has an upstream, you can do:
                     \bigbreak \noindent 
                     \begin{bashcode}
@@ -943,15 +945,124 @@
                     \end{bashcode}
                     \bigbreak \noindent 
                     So instead of fetching and merging the upstream branch, Git fetches and rebases your local commits on top of it.
-                    
-                   
+                \item \textbf{Blobs}: a blob is the object type that stores the contents of a file.
+                    \bigbreak \noindent 
+                    A blob does not store the file name, path, permissions, or directory structure. It only stores the raw file data.
+                    \bigbreak \noindent 
+                    If you have
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                    src/main.c
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    Git stores the contents of main.c as a \textbf{blob}. The filename main.c and the path src/main.c are stored separately in a \textbf{tree object}.
+                    \bigbreak \noindent 
+                    \begin{itemize}
+                        \item \textbf{blob}: file contents
+                        \item \textbf{tree}:  directory listing: names + permissions + pointers to blobs/trees
+                        \item \textbf{commit}:  snapshot metadata + pointer to a tree
+                    \end{itemize}
+                \item \textbf{Summary}: 
+                    \begin{itemize}
+                        \item \textbf{repository}: A repository is a collection of commits, each of which is an archive of what the project's working tree looked like at a past date, whether on your machine or someone else's. It also defines HEAD (see below), which identifies the branch or commit the current working tree stemmed from. Lastly, it contains a set of branches and tags, to identify certain commits by name.
+                        \item \textbf{index}: Unlike other, similar tools you may have used, Git does not commit changes directly from the working tree into the repository. Instead, changes are first registered in something called the index. Think of it as a way of “confirming” your changes, one by one, before doing a commit (which records all your approved changes at once). Some find it helpful to call it instead as the “staging area”, instead of the index.
+                        \item \textbf{working tree}: A working tree is any directory on your filesystem which has a repository associated with it (typically indicated by the presence of a sub-directory within it named .git.). It includes all the files and sub-directories in that directory.
+                        \item \textbf{commit}: A commit is a snapshot of your working tree at some point in time. The state of HEAD (see below) at the time your commit is made becomes that commit’s parent. This is what creates the notion of a “revision history”.
+                        \item \textbf{branch}: A branch is just a name for a commit (and much more will be said about commits in a moment), also called a reference. It’s the parentage of a commit which defines its history, and thus the typical notion of a “branch of development”.
+                        \item \textbf{tag}: A tag is also a name for a commit, similar to a branch, except that it al- ways names the same commit, and can have its own description text.
+                        \item \textbf{master}: The mainline of development in most repositories is done on a branch called “master”. Although this is a typical default, it is in no way special.
+                        \item \textbf{HEAD}: HEAD is used by your repository to define what is currently checked out:
+                            \begin{itemize}
+                                \item If you checkout a branch, HEAD symbolically refers to that branch, indicating that the branch name should be updated after the next commit operation.
+                                \item If you checkout a specific commit, HEAD refers to that commit only. This is referred to as a detached HEAD, and occurs, for example, if you check out a tag name.
+                            \end{itemize}
+                    \end{itemize}
+                    \bigbreak \noindent 
+                    \fig{.6}{./figures/1.png}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Repository: Directory content tracking}
+    \begin{itemize}
+        \item \textbf{Data is immutable}: Once Git stores an object in the repository, Git does not modify that object in place. Instead, if something changes, Git creates a \textbf{new object} with a \textbf{new hash}.
+            \bigbreak \noindent 
+            Git’s object database stores objects such as:
+            \begin{itemize}
+                \item \textbf{blob   }: file contents
+                \item \textbf{tree   }: directory structure
+                \item \textbf{commit }: snapshot metadata + pointer to a tree
+                \item \textbf{tag    }: annotated tag object
             \end{itemize}
-            
-            
+            Each object is identified by a hash of its contents. For example, a blob’s ID is computed from the blob’s data plus a small header.
+            \begin{align*}
+                \text{hash(contents)} = \text{object ID}
+            .\end{align*}
+            So, if the contents change, the hash changes.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                echo "hello" | git hash-object --stdin
+                echo "hello world" | git hash-object --stdin
+            \end{bashcode}
+            \bigbreak \noindent 
+            Those produce different object IDs because the contents are different. That means Git cannot just “edit” an existing blob. If it did, the object’s contents would no longer match its hash. The old object ID would become invalid.
+            \bigbreak \noindent 
+            Git does this
+            \bigbreak \noindent 
+            \begin{bashcode}
+                blob abc123: "hello"
+                blob def456: "hello world"
+            \end{bashcode}
+            \bigbreak \noindent 
+            The old object still exists. The new version is stored as a separate object. The same idea applies to commits. A commit contains data like:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                tree pointer
+                parent commit pointer
+                author
+                committer
+                message
+                timestamp
+            \end{bashcode}
+            \bigbreak \noindent 
+            If any of that changes, the commit hash changes. So when you “amend” a commit, Git does not actually edit the old commit. It creates a new commit object.
+        \item \textbf{Blobs and trees}: A blob represents the contents of one file at one particular version.
+            \bigbreak \noindent 
+            A \textbf{Git tree} is basically Git's representation of a directory. A  tree object contains entries. Each entry records
+            \begin{center}
+                mode \qquad name \qquad object id
+            \end{center}
+            For files, the object ID points to a blob
+            \begin{center}
+                100644      \qquad main.c      \qquad blob abc123
+                100644      \qquad README.md   \qquad blob def456
+            \end{center}
+            For subdirectories, the object ID points to another \textbf{tree}.
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XX@{}}
+                    \toprule
+                    \textbf{Mode} &	\textbf{Meaning} \\
+                    \midrule
+                    100644	&Regular file, not executable\\[2ex]
+                    100755	&Regular file, executable\\[2ex]
+                    040000	&Directory, represented by a tree object\\[2ex]
+                    120000	&Symbolic link\\[2ex]
+                    160000	&Git submodule, also called a gitlink \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+
+        \item \textbf{Intro}: The design of a Git repository in many ways mirrors the structure of a UNIX filesystem: A filesystem begins with a root directory, which typically consists of other directories, most of which have leaf nodes, or files, that contain data. Meta-data about these files’ contents is stored both in the directory (the names), and in the i-nodes that reference the contents of those file (their size, type, permissions, etc). Each i-node has a unique number that identifies the contents of its related file. And while you may have many directory entries pointing to a particular i-node (i.e., hard-links), it’s the i-node which “owns” the contents stored on your filesystem.
+            \bigbreak \noindent 
+            The difference between a Git blob and a filesystem’s file is that a blob stores no metadata about its content. All such information is kept in the tree that holds the blob. One tree may know those contents as a file named “foo” that was created in August 2004, while another tree may know the same contents as a file named “bar” that was created five years later. In a normal filesystem, two files with the same contents but with such different metadata would always be represented as two independent files. Why this difference? Mainly, it’s because a filesystem is designed to support files that change, whereas Git is not. The fact that data is immutable in the Git repository is what makes all of this work and so a different design was needed. And as it turns out, this design allows for much more compact storage, since all objects having identical content can be shared, no matter where they are.
+
+
 
 
 
     \end{itemize}
+
+
 
 
 
