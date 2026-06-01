@@ -1037,7 +1037,7 @@
                 100644      \qquad README.md   \qquad blob def456
             \end{center}
             For subdirectories, the object ID points to another \textbf{tree}.
-            \bigbreak \noindent 
+        \item \textbf{Object modes}: In Git, object modes are the mode values stored in tree objects to describe what kind of entry each path is.
             \begin{center}
                 \begin{tabularx}{\textwidth}{@{}XX@{}}
                     \toprule
@@ -1052,9 +1052,187 @@
                 \end{tabularx}
             \end{center}
 
-        \item \textbf{Intro}: The design of a Git repository in many ways mirrors the structure of a UNIX filesystem: A filesystem begins with a root directory, which typically consists of other directories, most of which have leaf nodes, or files, that contain data. Meta-data about these files’ contents is stored both in the directory (the names), and in the i-nodes that reference the contents of those file (their size, type, permissions, etc). Each i-node has a unique number that identifies the contents of its related file. And while you may have many directory entries pointing to a particular i-node (i.e., hard-links), it’s the i-node which “owns” the contents stored on your filesystem.
+        \item \textbf{Intro}: What Git does is quite rudimentary: it maintains snapshots of a directory’s contents. Much of its internal design can be understood in terms of this basic task.
+            \bigbreak \noindent 
+            The design of a Git repository in many ways mirrors the structure of a UNIX filesystem: A filesystem begins with a root directory, which typically consists of other directories, most of which have leaf nodes, or files, that contain data. Meta-data about these files’ contents is stored both in the directory (the names), and in the i-nodes that reference the contents of those file (their size, type, permissions, etc). Each i-node has a unique number that identifies the contents of its related file. And while you may have many directory entries pointing to a particular i-node (i.e., hard-links), it’s the i-node which “owns” the contents stored on your filesystem.
+            \bigbreak \noindent 
+            Internally, Git shares a strikingly similar structure, albeit with one or two key differences. First, it represents your file’s contents in blobs, which are also leaf nodes in something awfully close to a directory, called a tree. Just as an i-node is uniquely identified by a system-assigned number, a blob is named by computing the SHA1 hash id of its size and contents. For all intents and purposes this is just an arbitrary number, like an i-node, except that it has two additional properties: first, it verifies the blob’s contents will never change; and second, the same contents shall always be represented by the same blob, no matter where it appears: across commits, across repositories — even across the whole Internet. If multiple trees reference the same blob, this is just like hard-linking: the blob will not disappear from your repository as long as there is at least one link remaining to it.
             \bigbreak \noindent 
             The difference between a Git blob and a filesystem’s file is that a blob stores no metadata about its content. All such information is kept in the tree that holds the blob. One tree may know those contents as a file named “foo” that was created in August 2004, while another tree may know the same contents as a file named “bar” that was created five years later. In a normal filesystem, two files with the same contents but with such different metadata would always be represented as two independent files. Why this difference? Mainly, it’s because a filesystem is designed to support files that change, whereas Git is not. The fact that data is immutable in the Git repository is what makes all of this work and so a different design was needed. And as it turns out, this design allows for much more compact storage, since all objects having identical content can be shared, no matter where they are.
+            \bigbreak \noindent 
+            \textbf{Note:} Git tracks commits. A commit points to a tree, the tree maps filenames to blobs, and the blobs store file contents.
+        \item \textbf{The blob}: We can create a simple example,
+            \bigbreak \noindent 
+            \begin{bashcode}
+                mkdir sample && cd sample && echo "Hello, world!" > greeting
+                git hash-object greeting # -> af5626b4a114abcb82d63db7c8082c3c4756e51b
+            \end{bashcode}
+            \bigbreak \noindent 
+            No matter where you run \texttt{git hash-object}, if the file has only the content \textit{Hello, world!}, the hash will be the same.
+            \bigbreak \noindent 
+            If another repository has a commit whose tree refers to the same blob object, then when we fetch or pull from that repository, Git can recognize that we already have that blob because its object ID is the same. Git only needs to download/store objects that we do not already have.
+            \bigbreak \noindent 
+            If we now create a repository,
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git init
+            git add greeting
+            git commit -m "Added greeting"
+            \end{bashcode}
+            \bigbreak \noindent 
+            Our blob should be in the system exactly as we expected, using the hash id de-termined above. As a convenience, Git requires only as many digits of the hash id as are neces-sary to uniquely identify it within the repository. Usually just six or seven digits is enough:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git cat-file -t af5626b # -> blob
+            git cat-file blob af5626b # -> Hello, world!
+            \end{bashcode}
+            \bigbreak \noindent 
+            a Git blob represents the fundamental data unit in Git. Really, the whole system is about blob management.
+        \item \textbf{Blobs are stored in trees} In order for Git to represent the structure and naming of your files, it attaches blobs as leaf nodes within a tree. Now, I can’t discover which tree(s) a blob lives in just by looking at it, since it may have many, many owners. But I know it must live somewhere within the tree held by the commit I just made:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-tree HEAD # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            This commit contains one Git tree, which has a single leaf: the greeting content’s blob.
+            \bigbreak \noindent 
+            Although I can look at the tree containing my blob by passing HEAD to ls-tree, I haven’t yet seen the underlying tree object referenced by that commit. Here are a few other commands to highlight that difference and thus discover my tree:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git rev-parse HEAD # -> 0437733255614428faae0e090712264cf336cd37
+            git cat-file -t HEAD # -> commit
+            git cat-file commit HEAD
+
+            tree 0563f77d884e4f79ce95117e2d686d7d6e282887
+            author hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
+            committer hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
+
+            b # -> commit message
+            \end{bashcode}
+            \bigbreak \noindent 
+            The first command decodes the HEAD alias into the commit it references, the second verifies its type, while the third command shows the hash id of the tree held by that commit, as well as the other information stored in the commit object. The hash id for the commit is unique to my repository — because it includes my name and the date when I made the commit — but the hash id for the tree should be common between your example and mine, containing as it does the same blob under the same name.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git ls-tree 0563f77 # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            There you have it: my repository contains a single commit, which references a tree that holds a blob — the blob containing the contents I want to record. There’s one more command I can run to verify that this is indeed the case:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            find .git/objects -type f | sort
+            .git/objects/04/37733255614428faae0e090712264cf336cd37
+            .git/objects/05/63f77d884e4f79ce95117e2d686d7d6e282887
+            .git/objects/af/5626b4a114abcb82d63db7c8082c3c4756e51b
+            \end{bashcode}
+            \bigbreak \noindent 
+            We see three objects. These objects should refer to a tree, a commit, and a blob. Let's take a look
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git cat-file -t 0437733255
+                commit
+                git cat-file -t 0563f77
+                tree
+                git cat-file -t af5626b
+                blob
+            \end{bashcode}
+            \bigbreak \noindent 
+            Notice the directory name is the MSB of each hash.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git show 0437733
+            commit 0437733255614428faae0e090712264cf336cd37 (HEAD -> main)
+            Author: hgoose <noodlecloudcode@gmail.com>
+            Date:   Mon Jun 1 10:01:26 2026 -0500
+
+            b
+
+            diff --git a/greeting b/greeting
+            new file mode 100644
+            index 0000000..af5626b
+            --- /dev/null
+            +++ b/greeting
+            @@ -0,0 +1 @@
+            +Hello, world!
+
+            git show 0563f77
+            tree 0563f77
+
+            greeting
+
+            git show af5626b
+            Hello, world!
+            \end{bashcode}
+        \item \textbf{How trees are made}: Every commit holds a single tree, but how are trees made? We know that blobs are created by stuffing the contents of your files into blobs — and that trees own blobs — but we haven’t yet seen how the tree that holds the blob is made, or how that tree gets linked to its parent commit.
+            \bigbreak \noindent 
+            Let’s start with a new sample repository again, but this time by doing things manually, so you can get a feeling for exactly what’s happening under the hood:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            rm -rf greeting .git
+            echo "Hello, world!" > greeting
+            git init
+            git add greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            It all starts when you first add a file to the index.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git log # Fails, no commits
+
+            git ls-files --stage 
+            100644 af5626b4a114abcb82d63db7c8082c3c4756e51b 0 greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            What’s this? I haven’t committed anything to the repository yet, but already an object has come into being. It has the same hash id I started this whole business with, so I know it represents the contents of my greeting file. I could use cat-file -t at this point on the hash id, and I’d see that it was a blob. It is, in fact, the same blob I got the first time I created this sample repository.
+            \bigbreak \noindent 
+            This blob isn’t referenced by a tree yet, nor are there any commits. At the moment it is only referenced from a file named .git/index, which references the blobs and trees that make up the current index. So now let’s make a tree in the repo for our blob to hang off of:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git write-tree # Records the contents of the index in a tree
+            0563f77d884e4f79ce95117e2d686d7d6e282887
+            \end{bashcode}
+            \bigbreak \noindent 
+            This number should look familiar as well: a tree containing the same blobs (and sub-trees) will always have the same hash id. I don’t have a commit object yet, but now there is a tree object in that repository which holds the blob. The purpose of the low-level write-tree command is to take whatever the contents of the index are and tuck them into a new tree for the purpose of creating a commit.
+            \bigbreak \noindent 
+            I can manually make a new commit object by using this tree directly, which is just what the commit-tree command does:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git commit-tree 0563f77 -m "Initial commit"
+                d63d26194dd7a5cfbb9fe7365874c2918707f091
+            \end{bashcode}
+            \bigbreak \noindent 
+            The raw commit-tree command takes a tree’s hash id and makes a commit object to hold it. If I had wanted the commit to have a parent, I would have had to specify the parent commit’s hash id explicitly using the -p option.
+            \bigbreak \noindent 
+            Our work is not done yet, though, since I haven’t registered the commit as the new head of the current branch:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            echo d63d26194dd7a5cfbb9fe7365874c2918707f091 > .git/refs/head/master
+            \end{bashcode}
+            \bigbreak \noindent 
+            This command tells Git that the branch name “master” should now refer to our recent com- mit. Another, much safer way to do this is by using the command update-ref
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git update-ref refs/heads/master d63d2619
+            \end{bashcode}
+            \bigbreak \noindent 
+            After creating master, we must associate our working tree with it. Normally this happens for you whenever you check out a branch.
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git symbolic-ref HEAD refs/heads/master
+            \end{bashcode}
+            \bigbreak \noindent 
+            This command associates HEAD symbolically with the master branch. This is significant be- cause any future commits from the working tree will now automatically update the value of refs/heads/master.
+            \bigbreak \noindent 
+            The command git symbolic-ref HEAD refs/heads/master manually forces Git's HEAD pointer to point directly to the master branch without altering your working directory or changing your files. It writes the string ref: refs/heads/master straight into .git/HEAD.
+            \bigbreak \noindent 
+            It’s hard to believe it’s this simple, but yes, I can now use log to view my newly minted commit
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git log
+            \end{bashcode}
+            \bigbreak \noindent 
+            A side note: if I hadn’t set refs/heads/master to point to the new commit, it would have been considered “unreachable”, since nothing currently refers to it nor is it the parent of a reach- able commit. When this is the case, the commit object will at some point be removed from the repository, along with its tree and all its blobs. (This happens automatically by a command called gc, which you rarely need to use manually). By linking the commit to a name within refs/ heads, as we did above, it becomes a reachable commit, which ensures that it’s kept around from now on.
+        \item \textbf{The beauty of commits}: 
+
 
 
 
