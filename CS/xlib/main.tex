@@ -2611,6 +2611,7 @@
         The built-in selection property names are:
         \begin{verbatim}
             PRIMARY             SECONDARY
+            CLIPBOARD
         \end{verbatim}
         The built-in property names are:
         \begin{verbatim}
@@ -2812,6 +2813,215 @@
         \textbf{XListProperties} can generate a \textbf{BadWindow} error.
         \bigbreak \noindent 
         To change a property of a given window, use \textbf{XChangeProperty}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XChangeProperty (
+                Display* display,
+                Window w,
+                Atom property, type,
+                int format,
+                int mode,
+                unsigned char* data,
+                int nelements
+            )
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item w Specifies the window whose property you want to change.
+            \item property Specifies the property name.
+            \item type Specifies the type of the property. The X server does not interpret the type but simply passes it back to an application that later calls \textbf{XGetWindowProperty.}
+            \item format Specifies whether the data should be viewed as a list of 8-bit, 16-bit, or 32-bit quantities. Possible values are 8, 16, and 32. This information allows the X server to correctly perform byte-swap operations as necessary. If the format is 16-bit or 32-bit, you must explicitly cast your data pointer to an (unsigned char *) in the call to \textbf{XChangeProperty.}
+            \item mode Specifies the mode of the operation. You can pass \textbf{PropModeReplace,} Prop- \textbf{ModePrepend,} or \textbf{PropModeAppend.}
+            \item data Specifies the property data.
+            \item nelements Specifies the number of elements of the specified data format.
+        \end{itemize}
+        The \textbf{XChangeProperty} function alters the property for the specified window and causes the X server to generate a \textbf{PropertyNotify} event on that window. \textbf{XChangeProperty} performs the following:
+        \begin{itemize}
+            \item If mode is \textbf{PropModeReplace,} \textbf{XChangeProperty} discards the previous property value and stores the new data.
+            \item If mode is \textbf{PropModePrepend} or \textbf{PropModeAppend,} \textbf{XChangeProperty} inserts the specified data before the beginning of the existing data or onto the end of the existing data, respectively. The type and format must match the existing property value, or a \textbf{BadMatch} error results. If the property is undefined, it is treated as defined with the correct type and format with zero-length data.
+        \end{itemize}
+        If the specified format is 8, the property data must be a \textbf{char} array. If the specified format is 16, the property data must be a \textbf{short} array. If the specified format is 32, the property data must be a \textbf{long} array.
+        \bigbreak \noindent 
+        The lifetime of a property is not tied to the storing client. Properties remain until explicitly deleted, until the window is destroyed, or until the server resets. The maximum size of a property is server dependent and can vary dynamically depending on the amount of memory the server has available. (If there is insufficient space, a BadAlloc error results.)
+        \bigbreak \noindent 
+        \textbf{XChangeProperty} can generate BadAlloc, \textbf{BadAtom,} \textbf{BadMatch,} \textbf{BadValue,} and \textbf{BadWindow} errors.
+        \bigbreak \noindent 
+        To rotate a window’s property list, use \textbf{XRotateWindowProperties.}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XRotateWindowProperties (display, w, properties, num_prop, npositions)
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item w Specifies the window.
+            \item properties Specifies the array of properties that are to be rotated.
+            \item num\_prop Specifies the length of the properties array.
+            \item npositions Specifies the rotation amount.
+        \end{itemize}
+        The \textbf{XRotateWindowProperties} function allows you to rotate properties on a window and causes the X server to generate \textbf{PropertyNotify} events. If the property names in the properties array are viewed as being numbered starting from zero and if there are num\_prop property names in the list, then the value associated with property name $I$ becomes the value associated with property name $(I + \text{npositions}) \text{mod} N$ for all $I$ from zero to $N - 1$. The effect is to rotate the states by npositions places around the virtual ring of property names (right for positive npositions, left for negative npositions). If npositions mod $N$ is nonzero, the X server generates a \textbf{PropertyNotify} event for each property in the order that they are listed in the array. If an atom occurs more than once in the list or no property with that name is defined for the window, a \textbf{BadMatch} error results. If a \textbf{BadAtom} or \textbf{BadMatch} error results, no properties are changed.
+        \bigbreak \noindent 
+        \textbf{XRotateWindowProperties} can generate \textbf{BadAtom,} \textbf{BadMatch,} and \textbf{BadWindow} errors.
+        \bigbreak \noindent 
+        \textbf{XRotateWindowProperties} is a niche convenience function for swapping property values among several property names on the same window.
+        \bigbreak \noindent 
+        It does not rotate the bytes inside one property. It rotates which property name owns which value.
+        \bigbreak \noindent 
+        Suppose a window has three properties:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            P0 = "red"
+            P1 = "green"
+            P2 = "blue"
+        \end{cppcode}
+        \bigbreak \noindent 
+        and you call
+        \bigbreak \noindent 
+        \begin{cppcode}
+            Atom props[] = { P0, P1, P2 };
+            XRotateWindowProperties(display, w, props, 3, 1);
+        \end{cppcode}
+        \bigbreak \noindent 
+        With $\text{npositions} = 1$, the value associated with property $I$ moves to property $(I + 1) \text{mod} 3$.
+        \bigbreak \noindent 
+        \begin{itemize}
+            \item P0's old value moves to P1
+            \item P1's old value moves to P2
+            \item P2's old value moves to P0
+        \end{itemize}
+        \begin{cppcode}
+            P0 = "blue"
+            P1 = "red"
+            P2 = "green"
+        \end{cppcode}
+
+        \bigbreak \noindent 
+        To delete a property on a given window, use \textbf{XDeleteProperty.}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XDeleteProperty (display, w, property)
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item w Specifies the window whose property you want to delete.
+            \item property Specifies the property name.
+        \end{itemize}
+        The \textbf{XDeleteProperty} function deletes the specified property only if the property was defined on the specified window and causes the X server to generate a \textbf{PropertyNotify} event on the window unless the property does not exist.
+        \bigbreak \noindent 
+        \textbf{XDeleteProperty} can generate \textbf{BadAtom} and \textbf{BadWindow} errors.
+    \item \textbf{Selections}: Selections are one method used by applications to exchange data. By using the property mechanism, applications can exchange data of arbitrary types and can negotiate the type of the data. A selection can be thought of as an indirect property with a dynamic type. That is, rather than having the property stored in the X server, the property is maintained by some client (the owner). A selection is global in nature (considered to belong to the user but be maintained by clients) rather than being private to a particular window subhierarchy or a particular set of clients. Xlib provides functions that you can use to set, get, or request conversion of selections. This allows applications to implement the notion of current selection, which requires that notification
+        be sent to applications when they no longer own the selection. Applications that support selection often highlight the current selection and so must be informed when another application has acquired the selection so that they can unhighlight the selection.
+        \bigbreak \noindent 
+        When a client asks for the contents of a selection, it specifies a selection target type. This target type can be used to control the transmitted representation of the contents. For example, if the selection is ‘‘the last thing the user clicked on’’ and that is currently an image, then the target type might specify whether the contents of the image should be sent in XY format or Z format.
+        \bigbreak \noindent 
+        The target type can also be used to control the class of contents transmitted, for example, asking for the ‘‘looks’’ (fonts, line spacing, indentation, and so forth) of a paragraph selection, not the text of the paragraph. The target type can also be used for other purposes. The protocol does not constrain the semantics.
+        \bigbreak \noindent 
+        A normal X property is stored on a window:
+        \bigbreak \noindent 
+        \begin{cppcode}
+        window W
+          property WM_NAME = "Terminal"
+          type STRING
+          format 8
+        \end{cppcode}
+        \bigbreak \noindent 
+        The X server stores that property value. Another client can ask the server for WM\_NAME, and the server can directly return the data.
+        \bigbreak \noindent 
+        A selection is different. For example, with the clipboard:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            selection CLIPBOARD
+                owner = some client window
+        \end{cppcode}
+        \bigbreak \noindent 
+        The X server usually does not store the clipboard contents itself. It only knows which client currently owns the selection. The actual data is maintained by the owner client. That is why it is called an \textbf{indirect property:} you do not directly read the value from the server; you ask the server who owns it, and the owner client provides the value. Xlib describes this as a selection being maintained by a client rather than stored in the X server.
+        \bigbreak \noindent 
+        The \textbf{dynamic type} part means the requester can ask for the same selection in different forms.
+        \bigbreak \noindent 
+        For example, suppose an application owns the \textbf{CLIPBOARD} selection and the selected content is rich text. Another client might request it as:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            UTF8_STRING      // plain UTF-8 text
+            STRING           // older Latin-1-ish text
+            text/html        // HTML representation
+            image/png        // PNG representation, if applicable
+            TARGETS          // list of supported conversion targets
+        \end{cppcode}
+        \bigbreak \noindent 
+        So the “type” is not fixed ahead of time like an ordinary property. The requester specifies a \textbf{target type}, and the owner decides whether it can convert the selection into that representation. Xlib says that when a client asks for a selection, it specifies a target type, which controls the transmitted representation.
+        \bigbreak \noindent 
+        To set the selection owner, use XSetSelectionOwner.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XSetSelectionOwner(Display* display, Atom selection, Window owner, Time time)
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item selection Specifies the selection atom.
+            \item owner Specifies the owner of the specified selection atom. You can pass a window or \textbf{None.}
+            \item time Specifies the time. You can pass either a timestamp or \textbf{CurrentTime.}
+        \end{itemize}
+        The \textbf{XSetSelectionOwner} function changes the owner and last-change time for the specified selection and has no effect if the specified time is earlier than the current last-change time of the specified selection or is later than the current X server time. Otherwise, the last-change time is set to the specified time, with \textbf{CurrentTime} replaced by the current server time. If the owner window is specified as \textbf{None,} then the owner of the selection becomes \textbf{None} (that is, no owner). Otherwise, the owner of the selection becomes the client executing the request.
+        \bigbreak \noindent 
+        If the new owner (whether a client or None) is not the same as the current owner of the selection and the current owner is not None, the current owner is sent a \textbf{SelectionClear} event. If the client that is the owner of a selection is later terminated (that is, its connection is closed) or if the owner window it has specified in the request is later destroyed, the owner of the selection automatically reverts to \textbf{None,} but the last-change time is not affected. The selection atom is uninterpreted by the X server. \textbf{XGetSelectionOwner} returns the owner window, which is reported in \textbf{SelectionRequest} and \textbf{SelectionClear} events. Selections are global to the X server.
+        \bigbreak \noindent 
+        \textbf{XSetSelectionOwner} can generate \textbf{BadAtom} and \textbf{BadWindow} errors.
+        \bigbreak \noindent 
+        The current owner does not get to veto another client taking ownership. the X server changes the owner of that selection, assuming the timestamp is valid. If the new owner is different from the old owner, the old owner is simply sent a SelectionClear event telling it that it lost ownership. The old owner is not asked for permission.
+        \bigbreak \noindent 
+        To return the selection owner, use \textbf{XGetSelectionOwner.}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            Window XGetSelectionOwner (Display* display, Atom selection)
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item selection Specifies the selection atom whose owner you want returned.
+        \end{itemize}
+        The \textbf{XGetSelectionOwner} function returns the window ID associated with the window that currently owns the specified selection. If no selection was specified, the function returns the constant None. If None is returned, there is no owner for the selection.
+        \bigbreak \noindent 
+        \textbf{XGetSelectionOwner} can generate a \textbf{BadAtom} error.
+        \bigbreak \noindent 
+        To request conversion of a selection, use \textbf{XConvertSelection.}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XConvertSelection (
+                Display* display,
+                Atom selection,
+                Atom target,
+                Atom property,
+                Window requestor,
+                Time time
+            )
+        \end{cppcode}
+        \begin{itemize}
+            \item display Specifies the connection to the X server.
+            \item selection Specifies the selection atom.
+            \item target Specifies the target atom.
+            \item property Specifies the property name. You also can pass None.
+            \item requestor Specifies the requestor.
+            \item time Specifies the time. You can pass either a timestamp or CurrentTime.
+        \end{itemize}
+        \textbf{XConvertSelection} requests that the specified selection be converted to the specified target type:
+        \begin{itemize}
+            \item If the specified selection has an owner, the X server sends a \textbf{SelectionRequest} event to that owner.
+            \item If no owner for the specified selection exists, the X server generates a \textbf{SelectionNotify} event to the requestor with property \textbf{None.}
+        \end{itemize}
+        The arguments are passed on unchanged in either of the events. There are two predefined selection atoms: \textbf{PRIMARY} and \textbf{SECONDARY.}
+        \bigbreak \noindent 
+        \textbf{XConvertSelection} can generate \textbf{BadAtom} and \textbf{BadWindow} errors.
+        \bigbreak \noindent 
+        The owner of the selection is responsible for deciding what data to put into the requestor’s property. The flow is
+        \begin{enumerate}
+            \item requestor calls \textbf{XConvertSelection}
+            \item X server sends \textbf{SelectionRequest} to the owner
+            \item owner examines the request
+            \item owner writes data into a property on the \textbf{requestor's} window
+            \item owner sends \textbf{SelectionNotify} back to the requestor
+            \item requestor reads the property with \textbf{XGetWindowProperty}
+        \end{enumerate}
+
+
+
 
 
 
@@ -2823,9 +3033,433 @@
 
     \pagebreak 
     \unsect{5. Pixmap and cursor functions}
+    \begin{itemize}
+        \item Once you have connected to an X server, you can use the Xlib functions to:
+            \begin{itemize}
+                \item Create and free pixmaps
+                \item Create, recolor, and free cursors
+            \end{itemize}
+        \item \textbf{Drawables}: In Xlib, a Drawable is a generic X resource that you can draw into or copy from.
+            \bigbreak \noindent 
+            The two main drawable resource types are
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Window 
+            Pixmap
+            \end{cppcode}
+            \bigbreak \noindent 
+            In Xlib headers, they are all just X resource IDs:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef XID Drawable;
+                typedef XID Window;
+                typedef XID Pixmap;
+            \end{cppcode}
+            Many drawing functions take a Drawable
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XDrawLine(Display *display,
+                    Drawable d,
+                    GC gc,
+                    int x1, int y1,
+                    int x2, int y2
+                );
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \texttt{d} argument may be a window or a pixmap. A Window drawable represents an on-screen drawing destination. If you draw into a window, the result may appear on the display, subject to clipping, exposure, obscuring windows, child windows, and so on.
+            \bigbreak \noindent 
+            A Pixmap drawable represents off-screen storage on the X server. You can draw into it, then later copy it into a window:
+        \item \textbf{Creating and Freeing Pixmaps}: Pixmaps can only be used on the screen on which they were created. Pixmaps are off-screen resources that are used for various operations, such as defining cursors as tiling patterns or as the source for certain raster operations. Most graphics requests can operate either on a window or on a pixmap. A bitmap is a single bit-plane pixmap.
+            \bigbreak \noindent 
+            To create a pixmap of a given size, use \textbf{XCreatePixmap.}
+            \begin{cppcode}
+                Pixmap XCreatePixmap(Display* display, Drawable d, unsigned int width, unsigned int height, unsigned int depth)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item d Specifies which screen the pixmap is created on.
+                \item width, height Specify the width and height, which define the dimensions of the pixmap.
+                \item depth Specifies the depth of the pixmap.
+            \end{itemize}
+            The \textbf{XCreatePixmap} function creates a pixmap of the width, height, and depth you specified and returns a pixmap ID that identifies it. It is valid to pass an \textbf{InputOnly} window to the drawable argument. The width and height arguments must be nonzero, or a \textbf{BadValue} error results. The depth argument must be one of the depths supported by the screen of the specified drawable, or a BadValue error results.
+            \bigbreak \noindent 
+            The server uses the specified drawable to determine on which screen to create the pixmap. The pixmap can be used only on this screen and only with other drawables of the same depth (see \textbf{XCopyPlane} for an exception to this rule). The initial contents of the pixmap are undefined. \textbf{XCreatePixmap} can generate BadAlloc, \textbf{BadDrawable,} and \textbf{BadValue} errors.
+            \bigbreak \noindent 
+            The \texttt{d} argument is important. You are not drawing into d; you are using it to tell Xlib/X server which screen the pixmap should be created on. Pixmaps can only be used on the screen where they were created.
+            \bigbreak \noindent 
+            A Drawable specifies the screen because every drawable resource is already associated with a particular X screen inside the X server.
+            \bigbreak \noindent 
+            To free all storage associated with a specified pixmap, use \textbf{XFreePixmap.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XFreePixmap (Display* display, Pixmap pixmap)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item pixmap Specifies the pixmap.
+            \end{itemize}
+            The \textbf{XFreePixmap} function first deletes the association between the pixmap ID and the pixmap. Then, the X server frees the pixmap storage when there are no references to it. The pixmap should never be referenced again.
+            \bigbreak \noindent 
+            \textbf{XFreePixmap} can generate a \textbf{BadPixmap} error.
+        \item \textbf{Xlib cursors}: In Xlib, a cursor is not modeled as a modern full-color image. It is modeled as a small two-color bitmap cursor with optional transparency and a logical “active point.”
+            \bigbreak \noindent 
+            A cursor has four main parts:
+            \begin{enumerate}
+                \item source pixmap
+                \item mask pixmap
+                \item foreground/background colors
+                \item hotspot
+            \end{enumerate}
+            The \textbf{source pixmap} is the actual 1-bit cursor image. Since it has depth 1, each pixel is either 0 or 1, not a full RGB color.
+            \bigbreak \noindent 
+            The \textbf{colors} tell X how to interpret those bits. Typically:
+            \begin{itemize}
+                \item source bit 1 -> foreground color
+                \item source bit 0 -> background color
+            \end{itemize}
+            The \textbf{mask pixmap} controls which cursor pixels are visible. It must also have depth 1.
+            \begin{itemize}
+                \item mask bit 0 -> transparent / not part of cursor
+                \item mask bit 1 -> visible cursor pixel
+            \end{itemize}
+            So the mask gives the cursor its outline or shape. Without a mask, the cursor would effectively be a full rectangle of source pixels. With a mask, only selected pixels are drawn as the cursor.
+            \bigbreak \noindent 
+            The \textbf{hotspot} is the coordinate inside the cursor image that counts as the actual pointer location.
+            \bigbreak \noindent 
+            For example, with an arrow cursor, the visible image may be 16 by 16 pixels, but the actual click point is usually the arrow tip:
+        \item \textbf{Fonts}: In old X11 terminology, a \textbf{font} is a server-side collection of \textbf{glyph bitmaps}. A glyph is just a small bitmap shape. Xlib can use those bitmap glyphs not only for drawing characters, but also for constructing cursors.
+                \bigbreak \noindent 
+                X provides a special built-in font named something like the cursor font. It contains predefined cursor glyphs: arrows, crosses, watches, hands, etc. The constants in:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <X11/cursorfont.h>
+                \end{cppcode}
+                \bigbreak \noindent 
+                Which contains
+                \begin{itemize}
+                    \item \textbf{XC\_X\_cursor}:	An “X” shaped cursor. Often used as a generic default or placeholder cursor.
+                    \item \textbf{XC\_arrow}:	A generic arrow cursor.
+                    \item \textbf{XC\_based\_arrow\_down}:	A downward-pointing arrow with a base/bar.
+                    \item \textbf{XC\_based\_arrow\_up}:	An upward-pointing arrow with a base/bar.
+                    \item \textbf{XC\_boat}:	A small boat-shaped cursor. Mostly decorative/legacy.
+                    \item \textbf{XC\_bogosity}:	A strange “bad/invalid/weird” symbol. Mostly humorous/legacy.
+                    \item \textbf{XC\_bottom\_left\_corner}:	Resize cursor for the bottom-left corner of a window.
+                    \item \textbf{XC\_bottom\_right\_corner}:	Resize cursor for the bottom-right corner of a window.
+                    \item \textbf{XC\_bottom\_side}:	Resize cursor for the bottom edge of a window.
+                    \item \textbf{XC\_bottom\_tee}:	A T-shaped cursor associated with the bottom side.
+                    \item \textbf{XC\_box\_spiral}:	A box/square spiral shape. Mostly decorative.
+                    \item \textbf{XC\_center\_ptr}:	A pointer arrow whose hotspot is more centered than XC\_left\_ptr.
+                    \item \textbf{XC\_circle}:	A circular cursor.
+                    \item \textbf{XC\_clock}:	A clock-shaped cursor, usually indicating waiting/busy state.
+                    \item \textbf{XC\_coffee\_mug}:	A coffee mug cursor. Mostly decorative/legacy.
+                    \item \textbf{XC\_cross}:	A simple cross-shaped cursor.
+                    \item \textbf{XC\_cross\_reverse}:	A reverse/inverted version of the cross cursor.
+                    \item \textbf{XC\_crosshair}:	A precision crosshair cursor, often used for targeting or coordinate selection.
+                    \item \textbf{XC\_diamond\_cross}:	A cross combined with a diamond-like shape.
+                    \item \textbf{XC\_dot}:	A small dot cursor.
+                    \item \textbf{XC\_dotbox}:	A dot inside a box. Useful for precise pointing.
+                    \item \textbf{XC\_double\_arrow}:	A double-ended arrow, generally suggesting resizing or directional adjustment.
+                    \item \textbf{XC\_draft\_large}:	A large drafting/drawing-style cursor.
+                    \item \textbf{XC\_draft\_small}:	A smaller drafting/drawing-style cursor.
+                    \item \textbf{XC\_draped\_box}:	A box-like cursor with a draped/covered appearance. Mostly decorative.
+                    \item \textbf{XC\_exchange}:	An exchange/swap cursor, suggesting replacement or swapping.
+                    \item \textbf{XC\_fleur}:	A four-direction move cursor, like arrows pointing up/down/left/right.
+                    \item \textbf{XC\_gobbler}:	A “gobbler”/Pac-Man-like decorative cursor.
+                    \item \textbf{XC\_gumby}:	A Gumby-like figure cursor. Decorative/legacy.
+                    \item \textbf{XC\_hand1}:	A hand cursor, usually pointing or selecting.
+                    \item \textbf{XC\_hand2}:	Another hand cursor variant. Commonly used for links or clickable things.
+                    \item \textbf{XC\_heart}:	A heart-shaped cursor.
+                    \item \textbf{XC\_icon}:	An icon-like cursor, historically associated with window/icon manipulation.
+                    \item \textbf{XC\_iron\_cross}:	A heavy cross shape resembling an iron cross.
+                    \item \textbf{XC\_left\_ptr}:	The usual left-leaning arrow pointer. This is the common default pointer.
+                    \item \textbf{XC\_left\_side}:	Resize cursor for the left edge of a window.
+                    \item \textbf{XC\_left\_tee}:	A T-shaped cursor associated with the left side.
+                    \item \textbf{XC\_leftbutton}:	A mouse/button symbol emphasizing the left button.
+                    \item \textbf{XC\_ll\_angle}:	Lower-left angle/corner shape.
+                    \item \textbf{XC\_lr\_angle}:	Lower-right angle/corner shape.
+                    \item \textbf{XC\_man}:	A small human figure cursor.
+                    \item \textbf{XC\_middlebutton}:	A mouse/button symbol emphasizing the middle button.
+                    \item \textbf{XC\_mouse}:	A mouse-shaped cursor.
+                    \item \textbf{XC\_pencil}:	A pencil cursor, commonly used for drawing/editing.
+                    \item \textbf{XC\_pirate}:	A pirate/skull-style cursor, often used for destructive or dangerous actions.
+                    \item \textbf{XC\_plus}:	A plus-sign cursor. Often suggests adding, inserting, or selecting.
+                    \item \textbf{XC\_question\_arrow}:	An arrow with a question mark, commonly used for help/context help.
+                    \item \textbf{XC\_right\_ptr}:	A right-leaning or right-pointing pointer arrow.
+                    \item \textbf{XC\_right\_side}:	Resize cursor for the right edge of a window.
+                    \item \textbf{XC\_right\_tee}:	A T-shaped cursor associated with the right side.
+                    \item \textbf{XC\_rightbutton}:	A mouse/button symbol emphasizing the right button.
+                    \item \textbf{XC\_rtl\_logo}:	A stylized logo cursor. Rarely used in modern programs.
+                    \item \textbf{XC\_sailboat}:	A sailboat-shaped cursor. Decorative/legacy.
+                    \item \textbf{XC\_sb\_down\_arrow}:	Scrollbar-style down arrow.
+                    \item \textbf{XC\_sb\_h\_double\_arrow}:	Horizontal double arrow, commonly suggesting horizontal resizing or scrolling.
+                    \item \textbf{XC\_sb\_left\_arrow}:	Scrollbar-style left arrow.
+                    \item \textbf{XC\_sb\_right\_arrow}:	Scrollbar-style right arrow.
+                    \item \textbf{XC\_sb\_up\_arrow}:	Scrollbar-style up arrow.
+                    \item \textbf{XC\_sb\_v\_double\_arrow}:	Vertical double arrow, commonly suggesting vertical resizing or scrolling.
+                    \item \textbf{XC\_shuttle}:	A space-shuttle-shaped cursor. Decorative/legacy.
+                    \item \textbf{XC\_sizing}:	Generic sizing/resizing cursor.
+                    \item \textbf{XC\_spider}:	Spider-shaped cursor. Decorative/legacy.
+                    \item \textbf{XC\_spraycan}:	Spray-can cursor, commonly associated with painting/drawing programs.
+                    \item \textbf{XC\_star}:	Star-shaped cursor.
+                    \item \textbf{XC\_target}:	Target/bullseye cursor.
+                    \item \textbf{XC\_tcross}:	A T-like cross cursor.
+                    \item \textbf{XC\_top\_left\_arrow}:	Arrow pointing toward the upper-left.
+                    \item \textbf{XC\_top\_left\_corner}:	Resize cursor for the top-left corner of a window.
+                    \item \textbf{XC\_top\_right\_corner}:	Resize cursor for the top-right corner of a window.
+                    \item \textbf{XC\_top\_side}:	Resize cursor for the top edge of a window.
+                    \item \textbf{XC\_top\_tee}:	A T-shaped cursor associated with the top side.
+                    \item \textbf{XC\_trek}:	A Star-Trek-like insignia cursor. Decorative/legacy.
+                    \item \textbf{XC\_ul\_angle}:	Upper-left angle/corner shape.
+                    \item \textbf{XC\_umbrella}:	Umbrella-shaped cursor. Decorative/legacy.
+                    \item \textbf{XC\_ur\_angle}:	Upper-right angle/corner shape.
+                    \item \textbf{XC\_watch}:	Watch cursor, commonly used to indicate busy/waiting.
+                    \item \textbf{XC\_xterm}:	Text insertion/I-beam cursor, commonly used over text areas.
+                \end{itemize}
+                The practical / common ones is the subset
+                \begin{center}
+                    \begin{tabularx}{\textwidth}{@{}lXX@{}}
+                        \toprule
+                        \textbf{Cursor}&	\textbf{Description}&	\textbf{Common use} \\
+                        \midrule
+                        XC\_left\_ptr	&Standard arrow pointer, usually angled up-left.	&Default cursor for normal pointing and selection.\\[2ex]
+                        XC\_xterm	&Text insertion cursor, usually an I-beam.	&Used over editable or selectable text regions.\\[2ex]
+                        XC\_watch	&Watch/busy cursor.	&Indicates that the application is busy or waiting.\\[2ex]
+                        XC\_hand1	&Hand-shaped cursor, first variant.	&Used for clickable or draggable objects.\\[2ex]
+                        XC\_hand2	&Hand-shaped cursor, second variant.	&Commonly used for links or clickable UI elements.\\[2ex]
+                        XC\_crosshair	&Crosshair cursor with horizontal and vertical lines.	&Precision pointing, drawing, targeting, coordinate selection.\\[2ex]
+                        XC\_fleur	&Four-direction movement cursor.	&Moving windows, panels, objects, or selections.\\[2ex]
+                        XC\_sb\_h\_double\_arrow	&Horizontal double-ended arrow.	&Horizontal resizing or horizontal scrollbar interaction.\\[2ex]
+                        XC\_sb\_v\_double\_arrow	&Vertical double-ended arrow.	&Vertical resizing or vertical scrollbar interaction.\\[2ex]
+                        XC\_top\_side	&Resize cursor for the top edge.	&Resizing a window or object from its top border.\\[2ex]
+                        XC\_bottom\_side	&Resize cursor for the bottom edge.	&Resizing from the bottom border.\\[2ex]
+                        XC\_left\_side	&Resize cursor for the left edge.	&Resizing from the left border.\\[2ex]
+                        XC\_right\_side	&Resize cursor for the right edge.	&Resizing from the right border.\\[2ex]
+                        XC\_top\_left\_corner&	Diagonal resize cursor for the top-left corner.	&Resizing from the upper-left corner.\\[2ex]
+                        XC\_top\_right\_corner&	Diagonal resize cursor for the top-right corner.	&Resizing from the upper-right corner.\\[2ex]
+                        XC\_bottom\_left\_corner&	Diagonal resize cursor for the bottom-left corner.	&Resizing from the lower-left corner.\\[2ex]
+                        XC\_bottom\_right\_corner&	Diagonal resize cursor for the bottom-right corner.	&Resizing from the lower-right corner. \\
+                        \bottomrule
+                    \end{tabularx}
+                \end{center}
+        \item \textbf{Font}: In Xlib, Font is an X resource ID referring to a font loaded on the X server.
+            \bigbreak \noindent 
+            It is usually defined conceptually like this:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            typedef XID font;
+            \end{cppcode}
+            \bigbreak \noindent 
+            So Font is not a C struct containing glyph data directly. It is an integer-like handle that identifies a server-side font resource.
+            \bigbreak \noindent 
+            For normal text drawing, a font contains glyphs for characters. For cursor creation, Xlib can also use those glyph bitmaps as cursor images.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Font font = XLoadFont(display, "cursor");
+            \end{cppcode}
+            \bigbreak \noindent 
+            This loads the standard X cursor font and returns a Font ID. Then XCreateGlyphCursor can use glyphs from that font as the cursor’s source and mask.
+        \item \textbf{XColor}: XColor is a structure that represents a color in Xlib. It is commonly defined like this
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    unsigned long pixel;
+                    unsigned short red, green, blue;
+                    char flags; 
+                    char pad;
+                } XColor;
+            \end{cppcode}
+            \bigbreak \noindent 
+            These are 16-bit color components, not 8-bit components. So their values range from:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                0      // minimum intensity
+                65535  // maximum intensity
+            \end{cppcode}
+            \bigbreak \noindent 
+            pixel is the actual pixel value used by the X server for a color.
+            \bigbreak \noindent 
+            It is not necessarily an RGB value in the ordinary sense. It is the value that can be placed into a drawable or into a GC foreground/background field.
+            \bigbreak \noindent 
+            The meaning of pixel depends on the visual and colormap.
+        \item \textbf{Creating, Recoloring, and Freeing Cursors}:
+            Each window can have a different cursor defined for it. Whenever the pointer is in a visible window, it is set to the cursor defined for that window. If no cursor was defined for that window, the cursor is the one defined for the parent window.
+            \bigbreak \noindent
+            From X's perspective, a cursor consists of a cursor source, mask, colors, and a hotspot. The mask pixmap determines the shape of the cursor and must be a depth of one. The source pixmap must have a depth of one, and the colors determine the colors of the source. The hotspot defines the point on the cursor that is reported when a pointer event occurs. There may be limitations imposed by the hardware on cursors as to size and whether a mask is implemented. \textbf{XQueryBestCursor} can be used to find out what sizes are possible. There is a standard font for creating cursors, but Xlib provides functions that you can use to create cursors from arbitrary fonts or from bitmaps.
+            \bigbreak \noindent
+            To create a cursor from the standard cursor font, use \textbf{XCreateFontCursor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                #include <X11/cursorfont.h>
+
+                Cursor XCreateFontCursor(Display *display, unsigned int shape);
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display} specifies the connection to the X server.
+                \item \textit{shape} specifies the shape of the cursor.
+            \end{itemize}
+            \bigbreak \noindent
+            X provides a set of standard cursor shapes in a special font named \textit{cursor}. Applications are encouraged to use this interface for their cursors because they cannot customize for the individual display type. The \textit{shape} argument specifies which glyph of the standard fonts to use.
+            \bigbreak \noindent
+            The hotspot comes from the information stored in the cursor font. The initial colors of a cursor are a black foreground and a white background. See \textbf{XRecolorCursor}. For further information about cursor shapes, see appendix B.
+            \bigbreak \noindent
+            \textbf{XCreateFontCursor} can generate \textbf{BadAlloc} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To create a cursor from font glyphs, use \textbf{XCreateGlyphCursor}.
+            \bigbreak \noindent
+            To create a cursor from font glyphs, use \textbf{XCreateGlyphCursor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Cursor XCreateGlyphCursor(
+                    Display *display,
+                    Font source_font,
+                    Font mask_font,
+                    unsigned int source_char,
+                    unsigned int mask_char,
+                    XColor *foreground_color,
+                    XColor *background_color
+                );
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display} specifies the connection to the X server.
+                \item \textit{source\_font} specifies the font for the source glyph.
+                \item \textit{mask\_font} specifies the font for the mask glyph, or \textbf{None}.
+                \item \textit{source\_char} specifies the character glyph for the source.
+                \item \textit{mask\_char} specifies the glyph character for the mask.
+                \item \textit{foreground\_color} specifies the RGB values for the foreground of the source.
+                \item \textit{background\_color} specifies the RGB values for the background of the source.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XCreateGlyphCursor} function is similar to \textbf{XCreatePixmapCursor} except that the source and mask bitmaps are obtained from the specified font glyphs. The \textit{source\_char} must be a defined glyph in \textit{source\_font}, or a \textbf{BadValue} error results. If \textit{mask\_font} is given, \textit{mask\_char} must be a defined glyph in \textit{mask\_font}, or a \textbf{BadValue} error results. The \textit{mask\_font} and character are optional. The origins of the \textit{source\_char} and \textit{mask\_char}, if defined, glyphs are positioned coincidently and define the hotspot. The \textit{source\_char} and \textit{mask\_char} need not have the same bounding box metrics, and there is no restriction on the placement of the hotspot relative to the bounding boxes. If no \textit{mask\_char} is given, all pixels of the source are displayed. You can free the fonts immediately by calling \textbf{XFreeFont} if no further explicit references to them are to be made.
+            \bigbreak \noindent
+            For 2-byte matrix fonts, the 16-bit value should be formed with the \textit{byte1} member in the most significant byte and the \textit{byte2} member in the least significant byte.
+            \bigbreak \noindent
+            \textbf{XCreateGlyphCursor} can generate \textbf{BadAlloc}, \textbf{BadFont}, and \textbf{BadValue} errors.
+            \bigbreak \noindent 
+            \textbf{Note:} To understand, think of a font as a table of small bitmap drawings. Each drawing in the font is selected by a number. That number is what Xlib calls a “character,” even if it is not a normal letter.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            source_font + source_char
+            \end{cppcode}
+            \bigbreak \noindent 
+            means: Use glyph number source\_char from source\_font as the cursor’s source image.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            mask_font + mask_char
+            \end{cppcode}
+            \bigbreak \noindent 
+            means: Use glyph number mask\_char from mask\_font as the cursor’s transparency mask
+            \bigbreak \noindent 
+            \begin{cppcode}
+                source_font + source_char  -> choose the source glyph
+                mask_font   + mask_char    -> choose the mask glyph
+            \end{cppcode}
+            \bigbreak \noindent 
+            The \textbf{source glyph} controls the cursor’s black/white pattern. Since it is a 1-bit glyph, each pixel is either 0 or 1
+            \bigbreak \noindent 
+            \begin{cppcode}
+                source bit 1 -> foreground color
+                source bit 0 -> background color
+            \end{cppcode}
+            \bigbreak \noindent 
+            The mask glyph controls which pixels are visible at all.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                mask bit 1 -> show this cursor pixel
+                mask bit 0 -> transparent pixel
+            \end{cppcode}
+            \bigbreak \noindent 
+            Essentially,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if mask bit is 0:
+                    draw nothing
+
+                if mask bit is 1:
+                    if source bit is 1:
+                        draw foreground color
+                    else:
+                        draw background color
+            \end{cppcode}
+            \bigbreak \noindent
+            To create a cursor from two bitmaps, use \textbf{XCreatePixmapCursor}.
+            \begin{cppcode}
+                Cursor XCreatePixmapCursor(
+                    Display* display,
+                    Pixmap source,
+                    Pixmap mask,
+                    XColor* foreground_color,
+                    XColor* background_color,
+                    unsigned int x, unsigned int y
+                )
+            \end{cppcode}
+            \begin{description}
+                \item \textit{display} Specifies the connection to the X server.
+                \item \textit{source} Specifies the shape of the source cursor.
+                \item \textit{mask} Specifies the cursor source bits to be displayed or \textbf{None}.
+                \item \textit{foreground\_color} Specifies the RGB values for the foreground of the source.
+                \item \textit{background\_color} Specifies the RGB values for the background of the source.
+                \item \textit{x}, \textit{y} Specify the x and y coordinates, which indicate the hotspot relative to the source's origin.
+            \end{description}
+            The \textbf{XCreatePixmapCursor} function creates a cursor and returns the cursor ID associated with it. The foreground and background RGB values must be specified using \textit{foreground\_color} and \textit{background\_color}, even if the X server only has \textbf{StaticGray} or \textbf{GrayScale} color. The foreground color is used for the pixels set to 1 in the source, and the background color is used for the pixels set to 0. Both source and mask, if specified, must have depth one, or a \textbf{BadMatch} error results, but can have any root. The mask argument defines the shape of the cursor. The pixels set to 1 in the mask define which source pixels are displayed, and the pixels set to 0 define which pixels are ignored. If no mask is given, all pixels of the source are displayed. The mask, if present, must be the same size as the pixmap defined by the source argument, or a \textbf{BadMatch} error results. The hotspot must be a point within the source, or a \textbf{BadMatch} error results.
+            \bigbreak \noindent 
+            The components of the cursor can be transformed arbitrarily to meet display limitations. The pixmaps can be freed immediately if no further explicit references to them are to be made. Subsequent drawing in the source or mask pixmap has an undefined effect on the cursor. The X server might or might not make a copy of the pixmap.
+            \bigbreak \noindent 
+            \textbf{XCreatePixmapCursor} can generate \textbf{BadAlloc} and \textbf{BadPixmap} errors.
+            \bigbreak \noindent 
+            To determine useful cursor sizes, use \textbf{XQueryBestCursor}.
+            \begin{cppcode}
+                Status XQueryBestCursor(
+                    Display* display,
+                    Drawable d,
+                    unsigned int width, height,
+                    unsigned int* width_return, height_return
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display} Specifies the connection to the X server.
+                \item \textit{d} Specifies the drawable, which indicates the screen.
+                \item \textit{width}, \textit{height} Specify the width and height of the cursor that you want the size information for.
+                \item \textit{width\_return}, \textit{height\_return} Return the best width and height that is closest to the specified width and height.
+            \end{itemize}
+            Some displays allow larger cursors than other displays. The \textbf{XQueryBestCursor} function provides a way to find out what size cursors are actually possible on the display. It returns the largest size that can be displayed. Applications should be prepared to use smaller cursors on dis- plays that cannot support large ones.
+            \bigbreak \noindent 
+            \textbf{XQueryBestCursor} can generate a \textbf{BadDrawable} error.
+            \bigbreak \noindent 
+            To change the color of a given cursor, use \textbf{XRecolorCursor.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XRecolorCursor (display, cursor, foreground_color, background_color)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item cursor Specifies the cursor.
+                \item foreground\_color Specifies the RGB values for the foreground of the source.
+                \item background\_color Specifies the RGB values for the background of the source.
+            \end{itemize}
+            The \textbf{XRecolorCursor} function changes the color of the specified cursor, and if the cursor is being displayed on a screen, the change is visible immediately. The pixel members of the \textbf{XColor} structures are ignored; only the RGB values are used.
+            \bigbreak \noindent 
+            \textbf{XRecolorCursor} can generate a BadCursor error.
+            \bigbreak \noindent 
+            To free (destroy) a given cursor, use \textbf{XFreeCursor.}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XFreeCursor (display, cursor)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item cursor Specifies the cursor.
+            \end{itemize}
+            The \textbf{XFreeCursor} function deletes the association between the cursor resource ID and the specified cursor. The cursor storage is freed when no other resource references it. The specified cursor ID should not be referred to again.
+            \bigbreak \noindent 
+            \textbf{XFreeCursor} can generate a BadCursor error.
+    \end{itemize}
 
     \pagebreak 
     \unsect{6. Color management functions}
+    \begin{itemize}
+        
+    \end{itemize}
+
 
     \pagebreak 
     \unsect{7. Graphics context functions}

@@ -406,10 +406,160 @@
             \bigbreak \noindent 
             Base Case and Build algorithms often lead to natural recursive algorithms.
         \item \textbf{Data Structure Brainstorm}: This approach is certainly hacky, but it often works. We can simply run through a list of data structures and try to apply each one. This approach is useful because solving a problem may be trivial once it occurs to us to use, say, a tree
-        \item \textbf{Best Conceivable Runtime (BCR)}
+        \item \textbf{Best Conceivable Runtime (BCR)}: Considering the best conceivable runtime can offer a useful hint for some problem.
+            \bigbreak \noindent 
+            The best conceivable runtime is, literally, the best runtime you could conceive of a solution to a problem having. You can easily prove that there is no way you could beat the BCR.
+            \bigbreak \noindent 
+            For example, suppose you want to compute the number of elements that two arrays (of length $A$ and $B$) have in common. You immediately know that you can't do that in better than $O(A + B)$ time because you have to "touch" each element in each array. $O(A + B)$ is the BCR.
+            \bigbreak \noindent 
+            Or, suppose you want to print all pairs of values within an array. You know you can't do that in better than $O(N^{2})$ time because there are $N^{2}$ pairs to print.
+            \bigbreak \noindent 
+            Be careful though! Suppose your interviewer asks you to find all pairs with sum k within an array (assuming all distinct elements). Some candidates who have not fully mastered the concept of BCR will say that the BCR is $O(N^{2})$ because you have to look at $N^{2}$ pairs.
+            \bigbreak \noindent 
+            That's not true. Just because you want all pairs with a particular sum doesn't mean you have to look at all pairs. In fact, you don't.
+            \bigbreak \noindent 
+            What's the relationship between the Best Conceivable Runtime and Best Case Runtime? Nothing at all! The Best Conceivable Runtime is for a problem and is largely a function of the inputs and outputs. It has no particular connection to a specific algorithm. In fact, if you compute the Best Conceivable Runtime by thinking about what your algorithm does, you're probably doing something wrong. The Best Case Runtime is for a specific algorithm (and is a mostly useless value).
+            \bigbreak \noindent 
+            Note that the best conceivable runtime is not necessarily achievable, It says only that you can't do better than it.
+            \bigbreak \noindent 
+            This is another way we can use BCR. If you ever reach the BCR and have $O(1)$ additional space, then you know that you can't optimize the big $O$ time or space.
+        \item \textbf{Handling Incorrect Answers}: One of the most pervasive-and dangerous-rumors is that candidates need to get every question right. That's not quite true.
+            \bigbreak \noindent 
+            First, responses to interview questions shouldn't be thought of as "correct" or "incorrect:' When I evaluate how someone performed in an interview, I never think, "How many questions did they get right?" It's not a binary evaluation. Rather, it's about how optimal their final solution was, how long it took them to get there, how much help they needed, and how clean was their code. There is a range of factors.
+            \bigbreak \noindent 
+            Second, your performance is evaluated in comparison to other candidates. For example, if you solve a question optimally in 15 minutes, and someone else solves an easier question in five minutes, did that person do better than you? Maybe, but maybe not. If you are asked really easy questions, then you might be expected to get optimal solutions really quickly. But if the questions are hard, then a number of mistakes are expected.
+            \bigbreak \noindent 
+            Third, many-possibly most-questions are too difficult to expect even a strong candidate to immediately spit out the optimal algorithm. The questions I tend to ask would take strong candidates typically 20 to 30 minutes to solve.
+            \bigbreak \noindent 
+            In evaluating thousands of hiring packets at Google, I have only once seen a candidate have a "flawless" set of interviews. Everyone else, including the hundreds who got offers, made mistakes.
+        \item \textbf{When You've Heard a Question Before}: If you've heard a question before, admit this to your interviewer. Your interviewer is asking you these questions in order to evaluate your problem-solving skills. If you already know the question, then you aren't giving them the opportunity to evaluate you.
+            \bigbreak \noindent 
+            Additionally, your interviewer may find it highly dishonest if you don't reveal that you know the question. (And, conversely, you'll get big honesty points if you do reveal this.)
+        \item \textbf{What Good Coding Looks Like}: Broadly speaking, good code has the following properties:
+            \begin{itemize}
+                \item \textbf{Correct}: The code should operate correctly on all expected and unexpected inputs.
+                \item \textbf{Efficient}: The code should operate as efficiently as possible in terms of both time and space. This "efficiency" includes both the asymptotic (big 0) efficiency and the practical, real-life efficiency. That is, a constant factor might get dropped when you compute the big O time, but in real life, it can very much matter.
+                \item \textbf{Simple}: If you can do something in 10 lines instead of 100, you should. Code should be as quick as possible for a developer to write.
+                \item \textbf{Readable}: A different developer should be able to read your code and understand what it does and how it does it. Readable code has comments where necessary, but it implements things in an easily understandable way. That means that your fancy code that does a bunch of complex bit shifting is not necessarily good code.
+                \item \textbf{Maintainable}: Code should be reasonably adaptable to changes during the life cycle of a product and should be easy to maintain by other developers, as well as the initial developer.
+                    \bigbreak \noindent 
+                    Striving for these aspects requires a balancing act. For example, it's often advisable to sacrifice some degree of efficiency to make code more maintainable, and vice versa.
+                    \bigbreak \noindent 
+                    You should think about these elements as you code during an interview. The following aspects of code are more specific ways to demonstrate the earlier list.
+            \end{itemize}
+        \item \textbf{Use Data Structures Generously}: Suppose you were asked to write a function to add two simple mathematical expressions which are of the form
+            \begin{align*}
+                Ax^{a} + Bx^{b} + \dots
+            \end{align*}
+            for $A,B,\dots  \in \mathbb{R}$, $a,b,\dots \in \mathbb{R}$. That is, the expression is a sequence of terms, where each term is simply a constant times an exponent. The interviewer also adds that she doesn't want you to have to do string parsing, so you can use whatever data structure you'd like to hold the expressions.
+            \bigbreak \noindent 
+            There are a number of different ways you can implement this.
+            \begin{enumerate}
+                \item \textbf{Bad implementation}: A  bad implementation would be to store the expression as a single array of doubles, where the $k$th element corresponds to the coefficient of the $x^{k}$ term in the expression. This structure is problematic because it could not support expressions with negative or non-integer exponents. It would also require an array of 1000 elements to store just the expression $x^{1000}$
+                \item \textbf{Less bad implementation}:  A slightly less bad implementation would be to store the expression as a set of two arrays, coefficients and exponents. Under this approach, the terms of the expression are stored in any order, but "matched" such that the $i$th term of the expression is represented by $\text{coefficients}[i] \cdot x^{\text{exponents}[i]}$.
+                    \bigbreak \noindent 
+                    Although this doesn't have the same limitations as the earlier solution, it's still very messy. You need to keep track of two arrays for just one expression. Expressions could have "undefined" values if the arrays were of different lengths. And returning an expression is annoying because you need to return two arrays.
+                \item \textbf{Good implementation}: A good implementation for this problem is to design your own data structure for the expression.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        struct ExprTerm {
+                            double coefficient;
+                            double exponent;
+                        };
 
+                        ExprTerm[] sum(ExprTerm[] e1, ExprTerm[] e2) {
+                            ...
+                        }
+                    \end{cppcode}
+            \end{enumerate}
+        \item \textbf{Appropriate Code Reuse}: Suppose you were asked to write a function to check if the value of a binary number (passed as a string) equals the hexadecimal representation of a string.
+            \bigbreak \noindent 
+            An elegant implementation of this problem leverages code reuse.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                boolean compareBinToHex(String binary, String hex) {
+                    int nl convertFromBase(binary, 2);
+                    int n2 = convertFromBase(hex, 16);
+                    if (nl < 0 || n2 < 0) {
+                        return false;
+                    }
+                    return nl== n2;
+                }
 
+                int convertFromBase(String number, int base) {
+                    if (base < 2 || (base > 10 && base != 16)) return -1;
+                    int value = 0;
+                    for (int i = number.length() - 1; i >= 0; i--) {
+                        int digit = digitToValue(number.charAt(i));
+                        if (digit < 0 || digit >= base) {
+                            return -1;
+                        }
+                        int exp= number.length() - 1 - i;
+                        value += digit * Math.pow(base, exp);
+                    }
+                    return value;
+                }
 
+                int digitToValue(char c) { ... }
+            \end{cppcode}
+            \bigbreak \noindent 
+            We could have implemented separate code to convert a binary· number and a hexadecimal code, but this just makes our code harder to write and harder to maintain. Instead, we reuse code by writing one convertFromBase method and one digitToValue method.
+        \item \textbf{Modular}: Writing modular code means separating isolated chunks of code out into their own methods. This helps keep the code more maintainable, readable, and testable.
+            \bigbreak \noindent 
+            Imagine you are writing code to swap the minimum and maximum element in an integer array. You could implement it all in one method like this:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void swapMinMax(int[] array) {
+                    int minindex= 0;
+                }
+
+                for (int i= 1; i < array.length; i++) {
+                    if (array[i] < array[minindex]) {
+                        minindex = i;
+                    }
+                }
+
+                int maxindex = 0;
+                for (inti= 1; i < array.length; i++) {
+                    if (array[i] > array[maxindex]) {
+                        maxindex= i;
+                    }
+                }
+
+                int temp= array[minindex];
+                array[minindex] array[maxindex];
+                array[maxindex] = temp;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Or, you could implement in a more modular way by separating the relatively isolated chunks of code into their own methods.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void swapMinMaxBetter(int[] array) {
+                    int minindex= getMinindex(array);
+                    int maxindex= getMaxindex(array);
+                    swap(array, minindex, maxindex);
+                }
+
+                int getMinindex(int[] array) { ... }
+                int getMaxindex(int[] array) { ... }
+                id swap(int[] array, int m, int n) { ... }
+            \end{cppcode}
+            \bigbreak \noindent 
+            While the non-modular code isn't particularly awful, the nice thing about the modular code is that it's easily testable because each component can be verified separately. As code gets more complex, it becomes increasingly important to write it in a modular way. This will make it easier to read and maintain. Your inter viewer wants to see you demonstrate these skills in your interview.
+        \item \textbf{Flexible and Robust}: Just because your interviewer only asks you to write code to check if a normal tic-tac-toe board has a winner, doesn't mean you must assume that it's a $3\times 3$ board. Why not write the code in a more general way that implements it for an $N\times N$ board?
+            \bigbreak \noindent 
+            Writing flexible, general-purpose code may also mean using variables instead of hard-coded values or using templates/ generics to solve a problem. If we can write our code to solve a more general problem, we should.
+            \bigbreak \noindent 
+            Of course, there is a limit. If the solution is much more complex for the general case, and it seems unnecessary at this point in time, it may be better just to implement the simple, expected case.
+        \item \textbf{Error Checking}: One sign of a careful coder is that she doesn't make assumptions about the input. Instead, she validates that the input is what it should be, either through ASSERT statements or if-statements.
+            \bigbreak \noindent 
+            Of course, writing these error checks can be tedious and can waste precious time in an interview. The important thing is to point out that you would write the checks. If the error checks are much more than a quick if-statement, it may be best to leave some space where the error checks would go and indicate to your interviewer that you'll fill them in when you're finished with the rest of the code.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{The offer and beyond}
+    \begin{itemize}
+        
     \end{itemize}
 
 

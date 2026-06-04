@@ -138,6 +138,9 @@
                 \item \textbf{Abstract class}: An abstract class is an incomplete blueprint that cannot be instantiated directly and often contains undefined methods. 
                 \item \textbf{Concrete class}: A concrete class is a complete, fully-implemented class that can be instantiated directly to create objects.
             \end{itemize}
+        \item \textbf{Protected constructor}: It is reasonable for an abstract base class to have a protected constructor, but it is not strictly required. Because an abstract class cannot be instantiated directly anyway, a call to the constructor is already an error.
+            \bigbreak \noindent 
+            However, a protected constructor is often used to \textbf{communicate intent}
         \item \textbf{Participant / Client}: In software architecture, the participant and client classes represent distinct roles. A client acts as the interface initiating an interaction (e.g., an AWS or API connection), while a participant represents an active entity within that session (e.g., a person, agent, or device in a chat or RTC room).
             \bigbreak \noindent 
             \begin{itemize}
@@ -618,130 +621,384 @@
                 \item If CreateMaze is parameterized by various prototypical room,door, and wall objects, which it then copies and adds to the maze,then you can change the maze's composition by replacing these prototypical objects with different ones. This is an example of the Prototype (133) pattern.
             \end{itemize}
             The remaining creational pattern, Singleton (144), can ensure there's only one maze per game and that all game objects have ready access to it—without resorting to global variables or functions. Singleton also makes it easy to extend or replace the maze without touching existing code.
-        \item \textbf{Abstract factory}: 
-            \begin{itemize}
-                \item \textbf{Intent}: Provide an interface for creating families of related or dependent objects without specifying their concrete classes
-                \item \textbf{AKA}: Kit
-                \item \textbf{Motivation}:  Consider a user interface toolkit that supports multiple look-and-feel standards, such as Motif and Presentation Manager. Different look-and-feels define different appearances and behaviors for user interface "widgets" like scroll bars, windows, and buttons. To be portable across look-and-feel standards, an application should not hard-code its widgets for a particular look and feel. Instantiating look-and-feel-specific classes of widgets throughout the application makes it hard to change the look and feel later.
-                    \bigbreak \noindent
-                    \fig{.6}{./figures/16.png}
-                \item \textbf{Consequences}: The Abstract Factory pattern has the following benefits and liabilities:
-                    \begin{enumerate}
-                        \item It isolates concrete classes. The Abstract Factory pattern helps you control the classes of objects that an application creates. Because a factory encapsulates the responsibility and the process of creating product objects, it isolates clients from implementation classes. Clients manipulate instances through their abstract interfaces. Product class names are isolated in the implementation of the concrete factory; they do not appear in client code.
-                        \item It makes exchanging product families easy. The class of a concrete factory appears only once in an application—that is, where it's instantiated. This makes it easy to change the concrete factory an application uses. It can use different product configurations simply by changing the concrete factory. Because an abstract factory creates a complete family of products, the whole product family changes at once. In our user interface example, we can switch from Motif widgets to Presentation Manager widgets simply by switching the corresponding factory objects and recreating the interface.
-                        \item It promotes consistency among products. When product objects in a family are designed to work together, it's important that an application use objects from only one family at a time. AbstractFactory makes this easy to enforce.
-                        \item Supporting new kinds of products is difficult. Extending abstract factories to produce new kinds of Products isn't easy. That's because the AbstractFactory interface fixes the set of products that can be created. Supporting new kinds of products requires extending the factory interface, which involves changing the AbstractFactory class and all of its subclasses. We discuss one solution to this problem in the Implementation section.
-                    \end{enumerate}
-                \item \textbf{Implementation}: Here are some useful techniques for implementing the Abstract Factory pattern.
-                    \begin{enumerate}
-                        \item \textbf{Factories as singletons}: An application typically needs only one instance of a ConcreteFactory per product family. So it's usually best implemented as a Singleton (144).
-                        \item \textbf{Creating the products}: AbstractFactory only declares an interface for creating products. It's up to ConcreteProduct subclasses to actually create them. The most common way to do this is to define a factory method (see Factory Method (121)) for each product. A concrete factory will specify Its products by overriding the factory method for each. While this implementation is simple, it requires a new concrete factory subclass for each product family, even if the product families differ only slightly.
-                            \bigbreak \noindent 
-                            If many product families are possible, the concrete factory can be implemented using the Prototype (133) pattern. The concrete factory is initialized with a prototypical instance of each product in the family, and it creates a new product by cloning its prototype. The Prototype-based approach eliminates the need for a new concrete factory class for each new product family
-                        \item \textbf{Defining extensible factories}: AbstractFactory usually defines a different operation for each kind of product it can produce. The kinds of products are encoded in the operation signatures. Adding a new kind of product requires changing the AbstractFactory interface and all the classes that depend on it.
-                            \bigbreak \noindent 
-                            A more flexible but less safe design is to add a parameter to operations that create objects. This parameter specifies the kind of object to be created. It could be a class identifier, an integer, a string, or anything else that identifies the kind of product. In fact with this approach, AbstractFactory only needs a single "Make" operation with a parameter indicating the kind of object to create. This is the technique used in the Prototype- and the class-based abstract factories discussed earlier.
-                            \bigbreak \noindent 
-                            But even when no coercion is needed, an inherent problem remains: All products are returned to the client with the same abstract interface as given by the return type. The client will not be able to differentiate or make safe assumptions about the class of a product. If clients need to perform subclass-specific operations, they won't be accessible through the abstract interface. Although the client could perform a downcast (e.g., with dynamic\_cast in C++), that's not always feasible or safe, because the downcast can fail. This is the classic trade-off for a highly flexible and extensible interface.
-                    \end{enumerate}
-            \end{itemize}
-        \item \textbf{Abstract Factory in the maze example}: Class MazeFactory can create components of mazes. It builds rooms, walls, and doors between rooms. It might be used by a program that reads plans for mazes from a file and builds the corresponding maze. Or it might be used by a program that builds mazes randomly. Programs that build mazes take a MazeFactory as an argument so that the programmer can specify the classes of rooms, walls, and doors to construct.
-            \bigbreak \noindent 
-            \begin{cppcode}
-                struct MazeFactory {
-                    MazeFactory();
+        \end{itemize}
 
-                    virtual Maze* MakeMaze() const
+        \pagebreak 
+        \subsection{Abstract factory}
+        \begin{itemize}
+            \item \textbf{Intent}: Provide an interface for creating families of related or dependent objects without specifying their concrete classes
+            \item \textbf{AKA}: Kit
+            \item \textbf{Motivation}:  Consider a user interface toolkit that supports multiple look-and-feel standards, such as Motif and Presentation Manager. Different look-and-feels define different appearances and behaviors for user interface "widgets" like scroll bars, windows, and buttons. To be portable across look-and-feel standards, an application should not hard-code its widgets for a particular look and feel. Instantiating look-and-feel-specific classes of widgets throughout the application makes it hard to change the look and feel later.
+                \bigbreak \noindent
+                \fig{.6}{./figures/16.png}
+            \item \textbf{Consequences}: The Abstract Factory pattern has the following benefits and liabilities:
+                \begin{enumerate}
+                    \item It isolates concrete classes. The Abstract Factory pattern helps you control the classes of objects that an application creates. Because a factory encapsulates the responsibility and the process of creating product objects, it isolates clients from implementation classes. Clients manipulate instances through their abstract interfaces. Product class names are isolated in the implementation of the concrete factory; they do not appear in client code.
+                    \item It makes exchanging product families easy. The class of a concrete factory appears only once in an application—that is, where it's instantiated. This makes it easy to change the concrete factory an application uses. It can use different product configurations simply by changing the concrete factory. Because an abstract factory creates a complete family of products, the whole product family changes at once. In our user interface example, we can switch from Motif widgets to Presentation Manager widgets simply by switching the corresponding factory objects and recreating the interface.
+                    \item It promotes consistency among products. When product objects in a family are designed to work together, it's important that an application use objects from only one family at a time. AbstractFactory makes this easy to enforce.
+                    \item Supporting new kinds of products is difficult. Extending abstract factories to produce new kinds of Products isn't easy. That's because the AbstractFactory interface fixes the set of products that can be created. Supporting new kinds of products requires extending the factory interface, which involves changing the AbstractFactory class and all of its subclasses. We discuss one solution to this problem in the Implementation section.
+                \end{enumerate}
+            \item \textbf{Implementation}: Here are some useful techniques for implementing the Abstract Factory pattern.
+                \begin{enumerate}
+                    \item \textbf{Factories as singletons}: An application typically needs only one instance of a ConcreteFactory per product family. So it's usually best implemented as a Singleton (144).
+                    \item \textbf{Creating the products}: AbstractFactory only declares an interface for creating products. It's up to ConcreteProduct subclasses to actually create them. The most common way to do this is to define a factory method (see Factory Method (121)) for each product. A concrete factory will specify Its products by overriding the factory method for each. While this implementation is simple, it requires a new concrete factory subclass for each product family, even if the product families differ only slightly.
+                        \bigbreak \noindent 
+                        If many product families are possible, the concrete factory can be implemented using the Prototype (133) pattern. The concrete factory is initialized with a prototypical instance of each product in the family, and it creates a new product by cloning its prototype. The Prototype-based approach eliminates the need for a new concrete factory class for each new product family
+                    \item \textbf{Defining extensible factories}: AbstractFactory usually defines a different operation for each kind of product it can produce. The kinds of products are encoded in the operation signatures. Adding a new kind of product requires changing the AbstractFactory interface and all the classes that depend on it.
+                        \bigbreak \noindent 
+                        A more flexible but less safe design is to add a parameter to operations that create objects. This parameter specifies the kind of object to be created. It could be a class identifier, an integer, a string, or anything else that identifies the kind of product. In fact with this approach, AbstractFactory only needs a single "Make" operation with a parameter indicating the kind of object to create. This is the technique used in the Prototype- and the class-based abstract factories discussed earlier.
+                        \bigbreak \noindent 
+                        But even when no coercion is needed, an inherent problem remains: All products are returned to the client with the same abstract interface as given by the return type. The client will not be able to differentiate or make safe assumptions about the class of a product. If clients need to perform subclass-specific operations, they won't be accessible through the abstract interface. Although the client could perform a downcast (e.g., with dynamic\_cast in C++), that's not always feasible or safe, because the downcast can fail. This is the classic trade-off for a highly flexible and extensible interface.
+                \end{enumerate}
+            \item \textbf{Abstract Factory in the maze example}: Class MazeFactory can create components of mazes. It builds rooms, walls, and doors between rooms. It might be used by a program that reads plans for mazes from a file and builds the corresponding maze. Or it might be used by a program that builds mazes randomly. Programs that build mazes take a MazeFactory as an argument so that the programmer can specify the classes of rooms, walls, and doors to construct.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct MazeFactory {
+                        MazeFactory();
+
+                        virtual Maze* MakeMaze() const
                         { return new Maze; }
-                    virtual Wall* MakeWall() const
+                        virtual Wall* MakeWall() const
                         { return new Wall; }
-                    virtual Room* MakeRoom(int n) const
+                        virtual Room* MakeRoom(int n) const
                         { return new Room(n); }
-                    virtual Door* MakeDoor(Room* r1, Room* r2) const
+                        virtual Door* MakeDoor(Room* r1, Room* r2) const
                         { return new Door(r1, r2); }
-                };
-            \end{cppcode}
-            \bigbreak \noindent 
-            Recall that the member function CreateMaze builds a small maze consisting of two rooms with a door between them. CreateMaze hard-codes the class names, making it difficult to create mazes with different components
-            \bigbreak \noindent 
-            Here's a version of CreateMaze that remedies that shortcoming by taking a MazeFactory as a parameter:
-            \bigbreak \noindent 
-            \begin{cppcode}
-                Maze* MazeGame::CreateMaze (MazeFactory& factory) {
-                    Maze* aMaze = factory.MakeMaze();
-                    Room* r1 = factory.MakeRoom(1);
-                    Room* r2 = factory.MakeRoom(2);
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                Recall that the member function CreateMaze builds a small maze consisting of two rooms with a door between them. CreateMaze hard-codes the class names, making it difficult to create mazes with different components
+                \bigbreak \noindent 
+                Here's a version of CreateMaze that remedies that shortcoming by taking a MazeFactory as a parameter:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Maze* MazeGame::CreateMaze (MazeFactory& factory) {
+                        Maze* aMaze = factory.MakeMaze();
+                        Room* r1 = factory.MakeRoom(1);
+                        Room* r2 = factory.MakeRoom(2);
 
-                    Door* aDoor = factory.MakeDoor(r1, r2);
+                        Door* aDoor = factory.MakeDoor(r1, r2);
 
-                    aMaze->AddRoom(r1);
-                    aMaze->AddRoom(r2);
+                        aMaze->AddRoom(r1);
+                        aMaze->AddRoom(r2);
 
-                    r1->SetSide(North, factory.MakeWall());
-                    r1->SetSide(East, aDoor);
-                    r1->SetSide(South, factory.MakeWall());
-                    r1->SetSide(West, factory.MakeWall());
+                        r1->SetSide(North, factory.MakeWall());
+                        r1->SetSide(East, aDoor);
+                        r1->SetSide(South, factory.MakeWall());
+                        r1->SetSide(West, factory.MakeWall());
 
-                    r2->SetSide(North, factory.MakeWall());
-                    r2->SetSide(East, factory.MakeWall());
-                    r2->SetSide(South, factory.MakeWall());
-                    r2->SetSide(West, aDoor);
+                        r2->SetSide(North, factory.MakeWall());
+                        r2->SetSide(East, factory.MakeWall());
+                        r2->SetSide(South, factory.MakeWall());
+                        r2->SetSide(West, aDoor);
 
-                    return aMaze;
-                }
-            \end{cppcode}
-            \bigbreak \noindent 
-            We can create EnchantedMazeFactory, a factory for enchanted mazes, by subclassing MazeFactory. EnchantedMazeFactory will override different member functions and return different subclasses of Room, Wall, etc.
-            \bigbreak \noindent 
-            \begin{cppcode}
-                class EnchantedMazeFactory : public MazeFactory {
-                public:
-                    EnchantedMazeFactory();
+                        return aMaze;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                We can create EnchantedMazeFactory, a factory for enchanted mazes, by subclassing MazeFactory. EnchantedMazeFactory will override different member functions and return different subclasses of Room, Wall, etc.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    class EnchantedMazeFactory : public MazeFactory {
+                        public:
+                        EnchantedMazeFactory();
 
-                    virtual Room* MakeRoom(int n) const
+                        virtual Room* MakeRoom(int n) const
                         { return new EnchantedRoom(n, CastSpell()); }
 
-                    virtual Door* MakeDoor(Room* r1, Room* r2) const
+                        virtual Door* MakeDoor(Room* r1, Room* r2) const
                         { return new DoorNeedingSpell(r1, r2); }
 
-                protected:
-                    Spell* CastSpell() const;
-                };
-            \end{cppcode}
-            \bigbreak \noindent 
-            Now suppose we want to make a maze game in which a room can have a bomb set in it. If the bomb goes off, it will damage the walls (at least). We can make a subclass of Room keep track of whether the room has a bomb in it and whether the bomb has gone off. We'll also need a subclass of Wall to keep track of the damage done to the wall. We'll call these classes RoomWithABomb and BombedWall.
-            \bigbreak \noindent 
-            The last class we'll define is BombedMazeFactory, a subclass of MazeFactory that ensures walls are of class BombedWall and rooms are of class RoomWithABomb. BombedMazeFactory only needs to override two functions:
-            \bigbreak \noindent 
-            \begin{cppcode}
-                Wall* BombedMazeFactory::MakeWall () const {
-                    return new BombedWall;
-                }
-                Room* BombedMazeFactory::MakeRoom(int n) const {
-                    return new RoomWithABomb(n);
-                }
-            \end{cppcode}
-            \bigbreak \noindent 
-            To build a simple maze that can contain bombs, we simply call CreateMaze with a BombedMazeFactory.
-            \bigbreak \noindent 
-            \begin{cppcode}
-                MazeGame game;
-                BombedMazeFactory factory;
+                        protected:
+                        Spell* CastSpell() const;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                Now suppose we want to make a maze game in which a room can have a bomb set in it. If the bomb goes off, it will damage the walls (at least). We can make a subclass of Room keep track of whether the room has a bomb in it and whether the bomb has gone off. We'll also need a subclass of Wall to keep track of the damage done to the wall. We'll call these classes RoomWithABomb and BombedWall.
+                \bigbreak \noindent 
+                The last class we'll define is BombedMazeFactory, a subclass of MazeFactory that ensures walls are of class BombedWall and rooms are of class RoomWithABomb. BombedMazeFactory only needs to override two functions:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Wall* BombedMazeFactory::MakeWall () const {
+                        return new BombedWall;
+                    }
+                    Room* BombedMazeFactory::MakeRoom(int n) const {
+                        return new RoomWithABomb(n);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                To build a simple maze that can contain bombs, we simply call CreateMaze with a BombedMazeFactory.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    MazeGame game;
+                    BombedMazeFactory factory;
 
-                game.CreateMaze(factory);
-            \end{cppcode}
-            \bigbreak \noindent 
-            CreateMaze can take an instance of EnchantedMazeFactory just as well to build enchanted mazes.
-            \bigbreak \noindent 
-            Notice that the MazeFactory is just a collection of factory methods. This is the most common way to implement the Abstract Factory pattern. Also note that MazeFactory is not an abstract class; thus it acts as both the AbstractFactory and the ConcreteFactory. This is another common implementation for simple applications of the Abstract Factory pattern. Because the MazeFactory is a concrete class consisting entirely of factory methods, it's easy to make a new MazeFactory by making a subclass and overriding the operations that need to change.
-            \bigbreak \noindent 
-            CreateMaze used the SetSide operation on rooms to specify their sides. If it creates rooms with a BombedMazeFactory, then the maze will be made up of RoomWithABomb objects with BombedWall sides. If RoomWithABomb had to access a subclass-specific member of BombedWall, then it would have to cast a reference to its walls from Wall* to BombedWall*. This downcasting is safe as long as the argument is in fact a BombedWall, which is guaranteed to be true if walls are built solely with a BombedMazeFactory.
-        \item \textbf{Known Uses}: 
-        \item \textbf{Related Patterns}: AbstractFactory classes are often implemented with factory methods (Factory Method (121)), but they can also be implemented using Prototype (133).
-            \bigbreak \noindent 
-            A concrete factory is often a singleton (Singleton (144)).
-        \item \textbf{Builder}: 
+                    game.CreateMaze(factory);
+                \end{cppcode}
+                \bigbreak \noindent 
+                CreateMaze can take an instance of EnchantedMazeFactory just as well to build enchanted mazes.
+                \bigbreak \noindent 
+                Notice that the MazeFactory is just a collection of factory methods. This is the most common way to implement the Abstract Factory pattern. Also note that MazeFactory is not an abstract class; thus it acts as both the AbstractFactory and the ConcreteFactory. This is another common implementation for simple applications of the Abstract Factory pattern. Because the MazeFactory is a concrete class consisting entirely of factory methods, it's easy to make a new MazeFactory by making a subclass and overriding the operations that need to change.
+                \bigbreak \noindent 
+                CreateMaze used the SetSide operation on rooms to specify their sides. If it creates rooms with a BombedMazeFactory, then the maze will be made up of RoomWithABomb objects with BombedWall sides. If RoomWithABomb had to access a subclass-specific member of BombedWall, then it would have to cast a reference to its walls from Wall* to BombedWall*. This downcasting is safe as long as the argument is in fact a BombedWall, which is guaranteed to be true if walls are built solely with a BombedMazeFactory.
+            \item \textbf{Known Uses}: 
+            \item \textbf{Related Patterns}: AbstractFactory classes are often implemented with factory methods (Factory Method (121)), but they can also be implemented using Prototype (133).
+                \bigbreak \noindent 
+                A concrete factory is often a singleton (Singleton (144)).
 
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{Builder}
+        \begin{itemize}
+            \item \textbf{Intent}: Separate the construction of a complex object from its representation so that the same construction process can create different representations
+            \item \textbf{Motivation}:  A reader for the RTF (Rich Text Format) document exchange format should be able to convert RTF to many text formats. The reader might convert RTF documents into plain ASCII text or into a text widget that can be edited interactively. The problem, however, is that the number of possible conversions is open-ended. So it should be easy to add a new conversion without modifying the reader.
+                \bigbreak \noindent 
+                A solution is to configure the RTFReader class with a TextConverter object that converts RTF to another textual representation. As the RTFReader parses the RTF document, it uses the TextConverter to perform the conversion. Whenever the RTFReader recognizes an RTF token (either plain text or an RTF control word), it issues a request to the TextConverter to convert the token. TextConverter objects are responsible both for performing the data conversion and for representing the token in a particular format
+                \bigbreak \noindent 
+                Subclasses of TextConverter specialize in different conversions and formats. For example, an ASCIIConverter ignores requests to convert anything except plain text. A TeXConverter, on the other hand, will implement operations for all requests in order to produce a TeX representation that captures all the stylistic information in the text. A TextWidgetConverter will produce a complex user interface object that lets the user see and edit the text.
+                \bigbreak \noindent 
+                \fig{.6}{./figures/17.png}
+                \bigbreak \noindent 
+                Each kind of converter class takes the mechanism for creating and assembling a complex object and puts it behind an abstract interface. The converter is separate from the reader, which is responsible for parsing an RTF document.
+                \bigbreak \noindent 
+                The Builder pattern captures all these relationships. Each converter class is called a builder in the pattern, and the reader is called the director. Applied to this example, the Builder pattern separates the algorithm for interpreting a textual format (that is, the parser for RTF documents) from how a converted format gets created and represented. This lets us reuse the RTFReader's parsing algorithm to create different text representations from RTF documents—just configure the RTFReader with different subclasses of TextConverter.
+            \item \textbf{Applicability}: Use the builder pattern when
+                \begin{itemize}
+                    \item the algorithm for creating a complex object should be independent of the parts that make up the object and how they're assembled.
+                    \item the construction process must allow different representations for the object that's constructed.
+                \end{itemize}
+            \item \textbf{Structure}: 
+                \bigbreak \noindent 
+                \fig{.6}{./figures/18.png}
+            \item \textbf{Participants}: 
+                \begin{itemize}
+                    \item \textbf{Builder (TextConverter)}: specifies an abstract interface for creating parts of a Product object.
+                    \item \textbf{ConcreteBuilder (ASCIIConverter, TeXConverter, TextWidgetConverter)}: constructs and assembles parts of the product by implementing the Builder interface.
+                        \bigbreak \noindent 
+                        defines and keeps track of the representation it creates.
+                        \bigbreak \noindent 
+                        provides an interface for retrieving the product (e.g., GetASCIIText, GetTextWidget).
+                    \item \textbf{Director (RTFReader)}: constructs an object using the Builder interface.
+                    \item \textbf{Product (ASCIIText, TeXText, TextWidget)}: represents the complex object under construction. ConcreteBuilder builds the product's internal representation and defines the process by which it's assembled.
+                        \bigbreak \noindent 
+                        includes classes that define the constituent parts, including interfaces for assembling the parts into the final result.
+                \end{itemize}
+            \item \textbf{Collaborations}: 
+                \begin{itemize}
+                    \item The client creates the Director object and configures it with the desired Builder object.
+                    \item Director notifies the builder whenever a part of the product should be built.
+                    \item Builder handles requests from the director and adds parts to the product.
+                    \item The client retrieves the product from the builder
+                \end{itemize}
+                \bigbreak \noindent 
+                \fig{.6}{./figures/19.png}
+            \item \textbf{Consequences}: Here are key consequences of the Builder pattern:
+                \begin{enumerate}
+                    \item It lets you vary a product's internal representation. The Builder object provides the director with an abstract interface for constructing the product. The interface lets the builder hide the representation and internal structure of the product. It also hides how the product gets assembled. Because the product is constructed through an abstract interface, all you have to do to change the product's internal representation is define a new kind of builder.
+                    \item It isolates code for construction and representation. The Builder pattern improves modularity by encapsulating the way a complex object is constructed and represented. Clients needn't know anything about the classes that define the product's internal structure; such classes don't appear in Builder's interface.
+                        \bigbreak \noindent 
+                        Each ConcreteBuilder contains all the code to create and assemble a particular kind of product. The code is written once; then different Directors can reuse it to build Product variants from the same set of parts. In the earlier RTF example, we could define a reader for a format other than RTF, say, an SGMLReader, and use the same TextConverters to generate ASCIIText, TeXText, and TextWidget renditions of SGML documents.
+                    \item It gives you finer control over the construction process. Unlike creational patterns that construct products in one shot, the Builder pattern constructs the product step by step under the director's control. Only when the product is finished does the director retrieve it from the builder. Hence the Builder interface reflects the process of constructing the product more than other creational patterns. This gives you finer control over the construction process and consequently the internal structure of the resulting product.
+                \end{enumerate}
+            \item \textbf{Implementation}:  Typically there's an abstract Builder class that defines an operation for each component that a director may ask it to create. The operations do nothing by default. A ConcreteBuilder class overrides operations for components it's interested in creating.
+                \bigbreak \noindent 
+                Here are other implementation issues to consider:
+                \begin{enumerate}
+                    \item Assembly and construction interface. Builders construct their products in step-by-step fashion. Therefore the Builder class interface must be general enough to allow the construction of products for all kinds of concrete builders.
+                        \bigbreak \noindent 
+                        A key design issue concerns the model for the construction and assembly process. A model where the results of construction requests are simply appended to the product is usually sufficient. In the RTF example, the builder converts and appends the next token to the text it has converted so far.
+                        \bigbreak \noindent 
+                        But sometimes you might need access to parts of the product constructed earlier. In the Maze example we present in the Sample Code, the MazeBuilder interface lets you add a door between existing rooms. Tree structures such as parse trees that are built bottom-up are another example. In that case, the builder would return child nodes to the director, which then would pass them back to the builder to build the parent nodes.
+                    \item Why no abstract class for products? In the common case, the products produced by the concrete builders differ so greatly in their representation that there is little to gain from giving different products a common parent class. In the RTF example, the ASCIIText and the TextWidget objects are unlikely to have a common interface, nor do they need one. Because the client usually configures the director with the proper concrete builder, the client is in a position to know which concrete subclass of Builder is in use and can handle its products accordingly.
+                    \item Empty methods as default in Builder. In C++, the build methods are intentionally not declared pure virtual member functions. They're defined as empty methods instead, letting clients override only the operations they're interested in. A concrete subclass must implement all inherited pure virtual methods.
+                        \bigbreak \noindent 
+                        If the base class methods are virtual but not pure virtual, then they already have implementations. A derived class may override only the ones it wants, and it can still be instantiated.
+                \end{enumerate}
+            \item \textbf{Sample Code}: We'll define a variant of the CreateMaze member function that takes a builder of class MazeBuilder as an argument
+                \bigbreak \noindent 
+                The MazeBuilder class defines the following interface for building mazes:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    class MazeBuilder {
+                    public:
+                        virtual void BuildMaze() { }
+                        virtual void BuildRoom(int room) { }
+                        virtual void BuildDoor(int roomFrom, int roomTo) { }
+
+                        virtual Maze* GetMaze() { return 0; }
+
+                    protected:
+                        MazeBuilder();
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                This interface can create three things: (1) the maze, (2) rooms with a particular room number, and (3) doors between numbered rooms. The GetMaze operation returns the maze to the client. Subclasses of MazeBuilder will override this operation to return the maze that they build.
+                \bigbreak \noindent 
+                All the maze-building operations of MazeBuilder do nothing by default. They're not declared pure virtual to let derived classes override only those methods in which they're interested.
+                \bigbreak \noindent 
+                Given the MazeBuilder interface, we can change the CreateMaze member function to take this builder as a parameter.
+                \bigbreak \noindent 
+                Given the MazeBuilder interface, we can change the CreateMaze member function to take this builder as a parameter.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Maze* MazeGame::CreateMaze (MazeBuilder& builder) {
+                        builder.BuildMaze();
+
+                        builder.BuildRoom(1);
+                        builder.BuildRoom(2);
+                        builder.BuildDoor(1, 2);
+
+                        return builder.GetMaze();
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Compare this version of CreateMaze with the original. Notice how the builder hides the internal representation of the Maze—that is, the classes that define rooms, doors, and walls—and how these parts are assembled to complete the final maze. Someone might guess that there are classes for representing rooms and doors, but there is no hint of one for walls. This makes it easier to change the way a maze is represented, since none of the clients of MazeBuilder has to be changed.
+                \bigbreak \noindent 
+                Like the other creational patterns, the Builder pattern encapsulates how objects get created, in this case through the interface defined by MazeBuilder. That means we can reuse MazeBuilder to build different kinds of mazes. The CreateComplexMaze operation gives an example:
+                \bigbreak \noindent 
+                Note that MazeBuilder does not create mazes itself; its main purpose is just to define an interface for creating mazes. It defines empty implementations primarily for convenience. Subclasses of MazeBuilder do the actual work.
+                \bigbreak \noindent 
+                The subclass StandardMazeBuilder is an implementation that builds simple mazes. It keeps track of the maze it's building in the variable \_currentMaze.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    class StandardMazeBuilder : public MazeBuilder {
+                    public:
+                        StandardMazeBuilder();
+
+                        virtual void BuildMaze();
+                        virtual void BuildRoom(int);
+                        virtual void BuildDoor(int, int);
+
+                        virtual Maze* GetMaze();
+
+                    private:
+                        Direction CommonWall(Room*, Room*);
+                        Maze* _currentMaze;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                CommonWall is a utility operation that determines the direction of the common wall between two rooms.
+                \bigbreak \noindent 
+                The StandardMazeBuilder constructor simply initializes \_currentMaze.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    StandardMazeBuilder::StandardMazeBuilder () {
+                        _currentMaze = 0;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                BuildMaze instantiates a Maze that other operations will assemble and eventually return to the client (with GetMaze).
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void StandardMazeBuilder::BuildMaze () {
+                        _currentMaze = new Maze;
+                    }
+
+                    Maze* StandardMazeBuilder::GetMaze () {
+                        return _currentMaze;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                The BuildRoom operation creates a room and builds the walls around it:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void StandardMazeBuilder::BuildRoom (int n) {
+                        if (!_currentMaze->RoomNo(n)) {
+                            Room* room = new Room(n);
+                            _currentMaze->AddRoom(room);
+
+                            room->SetSide(North, new Wall);
+                            room->SetSide(South, new Wall);
+                            room->SetSide(East, new Wall);
+                            room->SetSide(West, new Wall);
+                        }
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                To build a door between two rooms, StandardMazeBuilder looks up both rooms in the maze and finds their adjoining wall:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void StandardMazeBuilder::BuildDoor (int n1, int n2) {
+                        Room* r1 = _currentMaze->RoomNo(n1);
+                        Room* r2 = _currentMaze->RoomNo(n2);
+                        Door* d = new Door(r1, r2);
+                        r1->SetSide(CommonWall(r1,r2), d);
+                        r2->SetSide(CommonWall(r2,r1), d);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Clients can now use CreateMaze in conjunction with StandardMazeBuilder to create a maze:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Maze* maze;
+                    MazeGame game;
+                    StandardMazeBuilder builder;
+
+                    game.CreateMaze(builder);
+                    maze = builder.GetMaze();
+                \end{cppcode}
+                \bigbreak \noindent 
+                We could have put all the StandardMazeBuilder operations in Maze and let each Maze build itself. But making Maze smaller makes it easier to understand and modify, and StandardMazeBuilder is easy to separate from Maze. Most importantly, separating the two lets you have a variety of MazeBuilders, each using different classes for rooms, walls, and doors.
+                \bigbreak \noindent 
+                A more exotic MazeBuilder is CountingMazeBuilder. This builder doesn't create a maze at all; it just counts the different kinds of components that would have been created.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    class CountingMazeBuilder : public MazeBuilder {
+                    public:
+                        CountingMazeBuilder();
+
+                        virtual void BuildMaze();
+                        virtual void BuildRoom(int);
+                        virtual void BuildDoor(int, int);
+                        virtual void AddWall(int, Direction);
+
+                        void GetCounts(int&, int&) const;
+                    private:
+                        int _doors;
+                        int _rooms;
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                The constructor initializes the counters, and the overridden MazeBuilder operations increment them accordingly.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    CountingMazeBuilder::CountingMazeBuilder () {
+                        _rooms = _doors = 0;
+                    }
+
+                    void CountingMazeBuilder::BuildRoom (int) {
+                        _rooms++;
+                    }
+
+                    void CountingMazeBuilder::BuildDoor (int, int) {
+                        _doors++;
+                    }
+
+                    void CountingMazeBuilder::GetCounts (int& rooms, int& doors) const {
+                        rooms = _rooms;
+                        doors = _doors;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Here's how a client might use a CountingMazeBuilder:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int rooms, doors;
+                    MazeGame game;
+                    CountingMazeBuilder builder;
+
+                    game.CreateMaze(builder);
+                    builder.GetCounts(rooms, doors);
+
+                    cout << "The maze has "
+                        << rooms << " rooms and "
+                        << doors << " doors" << '\n';
+                \end{cppcode}
+            \item \textbf{Related patterns}: Abstract Factory (99) is similar to Builder in that it too may construct complex objects. The primary difference is that the Builder pattern focuses on constructing a complex object step by step. Abstract Factory's emphasis is on families of product objects (either simple or complex). Builder returns the product as a final step, but as far as the Abstract Factory pattern is concerned, the product gets returned immediately.
+                \bigbreak \noindent 
+                A Composite (183) is what the builder often builds.
+            \item \textbf{Factory method}: 
 
     \end{itemize}
 
