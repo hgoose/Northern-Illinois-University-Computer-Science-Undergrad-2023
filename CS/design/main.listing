@@ -1,22 +1,19 @@
-                Maze* MazeGame::CreateMaze () {
-                    Maze* aMaze = MakeMaze();
+                class BombedWall : public Wall {
+                public:
+                    BombedWall();
+                    BombedWall(const BombedWall&);
 
-                    Room* r1 = MakeRoom(1);
-                    Room* r2 = MakeRoom(2);
-                    Door* theDoor = MakeDoor(r1, r2);
+                    virtual Wall* Clone() const;
+                    bool HasBomb();
 
-                    aMaze->AddRoom(r1);
-                    aMaze->AddRoom(r2);
+                private:
+                    bool _bomb;
+                };
 
-                    r1->SetSide(North, MakeWall());
-                    r1->SetSide(East, theDoor);
-                    r1->SetSide(South, MakeWall());
-                    r1->SetSide(West, MakeWall());
+                BombedWall::BombedWall (const BombedWall& other) : Wall(other) {
+                    _bomb = other._bomb;
+                }
 
-                    r2->SetSide(North, MakeWall());
-                    r2->SetSide(East, MakeWall());
-                    r2->SetSide(South, MakeWall());
-                    r2->SetSide(West, theDoor);
-
-                    return aMaze;
+                Wall* BombedWall::Clone () const {
+                    return new BombedWall(*this);
                 }

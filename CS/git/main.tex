@@ -72,19 +72,19 @@
             \bigbreak \noindent 
             \begin{bashcode}
                 git init [-q | --quiet] 
-                         [--bare] 
-                         [--template=<template-directory>]
-                         [--separate-git-dir <git-dir>] 
-                         [--object-format=<format>]
-                         [--ref-format=<format>]
-                         [-b <branch-name> | --initial-branch=<branch-name>]
-                         [--shared[=<permissions>]] 
-                         [<directory>]
+                [--bare] 
+                [--template=<template-directory>]
+                [--separate-git-dir <git-dir>] 
+                [--object-format=<format>]
+                [--ref-format=<format>]
+                [-b <branch-name> | --initial-branch=<branch-name>]
+                [--shared[=<permissions>]] 
+                [<directory>]
             \end{bashcode}
             \begin{itemize}
                 \item -q Suppress normal output. Git will only print errors and warnings. This is useful in scripts where you do not want the usual “Initialized empty Git repository...” message.
                 \item --bare Creates a bare repository. A bare repository has no working tree; it is essentially just the repository database itself. Instead of storing Git metadata inside .git/, the repository directory itself contains things like objects/, refs/, HEAD, and config. Git’s repository-layout documentation describes a bare repository as one “without its own working tree,” typically used for exchanging histories by pushing and fetching.
-                \item --template Tells Git where to copy template files from when initializing the repository. Templates can include default hook samples, info files, exclude patterns, and initial repository structure. Git chooses the template directory in this order: the --template argument, then $GIT\_TEMPLATE\_DIR, then init.templateDir, then the default template directory.
+                \item --template Tells Git where to copy template files from when initializing the repository. Templates can include default hook samples, info files, exclude patterns, and initial repository structure. Git chooses the template directory in this order: the --template argument, then \$GIT\_TEMPLATE\_DIR, then init.templateDir, then the default template directory.
                     \bigbreak \noindent 
                     This is useful if you want every new repo to start with the same hooks or config-related files.
                 \item --separate-git-dir Stores the actual Git repository data somewhere other than .git/ in the working directory. Instead of creating a real .git/ directory, Git creates a .git text file that points to the actual repository directory. If used while reinitializing, Git moves the repository to the specified path
@@ -104,7 +104,7 @@
                     The staging area is also called the index. When you run
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git add main.c
+                        git add main.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     you copy the current version of main.c from the working directory into the staging area.
@@ -132,7 +132,7 @@
                     And
                     \bigbreak \noindent 
                     \begin{cppcode}
-                    git log --graph
+                        git log --graph
                     \end{cppcode}
                 \item \textbf{Local repository}: The Git repository stored on your own machine. In a normal project, the local repository is mainly the .git directory
                     \bigbreak \noindent 
@@ -141,24 +141,24 @@
         \item \textbf{Working tree}: The working tree is the set of actual project files that git has checked out for you to edit. For
             \bigbreak \noindent 
             \begin{bashcode}
-            myproject/
-              main.c
-              README.md
-              src/
-              .git/
+                myproject/
+                main.c
+                README.md
+                src/
+                .git/
             \end{bashcode}
             \bigbreak \noindent 
             The working tree is 
             \bigbreak \noindent 
             \begin{bashcode}
-            main.c 
-            README.md
-            src/
+                main.c 
+                README.md
+                src/
             \end{bashcode}
         \item \textbf{git diff}: Git can show the difference between the working tree and the staging area with
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff
+                git diff
             \end{bashcode}
             \bigbreak \noindent 
             shows changes in your working tree that are not staged. Answers: 
@@ -167,29 +167,29 @@
             \end{quote}
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff --staged
+                git diff --staged
             \end{bashcode}
             \bigbreak \noindent 
             Shows staged changes, meaning what would go into the next commit.
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff HEAD
+                git diff HEAD
             \end{bashcode}
             \bigbreak \noindent 
             Shows all changes compared to the last commit, both staged and unstaged.
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff commit1 commit2
+                git diff commit1 commit2
             \end{bashcode}
             \bigbreak \noindent 
             Shows what changed between two commits
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff main feature
+                git diff main feature
             \end{bashcode}
             \bigbreak \noindent 
             Shows the difference between the snapshots pointed to by main and feature.
-            
+
         \item \textbf{Tracked files}: A tracked file is a file Git already knows about.
             \bigbreak \noindent 
             More precisely, a file is tracked if it is already in Git’s repository history or currently in the index.
@@ -204,40 +204,53 @@
         \item \textbf{git add -A}: Stages all additions, modifications, and deletions in the whole repository.
             \bigbreak \noindent 
             \begin{bashcode}
-            git add -A
+                git add -A
             \end{bashcode}
             \bigbreak \noindent 
             stages all changes in the entire repository, regardless of what directory you are currently in.
             \bigbreak \noindent 
             \begin{bashcode}
-            git add .
+                git add .
             \end{bashcode}
             \bigbreak \noindent 
             stages changes only in the current directory and below.
+        \item \textbf{git add --patch}: Lets you stage changes \textbf{piece by piece} instead of staging an entire file.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git add --patch 
+            \end{bashcode}
+            \bigbreak \noindent 
+            or
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git add -p
+            \end{bashcode}
+            \bigbreak \noindent 
+            shows you each change hunk and asks whether you want to stage it. A hunk is a small contiguous block of changed lines. For example, if you edited two unrelated parts of the same file, Git may show them as two separate hunks.
         \item \textbf{git restore, revert, and reset}: 
             \begin{itemize}
                 \item \textbf{Restore}: git restore is mainly for undoing changes in your working tree or staging area. Use it when you want to throw away uncommitted changes.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore file.txt
+                        git restore file.txt
                     \end{bashcode}
                     \bigbreak \noindent 
                     This discards unstaged changes to file.txt in your working tree and restores it to the version currently in the staging area.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore --staged file.txt
+                        git restore --staged file.txt
                     \end{bashcode}
                     \bigbreak \noindent 
                     removes file.txt from the index, --staged can undo a git add
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore --worktree file.txt
+                        git restore --worktree file.txt
                     \end{bashcode}
                     \bigbreak \noindent 
                     discards unstaged changes in the file and restores it from the index. Note that this is equivalent to 
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore file.txt
+                        git restore file.txt
                     \end{bashcode}
                     \bigbreak \noindent 
                     because --worktree is the default target for git restore.
@@ -248,7 +261,7 @@
                     If commit \textbf{abc123} adds a line "\textit{hello}", then
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git revert abc123
+                        git revert abc123
                     \end{bashcode}
                     \bigbreak \noindent 
                     creates a new commit that removes that line. The original commit still exists in history.
@@ -265,18 +278,18 @@
             Branches let you work on a separate line of development without disturbing another line.
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch -c feature-login
+                git switch -c feature-login
             \end{bashcode}
             \bigbreak \noindent 
             This creates a new branch called feature-login and switches to it. Now, both main and feature-login point to commit $C$. If you commit on feature-login, only that branch moves forward.
             \begin{verbatim}
                 A -- B -- C
-                          ^
-                        main
-                            \
-                            D -- E
-                                 ^
-                           feature-login
+                ^
+                main
+                \
+                D -- E
+                ^
+                feature-login
             \end{verbatim}
         \item \textbf{HEAD}: HEAD means “where you currently are.” Usually, head points to a branch. If you make a commit, git moves the branch that HEAD is attached to 
             \bigbreak \noindent 
@@ -287,53 +300,53 @@
             Creates a branch but does not switch to it.
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch -c feature-login
-            git checkout -b feature-login
+                git switch -c feature-login
+                git checkout -b feature-login
             \end{bashcode}
             \bigbreak \noindent 
             Both create the branch and switch to it
         \item \textbf{Merging branches}: Eventually, you usually want to bring the changes from one branch into another. Suppose you want to merge feature-login into main. First, switch to main.
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch main
+                git switch main
             \end{bashcode}
             \bigbreak \noindent 
             Then, merge
             \bigbreak \noindent 
             \begin{bashcode}
-            git merge feature-login.
+                git merge feature-login.
             \end{bashcode}
             \bigbreak \noindent 
             \begin{verbatim}
-               A -- B -- C -------- M
-                          \        /
-                           D -- E 
+                A -- B -- C -------- M
+                \        /
+                D -- E 
             \end{verbatim}
             \bigbreak \noindent 
             $M$ is a merge commit. It combines the histories of main and feature-login. Sometimes Git can do a \textbf{fast-forward merge} instead:
             \bigbreak \noindent 
             \begin{verbatim}
                 A -- B -- C -- D -- E
-                                    ^
-                                  main
+                ^
+                main
             \end{verbatim}
             \bigbreak \noindent 
             Note that we can pass \texttt{--no-ff} to force a merge commit. 
             \bigbreak \noindent 
             \begin{bashcode}
-            git merge --no-ff feature-login
+                git merge --no-ff feature-login
             \end{bashcode}
             \bigbreak \noindent 
             After merging a branch, you can delete the local branch name:
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch -d feature-login
+                git branch -d feature-login
             \end{bashcode}
             \bigbreak \noindent 
             This deletes the branch pointer, not necessarily the commits. If the commits are already reachable from another branch, such as main, they are still part of history.
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch -D feature-login
+                git branch -D feature-login
             \end{bashcode}
             \bigbreak \noindent 
             This deletes the branch even if Git thinks it has unmerged work.
@@ -343,8 +356,8 @@
             \bigbreak \noindent 
             \begin{verbatim}
                 A---B---C  main
-                    \
-                    D---E---F  feature 
+                \
+                D---E---F  feature 
             \end{verbatim}
             \bigbreak \noindent 
             A regular merge creates a new merge commit that has two parents: the current main commit and the tip of feature.
@@ -356,8 +369,8 @@
             \bigbreak \noindent 
             \begin{verbatim}
                 A---B---C-------M  main
-                    \         /
-                    D---E---F  feature
+                \         /
+                D---E---F  feature
             \end{verbatim}
             \bigbreak \noindent 
             The commits D, E, and F remain visible as separate commits in the project history. Git records that feature was merged into main.
@@ -375,7 +388,7 @@
             \begin{verbatim}
                 A---B---C---S  main
 
-                    D---E---F  feature
+                D---E---F  feature
             \end{verbatim}
             \bigbreak \noindent 
             Here, $S$ is a single new commit containing the same final changes as the whole feature branch.
@@ -387,25 +400,25 @@
             After a squash merge, Git does not consider the feature branch “merged” in the same structural way.
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch --merged
+                git branch --merged
             \end{bashcode}
             \bigbreak \noindent 
             Will not show that the branch was merged.
-            
-            
-            
+
+
+
         \item \textbf{Local vs remote branches}: A local branch exists in your repository. A \textbf{remote-tracking branch} represents the state of a branch on a remote, such as GitHub.
             \bigbreak \noindent 
             origin/main means: My local record of what main looked like on the remote named origin.
             \bigbreak \noindent 
             \begin{bashcode}
-            git fetch
+                git fetch
             \end{bashcode}
             \bigbreak \noindent 
             updates remote-tracking branches.
             \bigbreak \noindent 
             \begin{bashcode}
-            git push origin feature-login
+                git push origin feature-login
             \end{bashcode}
             \bigbreak \noindent 
             Git sends your local feature-login branch to the remote.
@@ -415,8 +428,8 @@
         \item \textbf{Checkout vs switch}: Git checkout is the older, overloaded command. Switch is the newer, more specific command for switching branches.
             \bigbreak \noindent 
             \begin{bashcode}
-            git checkout main
-            git switch main
+                git checkout main
+                git switch main
             \end{bashcode}
             \bigbreak \noindent 
             Both switch you to the main branch. But checkout can do multiple unrelated things. It can also restore files (seen below).
@@ -428,24 +441,24 @@
                 --- a/file.txt
                 +++ b/file.txt
                 @@ -1,5 +1,5 @@
-                    line 1
-                    line 2
+                line 1
+                line 2
                 -old line
                 +new line
-                    line 4
-                    line 5
+                line 4
+                line 5
             \end{bashcode}
             \bigbreak \noindent 
             This part is the hunk:
             \bigbreak \noindent 
             \begin{bashcode}
                 @@ -1,5 +1,5 @@
-                    line 1
-                    line 2
+                line 1
+                line 2
                 -old line
                 +new line
-                    line 4
-                    line 5
+                line 4
+                line 5
             \end{bashcode}
             \begin{itemize}
                 \item The -old line means that line was removed.
@@ -454,7 +467,7 @@
             The unchanged lines around it are context, included so Git and humans can understand where the change belongs.
             \bigbreak \noindent 
             \begin{bashcode}
-            @@ -1,5 +1,5 @@
+                @@ -1,5 +1,5 @@
             \end{bashcode}
             \bigbreak \noindent 
             is the \textbf{hunk header}. It means:
@@ -471,21 +484,21 @@
             You can create a patch with
             \bigbreak \noindent 
             \begin{bashcode}
-            git diff > changes.patch
+                git diff > changes.patch
             \end{bashcode}
             \bigbreak \noindent 
             Someone else can apply it with
             \bigbreak \noindent 
             \begin{bashcode}
-            git apply changes.patch
+                git apply changes.patch
             \end{bashcode}
             \bigbreak \noindent 
             That modifies their working tree using the changes described in the patch.
         \item \textbf{Merges}: A merge in git combines changes from one branch into another branch.
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch main
-            git merge feature
+                git switch main
+                git merge feature
             \end{bashcode}
             \bigbreak \noindent 
             This means: Take the changes from feature and integrate them into main.
@@ -493,13 +506,13 @@
             A merge conflict happens when Git cannot automatically combine the changes. Suppose both branches changed the same line differently,
             \bigbreak \noindent 
             \begin{cppcode}
-            // main.c
-            int x = 10;
+                // main.c
+                int x = 10;
             \end{cppcode}
             \bigbreak \noindent 
             \begin{bashcode}
-            // feature.c
-            int x = 20;
+                // feature.c
+                int x = 20;
             \end{bashcode}
             \bigbreak \noindent 
             Git cannot possibly know which one you want, so it marks the conflict in the file.
@@ -526,14 +539,14 @@
         \item \textbf{Tags}: You can attach a name to a commit using a tag.
             \bigbreak \noindent 
             \begin{bashcode}
-            git tag v1.0 a3f4c91
+                git tag v1.0 a3f4c91
             \end{bashcode}
             \bigbreak \noindent 
             Now, v1.0 refers to that commit.
         \item \textbf{Stashing}: Git stash temporarily saves your uncommited changes somewhere inside git, then cleans your working tree. Use it when you are in the middle of work but need to switch branches, pull changes, or do something else without committing yet.
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash
+                git stash
             \end{bashcode}
             \bigbreak \noindent 
             This takes your current uncommitted changes and stores them in a stash entry.
@@ -541,44 +554,44 @@
             Then your working tree goes back to a clean state.
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash list
+                git stash list
             \end{bashcode}
             \bigbreak \noindent 
             lists the stashes
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash apply
+                git stash apply
             \end{bashcode}
             \bigbreak \noindent 
             Brings back the most recent stash
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash pop
+                git stash pop
             \end{bashcode}
             \bigbreak \noindent 
             Applies and removes from the list
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash apply <stash name>
+                git stash apply <stash name>
             \end{bashcode}
             \bigbreak \noindent 
             Applies a specific stash from the list.
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash drop <name>
-            git stash clear
+                git stash drop <name>
+                git stash clear
             \end{bashcode}
             \bigbreak \noindent 
             Removes stashes from the list, or clears the list.
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash --staged
+                git stash --staged
             \end{bashcode}
             \bigbreak \noindent 
             stashes only the staged changes. That means Git takes the changes currently in the index/staging area and puts them into a stash. Your unstaged working-tree changes are left alone.
             \bigbreak \noindent 
             \begin{bashcode}
-            git stash --keep-indexd 
+                git stash --keep-indexd 
             \end{bashcode}
             \bigbreak \noindent 
             This stashes your unstaged changes, but keeps your staged changes in place.
@@ -590,15 +603,15 @@
                 \item \textbf{git rm}: Removes paths from the index. By default, it removes them from both the working tree and the index. With --cached, it removes them from the index only, leaving the file in your working directory 
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rm file.c
-                    git rm --cached file.c
+                        git rm file.c
+                        git rm --cached file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     Use git rm --cached when you accidentally started tracking a file but want to keep the local copy.
                 \item \textbf{git mv}: Moves or renames a file and updates the index to record that change. The change is staged, but it still needs to be committed.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git mv oldname.c newname.c
+                        git mv oldname.c newname.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     This is roughly equivalent to
@@ -611,51 +624,57 @@
                 \item \textbf{git restore --staged}: Changes the index without necessarily changing the working directory. This is the modern command for “unstaging” something. By default, git restore --staged <path> restores the index version from HEAD.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore --staged file.c
+                        git restore --staged file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     You can also restore both the index and working tree:
                     \bigbreak \noindent 
                     \begin{cppcode}
-                    git restore --staged --worktree file.c
+                        git restore --staged --worktree file.c
                     \end{cppcode}
                 \item \textbf{git reset}: git reset can move HEAD, reset the index, and sometimes reset the working tree depending on the mode.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git reset file.c
+                        git reset file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     Unstages file.c
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git reset 
+                        git reset 
                     \end{bashcode}
                     \bigbreak \noindent 
                     Resets the whole index to HEAD, leaving the working directory alone
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git reset --mixed HEAD~1
+                        git reset --mixed HEAD~1
                     \end{bashcode}
                     \bigbreak \noindent 
-                    Moves HEAD and resets the index, but keeps working-directory changes. --mixed is the default reset mode.
+                    Moves HEAD and resets the index, but keeps working-directory changes. --mixed is the default reset mode. That is,
+                    \begin{enumerate}
+                        \item Move the current branch/HEAD back to HEAD$\sim$1.
+                        \item Reset the index to match the tree of HEAD$\sim$1.
+                        \item Leave the working tree alone.
+                    \end{enumerate}
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git reset --hard HEAD
+                        git reset --hard HEAD
                     \end{bashcode}
                     \bigbreak \noindent 
                     Resets both the index and working tree to HEAD
                     \bigbreak \noindent 
                     \begin{cppcode}
-                    git reset --soft HEAD
+                        git reset --soft HEAD~1
                     \end{cppcode}
                     \bigbreak \noindent 
-                    Resets the working tree but \textbf{not} the index.
+                    moves HEAD back one commit, leaves index unchanged, leaves working tree unchanged.
+
                 \item \textbf{git checkout}: git checkout is older and overloaded. It can affect the index in some forms but not others.
                     \bigbreak \noindent 
                     This form updates both the working tree and the index from another commit/tree:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout main -- file.c
+                        git checkout main -- file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     That means: take file.c from main, put it into my working tree, and stage that version in the index.
@@ -665,14 +684,14 @@
                     The form
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout -- file.c
+                        git checkout -- file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     Restores the working-tree file from the index, so it affects the working directory, not the staging area.
                 \item \textbf{Detached head}: Consider a commit with hash 5f1bc85
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout 5f1bc85
+                        git checkout 5f1bc85
                     \end{bashcode}
                     \bigbreak \noindent 
                     This checks out the commit whose hash starts with 5f1bc85.
@@ -682,13 +701,13 @@
                     Normally, HEAD points to a branch:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    HEAD -> main -> C
+                        HEAD -> main -> C
                     \end{bashcode}
                     \bigbreak \noindent 
                     After checking out a specific commit, HEAD points directly to that commit instead of to a branch:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    HEAD -> f51bc85
+                        HEAD -> f51bc85
                     \end{bashcode}
                     So your working tree and index are updated to match the snapshot stored in commit 5f1bc85.
                     \bigbreak \noindent 
@@ -699,22 +718,22 @@
                     But if you make a new commit from here:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git add .
-                    git commit -m "experiment"
+                        git add .
+                        git commit -m "experiment"
                     \end{bashcode}
                     \bigbreak \noindent 
                     you get
                     \bigbreak \noindent 
                     \begin{verbatim}
-                       A--B--C--D main 
-                          \ 
-                           E HEAD
+                        A--B--C--D main 
+                        \ 
+                        E HEAD
                     \end{verbatim}
                     \bigbreak \noindent 
                     Commit E is not on a named branch unless you create one.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git switch -c experiment-branch
+                        git switch -c experiment-branch
                     \end{bashcode}
                 \item \textbf{Git reset vs git checkout}: 
                     \begin{itemize}
@@ -735,32 +754,32 @@
                 \item \textbf{Delete untracked files}: Git clean removes untracked files from the working tree
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git clean -fd # Force (f) and recursive (d)
+                        git clean -fd # Force (f) and recursive (d)
                     \end{bashcode}
                 \item \textbf{git switch}: Switching branches updates the working tree and the index to match the branch being checked out
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git switch main
-                    git switch feature
+                        git switch main
+                        git switch feature
                     \end{bashcode}
                     \bigbreak \noindent 
                     So while git switch is not normally thought of as a staging command, it does replace the index as part of changing branches
                 \item \textbf{git commit}: A plain commit reads the current index and creates a commit from it. The Git docs describe git commit as creating a new commit from the current contents of the index
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git commit -a
+                        git commit -a
                     \end{bashcode}
                     \bigbreak \noindent 
                     Automatically stages modifications and deletions for already-tracked files before committing. It does not add brand-new untracked files. 
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git commit -p
+                        git commit -p
                     \end{bashcode}
                     \bigbreak \noindent 
                     Lets you interactively choose hunks to include in the commit.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git commit file.c
+                        git commit file.c
                     \end{bashcode}
                     \bigbreak \noindent 
                     Commits the current content of the named tracked file, bypassing the normal “only what is already staged” behavior for that file.
@@ -770,26 +789,26 @@
                 \item \textbf{git apply --index}: Applies a patch to both the working tree and the index.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git apply --index patch patch.diff
+                        git apply --index patch patch.diff
                     \end{bashcode}
                 \item \textbf{git apply --cached}: Applies a patch only to the index, leaving the working tree alone
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git apply --cached patch.diff
+                        git apply --cached patch.diff
                     \end{bashcode}
                     \bigbreak \noindent 
                     Without --index or --cached, git apply applies the patch only to files in the working tree.
                 \item \textbf{git merge}: Merging updates the index and working tree when changes apply cleanly. If conflicts occur, the index stores special unmerged entries until you resolve them and stage the resolved files.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git merge feature
+                        git merge feature
                     \end{bashcode}
                     \bigbreak \noindent 
                     After conflict resolution,
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git add conflicted-file.c
-                    git commit
+                        git add conflicted-file.c
+                        git commit
                     \end{bashcode}
                 \item \textbf{git cherry-pick}: Applies the changes from an existing commit. If paths apply cleanly, they are updated in both the index and working tree. If conflicts occur, the index records multiple versions for conflicted paths.
                     \bigbreak \noindent 
@@ -800,21 +819,21 @@
                     After resolving conflicts:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git add file.c
-                    git cherry-pick --continue
+                        git add file.c
+                        git cherry-pick --continue
                     \end{bashcode}
                 \item \textbf{git revert}: Creates a new commit that reverses an earlier commit. With --no-commit/-n, it applies the reverse changes to the working tree and index without committing.
                 \item \textbf{git rebase}: Rebase repeatedly applies commits onto a new base. Internally, this affects the working tree and index as commits are replayed. If conflicts occur, you resolve files, stage them with git add, and continue:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rebase main
-                    git add file.c
-                    git rebase --continue
+                        git rebase main
+                        git add file.c
+                        git rebase --continue
                     \end{bashcode}
                 \item \textbf{Conflicts in a rebase}: After a git rebase, conflicts are handled one commit at a time. Git pauses at the first commit that cannot be replayed cleanly.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git status
+                        git status
                     \end{bashcode}
                     \bigbreak \noindent 
                     Tells you which files have conflicts. Open each conflicted file and look for conflict markers. 
@@ -830,7 +849,7 @@
                     Edit the file so it contains the final correct version. Remove the conflict markers. Then, stage the resolved files and continue the rebase
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rebase --continue
+                        git rebase --continue
                     \end{bashcode}
                     \bigbreak \noindent 
                     Git will then try to replay the next commit. If another conflict occurs, repeat the same process.
@@ -839,17 +858,17 @@
                         \item \textbf{Abort}: Cancels the whole rebase and returns your branch to how it was before the rebase started.
                             \bigbreak \noindent 
                             \begin{bashcode}
-                            git rebase --abort
+                                git rebase --abort
                             \end{bashcode}
                         \item \textbf{Skip}:  Skips the commit that caused the conflict. Use this only when you are sure that commit’s changes are no longer needed.
                             \bigbreak \noindent 
                             \begin{bashcode}
-                            git rebase --skip
+                                git rebase --skip
                             \end{bashcode}
                         \item \textbf{Continue}: Continues after you resolve and stage the conflicts
                             \bigbreak \noindent 
                             \begin{bashcode}
-                            git rebase --continue
+                                git rebase --continue
                             \end{bashcode}
                     \end{enumerate}
                 \item \textbf{Shortcut for resolving conflicts}: git checkout --ours file and git checkout --theirs file are shortcuts for resolving a conflicted file by choosing one side completely.
@@ -857,43 +876,43 @@
                     They are used when Git has stopped because of a conflict.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout --ours file.cpp
+                        git checkout --ours file.cpp
                     \end{bashcode}
                     \bigbreak \noindent 
                     Means replace file.cpp with our side of the conflict.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout --theirs file.cpp
+                        git checkout --theirs file.cpp
                     \end{bashcode}
                     \bigbreak \noindent 
                     Means replace file.cpp with their side of the conflict. After choosing one, you still need to stage the file:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git add file.cpp
+                        git add file.cpp
                     \end{bashcode}
                     \bigbreak \noindent 
                     Then, continue the operation
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git merge --continue
+                        git merge --continue
                     \end{bashcode}
                     \bigbreak \noindent 
                     However, during a rebase the meaning feels reversed. Suppose we are replaying feature commits on top of main. So, we are on branch \texttt{feature} and ran
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rebase main
+                        git rebase main
                     \end{bashcode}
                     \bigbreak \noindent 
                     In this case, 
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout --ours file.cpp
+                        git checkout --ours file.cpp
                     \end{bashcode}
                     \bigbreak \noindent 
                     chooses the version from main, the branch we are rebasing onto.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git checkout --theirs file.cpp
+                        git checkout --theirs file.cpp
                     \end{bashcode}
                     \bigbreak \noindent 
                     chooses the version from the \texttt{feature} commit currently being replayed.
@@ -901,13 +920,13 @@
                     \textbf{Note:} Modern git also lets you write this as
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git restore --ours file.cpp
-                    git restore --theirs file.cpp
+                        git restore --ours file.cpp
+                        git restore --theirs file.cpp
                     \end{bashcode}
                 \item \textbf{Interactive rebasing}: git rebase -i means interactive rebase. It lets you rewrite a sequence of commits by editing a temporary “todo list” before Git replays those commits.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rebase -i main
+                        git rebase -i main
                     \end{bashcode}
                     \bigbreak \noindent 
                     Git opens a list like this:
@@ -924,7 +943,7 @@
                     Suppose your history is:
                     \bigbreak \noindent 
                     \begin{verbatim}
-                       A -- B -- C -- D   feature 
+                        A -- B -- C -- D   feature 
                     \end{verbatim}
                     \bigbreak \noindent 
                     Maybe $B$, $C$, and $D$ are really one logical change.
@@ -946,7 +965,7 @@
                     After the rebase, Git creates one new commit containing the combined changes:
                     \bigbreak \noindent 
                     \begin{verbatim}
-                       A -- B' 
+                        A -- B' 
                     \end{verbatim}
                     \bigbreak \noindent 
                     Because Git gives you a list of commits, you can literally move lines around. Suppose the original order is 
@@ -974,15 +993,15 @@
                 \item \textbf{More specific rebasing}: You can also use --onto for more specific rebasing:                   
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    rebase --onto new_base old_base branch
+                        rebase --onto new_base old_base branch
                     \end{bashcode}
                     \bigbreak \noindent 
                     Take the commits after old\_base on branch, and replay them onto new\_base. That lets you move a branch onto almost any commit in the repository.
                 \item \textbf{git pull}: git pull is essentially git fetch followed by either git merge or git rebase, depending on configuration/options. Because the merge/rebase part can update the index, git pull can affect the staging area indirectly.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git pull
-                    git pull --rebase
+                        git pull
+                        git pull --rebase
                     \end{bashcode}
                 \item \textbf{git stash}: git stash records the current state of both the working directory and the index, then reverts the working directory to match HEAD.
                     \bigbreak \noindent 
@@ -1009,47 +1028,47 @@
                 \item \textbf{git read-tree}: Low-level command for reading tree objects into the index. It is used internally by commands such as checkout, merge, and reset-like operations.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                     git read-tree HEAD
+                        git read-tree HEAD
                     \end{bashcode}
             \end{itemize}
         \item \textbf{git ls-files}: git ls-files lists files that Git knows about in the index/staging area, and optionally files in the working tree
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files
+                git ls-files
             \end{bashcode}
             \bigbreak \noindent 
             This prints the files that are currently tracked by Git, because tracked files are recorded in the index.
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --others
+                git ls-files --others
             \end{bashcode}
             \bigbreak \noindent 
             Shows untracked files
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --others --exclude-standard
+                git ls-files --others --exclude-standard
             \end{bashcode}
             \bigbreak \noindent 
             Shows untracked files, but respect .gitignore.
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --ignored --others --exclude-standard
+                git ls-files --ignored --others --exclude-standard
             \end{bashcode}
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --deleted
+                git ls-files --deleted
             \end{bashcode}
             \bigbreak \noindent 
             Shows deleted tracked files
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --modified
+                git ls-files --modified
             \end{bashcode}
             \bigbreak \noindent 
             Shows modified tracked files
             \bigbreak \noindent 
             \begin{bashcode}
-            git ls-files --unmerged
+                git ls-files --unmerged
             \end{bashcode}
             \bigbreak \noindent 
             Shows files with merge conflicts.
@@ -1057,7 +1076,7 @@
         \item \textbf{git log}: Shows the commit history
             \bigbreak \noindent 
             \begin{bashcode}
-            git log
+                git log
             \end{bashcode}
             \bigbreak \noindent 
             Show recent commits only:
@@ -1088,62 +1107,62 @@
             For example, suppose you have:
             \bigbreak \noindent 
             \begin{bashcode}
-            main
-            origin/main
+                main
+                origin/main
             \end{bashcode}
             \bigbreak \noindent 
             If your local \texttt{main} is tracking \texttt{origin/main}, then origin/main is the upstream of main. You can see this with
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch -vv
+                git branch -vv
             \end{bashcode}
             \bigbreak \noindent 
             \begin{bashcode}
-            * main  abc1234 [origin/main] Add parser notes
+                * main  abc1234 [origin/main] Add parser notes
             \end{bashcode}
             \bigbreak \noindent 
             So,  local branch main has upstream origin/main. The upstream matters because commands like these use it automatically.
             \bigbreak \noindent 
             \begin{bashcode}
-            git pull
-            git push 
-            git status
+                git pull
+                git push 
+                git status
             \end{bashcode}
             \bigbreak \noindent 
             If your branch has an upstream, then
             \bigbreak \noindent 
             \begin{bashcode}
-            git push
+                git push
             \end{bashcode}
             \bigbreak \noindent 
             usually means
             \bigbreak \noindent 
             \begin{bashcode}
-            git push origin main
+                git push origin main
             \end{bashcode}
             \bigbreak \noindent 
             Also,
             \bigbreak \noindent 
             \begin{bashcode}
-            git pull
+                git pull
             \end{bashcode}
             \bigbreak \noindent 
             usually means
             \bigbreak \noindent 
             \begin{bashcode}
-            git fetch origin
-            git merge origin/main
+                git fetch origin
+                git merge origin/main
             \end{bashcode}
         \item \textbf{Setting an upstream}: When you first push a local branch, you often use
             \bigbreak \noindent 
             \begin{bashcode}
-            git push -u origin main
+                git push -u origin main
             \end{bashcode}
             \bigbreak \noindent 
             Or, equivalently
             \bigbreak \noindent 
             \begin{bashcode}
-            git push --set-upstream origin main
+                git push --set-upstream origin main
             \end{bashcode}
             \bigbreak \noindent 
             The -u means \textit{set upstream}.
@@ -1151,28 +1170,28 @@
             You can also manually set an upstream:
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch --set-upstream-to=origin/main main
+                git branch --set-upstream-to=origin/main main
             \end{bashcode}
             \bigbreak \noindent 
             Or, if already on main,
             \bigbreak \noindent 
             \begin{bashcode}
-            git branch --set-upstream-to=origin/main
+                git branch --set-upstream-to=origin/main
             \end{bashcode}
         \item \textbf{Upstreams and branches}: You do not always need to set an upstream for a branch.
             \bigbreak \noindent 
             You only need an upstream if you want Git to know which remote branch your local branch corresponds to for commands like:
             \bigbreak \noindent 
             \begin{bashcode}
-            git pull
-            git push
-            git status
+                git pull
+                git push
+                git status
             \end{bashcode}
             \bigbreak \noindent 
             Suppose you create a local branch
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch -c feature
+                git switch -c feature
             \end{bashcode}
             \bigbreak \noindent 
             At this point, feature is just local. It does not automatically have an upstream unless you created it from a remote branch in a tracking-aware way.
@@ -1190,16 +1209,16 @@
                 \item Creates / updates the remote branch
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    origin/feature
+                        origin/feature
                     \end{bashcode}
                 \item Sets your local branch \textbf{feature} to track \textbf{origin/feature}.
             \end{enumerate}
         \item \textbf{Remote-tracking branch}: A remote-tracking branch is Gits local record of a branch on a remote.
             \bigbreak \noindent 
             \begin{bashcode}
-            origin/main
-            origin/dev
-            origin/feature-x
+                origin/main
+                origin/dev
+                origin/feature-x
             \end{bashcode}
             \bigbreak \noindent 
             These are not branches you usually edit directly. They are Git’s local snapshots of what the remote branches looked like the last time you fetched.
@@ -1208,22 +1227,22 @@
         \item \textbf{Rebase}: A rebase moves your commits so that they appear to be based on a different commit. Suppose we have history
             \begin{verbatim}
                 A---B---C  origin/main
-                    \
-                    D---E  feature
+                \
+                D---E  feature
             \end{verbatim}
             \bigbreak \noindent 
             You made commits $D$ and $E$ on feature, but meanwhile main advanced to $C$. If you run
             \bigbreak \noindent 
             \begin{bashcode}
-            git switch feature
-            git rebase origin/main
+                git switch feature
+                git rebase origin/main
             \end{bashcode}
             \bigbreak \noindent 
             Git rewrites your branch like this:
             \begin{verbatim}
                 A---B---C  origin/main
-                         \
-                          D'---E'  feature
+                \
+                D'---E'  feature
             \end{verbatim}
             \bigbreak \noindent 
             Your changes are replayed on top of the latest origin/main.
@@ -1231,31 +1250,31 @@
             Notice the commits are now called $D^{\prime}$ and $E^{\prime}$, not $D$ and $E$. That is because rebasing creates new commits with new commit hashes.
         \item \textbf{Rebase vs merge}: Both merge and rebase can bring one branch up to date with another branch, but they do it differently.
             \begin{itemize}
-               \item \textbf{Merge}:  
-                   \bigbreak \noindent 
-                   \begin{bashcode}
-                   git merge origin/main
-                   \end{bashcode}
-                   \bigbreak \noindent 
-                   creates a new merge commit:
-                   \begin{verbatim}
-                       A---B----C  origin/main
-                           \     \
-                           D---E--M  feature 
-                   \end{verbatim}
-                   \bigbreak \noindent 
-                   The history preserves the fact that the branches diverged and were merged.
+                \item \textbf{Merge}:  
+                    \bigbreak \noindent 
+                    \begin{bashcode}
+                        git merge origin/main
+                    \end{bashcode}
+                    \bigbreak \noindent 
+                    creates a new merge commit:
+                    \begin{verbatim}
+                        A---B----C  origin/main
+                        \     \
+                        D---E--M  feature 
+                    \end{verbatim}
+                    \bigbreak \noindent 
+                    The history preserves the fact that the branches diverged and were merged.
                 \item \textbf{Rebase}:  
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git rebase origin/main
+                        git rebase origin/main
                     \end{bashcode}
                     \bigbreak \noindent 
                     rewrites the feature branch
                     \begin{verbatim}
-                       A---B---C  origin/main
-                                \
-                                 D'---E'  feature 
+                        A---B---C  origin/main
+                        \
+                        D'---E'  feature 
                     \end{verbatim}
                     \bigbreak \noindent 
                     The history looks linear, as if you started your feature branch from the latest main. Rebase is commonly used to keep a clean, linear history.
@@ -1263,61 +1282,127 @@
                     For example, before merging a feature branch, you might do:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git fetch origin
-                    git rebase origin/main
+                        git fetch origin
+                        git rebase origin/main
                     \end{bashcode}
                     \bigbreak \noindent 
                     This updates your feature branch so your commits are placed after the newest commits on main.
-                \end{itemize}
+            \end{itemize}
 
-                \item \textbf{Rebasing with upstream}: If your branch has an upstream, you can do:
+        \item \textbf{Rebasing with upstream}: If your branch has an upstream, you can do:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git pull --rebase
+            \end{bashcode}
+            \bigbreak \noindent 
+            This means:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git fetch
+                git rebase <upstream>
+            \end{bashcode}
+            \bigbreak \noindent 
+            So instead of fetching and merging the upstream branch, Git fetches and rebases your local commits on top of it.
+        \item \textbf{Blobs}: a blob is the object type that stores the contents of a file.
+            \bigbreak \noindent 
+            A blob does not store the file name, path, permissions, or directory structure. It only stores the raw file data.
+            \bigbreak \noindent 
+            If you have
+            \bigbreak \noindent 
+            \begin{bashcode}
+                src/main.c
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git stores the contents of main.c as a \textbf{blob}. The filename main.c and the path src/main.c are stored separately in a \textbf{tree object}.
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{blob}: file contents
+                \item \textbf{tree}:  directory listing: names + permissions + pointers to blobs/trees
+                \item \textbf{commit}:  snapshot metadata + pointer to a tree
+            \end{itemize}
+        \item \textbf{git gc and git prune}: 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git gc
+            \end{bashcode}
+            \bigbreak \noindent 
+            Means \textbf{Git garbage collection}. It is a maintenance command that cleans and optimizes the internal .git database. It does several things, including:
+            \begin{enumerate}
+                \item \textbf{Compresses loose objects into packfiles}: When Git creates objects, such as blobs, trees, commits, and tags, they may initially be stored as individual files under:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git pull --rebase
+                        .git/objects/
                     \end{bashcode}
                     \bigbreak \noindent 
-                    This means:
+                    These are called loose objects. Over time, Git packs many objects together into compressed files called packfiles
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    git fetch
-                    git rebase <upstream>
+                        .git/objects/pack/
                     \end{bashcode}
                     \bigbreak \noindent 
-                    So instead of fetching and merging the upstream branch, Git fetches and rebases your local commits on top of it.
-                \item \textbf{Blobs}: a blob is the object type that stores the contents of a file.
-                    \bigbreak \noindent 
-                    A blob does not store the file name, path, permissions, or directory structure. It only stores the raw file data.
-                    \bigbreak \noindent 
-                    If you have
+                    This saves disk space and makes many operations faster.
+                \item \textbf{Removes unreachable objects, but conservatively}: Objects that are not reachable from any branch, tag, stash, reflog, or other reference may eventually be deleted.
                     \bigbreak \noindent 
                     \begin{bashcode}
-                    src/main.c
+                        git add file.txt
+                        git reset file.txt
                     \end{bashcode}
                     \bigbreak \noindent 
-                    Git stores the contents of main.c as a \textbf{blob}. The filename main.c and the path src/main.c are stored separately in a \textbf{tree object}.
+                    Git may have created a blob during git add, but after reset, nothing points to that blob anymore. That blob is now unreachable.
                     \bigbreak \noindent 
+                    git gc may eventually remove it, but Git is conservative. It usually keeps recent unreachable objects around for a while in case you need to recover them.
+                \item \textbf{Cleans up other internal metadata}: It may also prune old reflog entries, repack objects, clean redundant packfiles, and optimize internal repository storage.
+            \end{enumerate}
+            \texttt{git prune} is more specific. It removes \textbf{unreachable loose objects} from the object database 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git prune
+            \end{bashcode}
+            \bigbreak \noindent 
+            An object is unreachable if no reference path leads to it. For example, if no branch, tag, commit, index entry, stash, or reflog points to it, Git may consider it garbage.
+        \item \textbf{git show}: used to view detailed metadata and textual differences (diffs) for specific Git objects, most commonly commits. By default, running it without any arguments displays the author, date, log message, and code changes of the absolute latest commit (HEAD) in your current branch
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git show
+            \end{bashcode}
+            \bigbreak \noindent 
+            We can also inspect a specific commit
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git show <commit-hash>
+            \end{bashcode}
+            \bigbreak \noindent 
+            Displays metadata alongside a complete line-by-line breakdown of code additions and deletions.
+        \item \textbf{Inspection differences}: 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}lXX@{}}
+                    \toprule
+                    \textbf{Command}& \textbf{Primary Scope} &\textbf{Default Focus} \\
+                    \midrule
+                    git show &A single object/commit. &Displays complete metadata and the full code diff.\\[2ex]
+                    git log &A chronological list or range of commits. &Displays only structural metadata like hashes, authors, and log messages.\\[2ex]
+                    git diff &A comparison between two states. &Displays differences between your working files, the staging area, or separate branches. \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+
+        \item \textbf{Summary}: 
+            \begin{itemize}
+                \item \textbf{repository}: A repository is a collection of commits, each of which is an archive of what the project's working tree looked like at a past date, whether on your machine or someone else's. It also defines HEAD (see below), which identifies the branch or commit the current working tree stemmed from. Lastly, it contains a set of branches and tags, to identify certain commits by name.
+                \item \textbf{index}: Unlike other, similar tools you may have used, Git does not commit changes directly from the working tree into the repository. Instead, changes are first registered in something called the index. Think of it as a way of “confirming” your changes, one by one, before doing a commit (which records all your approved changes at once). Some find it helpful to call it instead as the “staging area”, instead of the index.
+                \item \textbf{working tree}: A working tree is any directory on your filesystem which has a repository associated with it (typically indicated by the presence of a sub-directory within it named .git.). It includes all the files and sub-directories in that directory.
+                \item \textbf{commit}: A commit is a snapshot of your working tree at some point in time. The state of HEAD (see below) at the time your commit is made becomes that commit’s parent. This is what creates the notion of a “revision history”.
+                \item \textbf{branch}: A branch is just a name for a commit (and much more will be said about commits in a moment), also called a reference. It’s the parentage of a commit which defines its history, and thus the typical notion of a “branch of development”.
+                \item \textbf{tag}: A tag is also a name for a commit, similar to a branch, except that it al- ways names the same commit, and can have its own description text.
+                \item \textbf{master}: The mainline of development in most repositories is done on a branch called “master”. Although this is a typical default, it is in no way special.
+                \item \textbf{HEAD}: HEAD is used by your repository to define what is currently checked out:
                     \begin{itemize}
-                        \item \textbf{blob}: file contents
-                        \item \textbf{tree}:  directory listing: names + permissions + pointers to blobs/trees
-                        \item \textbf{commit}:  snapshot metadata + pointer to a tree
+                        \item If you checkout a branch, HEAD symbolically refers to that branch, indicating that the branch name should be updated after the next commit operation.
+                        \item If you checkout a specific commit, HEAD refers to that commit only. This is referred to as a detached HEAD, and occurs, for example, if you check out a tag name.
                     \end{itemize}
-                \item \textbf{Summary}: 
-                    \begin{itemize}
-                        \item \textbf{repository}: A repository is a collection of commits, each of which is an archive of what the project's working tree looked like at a past date, whether on your machine or someone else's. It also defines HEAD (see below), which identifies the branch or commit the current working tree stemmed from. Lastly, it contains a set of branches and tags, to identify certain commits by name.
-                        \item \textbf{index}: Unlike other, similar tools you may have used, Git does not commit changes directly from the working tree into the repository. Instead, changes are first registered in something called the index. Think of it as a way of “confirming” your changes, one by one, before doing a commit (which records all your approved changes at once). Some find it helpful to call it instead as the “staging area”, instead of the index.
-                        \item \textbf{working tree}: A working tree is any directory on your filesystem which has a repository associated with it (typically indicated by the presence of a sub-directory within it named .git.). It includes all the files and sub-directories in that directory.
-                        \item \textbf{commit}: A commit is a snapshot of your working tree at some point in time. The state of HEAD (see below) at the time your commit is made becomes that commit’s parent. This is what creates the notion of a “revision history”.
-                        \item \textbf{branch}: A branch is just a name for a commit (and much more will be said about commits in a moment), also called a reference. It’s the parentage of a commit which defines its history, and thus the typical notion of a “branch of development”.
-                        \item \textbf{tag}: A tag is also a name for a commit, similar to a branch, except that it al- ways names the same commit, and can have its own description text.
-                        \item \textbf{master}: The mainline of development in most repositories is done on a branch called “master”. Although this is a typical default, it is in no way special.
-                        \item \textbf{HEAD}: HEAD is used by your repository to define what is currently checked out:
-                            \begin{itemize}
-                                \item If you checkout a branch, HEAD symbolically refers to that branch, indicating that the branch name should be updated after the next commit operation.
-                                \item If you checkout a specific commit, HEAD refers to that commit only. This is referred to as a detached HEAD, and occurs, for example, if you check out a tag name.
-                            \end{itemize}
-                    \end{itemize}
-                    \bigbreak \noindent 
-                    \fig{.6}{./figures/1.png}
+            \end{itemize}
+            \bigbreak \noindent 
+            \fig{.6}{./figures/1.png}
     \end{itemize}
 
     \pagebreak 
@@ -1400,439 +1485,672 @@
             The difference between a Git blob and a filesystem’s file is that a blob stores no metadata about its content. All such information is kept in the tree that holds the blob. One tree may know those contents as a file named “foo” that was created in August 2004, while another tree may know the same contents as a file named “bar” that was created five years later. In a normal filesystem, two files with the same contents but with such different metadata would always be represented as two independent files. Why this difference? Mainly, it’s because a filesystem is designed to support files that change, whereas Git is not. The fact that data is immutable in the Git repository is what makes all of this work and so a different design was needed. And as it turns out, this design allows for much more compact storage, since all objects having identical content can be shared, no matter where they are.
             \bigbreak \noindent 
             \textbf{Note:} Git tracks commits. A commit points to a tree, the tree maps filenames to blobs, and the blobs store file contents.
-        \end{itemize}
 
-            \item \textbf{The blob}: We can create a simple example,
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    mkdir sample && cd sample && echo "Hello, world!" > greeting
-                    git hash-object greeting # -> af5626b4a114abcb82d63db7c8082c3c4756e51b
-                \end{bashcode}
-                \bigbreak \noindent 
-                No matter where you run \texttt{git hash-object}, if the file has only the content \textit{Hello, world!}, the hash will be the same.
-                \bigbreak \noindent 
-                If another repository has a commit whose tree refers to the same blob object, then when we fetch or pull from that repository, Git can recognize that we already have that blob because its object ID is the same. Git only needs to download/store objects that we do not already have.
-                \bigbreak \noindent 
-                If we now create a repository,
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git init
-                    git add greeting
-                    git commit -m "Added greeting"
-                \end{bashcode}
-                \bigbreak \noindent 
-                Our blob should be in the system exactly as we expected, using the hash id de-termined above. As a convenience, Git requires only as many digits of the hash id as are neces-sary to uniquely identify it within the repository. Usually just six or seven digits is enough:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git cat-file -t af5626b # -> blob
-                    git cat-file blob af5626b # -> Hello, world!
-                \end{bashcode}
-                \bigbreak \noindent 
-                a Git blob represents the fundamental data unit in Git. Really, the whole system is about blob management.
-            \item \textbf{Blobs are stored in trees} In order for Git to represent the structure and naming of your files, it attaches blobs as leaf nodes within a tree. Now, I can’t discover which tree(s) a blob lives in just by looking at it, since it may have many, many owners. But I know it must live somewhere within the tree held by the commit I just made:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git ls-tree HEAD # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
-                \end{bashcode}
-                \bigbreak \noindent 
-                This commit contains one Git tree, which has a single leaf: the greeting content’s blob.
-                \bigbreak \noindent 
-                Although I can look at the tree containing my blob by passing HEAD to ls-tree, I haven’t yet seen the underlying tree object referenced by that commit. Here are a few other commands to highlight that difference and thus discover my tree:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git rev-parse HEAD # -> 0437733255614428faae0e090712264cf336cd37
-                    git cat-file -t HEAD # -> commit
-                    git cat-file commit HEAD
+        \item \textbf{The blob}: We can create a simple example,
+            \bigbreak \noindent 
+            \begin{bashcode}
+                mkdir sample && cd sample && echo "Hello, world!" > greeting
+                git hash-object greeting # -> af5626b4a114abcb82d63db7c8082c3c4756e51b
+            \end{bashcode}
+            \bigbreak \noindent 
+            No matter where you run \texttt{git hash-object}, if the file has only the content \textit{Hello, world!}, the hash will be the same.
+            \bigbreak \noindent 
+            If another repository has a commit whose tree refers to the same blob object, then when we fetch or pull from that repository, Git can recognize that we already have that blob because its object ID is the same. Git only needs to download/store objects that we do not already have.
+            \bigbreak \noindent 
+            If we now create a repository,
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git init
+                git add greeting
+                git commit -m "Added greeting"
+            \end{bashcode}
+            \bigbreak \noindent 
+            Our blob should be in the system exactly as we expected, using the hash id de-termined above. As a convenience, Git requires only as many digits of the hash id as are neces-sary to uniquely identify it within the repository. Usually just six or seven digits is enough:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git cat-file -t af5626b # -> blob
+                git cat-file blob af5626b # -> Hello, world!
+            \end{bashcode}
+            \bigbreak \noindent 
+            a Git blob represents the fundamental data unit in Git. Really, the whole system is about blob management.
+        \item \textbf{Blobs are stored in trees} In order for Git to represent the structure and naming of your files, it attaches blobs as leaf nodes within a tree. Now, I can’t discover which tree(s) a blob lives in just by looking at it, since it may have many, many owners. But I know it must live somewhere within the tree held by the commit I just made:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git ls-tree HEAD # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            This commit contains one Git tree, which has a single leaf: the greeting content’s blob.
+            \bigbreak \noindent 
+            Although I can look at the tree containing my blob by passing HEAD to ls-tree, I haven’t yet seen the underlying tree object referenced by that commit. Here are a few other commands to highlight that difference and thus discover my tree:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git rev-parse HEAD # -> 0437733255614428faae0e090712264cf336cd37
+                git cat-file -t HEAD # -> commit
+                git cat-file commit HEAD
 
-                    tree 0563f77d884e4f79ce95117e2d686d7d6e282887
-                    author hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
-                    committer hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
+                tree 0563f77d884e4f79ce95117e2d686d7d6e282887
+                author hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
+                committer hgoose <noodlecloudcode@gmail.com> 1780326086 -0500
 
-                    b # -> commit message
-                \end{bashcode}
-                \bigbreak \noindent 
-                The first command decodes the HEAD alias into the commit it references, the second verifies its type, while the third command shows the hash id of the tree held by that commit, as well as the other information stored in the commit object. The hash id for the commit is unique to my repository — because it includes my name and the date when I made the commit — but the hash id for the tree should be common between your example and mine, containing as it does the same blob under the same name.
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git ls-tree 0563f77 # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
-                \end{bashcode}
-                \bigbreak \noindent 
-                There you have it: my repository contains a single commit, which references a tree that holds a blob — the blob containing the contents I want to record. There’s one more command I can run to verify that this is indeed the case:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    find .git/objects -type f | sort
-                    .git/objects/04/37733255614428faae0e090712264cf336cd37
-                    .git/objects/05/63f77d884e4f79ce95117e2d686d7d6e282887
-                    .git/objects/af/5626b4a114abcb82d63db7c8082c3c4756e51b
-                \end{bashcode}
-                \bigbreak \noindent 
-                We see three objects. These objects should refer to a tree, a commit, and a blob. Let's take a look
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git cat-file -t 0437733255
-                    commit
-                    git cat-file -t 0563f77
-                    tree
-                    git cat-file -t af5626b
-                    blob
-                \end{bashcode}
-                \bigbreak \noindent 
-                Notice the directory name is the MSB of each hash.
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git show 0437733
-                    commit 0437733255614428faae0e090712264cf336cd37 (HEAD -> main)
-                    Author: hgoose <noodlecloudcode@gmail.com>
-                    Date:   Mon Jun 1 10:01:26 2026 -0500
+                b # -> commit message
+            \end{bashcode}
+            \bigbreak \noindent 
+            The first command decodes the HEAD alias into the commit it references, the second verifies its type, while the third command shows the hash id of the tree held by that commit, as well as the other information stored in the commit object. The hash id for the commit is unique to my repository — because it includes my name and the date when I made the commit — but the hash id for the tree should be common between your example and mine, containing as it does the same blob under the same name.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git ls-tree 0563f77 # -> 100644 blob af5626b4a114abcb82d63db7c8082c3c4756e51b greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            There you have it: my repository contains a single commit, which references a tree that holds a blob — the blob containing the contents I want to record. There’s one more command I can run to verify that this is indeed the case:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                find .git/objects -type f | sort
+                .git/objects/04/37733255614428faae0e090712264cf336cd37
+                .git/objects/05/63f77d884e4f79ce95117e2d686d7d6e282887
+                .git/objects/af/5626b4a114abcb82d63db7c8082c3c4756e51b
+            \end{bashcode}
+            \bigbreak \noindent 
+            We see three objects. These objects should refer to a tree, a commit, and a blob. Let's take a look
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git cat-file -t 0437733255
+                commit
+                git cat-file -t 0563f77
+                tree
+                git cat-file -t af5626b
+                blob
+            \end{bashcode}
+            \bigbreak \noindent 
+            Notice the directory name is the MSB of each hash.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git show 0437733
+                commit 0437733255614428faae0e090712264cf336cd37 (HEAD -> main)
+                Author: hgoose <noodlecloudcode@gmail.com>
+                Date:   Mon Jun 1 10:01:26 2026 -0500
 
-                    b
+                b
 
-                    diff --git a/greeting b/greeting
-                    new file mode 100644
-                    index 0000000..af5626b
-                    --- /dev/null
-                    +++ b/greeting
-                    @@ -0,0 +1 @@
-                    +Hello, world!
+                diff --git a/greeting b/greeting
+                new file mode 100644
+                index 0000000..af5626b
+                --- /dev/null
+                +++ b/greeting
+                @@ -0,0 +1 @@
+                +Hello, world!
 
-                    git show 0563f77
-                    tree 0563f77
+                git show 0563f77
+                tree 0563f77
 
-                    greeting
+                greeting
 
-                    git show af5626b
-                    Hello, world!
-                \end{bashcode}
-            \item \textbf{How trees are made}: Every commit holds a single tree, but how are trees made? We know that blobs are created by stuffing the contents of your files into blobs — and that trees own blobs — but we haven’t yet seen how the tree that holds the blob is made, or how that tree gets linked to its parent commit.
-                \bigbreak \noindent 
-                Let’s start with a new sample repository again, but this time by doing things manually, so you can get a feeling for exactly what’s happening under the hood:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    rm -rf greeting .git
-                    echo "Hello, world!" > greeting
-                    git init
-                    git add greeting
-                \end{bashcode}
-                \bigbreak \noindent 
-                It all starts when you first add a file to the index.
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git log # Fails, no commits
+                git show af5626b
+                Hello, world!
+            \end{bashcode}
+        \item \textbf{How trees are made}: Every commit holds a single tree, but how are trees made? We know that blobs are created by stuffing the contents of your files into blobs — and that trees own blobs — but we haven’t yet seen how the tree that holds the blob is made, or how that tree gets linked to its parent commit.
+            \bigbreak \noindent 
+            Let’s start with a new sample repository again, but this time by doing things manually, so you can get a feeling for exactly what’s happening under the hood:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                rm -rf greeting .git
+                echo "Hello, world!" > greeting
+                git init
+                git add greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            It all starts when you first add a file to the index.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log # Fails, no commits
 
-                    git ls-files --stage 
-                    100644 af5626b4a114abcb82d63db7c8082c3c4756e51b 0 greeting
-                \end{bashcode}
-                \bigbreak \noindent 
-                What’s this? I haven’t committed anything to the repository yet, but already an object has come into being. It has the same hash id I started this whole business with, so I know it represents the contents of my greeting file. I could use cat-file -t at this point on the hash id, and I’d see that it was a blob. It is, in fact, the same blob I got the first time I created this sample repository.
-                \bigbreak \noindent 
-                This blob isn’t referenced by a tree yet, nor are there any commits. At the moment it is only referenced from a file named .git/index, which references the blobs and trees that make up the current index. So now let’s make a tree in the repo for our blob to hang off of:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git write-tree # Records the contents of the index in a tree
-                    0563f77d884e4f79ce95117e2d686d7d6e282887
-                \end{bashcode}
-                \bigbreak \noindent 
-                This number should look familiar as well: a tree containing the same blobs (and sub-trees) will always have the same hash id. I don’t have a commit object yet, but now there is a tree object in that repository which holds the blob. The purpose of the low-level write-tree command is to take whatever the contents of the index are and tuck them into a new tree for the purpose of creating a commit.
-                \bigbreak \noindent 
-                I can manually make a new commit object by using this tree directly, which is just what the commit-tree command does:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git commit-tree 0563f77 -m "Initial commit"
-                    d63d26194dd7a5cfbb9fe7365874c2918707f091
-                \end{bashcode}
-                \bigbreak \noindent 
-                The raw commit-tree command takes a tree’s hash id and makes a commit object to hold it. If I had wanted the commit to have a parent, I would have had to specify the parent commit’s hash id explicitly using the -p option.
-                \bigbreak \noindent 
-                Our work is not done yet, though, since I haven’t registered the commit as the new head of the current branch:
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    echo d63d26194dd7a5cfbb9fe7365874c2918707f091 > .git/refs/head/master
-                \end{bashcode}
-                \bigbreak \noindent 
-                This command tells Git that the branch name “master” should now refer to our recent com- mit. Another, much safer way to do this is by using the command update-ref
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git update-ref refs/heads/master d63d2619
-                \end{bashcode}
-                \bigbreak \noindent 
-                After creating master, we must associate our working tree with it. Normally this happens for you whenever you check out a branch.
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git symbolic-ref HEAD refs/heads/master
-                \end{bashcode}
-                \bigbreak \noindent 
-                This command associates HEAD symbolically with the master branch. This is significant be- cause any future commits from the working tree will now automatically update the value of refs/heads/master.
-                \bigbreak \noindent 
-                The command git symbolic-ref HEAD refs/heads/master manually forces Git's HEAD pointer to point directly to the master branch without altering your working directory or changing your files. It writes the string ref: refs/heads/master straight into .git/HEAD.
-                \bigbreak \noindent 
-                It’s hard to believe it’s this simple, but yes, I can now use log to view my newly minted commit
-                \bigbreak \noindent 
-                \begin{bashcode}
-                    git log
-                \end{bashcode}
-                \bigbreak \noindent 
-                A side note: if I hadn’t set refs/heads/master to point to the new commit, it would have been considered “unreachable”, since nothing currently refers to it nor is it the parent of a reach- able commit. When this is the case, the commit object will at some point be removed from the repository, along with its tree and all its blobs. (This happens automatically by a command called gc, which you rarely need to use manually). By linking the commit to a name within refs/ heads, as we did above, it becomes a reachable commit, which ensures that it’s kept around from now on.
-            \end{itemize}
+                git ls-files --stage 
+                100644 af5626b4a114abcb82d63db7c8082c3c4756e51b 0 greeting
+            \end{bashcode}
+            \bigbreak \noindent 
+            What’s this? I haven’t committed anything to the repository yet, but already an object has come into being. It has the same hash id I started this whole business with, so I know it represents the contents of my greeting file. I could use cat-file -t at this point on the hash id, and I’d see that it was a blob. It is, in fact, the same blob I got the first time I created this sample repository.
+            \bigbreak \noindent 
+            This blob isn’t referenced by a tree yet, nor are there any commits. At the moment it is only referenced from a file named .git/index, which references the blobs and trees that make up the current index. So now let’s make a tree in the repo for our blob to hang off of:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git write-tree # Records the contents of the index in a tree
+                0563f77d884e4f79ce95117e2d686d7d6e282887
+            \end{bashcode}
+            \bigbreak \noindent 
+            This number should look familiar as well: a tree containing the same blobs (and sub-trees) will always have the same hash id. I don’t have a commit object yet, but now there is a tree object in that repository which holds the blob. The purpose of the low-level write-tree command is to take whatever the contents of the index are and tuck them into a new tree for the purpose of creating a commit.
+            \bigbreak \noindent 
+            I can manually make a new commit object by using this tree directly, which is just what the commit-tree command does:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git commit-tree 0563f77 -m "Initial commit"
+                d63d26194dd7a5cfbb9fe7365874c2918707f091
+            \end{bashcode}
+            \bigbreak \noindent 
+            The raw commit-tree command takes a tree’s hash id and makes a commit object to hold it. If I had wanted the commit to have a parent, I would have had to specify the parent commit’s hash id explicitly using the -p option.
+            \bigbreak \noindent 
+            Our work is not done yet, though, since I haven’t registered the commit as the new head of the current branch:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                echo d63d26194dd7a5cfbb9fe7365874c2918707f091 > .git/refs/head/master
+            \end{bashcode}
+            \bigbreak \noindent 
+            This command tells Git that the branch name “master” should now refer to our recent com- mit. Another, much safer way to do this is by using the command update-ref
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git update-ref refs/heads/master d63d2619
+            \end{bashcode}
+            \bigbreak \noindent 
+            After creating master, we must associate our working tree with it. Normally this happens for you whenever you check out a branch.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git symbolic-ref HEAD refs/heads/master
+            \end{bashcode}
+            \bigbreak \noindent 
+            This command associates HEAD symbolically with the master branch. This is significant be- cause any future commits from the working tree will now automatically update the value of refs/heads/master.
+            \bigbreak \noindent 
+            The command git symbolic-ref HEAD refs/heads/master manually forces Git's HEAD pointer to point directly to the master branch without altering your working directory or changing your files. It writes the string ref: refs/heads/master straight into .git/HEAD.
+            \bigbreak \noindent 
+            It’s hard to believe it’s this simple, but yes, I can now use log to view my newly minted commit
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log
+            \end{bashcode}
+            \bigbreak \noindent 
+            A side note: if I hadn’t set refs/heads/master to point to the new commit, it would have been considered “unreachable”, since nothing currently refers to it nor is it the parent of a reach- able commit. When this is the case, the commit object will at some point be removed from the repository, along with its tree and all its blobs. (This happens automatically by a command called gc, which you rarely need to use manually). By linking the commit to a name within refs/ heads, as we did above, it becomes a reachable commit, which ensures that it’s kept around from now on.
+    \end{itemize}
 
-            \pagebreak 
-            \unsect{Commits}
+    \pagebreak 
+    \unsect{Commits}
+    \begin{itemize}
+        \item \textbf{The beauty of commits}: Some version control systems make “branches” into magical things, often distinguishing them from the “main line” or “trunk”, while others discuss the concept as though it were very different from commits. But in Git there are no branches as separate entities: there are only blobs, trees and commits. Since a commit can have one or more parents, and those commits can have parents, this is what allows a single commit to be treated like a branch: because it knows the whole history that led up to it.
+            \bigbreak \noindent 
+            You can examine all the top-level, referenced commits at any time using the branch command:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git branch -v
+            \end{bashcode}
+            \bigbreak \noindent 
+            Say it with me: A branch is nothing more than a named reference to a commit. In this way, branches and tags are identical, with the sole exception that tags can have their own descriptions, just like the commits they reference. Branches are just names, but tags are descriptive, well, “tags”.
+            \bigbreak \noindent 
+            But the fact is, we don’t really need to use aliases at all. For example, if I wanted to, I could reference everything in the repository using only the hash ids of its commits. Here’s me being straight up loco and resetting the head of my working tree to a particular commit:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard 5f1bc85
+            \end{bashcode}
+            \bigbreak \noindent 
+            The --hard option says to erase all changes currently in my working tree, whether they’ve been registered for a checkin or not (more will be said about this command later). A safer way to do the same thing is by using checkout:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git checkout 5f1bc85
+            \end{bashcode}
+            \bigbreak \noindent 
+            The difference here is that changed files in my working tree are preserved. If I pass the -f option to checkout, it acts the same in this case to reset --hard, except that checkout only ever changes the working tree, whereas reset --hard changes the current branch's HEAD to ref- erence the specified version of the tree.
+            \bigbreak \noindent 
+            Another joy of the commit-based system is that you can rephrase even the most complicated version control terminology using a single vocabulary. For example, if a commit has multiple parents, it’s a “merge commit” — since it merged multiple commits into one. Or, if a commit has multiple children, it represents the ancestor of a “branch”, etc. But really there is no difference between these things to Git: to it, the world is simply a collection of commit objects, each of which holds a tree that references other trees and blobs, which store your data. Anything more complicated than this is simply a device of nomenclature.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/3.png}
+        \item \textbf{A commit by any other name}: If commits are the key, how you name commits is the doorway to mastery. There are many, many ways to name commits, ranges of commits, and even some of the objects held by commits, which are accepted by most of the Git commands. Here’s a summary of some of the more basic usages: 
             \begin{itemize}
-                \item \textbf{The beauty of commits}: Some version control systems make “branches” into magical things, often distinguishing them from the “main line” or “trunk”, while others discuss the concept as though it were very different from commits. But in Git there are no branches as separate entities: there are only blobs, trees and commits. Since a commit can have one or more parents, and those commits can have parents, this is what allows a single commit to be treated like a branch: because it knows the whole history that led up to it.
-                    \bigbreak \noindent 
-                    You can examine all the top-level, referenced commits at any time using the branch command:
-                    \bigbreak \noindent 
-                    \begin{bashcode}
-                        git branch -v
-                    \end{bashcode}
-                    \bigbreak \noindent 
-                    Say it with me: A branch is nothing more than a named reference to a commit. In this way, branches and tags are identical, with the sole exception that tags can have their own descriptions, just like the commits they reference. Branches are just names, but tags are descriptive, well, “tags”.
-                    \bigbreak \noindent 
-                    But the fact is, we don’t really need to use aliases at all. For example, if I wanted to, I could reference everything in the repository using only the hash ids of its commits. Here’s me being straight up loco and resetting the head of my working tree to a particular commit:
-                    \bigbreak \noindent 
-                    \begin{bashcode}
-                        git reset --hard 5f1bc85
-                    \end{bashcode}
-                    \bigbreak \noindent 
-                    The --hard option says to erase all changes currently in my working tree, whether they’ve been registered for a checkin or not (more will be said about this command later). A safer way to do the same thing is by using checkout:
+                \item \textbf{branchname}: As has been said before, the name of any branch is simply an alias for the most recent commit on that “branch”. This is the same as using the word HEAD whenever that branch is checked out.
+                \item \textbf{tagname}: A tag-name alias is identical to a branch alias in terms of naming a commit. The major difference between the two is that tag alias- es never change, whereas branch aliases change each time a new commit is checked in to that branch.
+                \item \textbf{HEAD}: The currently checked out commit is always called HEAD. If you check out a specific commit — instead of a branch name — then HEAD refers to that commit only and not to any branch. Note that this case is somewhat special, and is called “using a detached HEAD” (I’m sure there’s a joke to be told here…).
+                \item \textbf{c82a22c39cbc32}: A commit may always be referenced using its full, 40-character SHA1 hash id. Usually this happens during cut-and-pasting, since there are typically other, more convenient ways to refer to the same commit.
+                \item \textbf{c82a22c}: You only need use as many digits of a hash id as are needed for a unique reference within the repository. Most of the time, six or seven digits is enough.
+                \item \textbf{name$\land$}: The parent of any commit is referenced using the caret symbol. If a commit has more than one parent, the first is used.
+                \item \textbf{name$\land\land$}: Carets may be applied successively. This alias refers to “the parent of the parent” of the given commit name.
+                \item \textbf{name$\land 2$}: If a commit has multiple parents (such as a merge commit), you can refer to the nth parent using name$\land n$.
+                \item \textbf{name$\sim 10$}: A commit’s $n$th ancestor may be referenced using a tilde ($\sim$) followed by the ordinal number. This type of usage is common with \texttt{rebase -i}, for example, to mean “show me a bunch of recent commits”. This is the same as name$\land\land\land\land\land\land\land\land\land\land$.
+                \item \textbf{name:path:} To reference a certain file within a commit’s content tree, specify that file’s name after a colon. This is helpful with show, or to show the difference between two versions of a committed file:
                     \bigbreak \noindent 
                     \begin{bashcode}
-                        git checkout 5f1bc85
+                        git diff HEAD^1:Makefile HEAD^2:Makefile
                     \end{bashcode}
+                \item \textbf{name$\land$\{tree\}}: You can reference just the tree held by a commit, rather than the commit itself.
+                \item \textbf{name1..name2}: This and the following aliases indicate commit ranges, which are supremely useful with commands like log for seeing what’s happened during a particular span of time.
                     \bigbreak \noindent 
-                    The difference here is that changed files in my working tree are preserved. If I pass the -f option to checkout, it acts the same in this case to reset --hard, except that checkout only ever changes the working tree, whereas reset --hard changes the current branch's HEAD to ref- erence the specified version of the tree.
+                    The syntax to the left refers to all the commits reachable from name2 back to, but not including, name1. If either name1 or name2 is omitted, HEAD is used in its place.
+                \item \textbf{name1...name2}: A “triple-dot” range is quite different from the two-dot version above. For commands like log, it refers to all the commits refer- enced by name1 or name2, but not by both. The result is then a list of all the unique commits in both branches.
                     \bigbreak \noindent 
-                    Another joy of the commit-based system is that you can rephrase even the most complicated version control terminology using a single vocabulary. For example, if a commit has multiple parents, it’s a “merge commit” — since it merged multiple commits into one. Or, if a commit has multiple children, it represents the ancestor of a “branch”, etc. But really there is no difference between these things to Git: to it, the world is simply a collection of commit objects, each of which holds a tree that references other trees and blobs, which store your data. Anything more complicated than this is simply a device of nomenclature.
-                    \bigbreak \noindent 
-                    \fig{.6}{./figures/3.png}
-                \item \textbf{A commit by any other name}: If commits are the key, how you name commits is the doorway to mastery. There are many, many ways to name commits, ranges of commits, and even some of the objects held by commits, which are accepted by most of the Git commands. Here’s a summary of some of the more basic usages: 
-                    \begin{itemize}
-                        \item \textbf{branchname}: As has been said before, the name of any branch is simply an alias for the most recent commit on that “branch”. This is the same as using the word HEAD whenever that branch is checked out.
-                        \item \textbf{tagname}: A tag-name alias is identical to a branch alias in terms of naming a commit. The major difference between the two is that tag alias- es never change, whereas branch aliases change each time a new commit is checked in to that branch.
-                        \item \textbf{HEAD}: The currently checked out commit is always called HEAD. If you check out a specific commit — instead of a branch name — then HEAD refers to that commit only and not to any branch. Note that this case is somewhat special, and is called “using a detached HEAD” (I’m sure there’s a joke to be told here…).
-                        \item \textbf{c82a22c39cbc32}: A commit may always be referenced using its full, 40-character SHA1 hash id. Usually this happens during cut-and-pasting, since there are typically other, more convenient ways to refer to the same commit.
-                        \item \textbf{c82a22c}: You only need use as many digits of a hash id as are needed for a unique reference within the repository. Most of the time, six or seven digits is enough.
-                        \item \textbf{name$\land$}: The parent of any commit is referenced using the caret symbol. If a commit has more than one parent, the first is used.
-                        \item \textbf{name$\land\land$}: Carets may be applied successively. This alias refers to “the parent of the parent” of the given commit name.
-                        \item \textbf{name$\land 2$}: If a commit has multiple parents (such as a merge commit), you can refer to the nth parent using name$\land n$.
-                        \item \textbf{name$\sim 10$}: A commit’s $n$th ancestor may be referenced using a tilde ($\sim$) followed by the ordinal number. This type of usage is common with \texttt{rebase -i}, for example, to mean “show me a bunch of recent commits”. This is the same as name$\land\land\land\land\land\land\land\land\land\land$.
-                        \item \textbf{name:path:} To reference a certain file within a commit’s content tree, specify that file’s name after a colon. This is helpful with show, or to show the difference between two versions of a committed file:
-                            \bigbreak \noindent 
-                            \begin{bashcode}
-                                git diff HEAD^1:Makefile HEAD^2:Makefile
-                            \end{bashcode}
-                        \item \textbf{name$\land$\{tree\}}: You can reference just the tree held by a commit, rather than the commit itself.
-                        \item \textbf{name1..name2}: This and the following aliases indicate commit ranges, which are supremely useful with commands like log for seeing what’s happened during a particular span of time.
-                            \bigbreak \noindent 
-                            The syntax to the left refers to all the commits reachable from name2 back to, but not including, name1. If either name1 or name2 is omitted, HEAD is used in its place.
-                        \item \textbf{name1...name2}: A “triple-dot” range is quite different from the two-dot version above. For commands like log, it refers to all the commits refer- enced by name1 or name2, but not by both. The result is then a list of all the unique commits in both branches.
-                            \bigbreak \noindent 
-                            For commands like diff, the range expressed is between name2 and the common ancestor of name1 and name2. This differs from the log case in that changes introduced by name1 are not shown.
-                        \item \textbf{master..}: This usage is equivalent to “master..HEAD”. I’m adding it here, even though it’s been implied above, because I use this kind of alias constantly when reviewing changes made to the current branch.
-                        \item \textbf{..master}: This, too, is especially useful after you’ve done a fetch and you want to see what changes have occurred since your last rebase or merge.
-                        \item \textbf{--since="2 weeks ago"}: Refers to all commits since a certain date.
-                        \item \textbf{--until=”1 week ago”}: Refers to all commits up to a certain date.
-                        \item \textbf{--grep=pattern}: Refers to all commits whose commit message matches the regular expression pattern.
-                        \item \textbf{--committer=pattern}: Refers to all commits whose committer matches the pattern.
-                        \item \textbf{--author=pattern}: Refers to all commits whose author matches the pattern. The author of a commit is the one who created the changes it represents. For local development this is always the same as the committer, but when patches are being sent by e-mail, the author and the committer usually differ.
-                        \item \textbf{--no-merges}: Refers to all commits in the range that have only one parent — that is, it ignores all merge commits.
-                    \end{itemize}
-                    Most of these options can be mixed-and-matched. Here is an example which shows the fol- lowing log entries: changes made to the current branch (branched from master), by myself, within the last month, which contain the text “foo”:
-                    \bigbreak \noindent 
-                    \begin{bashcode}
-                        git log --grep="foo" --author="johnw" --since="1 month ago" master..
-                    \end{bashcode}
-                \end{itemize}
+                    For commands like diff, the range expressed is between name2 and the common ancestor of name1 and name2. This differs from the log case in that changes introduced by name1 are not shown.
+                \item \textbf{master..}: This usage is equivalent to “master..HEAD”. I’m adding it here, even though it’s been implied above, because I use this kind of alias constantly when reviewing changes made to the current branch.
+                \item \textbf{..master}: This, too, is especially useful after you’ve done a fetch and you want to see what changes have occurred since your last rebase or merge.
+                \item \textbf{--since="2 weeks ago"}: Refers to all commits since a certain date.
+                \item \textbf{--until=”1 week ago”}: Refers to all commits up to a certain date.
+                \item \textbf{--grep=pattern}: Refers to all commits whose commit message matches the regular expression pattern.
+                \item \textbf{--committer=pattern}: Refers to all commits whose committer matches the pattern.
+                \item \textbf{--author=pattern}: Refers to all commits whose author matches the pattern. The author of a commit is the one who created the changes it represents. For local development this is always the same as the committer, but when patches are being sent by e-mail, the author and the committer usually differ.
+                \item \textbf{--no-merges}: Refers to all commits in the range that have only one parent — that is, it ignores all merge commits.
+            \end{itemize}
+            Most of these options can be mixed-and-matched. Here is an example which shows the fol- lowing log entries: changes made to the current branch (branched from master), by myself, within the last month, which contain the text “foo”:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git log --grep="foo" --author="johnw" --since="1 month ago" master..
+            \end{bashcode}
+    \end{itemize}
 
-                \pagebreak 
-                \unsect{Branching, merging, and rebasing}
-                \begin{itemize}
-                    \item \textbf{Branching and the power of rebase}: One of Git’s most capable commands for manipulating commits is the innocently-named re- base command. Basically, every branch you work from has one or more “base commits”: the commits that branch was born from.
-                        \bigbreak \noindent 
-                        Take the following typical scenario, for example. Note that the arrows point back in time because each commit references its parent(s), but not its children. Therefore, the $D$ and $Z$ commits represent the heads of their respective branches:
-                        \bigbreak \noindent 
-                        \fig{.6}{./figures/4.png}
-                        \bigbreak \noindent 
-                        In this case, running branch would show two “heads”: $D$ and $Z$, with the common parent of both branches being A. The output of show-branch shows us just this information:
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                            git branch
-                            Z
-                            * D
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                            git show-branch
-                            ! [Z] Z
-                            * [D] D
-                            --
-                            * [D] D
-                            * [D^] C
-                            * [D~2] B
-                            + [Z] Z
-                            + [Z^] Y
-                            + [Z~2] X
-                            + [Z~3] W
-                            +* [D~3] A
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        Reading this output takes a little getting used to, but essentially it’s no different from the diagram above.
-                        \begin{itemize}
-                            \item The branch we’re on experienced its first divergence at commit $A$ (also known as commit $D\sim 3$, and even $Z\sim 4$ if you feel so inclined). 
-                            \item Reading from bottom to top, the first column (the plus signs) shows a divergent branch named $Z$ with four commits: $W, X, Y$ and $Z$.
-                            \item The second column (the asterisks) show the commits which happened on the current branch, namely three commits: $B, C$ and $D$.
-                            \item The top of the output, separated from the bottom by a dividing line, identifies the branches displayed, which column their commits are labelled by, and the character used for the labeling.
-                        \end{itemize}
-                        The action we’d like to perform is to bring the working branch $Z$ back up to speed with the main branch, $D$. In other words, we want to incorporate the work from $B, C$, and $D$ into $Z$
-                        \bigbreak \noindent 
-                        In other version control systems this sort of thing can only be done using a “branch merge”. In fact, a branch merge can still be done in Git, using merge, and remains needful in the case where $Z$ is a published branch and we don’t want to alter its commit history. 
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                            git checkout Z
-                            git merge D
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        This is what the repository looks like afterward:
-                        \bigbreak \noindent 
-                        \fig{.6}{./figures/5.png}
-                        \bigbreak \noindent 
-                        If we checked out the $Z$ branch now, it would contain the contents of the previous $Z$ (now referenceable as $Z\land$), merged with the contents of $D$. (Though note: a real merge operation would have required resolving any conflicts between the states of $D$ and $Z$).
-                        \bigbreak \noindent 
-                        Although the new $Z$ now contains the changes from $D$, it also includes a new commit to represent the merging of $Z$ with $D$: the commit now shown as $Z^{\prime}$. This commit doesn’t add anything new, but represents the work done to bring $D$ and $Z$ together. In a sense it’s a “meta-commit”, because its contents are related to work done solely in the repository, and not to new work done in the working tree.
-                        \bigbreak \noindent 
-                        There is a way, however, to transplant the $Z$ branch straight onto $D$, effectively moving it for- ward in time: by using the powerful rebase command. Here’s the graph we’re aiming for:
-                        \bigbreak \noindent 
-                        \fig{.6}{./figures/6.png}
-                        \bigbreak \noindent 
-                        This state of affairs most directly represents what we’d like done: for our local, development branch $Z$ to be based on the latest work in the main branch $D$. That’s why the command is called “rebase”, because it changes the base commit of the branch it’s run from. If you run it repeatedly, you can carry forward a set of patches indefinitely, always staying up-to-date with the main branch, but without adding unnecessary merge commits to your development branch
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                            git checkout Z 
-                            git rebase D # Change Z's base commit to point to D
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        Why is this only for local branches? Because every time you rebase, you’re potentially changing every commit in the branch. Earlier, when $W$ was based on $A$, it contained only the changes needed to transform $A$ into $W$. After running rebase, however, $W$ will be rewritten to contain the changes necessary to transform $D$ into $W^{\prime}$. Even the transformation from $W$ to $X$ is changed, because $A+W+X$ is now $D+W^{\prime}+X^{\prime}$ - and so on. If this were a branch whose changes are seen by other people, and any of your downstream consumers had created their own local branches off of $Z$, their branches would now point to the old $Z$, not the new $Z^{\prime}$
-                        \bigbreak \noindent 
-                        Generally, the following rule of thumb can be used: Use rebase if you have a local branch with no other branches that have branched off from it, and use merge for all other cases. Merge is also useful when you’re ready to pull your local branch’s changes back into the main branch.
-                    \item \textbf{Interactive rebasing}: When rebase was run above, it automatically rewrote all the commits from $W$ to $Z$ in order to rebase the $Z$ branch onto the $D$ commit (i.e., the head commit of the D branch). You can, how- ever, take complete control over how this rewriting is done. If you supply the -i option to rebase, it will pop you into an editing buffer where you can choose what should be done for every commit in the local $Z$ branch:
-                        \begin{itemize}
-                            \item \textbf{pick} This is the default behavior chosen for every commit in the branch if you don’t use interactive mode. It means that the commit in question should be applied to its (now rewritten) parent commit. For every commit that involves conflicts, the rebase command gives you an opportunity to re- solve them.
-                            \item \textbf{squash}: A squashed commit will have its contents “folded” into the contents of the commit preceding it. This can be done any number of times. If you took the example branch above and squashed all of its commits (except the first, which must be a pick in order to squash), you would end up with a new $Z$ branch containing only one commit on top of $D$. Useful if you have changes spread over multiple commits, but you’d like the history rewritten to show them all as a single commit.
-                            \item \textbf{edit}: If you mark a commit as edit, the rebasing process will stop at that commit and leave you at the shell with the current working tree set to reflect that commit. The index will have all the commit’s changes registered for inclusion when you run commit. You can thus make whatever changes you like: amend a change, undo a change, etc.; and after committing, and running rebase --continue, the commit will be rewritten as if those changes had been made originally.
-                            \item \textbf{(drop)}: If you remove a commit from the interactive rebase file, or if you comment it out, the commit will simply disappear as if it had never been checked in. Note that this can cause merge conflicts if any of the later commits in the branch depended on those changes.
-                        \end{itemize}
-                        The power of this command is hard to appreciate at first, but it grants you virtually unlimited control over the shape of any branch. You can use it to:
-                        \begin{itemize}
-                            \item Collapse multiple commits into single ones.
-                            \item Re-order commits.
-                            \item Remove incorrect changes you now regret.
-                            \item Move the base of your branch onto any other commit in the repository.
-                            \item Modify a single commit, to amend a change long after the fact.
-                        \end{itemize}
-                    \item \textbf{Rebase example}: Consider the history
-                        \bigbreak \noindent 
-                        \fig{.6}{./figures/7.png}
-                        \bigbreak \noindent 
-                        Suppose we wanted to migrate the secondary branch $L$ to become the new head of $Z$. We simply
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                        git checkout L
-                        git rebase Z
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        Now, we have
-                        \bigbreak \noindent 
-                        \fig{.6}{./figures/8.png}
-                        \bigbreak \noindent 
-                        As you can see, when it comes to local development, rebasing gives you unlimited control over how your commits appear in the repository.
-                    \item \textbf{Rebase only with local development}: 
-                        Rebasing is recommended mainly for local development because it rewrites commit history.
-                        \bigbreak \noindent 
-                        A rebase does not move the same commits. It creates new commits with new parent commits, so they get new hashes.
-                        \bigbreak \noindent 
-                        Suppose we have the history
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                            A -- B -- C          main
-                                  \
-                                   D -- E        feature
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        If we run
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                        git checkout feature
-                        git rebase main
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        Git replays $D$ and $E$ on top of $C$.
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                           A -- B -- C -- D' -- E'    feature 
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        The commits $D^{\prime}$ and $E^{\prime}$ contain similar changes to D and E, but they are not the same commits. Their parent changed, so their hashes changed.
-                        \bigbreak \noindent 
-                        That is safe if only your local repository knows about $D$ and $E$.
-                        \bigbreak \noindent 
-                        The problem happens when other people already have the old commits.
-                        \bigbreak \noindent 
-                        Suppose we push
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                            A -- B -- C          main
-                                  \
-                                   D -- E        feature     
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        Then, someone else creates work on top of $E$
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                           A -- B -- C          main
-                                 \
-                                  D -- E -- F   coworker-work 
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        Now, you rebase and force-push
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                           A -- B -- C -- D' -- E'   feature 
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        Their branch is still based on the old E:
-                        \bigbreak \noindent 
-                        \begin{verbatim}
-                            A -- B -- C -- D' -- E'    feature
-                                  \
-                                   D -- E -- F         coworker-work
-                        \end{verbatim}
-                        \bigbreak \noindent 
-                        Now the project has two versions of the same logical changes:
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                            D, E      old commits
-                            D', E'    rebased replacements
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        So, rebase freely before you push. Avoid rebasing commits that other people may already have.
-                        \bigbreak \noindent 
-                        Rebase unpublished/local history. Do not casually rebase published/shared history.
-                        \bigbreak \noindent 
-                        You can always undo the effect of a merge commit with
-                        \bigbreak \noindent 
-                        \begin{bashcode}
-                        git revert -m 1 M
-                        \end{bashcode}
-                        \bigbreak \noindent 
-                        The -m 1 means: Treat parent 1 as the mainline parent, usually the branch you were on when you merged.
-                        \bigbreak \noindent 
-                        Merging is safe because it preserves existing history. Being able to revert the merge commit is a useful recovery mechanism, but the core safety property is that merge is additive rather than history-rewriting.
+    \pagebreak 
+    \unsect{Branching, merging, and rebasing}
+    \begin{itemize}
+        \item \textbf{Branching and the power of rebase}: One of Git’s most capable commands for manipulating commits is the innocently-named re- base command. Basically, every branch you work from has one or more “base commits”: the commits that branch was born from.
+            \bigbreak \noindent 
+            Take the following typical scenario, for example. Note that the arrows point back in time because each commit references its parent(s), but not its children. Therefore, the $D$ and $Z$ commits represent the heads of their respective branches:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/4.png}
+            \bigbreak \noindent 
+            In this case, running branch would show two “heads”: $D$ and $Z$, with the common parent of both branches being A. The output of show-branch shows us just this information:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git branch
+                Z
+                * D
+            \end{bashcode}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git show-branch
+                ! [Z] Z
+                * [D] D
+                --
+                * [D] D
+                * [D^] C
+                * [D~2] B
+                + [Z] Z
+                + [Z^] Y
+                + [Z~2] X
+                + [Z~3] W
+                +* [D~3] A
+            \end{bashcode}
+            \bigbreak \noindent 
+            Reading this output takes a little getting used to, but essentially it’s no different from the diagram above.
+            \begin{itemize}
+                \item The branch we’re on experienced its first divergence at commit $A$ (also known as commit $D\sim 3$, and even $Z\sim 4$ if you feel so inclined). 
+                \item Reading from bottom to top, the first column (the plus signs) shows a divergent branch named $Z$ with four commits: $W, X, Y$ and $Z$.
+                \item The second column (the asterisks) show the commits which happened on the current branch, namely three commits: $B, C$ and $D$.
+                \item The top of the output, separated from the bottom by a dividing line, identifies the branches displayed, which column their commits are labelled by, and the character used for the labeling.
+            \end{itemize}
+            The action we’d like to perform is to bring the working branch $Z$ back up to speed with the main branch, $D$. In other words, we want to incorporate the work from $B, C$, and $D$ into $Z$
+            \bigbreak \noindent 
+            In other version control systems this sort of thing can only be done using a “branch merge”. In fact, a branch merge can still be done in Git, using merge, and remains needful in the case where $Z$ is a published branch and we don’t want to alter its commit history. 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git checkout Z
+                git merge D
+            \end{bashcode}
+            \bigbreak \noindent 
+            This is what the repository looks like afterward:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/5.png}
+            \bigbreak \noindent 
+            If we checked out the $Z$ branch now, it would contain the contents of the previous $Z$ (now referenceable as $Z\land$), merged with the contents of $D$. (Though note: a real merge operation would have required resolving any conflicts between the states of $D$ and $Z$).
+            \bigbreak \noindent 
+            Although the new $Z$ now contains the changes from $D$, it also includes a new commit to represent the merging of $Z$ with $D$: the commit now shown as $Z^{\prime}$. This commit doesn’t add anything new, but represents the work done to bring $D$ and $Z$ together. In a sense it’s a “meta-commit”, because its contents are related to work done solely in the repository, and not to new work done in the working tree.
+            \bigbreak \noindent 
+            There is a way, however, to transplant the $Z$ branch straight onto $D$, effectively moving it for- ward in time: by using the powerful rebase command. Here’s the graph we’re aiming for:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/6.png}
+            \bigbreak \noindent 
+            This state of affairs most directly represents what we’d like done: for our local, development branch $Z$ to be based on the latest work in the main branch $D$. That’s why the command is called “rebase”, because it changes the base commit of the branch it’s run from. If you run it repeatedly, you can carry forward a set of patches indefinitely, always staying up-to-date with the main branch, but without adding unnecessary merge commits to your development branch
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git checkout Z 
+                git rebase D # Change Z's base commit to point to D
+            \end{bashcode}
+            \bigbreak \noindent 
+            Why is this only for local branches? Because every time you rebase, you’re potentially changing every commit in the branch. Earlier, when $W$ was based on $A$, it contained only the changes needed to transform $A$ into $W$. After running rebase, however, $W$ will be rewritten to contain the changes necessary to transform $D$ into $W^{\prime}$. Even the transformation from $W$ to $X$ is changed, because $A+W+X$ is now $D+W^{\prime}+X^{\prime}$ - and so on. If this were a branch whose changes are seen by other people, and any of your downstream consumers had created their own local branches off of $Z$, their branches would now point to the old $Z$, not the new $Z^{\prime}$
+            \bigbreak \noindent 
+            Generally, the following rule of thumb can be used: Use rebase if you have a local branch with no other branches that have branched off from it, and use merge for all other cases. Merge is also useful when you’re ready to pull your local branch’s changes back into the main branch.
+        \item \textbf{Interactive rebasing}: When rebase was run above, it automatically rewrote all the commits from $W$ to $Z$ in order to rebase the $Z$ branch onto the $D$ commit (i.e., the head commit of the D branch). You can, how- ever, take complete control over how this rewriting is done. If you supply the -i option to rebase, it will pop you into an editing buffer where you can choose what should be done for every commit in the local $Z$ branch:
+            \begin{itemize}
+                \item \textbf{pick} This is the default behavior chosen for every commit in the branch if you don’t use interactive mode. It means that the commit in question should be applied to its (now rewritten) parent commit. For every commit that involves conflicts, the rebase command gives you an opportunity to re- solve them.
+                \item \textbf{squash}: A squashed commit will have its contents “folded” into the contents of the commit preceding it. This can be done any number of times. If you took the example branch above and squashed all of its commits (except the first, which must be a pick in order to squash), you would end up with a new $Z$ branch containing only one commit on top of $D$. Useful if you have changes spread over multiple commits, but you’d like the history rewritten to show them all as a single commit.
+                \item \textbf{edit}: If you mark a commit as edit, the rebasing process will stop at that commit and leave you at the shell with the current working tree set to reflect that commit. The index will have all the commit’s changes registered for inclusion when you run commit. You can thus make whatever changes you like: amend a change, undo a change, etc.; and after committing, and running rebase --continue, the commit will be rewritten as if those changes had been made originally.
+                \item \textbf{(drop)}: If you remove a commit from the interactive rebase file, or if you comment it out, the commit will simply disappear as if it had never been checked in. Note that this can cause merge conflicts if any of the later commits in the branch depended on those changes.
+            \end{itemize}
+            The power of this command is hard to appreciate at first, but it grants you virtually unlimited control over the shape of any branch. You can use it to:
+            \begin{itemize}
+                \item Collapse multiple commits into single ones.
+                \item Re-order commits.
+                \item Remove incorrect changes you now regret.
+                \item Move the base of your branch onto any other commit in the repository.
+                \item Modify a single commit, to amend a change long after the fact.
+            \end{itemize}
+        \item \textbf{Rebase example}: Consider the history
+            \bigbreak \noindent 
+            \fig{.6}{./figures/7.png}
+            \bigbreak \noindent 
+            Suppose we wanted to migrate the secondary branch $L$ to become the new head of $Z$. We simply
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git checkout L
+                git rebase Z
+            \end{bashcode}
+            \bigbreak \noindent 
+            Now, we have
+            \bigbreak \noindent 
+            \fig{.6}{./figures/8.png}
+            \bigbreak \noindent 
+            As you can see, when it comes to local development, rebasing gives you unlimited control over how your commits appear in the repository.
+        \item \textbf{Rebase only with local development}: 
+            Rebasing is recommended mainly for local development because it rewrites commit history.
+            \bigbreak \noindent 
+            A rebase does not move the same commits. It creates new commits with new parent commits, so they get new hashes.
+            \bigbreak \noindent 
+            Suppose we have the history
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C          main
+                \
+                D -- E        feature
+            \end{verbatim}
+            \bigbreak \noindent 
+            If we run
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git checkout feature
+                git rebase main
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git replays $D$ and $E$ on top of $C$.
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C -- D' -- E'    feature 
+            \end{verbatim}
+            \bigbreak \noindent 
+            The commits $D^{\prime}$ and $E^{\prime}$ contain similar changes to D and E, but they are not the same commits. Their parent changed, so their hashes changed.
+            \bigbreak \noindent 
+            That is safe if only your local repository knows about $D$ and $E$.
+            \bigbreak \noindent 
+            The problem happens when other people already have the old commits.
+            \bigbreak \noindent 
+            Suppose we push
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C          main
+                \
+                D -- E        feature     
+            \end{verbatim}
+            \bigbreak \noindent 
+            Then, someone else creates work on top of $E$
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C          main
+                \
+                D -- E -- F   coworker-work 
+            \end{verbatim}
+            \bigbreak \noindent 
+            Now, you rebase and force-push
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C -- D' -- E'   feature 
+            \end{verbatim}
+            \bigbreak \noindent 
+            Their branch is still based on the old E:
+            \bigbreak \noindent 
+            \begin{verbatim}
+                A -- B -- C -- D' -- E'    feature
+                \
+                D -- E -- F         coworker-work
+            \end{verbatim}
+            \bigbreak \noindent 
+            Now the project has two versions of the same logical changes:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                D, E      old commits
+                D', E'    rebased replacements
+            \end{bashcode}
+            \bigbreak \noindent 
+            So, rebase freely before you push. Avoid rebasing commits that other people may already have.
+            \bigbreak \noindent 
+            Rebase unpublished/local history. Do not casually rebase published/shared history.
+            \bigbreak \noindent 
+            You can always undo the effect of a merge commit with
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git revert -m 1 M
+            \end{bashcode}
+            \bigbreak \noindent 
+            The -m 1 means: Treat parent 1 as the mainline parent, usually the branch you were on when you merged.
+            \bigbreak \noindent 
+            Merging is safe because it preserves existing history. Being able to revert the merge commit is a useful recovery mechanism, but the core safety property is that merge is additive rather than history-rewriting.
 
-                \end{itemize}
+    \end{itemize}
 
-                \pagebreak 
-                \unsect{The Index}
-                \begin{itemize}
-                \end{itemize}
+    \pagebreak 
+    \unsect{The Index}
+    \begin{itemize}
+        \item \textbf{Intro}: 
+            Between your data files, which are stored on the filesystem, and your Git blobs, which are stored in the repository, there stands a somewhat strange entity: the Git index. Part of what makes this beast hard to understand is that it’s got a rather unfortunate name. It’s an index in the sense that it refers to the set of newly created trees and blobs which you created by running add. These new objects will soon get bound into a new tree for the purpose of committing to your repository — but until then, they are only referenced by the index. That means that if you unregister a change from the index with reset, you’ll end up with an orphaned blob that will get deleted at some point at the future.
+            \bigbreak \noindent 
+            The index is really just a staging area for your next commit, and there’s a good reason why it exists: it supports a model of development that may be foreign to users of CVS or Subversion, but which is all too familiar to Darcs users: the ability to build up your next commit in stages
+            \bigbreak \noindent 
+            git add creates blob objects and records them in the index. Later, when committing, Git writes tree objects based on the index.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/9.png}
+            \bigbreak \noindent 
+            First, let me say that there is a way to ignore the index almost entirely: by passing the -a flag to commit. Look at the way Subversion works, for example. When you type svn status, what you’ll see is a list of actions to be applied to your repository on the next call to svn commit. In a way, this “list of next actions” is a kind of informal index, determined by comparing the state of your working tree with the state of HEAD. If the file foo.c has been changed, on your next commit those changes will be saved. If an unknown file has a question mark next to it, it will be ig- nored; but a new file which has been added with svn add will get added to the repository.
+            \bigbreak \noindent 
+            This is no different from what happens if you use commit -a: new, unknown files are ignored, but new files which have been added with add are added to the repository, as are any changes to existing files. This interaction is nearly identical with the Subversion way of doing things.
+            \bigbreak \noindent 
+            The real difference is that in the Subversion case, your “list of next actions” is always deter- mined by looking at the current working tree. In Git, the “list of next actions” is the contents of the index, which represents what will become the next state of HEAD, and that you can manipu- late directly before executing commit. This gives you an extra layer of control over what’s going to happen, by allowing you to stage those changes in advance.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Reset}
+    \begin{itemize}
+        \item \textbf{Doing a mixed reset}: If you use the --mixed option (or no option at all, as this is the default), reset will revert parts of your index along with your HEAD reference to match the given commit. The main difference from --soft is that --soft only changes the meaning of HEAD and doesn’t touch the index.
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git add foo.c # add changes to the index as a new blob
+                git reset HEAD # delete any changes staged in the index
+                git add foo.c # made a mistake, add it back
+            \end{bashcode}
+        \item \textbf{Doing a soft reset}: If you use the --soft option to reset, this is the same as simply changing your HEAD reference to a different commit. Your working tree changes are left untouched. This means the following two commands are equivalent:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --soft HEAD^
+
+                git update-ref HEAD HEAD^ # does the same thing, albeit manually
+            \end{bashcode}
+            \bigbreak \noindent 
+            In both cases, your working tree now sits on top of an older HEAD, so you should see more changes if you run status. It’s not that your file have been changed, simply that they are now being compared against an older version. It can give you a chance to create a new commit in place of the old one. In fact, if the commit you want to change is the most recent one checked in, you can use commit --amend to add your latest changes to the last commit as if you’d done them together
+            \bigbreak \noindent 
+            But please note: if you have downstream consumers, and they’ve done work on top of your previous head — the one you threw away — changing HEAD like this will force a merge to happen automatically after their next pull. Below is what your tree would look like after a soft reset and a new commit:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/10.png}
+            \bigbreak \noindent 
+            And here’s what your consumer’s HEAD would look like after they pulled again, with colors to show how the various commits match up:
+            \bigbreak \noindent 
+            \fig{.6}{./figures/11.png}
+        \item \textbf{Doing a hard reset}: A hard reset (the --hard option) has the potential of being very dangerous, as it’s able to do two different things at once: First, if you do a hard reset against your current HEAD, it will erase all changes in your working tree, so that your current files match the contents of HEAD
+            \bigbreak \noindent 
+            There is also another command, \texttt{checkout}, which operates just like reset --hard if the in- dex is empty. Otherwise, it forces your working tree to match the index.
+            \bigbreak \noindent 
+            Now, if you do a hard reset against an earlier commit, it’s the same as first doing a soft reset and then using reset --hard to reset your working tree. Thus, the following commands are equivalent:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard HEAD~3 # Go back in time, throwing away changes
+
+                git reset --soft HEAD~3 # Set HEAD to point to an earlier commit
+                git reset --hard # Wipe out differences in the working tree
+            \end{bashcode}
+            \bigbreak \noindent 
+            As you can see, doing a hard reset can be very destructive. Fortunately, there is a safer way to achieve the same effect, using the Git stash
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git stash
+                git checkout -b new-branch HEAD~3
+            \end{bashcode}
+            \bigbreak \noindent 
+            This approach has two distinct advantages if you’re not sure whether you really want to modify the current branch just now
+            \begin{enumerate}
+                \item It saves your work in the stash, which you can come back to at any time. Note that the stash is not branch specific, so you could potentially stash the state of your tree while on one branch, and later apply the differences to another.
+                \item It reverts your working tree back to a past state, but on a new branch, so if you decide to commit your changes against the past state, you won’t have altered your original branch
+            \end{enumerate}
+            If you do make changes to new-branch and then decide you want it to become your new master branch, run the following commands:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git branch -D master # goodbye old master (still in reflog)
+                git branch --move new-branch master # the new-branch is now my master
+            \end{bashcode}
+            \bigbreak \noindent 
+            The moral of this story is: although you can do major surgery on your current branch using reset --soft and reset --hard (which changes the working tree too), why would you want to? Git makes working with branches so easy and cheap, it’s almost always worth it to do your destructive modifications on a branch, and then move that branch over to take the place of your old master. 
+            \bigbreak \noindent 
+            And what if you do accidentally run reset --hard, losing not only your current changes but also removing commits from your master branch? Well, unless you’ve gotten into the habit of using stash to take snapshots Well, unless you’ve gotten into the habit of using stash to take snapshots (see next section), there’s nothing you can do to recover your lost working tree. But you can restore your branch to its previous state by again using reset -- hard with the reflog
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard HEAD@{1}
+            \end{bashcode}
+            \bigbreak \noindent 
+            To be on the safe side, never use reset --hard without first running stash. It will save you many white hairs later on. If you did run stash, you can now use it to recover your working tree changes as well
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git stash 
+                git reset --hard HEAD~3
+
+                git reset --hard HEAD@{1}
+                git stash apply
+            \end{bashcode}
+            \bigbreak \noindent 
+            \textbf{Note:} Consider the situation 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard HEAD~3
+            \end{bashcode}
+            \bigbreak \noindent 
+            while on \texttt{master}. That command does three things:
+            \begin{enumerate}
+                \item Moves the current branch pointer backward to HEAD~3.
+                \item Resets the index to match that older commit.
+                \item Resets the working tree to match that older commit, discarding uncommitted changes.
+            \end{enumerate}
+            So suppose your history was:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                A -- B -- C -- D -- E   master
+                ^
+                HEAD
+            \end{cppcode}
+            \bigbreak \noindent 
+            If you run 
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard C 
+            \end{bashcode}
+            \bigbreak \noindent 
+            Then, master is moved back to $C$.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                A -- B -- C   master
+                ^
+                HEAD
+
+                D -- E    no longer referenced by master
+            \end{cppcode}
+            \bigbreak \noindent 
+            The commits D and E are not immediately deleted from Git’s object database. But they are now unreachable from the branch name master. That is what the text means by “removing commits from your master branch.”
+            \bigbreak \noindent 
+            Of course, the remote branch may still point to $E$. In that case,
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git reset --hard origin/master
+            \end{bashcode}
+            \bigbreak \noindent 
+            Recovers. Also, commits that have a tag are reachable. Any reference to a commit keeps that commit reachable. That includes
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item branches
+                \item tags
+                \item remote-tracking branches
+                \item HEAD
+                \item stash refs
+                \item reflog entries, temporarily
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Stashing and the reflog}
+    \begin{itemize}
+        \item \textbf{Intro}: Until now we’ve described two ways in which blobs find their way into Git: first they’re created in your index, both without a parent tree and without an owning commit; and then they’re committed into the repository, where they live as leaves hanging off of the tree held by that commit. But there are two other ways a blob can dwell in your repository.
+            \bigbreak \noindent 
+            \textbf{Note:} Recall that the index contains \textbf{blob references}, not \textbf{tree objects}. Normally the tree object is created when you commit. 
+            \bigbreak \noindent 
+            More precisely, each normal index entry is roughly:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                path              mode        blob object ID
+                src/main.c        100644      <hash-of-blob>
+                src/util.c        100644      <hash-of-blob>
+                README.md         100644      <hash-of-blob>
+            \end{bashcode}
+            \bigbreak \noindent 
+            After
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git add src/main.c
+            \end{bashcode}
+            \bigbreak \noindent 
+            Git writes the file contents into the object database as a blob, then records in the index. The index does not need an explicit directory entry like src/. Directories are inferred from paths. When you commit, Git uses the index to construct tree objects, the commit then points to the root of the tree.
+        \item \textbf{The reflog}:  The first of these is the Git reflog, a kind of meta-repository that records — in the form of commits — every change you make to your repository. This means that when you create a tree from your index and store it under a commit (all of which is done by commit), you are also inadvertently adding that commit to the reflog, which can be viewed using the following command:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git reflog
+
+            5f1bc85... HEAD@{0}: commit (initial): Initial commit
+            \end{bashcode}
+            \bigbreak \noindent 
+            The beauty of the reflog is that it persists independently of other changes in your repository. This means I could unlink the above commit from my repository (using reset), yet it would still be referenced by the reflog for another 30 days, protecting it from garbage collection. This gives me a month’s chance to recover the commit should I discover I really need it.
+        \item \textbf{Stash}: The other place blobs can exist, albeit indirectly, is in your working tree itself. What I mean is, say you’ve changed a file foo.c but you haven’t added those changes to the index yet. Git may not have created a blob for you, but those changes do exist, meaning the content exists — it just lives in your filesystem instead of Git’s repository. The file even has its own SHA1 hash id, de- spite the fact no real blob exists. You can view it with this command:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git hash-object foo.c
+            <some hash id>
+            \end{bashcode}
+            \bigbreak \noindent 
+            What does this do for you? Well, if you find yourself hacking away on your working tree and you reach the end of a long day, a good habit to get into is to stash away your changes:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash
+            \end{bashcode}
+            \bigbreak \noindent 
+            This takes all your directory’s contents — including both your working tree, and the state of the index — and creates blobs for them in the git repository, a tree to hold those blobs, and a pair of stash commits to hold the working tree and index and record the time when you did the stash.
+            \bigbreak \noindent 
+            This is a good practice because, although the next day you’ll just pull your changes back out of the stash with stash apply, you’ll have a reflog of all your stashed changes at the end of every day. Here’s what you’d do after coming back to work the next morning (WIP here stands for “Work in progress”):
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git stash list
+                stash@{0}: WIP on master: 5f1bc85... Initial commit
+
+                git reflog show stash # same output, plus the stash commit's hash id
+                2add13e... stash@{0}: WIP on master: 5f1bc85... Initial commit
+
+                git stash apply
+            \end{bashcode}
+            \bigbreak \noindent 
+            Because your stashed working tree is stored under a commit, you can work with it like any other branch — at any time! This means you can view the log, see when you stashed it, and checkout any of your past working trees from the moment when you stashed them:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                git stash list
+                stash@{0}: WIP on master: 73ab4c1... Initial commit
+                ...
+                stash@{32}: WIP on master: 5f1bc85... Initial commit
+
+                git log stash@{32} # when did I do it?
+                git show stash@{32} # show me what I was working on
+
+                git checkout -b temp stash@{32} # let’s see that old working tree!
+            \end{bashcode}
+            \bigbreak \noindent 
+            This last command is particularly powerful: behold, I’m now playing around in an uncom- mitted working tree from over a month ago. I never even added those files to the index; I just used the simple expedient of calling stash before logging out each day (provided you actually had changes in your working tree to stash), and used stash apply when I logged back in.
+            \bigbreak \noindent 
+            If you ever want to clean up your stash list — say to keep only the last 30 days of activity — don’t use stash clear; use the reflog expire command instead:
+            \bigbreak \noindent 
+            \begin{bashcode}
+            git stash clear # BAD, loose all history
+
+            git reflog expire --expire=30.days refs/stash
+            <outputs the stash bundles that've been kept>
+            \end{bashcode}
+
+
+    \end{itemize}
 
 
 
