@@ -3457,7 +3457,415 @@
     \pagebreak 
     \unsect{6. Color management functions}
     \begin{itemize}
-        
+        \item \textbf{Intro}: Each X window always has an associated colormap that provides a level of indirection between pixel values and colors displayed on the screen. Xlib provides functions that you can use to manipulate a colormap. The X protocol defines colors using values in the RGB color space. The RGB color space is device dependent; rendering an RGB value on differing output devices typically results in different colors. Xlib also provides a means for clients to specify color using device-independent color spaces for consistent results across devices. Xlib supports device-independent color spaces derivable from the CIE XYZ color space. This includes the CIE XYZ, xyY, L*u*v*, and L*a*b* color spaces as well as the TekHVC color space. 
+            \bigbreak \noindent 
+            All functions, types, and symbols in this chapter with the prefix ‘‘Xcms’’ are defined in <X11/Xcms.h>. The remaining functions and types are defined in <X11/Xlib.h>.
+            \bigbreak \noindent 
+            Functions in this chapter manipulate the representation of color on the screen. For each possible value that a pixel can take in a window, there is a color cell in the colormap. For example, if a window is 4 bits deep, pixel values 0 through 15 are defined. A colormap is a collection of color cells. A color cell consists of a triple of red, green, and blue (RGB) values. The hardware imposes limits on the number of significant bits in these values. As each pixel is read out of dis- play memory, the pixel is looked up in a colormap. The RGB value of the cell determines what color is displayed on the screen. On a grayscale display with a black-and-white monitor, the values are combined to determine the brightness on the screen.
+            \bigbreak \noindent 
+            Typically, an application allocates color cells or sets of color cells to obtain the desired colors. The client can allocate read-only cells. In which case, the pixel values for these colors can be shared among multiple applications, and the RGB value of the cell cannot be changed. If the client allocates read/write cells, they are exclusively owned by the client, and the color associated with the pixel value can be changed at will. Cells must be allocated (and, if read/write, initialized with an RGB value) by a client to obtain desired colors. The use of pixel value for an unallocated cell results in an undefined color.
+            \bigbreak \noindent 
+            Because colormaps are associated with windows, X supports displays with multiple colormaps and, indeed, different types of colormaps. If there are insufficient colormap resources in the dis- play, some windows will display in their true colors, and others will display with incorrect colors. A window manager usually controls which windows are displayed in their true colors if more than one colormap is required for the color resources the applications are using. At any time, there is a set of installed colormaps for a screen. Windows using one of the installed colormaps display with true colors, and windows using other colormaps generally display with incorrect col- ors. You can control the set of installed colormaps by using \textbf{XInstallColormap} and \textbf{XUninstallColormap}
+            \bigbreak \noindent 
+            Colormaps are local to a particular screen. Screens always have a default colormap, and pro- grams typically allocate cells out of this colormap. Generally, you should not write applications that monopolize color resources. Although some hardware supports multiple colormaps installed at one time, many of the hardware displays built today support only a single installed colormap, so the primitives are written to encourage sharing of colormap entries between applications.
+            \bigbreak \noindent 
+            The \textbf{DefaultColormap} macro returns the default colormap. The \textbf{DefaultVisual} macro returns the default visual type for the specified screen. Possible visual types are \textbf{StaticGray,} \textbf{GrayScale,} \textbf{StaticColor,} \textbf{PseudoColor,} \textbf{TrueColor,} or \textbf{DirectColor}
+        \item \textbf{Color structures}: Functions that operate only on RGB color space values use an \textbf{XColor} structure, which contains:
+            \begin{cppcode}
+                typedef struct {
+                    unsigned long pixel; /* pixel value */
+                    unsigned short red, green, blue; /* rgb values */
+                    char flags; /* DoRed, DoGreen, DoBlue */
+                    char pad;
+                } XColor;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The red, green, and blue values are always in the range 0 to 65535 inclusive, independent of the number of bits actually used in the display hardware. The server scales these values down to the range used by the hardware. Black is represented by (0,0,0), and white is represented by (65535,65535,65535). In some functions, the flags member controls which of the red, green, and blue members is used and can be the inclusive OR of zero or more of \textbf{DoRed,} \textbf{DoGreen,} and \textbf{DoBlue}
+            \bigbreak \noindent 
+            Functions that operate on all color space values use an \textbf{XcmsColor} structure. This structure contains a union of substructures, each supporting color specification encoding for a particular color
+            space. Like the \textbf{XColor} structure, the \textbf{XcmsColor} structure contains pixel and color specification information (the spec member in the XcmsColor structure).
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef unsigned long XcmsColorFormat;/* Color Specification Format */
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    union {
+                        XcmsRGB RGB;
+                        XcmsRGBi RGBi;
+                        XcmsCIEXYZ CIEXYZ;
+                        XcmsCIEuvY CIEuvY;
+                        XcmsCIExyY CIExyY;
+                        XcmsCIELab CIELab;
+                        XcmsCIELuv CIELuv;
+                        XcmsTekHVC TekHVC;
+                        XcmsPad Pad;
+                    } spec;
+                    unsigned long pixel;
+                    XcmsColorFormat format;
+                } XcmsColor; /* Xcms Color Structure */
+            \end{cppcode}
+            \bigbreak \noindent 
+            Because the color specification can be encoded for the various color spaces, encoding for the spec member is identified by the format member, which is of type \textbf{XcmsColorFormat.} The following macros define standard formats.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #define XcmsUndefinedFormat 0x00000000
+                #define XcmsCIEXYZFormat 0x00000001 /* CIE XYZ */
+                #define XcmsCIEuvYFormat 0x00000002 /* CIE u’v’Y */
+                #define XcmsCIExyYFormat 0x00000003 /* CIE xyY */
+                #define XcmsCIELabFormat 0x00000004 /* CIE L*a*b* */
+                #define XcmsCIELuvFormat 0x00000005 /* CIE L*u*v* */
+                #define XcmsTekHVCFormat 0x00000006 /* TekHVC */
+                #define XcmsRGBFormat 0x80000000 /* RGB Device */
+                #define XcmsRGBiFormat 0x80000001 /* RGB Intensity */
+            \end{cppcode}
+            \bigbreak \noindent 
+            Formats for device-independent color spaces are distinguishable from those for device-dependent spaces by the 32nd bit. If this bit is set, it indicates that the color specification is in a device- dependent form; otherwise, it is in a device-independent form. If the 31st bit is set, this indicates that the color space has been added to Xlib at run time (see section 6.12.4). The format value for a color space added at run time may be different each time the program is executed. If references to such a color space must be made outside the client (for example, storing a color specification in a file), then reference should be made by color space string prefix (see \textbf{XcmsFormatOfPrefix} and \textbf{XcmsPrefixOfFormat).}
+            \bigbreak \noindent 
+            Data types that describe the color specification encoding for the various color spaces are defined as follows:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef double XcmsFloat;
+                typedef struct {
+                    unsigned short red; /* 0x0000 to 0xffff */
+                    unsigned short green; /* 0x0000 to 0xffff */
+                    unsigned short blue; /* 0x0000 to 0xffff */
+                } XcmsRGB; /* RGB Device */
+
+                typedef struct {
+                    XcmsFloat red; /* 0.0 to 1.0 */
+                    XcmsFloat green; /* 0.0 to 1.0 */
+                    XcmsFloat blue; /* 0.0 to 1.0 */
+                } XcmsRGBi; /* RGB Intensity */
+
+                typedef struct {
+                    XcmsFloat X;
+                    XcmsFloat Y; /* 0.0 to 1.0 */
+                    XcmsFloat Z;
+                } XcmsCIEXYZ; /* CIE XYZ */
+
+                typedef struct {
+                    XcmsFloat u_prime; /* 0.0 to ˜0.6 */
+                    XcmsFloat v_prime; /* 0.0 to ˜0.6 */
+                    XcmsFloat Y; /* 0.0 to 1.0 */
+                } XcmsCIEuvY; /* CIE u’v’Y */
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    XcmsFloat x; /* 0.0 to ˜.75 */
+                    XcmsFloat y; /* 0.0 to ˜.85 */
+                    XcmsFloat Y; /* 0.0 to 1.0 */
+                } XcmsCIExyY; /* CIE xyY */
+
+                typedef struct {
+                    XcmsFloat L_star; /* 0.0 to 100.0 */
+                    XcmsFloat a_star;
+                    XcmsFloat b_star;
+                } XcmsCIELab; /* CIE L*a*b* */
+
+                typedef struct {
+                    XcmsFloat L_star; /* 0.0 to 100.0 */
+                    XcmsFloat u_star;
+                    XcmsFloat v_star;
+                } XcmsCIELuv; /* CIE L*u*v* */
+
+                typedef struct {
+                    XcmsFloat H; /* 0.0 to 360.0 */
+                    XcmsFloat V; /* 0.0 to 100.0 */
+                    XcmsFloat C; /* 0.0 to 100.0 */
+                } XcmsTekHVC; /* TekHVC */
+
+                typedef struct {
+                    XcmsFloat pad0;
+                    XcmsFloat pad1;
+                    XcmsFloat pad2;
+                    XcmsFloat pad3;
+                } XcmsPad; /* four doubles */
+            \end{cppcode}
+            \bigbreak \noindent 
+            The device-dependent formats provided allow color specification in:
+            \begin{itemize}
+                \item \textbf{RGB Intensity (XcmsRGBi)}: Red, green, and blue linear intensity values, floating-point values from 0.0 to 1.0, where 1.0 indicates full intensity, 0.5 half intensity, and so on.
+                \item \textbf{RGB Device (XcmsRGB)}: Red, green, and blue values appropriate for the specified output device. \textbf{XcmsRGB} values are of type unsigned short, scaled from 0 to 65535 inclusive, and are interchangeable with the red, green, and blue values in an \textbf{XColor} structure.
+            \end{itemize}
+            It is important to note that RGB Intensity values are not gamma corrected values. In contrast, RGB Device values generated as a result of converting color specifications are always gamma corrected, and RGB Device values acquired as a result of querying a colormap or passed in by the client are assumed by Xlib to be gamma corrected. The term RGB value in this manual always refers to an RGB Device value.
+        \item \textbf{Display color gamut}: Specific range of colors a screen can reproduce.
+        \item \textbf{Gamma correction}:  Gamma correction is the process of adjusting color or brightness values to account for the fact that displays do not produce light linearly.
+            \bigbreak \noindent 
+            Ideally, you might think that if you send a display a value of 50\%, it produces 50\% brightness. In reality, many displays have a nonlinear response. A value halfway between black and white does not necessarily produce half the physical light output.
+            \bigbreak \noindent 
+            So gamma correction compensates for this nonlinear relationship.
+            \bigbreak \noindent 
+            Mathematically, it is often modeled like this:
+            \begin{align*}
+                \text{output brightness } = \text{ input value}^{\gamma}
+            ,\end{align*}
+            where $\gamma$ is the \textbf{gamma value}. A common display gamma is around 
+            \begin{align*}
+                \gamma \approx 2.2
+            .\end{align*}
+            That means displays often make raw input values appear darker than a linear brightness model would suggest.
+            \bigbreak \noindent 
+            For example, suppose a pixel channel is normalized between 0 and 1:
+            \begin{align*}
+                0.5^{2.2} \approx 0.218
+            .\end{align*}
+            So a numeric value of 0.5 may produce only about 21.8\% of maximum physical light output, not 50\%.
+            \bigbreak \noindent 
+            Gamma correction adjusts the stored or transmitted values so the displayed result looks perceptually correct.
+            \bigbreak \noindent 
+            In color systems, this matters because RGB values are usually not pure physical light intensities. They are often encoded values meant to look correct on a display. For example, an RGB value like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            R = 128, G = 128, B = 128
+            \end{cppcode}
+            \bigbreak \noindent 
+            is not necessarily “half the light” of white. It is a gamma-encoded middle gray intended to look visually halfway between black and white.
+            \bigbreak \noindent 
+            Gamma correcting an RGB value means changing the numeric channel values so that the final displayed brightness matches the intended perceived or physical brightness.
+        \item \textbf{Color strings}: Xlib provides a mechanism for using string names for colors. A color string may either contain an abstract color name or a numerical color specification. Color strings are case-insensitive.
+            \bigbreak \noindent 
+            Color strings are used in the following functions:
+            \begin{itemize}
+                \item XAllocNamedColor
+                \item XcmsAllocNamedColor
+                \item XLookupColor
+                \item XcmsLookupColor
+                \item XParseColor
+                \item XStoreNamedColor
+            \end{itemize}
+            Xlib supports the use of abstract color names, for example, red or blue. A value for this abstract name is obtained by searching one or more color name databases. Xlib first searches zero or more client-side databases; the number, location, and content of these databases is implementation-dependent and might depend on the current locale. If the name is not found, Xlib then looks for the color in the X server’s database. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent.
+            \bigbreak \noindent 
+            A numerical color specification consists of a color space name and a set of values in the following syntax:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            <color_space_name>:<value>/.../<value>
+            \end{cppcode}
+            \bigbreak \noindent 
+            The following are examples of valid color strings.
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item "CIEXYZ:0.3227/0.28133/0.2493"
+                \item "RGBi:1.0/0.0/0.0"
+                \item "rgb:00/ff/00"
+                \item "CIELuv:50.0/0.0/0.0"
+            \end{itemize}
+            The syntax and semantics of numerical specifications are given for each standard color space in the following sections.
+        \item \textbf{RGB Device String Specification}: An RGB Device specification is identified by the prefix ‘‘rgb:’’ and conforms to the following syntax:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rgb:<red>/<green>/<blue>
+
+            <red>, <green>, <blue> := h | hh | hhh | hhhh
+            h := single hexadecimal digits (case insignificant)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that $h$ indicates the value scaled in 4 bits, $hh$ the value scaled in 8 bits, $hhh$ the value scaled in 12 bits, and hhhh the value scaled in 16 bits, respectively.
+            \bigbreak \noindent 
+            For backward compatibility, an older syntax for RGB Device is supported, but its continued use is not encouraged. The syntax is an initial sharp sign character followed by a numeric specification, in one of the following formats:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #RGB (4 bits each)
+                #RRGGBB (8 bits each)
+                #RRRGGGBBB (12 bits each)
+                #RRRRGGGGBBBB (16 bits each)
+            \end{cppcode}
+            \bigbreak \noindent 
+            The R, G, and B represent single hexadecimal digits. When fewer than 16 bits each are specified, they represent the most significant bits of the value (unlike the ‘‘rgb:’’ syntax, in which values are scaled). For example, the string ‘‘\#3a7’’ is the same as ‘‘\#3000a0007000’’.
+        \item \textbf{RGB Intensity String Specification}: An RGB intensity specification is identified by the prefix ‘‘rgbi:’’ and conforms to the following syntax:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            rgbi:<red>/<green>/<blue>
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that red, green, and blue are floating-point values between 0.0 and 1.0, inclusive. The input format for these values is an optional sign, a string of numbers possibly containing a decimal point, and an optional exponent field containing an E or e followed by a possibly signed integer string.
+        \item \textbf{Device-Independent String Specifications}: The standard device-independent string speciﬁcations have the following syntax:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                CIEXYZ:<X>/<Y>/<Z>
+                CIEuvY:<u>/<v>/<Y>
+                CIExyY:<x>/<y>/<Y>
+                CIELab:<L>/<a>/<b>
+                CIELuv:<L>/<u>/<v>
+                TekHVC:<H>/<V>/<C>
+            \end{cppcode}
+            \bigbreak \noindent 
+            All of the values (C, H, V, X, Y, Z, a, b, u, v, y, x) are floating-point values. The syntax for these values is an optional plus or minus sign, a string of digits possibly containing a decimal point, and an optional exponent field consisting of an ‘‘E’’ or ‘‘e’’ followed by an optional plus or minus followed by a string of digits.
+        \item \textbf{Color Conversion Contexts and Gamut Mapping}: When Xlib converts device-independent color specifications into device-dependent specifications and vice versa, it uses knowledge about the color limitations of the screen hardware. This information, typically called the device profile, is available in a Color Conversion Context (CCC).
+            \bigbreak \noindent 
+            Because a specified color may be outside the color gamut of the target screen and the white point associated with the color specification may differ from the white point inherent to the screen, Xlib applies gamut mapping when it encounters certain conditions:
+            \begin{itemize}
+                \item Gamut compression occurs when conversion of device-independent color specifications to device-dependent color specifications results in a color out of the target screen’s gamut.
+                \item White adjustment occurs when the inherent white point of the screen differs from the white point assumed by the client.
+            \end{itemize}
+            Gamut handling methods are stored as callbacks in the CCC, which in turn are used by the color space conversion routines. Client data is also stored in the CCC for each callback. The CCC also contains the white point the client assumes to be associated with color specifications (that is, the Client White Point). The client can specify the gamut handling callbacks and client data as well as the Client White Point. Xlib does not preclude the X client from performing other forms of gamut handling (for example, gamut expansion); however, Xlib does not provide direct support for gamut handling other than white adjustment and gamut compression.
+            \bigbreak \noindent 
+            Associated with each colormap is an initial CCC transparently generated by Xlib. Therefore, when you specify a colormap as an argument to an Xlib function, you are indirectly specifying a CCC. There is a default CCC associated with each screen. Newly created CCCs inherit attributes from the default CCC, so the default CCC attributes can be modified to affect new CCCs.
+            \bigbreak \noindent 
+            Xcms functions in which gamut mapping can occur return \textbf{Status} and have specific status values defined for them, as follows:
+            \begin{itemize}
+                \item \textbf{XcmsFailure} indicates that the function failed.
+                \item \textbf{XcmsSuccess} indicates that the function succeeded. In addition, if the function performed any color conversion, the colors did not need to be compressed.
+                \item \textbf{XcmsSuccessWithCompression} indicates the function performed color conversion and at least one of the colors needed to be compressed. The gamut compression method is deter- mined by the gamut compression procedure in the CCC that is specified directly as a function argument or in the CCC indirectly specified by means of the colormap argument.
+            \end{itemize}
+        \item \textbf{Creating, Copying, and Destroying Colormaps}: 
+            \bigbreak \noindent
+            To create a colormap for a screen, use \textbf{XCreateColormap}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Colormap XCreateColormap(
+                    Display *display,
+                    Window w,
+                    Visual *visual,
+                    int alloc
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{w}: Specifies the window on whose screen you want to create a colormap.
+                \item \textbf{visual}: Specifies a visual type supported on the screen. If the visual type is not one supported by the screen, a \textbf{BadMatch} error results.
+                \item \textbf{alloc}: Specifies the colormap entries to be allocated. You can pass \textbf{AllocNone} or \textbf{AllocAll}.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XCreateColormap} function creates a colormap of the specified visual type for the screen on which the specified window resides and returns the colormap ID associated with it. Note that the specified window is only used to determine the screen.
+            \bigbreak \noindent
+            The initial values of the colormap entries are undefined for the visual classes \textbf{GrayScale}, \textbf{PseudoColor}, and \textbf{DirectColor}. For \textbf{StaticGray}, \textbf{StaticColor}, and \textbf{TrueColor}, the entries have defined values, but those values are specific to the visual and are not defined by X. For \textbf{StaticGray}, \textbf{StaticColor}, and \textbf{TrueColor}, \textbf{alloc} must be \textbf{AllocNone}, or a \textbf{BadMatch} error results. For the other visual classes, if \textbf{alloc} is \textbf{AllocNone}, the colormap initially has no allocated entries, and clients can allocate them. 
+            \bigbreak \noindent
+            If \textbf{alloc} is \textbf{AllocAll}, the entire colormap is allocated writable. The initial values of all allocated entries are undefined. For \textbf{GrayScale} and \textbf{PseudoColor}, the effect is as if an \textbf{XAllocColorCells} call returned all pixel values from zero to $N - 1$, where $N$ is the colormap entries value in the specified visual. For \textbf{DirectColor}, the effect is as if an \textbf{XAllocColorPlanes} call returned a pixel value of zero and \texttt{red\_mask}, \texttt{green\_mask}, and \texttt{blue\_mask} containing the same bits as the corresponding masks in the specified visual. However, in all cases, none of these entries can be freed by using \textbf{XFreeColors}.
+            \bigbreak \noindent
+            \textbf{XCreateColormap} can generate \textbf{BadAlloc}, \textbf{BadMatch}, \textbf{BadValue}, and \textbf{BadWindow} errors.
+            \bigbreak \noindent
+            To create a new colormap when the allocation out of a previously shared colormap has failed because of resource exhaustion, use \textbf{XCopyColormapAndFree}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Colormap XCopyColormapAndFree(
+                    Display* display,
+                    Colormap colormap
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{colormap}: Specifies the colormap.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XCopyColormapAndFree} function creates a colormap of the same visual type and for the same screen as the specified colormap and returns the new colormap ID. It also moves all of the client's existing allocation from the specified colormap to the new colormap with their color values intact and their read-only or writable characteristics intact and frees those entries in the specified colormap. Color values in other entries in the new colormap are undefined.
+            \bigbreak \noindent
+            If the specified colormap was created by the client with \textbf{alloc} not set to \textbf{AllocAll}, the new colormap is also created with \textbf{AllocAll}, all color values for all entries are copied from the specified colormap, and then all entries in the specified colormap are freed.
+            \bigbreak \noindent
+            If the specified colormap was not created by the client with \textbf{AllocAll}, the allocations to be moved are all those pixels and planes that have been allocated by the client using \textbf{XAllocColor}, \textbf{XAllocNamedColor}, \textbf{XAllocColorCells}, or \textbf{XAllocColorPlanes} and that have not been freed since they were allocated.
+            \bigbreak \noindent
+            \textbf{XCopyColormapAndFree} can generate \textbf{BadAlloc} and \textbf{BadColor} errors.
+            \bigbreak \noindent 
+            \textbf{Note:} A colormap can be “exhausted” because it has a finite number of color cells.
+            \bigbreak \noindent 
+            If the visual has 8 colormap bits, there may be only 256 entries. Multiple clients may be sharing the same default colormap. If enough clients allocate entries, there may be no suitable entries left.
+            \bigbreak \noindent 
+            The “AndFree” part means it frees your color allocations in the old colormap. It does not necessarily destroy the old colormap object itself. To destroy a colormap resource, you use:
+            \bigbreak \noindent 
+            If the old colormap was created by your client with:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            AllocAll
+            \end{cppcode}
+            \bigbreak \noindent 
+            then the client owns the entire colormap. In that case, the new colormap is also treated like an \textbf{AllocAll} colormap. All entries are copied, and the old entries are freed.
+            \bigbreak \noindent 
+            If the old colormap was not created with \textbf{AllocAll,} then only the colors/cells that your client explicitly allocated are moved. That includes allocations made by functions such as:
+            \bigbreak \noindent 
+            \textbf{XCopyColormapAndFree} creates a new colormap with the same screen, same visual, and same number of entries as the old one. It does not increase the size of the colormap.
+            \bigbreak \noindent 
+            For example, if the old colormap had 256 entries, the new colormap also has 256 entries.
+            \bigbreak \noindent 
+            The benefit is that the new colormap does not carry over everyone else’s allocations. It mainly preserves your client’s allocated colors and leaves the rest available/undefined in the new colormap.
+            \bigbreak \noindent
+            To destroy a colormap, use \textbf{XFreeColormap}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                XFreeColormap(Display *display, Colormap colormap)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{colormap}: Specifies the colormap that you want to destroy.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XFreeColormap} function deletes the association between the colormap resource ID and the colormap and frees the colormap storage. However, this function has no effect on the default colormap for a screen. If the specified colormap is an installed map for a screen, it is uninstalled. See \textbf{XUninstallColormap}.
+            \bigbreak \noindent
+            If the specified colormap is defined as the colormap for a window by \textbf{XCreateWindow}, \textbf{XSetWindowColormap}, or \textbf{XChangeWindowAttributes}, \textbf{XFreeColormap} changes the colormap associated with the window to \textbf{None} and generates a \textbf{ColormapNotify} event. X does not define the colors displayed for a window with a colormap of \textbf{None}.
+            \bigbreak \noindent
+            \textbf{XFreeColormap} can generate a \textbf{BadColor} error.
+        \item \textbf{Mapping Color Names to Values}: To map a color name to an RGB value, use \textbf{XLookupColor}
+            \bigbreak \noindent 
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XLookupColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *color_name,
+                    XColor *exact_def_return,
+                    XColor *screen_def_return
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{colormap}: Specifies the colormap.
+                \item \textbf{color\_name}: Specifies the color name string, for example, \texttt{red}, whose color definition structure you want returned.
+                \item \textbf{exact\_def\_return}: Returns the exact RGB values.
+                \item \textbf{screen\_def\_return}: Returns the closest RGB values provided by the hardware.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XLookupColor} function looks up the string name of a color with respect to the screen associated with the specified colormap. It returns both the exact color values and the closest values provided by the screen with respect to the visual type of the specified colormap. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. \textbf{XLookupColor} returns nonzero if the name is resolved; otherwise, it returns zero.
+            \bigbreak \noindent
+            \textbf{XLookupColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To map a color name to the exact RGB value, use \textbf{XParseColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XParseColor(Display *display, Colormap colormap, char *spec,
+                XColor *exact_def_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{colormap}: Specifies the colormap.
+                \item \textbf{spec}: Specifies the color name string; case is ignored.
+                \item \textbf{exact\_def\_return}: Returns the exact color value for later use and sets the \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue} flags.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XParseColor} function looks up the string name of a color with respect to the screen associated with the specified colormap. It returns the exact color value. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. \textbf{XParseColor} returns nonzero if the name is resolved; otherwise, it returns zero.
+            \bigbreak \noindent
+            \textbf{XParseColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To map a color name to a value in an arbitrary color space, use \textbf{XcmsLookupColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XcmsLookupColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *color_string,
+                    XcmsColor *color_exact_return,
+                    XcmsColor *color_screen_return,
+                    XcmsColorFormat result_format
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{colormap}: Specifies the colormap.
+                \item \textbf{color\_string}: Specifies the color string.
+                \item \textbf{color\_exact\_return}: Returns the color specification parsed from the color string or parsed from the corresponding string found in a color-name database.
+                \item \textbf{color\_screen\_return}: Returns the color that can be reproduced on the screen.
+                \item \textbf{result\_format}: Specifies the color format for the returned color specifications, that is, the \texttt{color\_screen\_return} and \texttt{color\_exact\_return} arguments. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a numerical color specification, the specification is returned in the format used in that numerical color specification. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a color name, the specification is returned in the format used to store the color in the database.
+            \end{itemize}
+            \bigbreak \noindent
+            The \textbf{XcmsLookupColor} function looks up the string name of a color with respect to the screen associated with the specified colormap. It returns both the exact color values and the closest values provided by the screen with respect to the visual type of the specified colormap. The values are returned in the format specified by \texttt{result\_format}. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. \textbf{XcmsLookupColor} returns \textbf{XcmsSuccess} or \textbf{XcmsSuccessWithCompression} if the name is resolved; otherwise, it returns \textbf{XcmsFailure}. If \textbf{XcmsSuccessWithCompression} is returned, the color specification returned in \texttt{color\_screen\_return} is the result of gamut compression.
+        \item \textbf{Allocating and Freeing Color Cells}: 
+
+
+
+
+
+
+
     \end{itemize}
 
 

@@ -141,6 +141,16 @@
         \item \textbf{Protected constructor}: It is reasonable for an abstract base class to have a protected constructor, but it is not strictly required. Because an abstract class cannot be instantiated directly anyway, a call to the constructor is already an error.
             \bigbreak \noindent 
             However, a protected constructor is often used to \textbf{communicate intent}
+        \item \textbf{Lazy initialization}: Lazy initialization is a creational design pattern in object-oriented programming (OOP) that delays the creation of an object, the calculation of a value, or an expensive process until the exact moment it is first needed
+            \bigbreak \noindent 
+            The pattern is typically built by wrapping a private field with an accessor method or property getter.
+            \begin{enumerate}
+                \item The field is initially set to null or a placeholder.
+                \item When the getter is called, it checks if the instance already exists.
+                \item If it exists, it returns it instantly.
+                \item If it is null, it initializes the object, saves it to the field, and returns it just-in-time.
+            \end{enumerate}
+            \textbf{Note}: Eager initialization is when the initialization happens at the time of request.
         \item \textbf{Participant / Client}: In software architecture, the participant and client classes represent distinct roles. A client acts as the interface initiating an interaction (e.g., an AWS or API connection), while a participant represents an active entity within that session (e.g., a person, agent, or device in a chat or RTC room).
             \bigbreak \noindent 
             \begin{itemize}
@@ -998,8 +1008,200 @@
             \item \textbf{Related patterns}: Abstract Factory (99) is similar to Builder in that it too may construct complex objects. The primary difference is that the Builder pattern focuses on constructing a complex object step by step. Abstract Factory's emphasis is on families of product objects (either simple or complex). Builder returns the product as a final step, but as far as the Abstract Factory pattern is concerned, the product gets returned immediately.
                 \bigbreak \noindent 
                 A Composite (183) is what the builder often builds.
-            \item \textbf{Factory method}: 
 
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Factory Method}
+    \begin{itemize}
+        \item \textbf{Intent}: Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.
+        \item \textbf{Also known as}: Virtual constructor
+        \item \textbf{Motivation}: Frameworks use abstract classes to define and maintain relationships between objects. A framework is often responsible for creating these objects as well.
+            \bigbreak \noindent 
+            Consider a framework for applications that can present multiple documents to the user. Two key abstractions in this framework are the classes Application and Document. Both classes are abstract, and clients have to subclass them to realize their application-specific implementations. To create a drawing application, for example, we define the classes DrawingApplication and DrawingDocument. The Application class is responsible for managing Documents and will create them as required—when the user selects Open or New from a menu, for example.
+            \bigbreak \noindent 
+            Because the particular Document subclass to instantiate is application-specific, the Application class can't predict the subclass of Document to instantiate—the Application class only knows when a new document should be created, not what kind of Document to create. This creates a dilemma: The framework must instantiate classes, but it only knows about abstract classes, which it cannot instantiate.
+            \bigbreak \noindent 
+            The Factory Method pattern offers a solution. It encapsulates the knowledge of which Document subclass to create and moves this knowledge out of the framework.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/20.png}
+            \bigbreak \noindent 
+            Application subclasses redefine an abstract CreateDocument operation on Application to return the appropriate Document subclass. Once an Application subclass is instantiated, it can then instantiate application-specific Documents without knowing their class. We call CreateDocument a \textbf{factory method} because it's responsible for "manufacturing" an object
+        \item \textbf{Applicability}: Use the Factory Method pattern when
+            \begin{itemize}
+                \item a class can't anticipate the class of objects it must create.
+                \item a class wants its subclasses to specify the objects it creates.
+                \item classes delegate responsibility to one of several helper subclasses, and you want to localize the knowledge of which helper subclass is the delegate.
+            \end{itemize}
+        \item \textbf{Structure}: 
+            \bigbreak \noindent 
+            \fig{.6}{./figures/21.png}
+        \item \textbf{Participants}: 
+            \begin{itemize}
+                \item \textbf{Product (Document)}: defines the interface of objects the factory method creates.
+                \item \textbf{ConcreteProduct (MyDocument)}: implements the Product interface.
+                \item \textbf{Creator (Application)}: declares the factory method, which returns an object of type Product. Creator may also define a default implementation of the factory method that returns a default ConcreteProduct object.
+                    \bigbreak \noindent 
+                    may call the factory method to create a Product object.
+                \item \textbf{ConcreteCreator (MyApplication)}: overrides the factory method to return an instance of a ConcreteProduct
+            \end{itemize}
+        \item \textbf{Collaborations}: Creator relies on its subclasses to define the factory method so that it returns an instance of the appropriate ConcreteProduct.
+        \item \textbf{Consequences}: Factory methods eliminate the need to bind application-specific classes into your code. The code only deals with the Product interface; therefore it can work with any user-defined ConcreteProduct classes.
+            \bigbreak \noindent 
+            A potential disadvantage of factory methods is that clients might have to subclass the Creator class just to create a particular ConcreteProduct object. Subclassing is fine when the client has to subclass the Creator class anyway, but otherwise the client now must deal with another point of evolution.
+            \bigbreak \noindent 
+            Here are two additional consequences of the Factory Method pattern:
+            \begin{enumerate}
+                \item \textbf{Provides hooks for subclasses}: Creating objects inside a class with a factory method is always more flexible than creating an object directly. Factory Method gives subclasses a hook for providing an extended version of an object.
+                    \bigbreak \noindent 
+                    In the Document example, the Document class could define a factory method called CreateFileDialog that creates a default file dialog object for opening an existing document. A Document subclass can define an application-specific file dialog by overriding this factory method. In this case the factory method is not abstract but provides a reasonable default implementation.
+                \item \textbf{Connects parallel class hierarchies}: In the examples we've considered so far, the factory method is only called by Creators. But this doesn't have to be the case; clients can find factory methods useful, especially in the case of parallel class hierarchies.
+                    \bigbreak \noindent 
+                    Parallel class hierarchies result when a class delegates some of its responsibilities to a separate class. Consider graphical figures that can be manipulated interactively; that is, they can be stretched, moved, or rotated using the mouse. Implementing such interactions isn't always easy. It often requires storing and updating information that records the state of the manipulation at a given time. This state is needed only during manipulation; therefore it needn't be kept in the figure object. Moreover, different figures behave differently when the user manipulates them. For example, stretching a line figure might have the effect of moving an endpoint, whereas stretching a text figure may change its line spacing.
+                    \bigbreak \noindent 
+                    With these constraints, it's better to use a separate Manipulator object that implements the interaction and keeps track of any manipulation-specific state that's needed. Different figures will use different Manipulator subclasses to handle particular interactions. The resulting Manipulator class hierarchy parallels (at least partially) the Figure class hierarchy:
+                    \bigbreak \noindent 
+                    \fig{.6}{./figures/22.png}
+                    \bigbreak \noindent 
+                    The Figure class provides a CreateManipulator factory method that lets clients create a Figure's corresponding Manipulator. Figure subclasses override this method to return an instance of the Manipulator subclass that's right for them. Alternatively, the Figure class may implement CreateManipulator to return a default Manipulator instance, and Figure subclasses may simply inherit that default. The Figure classes that do so need no corresponding Manipulator subclass—hence the hierarchies are only partially parallel
+                    \bigbreak \noindent 
+                    Notice how the factory method defines the connection between the two class hierarchies. It localizes knowledge of which classes belong together.
+            \end{enumerate}
+        \item \textbf{Implementation}: Consider the following issues when applying the Factory Method pattern:
+            \begin{enumerate}
+                \item \textbf{Two major varieties}: The two main variations of the Factory Method pattern are (1) the case when the Creator class is an abstract class and does not provide an implementation for the factory method it declares, and (2) the case when the Creator is a concrete class and provides a default implementation for the factory method. It's also possible to have an abstract class that defines a default implementation, but this is less common.
+                    \bigbreak \noindent 
+                    The first case requires subclasses to define an implementation, because there's no reasonable default. It gets around the dilemma of having to instantiate unforeseeable classes. In the second case, the concrete Creator uses the factory method primarily for flexibility. It's following a rule that says, "Create objects in a separate operation so that subclasses can override the way they're created." This rule ensures that designers of subclasses can change the class of objects their parent class instantiates if necessary.
+                \item \textbf{Parameterized factory methods}: Another variation on the pattern lets the factory method create multiple kinds of products. The factory method takes a parameter that identifies the kind of object to create. All objects the factory method creates will share the Product interface. In the Document example, Application might support different kinds of Documents. You pass CreateDocument an extra parameter to specify the kind of document to create.
+                    \bigbreak \noindent 
+                    The Unidraw graphical editing framework uses this approach for reconstructing objects saved on disk. Unidraw defines a Creator class with a factory method Create that takes a class identifier as an argument. The class identifier specifies the class to instantiate. When Unidraw saves an object to disk, it writes out the class identifier first and then its instance variables. When it reconstructs the object from disk, it reads the class identifier first.
+                    \bigbreak \noindent 
+                    Once the class identifier is read, the framework calls Create, passing the identifier as the parameter. Create looks up the constructor for the corresponding class and uses it to instantiate the object. Last, Create calls the object's Read operation, which reads the remaining information on the disk and initializes the object's instance variables. A parameterized factory method has the following general form, where
+                    \bigbreak \noindent 
+                    MyProduct and YourProduct are subclasses of Product:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        class Creator {
+                            public:
+                            virtual Product* Create(ProductId);
+                        };
+
+                        Product* Creator::Create (ProductId id) {
+                            if (id == MINE) return new MyProduct;
+                            if (id == YOURS) return new YourProduct;
+                            // repeat for remaining products...
+                            return 0;
+                        }
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Overriding a parameterized factory method lets you easily and selectively extend or change the products that a Creator produces. You can introduce new identifiers for new kinds of products, or you can associate existing identifiers with different products.
+                    \bigbreak \noindent 
+                    For example, a subclass MyCreator could swap MyProduct and YourProduct and support a new TheirProduct subclass:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        Product* MyCreator::Create (ProductId id) {
+                            if (id == YOURS) return new MyProduct;
+                            if (id == MINE) return new YourProduct;
+                            // N.B.: switched YOURS and MINE
+
+                            if (id == THEIRS) return new TheirProduct;
+
+                            return Creator::Create(id); // called if all others fail
+                        }
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Notice that the last thing this operation does is call Create on the parent class. That's because MyCreator::Create handles only YOURS, MINE, and THEIRS differently than the parent class. It isn't interested in other classes. Hence MyCreator extends the kinds of products created, and it defers responsibility for creating all but a few products to its parent.
+                \item \textbf{Language-specific variants and issues}: Different languages lend themselves to other interesting variations and caveats.
+                \item \textbf{Using templates to avoid subclassing}: As we've mentioned, another potential problem with factory methods is that they might force you to subclass just to create the appropriate Product objects. Another way to get around this in C++ is to provide a template subclass of Creator that's parameterized by the Product class:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        class Creator {
+                            public:
+                            virtual Product* CreateProduct() = 0;
+                        };
+
+                        template <class TheProduct>
+                        class StandardCreator: public Creator {
+                            public:
+                            virtual Product* CreateProduct();
+                        };
+
+                        template <class TheProduct>
+                        Product* StandardCreator<TheProduct>::CreateProduct () {
+                            return new TheProduct;
+                        }
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    With this template, the client supplies just the product class—no subclassing of Creator is required.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        class MyProduct : public Product {
+                            public:
+                            MyProduct();
+                            // ...
+                        };
+
+                        StandardCreator<MyProduct> myCreator;
+                    \end{cppcode}
+                \item \textbf{Naming conventions}. It's good practice to use naming conventions that make it clear you're using factory methods. For example, the MacApp Macintosh application framework always declares the abstract operation that defines the factory method as Class* DoMakeClass(), where Class is the Product class.
+            \end{enumerate}
+        \item \textbf{Sample Code}: The function CreateMaze builds and returns a maze. One problem with this function is that it hard-codes the classes of maze, rooms, doors, and walls. We'll introduce factory methods to let subclasses choose these components
+            \bigbreak \noindent 
+            First we'll define factory methods in MazeGame for creating the maze, room, wall, and door objects:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                class MazeGame {
+                public:
+                    Maze* CreateMaze();
+
+                    // factory methods:
+
+                    virtual Maze* MakeMaze() const
+                        { return new Maze; }
+                    virtual Room* MakeRoom(int n) const
+                        { return new Room(n); }
+                    virtual Wall* MakeWall() const
+                        { return new Wall; }
+                    virtual Door* MakeDoor(Room* r1, Room* r2) const
+                        { return new Door(r1, r2); }
+                };
+            \end{cppcode}
+            \bigbreak \noindent 
+            Each factory method returns a maze component of a given type. MazeGame provides default implementations that return the simplest kinds of maze, rooms, walls, and doors.
+            \bigbreak \noindent 
+            Now we can rewrite CreateMaze to use these factory methods:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Maze* MazeGame::CreateMaze () {
+                    Maze* aMaze = MakeMaze();
+
+                    Room* r1 = MakeRoom(1);
+                    Room* r2 = MakeRoom(2);
+                    Door* theDoor = MakeDoor(r1, r2);
+
+                    aMaze->AddRoom(r1);
+                    aMaze->AddRoom(r2);
+
+                    r1->SetSide(North, MakeWall());
+                    r1->SetSide(East, theDoor);
+                    r1->SetSide(South, MakeWall());
+                    r1->SetSide(West, MakeWall());
+
+                    r2->SetSide(North, MakeWall());
+                    r2->SetSide(East, MakeWall());
+                    r2->SetSide(South, MakeWall());
+                    r2->SetSide(West, theDoor);
+
+                    return aMaze;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Different games can subclass MazeGame to specialize parts of the maze. MazeGame subclasses can redefine some or all of the factory methods to specify variations in products. For example, a BombedMazeGame can redefine the Room and Wall products to return the bombed varieties:
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Prototype}
+    \begin{itemize}
     \end{itemize}
 
 
