@@ -656,7 +656,45 @@
                 \item \textbf{Perfect}: A perfect binary tree is one that is both full and complete. All leaf nodes will be at the same level, and this level has the maximum number of nodes.
                     \fig{.6}{./figures/9.png}
             \end{itemize}
-        \item \textbf{Prefix trees (tries)}: 
+        \item \textbf{Prefix trees (tries)}:  A trie (sometimes called a prefix tree) is a funny data structure. It comes up a lot in interview questions, but algorithm textbooks don't spend much time on this data structure.
+            \bigbreak \noindent 
+            A trie is a variant of an n-ary tree in which characters are stored at each node. Each path down the tree may represent a word.
+            \bigbreak \noindent 
+            The * nodes (sometimes called "null nodes") are often used to indicate complete words. For example, the fact that there is a * node under MANY indicates that MANY is a complete word. The existence of the MA path indicates there are words that start with MA
+            \bigbreak \noindent 
+            The actual implementation of these * nodes might be a special type of child (such as a TerminatingTrieNode, which inherits from TrieNode). Or, we could use just a boolean flag terminates within the "parent" node.
+            \bigbreak \noindent 
+            A node in a trie could have anywhere from 1 through ALPHABET\_SIZE + 1 children (or, 0 through ALPHABET\_SIZE if a boolean flag is used instead of a* node).
+            \bigbreak \noindent 
+            \fig{.6}{./figures/10.png}
+            \bigbreak \noindent 
+            Very commonly, a trie is used to store the entire (English) language for quick prefix lookups. While a hash table can quickly look up whether a string is a valid word, it cannot tell us if a string is a prefix of any valid words. A trie can do this very quickly.
+            \bigbreak \noindent 
+            How quickly? A trie can check if a string is a valid prefix in $O(K)$ time, where $K$ is the length of the string. This is actually the same runtime as a hash table will take. Although we often refer to hash table lookups as being $O(1)$ time, this isn't entirely true. A hash table must read through all the characters in the input, which takes $O( K)$ time in the case of a word lookup.
+            \bigbreak \noindent 
+            Many problems involving lists of valid words leverage a trie as an optimization. In situations when we search through the tree on related prefixes repeatedly (e.g., looking up M, then MA, then MAN, then MANY), we might pass around a reference to the current node in the tree. This will allow us to just check if Y is a child of MAN, rather than starting from the root each time.
+        \item \textbf{Bidirectional graph search}: Bidirectional search is used to find the shortest path between a source and destination node. It operates by essentially running two simultaneous breadth-first searches, one from each node. When their searches collide, we have found a path.
+            \bigbreak \noindent 
+            \fig{.6}{./figures/11.png}
+            \bigbreak \noindent 
+            To see why this is faster, consider a graph where every node has at most $k$ adjacent nodes and the shortest path from node $s$ to node $t$ has length $d$.
+            \begin{itemize}
+                \item In traditional breadth-first search, we would search up to $k$ nodes in the first "level" of the search. In the second level, we would search up to $k$ nodes for each of those first $k$ nodes, so $k^{2}$ nodes total (thus far). We would do this $d$ times, so that's $O(k^{d})$ nodes.
+                    \bigbreak \noindent 
+                \item In bidirectional search, we have two searches that collide after approximately $\frac{d}{2}$ levels (the midpoint of the path). The search from $s$ visits approximately $k^{\frac{d}{2}}$, as does the search from $t$. That's approximately $2 k^{\frac{d}{2}}$, or $O(k^{\frac{d}{2}})$, nodes total.
+            \end{itemize}
+            This might seem like a minor difference, but it's not. It's huge. Recall that $(k^{\frac{d}{2}})\cdot  (k^{\frac{d}{2}}) = k^{d}$. The bidirectional search is actually faster by a factor of $k^{\frac{d}{2}} $.
+            \bigbreak \noindent 
+            Put another way: if our system could only support searching "friend of friend" paths in breadth-first search, it could now likely support "friend of friend of friend of friend" paths. We can support paths that are twice as long.
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Bit manipulation}
+    \begin{itemize}
+        
     \end{itemize}
 
 

@@ -3858,19 +3858,449 @@
             \end{itemize}
             \bigbreak \noindent
             The \textbf{XcmsLookupColor} function looks up the string name of a color with respect to the screen associated with the specified colormap. It returns both the exact color values and the closest values provided by the screen with respect to the visual type of the specified colormap. The values are returned in the format specified by \texttt{result\_format}. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. \textbf{XcmsLookupColor} returns \textbf{XcmsSuccess} or \textbf{XcmsSuccessWithCompression} if the name is resolved; otherwise, it returns \textbf{XcmsFailure}. If \textbf{XcmsSuccessWithCompression} is returned, the color specification returned in \texttt{color\_screen\_return} is the result of gamut compression.
-        \item \textbf{Allocating and Freeing Color Cells}: 
-
-
-
-
-
-
+        \item \textbf{Clearing up confusion}: The colormap is stored and managed by the X server, not by the client.
+            \bigbreak \noindent 
+            The client only holds an XID, a numeric handle, that refers to the server-side colormap object.
+            \bigbreak \noindent 
+            This is why multiple clients can share the same colormap. They are all referring to the same server-side resource by XID.
+            \bigbreak \noindent 
+            For a client to allocate a read-only color cell means: The client asks the X server for a colormap entry representing some RGB color, and the server gives the client a pixel value it may use, but not modify.
+            \bigbreak \noindent 
+            The important part is that the client has allocated permission to use that pixel value, not permission to change the RGB contents of the colormap cell.
+            \bigbreak \noindent 
+            The word allocate here means the server records that this client is using that shared color cell. It increments an internal count so the entry is not freed while clients are still using it.
+            \bigbreak \noindent 
+            When clients call \textbf{XFreeColors,} the server decrements that count. The cell is actually available for reuse only after all allocations have been freed.
+        \item \textbf{Allocating and Freeing Color Cells}: There are two ways of allocating color cells: explicitly as read-only entries, one pixel value at a time, or read/write, where you can allocate a number of color cells and planes simultaneously. A read-only cell has its RGB value set by the server. Read/write cells do not have defined colors initially; functions described in the next section must be used to store values into them. Although it is possible for any client to store values into a read/write cell allocated by another client, read/write cells normally should be considered private to the client that allocated them.
+            \bigbreak \noindent 
+            Read-only colormap cells are shared among clients. The server counts each allocation and freeing of the cell by clients. When the last client frees a shared cell, the cell is finally deallocated. If a single client allocates the same read-only cell multiple times, the server counts each such allocation, not just the first one.
+            \bigbreak \noindent 
+            To allocate a read-only color cell with an RGB value, use \textbf{XAllocColor}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XAllocColor(
+                    Display *display,
+                    Colormap colormap,
+                    XColor *screen_in_out
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{screen\_in\_out}: Specifies and returns the values actually used in the colormap.
+            \end{itemize}
+            \noindent
+            The \textbf{XAllocColor} function allocates a read-only colormap entry corresponding to the closest RGB value supported by the hardware. \textbf{XAllocColor} returns the pixel value of the closest to the specified RGB elements supported by the hardware and returns the RGB value actually used. The corresponding colormap cell is read-only. In addition, \textbf{XAllocColor} returns nonzero if it succeeded or zero if it failed. Multiple clients that request the same effective RGB value can be assigned the same read-only entry, thus allowing entries to be shared. When the last client deallocates a shared cell, it is deallocated. \textbf{XAllocColor} does not use or affect the flags in the \textbf{XColor} structure.
+            \bigbreak \noindent
+            \textbf{XAllocColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To allocate a read-only color cell with a color in arbitrary format, use \textbf{XcmsAllocColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XcmsAllocColor(
+                    Display *display,
+                    Colormap colormap,
+                    XcmsColor *color_in_out,
+                    XcmsColorFormat result_format
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color\_in\_out}: Specifies the color to allocate and returns the pixel and color that is actually used in the colormap.
+                \item \textit{result\_format}: Specifies the color format for the returned color specification.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsAllocColor} function is similar to \textbf{XAllocColor} except the color can be specified in any format. The \textbf{XcmsAllocColor} function ultimately calls \textbf{XAllocColor} to allocate a read-only color cell, or colormap entry, with the specified color. \textbf{XcmsAllocColor} first converts the color specified in \textit{color\_in\_out} to an RGB value and then passes it to \textbf{XAllocColor}. \textbf{XcmsAllocColor} returns the pixel value of the color cell and the color specification actually allocated. This returned color specification is the result of converting the RGB value returned by \textbf{XAllocColor} into the format specified with the \textit{result\_format} argument. If there is no interest in a returned color specification, unnecessary computation can be bypassed if \textit{result\_format} is set to \textbf{XcmsRGBFormat}. The corresponding colormap cell is read-only. If this routine returns \textbf{XcmsFailure}, the \textit{color\_in\_out} color specification is left unchanged.
+            \bigbreak \noindent
+            \textbf{XcmsAllocColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To allocate a read-only color cell using a color name and return the closest color supported by the hardware in RGB format, use \textbf{XAllocNamedColor}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XAllocNamedColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *color_name,
+                    XColor *screen_def_return,
+                    XColor *exact_def_return
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color\_name}: Specifies the color name string, for example, \texttt{red}, whose color definition structure you want returned.
+                \item \textit{screen\_def\_return}: Returns the closest RGB values provided by the hardware.
+                \item \textit{exact\_def\_return}: Returns the exact RGB values.
+            \end{itemize}
+            \noindent
+            The \textbf{XAllocNamedColor} function looks up the named color with respect to the screen that is associated with the specified colormap. It returns both the exact database definition and the closest color supported by the screen. The allocated color cell is read-only. The pixel value is returned in \textit{screen\_def\_return}. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. If \textit{screen\_def\_return} and \textit{exact\_def\_return} point to the same structure, the pixel field will be set correctly, but the color values are undefined. \textbf{XAllocNamedColor} returns nonzero if a cell is allocated; otherwise, it returns zero.
+            \bigbreak \noindent
+            \textbf{XAllocNamedColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To allocate a read-only color cell using a color name and return the closest color supported by the hardware in an arbitrary format, use \textbf{XcmsAllocNamedColor}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XcmsAllocNamedColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *color_string,
+                    XcmsColor *color_screen_return,
+                    XcmsColor *color_exact_return,
+                    XcmsColorFormat result_format
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color\_string}: Specifies the color string whose color definition structure is to be returned.
+                \item \textit{color\_screen\_return}: Returns the pixel value of the color cell and color specification that actually is stored for that cell.
+                \item \textit{color\_exact\_return}: Returns the color specification parsed from the color string or parsed from the corresponding string found in a color-name database.
+                \item \textit{result\_format}: Specifies the color format for the returned color specifications, namely the \textit{color\_screen\_return} and \textit{color\_exact\_return} arguments. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a numerical color specification, the specification is returned in the format used in that numerical color specification. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a color name, the specification is returned in the format used to store the color in the database.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsAllocNamedColor} function is similar to \textbf{XAllocNamedColor} except that the color returned can be in any format specified. This function ultimately calls \textbf{XAllocColor} to allocate a read-only color cell with the color specified by a color string. The color string is parsed into an \textbf{XcmsColor} structure, converted to an RGB value, and finally passed to \textbf{XAllocColor}. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter.
+            \bigbreak \noindent
+            This function returns both the color specification as a result of parsing, called the exact specification, and the actual color specification stored, called the screen specification. This screen specification is the result of converting the RGB value returned by \textbf{XAllocColor} into the format specified in \textit{result\_format}. If there is no interest in a returned color specification, unnecessary computation can be bypassed if \textit{result\_format} is set to \textbf{XcmsRGBFormat}. If \textit{color\_screen\_return} and \textit{color\_exact\_return} point to the same structure, the pixel field will be set correctly, but the color values are undefined.
+            \bigbreak \noindent
+            \textbf{XcmsAllocNamedColor} can generate a \textbf{BadColor} error.
+            \bigbreak \noindent
+            To allocate read/write color cell and color plane combinations for a \textbf{PseudoColor} model, use \textbf{XAllocColorCells}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XAllocColorCells(
+                    Display *display,
+                    Colormap colormap,
+                    Bool contig,
+                    unsigned long plane_masks_return[],
+                    unsigned int nplanes,
+                    unsigned long pixels_return[],
+                    unsigned int npixels
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{contig}: Specifies a Boolean value that indicates whether the planes must be contiguous.
+                \item \textit{plane\_masks\_return}: Returns an array of plane masks.
+                \item \textit{nplanes}: Specifies the number of plane masks that are to be returned in the plane masks array.
+                \item \textit{pixels\_return}: Returns an array of pixel values.
+                \item \textit{npixels}: Specifies the number of pixel values that are to be returned in the \textit{pixels\_return} array.
+            \end{itemize}
+            \noindent
+            The \textbf{XAllocColorCells} function allocates read/write color cells. The number of colors must be positive and the number of planes nonnegative, or a \textbf{BadValue} error results. If \textit{npixels} and \textit{nplanes} are requested, then \textit{npixels} pixels and \textit{nplanes} plane masks are returned. No mask will have any bits set to 1 in common with any other mask or with any of the pixels. By ORing together each pixel with zero or more masks, $\textit{npixels} \times 2^{\textit{nplanes}}$ distinct pixels can be produced. All of these are allocated writable by the request.
+            \bigbreak \noindent
+            For \textbf{GrayScale} or \textbf{PseudoColor}, each mask has exactly one bit set to 1. For \textbf{DirectColor}, each has exactly three bits set to 1. If \textit{contig} is \textbf{True} and if all masks are ORed together, a single contiguous set of bits set to 1 will be formed for \textbf{GrayScale} or \textbf{PseudoColor}, and three contiguous sets of bits set to 1, one within each pixel subfield, for \textbf{DirectColor}. The RGB values of the allocated entries are undefined. \textbf{XAllocColorCells} returns nonzero if it succeeded or zero if it failed.
+            \bigbreak \noindent
+            \textbf{XAllocColorCells} can generate \textbf{BadColor} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To allocate read/write color resources for a \textbf{DirectColor} model, use \textbf{XAllocColorPlanes}.
+            \bigbreak \noindent 
+            The server guarantees that the returned masks do not overlap with each other or with the base pixels. That guarantee matters because otherwise ORing the masks together could accidentally collide with other allocated pixel values.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XAllocColorPlanes(
+                    Display *display,
+                    Colormap colormap,
+                    Bool contig,
+                    unsigned long pixels_return[],
+                    int ncolors,
+                    int nreds,
+                    int ngreens,
+                    int nblues,
+                    unsigned long *rmask_return,
+                    unsigned long *gmask_return,
+                    unsigned long *bmask_return
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{contig}: Specifies a Boolean value that indicates whether the planes must be contiguous.
+                \item \textit{pixels\_return}: Returns an array of pixel values. \textbf{XAllocColorPlanes} returns the pixel values in this array.
+                \item \textit{ncolors}: Specifies the number of pixel values that are to be returned in the \textit{pixels\_return} array.
+                \item \textit{nreds}: Specifies the number of red planes. The value you pass must be nonnegative.
+                \item \textit{ngreens}: Specifies the number of green planes. The value you pass must be nonnegative.
+                \item \textit{nblues}: Specifies the number of blue planes. The value you pass must be nonnegative.
+                \item \textit{rmask\_return}: Returns the bit mask for the red planes.
+                \item \textit{gmask\_return}: Returns the bit mask for the green planes.
+                \item \textit{bmask\_return}: Returns the bit mask for the blue planes.
+            \end{itemize}
+            \noindent
+            The specified \textit{ncolors} must be positive, and \textit{nreds}, \textit{ngreens}, and \textit{nblues} must be nonnegative, or a \textbf{BadValue} error results. If \textit{ncolors} colors, \textit{nreds} reds, \textit{ngreens} greens, and \textit{nblues} blues are requested, \textit{ncolors} pixels are returned, and the masks have \textit{nreds}, \textit{ngreens}, and \textit{nblues} bits set to 1, respectively. If \textit{contig} is \textbf{True}, each mask will have a contiguous set of bits set to 1. No mask will have any bits set to 1 in common with any other mask or with any of the pixels.
+            \bigbreak \noindent
+            For \textbf{DirectColor}, each mask will lie within the corresponding pixel subfield. By ORing together subsets of masks with each pixel value, $\textit{ncolors} \times 2^{(\textit{nreds} + \textit{ngreens} + \textit{nblues})}$ distinct pixel values can be produced. All of these are allocated by the request.
+            \bigbreak \noindent
+            However, in the colormap, there are only $\textit{ncolors} \times 2^{\textit{nreds}}$ independent red entries, $\textit{ncolors} \times 2^{\textit{ngreens}}$ independent green entries, and $\textit{ncolors} \times 2^{\textit{nblues}}$ independent blue entries. This is true even for \textbf{PseudoColor}. When the colormap entry of a pixel value is changed using \textbf{XStoreColors}, \textbf{XStoreColor}, or \textbf{XStoreNamedColor}, the pixel is decomposed according to the masks, and the corresponding independent entries are updated. \textbf{XAllocColorPlanes} returns nonzero if it succeeded or zero if it failed.
+            \bigbreak \noindent
+            \textbf{XAllocColorPlanes} can generate \textbf{BadColor} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            \textbf{Note:} The contig argument controls the shape of those masks. If contig is False, the server may return masks using any non-overlapping bit positions. 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                mask0 = 0b00000001
+                mask1 = 0b00001000
+                mask2 = 0b00100000
+            \end{cppcode}
+            \bigbreak \noindent 
+            These masks are valid because they do not overlap, but the set of mask bits is not contiguous.
+            \bigbreak \noindent 
+            If contig is True, the server must return masks whose set bits form a contiguous range.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                mask0 = 0b00000100
+                mask1 = 0b00001000
+                mask2 = 0b00010000
+            \end{cppcode}
+            Together, these occupy adjacent bit positions:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            0b00011100
+            \end{cppcode}
+            \bigbreak \noindent 
+            For DirectColor, each mask affects the red, green, and blue subfields separately. So contig = True means there is a contiguous set of bits within each color subfield.
+            \bigbreak \noindent 
+            To free colormap cells, use \textbf{XFreeColors}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XFreeColors(
+                    Display *display,
+                    Colormap colormap,
+                    unsigned long pixels[],
+                    int npixels,
+                    unsigned long planes
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{pixels}: Specifies an array of pixel values that map to the cells in the specified colormap.
+                \item \textit{npixels}: Specifies the number of pixels.
+                \item \textit{planes}: Specifies the planes you want to free.
+            \end{itemize}
+            \noindent
+            The \textbf{XFreeColors} function frees the cells represented by pixels whose values are in the \textit{pixels} array. The \textit{planes} argument should not have any bits set to 1 in common with any of the pixels. The set of all pixels is produced by ORing together subsets of the \textit{planes} argument with the pixels.
+            \bigbreak \noindent
+            The request frees all of these pixels that were allocated by the client using \textbf{XAllocColor}, \textbf{XAllocNamedColor}, \textbf{XAllocColorCells}, and \textbf{XAllocColorPlanes}. Note that freeing an individual pixel obtained from \textbf{XAllocColorPlanes} may not actually allow it to be reused until all of its related pixels are also freed. Similarly, a read-only entry is not actually freed until it has been freed by all clients, and if a client allocates the same read-only entry multiple times, it must free the entry that many times before the entry is actually freed.
+            \bigbreak \noindent
+            All specified pixels that are allocated by the client in the colormap are freed, even if one or more pixels produce an error. If a specified pixel is not a valid index into the colormap, a \textbf{BadValue} error results. If a specified pixel is not allocated by the client, that is, if it is unallocated or is only allocated by another client, or if the colormap was created with all entries writable by passing \textbf{AllocAll} to \textbf{XCreateColormap}, a \textbf{BadAccess} error results. If more than one pixel is in error, the one that gets reported is arbitrary.
+            \bigbreak \noindent
+            \textbf{XFreeColors} can generate \textbf{BadAccess}, \textbf{BadColor}, and \textbf{BadValue} errors.
+        \item \textbf{Modifying and Querying Colormap Cells}: To store an RGB value in a single colormap cell, use \textbf{XStoreColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                int XStoreColor(
+                    Display *display,
+                    Colormap colormap,
+                    XColor *color
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color}: Specifies the pixel and RGB values.
+            \end{itemize}
+            \noindent
+            The \textbf{XStoreColor} function changes the colormap entry of the pixel value specified in the \textit{pixel} member of the \textbf{XColor} structure. This pixel value must be a read/write cell and a valid index into the colormap. If a specified pixel is not a valid index into the colormap, a \textbf{BadValue} error results.
+            \bigbreak \noindent
+            \textbf{XStoreColor} also changes the red, green, and/or blue color components. You specify which color components are to be changed by setting \textbf{DoRed}, \textbf{DoGreen}, and/or \textbf{DoBlue} in the \textit{flags} member of the \textbf{XColor} structure. If the colormap is an installed map for its screen, the changes are visible immediately.
+            \bigbreak \noindent
+            \textbf{XStoreColor} can generate \textbf{BadAccess}, \textbf{BadColor}, and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To store multiple RGB values in multiple colormap cells, use \textbf{XStoreColors}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                int XStoreColors(
+                    Display *display,
+                    Colormap colormap,
+                    XColor color[],
+                    int ncolors
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color}: Specifies an array of color definition structures to be stored.
+                \item \textit{ncolors}: Specifies the number of \textbf{XColor} structures in the color definition array.
+            \end{itemize}
+            \noindent
+            The \textbf{XStoreColors} function changes the colormap entries of the pixel values specified in the \textit{pixel} members of the \textbf{XColor} structures. You specify which color components are to be changed by setting \textbf{DoRed}, \textbf{DoGreen}, and/or \textbf{DoBlue} in the \textit{flags} member of the \textbf{XColor} structures. If the colormap is an installed map for its screen, the changes are visible immediately.
+            \bigbreak \noindent
+            \textbf{XStoreColors} changes the specified pixels if they are allocated writable in the colormap by any client, even if one or more pixels generates an error. If a specified pixel is not a valid index into the colormap, a \textbf{BadValue} error results. If a specified pixel either is unallocated or is allocated read-only, a \textbf{BadAccess} error results. If more than one pixel is in error, the one that gets reported is arbitrary.
+            \bigbreak \noindent
+            \textbf{XStoreColors} can generate \textbf{BadAccess}, \textbf{BadColor}, and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To store a color of arbitrary format in a single colormap cell, use \textbf{XcmsStoreColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XcmsStoreColor(
+                    Display *display,
+                    Colormap colormap,
+                    XcmsColor *color
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color}: Specifies the color cell and the color to store. Values specified in this \textbf{XcmsColor} structure remain unchanged on return.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsStoreColor} function converts the color specified in the \textbf{XcmsColor} structure into RGB values. It then uses this RGB specification in an \textbf{XColor} structure, whose three flags, \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue}, are set, in a call to \textbf{XStoreColor} to change the color cell specified by the \textit{pixel} member of the \textbf{XcmsColor} structure.
+            \bigbreak \noindent
+            This pixel value must be a valid index for the specified colormap, and the color cell specified by the pixel value must be a read/write cell. If the pixel value is not a valid index, a \textbf{BadValue} error results. If the color cell is unallocated or is allocated read-only, a \textbf{BadAccess} error results. If the colormap is an installed map for its screen, the changes are visible immediately.
+            \bigbreak \noindent
+            Note that \textbf{XStoreColor} has no return value; therefore, an \textbf{XcmsSuccess} return value from this function indicates that the conversion to RGB succeeded and the call to \textbf{XStoreColor} was made. To obtain the actual color stored, use \textbf{XcmsQueryColor}. Because of the screen's hardware limitations or gamut compression, the color stored in the colormap may not be identical to the color specified.
+            \bigbreak \noindent
+            \textbf{XcmsStoreColor} can generate \textbf{BadAccess}, \textbf{BadColor}, and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To store multiple colors of arbitrary format in multiple colormap cells, use \textbf{XcmsStoreColors}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XcmsStoreColors(
+                    Display *display,
+                    Colormap colormap,
+                    XcmsColor colors[],
+                    int ncolors,
+                    Bool compression_flags_return[]
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{colors}: Specifies the color specification array of \textbf{XcmsColor} structures, each specifying a color cell and the color to store in that cell. Values specified in the array remain unchanged upon return.
+                \item \textit{ncolors}: Specifies the number of \textbf{XcmsColor} structures in the color-specification array.
+                \item \textit{compression\_flags\_return}: Returns an array of Boolean values indicating compression status. If a non-\textbf{NULL} pointer is supplied, each element of the array is set to \textbf{True} if the corresponding color was compressed and \textbf{False} otherwise. Pass \textbf{NULL} if the compression status is not useful.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsStoreColors} function converts the colors specified in the array of \textbf{XcmsColor} structures into RGB values and then uses these RGB specifications in \textbf{XColor} structures, whose three flags, \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue}, are set, in a call to \textbf{XStoreColors} to change the color cells specified by the \textit{pixel} member of the corresponding \textbf{XcmsColor} structure.
+            \bigbreak \noindent
+            Each pixel value must be a valid index for the specified colormap, and the color cell specified by each pixel value must be a read/write cell. If a pixel value is not a valid index, a \textbf{BadValue} error results. If a color cell is unallocated or is allocated read-only, a \textbf{BadAccess} error results. If more than one pixel is in error, the one that gets reported is arbitrary. If the colormap is an installed map for its screen, the changes are visible immediately.
+            \bigbreak \noindent
+            Note that \textbf{XStoreColors} has no return value; therefore, an \textbf{XcmsSuccess} return value from this function indicates that conversions to RGB succeeded and the call to \textbf{XStoreColors} was made. To obtain the actual colors stored, use \textbf{XcmsQueryColors}. Because of the screen's hardware limitations or gamut compression, the colors stored in the colormap may not be identical to the colors specified.
+            \bigbreak \noindent
+            \textbf{XcmsStoreColors} can generate \textbf{BadAccess}, \textbf{BadColor}, and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To store a color specified by name in a single colormap cell, use \textbf{XStoreNamedColor}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XStoreNamedColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *color,
+                    unsigned long pixel,
+                    int flags
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color}: Specifies the color name string, for example, \texttt{red}.
+                \item \textit{pixel}: Specifies the entry in the colormap.
+                \item \textit{flags}: Specifies which red, green, and blue components are set.
+            \end{itemize}
+            \noindent
+            The \textbf{XStoreNamedColor} function looks up the named color with respect to the screen associated with the colormap and stores the result in the specified colormap. The \textit{pixel} argument determines the entry in the colormap. The \textit{flags} argument determines which of the red, green, and blue components are set. You can set this member to the bitwise inclusive OR of the bits \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue}.
+            \bigbreak \noindent
+            If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter. If the specified pixel is not a valid index into the colormap, a \textbf{BadValue} error results. If the specified pixel either is unallocated or is allocated read-only, a \textbf{BadAccess} error results.
+            \bigbreak \noindent
+            \textbf{XStoreNamedColor} can generate \textbf{BadAccess}, \textbf{BadColor}, \textbf{BadName}, and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            The \textbf{XQueryColor} and \textbf{XQueryColors} functions take pixel values in the \textit{pixel} member of \textbf{XColor} structures and store in the structures the RGB values for those pixels from the specified colormap. The values returned for an unallocated entry are undefined. These functions also set the \textit{flags} member in the \textbf{XColor} structure to all three colors. If a pixel is not a valid index into the specified colormap, a \textbf{BadValue} error results. If more than one pixel is in error, the one that gets reported is arbitrary.
+            \bigbreak \noindent
+            To query the RGB value of a single colormap cell, use \textbf{XQueryColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                int XQueryColor(
+                    Display *display,
+                    Colormap colormap,
+                    XColor *def_in_out
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{def\_in\_out}: Specifies and returns the RGB values for the pixel specified in the structure.
+            \end{itemize}
+            \noindent
+            The \textbf{XQueryColor} function returns the current RGB value for the pixel in the \textbf{XColor} structure and sets the \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue} flags.
+            \bigbreak \noindent
+            \textbf{XQueryColor} can generate \textbf{BadColor} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To query the RGB values of multiple colormap cells, use \textbf{XQueryColors}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XQueryColors(
+                    Display *display,
+                    Colormap colormap,
+                    XColor defs_in_out[],
+                    int ncolors
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{defs\_in\_out}: Specifies and returns an array of color definition structures for the pixels specified in the structures.
+                \item \textit{ncolors}: Specifies the number of \textbf{XColor} structures in the color definition array.
+            \end{itemize}
+            \noindent
+            The \textbf{XQueryColors} function returns the RGB value for each pixel in each \textbf{XColor} structure and sets the \textbf{DoRed}, \textbf{DoGreen}, and \textbf{DoBlue} flags in each structure.
+            \bigbreak \noindent
+            \textbf{XQueryColors} can generate \textbf{BadColor} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To query the color of a single colormap cell in an arbitrary format, use \textbf{XcmsQueryColor}.
+            \bigbreak \noindent
+            \begin{cppcode}
+                Status XcmsQueryColor(
+                    Display *display,
+                    Colormap colormap,
+                    XcmsColor *color_in_out,
+                    XcmsColorFormat result_format
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{color\_in\_out}: Specifies the \textit{pixel} member that indicates the color cell to query. The color specification stored for the color cell is returned in this \textbf{XcmsColor} structure.
+                \item \textit{result\_format}: Specifies the color format for the returned color specification.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsQueryColor} function obtains the RGB value for the pixel value in the \textit{pixel} member of the specified \textbf{XcmsColor} structure and then converts the value to the target format as specified by the \textit{result\_format} argument. If the pixel is not a valid index in the specified colormap, a \textbf{BadValue} error results.
+            \bigbreak \noindent
+            \textbf{XcmsQueryColor} can generate \textbf{BadColor} and \textbf{BadValue} errors.
+            \bigbreak \noindent
+            To query the color of multiple colormap cells in an arbitrary format, use \textbf{XcmsQueryColors}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XcmsQueryColors(
+                    Display *display,
+                    Colormap colormap,
+                    XcmsColor colors_in_out[],
+                    unsigned int ncolors,
+                    XcmsColorFormat result_format
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item \textit{display}: Specifies the connection to the X server.
+                \item \textit{colormap}: Specifies the colormap.
+                \item \textit{colors\_in\_out}: Specifies an array of \textbf{XcmsColor} structures, each \textit{pixel} member indicating the color cell to query. The color specifications for the color cells are returned in these structures.
+                \item \textit{ncolors}: Specifies the number of \textbf{XcmsColor} structures in the color-specification array.
+                \item \textit{result\_format}: Specifies the color format for the returned color specification.
+            \end{itemize}
+            \noindent
+            The \textbf{XcmsQueryColors} function obtains the RGB values for pixel values in the \textit{pixel} members of \textbf{XcmsColor} structures and then converts the values to the target format as specified by the \textit{result\_format} argument.
+            \bigbreak \noindent
+            If a pixel is not a valid index into the specified colormap, a \textbf{BadValue} error results. If more than one pixel is in error, the one that gets reported is arbitrary.
+            \bigbreak \noindent
+            \textbf{XcmsQueryColors} can generate \textbf{BadColor} and \textbf{BadValue} errors.
 
     \end{itemize}
 
 
     \pagebreak 
     \unsect{7. Graphics context functions}
+    \begin{itemize}
+        
+    \end{itemize}
 
     \pagebreak 
     \unsect{8. Graphics functions}
