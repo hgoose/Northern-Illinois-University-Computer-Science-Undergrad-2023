@@ -691,13 +691,159 @@
 
     \end{itemize}
 
+
     \pagebreak 
-    \subsection{Bit manipulation}
+    \unsect{System design and scalability}
     \begin{itemize}
-        
+        \item \textbf{Intro}: Despite how intimidating they seem, scalability questions can be among the ea:iest questions. Ther_e are no "gotchas;' no tricks, and no fancy algorithms-at least not usually. What tnps up many people 1s that they believe there's something "magic" to these problems-some hidden bit of knowledge.
+            \bigbreak \noindent 
+            It's not like that. These questions are simply designed to see how you would perform in the real world. If you were asked by your manager to design some system, what would you do?
+            \bigbreak \noindent 
+            That's why you should approach it just like this. Tackle the problem by doing it just like you would at work. Ask questions. Engage the interviewer. Discuss the tradeoffs.
+            \bigbreak \noindent 
+            We will touch on some key concepts in this chapter, but recognize it's not really about memorizing these concepts. Yes, understanding some big components of system design can be useful, but it's much more about the process you take. There are good solutions and bad solutions. There is no perfect solution. 
+            \begin{itemize}
+                \item \textbf{Communicate:} A key goal of system design questions is to evaluate your ability to communicate. Stay engaged with the interviewer. Ask them questions. Be open about the issues of your system.
+                \item \textbf{Go broad first:} Don't dive straight into the algorithm part or get excessively focused on one part. 
+                \item \textbf{Use the whiteboard:} Using a whiteboard helps your interviewer follow your proposed design. Get up to the whiteboard in the very beginning and use it to draw a picture of what you're proposing. 
+                \item \textbf{Acknowledge interviewer concerns:} Your interviewer will likely jump in with concerns. Don't brush them off; validate them. Acknowledge the issues your interviewer points out and make changes accordingly.
+                \item \textbf{Be careful about assumptions:} An incorrect assumption can dramatically change the problem. For example, if your system produces analytics / statistics for a dataset, it matters whether those analytics must be totally up to date.
+                \item \textbf{State your assumptions explicitly:} When you do make assumptions, state them. This allows your inter viewer to correct you if you're mistaken, and shows that you at least know what assumptions you're making.
+                \item \textbf{Estimate when necessary:} In many cases, you might not have the data you need. For example, if you're designing a web crawler, you might need to estimate how much space it will take to store all the URLs. You can estimate this with other data you know.
+                \item \textbf{Drive:} As the candidate, you should stay in the driver's seat. This doesn't mean you don't talk to your interviewer; in fact you must talk to your interviewer. However, you should be driving through the question. Ask questions. Be open about tradeoffs. Continue to go deeper. Continue to make improvements. These questions are largely about the process rather than the ultimate design.
+            \end{itemize}
+        \item \textbf{Scope the problem}: You can't design a system if you don't know what you're designing. Scoping the problem is important because you want to ensure that you're building what the interviewer wants and because this might be something that interviewer is specifically evaluating.
+            \bigbreak \noindent 
+            If you're asked something such as "Design TinyURL'; you'll want to understand what exactly you need to implement. Will people be able to specify their own short URLs? Or will it all be auto-generated? Will you need to keep track of any stats on the clicks? Should the URLs stay alive forever, or do they have a timeout?
+        \item \textbf{Step 2: Make Reasonable Assumptions}: It's okay to make some assumptions (when necessary), but they should be reasonable. For example, it would not be reasonable to assume that your system only needs to process 100 users per day, or to assume that you have infinite memory available.
+            \bigbreak \noindent 
+            However, it might be reasonable to design for a max of one million new URLs per day. Making this assumption can help you calculate how much data your system might need to store.
+            \bigbreak \noindent 
+            Some assumptions might take some "product sense" (which is not a bad thing). For example, is it okay for the data to be stale by a max of ten minutes? That all depends. If it takes 1 O minutes for a just-entered URL to work, that's a deal-breaking issue. People usually want these URLs to be active immediately. However, if the statistics are ten minutes out of date, that might be okay.Talk to your interviewer about these sorts of assumptions.
+        \item \textbf{Draw the major components}: Get up out of that chair and go to the whiteboard. Draw a diagram of the major components. You might have something like a frontend server (or set of servers) that pull data from the backend's data store. You might have another set of servers that crawl the internet for some data, and anotl")er set that process analytics. Draw a picture of what this system might look like.
+            \bigbreak \noindent 
+            Walk through your system from end-to-end to provide a flow. A user enters a new URL.Then what?
+        \item \textbf{Step 4: Identify the Key Issues}:
+        \item \textbf{Step 5: Redesign for the Key Issues}:
+        \item \textbf{Horizontal vs. Vertical Scaling}: A system can be scaled one of two ways. Vertical scaling means increasing the resources of a specific node. For example, you might add additional memory to a server to improve its ability to handle load changes. Horizontal scaling means increasing the number of nodes. For example, you might add additional servers, thus decreasing the load on any one server.
+            \bigbreak \noindent 
+            Vertical scaling is generally easier than horizontal scaling, but it's limited. You can only add so much memory or disk space.
+        \item \textbf{Load Balancer}: Typically, some frontend parts of a scalable website will be thrown behind a load balancer. This allows a system to distribute the load evenly so that one server doesn't crash and take down the whole system. To do so, of course, you have to build out a network of cloned servers that all have essentially the same code and access to the same data.
+        \item \textbf{Database Denormalization and NoSQL}: Joins in a relational database such as SQL can get very slow as the system grows bigger. For this reason, you would generally avoid them.
+            \bigbreak \noindent 
+            Denormalization is one part of this. Denormalization means adding redundant information into a database to speed up reads. For example, imagine a database describing projects and tasks (where a project can have multiple tasks). You might need to get the project name and the task information. Rather than doing a join across these tables, you can store the project name within the task table (in addition to the project table).
+            \bigbreak \noindent 
+            Or, you can go with a NoSQL database. A NoSQL database does not support joins and might structure data in a different way. It is designed to scale better.
+        \item \textbf{Database Partitioning (Sharding)}: Sharding means splitting the data across multiple machines while ensuring you have a way of figuring out which data is on which machine.
+            \begin{itemize}
+                \item \textbf{Vertical Partitioning:} This is basically partitioning by feature. For example, if you were building a social network, you might have one partition for tables relating to profiles, another one for messages, and so on. One drawback of this is that if one of these tables gets very large, you might need to repartition that database (possibly using a different partitioning scheme).
+                \item \textbf{Key-Based (or Hash-Based) Partitioning:} This uses some part of the data (for example an ID) to partition it. A very simple way to do this is to allocate N servers and put the data on mod (key, n). One issue with this is that the number of servers you have is effectively fixed. Adding additional servers means reallocating all the data-a very expensive task.
+                \item \textbf{Directory-Based Partitioning:} In this scheme, you maintain a lookup table for where the data can be found. This makes it relatively easy to add additional servers, but it comes with two major drawbacks. First, the lookup table can be a single point of failure. Second, constantly accessing this table impacts performance.
+            \end{itemize}
+            Many architectures actually end up using multiple partitioning schemes.
+        \item \textbf{Caching}: An in-memory cache can deliver very rapid results. It is a simple key-value pairing and typically sits between your application layer and your data store.
+            \bigbreak \noindent 
+            When an application requests a piece of information, it first tries the cache. If the cache does not contain the key, it will then look up the data in the data store. (At this point, the data might-or might not-be stored in the data store.)
+            \bigbreak \noindent 
+            When you cache, you might cache a query and its results directly. Or, alternatively, you can cache the specific object (for example, a rendered version of a part of the website, or a list of the most recent blog posts).
+        \item \textbf{Asynchronous Processing \& Queues}:  Slow operations should ideally be done asynchronously. Otherwise, a user might get stuck waiting and waiting for a process to complete.
+            \bigbreak \noindent 
+            In some cases, we can do this in advance (i.e., we can pre-process). For example, we might have a queue of jobs to be done that update some part of the website. If we were running a forum, one of these jobs might be to re-render a page that lists the most popular posts and the number of comments. That list might end up being slightly out of date, but that's perhaps okay. It's better than a user stuck waiting on the website to load simply because someone added a new comment and invalidated the cached version of this page.
+            \bigbreak \noindent 
+            In other cases, we might tell the user to wait and notify them when the process is done. You've probably seen this on websites before. Perhaps you enabled some new part of a website and it says it needs a few minutes to import your data, but you'll get a notification when it's done.
+        \item \textbf{Networking Metrics}: 
+            \begin{itemize}
+                \item \textbf{Bandwidth:} This is the maximum amount of data that can be transferred in a unit of time. It is typically expressed in bits per second (or some similar ways, such as gigabytes per second).
+                \item \textbf{Throughput}: Whereas bandwidth is the maximum data that can be transferred in a unit of time, throughput is the actual amount of data that is transferred.
+                \item \textbf{Latency}: This is how long it takes data to go from one end to the other. That is, it is the delay between the sender sending information (even a very small chunk of data) and the receiver receiving it.
+            \end{itemize}
+        \item \textbf{Considerations}: 
+            \begin{itemize}
+                \item \textbf{Failures:} Essentially any part of a system can fail. You'll need to plan for many or all of these failures.
+                \item \textbf{Availability and Reliability:} Availability is a function of the percentage of time the system is operational. Reliability is a function of the probability that the system is operational for a certain unit of time.
+                \item \textbf{Read-heavy vs. Write-heavy:} Whether an application will do a lot of reads or a lot of writes impacts the design. If it's write-heavy, you could consider queuing up the writes (but think about potential failure here!). If it's read-heavy, you might want to cache. Other design decisions could change as well.
+                \item \textbf{Security}: Security threats can, of course, be devastating for a system. Think about the types of issues a system might face and design around those.
+            \end{itemize}
+
+
     \end{itemize}
 
+    \pagebreak 
+    \unsect{Testing}
+    \begin{itemize}
+        \item \textbf{Intro}: Interviewers want to test the following
+            \begin{itemize}
+                \item \textbf{Big Picture Understanding:} Are you a person who understands what the software is really about? Can you prioritize test cases properly? For example, suppose you're asked to test an e-commerce system like Amazon. It's great to make sure that the product images appear in the right place, but it's even more important that payments work reliably, products are added to the shipment queue, and customers are never double charged.
+                \item \textbf{Knowing How the Pieces Fit Together:} Do you understand how software works, and how it might fit into a greater ecosystem? Suppose you're asked to test Google Spreadsheets. It's important that you test opening, saving, and editing documents. But, Google Spreadsheets is part of a larger ecosystem. You need to test integration with Gmail, with plug-ins, and with other components.
+                \item \textbf{Organization:} Do you approach the problem in a structured manner, or do you just spout off anything that comes to your head? Some candidates, when asked to come up with test cases for a camera, will just state anything and everything that comes to their head. A good candidate will break down the parts into categories like Taking Photos, Image Management, Settings, and so on. This structured approach will also help you to do a more thorough job creating the test cases.
+                \item \textbf{Practicality:} Can you actually create reasonable testing plans? For example, if a user reports that the software crashes when they open a specific image, and you just tell them to reinstall the software, that's typically not very practical. Your testing plans need to be feasible and realistic for a company to implement.
+            \end{itemize}
+        \item \textbf{Testing a real world object}: Some candidates are surprised to be asked questions like how to test a pen. After all, you should be testing software, right? Maybe, but these "real world" questions are still very common. Let's walk through this with an example.
+            \bigbreak \noindent 
+            \textbf{Question:} How would you test a paperclip?
+            \begin{itemize}
+                \item \textbf{Step 1: Who will use it? And why?}: You need to discuss with your interviewer who is using the product and for what purpose. The answer may not be what you think. The answer could be"by teachers, to hold papers together;' or it could be"by artists, to bend into the shape of animal:' Or, it could be both. The answer to this question will shape how you handle the remaining questions.
+                \item \textbf{Step 2: What are the use cases?}: It will be useful for you to make a list of the use cases. In this case, the use case might be simply fastening paper together in a non-damaging (to the paper) way. 
+                    \bigbreak \noindent 
+                    For other questions, there might be multiple use cases. It might be, for example, that the product needs to be able to send and receive content, or write and erase, and so on.
+                \item \textbf{Step 3: What are the bounds of use?}: The bounds of use might mean holding up to thirty sheets of paper in a single usage without permanent damage (e.g., bending), and thirty to fifty sheets with minimal permanent bending. 
+                    \bigbreak \noindent 
+                    The bounds also extend to environmental factors as well. 
+                    \bigbreak \noindent 
+                    For example, should the paperclip work during very warm temperatures (90 - 110 degrees Fahrenheit)? What about extreme cold?
+                \item \textbf{Step 4: What are the stress/ failure conditions?}: No product is fail-proof, so analyzing failure conditions needs to be part of your testing. A good discussion to have with your interviewer is about when it's acceptable (or even necessary) for the product to fail, and what failure should mean. For example, if you were testing a laundry machine, you might decide that the machine should be able to handle at least 30 shirts or pants. Loading 30 - 45 pieces of clothing may result in minor failure, such as the clothing being inadequately cleaned. At more than 45 pieces of clothing, extreme failure might be accept able. However, extreme failure in this case should probably mean the machine never turning on the water. It should certainly not mean a flood or a fire.
+                \item \textbf{Step 5: How would you perform the testing?}: In some cases, it might also be relevant to discuss the details of performing the testing. For example, if you need to make sure a chair can withstand normal usage for five years, you probably can't actually place it in a home and wait five years. Instead, you'd need to define what"normal" usage is (How many "sits" per year on the seat? What about the armrest?). Then, in addition to doing some manual testing, you would likely want a machine to automate some of the usage.
+            \end{itemize}
+        \item \textbf{Testing a piece of software}: Testing a piece of software is actually very similar to testing a real world object. The major difference is that software testing generally places a greater emphasis on the details of performing testing.
+            \begin{itemize}
+                \item \textbf{Manual vs. Automated Testing:} In an ideal world, we might love to automate everything, but that's rarely feasible. Some things are simply much better with manual testing because some features are too qualitative for a computer to effectively examine (such as if content represents pornography). Additionally, whereas a computer can generally recognize only issues that it's been told to look for, human observation may reveal new issues that haven't been specifically examined. Both humans and computers form an essential part of the testing process.
+                \item \textbf{Black Box Testing vs. White Box Testing:} This distinction refers to the degree of access we have into the software. In black box testing, we're just given the software as-is and need to test it. With white box testing, we have additional programmatic access to test individual functions. We can also automate some black box testing, although it's certainly much harder.
+            \end{itemize}
+            \begin{itemize}
+                \item \textbf{Are we doing Black Box Testing or White Box Testing?}: Though this question can often be delayed to a later step, I like to get it out of the way early on. Check with your interviewer as to whether you're doing black box testing or white box testing-or both.
+                \item \textbf{Who will use it? And why?}: Software typically has one or more target users, and the features are designed with this in mind. For example, if you're asked to test software for parental controls on a web browser, your target users include both parents (who are implementing the blocking) and children (who are the recipients of blocking). You may also have "guests" (people who should neither be implementing nor receiving blocking).
+                \item \textbf{What are the use cases?}: In the software blocking scenario, the use cases of the parents include installing the software, updating controls, removing controls, and of course their own personal internet usage. For the children, the use cases include accessing legal content as well as "illegal" content.
+                    \bigbreak \noindent 
+                    Remember that it's not up to you to just magically decide the use cases. This is a conversation to have with your interviewer.
+                \item \textbf{What are the bounds of use?}: Now that we have the vague use cases defined, we need to figure out what exactly this means. What does it mean for a website to be blocked? Should just the "illegal" page be blocked, or the entire website? Is the application supposed to"learn" what is bad content, or is it based on a white list or black list? If it's supposed to learn what inappropriate content is, what degree of false positives or false negatives is acceptable?
+                \item \textbf{What are the stress conditions/ failure conditions?}: When the software fails-which it inevitably will-what should the failure look like? Clearly, the software failure shouldn't crash the computer. Instead, it's likely that the software should just permit a blocked site, or ban an allowable site. In the latter case, you might want to discuss the possibility of a selective override with a password from the parents.
+            \end{itemize}
+        \item \textbf{Troubleshooting questions}: 
+            A final type of question is explaining how you would debug or troubleshoot an existing issue. Many candi dates balk at a question like this, giving unrealistic answers like "reinstall the software:'You can approach these questions in a structured manner, like anything else.
+            \bigbreak \noindent 
+            Let's walk through this problem with an example: You're working on the Google Chrome team when you receive a bug report: Chrome crashes on launch. What would you do?
+            \bigbreak \noindent 
+            Reinstalling the browser might solve this user's problem, but it wouldn't help the other users who might be experiencing the same issue.Your goal is to understand what's really happening, so that the developers can fix it
+            \begin{itemize}
+                \item \textbf{Step 1: Understand the Scenario}: The first thing you should do is ask questions to understand as much about the situation as possible.
+                    \begin{itemize}
+                        \item How long has the user been experiencing this issue?
+                        \item What version of the browser is it? What operating system?
+                        \item Does the issue happen consistently, or how often does it happen? When does it happen?
+                        \item Is there an error report that launches?
+                    \end{itemize}
+                \item \textbf{Break down the problem}: Now that you understand the details of the scenario, you want to break down the problem into testable units. In this case, you can imagine the flow of the situation as follows:
+                    \begin{enumerate}
+                        \item Go to Windows Start menu.
+                        \item Click on Chrome icon.
+                        \item Browser instance starts.
+                        \item Browser loads settings.
+                        \item Browser issues HTIP request for homepage.
+                        \item Browser gets HTIP response.
+                        \item Browser parses webpage.
+                        \item Browser displays content.
+                    \end{enumerate}
+                    At some point in this process, something fails and it causes the browser to crash. A strong tester would iterate through the elements of this scenario to diagnose the problem.
 
+
+
+
+            \end{itemize}
+
+
+
+
+    \end{itemize}
 
 
 
