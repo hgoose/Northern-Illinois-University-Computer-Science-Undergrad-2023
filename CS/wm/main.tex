@@ -698,14 +698,771 @@
     \pagebreak 
     \unsect{Mouse control}
     \begin{itemize}
-        
+        \item \textbf{Intro}: A pure tiling window manager can avoid most mouse logic, but a practical one usually still needs mouse handling for:
+            \begin{itemize}
+                \item moving floating windows;
+                \item resizing floating windows;
+                \item interacting with title bars, borders, or decorations;
+                \item allowing Mod + mouse controls;
+                \item clicking the root window for menus or launchers;
+                \item dragging windows between monitors or workspaces.
+            \end{itemize}
+            In Xlib, mouse control is mostly built out of button events, motion events, and pointer grabs.
+        \item \textbf{Button grabs}: A button grab tells the X server: “When this mouse button is pressed with this modifier combination, send the event to the window manager.”
+            \bigbreak \noindent 
+            This is usually how WMs implement things like:
+            \begin{itemize}
+                \item Mod + Left Mouse  = move floating window
+                \item Mod + Right Mouse = resize floating window
+            \end{itemize}
+            \bigbreak \noindent 
+            We use \textbf{XGrabButton}.
+        \item \textbf{Passive grabs}: A passive grab is created ahead of time with \textbf{XGrabButton}. It says “Wake me up when this mouse button/modifier combination happens.” 
+        \item \textbf{Active grabs}: An active pointer grab is created with XGrabPointer.
+            \bigbreak \noindent 
+            It says: “From now until I ungrab, send pointer motion/release events to me.”
+            \bigbreak \noindent 
+            This is useful during dragging or resizing. Once a move operation starts, you do not want to lose motion events if the pointer leaves the window.
+        \item \textbf{Dragging windows}: Dragging a floating window is mostly geometry math.
+            \bigbreak \noindent 
+            You usually want to move the frame window, not the raw client window, if your WM reparents clients.
+            \bigbreak \noindent 
+            If your WM is non-reparenting, then you move the client window directly.
+        \item \textbf{Resizing floating windows}: Resizing is similar to moving, but instead of changing x and y, you usually change width and height.
+        \item \textbf{Root-relative coordinates}: Root-relative coordinates are coordinates relative to the root window.
+            \bigbreak \noindent 
+            These are usually the best coordinates for dragging and resizing because they are stable globally.
+        \item \textbf{Client-relative coordinates}: Client-relative coordinates are relative to the event window.
+
     \end{itemize}
 
     \pagebreak 
     \unsect{Borders and visual feedback}
     \begin{itemize}
-        
+        \item \textbf{Intro}: In an X11 tiling window manager, borders and visual feedback are how the WM tells the user:
+            \begin{itemize}
+                \item “this window is focused,”
+                \item “this window is urgent,”
+                \item “this window is fullscreen,”
+                \item “this window belongs to the current layout.”
+            \end{itemize}
+            Without good visual feedback, a tiling WM feels disorienting even if the layout algorithm works correctly.
+        \item \textbf{Borders}: In X11, a top-level application window can have a border controlled through the X server.
+            \bigbreak \noindent 
+            The classic calls are
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetWindowBorderWidth(display, window, width);
+                XSetWindowBorder(display, window, pixel_color);  
+            \end{cppcode}
+            \bigbreak \noindent 
+            The border belongs to the X window itself. Your WM does not need to draw a rectangle manually around the client unless you use reparenting.
+            \bigbreak \noindent 
+            For a simple non-reparenting tiling WM, changing the client window’s border is usually enough.
+        \item \textbf{Focused border color}: The focused window should be visually obvious. The focus border is one of the most important parts of the WM. In a tiling environment, the mouse may not clearly indicate which window receives keyboard input, so the border must.
+        \item \textbf{Unfocused border color}: Every managed but unfocused tiled window usually gets a neutral border.
+        \item \textbf{Border width}: Border width affects both appearance and geometry.
+            \bigbreak \noindent 
+            If you set
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetWindowBorderWidth(dpy, win, 2);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, the total visible rectangle is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                outer_width  = client_width  + 2 * border_width
+                outer_height = client_height + 2 * border_width
+            \end{cppcode}
+        \item \textbf{Urgent window color}: Urgency is usually used when a background window wants attention. For example:
+            \begin{itemize}
+                \item A terminal bell occurs.
+                \item A chat window receives a message.
+                \item A dialog appears on another workspace.
+                \item A program sets the urgency hint.
+            \end{itemize}
+            This is commonly exposed through \textbf{WM\_HINTS}. You can query hints with \textbf{XGetWMHints}. You usually clear urgency when the user focuses the window.
+            \bigbreak \noindent 
+            Urgency is not the same as focus. An urgent window can be unfocused but still have a special border.
+        \item \textbf{Fullscreen border suppression}: Fullscreen windows usually should not have borders. When a window is fullscreen, users expect it to occupy the entire monitor:
+        \item \textbf{Note:} Do not make focus, layout, and border code all fight each other. A clean model is 
+            \begin{itemize}
+                \item focus logic decides which client is focused
+                \item layout logic decides where clients go
+                \item state logic decides fullscreen/urgent/floating
+                \item border logic visually reflects that state
+            \end{itemize}
+            So instead of directly setting borders from everywhere, have one function that says:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            redraw_client_decoration(client);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Or
+            \bigbreak \noindent 
+            \begin{cppcode}
+            update_client_decoration(client);
+            \end{cppcode}
+            \bigbreak \noindent 
+            That function should be the only place where focused, unfocused, urgent, and fullscreen border decisions are made.
+
+
     \end{itemize}
+
+    \pagebreak 
+    \unsect{Workspaces}
+    \begin{itemize}
+        \item \textbf{Workspace}: A workspace is a logical collection of windows. Only one workspace might be visible on a given monitor at a time. 
+            \bigbreak \noindent 
+            In a simple WM, each window belongs to exactly one workspace.
+            \bigbreak \noindent 
+            So when you switch from workspace 1 to workspace 2, you do something like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                hide_workspace(old_workspace);
+                show_workspace(new_workspace);
+                arrange_workspace(new_workspace);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Note that hide usually means unmapping, and show usually means mapping.
+        \item \textbf{Tags}: A tag is similar to a workspace, but more flexible.
+            \begin{itemize}
+                \item \textbf{Workspace model}: A window belongs to one workspace
+                \item \textbf{Tag model}: A window may have one or more tags
+            \end{itemize}
+            For example, in a tag-based WM like dwm, a window can be tagged as both dev and web.
+            \begin{itemize}
+                \item \textbf{Terminal:}: tags = \{1\}
+                \item \textbf{Browser:}:  tags = \{2\}
+                \item \textbf{Docs:}:     tags = \{1, 2\}
+            \end{itemize}
+            If you view tag one you see \textit{Terminal} and \textit{Docs}. If you view tag two you see \textit{Browser} and \textit{Docs}
+        \item \textbf{Multi-monitor}: You need to decide whether workspaces are
+            \begin{enumerate}
+                \item Global, like i3-style workspaces that move between monitors.
+                \item Per-monitor, where each monitor has its own independent workspace set.
+                \item Tag-based, where each monitor views a tag mask.
+            \end{enumerate}
+        \item \textbf{Per-workspace layout}: Most tiling WMs allow each workspace to remember its own layout. So, a workspace might store
+            \bigbreak \noindent 
+            \begin{cppcode}
+                enum LayoutKind {
+                    LAYOUT_TILE,
+                    LAYOUT_MONOCLE,
+                    LAYOUT_FLOATING,
+                    LAYOUT_GRID
+                };
+
+                struct Workspace {
+                    Client* clients;
+                    Client* focused;
+                    enum LayoutKind layout;
+                };
+            \end{cppcode}
+            \bigbreak \noindent 
+            When you switch workspaces, you do not globally switch the whole WM’s layout. You use the layout stored inside the workspace:
+        \item \textbf{Sticky windows}: A stick window appears on all workspaces. So when switching workspaces, sticky windows remain mapped:
+        \item \textbf{Workspaces and EWMH}: If you want your WM to cooperate with panels, pagers, taskbars, and desktop utilities, you should expose workspace state through EWMH properties.
+            \bigbreak \noindent 
+            Important root window properties include:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                _NET_NUMBER_OF_DESKTOPS
+                _NET_CURRENT_DESKTOP
+                _NET_DESKTOP_NAMES
+                _NET_CLIENT_LIST
+                _NET_CLIENT_LIST_STACKING
+            \end{cppcode}
+            \bigbreak \noindent 
+            Important client properties include:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                _NET_WM_DESKTOP
+                _NET_WM_STATE
+                _NET_WM_STATE_STICKY
+            \end{cppcode}
+            \bigbreak \noindent 
+            For example, 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            _NET_WM_DESKTOP = 0
+            \end{cppcode}
+            \bigbreak \noindent 
+            Means the window is on desktop / workspace 0. Sticky windows are commonly represented with:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            _NET_WM_DESKTOP = 0xFFFFFFFF
+            \end{cppcode}
+            \bigbreak \noindent 
+            or with
+            \bigbreak \noindent 
+            \begin{cppcode}
+            _NET_WM_STATE_STICKY
+            \end{cppcode}
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Configure requests}
+    \begin{itemize}
+        \item \textbf{Intro}: In Xorg, configure requests are how a client says: “I would like my top-level window to be moved, resized, raised, lowered, or otherwise reconfigured.”
+            \bigbreak \noindent 
+            In a normal X session without a window manager, the X server would just do it. With a window manager running, the WM intercepts those requests and decides what actually happens.
+            \bigbreak \noindent 
+            This is central to a tiling WM because tiling is based on the rule: The layout owns the geometry, not the application.
+            \bigbreak \noindent 
+            So when a tiled terminal asks to resize itself to 900x600, your WM usually says, “No, your tile is 960x540; stay there.”
+        \item \textbf{What a configure request is}: A client can call functions such as:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XMoveWindow(display, win, x, y);
+                XResizeWindow(display, win, width, height);
+                XMoveResizeWindow(display, win, x, y, width, height);
+                XConfigureWindow(display, win, mask, &changes);
+            \end{cppcode}
+            \bigbreak \noindent 
+            For a top-level application window, this does not immediately happen if your WM has selected SubstructureRedirectMask on the root window.
+            \bigbreak \noindent 
+            Instead, the X server sends your WM a \textbf{ConfigureRequest} event. The event type is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XConfigureRequestEvent
+            \end{cppcode}
+            \bigbreak \noindent 
+            If a client is tiled, you should ignore the configure request. For floating windows, dialogs, popups, and special utility windows, you usually do honor the request.
+            \bigbreak \noindent 
+            A good WM does not blindly honor every request. It still checks:
+            \begin{itemize}
+                \item minimum size
+                \item maximum size
+                \item resize increments
+                \item aspect ratio
+                \item screen bounds
+                \item struts/panels
+            \end{itemize}
+        \item \textbf{Struts and panels}: In the Linux graphical environment, panels (or taskbars) house application launchers and system trays, while struts are the invisible "margins" that tell the window manager to keep applications from covering those panels. They work together to reserve screen space for your desktop UI. 
+        \item \textbf{Synthetic ConfigureNotify events}: This is one of the most important practical details.
+            \bigbreak \noindent 
+            Applications expect to receive \textbf{ConfigureNotify} events when their geometry changes. But if your WM intercepts a configure request and decides not to change the window, the application may still need to be told: “Here is your actual geometry.”
+            \bigbreak \noindent 
+            This is done with a \textbf{synthetic ConfigureNotify event}. The WM creates the event manually and sends it to the client. Do this when the client requested geometry, the WM denied or modified the request, and the client still needs to know its real position/size.
+        \item \textbf{Window gravity}: Window gravity controls how a window’s position should be interpreted when its size changes. The basic question is: If the window changes size, which point should stay fixed?
+            \bigbreak \noindent 
+            Common gravities include:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                NorthWestGravity
+                NorthGravity
+                NorthEastGravity
+                WestGravity
+                CenterGravity
+                EastGravity
+                SouthWestGravity
+                SouthGravity
+                SouthEastGravity
+                StaticGravity
+            \end{cppcode}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Mapping, unmapping, and destruction}
+    \begin{itemize}
+        \item \textbf{Intro}: In a tiling X11 window manager, this section is about separating X11 window state from your WM’s internal client state.
+            \bigbreak \noindent 
+            A Window ID can exist, be mapped, be unmapped, be destroyed, be assigned to a workspace, be hidden, or be known to your WM. These are related, but they are not the same thing.
+        \item \textbf{Two layers}: You should think in two layers
+            \begin{enumerate}
+                \item \textbf{X server state}:
+                    \begin{itemize}
+                        \item Does this X window exist?
+                        \item Is it mapped or unmapped?
+                        \item Has it been destroyed?
+                    \end{itemize}
+                \item \textbf{WM state}: 
+                    \begin{itemize}
+                        \item Do I have a Client struct for it?
+                        \item Which workspace is it on?
+                        \item Is it visible in the current layout?
+                        \item Is it focused?
+                        \item Is it floating / tiled / fullscreen?
+                    \end{itemize}
+            \end{enumerate}
+            A common beginner mistake is treating “unmapped” as “dead.” That is wrong.
+            \bigbreak \noindent 
+            An unmapped window may be:
+            \begin{itemize}
+                \item a client that exited,
+                \item a client that voluntarily withdrew itself,
+                \item a window hidden because it is on another workspace,
+                \item an iconified/minimized window,
+                \item a window your WM temporarily unmapped while rearranging.
+            \end{itemize}
+            The X server generates \textbf{MapNotify} and \textbf{UnmapNotify} when a window changes between mapped and unmapped states. DestroyNotify is generated when a client destroys a window with XDestroyWindow or related operations.
+        \item \textbf{Managing a window}: To manage a window means: your WM creates internal state for it. When you manage a window, you usually:
+            When you manage a window, you usually:
+            \begin{enumerate}
+                \item allocate a Client,
+                \item store the Window ID,
+                \item select events on the client window,
+                \item insert it into your client list,
+                \item assign it to the current workspace,
+                \item tile it,
+                \item map it if it should be visible,
+                \item possibly focus it.
+            \end{enumerate}
+        \item \textbf{Mapping}: For a tiling WM, mapping usually happens when
+            \begin{itemize}
+                \item a new client appears,
+                \item you switch to the workspace containing that client,
+                \item a hidden/minimized client is restored,
+                \item a client changes state from withdrawn/iconic to normal.
+            \end{itemize}
+        \item \textbf{Unmapping}: Means to ask the X server to make it not visible. An UnmapNotify can mean very different things depending on who caused it.
+            \begin{enumerate}[label=(\alph*)]
+                \item \textbf{The client unmapped itself}: The application may be withdrawing its top-level window. In ICCCM terms, newly created top-level windows begin in the Withdrawn state, and transitions between Withdrawn, Normal, and Iconic are driven by mapping, unmapping, and certain WM messages. 
+                    \bigbreak \noindent 
+                    If a real client window unmaps itself, your WM will often treat that as:
+                    \begin{itemize}
+                        \item client is no longer normal/manageable
+                        \item remove it from tiling data
+                        \item clear focus if needed
+                    \end{itemize}
+                    That is an \textbf{unmanage} operation.
+                \item \textbf{Your WM unmapped it to hide it}: Suppose the user switches from workspace 1 to workspace 2.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    for each client on old_workspace:
+                        XUnmapWindow(dpy, client->win);
+
+                    for each client on new_workspace:
+                        XMapWindow(dpy, client->win);
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    But those \textbf{XUnmapWindow} calls will also produce \textbf{UnmapNotify.}
+                    \bigbreak \noindent 
+                    You must not accidentally interpret those as “the client exited.” The client is still managed. It is merely hidden.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        client->hidden = true;
+                        client->ignore_unmap++;
+                        XUnmapWindow(dpy, client->win);
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Then in UnmapNotify:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        void handle_unmap_notify(XUnmapEvent *e) {
+                            Client *c = find_client(e->window);
+                            if (!c) return;
+
+                            if (c->ignore_unmap > 0) {
+                                c->ignore_unmap--;
+                                return;
+                            }
+
+                            unmanage(c);
+                        }
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    The important point is that you should not blindly unmanage every window that receives \textbf{UnmapNotify.}
+            \end{enumerate}
+        \item \textbf{Unmanaging a window}: To unmanage a window means to delete your WM's internal record for it. This usually means
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void unmanage(Client *c) {
+                    if (!c) return;
+
+                    if (focused == c)
+                        focused = NULL;
+
+                    remove_from_workspace(c);
+                    remove_from_client_list(c);
+
+                    free(c);
+
+                    arrange();
+                    focus_next_valid_client();
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Unmanaging should happen when the client is truly gone from the WM’s perspective. Reasons include:
+            \begin{itemize}
+                \item the client destroyed its top-level window,
+                \item the client withdrew itself,
+                \item the WM decided this window should no longer be managed,
+                \item startup cleanup found stale clients.   
+            \end{itemize}
+            Unmanage must be idempotent in spirit. In other words, your code should be robust if multiple events arrive close together.
+            \bigbreak \noindent 
+            \textbf{Note:} Idempotent describes a property of certain actions or operations that yield the same exact result, regardless of whether they are executed once or multiple times. If you repeat the action, it causes no further change beyond the initial application
+            \bigbreak \noindent 
+            For example, a client may unmap and then destroy. If your \textbf{UnmapNotify} handler already unmanaged it, your \textbf{DestroyNotify} handler must not free the same Client again.
+        \item \textbf{Destroyed windows}: A destroyed window is different from an unmapped window. Destroyed means
+            \begin{itemize}
+                \item The X server object is gone.
+                \item The Window ID is no longer valid for normal use.
+            \end{itemize}
+            After \textbf{DestroyNotify,} you should assume the Window ID is dead. Do not try to focus it, configure it, move it, resize it, restack it, or read properties from it unless you are deliberately handling X errors.
+            \bigbreak \noindent 
+            Destruction cleanup should clear:
+            \begin{itemize}
+                focused client,
+                last focused client,
+                urgent client pointer,
+                fullscreen client pointer,
+                workspace client references,
+                layout stack references,
+                any pointer stored in monitor/screen state.
+            \end{itemize}
+        \item \textbf{Withdrawn state}: In ICCCM terminology, a top-level client window can be in states such as:
+            \begin{enumerate}
+                \item \textbf{Withdrawn}: Baseline state of a top-level window. It means the window is unmapped, invisible, and completely ignored by the window manager. 
+                \item \textbf{Normal}: Application's top-level window should be fully visible, active, and viewable on the screen.
+                \item \textbf{Iconic}: Minimized
+            \end{enumerate}
+            A newly created top-level window starts in the Withdrawn state. It leaves Withdrawn when the client maps it and the WM begins managing it.
+            \bigbreak \noindent 
+            When the client maps, the WM handles \textbf{MapRequest}, creates a client, and tiles it.
+            \bigbreak \noindent 
+            When the client withdraws itself, the WM receives an unmap-related event and should remove the client from its managed list. ICCCM specifically notes that WMs should handle the transition to Withdrawn on real UnmapNotify for compatibility.
+        \item \textbf{Client exits}: When an application exits, its windows are usually destroyed by the X server. The WM may see 
+            \begin{itemize}
+                \item UnmapNotify
+                \item DestroyNotify
+            \end{itemize}
+            or just one of them depending on timing and event selection. Your logic should tolerate both. A safe model is 
+            \bigbreak \noindent 
+            \begin{itemize}
+                \item \textbf{UnmapNotify}: If caused by WM hiding/minimizing, ignore as lifecycle removal. Otherwise unmanage.
+                \item \textbf{DestroyNotify}: If still managed, unmanage. If not managed, ignore.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Stacking order}
+    \begin{itemize}
+        \item \textbf{Intro}: In X11, windows are not only arranged in 2D space with $x$, $y$, width, and height. They also have a Z-order, called the stacking order.
+            \bigbreak \noindent 
+            The stacking order determines which window appears in front of another when they overlap.
+            \bigbreak \noindent 
+            Even in a tiling window manager, where normal windows usually do not overlap, stacking still matters because of:
+            \begin{itemize}
+                \item floating windows
+                \item fullscreen windows
+                \item dialogs
+                \item popups
+                \item panels/docks
+                \item menus
+                \item transient windows
+                \item focused-window visual behavior
+            \end{itemize}
+            A tiling window manager still needs a clear stacking policy.
+        \item \textbf{Raising}: To raise a window means to move it higher in the stacking order.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XRaiseWindow(display, window);
+            \end{cppcode}
+            \bigbreak \noindent 
+            This places the window above its siblings. In a tiling WM, you usually do not need to raise every focused tiled window, because tiled windows normally do not overlap. But you may still raise focused floating windows.
+        \item \textbf{Lowering}: To lower a window means to move it lower in the stacking order.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XLowerWindow(display, window); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Lowering is less common in tiling WMs, but it can be useful when implementing:
+            \begin{itemize}
+                \item “send to back”
+                \item demoting floating windows
+                \item keeping tiled windows below floating windows
+                \item restoring a normal window after fullscreen mode
+            \end{itemize}
+        \item \textbf{Restack}: To restack means to explicitly reorder multiple windows.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XRestackWindows(display, windows, count);
+            \end{cppcode}
+            \bigbreak \noindent 
+            A tiling WM often benefits from having a function like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void restack_workspace(Workspace* ws);
+            \end{cppcode}
+            \bigbreak \noindent 
+            That function can enforce your intended stacking layers every time layout changes.
+            \bigbreak \noindent 
+        \item \textbf{Stacking Policy}: A common stacking policy is
+            \begin{verbatim}
+                top
+                    fullscreen
+                    docks/panels
+                    floating
+                    tiled
+                bottom
+            \end{verbatim}
+            Fullscreen should also interact with panels/docks. Some WMs allow fullscreen windows to cover panels. Others keep panels visible. That is a policy decision.
+            \bigbreak \noindent 
+            So, another valid policy is 
+            \begin{verbatim}
+                top
+                    docks/panels
+                    fullscreen
+                    floating
+                    tiled
+                bottom
+            \end{verbatim}
+        \item \textbf{Transient windows above parents}: 
+            A transient window is a temporary child-like window associated with another top-level window.
+            \bigbreak \noindent 
+            Examples:
+            \begin{itemize}
+                \item dialog boxes
+                \item file picker windows
+                \item confirmation prompts
+                \item settings popups
+                \item “Save changes?” windows
+            \end{itemize}
+            In X11, a client can mark a window as transient using:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XGetTransientForHint(display, win, &parent);
+            \end{cppcode}
+            \bigbreak \noindent 
+            If a window is transient for another window, your WM should usually keep it above its parent.
+        \item \textbf{Focused window stacking}: Some WMs raise the focused window. Others do not.
+            \bigbreak \noindent 
+            In a floating WM, focusing a window usually raises it. For tiled windows, raising on focus usually does not matter because they should not overlap.
+        \item \textbf{ConfigureRequest and stacking}: In X11, applications may request changes to their own stacking order. The WM receives these as \textbf{ConfigureRequest} events if it selected \textbf{SubstructureRedirectMask} on the root window.
+            \bigbreak \noindent 
+            A client might request:
+            \begin{itemize}
+                \item raise me
+                \item lower me
+                \item place me above another window
+                \item place me below another window
+                \item change my size
+                \item change my position
+            \end{itemize}
+            A WM is not required to blindly obey these requests. The WM owns global window policy.
+            \bigbreak \noindent 
+            For example, if a tiled client requests to raise itself above a fullscreen window, you probably reject or reinterpret that request.
+        \item \textbf{Sibling windows}: Stacking order is among sibling windows. In X11, top-level application windows are usually children of the root window. Since they share the same parent, they are siblings.
+
+
+
+    \end{itemize}
+
+
+    \pagebreak 
+    \unsect{Error handling}
+    \begin{itemize}
+        \item \textbf{Intro}: In Xlib, error handling is different from normal C error handling because many X requests do not fail immediately. You often send a request to the X server, continue executing, and only later receive an error event saying that an earlier request was invalid. 
+        \item \textbf{Errors are asynchronous}: When you call something like
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XMoveResizeWindow(...)
+            \end{cppcode}
+            \bigbreak \noindent 
+            That function usually does not wait for the X server to confirm success. It writes a request into Xlib’s output buffer and returns.
+            \bigbreak \noindent 
+            The actual error, if any, may occur later when the server processes the request.
+        \item \textbf{The X error handler}: Xlib lets you install a global error handler.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int x_error_handler(Display* display, XErrorEvent* error) {
+                    char msg[1024];
+
+                    XGetErrorText(display, error->error_code, msg, sizeof(msg));
+
+                    fprintf(stderr,
+                        "X error: %s\n"
+                        "  request_code: %d\n"
+                        "  minor_code: %d\n"
+                        "  resourceid: 0x%lx\n",
+                        msg,
+                        error->request_code,
+                        error->minor_code,
+                        error->resourceid
+                    );
+
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then, install it 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetErrorHandler(x_error_handler);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The handler is called when the X server reports an error for one of your requests.
+            \bigbreak \noindent 
+            Important: the error handler is \textbf{global per process}, not per request. You cannot easily attach a normal callback to one X request.
+        \item \textbf{Bad window}: BadWindow means you tried to use a window ID that the X server no longer considers valid.
+            \bigbreak \noindent 
+            This is extremely common in window managers.
+            \bigbreak \noindent 
+            For example, in 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XMoveWindow(display, win, 100, 100);
+            \end{cppcode}
+            \bigbreak \noindent 
+            A \textbf{BadWindow} might occur if the client destroyed the window before your request reached the server. A tiling WM should treat many \textbf{BadWindow} errors as normal race conditions, not fatal bugs.
+            \bigbreak \noindent 
+            But do not blindly ignore everything. A \textbf{BadWindow} can also indicate that your WM state is stale or corrupted.
+        \item \textbf{BadAccess}: BadAccess means your request attempted to access something exclusively controlled by another client.
+            \bigbreak \noindent 
+            For a window manager, the most important case is this: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSelectInput(display, root, SubstructureRedirectMask | SubstructureNotifyMask);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Only one client can select \textbf{SubstructureRedirectMask} on the root window. If another WM is already running, your call will generate \textbf{BadAccess.}
+        \item \textbf{Detecting another WM already running}: Because errors are asynchronous, this is not enough:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSelectInput(display, root, SubstructureRedirectMask);
+                printf("I am the WM now\n");
+            \end{cppcode}
+            \bigbreak \noindent 
+            The error may not have arrived yet. You need to force the server to process the request using \textbf{XSync}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                static int wm_detected = 0;
+
+                int wm_error_handler(Display* display, XErrorEvent* error) {
+                    if (error->error_code == BadAccess) {
+                        wm_detected = 1;
+                        return 0;
+                    }
+
+                    return 0;
+                }
+
+                int main() {
+                    Display* display = XOpenDisplay(NULL);
+                    if (!display) {
+                        fprintf(stderr, "Could not open display\n");
+                        return 1;
+                    }
+
+                    XSetErrorHandler(wm_error_handler);
+
+                    Window root = DefaultRootWindow(display);
+
+                    XSelectInput(display, root,
+                        SubstructureRedirectMask |
+                        SubstructureNotifyMask
+                    );
+
+                    XSync(display, False);
+
+                    if (wm_detected) {
+                        fprintf(stderr, "Another window manager is already running\n");
+                        return 1;
+                    }
+
+                    printf("Window manager started\n");
+
+                    // Main event loop...
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The key line is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSync(display, False);
+            \end{cppcode}
+            \bigbreak \noindent 
+            That forces pending requests to be sent to the server and waits until the server has processed them. The second argument controls whether pending events are discarded. Do not use True casually because it discards pending events.
+        \item \textbf{Good handler}: A good error handler should print at least
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int x_error_handler(Display* display, XErrorEvent* e) {
+                    char buffer[1024];
+
+                    XGetErrorText(display, e->error_code, buffer, sizeof(buffer));
+
+                    fprintf(stderr, "X error: %s\n", buffer);
+                    fprintf(stderr, "  error_code: %d\n", e->error_code);
+                    fprintf(stderr, "  request_code: %d\n", e->request_code);
+                    fprintf(stderr, "  minor_code: %d\n", e->minor_code);
+                    fprintf(stderr, "  resourceid: 0x%lx\n", e->resourceid);
+                    fprintf(stderr, "  serial: %lu\n", e->serial);
+
+                    return 0;
+                }
+            \end{cppcode}
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}lX@{}}
+                    \toprule
+                    \textbf{Field}&	\textbf{Meaning} \\
+                    \midrule
+                    error\_code	&The actual error, such as BadWindow or BadAccess.\\[2ex]
+                    request\_code	&The major X protocol request that failed.\\[2ex]
+                    minor\_code	&Extra request-specific code, especially useful for extensions.\\[2ex]
+                    resourceid	&The X resource involved, often a Window, Pixmap, GC, etc.\\[2ex]
+                    serial	&The request serial number associated with the error. \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            The serial is useful because Xlib assigns sequence numbers to requests. Advanced debugging can compare the error serial to request serials.
+        \item \textbf{Common errors}:
+            \begin{itemize}
+                \item \textbf{BadWindow}:  You tried to operate on a destroyed or invalid window.
+                \item \textbf{BadAccess}: You requested access that another client already owns.
+                \item \textbf{BadMatch}: The resources are valid, but incompatible for that request.
+                \item \textbf{BadDrawable}: You passed an invalid Drawable.
+                \item \textbf{BadValue}: One of your numeric arguments was invalid.
+                \item \textbf{BadAlloc}: Server could not allocate resource.
+            \end{itemize}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Startup sequence / minimal implementation order}
+    \begin{itemize}
+        \item \textbf{Startup sequence}: A basic WM startup usually does this:
+            \begin{enumerate}
+                \item Open display.
+                \item Get root window.
+                \item Install X error handler.
+                \item Select events on root window.
+                \item Grab keys/buttons.
+                \item Scan existing windows.
+                \item Manage existing windows.
+                \item Enter event loop.
+            \end{enumerate}
+        \item \textbf{Minimal implementation order}: A good build order is 
+            \begin{enumerate}
+                \item Start the WM and claim the root window
+                \item Handle MapRequest
+                \item Track managed clients
+                \item Tile all windows in a simple vertical stack
+                \item Add focus
+                \item Add keybindings
+                \item Add master-stack layout
+                \item Add window closing
+                \item Add workspaces
+                \item Add floating windows
+                \item Add fullscreen
+                \item Add ICCCM/EWMH support
+                \item Add multi-monitor suppor
+            \end{enumerate}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{ICCCM}
+
+    \pagebreak 
+    \unsect{EWMH}
+
 
 
 
