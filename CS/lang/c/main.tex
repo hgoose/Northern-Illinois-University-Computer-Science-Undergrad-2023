@@ -1,0 +1,1467 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={The C Programming Language}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{The C Programming Language}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Introduction}
+    \begin{itemize}
+        \item \textbf{C++ features not in C}: This is clearly a non-exhaustive list, just the less obvious ones:
+            \begin{enumerate}
+                \item Classes
+                \item Member functions
+                \item Constructors
+                \item Destructors
+                \item Access control: public, private, protected
+                \item Inheritance
+                \item Operator overloading
+                \item Function overloading
+                \item constexpr functions
+                \item consteval
+                \item constinit
+                \item Namespaces
+                \item References
+                \item Move semantics
+                \item RAII as a language-supported idiom
+                \item Exceptions
+                \item try / catch / throw
+                \item new / delete
+                \item Iterators
+                \item Lambdas
+                \item Capturing lambdas
+                \item auto type deduction in the C++ sense
+                \item decltype
+                \item typeid
+                \item dynamic\_cast, static\_cast, reinterpret\_cast, const\_cast
+                \item Default function arguments
+                \item Default member initializers
+                \item Uniform initialization: {} initialization
+                \item Member initializer lists
+                \item this pointer
+                \item Scoped enums: enum class
+                \item bool as a built-in fundamental type in older C comparison
+                \item References to functions/objects
+                \item Inline variables
+                \item Overload resolution
+                \item Member pointers
+            \end{enumerate}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Input / output}
+    \begin{itemize}
+        \item \textbf{stdio.h}: In C, input/output is mostly handled through the standard I/O library, declared in:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            #include <std.io>
+            \end{cppcode}
+        \item \textbf{Standard streams}: When a C program starts, it automatically has three standard streams:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            stdin
+            stdout
+            stderr
+            \end{cppcode}
+        \item \textbf{printf}: Printf prints formatted text to stdout.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            printf("%s %s", "Hello, ", "world!");
+            \end{cppcode}
+            \bigbreak \noindent 
+            The placeholders are called format specifies. Common ones include
+            \bigbreak \noindent 
+            \begin{cppcode}
+                %d      int
+                %u      unsigned int
+                %ld     long
+                %lu     unsigned long
+                %lld    long long
+                %llu    unsigned long long
+
+                %f      double
+                %lf     double in scanf, but also accepted in printf
+                %c      char
+                %s      string / char array
+                %p      pointer address
+                %%      literal percent sign
+            \end{cppcode}
+            \bigbreak \noindent 
+            For \%p, cast the pointer to void*. Note that the language itself does not make printf typesafe. Wrong format specifiers cause \textbf{undefined behavior}.
+        \item \textbf{fprintf}: The fprintf function in C is used to write formatted data directly to an output stream, which is most commonly a file. It works identically to printf, except it requires a destination file pointer as its very first argument. 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fprintf(FILE *stream, const char *format, ...);
+            \end{cppcode}
+        \item \textbf{sprintf}: The sprintf function in C formats and stores a series of characters and values into a string buffer instead of printing them directly to the console. It is defined in the <stdio.h> standard library.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int sprintf(char *str, const char *format, ...); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the total number of characters successfully written, excluding the null terminator (\textbackslash0). If an error occurs, it returns a negative value. 
+        \item \textbf{snprintf}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int snprintf ( char * s, size_t n, const char * format, ... );
+            \end{cppcode}
+            \bigbreak \noindent 
+            Composes a string with the same text that would be printed if format was used on printf, but instead of being printed, the content is stored as a C string in the buffer pointed by s (taking n as the maximum buffer capacity to fill).
+            \bigbreak \noindent 
+            If the resulting string would be longer than n-1 characters, the remaining characters are discarded and not stored, but counted for the value returned by the function.
+            \bigbreak \noindent 
+            A terminating null character is automatically appended after the content written.
+            \bigbreak \noindent 
+            Returns the number of characters that would have been written if $n$ had been sufficiently large, not counting the terminating null character. If an encoding error occurs, a negative number is returned.
+            \bigbreak \noindent 
+            The key rule is \textbf{size} is the total buffer size, including space for the null terminator.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char buf[10];
+                snprintf(buf, sizeof buf, "hello");
+            \end{cppcode}
+            \bigbreak \noindent 
+            sizeof buf is 10, so snprintf may write at most 9 visible characters plus the final '\textbackslash0'.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char buf[6];
+                snprintf(buf, sizeof buf, "hello");
+            \end{cppcode}
+            \bigbreak \noindent 
+            This fits exactly. So, this is safe. 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char buf[5];
+
+                int n = snprintf(buf, sizeof buf, "hello");
+            \end{cppcode}
+            \bigbreak \noindent 
+            snprintf writes
+            \bigbreak \noindent 
+            \begin{cppcode}
+            'h' 'e' 'l' 'l' '\0'
+            \end{cppcode}
+            \bigbreak \noindent 
+            in this case the return value is still $5$, because "hello" would have required 5 visible characters, not counting the null terminator. snprintf returns the number of characters that would have been written, excluding the null terminator.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char buf[5];
+
+                int n = snprintf(buf, sizeof buf, "hello");
+
+                if (n < 0) {
+                    // encoding or formatting error
+                } else if ((size_t)n >= sizeof buf) {
+                    // output was truncated
+                } else {
+                    // output fit
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            You can call snprintf once to find out how much space is needed:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int n = snprintf(NULL, 0, "value = %d", 123);
+            \end{cppcode}
+        \item \textbf{scanf}: scanf reads formatted input from stdin.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int x;
+            scanf("%d", &x)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Scanf needs the address because it has to modify the variable. Scanf returns the number of successful conversions. You should usually check the return value
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int x;
+            if (scanf("%d", &x) != 1) {
+                fprintf(stderr, "Invalid integer\n");
+            }
+            \end{cppcode}
+        \item \textbf{puts}: Writes a string to the console
+            \bigbreak \noindent 
+            \begin{cppcode}
+            puts("Hello, world!");
+            \end{cppcode}
+        \item \textbf{getchar}: reads one character from stdin
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int c;
+            c = getchar();
+            \end{cppcode}
+            \bigbreak \noindent 
+            Notice that getchar returns int, not char. That is because it may return EOF, which is a special value indicating end-of-file or error.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int c;
+            while ((c=getchar()) != EOF) putchar(c);
+            \end{cppcode}
+        \item \textbf{putchar}: Writes one character to stdout
+            \bigbreak \noindent 
+            \begin{cppcode}
+            putchar('A');
+            \end{cppcode}
+        \item \textbf{fgets for line input}:  Avoid
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char name[32];
+                scanf("%s", name);
+            \end{cppcode}
+            \bigbreak \noindent 
+            If the user types more than 31 characters, you can overflow the buffer. A safer approach is fgets:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char name[32];
+
+                printf("Enter your name: ");
+
+                if (fgets(name, sizeof name, stdin) == NULL) {
+                    fprintf(stderr, "Input error\n");
+                    return 1;
+                }
+
+                printf("Hello, %s", name);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Fgets has signature
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* fgets( char* str, int count, FILE* stream );
+            \end{cppcode}
+            \bigbreak \noindent 
+            and returns \textbf{str} on success, null pointer on failure.
+        \item \textbf{sscanf}: The sscanf function in C extracts and parses formatted data directly from a character string rather than reading from standard keyboard input (stdin). It is defined in the <stdio.h> library and stands for "String Scan Formatted". 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int sscanf(const char *str, const char *format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                const char *info = "ID:4023 Alice 28";
+                int id;
+                char name[20];
+                int age;
+
+                // Parse data by explicitly matching the literal "ID:" prefix
+                int items = sscanf(info, "ID:%d %19s %d", &id, name, &age);
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{\%[set]:} A scanset. For instance, \%[A-Za-z] reads only alphabetic characters.
+                \item \textbf{\%[$\land$set]:} An inverted scanset. For instance, \%[$\land$,] reads everything up until it hits a comma.
+                \item \textbf{* Modifier:} Suppresses assignment. For example, \%*d matches and skips an entire integer without storing it.
+            \end{itemize}
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Working with files}
+    \begin{itemize}
+        \item \textbf{Header}: File I /O is mainly done through the same header
+            \bigbreak \noindent 
+            \begin{cppcode}
+            #include <stdio.h>
+            \end{cppcode}
+        \item \textbf{FILE type}: The central type is
+            \bigbreak \noindent 
+            \begin{cppcode}
+            FILE*
+            \end{cppcode}
+            \bigbreak \noindent 
+            A FILE* is a handle to an open file stream. You do not manipulate the file directly. You open it, get a FILE *, use functions such as fgetc, fgets, fprintf, fread, and finally close it with fclose.
+        \item \textbf{fopen}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            FILE *fopen(const char *restrict filename, const char *restrict mode);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Upon successful completion fopen(), fdopen(), and freopen() return a FILE pointer.  Otherwise, NULL is returned and errno is set to indicate the error.
+            \bigbreak \noindent 
+            The mode string tells C whether you want to read, write, append, or work in binary mode. 
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}lX@{}}
+                    \toprule
+                    \textbf{Mode}	&\textbf{Meaning} \\
+                    \midrule
+                    "r"	    &Open existing file for reading\\[2ex]
+                    "w"	    &Open file for writing; destroys old contents\\[2ex]
+                    "a"	    &Open file for appending\\[2ex]
+                    "r+"	&Open existing file for reading and writing\\[2ex]
+                    "w+"	&Open for reading and writing; destroys old contents\\[2ex]
+                    "a+"	&Open for reading and appending\\[2ex]
+                    "rb"	&Read binary\\[2ex]
+                    "wb"	&Write binary\\[2ex]
+                    "ab"	&Append binary \\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            \bigbreak \noindent 
+            The primary difference between r+ and a+ modes in C file handling lies in how they handle file creation and where the data is written. While both allow you to read and write without erasing (truncating) the existing data, they behave very differently under the hood. 
+            \bigbreak \noindent 
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}XXX@{}}
+                    \toprule
+                    \textbf{Feature}& \textbf{r+ (Read / Update)}&	\textbf{a+ (Append / Update)} \\
+                    \midrule
+                    File Must Exist?	&Yes (returns NULL if missing)	&No (creates a new file if missing)\\[2ex]
+                    Initial Pointer Position	&Beginning of the file	&End of the file\\[2ex]
+                    Overwrites Content?	&Yes (overwrites at current cursor)	&No (always forces writes to EOF)\\[2ex]
+                    Effect of fseek() on Writes	&Moves the cursor for the next write	&Ignored (writes always go to the end) \\ 
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+
+                int main(void) {
+                    FILE *fp = fopen("data.txt", "r");
+
+                    if (fp == NULL) {
+                        perror("fopen");
+                        return 1;
+                    }
+
+                    fclose(fp);
+                    return 0;
+                }
+            \end{cppcode}
+        \item \textbf{fclose}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fclose(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fclose closes an open file stream. It also flushes any buffered output before closing the file.
+            \bigbreak \noindent 
+            You should call fclose on every file you successfully opened with fopen.
+            \bigbreak \noindent 
+            Upon successful completion, 0 is returned.  Otherwise, EOF is returned and errno is set to indicate the error.
+            \bigbreak \noindent 
+            EOF is a negative integer constant defined in <stdio.h>.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            #include <stdio.h>
+
+            int main(void) {
+                FILE *fp = fopen("output.txt", "w");
+
+                if (fp == NULL) {
+                    perror("fopen");
+                    return 1;
+                }
+
+                fprintf(fp, "Hello file\n");
+
+                if (fclose(fp) == EOF) {
+                    perror("fclose");
+                    return 1;
+                }
+
+                return 0;
+            }
+            \end{cppcode}
+        \item \textbf{The restrict keyword}: restrict is a type qualifier used on pointers to promise the compiler that the pointer is the only means to access its underlying memory object
+            \bigbreak \noindent 
+            When you qualify a pointer with restrict, you guarantee that for the lifetime of that pointer, no other pointer or variable inside the same scope will read or write to that specific chunk of memory.
+        \item \textbf{fprintf}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fprintf(FILE *restrict stream, const char *restrict format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fprintf works like printf, but it writes to a file stream instead of standard output.
+            \bigbreak \noindent 
+            Returns the number of characters written on success.
+            \bigbreak \noindent 
+            Returns a negative value on failure.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+
+                int main(void) {
+                    FILE *fp = fopen("numbers.txt", "w");
+
+                    if (fp == NULL) {
+                        perror("fopen");
+                        return 1;
+                    }
+
+                    int x = 10;
+                    double y = 3.14;
+
+                    fprintf(fp, "x = %d\n", x);
+                    fprintf(fp, "y = %.2f\n", y);
+
+                    fclose(fp);
+                    return 0;
+                }
+            \end{cppcode}
+        \item \textbf{fputs}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int fputs(const char *restrict s, FILE *restrict stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fputs writes a string to a file. Unlike puts, it does not automatically add a newline.
+            \bigbreak \noindent 
+            Returns a non-negative value on success. Returns EOF on failure.
+        \item \textbf{fputc}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fputc(int c, FILE *stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fputc writes a single character to a file. The character is passed as an int, but it usually represents a char.
+            \bigbreak \noindent 
+            Returns the character written on success. Returns EOF on failure.
+        \item \textbf{fgetc}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fgetc(FILE *stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fgetc reads one character from a file.
+            \bigbreak \noindent 
+            It returns an int, not a char, because it needs to represent every possible character plus the special value EOF.
+            \bigbreak \noindent 
+            Returns the character read on success. Returns EOF if the end of the file is reached or if an error occurs.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+
+                int main(void) {
+                    FILE *fp = fopen("data.txt", "r");
+
+                    if (fp == NULL) {
+                        perror("fopen");
+                        return 1;
+                    }
+
+                    int ch;
+
+                    while ((ch = fgetc(fp)) != EOF) {
+                        putchar(ch);
+                    }
+
+                    fclose(fp);
+                    return 0;
+                }
+            \end{cppcode}
+        \item \textbf{fgets}: 
+            \begin{cppcode}
+                char *fgets(char *restrict s, int n, FILE *restrict stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fgets reads a line, or part of a line, from a file into a character buffer.
+            \bigbreak \noindent 
+            It reads at most $n - 1$ characters and then adds the null terminator '\textbackslash 0'.
+            \bigbreak \noindent 
+            If it sees a newline before the limit, it includes the newline in the buffer.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+
+                int main(void) {
+                    FILE *fp = fopen("data.txt", "r");
+
+                    if (fp == NULL) {
+                        perror("fopen");
+                        return 1;
+                    }
+
+                    char line[256];
+
+                    while (fgets(line, sizeof line, fp) != NULL) {
+                        printf("%s", line);
+                    }
+
+                    fclose(fp);
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            This is the normal way to read a text file line by line in C.
+        \item \textbf{fscanf}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int fscanf(FILE *restrict stream, const char *restrict format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fscanf reads formatted input from a file, similar to how scanf reads from standard input.
+            \bigbreak \noindent 
+            It is useful for simple structured input, such as integers, floats, and words.
+            \bigbreak \noindent 
+            However, fscanf can be fragile for complicated input. For many real programs, reading a full line with fgets and then parsing it manually is safer.
+            \bigbreak \noindent 
+            Returns the number of input items successfully matched and assigned.
+            \bigbreak \noindent 
+            Returns EOF if the end of the file is reached before any conversion happens, or if a read error occurs.
+        \item \textbf{fputs}
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Binary I/O}
+    \begin{itemize}
+        \item \textbf{fwrite}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                size_t fwrite(const void *restrict data_ptr, size_t element_size, size_t n_elements, FILE *restrict stream); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Writes raw binary data from memory into a file. To write one \texttt{int}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            fwrite(&x, sizeof x, 1, fp);
+            \end{cppcode}
+            \bigbreak \noindent 
+            To write an array:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                fwrite(arr, sizeof arr[0], count, fp)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the number of characters written on success.
+            \bigbreak \noindent 
+            Returns a negative value on failure.
+        \item \textbf{fread}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t fread(void ptr[restrict size * n], size_t size, size_t n, FILE *restrict stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The function fread() reads n items of data, each size bytes long, from the stream pointed to by stream, storing them at the location given by ptr.
+            \bigbreak \noindent 
+            On success, fread() and fwrite() return the number of items read or written.  This number equals the number of bytes transferred only when size is 1.  If an error occurs, or the end of the file is reached, the return value is a short item count (or zero).
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{I/O helpers}
+    \subsubsection{Flushing}
+    \begin{itemize}
+        \item \textbf{fflush}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int fflush(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            C file output is often buffered. That means data may sit in memory temporarily before being physically written to the file. fflush forces buffered output to be written immediately. It is mainly used for output streams.
+            \bigbreak \noindent 
+            Returns 0 on success. Returns EOF on failure.
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{File positioning}
+    \begin{itemize}
+        \item \textbf{Intro}: Every open file stream has a current position. Reading or writing usually advances that position.
+            \bigbreak \noindent 
+            You can move around in a file using fseek, ftell, and rewind.        
+        \item \textbf{fseek}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int fseek(FILE* stream, long offset, int whence);
+            \end{cppcode}
+            \bigbreak \noindent 
+            fseek moves file position. Whence controls where the offset is measured from:
+            \begin{itemize}
+                \item \textbf{SEEK\_SET}: Beginning of file
+                \item \textbf{SEEK\_CUR}: Current position
+                \item \textbf{SEEK\_END}: End of file
+            \end{itemize}
+            Returns zero on success, nonzero on failure.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+
+                int main(void) {
+                    FILE *fp = fopen("data.txt", "r");
+
+                    if (fp == NULL) {
+                        perror("fopen");
+                        return 1;
+                    }
+
+                    if (fseek(fp, 0, SEEK_END) != 0) {
+                        perror("fseek");
+                        fclose(fp);
+                        return 1;
+                    }
+
+                    fclose(fp);
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Moves position to EOF
+        \item \textbf{ftell}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            long ftell(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            returns the current file position. For binary files, this is commonly used as a byte offset.
+            \bigbreak \noindent 
+            Returns current position on success, -1L on failure.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            #include <stdio.h>
+
+            int main(void) {
+                FILE *fp = fopen("data.txt", "r");
+
+                if (fp == NULL) {
+                    perror("fopen");
+                    return 1;
+                }
+
+                fseek(fp, 0, SEEK_END);
+
+                long size = ftell(fp);
+
+                if (size == -1L) {
+                    perror("ftell");
+                    fclose(fp);
+                    return 1;
+                }
+
+                printf("File size: %ld bytes\n", size);
+
+                fclose(fp);
+                return 0;
+            }
+            \end{cppcode}
+        \item \textbf{rewind}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void rewind(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            reset the file position indicator in a stream
+
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{EOF and Errors}
+    \begin{itemize}
+        \item \textbf{feof}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+               int feof(FILE *stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The feof() function shall test the end-of-file indicator for the stream pointed to by stream.
+            \bigbreak \noindent 
+            The feof() function shall not change the setting of errno if stream is valid.
+            \bigbreak \noindent 
+            The feof() function shall return non-zero if and only if the end-of-file indicator is set for stream, otherwise returns zero.
+        \item \textbf{ferror}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int ferror(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            ferror checks whether an error occurred on a file stream.
+            \bigbreak \noindent 
+            This is useful because some functions, such as fgetc, return EOF both for real end-of-file and for errors.
+            \bigbreak \noindent 
+            Returns nonzero if the error indicator is set, zero otherwise.
+        \item \textbf{clearerr}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void clearerr(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            clearerr clears both the error indicator and the EOF indicator for a stream.
+            \bigbreak \noindent 
+            You usually do not need it in simple programs, but it matters if you want to continue using a stream after EOF or after handling an error.
+        \item \textbf{perror}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void perror(const char* s);
+            \end{cppcode}
+            \bigbreak \noindent 
+            perror prints an error message describing the most recent library/system error.
+            \bigbreak \noindent 
+            It is commonly used after functions such as fopen, fread, fwrite, fflush, or fclose fail.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsubsection{Removing and renaming files}
+    \begin{itemize}
+        \item \textbf{remove}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int remove(const char* filename);
+            \end{cppcode}
+            \bigbreak \noindent
+            Remove deletes a file.
+            \bigbreak \noindent 
+            Returns zero on success, nonzero on failure.
+        \item \textbf{Rename}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int rename(const char* old, const char* new);
+            \end{cppcode}
+            \bigbreak \noindent 
+            rename changes the name or path of a file.
+            \bigbreak \noindent 
+            It can also be used to move a file within the same filesystem.
+            \bigbreak \noindent 
+            Returns 0 on success. Returns nonzero on failure.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Strings}
+    \begin{itemize}
+        \item \textbf{String literals}: Consider
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* s1 = "Hello, world!";
+            const char* s2 = "Hello, world!";
+            \end{cppcode}
+            \bigbreak \noindent 
+            These create read only string literals. You should always make string literals const. Attempting to modify an non-const string literal  will cause a crash.
+            \bigbreak \noindent 
+            To make them mutable, attach them to a char array
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char arr[] = "Hello, world!";
+            \end{cppcode}
+            \bigbreak \noindent 
+            The compiler allocates a fresh block of writable memory on the stack (or global scope) and copies the contents of "Hello" into it. This memory is completely safe to change.
+
+
+        \item \textbf{string.h}: The main C header for working with strings. Contains the standard C functions for working with null-terminated strings and raw memory blocks.
+        \item \textbf{strlen}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                size_t strlen(const char* s);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the length of a C string, not counting the null terminator.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char s[] = "Hello";
+
+                sizeof s // 6, includes \0
+                strlen(s) // 5, excludes \0
+            \end{cppcode}
+        \item \textbf{strcmp}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int strcmp(const char *s1, const char *s2);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Compares two strings lexicographically.
+            \bigbreak \noindent 
+            A negative return value implies s1 is less than s2. A return value of zero implies s1 equals s2. A positive return value implies s1 is greater than s2.
+            \bigbreak \noindent 
+            \textbf{Note:} Strings \textbf{cannot} be compared with ==. Using this operator simply compares addresses.
+            \bigbreak \noindent 
+            Because strcmp does not accept a maximum length argument, it evaluates characters sequentially until it detects a null-terminator (\textbackslash 0). If a maliciously crafted or malformed string lacks a null-terminator,
+            \begin{itemize}
+                \item Keep reading past the assigned memory buffer.
+                \item Trigger undefined program behavior.
+                \item Cause a segmentation fault (SIGSEGV) or application crash if it tries to read protected memory spaces.
+                \item Potentially read adjacent data from the stack or heap, giving attackers a mechanism to bleed sensitive information
+            \end{itemize}
+        \item \textbf{strncmp}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int strncmp(const char* s1, const char* s2, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Compares at most the first $n$ characters of two strings. 
+            \bigbreak \noindent 
+            Has same return behavior as \texttt{strcmp}.
+        \item \textbf{strcpy}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strcpy(char* dest, const char* src);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Copies the string src into dest, including the null terminator.
+            \bigbreak \noindent 
+            Returns dest.
+        \item \textbf{strncpy}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strncpy(char *dest, const char *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Copies at most $n$ characters from src to dest.
+            \bigbreak \noindent 
+            Returns dest.
+            \bigbreak \noindent 
+            This function is \textbf{not} simply a safer strcpy. If src has length greater than or equal to $n$, strncpy does \textbf{not} append a null-terminator.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <string.h>
+
+                int main(void) {
+                    char dest[6];
+
+                    strncpy(dest, "hello world", sizeof dest - 1);
+                    dest[sizeof dest - 1] = '\0';
+
+                    printf("%s\n", dest);
+
+                    return 0;
+                }
+            \end{cppcode}
+        \item \textbf{strcat}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strcat(char *dest, const char *src);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Appends src to the end of dest. Starts at the null-terminator of dest. Dest must have a null-terminator and enough room for the result.
+            \bigbreak \noindent 
+            Returns dest.
+        \item \textbf{strncat}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strncat(char *dest, const char *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Appends at most $n$ characters from src to dest, then appends a null-terminator.
+            \bigbreak \noindent 
+            Returns dest
+        \item \textbf{strchr}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strchr(const char* s, int c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Finds the first occurrence of character $c$ is string $s$.
+            \bigbreak \noindent 
+            Returns pointer to first occurrence of character $c$ in string $s$, or NULL if not found.
+        \item \textbf{strrchr}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strrchr(const char* s, int c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Finds the last occurrence of character $c$ is string $s$. 
+            \bigbreak \noindent 
+            Same return value as strchr
+        \item \textbf{strstr}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strstr(const char* haystack, const char* needle);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Finds the first occurrence of string \textbf{needle} inside string \textbf{haystack}.
+            \bigbreak \noindent 
+            Returns pointer on success, NULL if not found.
+        \item \textbf{strtok}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strtok(char* str, const char* delim);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Splits a string into tokens using delimiter characters.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <string.h>
+
+                int main(void) {
+                    char s[] = "red,green,blue";
+
+                    char *token = strtok(s, ",");
+
+                    while (token != NULL) {
+                        printf("%s\n", token);
+                        token = strtok(NULL, ",");
+                    }
+
+                    return 0;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            strtok modifies the original string by writing '\textbackslash 0' characters into it. Also notice that strtok uses a hidden internal static state. Essentially, you can pass NULL to it and it will pick up where it left off.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char s[] = "red,green,blue";
+                size_t n = sizeof s;
+
+                char *token = strtok(s, ",");
+
+                for (size_t i = 0; i < n; ++i) {
+                    printf("%c", s[i]);
+                    if (s[i] == '\0') {
+                        fputs("__null-term__", stdout);
+                    }
+                }
+
+                // red__null-term__green,blue__null-term__
+            \end{cppcode}
+
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char s[] = "red,green,blue";
+                size_t n = sizeof s;
+
+                char *token = strtok(s, ",");
+
+                while (token != NULL) {
+                    token = strtok(NULL, ",");
+                }
+
+                for (size_t i = 0; i < n; ++i) {
+                    printf("%c", s[i]);
+                    if (s[i] == '\0') {
+                        // Using fputs instead of puts for no newline.
+                        fputs("\\0", stdout);
+                    }
+                }
+
+                // red\0green\0blue\0
+            \end{cppcode}
+        \item \textbf{strspn}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t strspn(const char* s, const char* accept);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the length of the initial segment of $s$ containing only characters from \texttt{accept}.
+        \item \textbf{strcspn}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t strcspn(const char *s, const char *reject);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the length of the initial segment of $s$ containing no characters from reject.
+        \item \textbf{strpbrk}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strpbrk(const char *s, const char *accept);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Finds the first character in $s$ that matches any character in accept.
+        \item \textbf{strerror}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strerror(int errnum);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a human-readable error message for an error number.
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Memory operations in string.h}
+    \begin{itemize}
+        \item \textbf{memset}        
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* memset(void* s, int c, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Sets $n$ bytes of memory to the byte value $c$.
+            \bigbreak \noindent 
+            Returns $s$
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char buffer[8];
+
+                memset(buffer, 0, sizeof buffer);
+
+                printf("%d\n", buffer[0]);
+            \end{cppcode}
+        \item \textbf{memcpy}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void *memcpy(void *dest, const void *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Copies exactly $n$ bytes from src to dest.
+            \bigbreak \noindent 
+            Returns dest.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                    int src[] = {1, 2, 3};
+                    int dest[3];
+
+                    memcpy(dest, src, sizeof src);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Overlapping memory is UB.
+        \item \textbf{memmove}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void *memmove(void *dest, const void *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Copies exactly $n$ bytes from src to dest, safely handling overlapping memory regions.
+            \bigbreak \noindent 
+            Returns dest.
+        \item \textbf{memcmp}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int memcmp(const void *s1, const void *s2, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Compares exactly $n$ bytes of memory.
+            \bigbreak \noindent 
+            Returns:
+            \begin{itemize}
+                \item < 0   first differing byte in s1 is less than the one in s2
+                \item 0   all $n$ bytes are equal
+                \item > 0   first differing byte in s1 is greater than the one in s2
+            \end{itemize}
+        \item \textbf{memchr}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* memchr(const void* s, int c, size_t n); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Searches the first $n$ bytes of memory for byte value $c$.
+            \bigbreak \noindent 
+            Returns pointer to the first matching byte or NULL.
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{stdlib.h}
+    \subsection{Memory management}
+    \begin{itemize}
+        \item \textbf{malloc} 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* malloc(size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Allocates \texttt{size} bytes of uninitialized memory.
+            \bigbreak \noindent 
+            Returns a pointer to the allocated memory, or NULL if allocation fails.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int* arr = malloc(10 * sizeof *arr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The memory contains indeterminate values. Reading before writing is undefined behavior.
+        \item \textbf{calloc}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* calloc(size_t n, size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Allocates space for $n$ elements, each \texttt{size} bytes, and initializes all bytes to zero.
+            \bigbreak \noindent 
+            Returns a pointer to the allocated memory, or NULL if allocation fails.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int* arr = calloc(10, sizeof *arr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            For integer types, the values become 0. For pointer types, on normal modern systems this gives null pointers, but the standard technically describes byte zeroing.
+        \item \textbf{realloc}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* realloc(void* ptr, size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Changes the size of a previously allocated block.
+            \bigbreak \noindent 
+            Returns a pointer to the resized block, or NULL if resizing fails.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int *arr = malloc(5 * sizeof *arr);
+
+                int *tmp = realloc(arr, 10 * sizeof *arr);
+                if (!tmp) {
+                    free(arr);
+                    /* allocation failed */
+                } else {
+                    arr = tmp;
+                }
+
+                free(arr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            If you assign the return value of realloc to the original memory pointer, you loose it if realloc fails and returns NULL.
+        \item \textbf{free}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void free(void* ptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Releases memory allocated by malloc, calloc, or realloc.
+            \bigbreak \noindent 
+            Returns nothing.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            free(NULL); // safe
+            free(nullptr) // safe
+            \end{cppcode}
+            \bigbreak \noindent 
+            Both of these are safe, but freeing the same pointer twice is undefined behavior.
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{String to number conversions}
+    \begin{itemize}
+        \item \textbf{\_Nullable}: Simply means that the pointer passed to the function is allowed to be NULL. It is however not a keyword in C (and doesn't occur even once in the draft for the C23 standard) but an extension supported only by some compilers, for example clang and icx.
+        \item \textbf{atoi, atol, atoll}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int atoi(const char* nptr);
+            long atol(const char* nptr);
+            long long atoll(const char* nptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Converts a string to int, long, or long long.
+            \bigbreak \noindent 
+            Returns the converted integer.
+            \bigbreak \noindent 
+            No reliable error reporting, prefer \texttt{strtol} or \texttt{strtoll}.
+        \item \textbf{strtol, strtoll, strtoul, strtoull, strtod, strtof, strtold}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                long strtol(const char *restrict nptr, char **restrict endptr, int base);
+                long long strtoll(const char *restrict nptr, char **restrict endptr, int base);
+                unsigned long strtoul(const char *restrict nptr, char **restrict endptr, int base);
+                unsigned long strtoull(const char *restrict nptr, char **restrict endptr, int base);
+                double strtod(const char *restrict nptr, char **restrict endptr);
+                float strtof(const char *restrict nptr, char **restrict endptr);
+                long double strtold(const char *restrict nptr, char **restrict endptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the converted value. If endptr is not NULL, it is set to the first character after the parsed number.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char *end;
+                long x = strtol("123abc", &end, 10);
+
+                printf("%ld\n", x);   /* 123 */
+                printf("%s\n", end);  /* abc */
+            \end{cppcode}
+            \bigbreak \noindent 
+            Base == 0 detects prefixes.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                "123"   /* decimal */
+                "077"   /* octal */
+                "0xff"  /* hexadecimal */
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char* end;
+                const char* s = "123a";
+                int x = strtol(s, &end, 10);
+
+                if (errno == ERANGE) {
+                    puts("Overflow or underflow");
+                }
+
+                else if (s == end) {
+                    puts("No conversion");
+                }
+
+                else if (*end == '\0') {
+                    puts("Full conversion");
+                }
+
+                else {
+                    puts("Some conversion");
+                }
+            \end{cppcode}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Program termination and process control}
+    \begin{itemize}
+        \item \textbf{exit} 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void exit(int status); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Terminates the program with exit code \texttt{status}. 
+            \bigbreak \noindent 
+            Returns nothing.
+        \item \textbf{abort}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void abort(void)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Abnormally terminates the program.
+        \item \textbf{atexit}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int atexit(void (*func)(void));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Registers a function to be called when the program exists normally.
+            \bigbreak \noindent 
+            Returns zero on success, nonzero on failure.
+            \bigbreak \noindent 
+            Functions registered with atexit are called in reverse order of registration.
+        \item \textbf{Normal program exit cleanup}: A normal program exit (triggered by returning from main() or calling exit()) automatically performs standard runtime and stream cleanup, while application-level resource cleanup remains the responsibility of the code.
+            \bigbreak \noindent 
+            When a program terminates normally, the C standard library (stdlib.h) executes the following operations automatically in order: 
+            \begin{itemize}
+                \item \textbf{Calls Termination Functions:} Executes functions registered via the atexit() function in the reverse order of their registration.
+                \item \textbf{Flushes and Closes Streams:} Flushes all unwritten buffered data to open C streams (like stdout or stderr) and closes all open files.
+                \item \textbf{Deletes Temporary Files:} Removes any temporary files created using tmpfile().
+                \item \textbf{Returns Control:} Passes the final exit status code back to the host environment (e.g., to the operating system or parent process). 
+            \end{itemize}
+        \item \textbf{\_Exit}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void _Exit(int status);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Terminates the program immediately. No \texttt{atexit} handlers are called and normal cleanup is not performed.
+        \item \textbf{system}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int system(const char* string);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Passes a command string to the host environment’s command processor.
+            \bigbreak \noindent 
+            Returns implementation-defined status information.
+            \bigbreak \noindent 
+            You can also check whether a command processor exists:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                if (system(NULL)) {
+                    puts("command processor available");
+                }
+            \end{cppcode}
+            The return value is 
+            \begin{itemize}
+                \item If command is NULL, then a nonzero value if a shell is available, or 0 if no shell is available.
+                \item  If a child process could not be created, or its status could not be retrieved, the return value is -1 and errno is set to indicate the error.
+                \item If a shell could not be executed in the child process, then the return value is as though the child shell terminated by calling \_exit(2) with the status 127.
+                \item  If all system calls succeed, then the return value is the termination status of the child shell used to execute command. (The termination status of a shell is the termination status of the last command it executes.)
+            \end{itemize}
+        \item \textbf{getenv}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* getenv(const char* name);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Gets the value of an environment variable.
+            \bigbreak \noindent 
+            Returns a pointer to the value string, or NULL if the variable does not exist.
+            \bigbreak \noindent 
+            Do not modify the returned string unless your platform specifically allows it. Treat it as read-only.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Random numbers}
+    \begin{itemize}
+        \item \textbf{rand}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int rand(void);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a pseudo-random integer in the range 0 to RAND_MAX.
+        \item \textbf{srand}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void srand(unsigned int seed);
+            \end{cppcode}
+            \bigbreak \noindent 
+            seeds the pseudo-random number generator used by rand.
+            \bigbreak \noindent 
+            If you do not call \texttt{srand}, the program behaves as though it were seeded with 1.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Sorting and searching}
+    \begin{itemize}
+        \item \textbf{qsort}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void qsort(void *base, size_t nmemb, size_t size, int (*compare)(const void *, const void *));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Sorts and array. Returns nothing
+            \bigbreak \noindent 
+            The comparison function must return:
+            \begin{itemize}
+                \item < 0   if first element comes before second
+                \item 0   if elements compare equal
+                \item > 0   if first element comes after second
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <stdlib.h>
+
+                int cmp_int(const void *a, const void *b) {
+                    const int *x = a;
+                    const int *y = b;
+
+                    if (*x < *y) return -1;
+                    if (*x > *y) return 1;
+                    return 0;
+                }
+
+                int main(void) {
+                    int arr[] = {5, 2, 9, 1, 3};
+                    size_t n = sizeof arr / sizeof arr[0];
+
+                    qsort(arr, n, sizeof arr[0], cmp_int);
+
+                    for (size_t i = 0; i < n; ++i) {
+                        printf("%d ", arr[i]);
+                    }
+                }
+            \end{cppcode}
+        \item \textbf{bsearch}: 
+            \begin{cppcode}
+                void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Performs binary search on a sorted array.
+            \bigbreak \noindent 
+            Returns pointer to the matching element, or NULL.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                #include <stdio.h>
+                #include <stdlib.h>
+
+                int cmp_int(const void *a, const void *b) {
+                    const int *x = a;
+                    const int *y = b;
+
+                    if (*x < *y) return -1;
+                    if (*x > *y) return 1;
+                    return 0;
+                }
+
+                int main(void) {
+                    int arr[] = {1, 2, 3, 5, 9};
+                    int key = 5;
+
+                    int *found = bsearch(&key, arr, 5, sizeof arr[0], cmp_int);
+
+                    if (found) {
+                        printf("found %d\n", *found);
+                    }
+                }
+            \end{cppcode}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Integer math helpers}
+    \begin{itemize}
+        \item 
+            \begin{cppcode}
+                int abs(int j);        
+                long labs(long j);
+                long long llabs(long long j);
+
+                div_t div(int numer, int denom);
+                ldiv_t ldiv(long numer, long denom);
+                lldiv_t lldiv(long long numer, long long denom);
+            \end{cppcode}
+        \item \textbf{div\_t}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int quot;
+                    int rem;
+                } div_t;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Its variants are similar.
+
+
+
+
+    \end{itemize}
+
+
+
+
+
+
+
+
+
+    
+\end{document}

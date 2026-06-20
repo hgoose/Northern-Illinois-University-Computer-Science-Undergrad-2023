@@ -1,0 +1,649 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={C std}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{C std}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Stdio}
+    \subsection{Output}
+    \begin{itemize}
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int printf(const char *restrict format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Upon successful return, these functions return the number of bytes printed (excluding the null byte used to end output to strings).
+            \bigbreak \noindent 
+            On error, a negative value is returned, and errno is set to indicate the error.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int fprintf(FILE *stream, const char *format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Upon successful return, these functions return the number of bytes printed (excluding the null byte used to end output to strings).
+            \bigbreak \noindent 
+            On error, a negative value is returned, and errno is set to indicate the error.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int sprintf(char *str, const char *format, ...); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the total number of characters successfully written, excluding the null terminator (\textbackslash0). 
+            \bigbreak \noindent 
+            If an error occurs, it returns a negative value and errno is set.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int snprintf ( char * s, size_t n, const char * format, ... );
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the number of characters that would have been written if $n$ had been sufficiently large, not counting the terminating null character. 
+            \bigbreak \noindent 
+            If an encoding error occurs, a negative number is returned and errno is set.
+        \item \bigbreak \noindent \begin{cppcode}
+                int fputc(int c, FILE *stream);
+                int putc(int c, FILE *stream);
+                int putchar(int c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Return the character written as an unsigned char cast to an int or EOF on error.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int fputs(const char *restrict s, FILE *restrict stream);
+                int puts(const char *s);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a nonnegative number on success, or EOF on error.
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Input}
+    \begin{itemize}
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int scanf(const char *restrict format, ...);
+                int fscanf(FILE *restrict stream, const char *restrict format, ...);
+            \end{cppcode}
+            \bigbreak \noindent 
+            On success, these functions return the number of input items successfully matched and assigned; this can be fewer than provided for, or even zero, in the event of an early matching failure.
+            \bigbreak \noindent 
+            The value EOF is returned if the end of input is reached before either the first successful conversion or a matching failure occurs.  EOF is also returned if a read error occurs, in which case the error indicator for the stream is set, and errno is set to indicate the error.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+                int getchar(void);
+                int fgetc(FILE *stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Upon successful completion, fgetc() shall return the next byte from the input stream pointed to by stream.  If the end-of-file indicator for the stream is set, or if the stream is at end-of- file, the end-of-file indicator for the stream shall be set and fgetc() shall return EOF. If a read error occurs, the error indicator for the stream shall be set, fgetc() shall return EOF, and shall set errno to indicate the error.
+            \bigbreak \noindent 
+            The return behavior for getchar is the same as fgetc.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+             int sscanf(const char *restrict str, const char *restrict format, ...);
+             \end{cppcode}
+             \bigbreak \noindent 
+             On success, these functions return the number of input items successfully matched and assigned; this can be fewer than provided for, or even zero, in the event of an early matching failure.
+             \bigbreak \noindent 
+             The value EOF is returned if the end of input is reached before either the first successful conversion or a matching failure occurs.
+        \item \bigbreak \noindent 
+            \begin{cppcode}
+               char *fgets(char *restrict s, int n, FILE *restrict stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Upon successful completion, fgets() shall return s.  If the stream is at end-of-file, the end-of-file indicator for the stream shall be set and fgets() shall return a null pointer.  If a read error occurs, the error indicator for the stream shall be set, fgets() shall return a null pointer, and shall set errno to indicate the error.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Binary I/O}
+    \begin{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                size_t fwrite(const void *restrict data_ptr, size_t element_size, size_t n_elements, FILE *restrict stream); 
+            \end{cppcode}
+            \bigbreak \noindent 
+             The fwrite() function shall return the number of elements successfully written, which may be less than nitems if a write error is encountered. If size or nitems is 0, fwrite() shall return 0 and the state of the stream remains unchanged. Otherwise, if a write error occurs, the error indicator for the stream shall be set, and errno shall be set to indicate the error.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t fread(void ptr[restrict size * n], size_t size, size_t n, FILE *restrict stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The function fread() reads n items of data, each size bytes long, from the stream pointed to by stream, storing them at the location given by ptr.
+            \bigbreak \noindent 
+            On success, fread() and fwrite() return the number of items read or written.  This number equals the number of bytes transferred only when size is 1.  If an error occurs, or the end of the file is reached, the return value is a short item count (or zero).
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Flushing}
+    \begin{itemize}
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int fflush(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns 0 on success. Returns EOF on failure.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{File Positioning}
+    \begin{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int fseek(FILE* stream, long offset, int whence);
+            \end{cppcode}
+            \bigbreak \noindent 
+            whence can be 
+            \begin{itemize}
+                \item \textbf{SEEK\_SET}: Beginning of file
+                \item \textbf{SEEK\_CUR}: Current position
+                \item \textbf{SEEK\_END}: End of file
+            \end{itemize}
+            Returns zero on success, nonzero on failure.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                long ftell(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            returns the current file position. For binary files, this is commonly used as a byte offset.
+            \bigbreak \noindent 
+            Returns current position on success, -1L on failure.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void rewind(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            reset the file position indicator in a stream
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Eof and errors}
+    \begin{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+               int feof(FILE *stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The feof() function shall return non-zero if and only if the end-of-file indicator is set for stream, otherwise returns zero.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int ferror(FILE* stream);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns nonzero if the error indicator is set, zero otherwise.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void clearerr(FILE* stream);
+            \end{cppcode}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void perror(const char* s);
+            \end{cppcode}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Removing and renaming files}
+    \begin{itemize}
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int remove(const char* filename);
+            \end{cppcode}
+            \bigbreak \noindent
+            Returns zero on success, nonzero on failure.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int rename(const char* old, const char* new);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns 0 on success. Returns nonzero on failure.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{string.h}
+    \begin{itemize}
+        \item \textbf{Note:} string.h defines NULL and size\_t described in stddef.h
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                size_t strlen(const char* s);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the length of a C string, not counting the null terminator.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int strcmp(const char *s1, const char *s2);
+            \end{cppcode}
+            \bigbreak \noindent 
+            A negative return value implies s1 is less than s2. A return value of zero implies s1 equals s2. A positive return value implies s1 is greater than s2.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int strncmp(const char* s1, const char* s2, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Has same return behavior as \texttt{strcmp}.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char* strcpy(char* dest, const char* src);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char *strncpy(char *dest, const char *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strcat(char *dest, const char *src);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strncat(char *dest, const char *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char* strchr(const char* s, int c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns pointer to first occurrence of character $c$ in string $s$, or NULL if not found.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char* strrchr(const char* s, int c);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Same return value as strchr
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                char* strstr(const char* haystack, const char* needle);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns pointer on success, NULL if not found.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strtok(char* str, const char* delim);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Splits a string into tokens using delimiter characters. 
+            \bigbreak \noindent 
+            Returns pointer to next token (or first token). 
+            \bigbreak \noindent 
+            Saves internal state (where it left off).
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            size_t strcspn(const char *s, const char *reject);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the length of the initial segment of $s$ containing no characters from reject.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *strpbrk(const char *s, const char *accept);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Finds the first character in $s$ that matches any character in accept. Or NULL if none is found.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* strerror(int errnum);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a human-readable error message for an error number.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Memory operations in string.h}
+    \begin{itemize}
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void* memset(void* s, int c, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Sets $n$ bytes of memory to the byte value $c$.
+            \bigbreak \noindent 
+            Returns $s$
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void *memcpy(void *dest, const void *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void *memmove(void *dest, const void *src, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns dest.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int memcmp(const void *s1, const void *s2, size_t n);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns:
+            \begin{itemize}
+                \item < 0   first differing byte in s1 is less than the one in s2
+                \item 0   all $n$ bytes are equal
+                \item > 0   first differing byte in s1 is greater than the one in s2
+            \end{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* memchr(const void* s, int c, size_t n); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns pointer to the first matching byte or NULL.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{stddef.h}
+    \begin{itemize}
+        \item \textbf{Macros}:
+            \begin{itemize}
+                \item NULL
+            \end{itemize}
+        \item \textbf{Types:}
+            \begin{itemize}
+                \item \textbf{ptrdiff\_t}: Signed integer type of the result of subtracting two pointers.
+                \item \textbf{wchar\_t}:   Integer type whose range of values can represent distinct codes for all members of the largest extended character set specified among the supported locales; the null character shall have the code value zero. Each member of the basic character set shall have a code value equal to its value when used as the lone character in an integer character constant if an implementation does not define 
+                \item \textbf{size\_t}: Unsigned integer type of the result of the sizeof operator.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{stdlib.h}
+    \subsection{Memory management}
+    \begin{itemize}
+        \item \textbf{Macros}: 
+            \begin{itemize}
+                \item \textbf{EXIT\_FAILURE}: Unsuccessful termination for exit(); evaluates to a non-zero value.
+                \item \textbf{EXIT\_SUCCESS}: Successful termination for exit(); evaluates to 0.
+                \item \textbf{RAND\_MAX}:  Maximum value returned by rand(); at least 32767.
+                \item \textbf{MB\_CUR\_MAX}: Maximum number of bytes in a character specified by the current locale
+            \end{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void* malloc(size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Allocates \texttt{size} bytes of uninitialized memory.
+            \bigbreak \noindent 
+            Returns a pointer to the allocated memory, or NULL if allocation fails.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void* calloc(size_t n, size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a pointer to the allocated memory, or NULL if allocation fails.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void* realloc(void* ptr, size_t size);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a pointer to the resized block, or NULL if resizing fails.
+        \item \textbf{free}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void free(void* ptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns nothing.
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{String to number}
+    \begin{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int atoi(const char* nptr);
+                long atol(const char* nptr);
+                long long atoll(const char* nptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the converted integer.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                long strtol(const char *restrict nptr, char **restrict endptr, int base);
+                long long strtoll(const char *restrict nptr, char **restrict endptr, int base);
+                unsigned long strtoul(const char *restrict nptr, char **restrict endptr, int base);
+                unsigned long strtoull(const char *restrict nptr, char **restrict endptr, int base);
+                double strtod(const char *restrict nptr, char **restrict endptr);
+                float strtof(const char *restrict nptr, char **restrict endptr);
+                long double strtold(const char *restrict nptr, char **restrict endptr);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns the converted value. If endptr is not NULL, it is set to the first character after the parsed number.
+            \bigbreak \noindent 
+            Errno is set on overflow / underflow.
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Program termination and process control}
+    \begin{itemize}
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void exit(int status); 
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns nothing.
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void abort(void)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns nothing.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int atexit(void (*func)(void));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns zero on success, nonzero on failure.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void _Exit(int status);
+            \end{cppcode}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int system(const char* string);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns implementation-defined status information.
+            \bigbreak \noindent 
+            The return value is 
+            \begin{itemize}
+                \item If command is NULL, then a nonzero value if a shell is available, or 0 if no shell is available.
+                \item  If a child process could not be created, or its status could not be retrieved, the return value is -1 and errno is set to indicate the error.
+                \item If a shell could not be executed in the child process, then the return value is as though the child shell terminated by calling \_exit(2) with the status 127.
+                \item  If all system calls succeed, then the return value is the termination status of the child shell used to execute command. (The termination status of a shell is the termination status of the last command it executes.)
+            \end{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char* getenv(const char* name);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a pointer to the value string, or NULL if the variable does not exist.
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Random numbers}
+    \begin{itemize}
+        \item
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int rand(void);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Returns a pseudo-random integer in the range 0 to RAND_MAX.
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            void srand(unsigned int seed);
+            \end{cppcode}
+            \bigbreak \noindent 
+            seeds the pseudo-random number generator used by rand.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Sorting and searching}
+    \begin{itemize}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void qsort(void *base, size_t nmemb, size_t size, int (*compare)(const void *, const void *));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Sorts and array. Returns nothing
+            \bigbreak \noindent 
+            The comparison function must return:
+            \begin{itemize}
+                \item < 0   if first element comes before second
+                \item 0   if elements compare equal
+                \item > 0   if first element comes after second
+            \end{itemize}
+        \item 
+            \begin{cppcode}
+                void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
+            \end{cppcode}
+            \bigbreak \noindent 
+            Performs binary search on a sorted array.
+            \bigbreak \noindent 
+            Returns pointer to the matching element, or NULL.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Integer Math helpers}
+    \begin{itemize}
+                \item 
+            \begin{cppcode}
+                int abs(int j);        
+                long labs(long j);
+                long long llabs(long long j);
+
+                div_t div(int numer, int denom);
+                ldiv_t ldiv(long numer, long denom);
+                lldiv_t lldiv(long long numer, long long denom);
+            \end{cppcode}
+        \item 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int quot;
+                    int rem;
+                } div_t;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Its variants are similar.
+
+    \end{itemize}
+
+    
+\end{document}

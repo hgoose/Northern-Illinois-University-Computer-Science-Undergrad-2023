@@ -1,0 +1,720 @@
+\documentclass{report}
+
+\input{~/dev/latex/template/preamble.tex}
+\input{~/dev/latex/template/macros.tex}
+
+\title{\Huge{}}
+\author{\huge{Nathan Warner}}
+\date{\huge{}}
+\fancyhf{}
+\rhead{}
+\fancyhead[R]{\itshape Warner} % Left header: Section name
+\fancyhead[L]{\itshape\leftmark}  % Right header: Page number
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0pt} % Optional: Removes the header line
+%\pagestyle{fancy}
+%\fancyhf{}
+%\lhead{Warner \thepage}
+%\rhead{}
+% \lhead{\leftmark}
+%\cfoot{\thepage}
+%\setborder
+% \usepackage[default]{sourcecodepro}
+% \usepackage[T1]{fontenc}
+
+% Change the title
+\hypersetup{
+    pdftitle={X11 WM}
+}
+
+\begin{document}
+    % \maketitle
+        \begin{titlepage}
+       \begin{center}
+           \vspace*{1cm}
+    
+           \textbf{X11 WM}
+    
+           \vspace{0.5cm}
+            
+                
+           \vspace{1.5cm}
+    
+           \textbf{Nathan Warner}
+    
+           \vfill
+                
+                
+           \vspace{0.8cm}
+         
+           \includegraphics[width=0.4\textwidth]{~/niu/seal.png}
+                
+           Computer Science \\
+           Northern Illinois University\\
+           United States\\
+           
+                
+       \end{center}
+    \end{titlepage}
+    \tableofcontents
+    \pagebreak 
+    \unsect{Introduction}
+    \begin{itemize}
+        \item \textbf{The X11 WM role}: An X11 window manager is not the operating system’s windowing system. It is a normal X client that is granted special control over the root window’s child windows.
+            \bigbreak \noindent 
+            The X server owns the screen, keyboard, mouse, windows, pixmaps, cursors, and other graphical resources. Programs such as terminals, browsers, editors, and your window manager are X clients. They all talk to the X server through the X11 protocol.
+            \bigbreak \noindent 
+            A window manager’s job is to manage other clients’ top-level windows.
+            \bigbreak \noindent 
+            It usually controls:
+            \begin{itemize}
+                \item where top-level windows appear
+                \item how large they are
+                \item whether they are mapped or unmapped
+                \item stacking order
+                \item focus policy
+                \item borders/decorations
+                \item workspaces/tags/desktops
+                \item fullscreen/maximized/minimized state
+                \item how user input is interpreted as window-management commands
+            \end{itemize}
+            It does not normally draw the contents of applications. Firefox draws Firefox’s content. Kitty draws Kitty’s terminal grid. The window manager controls the container around those windows and their position in the global desktop.
+            \bigbreak \noindent 
+            Your window manager connects to the X server like any other client:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Display* dpy = XOpenDisplay(NULL);
+            \end{cppcode}
+            \bigbreak \noindent 
+            This gives your program a connection to the running X server.
+            \bigbreak \noindent 
+            The X server stores the actual window objects. In Xlib, a Window is just an integer ID referring to a server-side resource.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Window root = DefaultRootWindow(dpy);
+            \end{cppcode}
+            That root value is not a C object containing the window. It is an ID you send back to the X server when making requests.
+            \bigbreak \noindent 
+            Xlib calls such as \textbf{XMoveWindow,} \textbf{XResizeWindow,} \textbf{XMapWindow,} and XDestroyWindow send requests to the server. They do not directly manipulate local objects.
+        \item \textbf{X Clients}: An X client is any program connected to the X server.
+            \bigbreak \noindent 
+            Each client may create one or more windows. Applications usually create a top-level window, which is the main window the window manager cares about.
+            \bigbreak \noindent 
+            A client creates a window using calls such as:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XCreateWindow(...)
+                XCreateSimpleWindow(...)
+            \end{cppcode}
+            \bigbreak \noindent 
+            Then it usually maps the window:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XMapWindow(dpy, win);
+            \end{cppcode}
+            \bigbreak \noindent 
+            Mapping means “make this window visible.” But because a window manager exists, the server may not immediately honor that mapping request. Instead, it may redirect the request to the window manager.
+        \item \textbf{Top level windows}: A top-level window is usually an application window that is a direct child of the root window. These are the windows the window manager manages.
+            \bigbreak \noindent 
+            Not every window is top-level. Applications often create child windows inside themselves:
+            \bigbreak \noindent 
+            A basic window manager usually ignores internal child windows. It manages the top-level windows that live directly under the root window.
+            \bigbreak \noindent 
+            You can check a windows parent using
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XQueryTree(...)
+            \end{cppcode}
+            \bigbreak \noindent 
+            A window whose parent is the root window is usually a top-level client window.
+        \item \textbf{Root window}: The root window is the invisible desktop-sized parent window for the whole screen.
+            \bigbreak \noindent 
+            Every X screen has a root window. It covers the entire display area.
+            \bigbreak \noindent 
+            For a simple one-screen setup:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int screen = DefaultScreen(dpy);
+                Window root = RootWindow(dpy, screen);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The root window is important because clients create their top-level windows as children of it.
+            \bigbreak \noindent 
+            The window manager selects events on the root window so it can intercept requests involving the root’s child windows.
+            \bigbreak \noindent 
+            A minimal window manager usually does something like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSelectInput(
+                dpy,
+                root,
+                SubstructureRedirectMask | SubstructureNotifyMask
+            );
+        \end{cppcode}
+        \bigbreak \noindent 
+        This is the critical step that makes your program the active window manager.
+        \bigbreak \noindent 
+        The window manager is “special” only because it selects SubstructureRedirectMask on the root window.
+        \bigbreak \noindent 
+        Only one client may select SubstructureRedirectMask on a given root window at a time.
+        \bigbreak \noindent 
+        That means only one window manager can run per screen.
+        \bigbreak \noindent 
+        If another window manager is already running, your attempt to select SubstructureRedirectMask fails with a BadAccess error.
+        \bigbreak \noindent 
+        \textbf{Note:} The X server creates the root window, not the window manager and not normal applications.
+        \bigbreak \noindent 
+        When Xorg starts, it initializes each screen. As part of that initialization, it creates one root window per screen. That root window is the top-level ancestor for all other windows on that screen.
+    \item \textbf{SubstructureRedirectMask}:  The SubstructureRedirectMask is an Xlib event mask that allows a single client (typically a window manager) to intercept structural requests made to the X server on the subwindows of a parent window
+        \bigbreak \noindent 
+        When this mask is set on a parent window (like the root window), it intercepts requests from other clients to map, configure (resize/move), or circulate child windows. Instead of executing the command, the X server pauses the action and sends the window manager a specific request even
+    \item \textbf{SubstructureNotifyMask}: SubstructureNotifyMask is an Xlib event mask used primarily by window managers and system utilities. When selected on a parent window, it alerts the client to any structural or state changes affecting any of its direct child windows. 
+        \bigbreak \noindent 
+        When the X Server receives SubstructureNotifyMask, it can report the following state-change events for children
+        \begin{itemize}
+            \item \textbf{CreateNotify:} A new child window was created.
+            \item \textbf{DestroyNotify:} A child window was destroyed.
+            \item \textbf{MapNotify:} A child window was mapped (made visible).
+            \item \textbf{UnmapNotify:} A child window was unmapped (hidden).
+            \item \textbf{ConfigureNotify:} A child window changed size, position, border, or stacking order.
+            \item \textbf{ReparentNotify:} A child window was reparented to a different window.
+            \item \textbf{CirculateNotify:} A child window's stacking order was circulated.
+            \item \textbf{GravityNotify:} A child window was moved due to window gravity. 
+        \end{itemize}
+        You should ideally install a temporary X error handler before this so you can detect whether another window manager already owns the root.
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item \textbf{normal client:} asks X server to map/configure its window
+            \item \textbf{X server:} sees that WM selected SubstructureRedirectMask on root
+            \item \textbf{X server:} sends event to WM instead of immediately performing request
+            \item \textbf{WM:} decides what to do
+            \item \textbf{WM:} sends XMoveResizeWindow / XMapWindow / XConfigureWindow / etc.
+        \end{enumerate}
+    \item \textbf{Reparenting vs non-reparenting window managers}: A window manager may either manage the application window directly or create a frame window around it.
+        \begin{itemize}
+            \item \textbf{Non-reparenting WM:} A non-reparenting WM manages the application’s top-level window directly.
+            \item \textbf{Reparenting WM}: A reparenting WM creates a frame window, then makes the client window a child of that frame.
+                \bigbreak \noindent 
+                \begin{verbatim}
+                    root window
+                    |__ frame window
+                        |__ client window
+                \end{verbatim}
+                The frame belongs to the window manager. The client belongs to the application. This allows the WM to draw title bars, close buttons, resize handles, shadows, and borders independently of the client window.
+        \end{itemize}
+    \item \textbf{Override-redirect windows}: Some windows are not supposed to be managed by the window manager. These are called \textbf{override-redirect} windows.
+        \bigbreak \noindent 
+        Your WM should usually ignore override-redirect windows.
+    \item \textbf{Workspaces}: In a tiling WM, switching workspaces often means:
+        \begin{itemize}
+            \item \textbf{Windows on current workspace:} Mapped
+            \item \textbf{Windows on hidden workspace:} Unmapped
+        \end{itemize}
+    \item \textbf{Window lifecycle}: A top-level application window usually goes through this lifecycle:
+        \bigbreak \noindent 
+        \begin{enumerate}
+            \item client connects to X server
+            \item client creates top-level window
+            \item client sets properties/hints
+            \item client asks to map the window
+            \item WM receives MapRequest
+            \item WM starts managing the window
+            \item WM positions/resizes it
+            \item WM maps it
+            \item user interacts with it
+            \item window may be resized/moved/focused/unfocused
+            \item client may unmap it
+            \item client may destroy it
+            \item WM removes it from internal state 
+        \end{enumerate}
+    \item \textbf{Events to understand}: 
+        \begin{itemize}
+            \item \textbf{MapRequest}:	A client wants to show a top-level window.
+            \item \textbf{ConfigureRequest:}	A client wants to move/resize/restack a top-level window.
+            \item \textbf{DestroyNotify:}	A window was destroyed.
+            \item \textbf{UnmapNotify}:	A window was hidden/unmapped.
+            \item \textbf{MapNotify}:	A window was mapped.
+            \item \textbf{EnterNotify}:	Pointer entered a window. Useful for focus-follows-mouse.
+            \item \textbf{ButtonPress}:	Mouse button pressed. Useful for moving/resizing/focusing.
+            \item \textbf{KeyPress}:	Key pressed. Useful for WM shortcuts.
+            \item \textbf{ClientMessage}:	Client sent a protocol message, often EWMH/ICCCM-related.
+            \item \textbf{PropertyNotify}:	A window property changed. Useful for titles, hints, states.
+        \end{itemize}
+    \item \textbf{Desktop backgrounds}: Setting the background of the desktop usually means setting the background of the root window.
+        \bigbreak \noindent 
+        So, we can convert an image into an X pixmap, set the roots background to that pixmap, and clear / redraw the root window.
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Events}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Tiling layout model}
+    \begin{itemize}
+        \item \textbf{Intro}: A tiling layout model is the part of the window manager that decides: Given a monitor rectangle and a set of managed windows, what rectangle should each window occupy?
+            \bigbreak \noindent 
+            At minimum, a tiling window manager needs to track
+            \bigbreak \noindent 
+            \begin{cppcode}
+                struct Client {
+                    Window win;
+                    int x, y, w, h;
+
+                    bool is_floating;
+                    bool is_fullscreen;
+                    bool is_hidden;
+
+                    int min_w, min_h;
+                    int max_w, max_h;
+                    int base_w, base_h;
+                    int resize_inc_w, resize_inc_h;
+
+                    float min_aspect;
+                    float max_aspect;
+                };
+            \end{cppcode}
+            \bigbreak \noindent 
+            And something like:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                struct Workspace {
+                    Client* clients[MAX_CLIENTS];
+                    int client_count;
+
+                    LayoutKind layout;
+
+                    int master_count;
+                    float master_factor;
+
+                    int gap_inner;
+                    int gap_outer;
+                    int border_width;
+                };
+            \end{cppcode}
+            \bigbreak \noindent 
+            The layout algorithm usually processes only tiled clients, floating and fullscreen clients are layered separately.
+        \item \textbf{Master stack layout}: The screen is divided into two areas:
+            \bigbreak \noindent 
+            \begin{verbatim}
+                +-------------------+-------------------+
+                |                   |                   |
+                |                   |      Stack 1      |
+                |                   |                   |
+                |      Master       +-------------------+
+                |                   |                   |
+                |                   |      Stack 2      |
+                |                   |                   |
+                |                   +-------------------+
+                |                   |      Stack 3      |
+                +-------------------+-------------------+
+            \end{verbatim}
+            \begin{itemize}
+                \item The focused or first client goes in the master area.
+                \item Remaining clients go in the stack area.
+                \item master\_factor controls how much width the master area receives.
+                \item master\_count controls how many windows are allowed in the master area.
+            \end{itemize}
+            \bigbreak \noindent 
+            With multiple master windows, the master area itself is split vertically.
+            \bigbreak \noindent 
+            \begin{verbatim}
+                +-------------------+-------------------+
+                |     Master 1      |      Stack 1      |
+                +-------------------+-------------------+
+                |     Master 2      |      Stack 2      |
+                +-------------------+-------------------+
+            \end{verbatim}
+        \item \textbf{Monocle / fullscreen layout}: Monocle means every tiled window receives the full usable monitor rectangle.
+            \begin{verbatim}
+                +-------------------------------+
+                |                               |
+                |          Window A             |
+                |          Window B             |
+                |          Window C             |
+                |                               |
+                +-------------------------------+
+            \end{verbatim}
+            \bigbreak \noindent 
+            They are all the same size, but only the topmost/focused one is visible.
+            \begin{itemize}
+                \item \textbf{Monocle}: The WM still manages the window normally.
+                    \bigbreak \noindent 
+                    You may keep borders, gaps, and panels visible depending on your design.
+                \item \textbf{Fullscreen}: Fullscreen is usually a special state.
+                    \bigbreak \noindent 
+                    A fullscreen client should typically:
+                    \begin{itemize}
+                        cover the entire monitor,
+                        ignore gaps,
+                        ignore borders or use border width 0,
+                        appear above normal tiled clients,
+                        possibly cover bars/panels,
+                        be excluded from normal tiling.
+                    \end{itemize}
+                    In EWMH-aware WMs, fullscreen often corresponds to:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    _NET_WM_STATE_FULLSCREEN
+                    \end{cppcode}
+            \end{itemize}
+            \item \textbf{Grid layout}: Grid layout places windows in rows and columns.
+                \begin{verbatim}
+                    +----------+----------+----------+
+                    |    A     |    B     |    C     |
+                    +----------+----------+----------+
+                    |    D     |    E     |    F     |
+                    +----------+----------+----------+
+                \end{verbatim}
+                \bigbreak \noindent 
+                For $n$ clients, you choose
+                \begin{align*}
+                    \text{cols} &= \left\lceil \sqrt{n} \right\rceil \\
+                    \text{rows} &= \left\lceil \frac{n}{\text{cols}} \right\rceil
+                .\end{align*}
+                Then, for each cell,
+                \begin{align*}
+                    \text{cell\_w} &= \text{screen\_width} / \text{cols} \\
+                    \text{cell\_h} &= \text{screen\_height} / \text{rows}
+                .\end{align*}
+                A common refinement is to avoid ugly empty cells. For example, with 5 windows:
+                \begin{verbatim}
+                    +----------+----------+----------+
+                    |    A     |    B     |    C     |
+                    +----------+----------+----------+
+                    |    D     |          E          |
+                    +----------+---------------------+
+                \end{verbatim}
+            \item \textbf{Binary space partitioning}: Binary space partitioning, or BSP, treats the screen as a recursively split rectangle.
+                \bigbreak \noindent 
+                The monitor begins as one rectangle:
+                \begin{verbatim}
+                    +-------------------------------+
+                    |                               |
+                    |            Root               |
+                    |                               |
+                    +-------------------------------+
+                \end{verbatim}
+                Then you split it
+                \begin{verbatim}
+                    +---------------+---------------+
+                    |               |               |
+                    |       A       |       B       |
+                    |               |               |
+                    +---------------+---------------+
+                \end{verbatim}
+                Then one side can split again:
+                \begin{verbatim}
+                    +---------------+---------------+
+                    |               |       B       |
+                    |       A       +---------------+
+                    |               |       C       |
+                    +---------------+---------------+
+                \end{verbatim}
+                Conceptually, you get a binary tree:
+                \begin{verbatim}
+                    root
+                   /    \
+                  A    split
+                      /     \
+                     B       C
+                \end{verbatim}
+                \bigbreak \noindent 
+                Each internal node is a split:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    enum SplitKind {
+                        SPLIT_HORIZONTAL,
+                        SPLIT_VERTICAL
+                    };
+
+                    struct Node {
+                        bool is_leaf;
+
+                        union {
+                            Client* client;
+
+                            struct {
+                                Node* first;
+                                Node* second;
+                                SplitKind split;
+                                float ratio;
+                            };
+                        };
+                    };
+                \end{cppcode}
+            \item \textbf{Manual split trees}: Manual split trees are BSP where the user controls where new windows go. For example,
+                \begin{itemize}
+                    \item Mod+h  split horizontally
+                    \item Mod+v  split vertically
+                \end{itemize}
+                Then the next window is inserted according to that chosen split.
+            \item \textbf{Dynamic tiling}: Dynamic tiling means the layout is generated automatically from the client list and layout mode.
+                \bigbreak \noindent 
+                In a dynamic tiler, the WM does not store a detailed layout tree for every split. Instead, it stores a list of clients and recomputes positions.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    clients = [A, B, C, D]
+                    layout = MASTER_STACK
+                    master_factor = 0.6
+                \end{cppcode}
+                \bigbreak \noindent 
+                Every time something changes, you call
+                \bigbreak \noindent 
+                \begin{cppcode}
+                arrange(workspace);
+                \end{cppcode}
+                \bigbreak \noindent 
+                Events that trigger rearrangement include:
+                \begin{itemize}
+                    \item new window mapped,
+                    \item window closed,
+                    \item focus changed,
+                    \item layout changed,
+                    \item master factor changed,
+                    \item monitor resized,
+                    \item gap size changed,
+                    \item client moved to/from floating state.
+                \end{itemize}
+                Dynamic tiling is simpler than manual tiling.
+            \item \textbf{Floating layer}: Not every window should tile.
+                \bigbreak \noindent 
+                Some windows should float:
+                \begin{itemize}
+                    \item dialog boxes,
+                    \item file pickers,
+                    \item small utility windows,
+                    \item splash windows,
+                    \item transient windows,
+                    \item user-forced floating windows,
+                    \item windows with fixed size hints.
+                \end{itemize}
+                \bigbreak \noindent 
+                The important design point is that floating windows are managed by the WM but excluded from tiling.
+            \item \textbf{Gaps}: Gaps are empty space between windows
+                \bigbreak \noindent 
+                There are usually two kinds
+                \begin{itemize}
+                    \item \textbf{Outer gaps}: Space between the monitor edge and the window layout
+                    \item \textbf{Inner gaps}:  Space between adjacent windows
+                \end{itemize}
+            \item \textbf{Borders}: Border width is part of the windows outer size. If you call
+                \bigbreak \noindent 
+                \begin{cppcode}
+                XMoveResizeWindow(display, win, x, y, w, h);
+                \end{cppcode}
+                \bigbreak \noindent 
+                the $w$ and $h$ refer to the inner window size, not including the border.
+            \item \textbf{Resize hints}: Resize hints come from the client application. In X11, you get them with:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                XGetWMNormalHints
+                \end{cppcode}
+                \bigbreak \noindent 
+                They are stored in \textbf{XSizeHints}. Important fields include
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    PMinSize      minimum width/height
+                    PMaxSize      maximum width/height
+                    PBaseSize     base width/height
+                    PResizeInc    resize increment
+                    PAspect       aspect ratio constraints
+                \end{cppcode}
+                \bigbreak \noindent 
+                Some applications do not want arbitrary sizes.
+            \item \textbf{Aspect-ratio constraints}: Aspect-ratio hints tell the WM that a window wants to stay within a certain width/height ratio.
+                \bigbreak \noindent 
+                For example, 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    min aspect = 16/10
+                    max aspect = 16/9
+                \end{cppcode}
+                \bigbreak \noindent 
+                The aspect ratio is 
+                \begin{align*}
+                    \text{ratio} = \text{width} / \text{height}
+                .\end{align*}
+                If the width is too large for the height, reduce width.
+                \bigbreak \noindent 
+                If the height is too large for the width, reduce height.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Layout recomputation}
+    \begin{itemize}
+        \item \textbf{Intro}: A tiling window manager should treat the screen layout as a derived result of its internal state.
+            \bigbreak \noindent 
+            That is the main idea behind layout recomputation. You do \textbf{not} want the geometry of each window to be the primary thing you manually maintain. Instead, you keep a clean model of the current world, then regenerate window positions from that model whenever something important changes.
+            \bigbreak \noindent 
+            \begin{center}
+                state -> layout algorithm -> window rectangles -> XMoveResizeWindow calls
+            \end{center}
+            \bigbreak \noindent 
+            The window positions are an output, they are not the real source of truth.
+        \item \textbf{Why you recompute the whole layout}: Suppose you have three windows $A,B,C$, and window $B$ closes. If you only manually remove $B$, you now need to decide what happens to $C$.
+            \bigbreak \noindent 
+            The better model is 
+            \begin{itemize}
+                \item \textbf{Before:}: clients = [A, B, C]
+                \item \textbf{After:}: clients = [A, C]
+            \end{itemize}
+            Then rerun the layout algorithm. 
+        \item \textbf{New window appears}: When a new window appears, you usually receive something like MapRequest. You should
+            \begin{enumerate}
+                \item decide whether to manage the window,
+                \item add it to the current workspace’s client list,
+                \item set focus if appropriate,
+                \item recompute the layout,
+                \item map the window.
+            \end{enumerate}
+        \item \textbf{Window close}: When a window closes, you remove it from your model. Do not just “erase the dead window from the screen.” The X server already destroys/unmaps it. Your job is to update your internal state and then recompute the layout for the remaining windows.
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Focus model}
+    \begin{itemize}
+        \item \textbf{Intro:} A tiling window manager needs a focus model because X11 does not automatically know which client should receive keyboard input. Your WM must decide which window is “active,” tell the X server where keyboard events should go, and keep that decision consistent when windows are created, destroyed, hidden, moved between workspaces, or moved between monitors.
+            \bigbreak \noindent 
+            In X11 terms, focus mostly means keyboard focus. Pointer/mouse events are separate. A window can receive mouse events because the pointer is over it, while a completely different window receives keyboard events because it has input focus.        
+        \item \textbf{Input focus}: Input focus is the X11 mechanism that determines which window receives keyboard events.
+            \bigbreak \noindent 
+            The core call is usually
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSetInputFocus(display, window, RevertToPointerRoot, CurrentTime);
+            \end{cppcode}
+            \bigbreak \noindent 
+            The focused window then receives keyboard input, assuming it selected the relevant events or has descendants that do.
+            \bigbreak \noindent 
+            A window manager usually does not focus the frame window for typing. It normally focuses the actual client window.
+            \bigbreak \noindent 
+            You may decorate/reparent the client into a frame, but keyboard focus should usually go to the client, not the decoration frame.
+            \bigbreak \noindent 
+            Focus is not just an X server state. Your WM also needs its own internal state saying which client is focused.
+        \item \textbf{Click-to-focus}: Click-to-focus means a window becomes focused only when the user clicks it.
+            \bigbreak \noindent 
+            This is the easiest policy to implement and reason about.
+        \item \textbf{Focus-follows-mouse}: Focus-follows-mouse means the window under the pointer becomes focused when the pointer enters it. The usual X event is \textbf{EnterNotify.}
+            \bigbreak \noindent 
+            you should usually ignore some EnterNotify events generated by grabs, ungrabs, or window hierarchy changes. X11 crossing events have fields like mode and detail that help distinguish normal pointer motion from synthetic/side-effect transitions.
+            \bigbreak \noindent 
+            You do not want accidental focus changes caused by:
+            \begin{itemize}
+                \item Mapping a new window
+                \item Unmapping a window
+                \item Moving/resizing a window
+                \item Grabbing/ungrabbing pointer
+                \item Switching workspace
+                \item Restacking windows
+            \end{itemize}
+            So a real implementation often filters enter events.
+        \item \textbf{Sloppy focus}: Variant of FFM. The difference is what happens when the pointer leaves a window and enters empty root-window space.
+            \begin{itemize}
+                \item \textbf{Pointer over window A}: A focused
+                \item \textbf{Pointer over root}: A remains focused
+            \end{itemize}
+            Sloppy focus is often better for tiling WMs because there may be gaps, bars, or empty areas. You usually do not want focus to disappear just because the pointer moved over the root window.
+        \item \textbf{Focus direction in a tiling layout}: A tiling WM often supports commands like:
+            \begin{itemize}
+                \item focus left
+                \item focus right
+                \item focus up
+                \item focus down
+            \end{itemize}
+            There are two common ways to implement directional focus.
+            \begin{itemize}
+                \item \textbf{Layout-tree focus}: If your layout is stored as a tree, you navigate the tree
+                \item \textbf{Geometry-based focus}: You compare window rectangles. If focused client is $A$, and the user says focus right, find the visible client whose rectangle is to the right of $A$ and closest by distance.
+            \end{itemize}
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Keyboard control}
+    \begin{itemize}
+        \item \textbf{Intro}: In a tiling WM, keyboard control is not “text input.” It is a global command interface. You grab certain key combinations on the root window, receive KeyPress events before normal clients do, translate those events into internal commands, then mutate your WM state: focus, layout, workspace, client order, spawning, quitting, and so on.
+            \begin{verbatim}
+                physical key press
+                    -> X11 KeyCode + modifier mask
+                    -> WM matches key binding
+                    -> dispatches command
+                    -> command mutates WM state
+                    -> WM rearranges / focuses / spawns / exits
+            \end{verbatim}
+        \item \textbf{Passive grabs}: A passive key grab means: “when this key combination is pressed, send the event to my WM.”
+            \bigbreak \noindent 
+            In Xlib, this is usually done with \textbf{XGrabKey.}
+            \bigbreak \noindent 
+            \textbf{XGrabKey} establishes a passive keyboard grab. When the matching key and modifier combination is pressed, the grab becomes active and the key event is delivered to the grabbing client, usually your WM.
+            \bigbreak \noindent 
+            For a WM, you usually grab keys on the root window, because the root window is the parent of all top-level client windows. This gives you “global” WM keybindings.
+        \item \textbf{Modifier keys}: Modifiers are bitmask attached to key events
+            \bigbreak \noindent
+            \begin{cppcode}
+                ShiftMask
+                LockMask       // usually Caps Lock
+                ControlMask
+                Mod1Mask       // often Alt
+                Mod2Mask       // often Num Lock
+                Mod3Mask
+                Mod4Mask       // often Super / Windows key
+                Mod5Mask
+            \end{cppcode}
+            \bigbreak \noindent 
+            Most tiling WMs use Mod4Mask as the main WM modifier:
+        \item \textbf{Key symbols}: A KeySym is the symbolic meaning of a key. For example,
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XK_Return
+                XK_Tab
+                XK_space
+                XK_j
+                XK_k
+                XK_h
+                XK_l
+                XK_1
+                XK_q
+            \end{cppcode}
+            \bigbreak \noindent 
+            These are layout-level symbolic names. You generally write your config using KeySyms because they are readable.
+            \bigbreak \noindent 
+            Internally you store keysyms, then when registering a grab you convert it to a keycode.
+        \item \textbf{Key codes}: A KeyCode is the physical-ish code X11 reports for a key on the keyboard.
+            \bigbreak \noindent 
+            Your config should usually use KeySym.
+            \bigbreak \noindent 
+            Your grabs require KeyCode
+        \item \textbf{Spawn commands}: A WM does not usually implement a terminal, launcher, browser, or editor itself. It spawns external programs.
+            \bigbreak \noindent 
+            A spawn command usually forks, closes the X connection in the child, starts a new session, then execs
+        
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Mouse control}
+    \begin{itemize}
+        
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Borders and visual feedback}
+    \begin{itemize}
+        
+    \end{itemize}
+
+
+
+
+
+
+
+
+
+
+    
+\end{document}

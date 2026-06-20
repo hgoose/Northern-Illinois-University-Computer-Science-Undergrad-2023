@@ -4299,7 +4299,82 @@
     \pagebreak 
     \unsect{7. Graphics context functions}
     \begin{itemize}
-        
+        \item \textbf{Intro}: A number of resources are used when performing graphics operations in X. Most information about performing graphics (for example, foreground color, background color, line style, and so on) is stored in resources called graphics contexts (GCs). Most graphics operations (see chapter 8) take a GC as an argument. Although in theory the X protocol permits sharing of GCs between applications, it is expected that applications will use their own GCs when performing operations. Sharing of GCs is highly discouraged because the library may cache GC state
+            \bigbreak \noindent 
+            Graphics operations can be performed to either windows or pixmaps, which collectively are called drawables. Each drawable exists on a single screen. A GC is created for a specific screen and drawable depth and can only be used with drawables of matching screen and depth.
+        \item \textbf{Write-back cache}: A write-back cache is a caching technique where the system writes incoming data directly to the fast cache and instantly confirms the write is complete, deferring the update to the slower primary storage (like a hard drive or database) until a later time
+        \item \textbf{Manipulating Graphics Context/State}: Most attributes of graphics operations are stored in GCs. These include line width, line style, plane mask, foreground, background, tile, stipple, clipping region, end style, join style, and so on. Graphics operations (for example, drawing lines) use these values to determine the actual drawing operation. 
+            \bigbreak \noindent 
+            Xlib implements a write-back cache for all elements of a GC that are not resource IDs to allow Xlib to implement the transparent coalescing of changes to GCs. For example, a call to \textbf{XSetForeground} of a GC followed by a call to \textbf{XSetLineAttributes} results in only a single-change GC protocol request to the server. GCs are neither expected nor encouraged to be shared between client applications, so this write-back caching should present no problems. Applications cannot share GCs without external synchronization. Therefore, sharing GCs between applications is highly discouraged.
+            \bigbreak \noindent 
+            To set an attribute of a GC, set the appropriate member of the \textbf{XGCValues} structure and OR in the corresponding value bitmask in your subsequent calls to \textbf{XCreateGC.} The symbols for the value mask bits and the \textbf{XGCValues} structure are:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* GC attribute value mask bits */
+                #define GCFunction (1L<<0)
+                #define GCPlaneMask (1L<<1)
+                #define GCForeground (1L<<2)
+                #define GCBackground (1L<<3)
+                #define GCLineWidth (1L<<4)
+                #define GCLineStyle (1L<<5)
+                #define GCCapStyle (1L<<6)
+                #define GCJoinStyle (1L<<7)
+                #define GCFillStyle (1L<<8)
+                #define GCFillRule (1L<<9)
+                #define GCTile (1L<<10)
+                #define GCStipple (1L<<11)
+                #define GCTileStipXOrigin (1L<<12)
+                #define GCTileStipYOrigin (1L<<13)
+                #define GCFont (1L<<14)
+                #define GCSubwindowMode (1L<<15)
+                #define GCGraphicsExposures (1L<<16)
+                #define GCClipXOrigin (1L<<17)
+                #define GCClipYOrigin (1L<<18)
+                #define GCClipMask (1L<<19)
+                #define GCDashOffset (1L<<20)
+                #define GCDashList (1L<<21)
+                #define GCArcMode (1L<<22)
+            \end{cppcode}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            /* Values */
+            typedef struct {
+                int function;                   /* logical operation */
+                unsigned long plane_mask;       /* plane mask */
+                unsigned long foreground;       /* foreground pixel */
+                unsigned long background;       /* background pixel */
+                int line_width;                 /* line width (in pixels) */
+                int line_style;                 /* LineSolid, LineOnOffDash, LineDoubleDash */
+                int cap_style;                  /* CapNotLast, CapButt, CapRound, CapProjecting */
+                int join_style;                 /* JoinMiter, JoinRound, JoinBevel */
+                int fill_style;                 /* FillSolid, FillTiled, FillStippled FillOpaqueStippled*/
+                int fill_rule;                  /* EvenOddRule, WindingRule */
+                int arc_mode;                   /* ArcChord, ArcPieSlice */
+                Pixmap tile;                    /* tile pixmap for tiling operations */
+                Pixmap stipple;                 /* stipple 1 plane pixmap for stippling */
+                int ts_x_origin;                /* offset for tile or stipple operations */
+                int ts_y_origin;
+                Font font;                      /* default text font for text operations */
+                int subwindow_mode;             /* ClipByChildren, IncludeInferiors */
+                Bool graphics_exposures;        /* boolean, should exposures be generated */
+                int clip_x_origin;              /* origin for clipping */
+                int clip_y_origin;
+                Pixmap clip_mask;               /* bitmap clipping; other calls for rects */
+                int dash_offset;                /* patterned/dashed line information */
+                char dashes;
+            } XGCValues;
+            \end{cppcode}
+
+
+
+
+
+
+
+
+
+
+
     \end{itemize}
 
     \pagebreak 
