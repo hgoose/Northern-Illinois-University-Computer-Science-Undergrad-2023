@@ -4374,6 +4374,256 @@
 
     \pagebreak 
     \unsect{9. Window and session manager functions}
+    \begin{itemize}
+        \item \textbf{Changing the parent of a window}: To change a window’s parent to another window on the same screen, use XReparentWindow. There is no way to move a window between screens.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XReparentWindow(Display* display, Window w, Window parent, int x, int y)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window.
+                \item parent Specifies the parent window.
+                \item $x$, $y$ Specify the $x$ and $y$ coordinates of the position in the new parent window.
+            \end{itemize}
+            If the specified window is mapped, XReparentWindow automatically performs an UnmapWindow request on it, removes it from its current position in the hierarchy, and inserts it as the child of the specified parent. The window is placed in the stacking order on top with respect to sibling windows.
+            \bigbreak \noindent 
+            After reparenting the specified window, XReparentWindow causes the X server to generate a ReparentNotify event. The override\_redirect member returned in this event is set to the window’s corresponding attribute. Window manager clients usually should ignore this window if this member is set to True. Finally, if the specified window was originally mapped, the X server automatically performs a MapWindow request on it.
+            \bigbreak \noindent 
+            The X server performs normal exposure processing on formerly obscured windows. The X server might not generate Expose events for regions from the initial UnmapWindow request that are immediately obscured by the final MapWindow request. A BadMatch error results if:
+            \begin{itemize}
+                \item The new parent window is not on the same screen as the old parent window.
+                \item The new parent window is the specified window or an inferior of the specified window.
+                \item The new parent is InputOnly, and the window is not.
+                \item The specified window has a ParentRelative background, and the new parent window is not the same depth as the specified window.
+            \end{itemize}
+            XReparentWindow can generate BadMatch and BadWindow errors.
+        \item \textbf{Save set}: The save-set of a client is a list of other clients’ windows that, if they are inferiors of one of the client’s windows at connection close, should not be destroyed and should be remapped if they are unmapped. 
+            \bigbreak \noindent 
+            To allow an application’s window to survive when a window manager that has reparented a window fails, Xlib provides the save-set functions that you can use to control the longevity of subwindows that are normally destroyed when the parent is destroyed. For example, a window manager that wants to add decoration to a window by adding a frame might reparent an application’s window. When the frame is destroyed, the application’s window should not be destroyed but be returned to its previous place in the window hierarchy
+            \bigbreak \noindent 
+            The X server automatically removes windows from the save-set when they are destroyed.
+        \item \textbf{Controlling the Lifetime of a Window}: To add or remove a window from the client’s save-set, use XChangeSaveSet
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XChangeSaveSet(Display* display, Window w, int change_mode)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window that you want to add to or delete from the client’s save-set.
+                \item change\_mode Specifies the mode. You can pass SetModeInsert or SetModeDelete.
+            \end{itemize}
+            Depending on the specified mode, XChangeSaveSet either inserts or deletes the specified window from the client’s save-set. The specified window must have been created by some other client, or a BadMatch error results.
+            \bigbreak \noindent 
+            XChangeSaveSet can generate BadMatch, BadValue, and BadWindow errors
+            \bigbreak \noindent 
+            To add a window to the client’s save-set, use XAddToSaveSet
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XAddToSaveSet(Display* display, Window w)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window that you want to add to the client’s save-set.
+            \end{itemize}
+            The XAddToSaveSet function adds the specified window to the client’s save-set. The specified window must have been created by some other client, or a BadMatch error results.
+            \bigbreak \noindent 
+            XAddToSaveSet can generate BadMatch and BadWindow errors.
+            \bigbreak \noindent 
+            To remove a window from the client’s save-set, use XRemoveFromSaveSet
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XRemoveFromSaveSet(Display* display, Window w)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window that you want to delete from the client’s save-set.
+            \end{itemize}
+            The XRemoveFromSaveSet function removes the specified window from the client’s save-set. The specified window must have been created by some other client, or a BadMatch error results.
+            \bigbreak \noindent 
+            XRemoveFromSaveSet can generate BadMatch and BadWindow errors.
+        \item \textbf{Managing Installed Colormaps}: The X server maintains a list of installed colormaps. Windows using these colormaps are guaranteed to display with correct colors; windows using other colormaps may or may not display with correct colors. Xlib provides functions that you can use to install a colormap, uninstall a colormap, and obtain a list of installed colormaps.
+            \bigbreak \noindent 
+            At any time, there is a subset of the installed maps that is viewed as an ordered list and is called the required list. The length of the required list is at most M, where M is the minimum number of installed colormaps specified for the screen in the connection setup. The required list is maintained as follows. When a colormap is specified to XInstallColormap, it is added to the head of the list; the list is truncated at the tail, if necessary, to keep its length to at most M. When a colormap is specified to XUninstallColormap and it is in the required list, it is removed from the list. A colormap is not added to the required list when it is implicitly installed by the X server, and the X server cannot implicitly uninstall a colormap that is in the required list.
+            \bigbreak \noindent 
+            To install a colormap, use XInstallColormap
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XInstallColormap(Display* display, Colormap colormap)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item colormap Specifies the colormap.
+            \end{itemize}
+            The XInstallColormap function installs the specified colormap for its associated screen. All windows associated with this colormap immediately display with true colors. You associated the windows with this colormap when you created them by calling XCreateWindow, XCreateSimpleWindow, XChangeWindowAttributes, or XSetWindowColormap.
+            \bigbreak \noindent 
+            If the specified colormap is not already an installed colormap, the X server generates a ColormapNotify event on each window that has that colormap. In addition, for every other colormap that is installed as a result of a call to XInstallColormap, the X server generates a ColormapNotify event on each window that has that colormap.
+            \bigbreak \noindent 
+            XInstallColormap can generate a BadColor error.
+            \bigbreak \noindent 
+            To uninstall a colormap, use XUninstallColormap.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUninstallColormap(Display* display, Colormap colormap)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item colormap Specifies the colormap.
+            \end{itemize}
+            The XUninstallColormap function removes the specified colormap from the required list for its screen. As a result, the specified colormap might be uninstalled, and the X server might implicitly install or uninstall additional colormaps. Which colormaps get installed or uninstalled is server dependent except that the required list must remain installed.
+            \bigbreak \noindent 
+            If the specified colormap becomes uninstalled, the X server generates a ColormapNotify event on each window that has that colormap. In addition, for every other colormap that is installed or uninstalled as a result of a call to XUninstallColormap, the X server generates a ColormapNotify event on each window that has that colormap.
+            \bigbreak \noindent 
+            XUninstallColormap can generate a BadColor error
+            \bigbreak \noindent 
+            To obtain a list of the currently installed colormaps for a given screen, use XListInstalledColormaps
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Colormap *XListInstalledColormaps(Display* display, Window w, int* num_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window that determines the screen.
+                \item num\_return Returns the number of currently installed colormaps.
+            \end{itemize}
+            The XListInstalledColormaps function returns a list of the currently installed colormaps for the screen of the specified window. The order of the colormaps in the list is not significant and is no explicit indication of the required list. When the allocated list is no longer needed, free it by using XFree.
+            \bigbreak \noindent 
+            XListInstalledColormaps can generate a BadWindow error.
+        \item \textbf{Setting and Retrieving the Font Search Path}: The set of fonts available from a server depends on a font search path. Xlib provides functions to set and retrieve the search path for a server.
+            \bigbreak \noindent 
+            To set the font search path, use XSetFontPath
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetFontPath(Display* display, char** directories, int ndirs)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item directories Specifies the directory path used to look for a font. Setting the path to the empty list restores the default path defined for the X server.
+                \item ndirs Specifies the number of directories in the path.
+            \end{itemize}
+            The XSetFontPath function defines the directory search path for font lookup. There is only one search path per X server, not one per client. The encoding and interpretation of the strings are implementation-dependent, but typically they specify directories or font servers to be searched in the order listed. An X server is permitted to cache font information internally; for example, it might cache an entire font from a file and not check on subsequent opens of that font to see if the underlying font file has changed. However, when the font path is changed, the X server is guaranteed to flush all cached information about fonts for which there currently are no explicit resource IDs allocated. The meaning of an error from this request is implementation-dependent.
+            \bigbreak \noindent 
+            XSetFontPath can generate a BadValue error.
+            \bigbreak \noindent 
+            To get the current font search path, use XGetFontPath
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char** XGetFontPath(Display* display, int* npaths_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item npaths\_return Returns the number of strings in the font path array.
+            \end{itemize}
+            To free data returned by XGetFontPath, use XFreeFontPath
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XFreeFontPath(char** list)
+            \end{cppcode}
+            \begin{itemize}
+                \item list Specifies the array of strings you want to free.
+            \end{itemize}
+            The XFreeFontPath function frees the data allocated by XGetFontPath
+        \item \textbf{Grabbing the Server}: Xlib provides functions that you can use to grab and ungrab the server. These functions can be used to control processing of output on other connections by the window system server. While the server is grabbed, no processing of requests or close downs on any other connection will occur. A client closing its connection automatically ungrabs the server. Although grabbing the server is highly discouraged, it is sometimes necessary.
+            \bigbreak \noindent 
+            To grab the server, use \textbf{XGrabServer}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XGrabServer(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+            \end{itemize}
+            The XGrabServer function disables processing of requests and close downs on all other connections than the one this request arrived on. You should not grab the X server any more than is absolutely necessary.
+            \bigbreak \noindent 
+            To ungrab the server, use XUngrabServer
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUngrabServer(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+            \end{itemize}
+            The XUngrabServer function restarts processing of requests and close downs on other connections. You should avoid grabbing the X server as much as possible.
+        \item \textbf{Killing Clients}: Xlib provides a function to cause the connection to a client to be closed and its resources to be destroyed. To destroy a client, use XKillClient.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XKillClient(Display* display, XID resource)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item resource Specifies any resource associated with the client that you want to destroy or AllTemporary
+            \end{itemize}
+            The XKillClient function forces a close down of the client that created the resource if a valid resource is specified. If the client has already terminated in either RetainPermanent or RetainTemporary mode, all of the client’s resources are destroyed. If AllTemporary is specified, the resources of all clients that have terminated in RetainTemporary are destroyed. This permits implementation of window manager facilities that aid debugging. A client can set its close-down mode to RetainTemporary. If the client then crashes, its windows would not be destroyed. The programmer can then inspect the application’s window tree and use the window manager to destroy the zombie windows
+            \bigbreak \noindent 
+            XKillClient can generate a BadValue error.
+        \item \textbf{Controlling the Screen Saver}: Xlib provides functions that you can use to set or reset the mode of the screen saver, to force or activate the screen saver, or to obtain the current screen saver values.
+            \bigbreak \noindent 
+            To set the screen saver mode, use \textbf{XSetScreenSaver}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetScreenSaver(Display* display, int timeout, int interval, int prefer_blanking, int allow_exposures)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item timeout Specifies the timeout, in seconds, until the screen saver turns on.
+                \item interval Specifies the interval, in seconds, between screen saver alterations.
+                \item prefer\_blanking Specifies how to enable screen blanking. You can pass DontPreferBlanking, PreferBlanking, or DefaultBlanking.
+                \item allow\_exposuresSpecifies the screen save control values. You can pass DontAllowExposures, AllowExposures, or DefaultExposures
+            \end{itemize}
+            Timeout and interval are specified in seconds. A timeout of 0 disables the screen saver (but an activated screen saver is not deactivated), and a timeout of −1 restores the default. Other negative values generate a BadValue error. If the timeout value is nonzero, XSetScreenSaver enables the screen saver. An interval of 0 disables the random-pattern motion. If no input from devices (keyboard, mouse, and so on) is generated for the specified number of timeout seconds once the screen saver is enabled, the screen saver is activated.
+            \bigbreak \noindent 
+            For each screen, if blanking is preferred and the hardware supports video blanking, the screen simply goes blank. Otherwise, if either exposures are allowed or the screen can be regenerated without sending Expose events to clients, the screen is tiled with the root window background tile randomly re-origined each interval seconds. Otherwise, the screens’ state do not change, and the screen saver is not activated. The screen saver is deactivated, and all screen states are restored at the next keyboard or pointer input or at the next call to XForceScreenSaver with mode ScreenSaverReset
+            \bigbreak \noindent 
+            If the server-dependent screen saver method supports periodic change, the interval argument serves as a hint about how long the change period should be, and zero hints that no periodic change should be made. Examples of ways to change the screen include scrambling the colormap periodically, moving an icon image around the screen periodically, or tiling the screen with the root window background tile, randomly re-origined periodically.
+            \bigbreak \noindent 
+            XSetScreenSaver can generate a BadValue error.
+            \bigbreak \noindent 
+            To force the screen saver on or off, use \textbf{XForceScreenSaver}.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XForceScreenSaver(Display* display, int mode)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item mode Specifies the mode that is to be applied. You can pass ScreenSaverActive or ScreenSaverReset
+            \end{itemize}
+            If the specified mode is ScreenSaverActive and the screen saver currently is deactivated, XForceScreenSaver activates the screen saver even if the screen saver had been disabled with a timeout of zero. If the specified mode is ScreenSaverReset and the screen saver currently is enabled, XForceScreenSaver deactivates the screen saver if it was activated, and the activation timer is reset to its initial state (as if device input had been received).
+            \bigbreak \noindent 
+            XForceScreenSaver can generate a BadValue error.
+            \bigbreak \noindent 
+            To activate the screen saver, use XActivateScreenSaver.
+            \begin{cppcode}
+                XActivateScreenSaver(Display* display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            To reset the screen saver, use XResetScreenSaver.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XResetScreenSaver(Display* display)
+            \end{cppcode}
+            \bigbreak \noindent 
+            To get the current screen saver values, use XGetScreenSaver
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XGetScreenSaver(
+                    Display* display,
+                    int* timeout_return,
+                    int* interval_return,
+                    int* prefer_blanking_return,
+                    int* allow_exposures_return
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item timeout\_return Returns the timeout, in seconds, until the screen saver turns on.
+                \item interval\_return Returns the interval between screen saver invocations.
+                \item prefer\_blanking\_return Returns the current screen blanking preference (DontPreferBlanking, PreferBlanking, or DefaultBlanking).
+                \item allow\_exposures\_return Returns the current screen save control value (DontAllowExposures, AllowExposures, or DefaultExposures).
+            \end{itemize}
+
+
+
+    \end{itemize}
 
     \pagebreak 
     \unsect{10. Events}
@@ -6076,11 +6326,539 @@
             Xlib provides functions that you can use to grab or ungrab the keyboard as well as allow events. For many functions in this section, you pass keymask bits. The valid keymask bits are: ShiftMask, LockMask, ControlMask, Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, and Mod5Mask
             \bigbreak \noindent 
             To grab the keyboard, use XGrabKeyboard.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XGrabKeyboard(
+                    Display* display,
+                    Window grab_window,
+                    Bool owner_events,
+                    int pointer_mode, keyboard_mode,
+                    Time time
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item grab\_window Specifies the grab window.
+                \item owner\_events Specifies a Boolean value that indicates whether the keyboard events are to be reported as usual.
+                \item pointer\_mode Specifies further processing of pointer events. You can pass GrabModeSync or GrabModeAsync.
+                \item keyboard\_mode Specifies further processing of keyboard events. You can pass GrabModeSync or GrabModeAsync.
+                \item time Specifies the time. You can pass either a timestamp or CurrentTime
+            \end{itemize}
+            The XGrabKeyboard function actively grabs control of the keyboard and generates FocusIn and FocusOut events. Further key events are reported only to the grabbing client. XGrabKeyboard overrides any active keyboard grab by this client. If owner\_events is False, all generated key events are reported with respect to grab\_window. If owner\_events is True and if a generated key event would normally be reported to this client, it is reported normally; otherwise, the event is reported with respect to the grab\_window. Both KeyPress and KeyRelease events are always reported, independent of any event selection made by the client.
+            \bigbreak \noindent 
+            If the keyboard\_mode argument is GrabModeAsync, keyboard event processing continues as usual. If the keyboard is currently frozen by this client, then processing of keyboard events is resumed. If the keyboard\_mode argument is GrabModeSync, the state of the keyboard (as seen by client applications) appears to freeze, and the X server generates no further keyboard events until the grabbing client issues a releasing XAllowEvents call or until the keyboard grab is released. Actual keyboard changes are not lost while the keyboard is frozen; they are simply queued in the server for later processing.
+            \bigbreak \noindent 
+            If pointer\_mode is GrabModeAsync, pointer event processing is unaffected by activation of the grab. If pointer\_mode is GrabModeSync, the state of the pointer (as seen by client applications) appears to freeze, and the X server generates no further pointer events until the grabbing client issues a releasing XAllowEvents call or until the keyboard grab is released. Actual pointer changes are not lost while the pointer is frozen; they are simply queued in the server for later processing.
+            \bigbreak \noindent 
+            If the keyboard is actively grabbed by some other client, XGrabKeyboard fails and returns AlreadyGrabbed. If grab\_window is not viewable, it fails and returns GrabNotViewable. If the keyboard is frozen by an active grab of another client, it fails and returns GrabFrozen. If the specified time is earlier than the last-keyboard-grab time or later than the current X server time, it fails and returns GrabInvalidTime. Otherwise, the last-keyboard-grab time is set to the specified time (CurrentTime is replaced by the current X server time).
+            \bigbreak \noindent 
+            XGrabKeyboard can generate BadValue and BadWindow errors.
+            \bigbreak \noindent 
+            To ungrab the keyboard, use XUngrabKeyboard.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XUngrabKeyboard(display, time);
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item time Specifies the time. You can pass either a timestamp or CurrentTime.
+            \end{itemize}
+            \bigbreak \noindent 
+            The XUngrabKeyboard function releases the keyboard and any queued events if this client has it actively grabbed from either XGrabKeyboard or XGrabKey. XUngrabKeyboard does not release the keyboard and any queued events if the specified time is earlier than the last-keyboard-grab time or is later than the current X server time. It also generates FocusIn and FocusOut events. The X server automatically performs an UngrabKeyboard request if the event window for an active keyboard grab becomes not viewable.
+            \bigbreak \noindent 
+            To passively grab a single key of the keyboard, use XGrabKey.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XGrabKey(
+                    Display* display,
+                    int keycode,
+                    unsigned int modifiers,
+                    Window grab_window,
+                    Bool owner_events,
+                    int pointer_mode, keyboard_mode
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item keycode Specifies the KeyCode or AnyKey.
+                \item modifiers Specifies the set of keymasks or AnyModifier. The mask is the bitwise inclusive OR of the valid keymask bits.
+                \item grab\_window Specifies the grab window.
+                \item owner\_events Specifies a Boolean value that indicates whether the keyboard events are to be reported as usual.
+                \item pointer\_mode Specifies further processing of pointer events. You can pass GrabModeSync or GrabModeAsync.
+                \item keyboard\_mode Specifies further processing of keyboard events. You can pass GrabModeSync or GrabModeAsync
+            \end{itemize}
+            The XGrabKey function establishes a passive grab on the keyboard. In the future, the keyboard is actively grabbed (as for XGrabKeyboard), the last-keyboard-grab time is set to the time at which the key was pressed (as transmitted in the KeyPress event), and the KeyPress event is reported if all of the following conditions are true:
+            \begin{itemize}
+                \item The keyboard is not grabbed and the specified key (which can itself be a modifier key) is logically pressed when the specified modifier keys are logically down, and no other modifier keys are logically down.
+                \item Either the grab\_window is an ancestor of (or is) the focus window, or the grab\_window is a descendant of the focus window and contains the pointer.
+                \item A passive grab on the same key combination does not exist on any ancestor of grab\_window.
+            \end{itemize}
+            The interpretation of the remaining arguments is as for XGrabKeyboard. The active grab is terminated automatically when the logical state of the keyboard has the specified key released (independent of the logical state of the modifier keys).
+            \bigbreak \noindent 
+            A modifiers argument of AnyModifier is equivalent to issuing the request for all possible modifier combinations (including the combination of no modifiers). It is not required that all modifiers specified have currently assigned KeyCodes. A keycode argument of AnyKey is equivalent to issuing the request for all possible KeyCodes. Otherwise, the specified keycode must be in the range specified by min\_keycode and max\_keycode in the connection setup, or a BadValue error results.
+            \bigbreak \noindent 
+            If some other client has issued a XGrabKey with the same key combination on the same window, a BadAccess error results. When using AnyModifier or AnyKey, the request fails completely, and a BadAccess error results (no grabs are established) if there is a conflicting grab for any combination
+            \bigbreak \noindent 
+            XGrabKey can generate BadAccess, BadValue, and BadWindow errors.
+            \bigbreak \noindent 
+            To ungrab a key, use XUngrabKey.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XUngrabKey (Display display, int keycode, unsigned int modifiers, Window grab_window)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item keycode Specifies the KeyCode or AnyKey.
+                \item modifiers Specifies the set of keymasks or AnyModifier. The mask is the bitwise inclusive
+                \item OR of the valid keymask bits.
+                \item grab\_window Specifies the grab window.
+            \end{itemize}
+            The XUngrabKey function releases the key combination on the specified window if it was grabbed by this client. It has no effect on an active grab. A modifiers of AnyModifier is equivalent to issuing the request for all possible modifier combinations (including the combination of no modifiers). A keycode argument of AnyKey is equivalent to issuing the request for all possible key codes.
+            \bigbreak \noindent 
+            XUngrabKey can generate BadValue and BadWindow errors.
+        \item \textbf{Resuming Event Processing}: The previous sections discussed grab mechanisms with which processing of events by the server can be temporarily suspended. This section describes the mechanism for resuming event processing.
+            \bigbreak \noindent 
+            To allow further events to be processed when the device has been frozen, use XAllowEvents
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XAllowEvents(Display* display, int event_mode, Time time)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item event\_mode Specifies the event mode. You can pass AsyncPointer, SyncPointer, AsyncKeyboard, SyncKeyboard, ReplayPointer, ReplayKeyboard, AsyncBoth, or SyncBoth.
+                \item time Specifies the time. You can pass either a timestamp or CurrentTime
+            \end{itemize}
+            The XAllowEvents function releases some queued events if the client has caused a device to freeze. It has no effect if the specified time is earlier than the last-grab time of the most recent active grab for the client or if the specified time is later than the current X server time. Depending on the event\_mode argument, the following occurs:
+            \begin{itemize}
+                \item \textbf{AsyncPointer} If the pointer is frozen by the client, pointer event processing continues as usual. If the pointer is frozen twice by the client on behalf of two separate grabs, AsyncPointer thaws for both. AsyncPointer has no effect if the pointer is not frozen by the client, but the pointer need not be grabbed by the client.
+                \item \textbf{SyncPointer} If the pointer is frozen and actively grabbed by the client, pointer event processing continues as usual until the next ButtonPress or ButtonRelease event is reported to the client. At this time, the pointer again appears to freeze. However, if the reported event causes the pointer grab to be released, the pointer does not freeze. SyncPointer has no effect if the pointer is not frozen by the client or if the pointer is not grabbed by the client.
+                \item \textbf{ReplayPointer} If the pointer is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of an XGrabButton or from a previous XAllowEvents with mode SyncPointer but not from an XGrabPointer), the pointer grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (toward the root of) the grab\_window of the grab just released. The request has no effect if the pointer is not grabbed by the client or if the pointer is not frozen as the result of an event.
+                \item \textbf{AsyncKeyboard} If the keyboard is frozen by the client, keyboard event processing continues as usual. If the keyboard is frozen twice by the client on behalf of two separate grabs, AsyncKeyboard thaws for both. AsyncKeyboard has no effect if the keyboard is not frozen by the client, but the keyboard need not be grabbed by the client.
+                \item \textbf{SyncKeyboard} If the keyboard is frozen and actively grabbed by the client, keyboard event processing continues as usual until the next KeyPress or KeyRelease event is reported to the client. At this time, the keyboard again appears to freeze. However, if the reported event causes the keyboard grab to be released, the keyboard does not freeze. SyncKeyboard has no effect if the keyboard is not frozen by the client or if the keyboard is not grabbed by the client.
+                \item \textbf{ReplayKeyboard} If the keyboard is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of an XGrabKey or from a previous XAllowEvents with modeSyncKeyboard but not from an XGrabKeyboard), the keyboard grab is released and that event is completely reprocessed. This time, however, the function ignores any passive grabs at or above (toward the root of) the grab\_window of the grab just released. The request has no effect if the keyboard is not grabbed by the client or if the keyboard is not frozen as the result of an event.
+                \item \textbf{SyncBoth} If both pointer and keyboard are frozen by the client, event processing for both devices continues as usual until the next ButtonPress, ButtonRelease, KeyPress, or KeyRelease event is reported to the client for a grabbed device (button event for the pointer, key event for the keyboard), at which time the devices again appear to freeze. However, if the reported event causes the grab to be released, then the devices do not freeze (but if the other device is still grabbed, then a subsequent event for it will still cause both devices to freeze). SyncBoth has no effect unless both pointer and keyboard are frozen by the client. If the pointer or keyboard is frozen twice by the client on behalf of two separate grabs, SyncBoth thaws for both (but a subsequent freeze for SyncBoth will only freeze each device once).
+                \item \textbf{AsyncBoth} If the pointer and the keyboard are frozen by the client, event processing for both devices continues as usual. If a device is frozen twice by the client on behalf of two separate grabs, AsyncBoth thaws for both. AsyncBoth has no effect unless both pointer and keyboard are frozen by the client
+            \end{itemize}
+            AsyncPointer, SyncPointer, and ReplayPointer have no effect on the processing of keyboard events. AsyncKeyboard, SyncKeyboard, and ReplayKeyboard have no effect on the processing of pointer events. It is possible for both a pointer grab and a keyboard grab (by the same or different clients) to be active simultaneously. If a device is frozen on behalf of either grab, no event processing is performed for the device. It is possible for a single device to be frozen because of both grabs. In this case, the freeze must be released on behalf of both grabs before events can again be processed. If a device is frozen twice by a single client, then a single AllowEvents releases both
+            \bigbreak \noindent 
+            XAllowEvents can generate a BadValue error.
+            \bigbreak \noindent 
+            ReplayKeyboard and ReplayPointer mean: “Cancel my active grab, then re-process the event that caused the freeze as if my grab had not intercepted it.”
+            \bigbreak \noindent 
+            They are used when you grabbed an input event, looked at it, and decided not to consume it.
+        \item \textbf{Moving the Pointer}: Although movement of the pointer normally should be left to the control of the end user, sometimes it is necessary to move the pointer to a new position under program control.
+            \bigbreak \noindent 
+            To move the pointer to an arbitrary point in a window, use XWarpPointer
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XWarpPointer(
+                    display,
+                    src_w, dest_w,
+                    src_x, src_y, 
+                    src_width, src_height,
+                    dest_x, dest_y
+                )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item src\_w Specifies the source window or None.
+                \item dest\_w Specifies the destination window or None.
+                \item src\_x, src\_y
+                \item src\_width, src\_height Specify a rectangle in the source window.
+                \item dest\_x, dest\_y Specify the x and y coordinates within the destination window.
+            \end{itemize}
+            If dest\_w is None, XWarpPointer moves the pointer by the offsets (dest\_x, dest\_y) relative to the current position of the pointer. If dest\_w is a window, XWarpPointer moves the pointer to the offsets (dest\_x, dest\_y) relative to the origin of dest\_w. However, if src\_w is a window, the move only takes place if the window src\_w contains the pointer and if the specified rectangle of src\_w contains the pointer.
+            \bigbreak \noindent 
+            The src\_x and src\_y coordinates are relative to the origin of src\_w. If src\_height is zero, it is replaced with the current height of src\_w minus src\_y. If src\_width is zero, it is replaced with the current width of src\_w minus src\_x.
+            \bigbreak \noindent 
+            There is seldom any reason for calling this function. The pointer should normally be left to the user. If you do use this function, however, it generates events just as if the user had instantaneously moved the pointer from one position to another. Note that you cannot use XWarpPointer to move the pointer outside the confine\_to window of an active pointer grab. An attempt to do so will only move the pointer as far as the closest edge of the confine\_to window.
+            \bigbreak \noindent 
+            XWarpPointer can generate a BadWindow error.
+        \item \textbf{Controlling Input Focus}:  Xlib provides functions that you can use to set and get the input focus. The input focus is a shared resource, and cooperation among clients is required for correct interaction. See the Inter-Client Communication Conventions Manual for input focus policy.
+            \bigbreak \noindent 
+            To set the input focus, use XSetInputFocus
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XSetInputFocus(Display* display, Window focus, int revert_to, Time time)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item focus Specifies the window, PointerRoot, or None.
+                \item revert\_to Specifies where the input focus reverts to if the window becomes not viewable.
+                \item You can pass RevertToParent, RevertToPointerRoot, or RevertToNone.
+                \item time Specifies the time. You can pass either a timestamp or CurrentTime
+            \end{itemize}
+            The XSetInputFocus function changes the input focus and the last-focus-change time. It has no effect if the specified time is earlier than the current last-focus-change time or is later than the current X server time. Otherwise, the last-focus-change time is set to the specified time (CurrentTime is replaced by the current X server time). XSetInputFocus causes the X server to generate FocusIn and FocusOut events.
+            \bigbreak \noindent 
+            Depending on the focus argument, the following occurs
+            \begin{itemize}
+                \item If focus is None, all keyboard events are discarded until a new focus window is set, and the revert\_to argument is ignored.
+                \item If focus is a window, it becomes the keyboard’s focus window. If a generated keyboard event would normally be reported to this window or one of its inferiors, the event is reported as usual. Otherwise, the event is reported relative to the focus window.
+                \item If focus is PointerRoot, the focus window is dynamically taken to be the root window of whatever screen the pointer is on at each keyboard event. In this case, the revert\_to argument is ignored.
+            \end{itemize}
+            \bigbreak \noindent 
+            The specified focus window must be viewable at the time XSetInputFocus is called, or a BadMatch error results. If the focus window later becomes not viewable, the X server evaluates the revert\_to argument to determine the new focus window as follows
+            \begin{itemize}
+                \item If revert\_to is RevertToParent, the focus reverts to the parent (or the closest viewable ancestor), and the new revert\_to value is taken to be RevertToNone.
+                \item If revert\_to is RevertToPointerRoot or RevertToNone, the focus reverts to PointerRoot or None, respectively. When the focus reverts, the X server generates FocusIn and FocusOut events, but the last-focus-change time is not affected
+            \end{itemize}
+            XSetInputFocus can generate BadMatch, BadValue, and BadWindow errors.
+            \bigbreak \noindent 
+            To obtain the current input focus, use \textbf{XGetInputFocus}.
+            \bigbreak \noindent  
+            \begin{cppcode}
+            XGetInputFocus (Display* display, Window* focus_return, int* revert_to_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item focus\_return Returns the focus window, PointerRoot, or None.
+                \item revert\_to\_returnReturns the current focus state (RevertToParent, RevertToPointerRoot, or RevertToNone).
+            \end{itemize}
+            The \textbf{XGetInputFocus} function returns the focus window and the current focus state.
+        \item \textbf{Manipulating the Keyboard and Pointer Settings}: Xlib provides functions that you can use to change the keyboard control, obtain a list of the auto-repeat keys, turn keyboard auto-repeat on or off, ring the bell, set or obtain the pointer button or keyboard mapping, and obtain a bit vector for the keyboard.
+            \bigbreak \noindent 
+            This section discusses the user-preference options of bell, key click, pointer behavior, and so on. The default values for many of these options are server dependent. Not all implementations will actually be able to control all of these parameters.
+            \bigbreak \noindent 
+            The XChangeKeyboardControl function changes control of a keyboard and operates on a XKeyboardControl structure:
+        \item \textbf{Keyboard auto-repeat}: Keyboard auto-repeat is a feature that generates continuous keystrokes when you press and hold down a key
+        \item \textbf{XKeyboardControl}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            /* Mask bits for ChangeKeyboardControl */
+            #define KBKeyClickPercent (1L<<0)
+            #define KBBellPercent (1L<<1)
+            #define KBBellPitch (1L<<2)
+            #define KBBellDuration (1L<<3)
+            #define KBLed (1L<<4)
+            #define KBLedMode (1L<<5)
+            #define KBKey (1L<<6)
+            #define KBAutoRepeatMode (1L<<7)
+
+            typedef struct {
+                int key_click_percent;
+                int bell_percent;
+                int bell_pitch;
+                int bell_duration;
+                int led;
+                int led_mode;           /* LedModeOn, LedModeOff */
+                int key;
+                int auto_repeat_mode;   /* AutoRepeatModeOff, AutoRepeatModeOn, AutoRepeatModeDefault */
+            } XKeyboardControl;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The key\_click\_percent member sets the volume for key clicks between 0 (off) and 100 (loud) inclusive, if possible. A setting of −1 restores the default. Other negative values generate a BadValue error
+            \bigbreak \noindent 
+            The bell\_percent sets the base volume for the bell between 0 (off) and 100 (loud) inclusive, if possible. A setting of −1 restores the default. Other negative values generate a BadValue error. The bell\_pitch member sets the pitch (specified in Hz) of the bell, if possible. A setting of −1 restores the default. Other negative values generate a BadValue error. The bell\_duration member sets the duration of the bell specified in milliseconds, if possible. A setting of −1 restores the default. Other negative values generate a BadValue error.
+            \bigbreak \noindent 
+            If both the led\_mode and led members are specified, the state of that LED is changed, if possible. The led\_mode member can be set to LedModeOn or LedModeOff. If only led\_mode is specified, the state of all LEDs are changed, if possible. At most 32 LEDs numbered from one are supported. No standard interpretation of LEDs is defined. If led is specified without led\_mode, a BadMatch error results.
+            \bigbreak \noindent 
+            If both the auto\_repeat\_mode and key members are specified, the auto\_repeat\_mode of that key is changed (according to AutoRepeatModeOn, AutoRepeatModeOff, or AutoRepeatModeDefault), if possible. If only auto\_repeat\_mode is specified, the global auto\_repeat\_mode for the entire keyboard is changed, if possible, and does not affect the per-key settings. If a key is specified without an auto\_repeat\_mode, a BadMatch error results. Each key has an individual mode of whether or not it should auto-repeat and a default setting for the mode. In addition, there is a global mode of whether auto-repeat should be enabled or not and a default setting for that mode. When global mode is AutoRepeatModeOn, keys should obey their individual auto-repeat modes. When global mode is AutoRepeatModeOff, no keys should auto-repeat. An autorepeating key generates alternating KeyPress and KeyRelease events. When a key is used as a modifier, it is desirable for the key not to auto-repeat, regardless of its auto-repeat setting.
+            \bigbreak \noindent 
+            A bell generator connected with the console but not directly on a keyboard is treated as if it were part of the keyboard. The order in which controls are verified and altered is server-dependent. If an error is generated, a subset of the controls may have been altered.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XChangeKeyboardControl(Display* display, unsigned long value_mask, XKeyboardControl values)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item value\_mask Specifies which controls to change. This mask is the bitwise inclusive OR of the valid control mask bits.
+                \item values Specifies one value for each bit set to 1 in the mask.
+            \end{itemize}
+            The XChangeKeyboardControl function controls the keyboard characteristics defined by the XKeyboardControl structure. The value\_mask argument specifies which values are to be changed.
+            \bigbreak \noindent 
+            XChangeKeyboardControl can generate BadMatch and BadValue errors.
+            \bigbreak \noindent 
+            To obtain the current control values for the keyboard, use XGetKeyboardControl
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XGetKeyboardControl(Display* display, XKeyboardState* values_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item values\_return Returns the current keyboard controls in the specified XKeyboardState structure.
+            \end{itemtze}
+            The XGetKeyboardControl function returns the current control values for the keyboard to the XKeyboardState structure.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int key_click_percent;
+                    int bell_percent;
+                    unsigned int bell_pitch, bell_duration;
+                    unsigned long led_mask;
+                    int global_auto_repeat;
+                    char auto_repeats[32];
+                } XKeyboardState;  
+            \end{cppcode}
+            \bigbreak \noindent 
+            For the LEDs, the least significant bit of led\_mask corresponds to LED one, and each bit set to 1 in led\_mask indicates an LED that is lit. The global\_auto\_repeat member can be set to AutoRepeatModeOn or AutoRepeatModeOff. The auto\_repeats member is a bit vector. Each bit set to 1 indicates that auto-repeat is enabled for the corresponding key. The vector is represented as 32 bytes. Byte $N$ (from 0) contains the bits for keys $8N$ to $8N + 7$ with the least significant bit in the byte representing key $8N$.
+            \bigbreak \noindent 
+            To turn on keyboard auto-repeat, use XAutoRepeatOn.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XAutoRepeatOn(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+            \end{itemize}
+            The XAutoRepeatOn function turns on auto-repeat for the keyboard on the specified display.
+            \bigbreak \noindent 
+            To turn off keyboard auto-repeat, use XAutoRepeatOff
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XAutoRepeatOff(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+            \end{itemize}
+            The XAutoRepeatOff function turns off auto-repeat for the keyboard on the specified display.
+            \bigbreak \noindent 
+            To ring the bell, use XBell.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XBell (Display* display, int percent)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Speciﬁes the connection to the X server.
+                \item percent Speciﬁes the volume for the bell, which can range from −100 to 100 inclusive.
+            \end{itemize}
+            The XBell function rings the bell on the keyboard on the specified display, if possible. The specified volume is relative to the base volume for the keyboard. If the value for the percent argument is not in the range −100 to 100 inclusive, a BadValue error results.
+            \bigbreak \noindent 
+            To change the base volume of the bell, use XChangeKeyboardControl
+            \bigbreak \noindent 
+            XBell can generate a BadValue error.
+            \bigbreak \noindent 
+            To obtain a bit vector that describes the state of the keyboard, use XQueryKeymap
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XQueryKeymap(Display* display, char keys_return[32])
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item keys\_return Returns an array of bytes that identifies which keys are pressed down. Each bit represents one key of the keyboard.
+            \end{itemize}
+            The XQueryKeymap function returns a bit vector for the logical state of the keyboard, where each bit set to 1 indicates that the corresponding key is currently pressed down. The vector is represented as 32 bytes. Byte $N$ (from 0) contains the bits for keys $8N$ to $8N + 7$ with the least significant bit in the byte representing key $8N$.
+            \bigbreak \noindent 
+            Note that the logical state of a device (as seen by client applications) may lag the physical state if device event processing is frozen.
+            \bigbreak \noindent 
+            To set the mapping of the pointer buttons, use XSetPointerMapping.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            int XSetPointerMapping(display, map, nmap)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item map Specifies the mapping list.
+                \item nmap Specifies the number of items in the mapping list.
+            \end{itemize}
+            The XSetPointerMapping function sets the mapping of the pointer. If it succeeds, the X server generates a MappingNotify event, and XSetPointerMapping returns MappingSuccess. Element map[$i$] defines the logical button number for the physical button $i+1$. The length of the list must be the same as XGetPointerMapping would return, or a BadValue error results. A zero element disables a button, and elements are not restricted in value by the number of physical buttons. However, no two elements can have the same nonzero value, or a BadValue error results. If any of the buttons to be altered are logically in the down state, XSetPointerMapping returns MappingBusy, and the mapping is not changed.
+            \bigbreak \noindent 
+            XSetPointerMapping can generate a BadValue error.
+            \bigbreak \noindent 
+            To get the pointer mapping, use XGetPointerMapping
+            \bigbreak \noindent 
+            \begin{cppcode}
+                int XGetPointerMapping(Display* display, unsigned char map_return[], int nmap)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item map\_return Returns the mapping list.
+                \item nmap Specifies the number of items in the mapping list.
+            \end{itemize}
+            The XGetPointerMapping function returns the current mapping of the pointer. Pointer buttons are numbered starting from one. XGetPointerMapping returns the number of physical buttons actually on the pointer. The nominal mapping for a pointer is map[$i$]$=i+1$. The nmap argument
+            \bigbreak \noindent 
+            specifies the length of the array where the pointer mapping is returned, and only the first nmap elements are returned in map\_return
+            \bigbreak \noindent 
+            To control the pointer’s interactive feel, use XChangePointerControl
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XChangePointerControl(
+                Display* display,
+                Bool do_accel,
+                bool do_threshold,
+                int accel_numerator,
+                int accel_denominator,
+                int threshold
+            )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item do\_accel Specifies a Boolean value that controls whether the values for the accel\_numerator or accel\_denominator are used.
+                \item do\_threshold Specifies a Boolean value that controls whether the value for the threshold is used.
+                \item accel\_numerator Specifies the numerator for the acceleration multiplier.
+                \item accel\_denominator Specifies the denominator for the acceleration multiplier.
+                \item threshold Specifies the acceleration threshold.
+            \end{itemize}
+            The XChangePointerControl function defines how the pointing device moves. The acceleration, expressed as a fraction, is a multiplier for movement. For example, specifying 3/1 means the pointer moves three times as fast as normal. The fraction may be rounded arbitrarily by the X server. Acceleration only takes effect if the pointer moves more than threshold pixels at once and only applies to the amount beyond the value in the threshold argument. Setting a value to −1 restores the default. The values of the do\_accel and do\_threshold arguments must be True for the pointer values to be set, or the parameters are unchanged. Negative values (other than −1) generate a BadValue error, as does a zero value for the accel\_denominator argument.
+            \bigbreak \noindent 
+            XChangePointerControl can generate a BadValue error.
+            \bigbreak \noindent 
+            To get the current pointer parameters, use XGetPointerControl
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XGetPointerControl(
+                Display* display,
+                int* accel_numerator_return,
+                int* accel_denominator_return,
+                int* threshold_return
+            )
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item accel\_numerator\_return
+                \item Returns the numerator for the acceleration multiplier.
+                \item accel\_denominator\_return
+                \item Returns the denominator for the acceleration multiplier.
+                \item threshold\_return Returns the acceleration threshold.
+            \end{itemize}
+            \bigbreak \noindent 
+            The XGetPointerControl function returns the pointer’s current acceleration multiplier and acceleration threshold.
 
 
+    \end{itemize}
 
+    \pagebreak 
+    \unsect{16. Application Utility Functions}
+    \begin{itemize}
+        \item \textbf{Using Keyboard Utility Functions}: To obtain a KeySym for the KeyCode of an event, use XLookupKeysym
+            \bigbreak \noindent 
+            \begin{cppcode}
+            KeySym XLookupKeysym(XKeyEvent* key_event, int index)
+            \end{cppcode}
+            \begin{itemize}
+                \item key\_event Specifies the KeyPress or KeyRelease event.
+                \item index Specifies the index into the KeySyms list for the event’s KeyCode.
+            \end{itemize}
+            The XLookupKeysym function uses a given keyboard event and the index you specified to return the KeySym from the list that corresponds to the KeyCode member in the XKeyPressedEvent or XKeyReleasedEvent structure. If no KeySym is defined for the KeyCode of the event, XLookupKeysym returns NoSymbol.
+            \bigbreak \noindent 
+            To obtain a KeySym for a specific KeyCode, use XKeycodeToKeysym.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            KeySym XKeycodeToKeysym (Display* display, KeyCode keycode, int index)
+lower_return Returns the lowercase form of keysym, or keysym.
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item keycode Specifies the KeyCode.
+                \item index Specifies the element of KeyCode vector
+            \end{itemize}
+            The XKeycodeToKeysym function uses internal Xlib tables and returns the KeySym defined for the specified KeyCode and the element of the KeyCode vector. If no symbol is defined, XKey- codeToKeysym returns NoSymbol
+            \bigbreak \noindent 
+            To obtain a KeyCode for a key having a specific KeySym, use XKeysymToKeycode.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            KeyCode XKeysymToKeycode(Display* display, KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item keysym Specifies the KeySym that is to be searched for.
+            \end{itemize}
+            If the specified KeySym is not defined for any KeyCode, XKeysymToKeycode returns zero.
+            \bigbreak \noindent 
+            The mapping between KeyCodes and KeySyms is cached internal to Xlib. When this information is changed at the server, an Xlib function must be called to refresh the cache. To refresh the stored modifier and keymap information, use XRefreshKeyboardMapping
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XRefreshKeyboardMapping(XMappingEvent* event_map)
+            \end{cppcode}
+            \begin{itemize}
+                \item event\_map Specifies the mapping event that is to be used.
+            \end{itemize}
+            The XRefreshKeyboardMapping function refreshes the stored modifier and keymap information. You usually call this function when a MappingNotify event with a request member of MappingKeyboard or MappingModifier occurs. The result is to update Xlib’s knowledge of the keyboard.
+            \bigbreak \noindent 
+            To obtain the uppercase and lowercase forms of a KeySym, use XConvertCase
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void XConvertCase(KeySym keysym, KeySym* lower_return, KeySym* upper_return)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be converted.
+                \item upper\_return Returns the uppercase form of keysym, or keysym.
+            \end{itemize}
+            The XConvertCase function returns the uppercase and lowercase forms of the specified Keysym, if the KeySym is subject to case conversion; otherwise, the specified KeySym is returned to both lower\_return and upper\_return.
+            \bigbreak \noindent 
+            KeySyms have string names as well as numeric codes. To convert the name of the KeySym to the KeySym code, use XStringToKeysym.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            KeySym XStringToKeysym(char* string)
+            \end{cppcode}
+            \begin{itemize}
+                \item string Specifies the name of the KeySym that is to be converted.
+            \end{itemize}
+            Standard KeySym names are obtained from <X11/keysymdef.h> by removing the XK_ prefix from each name. KeySyms that are not part of the Xlib standard also may be obtained with this function. The set of KeySyms that are available in this manner and the mechanisms by which Xlib obtains them is implementation-dependent.
+            \bigbreak \noindent 
+            If the KeySym name is not in the Host Portable Character Encoding, the result is implementation- dependent. If the specified string does not match a valid KeySym, XStringToKeysym returns NoSymbol.
+            \bigbreak \noindent 
+            To convert a KeySym code to the name of the KeySym, use XKeysymToString.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            char *XKeysymToString(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be converted.
+            \end{itemize}
+            The returned string is in a static area and must not be modified. The returned string is in the Host Portable Character Encoding. If the specified KeySym is not defined, XKeysymToString returns a NULL.
+        \item \textbf{KeySym Classification Macros}: You may want to test if a KeySym is, for example, on the keypad or on one of the function keys. You can use KeySym macros to perform the following tests.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsCursorKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a cursor key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsFunctionKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a function key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsKeypadKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a standard keypad key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsPrivateKeypadKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a vendor-private keypad key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsMiscFunctionKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a miscellaneous function key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsModifierKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a modifier key.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                IsPFKey(KeySym keysym)
+            \end{cppcode}
+            \begin{itemize}
+                \item keysym Specifies the KeySym that is to be tested.
+            \end{itemize}
+            Returns True if the specified KeySym is a PF key.
+    \end{itemize}
 
-
+    \pagebreak 
+    \unsect{ICCCM Functions}:
+    \begin{itemize}
+        
     \end{itemize}
 
 
