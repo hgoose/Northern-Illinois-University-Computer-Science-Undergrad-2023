@@ -1668,6 +1668,195 @@
             \end{cppcode}
             \bigbreak \noindent 
             A dock/panel should usually be floating and not tiled. Its strut reserves screen space. Your tiling area should exclude that reserved space.
+        \item \textbf{Protocols}: In ICCCM, a window manager protocol is a named convention between a client window and the window manager.
+            \bigbreak \noindent 
+            The client advertises which protocols it understands by setting the WM_PROTOCOLS property on its top-level window.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WM_PROTOCOLS = [
+                    WM_DELETE_WINDOW,
+                    WM_TAKE_FOCUS,
+                    _NET_WM_PING
+                ]
+            \end{cppcode}
+            \bigbreak \noindent 
+            The client is saying “Window manager, I know how to participate in these specific conversations.”
+            \bigbreak \noindent 
+            The ICCCM defines WM\_PROTOCOLS as a property of type ATOM; each atom in the list identifies a communication protocol between the client and WM.
+            \bigbreak \noindent 
+            Without protocols, a WM would have to do blunt things. For example, closing a window could mean:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XKillClient(dpy, window);
+            \end{cppcode}
+            \bigbreak \noindent 
+            or
+            \bigbreak \noindent 
+            \begin{cppcode}
+            XDestroyWindow(dpy, window);
+            \end{cppcode}
+            \bigbreak \noindent 
+            But that is rude. The application may need to ask the user to save a file, cancel a download, close a database connection, or reject the close.
+            \bigbreak \noindent 
+            So ICCCM defines WM\_DELETE\_WINDOW. If the client lists WM\_DELETE\_WINDOW in WM\_PROTOCOLS, the WM should send a message saying: "The user requested that you close." Then, the client decides what to do.
+            \bigbreak \noindent 
+            So, a protocol is a structured interaction.
+    \item \textbf{Common WM protocols}: 
+        \begin{itemize}
+            \item \textbf{WM\_DELETE\_WINDOW}: Used for polite window closing. The client receives it and may close itself, ask the user to save, ignore it, or do something else. 
+                \bigbreak \noindent 
+                ICCCM says WMs should not use DestroyWindow on a window that has WM\_DELETE\_WINDOW in WM\_PROTOCOLS.
+            \item \textbf{WM\_TAKE\_FOCUS}: Used for focus negotiation. The WM sends a \texttt{ClientMessage} saying "You may take keyboard focus now, using this timestamp."
+                \bigbreak \noindent 
+                The client may then call XSetInputFocus on itself or one of its child windows.
+                \bigbreak \noindent 
+                This is used by clients that need control over their internal focus behavior.
+            \item \textbf{\_NET\_WM\_PING}: This is EWMH, not old ICCCM, but it also uses WM_PROTOCOLS.
+                \bigbreak \noindent 
+                A client can list \_NET\_WM\_PING in WM\_PROTOCOLS. The WM can use it to check whether the client is still processing events, especially after a close request seems to hang.
+        \end{itemize}
+    \item \textbf{ClientMessage}: A ClientMessage is an X event type used for client-to-client communication. Xlib documentation says the X server generates ClientMessage events only when a client calls XSendEvent.
+        \begin{verbatim}
+            Client A calls XSendEvent
+                    ↓
+            X server delivers synthetic event
+                    ↓
+            Client B receives ClientMessage
+        \end{verbatim}
+        Client $A$ is often the WM, client $B$ is an application window.
+    \item \textbf{XClientMessageEvent}: 
+        \bigbreak \noindent 
+        \begin{cppcode}
+            typedef struct {
+                int type;               // ClientMessage
+                unsigned long serial;
+                Bool send_event;
+                Display *display;
+                Window window;
+                Atom message_type;
+                int format;
+                union {
+                    char b[20];
+                    short s[10];
+                    long l[5];
+                } data;
+            } XClientMessageEvent;
+        \end{cppcode}
+        \bigbreak \noindent 
+        Set \texttt{type} to \texttt{ClientMessage}, and \texttt{window} to the window the message is about to be delivered to. For WM\_DELETE\_WINDOW, this is the client window being asked to close.
+        \bigbreak \noindent 
+        \texttt{message\_type} is the general category of the message. For ICCCM WM protocols, this is usually 
+        \bigbreak \noindent 
+        \begin{cppcode}
+        WM_PROTOCOLS
+        \end{cppcode}
+        \bigbreak \noindent 
+        For EWMH requests, this may be something like:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            _NET_ACTIVE_WINDOW
+            _NET_WM_STATE
+            _NET_CLOSE_WINDOW
+        \end{cppcode}
+        \bigbreak \noindent 
+        \texttt{format} is the size of the data elements. \texttt{Data} is the payload. For ICCCM WM\_PROTOCOLS, the first value usually identifies the specific protocol. For example,
+        \bigbreak \noindent 
+        \begin{cppcode}
+            data.l[0] = WM_DELETE_WINDOW;
+            data.l[1] = timestamp;
+        \end{cppcode}
+    \item \textbf{Sending WM\_DELETE\_WINDOW}: First, intern the atoms
+        \bigbreak \noindent 
+        \begin{cppcode}
+            Atom WM_PROTOCOLS;
+            Atom WM_DELETE_WINDOW;
+
+            WM_PROTOCOLS = XInternAtom(dpy, "WM_PROTOCOLS", False);
+            WM_DELETE_WINDOW = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+        \end{cppcode}
+        \bigbreak \noindent 
+        Then, check whether the client supports it.
+        \bigbreak \noindent 
+        \begin{cppcode}
+            Bool supports_protocol(Display* dpy, Window w, Atom protocol) {
+                Atom* protocols = NULL;
+                int count = 0;
+
+                if (!XGetWMProtocols(dpy, w, &protocols, &count))
+                return False;
+
+                Bool found = False;
+
+                for (int i = 0; i < count; ++i) {
+                    if (protocols[i] == protocol) {
+                        found = True;
+                        break;
+                    }
+                }
+
+                XFree(protocols);
+                return found;
+            }
+        \end{cppcode}
+        \bigbreak \noindent 
+        Then,
+        \bigbreak \noindent 
+        \begin{cppcode}
+            Bool supports_protocol(Display* dpy, Window w, Atom protocol) {
+                Atom* protocols = NULL;
+                int count = 0;
+
+                if (!XGetWMProtocols(dpy, w, &protocols, &count))
+                return False;
+
+                Bool found = False;
+
+                for (int i = 0; i < count; ++i) {
+                    if (protocols[i] == protocol) {
+                        found = True;
+                        break;
+                    }
+                }
+
+                XFree(protocols);
+                return found;
+            }
+        \end{cppcode}
+        \bigbreak \noindent 
+        For strict ICCCM behavior, prefer a real event timestamp instead of \textbf{CurrentTime} when you have one.
+        \bigbreak \noindent 
+        The WM sends the message, and the client decides how to react.
+    \item \textbf{Receiving ClientMessage in the WM}: The WM also receives ClientMessage events.
+        \bigbreak \noindent 
+        Modern clients often send EWMH requests to the root window. For example:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            _NET_ACTIVE_WINDOW
+            _NET_WM_STATE
+            _NET_CLOSE_WINDOW
+        \end{cppcode}
+        \bigbreak \noindent 
+        A client might send \_NET\_ACTIVE\_WINDOW to ask: “Please activate/focus this window.”
+        \bigbreak \noindent 
+        For ICCCM WM\_PROTOCOLS messages, you normally send directly to the client that owns the destination window:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            XSendEvent(dpy, w, False, NoEventMask, &ev);
+        \end{cppcode}
+        \bigbreak \noindent 
+        NoEventMask has a special meaning here: send it to the client that created the destination window.
+        \bigbreak \noindent 
+        For EWMH messages sent to the root window, clients usually use masks such as:
+        \bigbreak \noindent 
+        \begin{cppcode}
+            SubstructureRedirectMask | SubstructureNotifyMask
+        \end{cppcode}
+        \bigbreak \noindent 
+        because the WM selected those masks on the root.
+    \item \textbf{send\_event}: Every X event structure has a send\_event field through the common event header. It is set to true if the event came from a SendEvent protocol request.
+        
+
+        
 
 
 

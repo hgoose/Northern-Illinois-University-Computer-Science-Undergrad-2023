@@ -1525,10 +1525,193 @@
             \end{cppcode}
             \bigbreak \noindent 
             Notice how $fp$ became the signature (excluding a return value) of $f$. Read as: "$f$" is a function that takes an int and returns a pointer to a function that takes a double and returns void.
+        \item \textbf{Unions}: C code uses union more often because C has fewer built-in abstraction tools. In C++, many uses of union are replaced by safer language/library features such as classes, inheritance, templates, std::variant, std::optional, and RAII-managed types.
+            \bigbreak \noindent 
+            A union is useful when you want several different members to occupy the same memory location, but only one of them is valid at a time
+            \bigbreak \noindent 
+            \begin{cppcode}
+                union Value {
+                    int i;
+                    double d;
+                    char* s;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            The size of Value is large enough to hold the largest member. The fields overlap in memory.
+            \bigbreak \noindent 
+            A classic C pattern is a tagged union:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            enum ValueKind {
+                VALUE_INT,
+                VALUE_DOUBLE,
+                VALUE_STRING
+            };
 
+            struct Value {
+                enum ValueKind kind;
 
+                union {
+                    int i;
+                    double d;
+                    char* s;
+                } as;
+            };
+            \end{cppcode}
+            \bigbreak \noindent 
+            The kind field tells you which union member is currently valid.
+        \end{itemize}
 
-    \end{itemize}
+        \pagebreak 
+        \subsection{C99}
+        \begin{itemize}
+            \item \textbf{Designated initializers}: Designated initializers allow initializing struct fields by name.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct S {
+                        int x,y,z;
+                    };
+
+                    struct S s  = {.x = 10 };
+                    struct S s2  = {.x = 10, .y = 20, .z = 30};
+
+                    printf("%d, %d, %d\n", s.x, s.y, s.z); // 10, 0, 0
+                    printf("%d, %d, %d\n", s2.x, s2.y, s2.z); // 10, 20, 30
+                \end{cppcode}
+            \item \textbf{Designate array indices}: You can also designate array indices:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int arr[10] = {
+                        [5] = 6,
+                        [2] = 1
+                    };
+
+                    // 0, 0, 1, 0, 0, 6, 0, 0, 0, 0, 
+                    for (__auto_type i = 0; i < 10; ++i) 
+                    printf("%d, ", arr[i]);
+                \end{cppcode}
+            \item \textbf{\_\_auto\_type}: \_\_auto\_type is a GNU C compiler extension supported by GCC and Clang that enables automatic type inference in the C programming language. It allows the compiler to automatically deduce the data type of a local variable from its initialization expression, providing functionality similar to the auto keyword in C++11
+                \begin{itemize}
+                    \item \textbf{Immediate Initialization Required:} You cannot declare a variable with \_\_auto\_type without assigning a value immediately.
+                    \item \textbf{Plain Identifiers Only:} The declarator must be a single, plain variable name. You cannot mix it with pointer or array syntax during declaration (e.g., \_\_auto\_type *ptr = &x; is syntax error).
+                    \item \textbf{Single Variable Limit:} You can only declare one variable per statement
+                \end{itemize}
+                Before \_\_auto\_type, type-generic macros relied on the typeof extension. However, typeof evaluates expressions with side effects twice. Using \_\_auto\_type safely captures values exactly once, preventing double-evaluation bugs:
+            \item \textbf{auto}: The behavior of the auto keyword in C depends entirely on the version of the C standard you are using. In traditional C (up to C17), auto is a storage class specifier used to declare variables with automatic storage duration, which means they are created when entering a block and destroyed upon exiting it. However, starting with the C23 standard, auto has been redefined to perform type inference, matching its modern behavior in C++
+            \item \textbf{Compound literals}: Compound literals create unnamed objects inline.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct Point {
+                        int x;
+                        int y;
+                    };
+
+                    draw_point((struct Point){ .x = 10, .y = 20 });
+                \end{cppcode}
+                \bigbreak \noindent 
+                They are also useful for arrays:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int *p = (int[]){1, 2, 3, 4};
+                \end{cppcode}
+                \bigbreak \noindent 
+                Inside a function, a compound literal has automatic storage duration. At file scope, it has static storage duration.
+            \item \textbf{Variadic macros}: C99 added macros that accept a variable number of arguments.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    #define LOG(fmt, ...) \
+                    fprintf(stderr, "[log] " fmt "\n", __VA_ARGS__)
+                \end{cppcode}
+            \item \textbf{String concatenation at compile time}: This is allowed because C concatenates adjacent string literals at compile time.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    printf("hello, " "world!");
+                \end{cppcode}
+                \bigbreak \noindent 
+                Is translated as if you had written
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    printf("Hello, world!");
+                \end{cppcode}
+                \bigbreak \noindent 
+                The two string literals are not separate runtime strings. The compiler combines them during translation, before the program runs.
+                \bigbreak \noindent 
+                This rule exists mainly to make long strings easier to write:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    printf("This is a very long message "
+                    "split across multiple source lines "
+                    "but still one string.\n");
+                \end{cppcode}
+            \item \textbf{Inline functions}: C99 added the inline keyword.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    inline int square(int x) {
+                        return x * x;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                The purpose is to allow function-like abstractions without the problems of macros.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #define SQUARE(x) ((x) * (x))
+                SQUARE(i++) // Increments i twice
+                \end{cppcode}
+                \bigbreak \noindent 
+                An inline function would avoid the issue above.
+                \bigbreak \noindent 
+                C99 inline rules are slightly subtle, especially across translation units. For header-defined functions, many projects use static inline. This gives each translation unit its own internal-linkage copy.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    static inline int square(int x) {
+                        return x*x;
+                    }
+                \end{cppcode}
+            \item \textbf{Variable Length Arrays (VLAs)}: C99 added variable length arrays, or VLAs.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void f(int n) {
+                        int arr[n];
+
+                        for (int i = 0; i < n; ++i) {
+                            arr[i] = i;
+                        }
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                The array size is determined at runtime, but the object usually has automatic storage duration, typically stack-like storage.
+                \bigbreak \noindent 
+                VLAs are controversial. They are convenient, but they can be dangerous if n is large or untrusted:
+                \bigbreak \noindent 
+                C11 later made VLAs optional, so they are less universally portable than other C99 features.
+            \item \textbf{Flexible array members}: C99 added flexible array members for structs with variable-sized trailing data.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct Buffer {
+                        size_t len;
+                        unsigned char data[];
+                    };
+                \end{cppcode}
+                \bigbreak \noindent 
+                You allocate enough memory for the struct plus the extra array data:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    struct Buffer *b = malloc(sizeof *b + 1024);
+
+                    b->len = 1024;
+                    b->data[0] = 42;
+                \end{cppcode}
+                \bigbreak \noindent 
+                The flexible array member must be the last member of the struct.
+            \item \textbf{\_\_func\_\_}: C99 added \_\_func\_\_, which expands to the current function name as a string.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void parse_expr(void) {
+                        printf("entered %s\n", __func__);
+                    }
+                \end{cppcode}
+
+        \end{itemize}
 
 
 
