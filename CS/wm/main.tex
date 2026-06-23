@@ -1458,10 +1458,222 @@
     \end{itemize}
 
     \pagebreak 
-    \unsect{ICCCM}
+    \unsect{ICCCM / EWMH Discussion}
+    \begin{itemize}
+        \item \textbf{Window managers}: An X11 window manager is just another X client. It is not privileged. It becomes “the window manager” by selecting SubstructureRedirectMask on the root window. Once it does that, map/configure/restack requests for top-level client windows are redirected to it as events such as MapRequest, ConfigureRequest, and CirculateRequest. Only one client can select SubstructureRedirectMask on a given window, which is why only one WM can manage a root window at a time.
+            \bigbreak \noindent 
+            ICCCM is the base contract. It defines things like WM\_NORMAL\_HINTS, WM\_HINTS, WM\_PROTOCOLS, WM\_DELETE\_WINDOW, WM\_TAKE\_FOCUS, WM\_TRANSIENT\_FOR, and WM\_STATE. EWMH explicitly builds on ICCCM and says compliant WMs/clients must adhere to ICCCM where applicable
+            \bigbreak \noindent 
+            For a tiling WM, ICCCM keeps normal programs from breaking. EWMH makes your WM cooperate with panels, launchers, taskbars, pagers, fullscreen applications, and modern toolkits.
+        \item \textbf{ICCCM state model}: ICCCM says a top-level client is viewed by the WM as being in one of three states:
+            \begin{itemize}
+                \item \textbf{NormalState}:	The client window is viewable
+                \item \textbf{IconicState}:	The client is iconified/minimized
+                \item \textbf{WithdrawnState}:	The client is not managed or visible
+            \end{itemize}
+            New top-level windows start in the withdrawn state. The WM places a WM\_STATE property on each managed top-level window that is not withdrawn. This is done with \textbf{XChangeProperty}.
+            \bigbreak \noindent 
+            When you manage a window, set WM\_STATE to NormalState. When you unmanage it because it withdrew or was destroyed, remove or update WM\_STATE.
+        \item \textbf{WM\_NORMAL\_HINTS (geometry constraints)}: Clients use WM\_NORMAL\_HINTS to describe preferred size behavior: minimum size, maximum size, base size, resize increments, aspect ratio, and window gravity. ICCCM says the WM interprets client configure requests similarly to initial geometry and that clients must be prepared for the WM not to allocate exactly what they requested.
+            \bigbreak \noindent 
+            Important fields are 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                PMinSize      // min_width, min_height
+                PMaxSize      // max_width, max_height
+                PBaseSize     // base_width, base_height
+                PResizeInc    // width_inc, height_inc
+                PAspect       // min_aspect, max_aspect
+                PWinGravity   // win_gravity
+                USPosition    // user-specified position
+                USSize        // user-specified size
+                PPosition     // program-specified position
+                PSize         // program-specified size
+            \end{cppcode}
+            \bigbreak \noindent 
+            For tiling, the big one is PResizeInc. Terminals often want sizes in character-cell increments. If you ignore increments, terminals still work, but you may get ugly unused padding. A simple first WM can ignore this; a better WM applies increments after computing the tile rectangle.
+        \item \textbf{WM\_HINTS}: WM\_HINTS carries extra information from the client to the WM. Important fields include:
+            \bigbreak \noindent 
+            Important fields are
+            \bigbreak \noindent 
+            \begin{cppcode}
+                InputHint
+                StateHint
+                IconPixmapHint
+                IconWindowHint
+                WindowGroupHint
+                UrgencyHint
+            \end{cppcode}
+            \bigbreak \noindent 
+            The input field participates in ICCCM focus handling. UrgencyHint means the client wants attention; the ICCCM says the WM must make some effort to draw the user’s attention while this flag is set.
+        \item \textbf{Focus models and WM\_TAKE\_FOCUS}: ICCCM defines four input models:
+            \bigbreak \noindent 
+            ICCCM defines four input models:
+            \begin{center}
+                \begin{tabularx}{\textwidth}{@{}Xll@{}}
+                    \toprule
+                    \textbf{Model}&	\textbf{WM\_HINTS.input}&	\textbf{WM\_TAKE\_FOCUS} \\
+                    \midrule
+                    No Input&	False	&absent\\[2ex]
+                    Passive	&True	&absent\\[2ex]
+                    Locally Active	&True	&present\\[2ex]
+                    Globally Active	&False	&present\\
+                    \bottomrule
+                \end{tabularx}
+            \end{center}
+            Passive and locally active clients set input = True, meaning the WM may set focus to their top-level window. No-input and globally active clients set input = False, meaning the WM should not directly set focus to that top-level window. Clients with WM\_TAKE\_FOCUS may receive a ClientMessage from the WM containing WM\_TAKE\_FOCUS and a valid timestamp.
+        \item \textbf{More on focus}: The window manager does not know how every application internally handles focus.
+            \bigbreak \noindent 
+            Some applications are simple. They have one top-level window, and keyboard input can go directly to that top-level window.
+            \bigbreak \noindent 
+            Other applications have many child windows: text fields, editor panes, toolbars, embedded widgets, terminal grids, browser views, and so on. In those cases, the top-level window may not be the real input target. The application may want focus to go to one of its own subwindows instead
+            \bigbreak \noindent 
+            That is the reason ICCCM defines focus models. The client tells the WM:
+            \begin{enumerate}
+                \item Whether the WM should directly set focus to the client’s top-level window.
+                \item Whether the client wants a WM\_TAKE\_FOCUS message so it can choose what to do internally
+            \end{enumerate}
+            These two pieces of information come from WM\_HINTS.input and WM\_PROTOCOLS containing WM\_TAKE\_FOCUS
+            \bigbreak \noindent 
+            ICCCM defines four input models using those two values.
+            \begin{enumerate}
+                \item \textbf{Model 1: No Input}:
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    WM_HINTS.input = False
+                    WM_TAKE_FOCUS absent
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This client never wants keyboard input. The WM should not call XSetInputFocus, the WM also does not send WM\_TAKE\_FOCUS
+                \item \textbf{Model 2: Passive Input}: 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        WM_HINTS.input = True
+                        WM_TAKE_FOCUS absent
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This is the simplest normal application model. The client wants keyboard input, but it does not manage focus itself. It expects the WM to set focus to the client’s top-level window.
+                    \bigbreak \noindent 
+                    In this case we can call XSetInputFocus, but no WM\_TAKE\_FOCUS message is needed.
+                \item \textbf{Model 3: Locally Active Input}: 
+                    \begin{cppcode}
+                        WM_HINTS.input = True
+                        WM_TAKE_FOCUS present
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This client wants WM assistance, but it also participates in focus management.
+                    \bigbreak \noindent 
+                    The WM may set focus to the top-level window because input = True. The WM may also send WM\_TAKE\_FOCUS because the client advertised that protocol.
+                    \bigbreak \noindent 
+                    This model is for clients that can manage focus among their own subwindows, but only after they already have focus or after the WM offers focus.
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        XSetInputFocus(dpy, c->win, RevertToPointerRoot, time);
+                        send_wm_take_focus(c, time);
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Then the client may respond by setting focus to one of its own child windows.
+                \item \textbf{Model 4: Globally Active Input}: 
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                        WM_HINTS.input = False
+                        WM_TAKE_FOCUS present
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    This is the most subtle model. The client wants keyboard input, but it does not want the WM to blindly set focus to its top-level window.
+                    \bigbreak \noindent 
+                    Instead, the WM should send WM\_TAKE\_FOCUS. The client then decides whether to accept focus and which internal window should receive it.
+                    \bigbreak \noindent 
+                    ICCCM says No Input and Globally Active clients set input = False, which requests that the WM not set input focus to their top-level window
+            \end{enumerate}
+        \item \textbf{What is WM\_TAKE\_FOCUS}: WM_TAKE_FOCUS is not a function call. It is an atom used inside a ClientMessage. The client advertises support for it by setting:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                WM_PROTOCOLS = [..., WM_TAKE_FOCUS, ...]
+            \end{cppcode}
+            \bigbreak \noindent 
+            The WM reads WM\_PROTOCOLS. If WM\_TAKE\_FOCUS is present, the WM can send the client a message saying: “You may take focus now, using this timestamp.”
+        \item \textbf{Note about timestamps}: The time argument matters. X uses timestamps to prevent stale clients from stealing focus after a newer user action. ICCCM specifically says clients setting focus should use the timestamp of the event that caused the focus attempt, not CurrentTime. FocusIn cannot be used for this because FocusIn events do not carry timestamps
+        \item \textbf{WM\_PROTOCOLS: polite close and focus protocol}:  The two protocols you really care about are:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            WM_DELETE_WINDOW
+            WM_TAKE_FOCUS
+            \end{cppcode}
+            \bigbreak \noindent 
+            When the user asks to close a window, do not blindly call XKillClient or XDestroyWindow. First check whether the window supports WM\_DELETE\_WINDOW.
+            \bigbreak \noindent 
+            ICCCM says clients that include WM\_DELETE\_WINDOW in WM\_PROTOCOLS receive a ClientMessage with data[0] = WM\_DELETE\_WINDOW, and WMs should not use DestroyWindow on a window that has this protocol.
+        \item \textbf{ConfigureRequest: tiled versus floating policy}: When a tiled client asks to resize itself, your WM does not have to obey. In tiling mode, your layout owns geometry.
+            \bigbreak \noindent 
+            But ICCCM expects the client to be told what its actual geometry is. If the WM denies a configure request, it should send a synthetic ConfigureNotify describing the unchanged geometry. If it changes the geometry, it may also need to send a synthetic ConfigureNotify, especially for reparenting WMs.
+        \item \textbf{Transients and dialogs}: WM\_TRANSIENT\_FOR tells you that a window is transient for another top-level window. This usually means dialog, modal popup, file chooser, alert, etc.
+            \bigbreak \noindent 
+            In a tiling WM, transient windows should usually be floating, centered over their parent, and kept above the parent. Do not tile every dialog into the master stack unless you intentionally want that behavior.
+            \bigbreak \noindent 
+            EWMH also defines \_NET\_WM\_WINDOW\_TYPE; \_NET\_WM\_WINDOW\_TYPE\_DIALOG, \_NET\_WM\_WINDOW\_TYPE\_SPLASH, \_NET\_WM\_WINDOW\_TYPE\_UTILITY, and \_NET\_WM\_WINDOW\_TYPE\_DOCK are especially relevant. The spec says \_NET\_WM\_WINDOW\_TYPE should be used by the WM to determine decoration, stacking, and behavior; if a managed window lacks \_NET\_WM\_WINDOW\_TYPE but has WM\_TRANSIENT\_FOR, it must be treated as a dialog.
+        \item \textbf{EWMH properties you should implement early}: You can write a usable WM with only ICCCM, but modern programs behave better if you implement a small EWMH subset.
+            \bigbreak \noindent 
+            The root-window properties to implement are
+            \begin{enumerate}
+                \item \textbf{\_NET\_SUPPORTED}:	List atoms your WM supports
+                \item \textbf{\_NET\_SUPPORTING\_WM\_CHECK}:	Identifies your WM
+                \item \textbf{\_NET\_CLIENT\_LIST}:	Managed windows in mapping order
+                \item \textbf{\_NET\_CLIENT\_LIST\_STACKING}:	Managed windows in stacking order
+                \item \textbf{\_NET\_NUMBER\_OF\_DESKTOPS}:	Number of workspaces
+                \item \textbf{\_NET\_CURRENT\_DESKTOP}:	Current workspace
+                \item \textbf{\_NET\_ACTIVE\_WINDOW}:	Currently focused window
+                \item \textbf{\_NET\_WORKAREA}:	Usable screen area after docks/panels
+            \end{enumerate}
+            The active window property is read-only from the client’s perspective; clients request activation by sending a \_NET\_ACTIVE\_WINDOW client message to the root, and the WM may accept or refuse it.
+            \bigbreak \noindent 
+            Client-window properties/messages to support:
+            \begin{enumerate}
+                \item \textbf{\_NET\_WM\_NAME}:	UTF-8 title
+                \item \textbf{\_NET\_WM\_WINDOW\_TYPE}:	normal/dialog/dock/utility/etc.
+                \item \textbf{\_NET\_WM\_STATE}:	fullscreen, sticky, above, demands attention
+                \item \textbf{\_NET\_WM\_DESKTOP}:	workspace assignment
+                \item \textbf{\_NET\_WM\_PID}:	process ID, useful for diagnostics
+                \item \textbf{\_NET\_ACTIVE\_WINDOW}:	focus request
+                \item \textbf{\_NET\_CLOSE\_WINDOW}:	polite close request
+                \item \textbf{\_NET\_WM\_STATE\_FULLSCREEN:}	fullscreen behavior
+            \end{enumerate}
+            For a tiling WM, \_NET\_WM\_STATE\_FULLSCREEN is the most important modern state. A fullscreen window should usually cover the monitor work area or full monitor area, be above tiled windows, and suppress normal tiling while active.
+        \item \textbf{Fullscreen}: When a client requests \_NET\_WM\_STATE\_FULLSCREEN:
+            \begin{enumerate}
+                \item Mark client fullscreen.
+                \item Save old geometry.
+                \item Move/resize it to monitor bounds.
+                \item Raise it.
+                \item Focus it.
+                \item Update \_NET\_WM\_STATE
+            \end{enumerate}
+            When fullscreen is removed:
+            \begin{itemize}
+                \item Restore old geometry if floating.
+                \item Otherwise return it to tiling layout.
+                \item Re-run arrange()
+            \end{itemize}
+        \item \textbf{WM\_COLORMAP\_WINDOWS}:  
+            This is mostly legacy, but ICCCM says the WM is responsible for installing/uninstalling colormaps for managed top-level clients. Clients give hints through their top-level colormap attribute or WM\_COLORMAP\_WINDOWS.
+            \bigbreak \noindent 
+            On modern TrueColor desktops, this usually does not matter much. But technically, an ICCCM-aware WM should watch colormap properties/attributes and install the appropriate colormap when a client gets colormap focus.
+        \item \textbf{Panels, docks, and struts}: If you want compatibility with bars/panels, support:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                _NET_WM_WINDOW_TYPE_DOCK
+                _NET_WM_STRUT
+                _NET_WM_STRUT_PARTIAL
+                _NET_WORKAREA
+            \end{cppcode}
+            \bigbreak \noindent 
+            A dock/panel should usually be floating and not tiled. Its strut reserves screen space. Your tiling area should exclude that reserved space.
 
-    \pagebreak 
-    \unsect{EWMH}
+
+
+
+
+    \end{itemize}
 
 
 
