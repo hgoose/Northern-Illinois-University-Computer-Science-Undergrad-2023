@@ -1859,7 +1859,178 @@
     \end{itemize}
 
     \pagebreak 
-    \unsect{API}
+    \unsect{Testing environment}
+    \begin{itemize}
+        \item \textbf{Testing}:  Use a nested X server, not your real desktop session. The standard setup for developing an Xorg tiling window manager is:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                Xephyr :1 -screen 1280x720 &
+                DISPLAY=:1 ./your_wm
+            \end{bashcode}
+            \bigbreak \noindent 
+            Then run test clients inside that nested display:
+            \bigbreak \noindent 
+            \begin{bashcode}
+                DISPLAY=:1 xterm
+                DISPLAY=:1 xeyes
+                DISPLAY=:1 xclock
+            \end{bashcode}
+            \bigbreak \noindent 
+            This gives you a fake X display :1 inside a normal window on your existing desktop. If your WM crashes, only the nested session dies; your real i3/Xorg session remains safe.
+            \bigbreak \noindent 
+            Once your WM works in Xephyr, test it on a real X server from another TTY.
+            \bigbreak \noindent 
+            \begin{cppcode}
+                startx ./your_wm -- :1
+            \end{cppcode}
+            \bigbreak \noindent 
+            \textbf{Note:} A display number identifies an X server instance on a machine. A connection is created when a client program connects to that X server.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            :0
+            \end{cppcode}
+            \bigbreak \noindent 
+            usually means “the X server running as display 0.”
+            \bigbreak \noindent 
+            \begin{cppcode}
+            :1
+            \end{cppcode}
+            \bigbreak \noindent 
+            means “the X server running as display 1.”
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \unsect{Angel Implementation Journal (AIJ)}
+    \subsection{Display}
+    \begin{itemize}
+        \item \textbf{Getting connection to the X server}: Simply call \textbf{XOpenDisplay}
+            \begin{cppcode}
+                Display *XOpenDisplay(char* display_name)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Opens a connection to the X server and returns a \texttt{Display*} used for nearly all later Xlib calls.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textit{None}: This function does not generate X protocol errors.
+                        \item Failure to open the display is indicated by a \texttt{NULL} return value.
+                    \end{itemize}
+            \end{itemize}
+            \textbf{Note:} Passing NULL tells X to use the DISPLAY environment variable.
+            \bigbreak \noindent 
+            After XOpenDisplay, the primary test is simply whether it returned NULL.
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Display* dp = XOpenDisplay(NULL);
+            if (dp == NULL) {
+                fprintf(stderr, "Error: failed to get display");
+            }
+            \end{cppcode}
+        \item \textbf{Freeing resources allocated by XOpenDisplay}: For this, we use
+            \begin{cppcode}
+                int XCloseDisplay(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Closes the connection to the X server and frees resources associated with the display.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \texttt{BadGC}
+                    \end{itemize}
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Display* dp = XOpenDisplay(NULL);
+            ...
+            XCloseDisplay(dp);
+            \end{cppcode}
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Errors}
+    \begin{itemize}
+        \item \textbf{Attaching error handler}: 
+            \begin{cppcode}
+                int (*XSetErrorHandler(handler))(Display*, XErrorEvent*)
+                    int (*handler)(Display *, XErrorEvent *)
+            \end{cppcode}
+            \bigbreak \noindent
+            Installs a custom handler for nonfatal X protocol errors and returns the previously installed handler.
+            \bigbreak \noindent 
+            The XErrorEvent structure is
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int type;
+                    Display *display;                   /* Display the event was read from */
+                    unsigned long serial;               /* serial number of failed request */
+                    unsigned char error_code;           /* error code of failed request */
+                    unsigned char request_code;         /* Major op-code of failed request */
+                    unsigned char minor_code;           /* Minor op-code of failed request */
+                    XID resourceid;                     /* resource id */
+                } XErrorEvent;
+            \end{cppcode}
+            \bigbreak \noindent 
+            We use 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XGetErrorText(Display* display, int code, char* buffer_return, int length)
+            \end{cppcode}
+            \bigbreak \noindent 
+            To get a textual description of the error code in the XErrorEvent structure passed to the handler.
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Root window}
+    \begin{itemize}
+        \item \textbf{Getting root window}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Window XDefaultRootWindow(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Returns the root window of the default screen.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textit{None}: This function does not generate X protocol errors.
+                    \end{itemize}
+            \end{itemize}
+            \bigbreak \noindent 
+            \begin{bashcode}
+                Window root = XDefaultRootWindow(dp);
+            \end{bashcode}
+        \item \textbf{Selecting events on root window}:
+            \begin{cppcode}
+                XSelectInput(Display* display, Window w, long event_mask)
+            \end{cppcode}
+            \bigbreak \noindent
+            Selects which input events the client wants to receive for the specified window.
+            \bigbreak \noindent 
+            We select 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            SubstructureRedirectMask | StructureNotifyMask
+            \end{cppcode}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Scanning existing windows}
+    \begin{itemize}
+        \item \textbf{XQueryTree}
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Notes}
+    \begin{itemize}
+        \item \textbf{XFree on NULL}:  While older X11 documentation explicitly stated that a NULL pointer could not be passed, the behavior was formally updated in the libX11 specification. Today, calling XFree(NULL) is completely safe, and the function will simply return without performing any operation
+        \item \textbf{XFree on arrays}: Yes, you can and should call XFree on memory arrays that were dynamically allocated and returned by Xlib functions. XFree is a general-purpose routine used to free objects and arrays allocated by the X Window System.
+
+    \end{itemize}
+
+
 
 
 

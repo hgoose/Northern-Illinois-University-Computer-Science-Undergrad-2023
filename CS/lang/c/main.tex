@@ -1466,7 +1466,7 @@
             Here, \texttt{Node} is the \textbf{tag name}. The actual type is \texttt{struct Node}. So, to declare a variable
             \bigbreak \noindent 
             \begin{cppcode}
-            struct Node n; 
+                struct Node n; 
             \end{cppcode}
             \bigbreak \noindent 
             This is why we see
@@ -1479,15 +1479,15 @@
             Then,
             \bigbreak \noindent 
             \begin{cppcode}
-            U u;  
-            Node n;
+                U u;  
+                Node n;
             \end{cppcode}
             \bigbreak \noindent 
             Are both legal. If we don't care about writing
             \bigbreak \noindent 
             \begin{cppcode}
-            Union _U u;
-            Struct Node n;
+                Union _U u;
+                Struct Node n;
             \end{cppcode}
             \bigbreak \noindent 
             We can omit the tag name,
@@ -1500,8 +1500,8 @@
             Then, only 
             \bigbreak \noindent 
             \begin{cppcode}
-            Node n;
-            U u;
+                Node n;
+                U u;
             \end{cppcode}
             \bigbreak \noindent 
             Are legal.
@@ -1514,8 +1514,8 @@
             Suppose $f$ returns a pointer a function that returns void and accepts a single double.
             \bigbreak \noindent 
             \begin{cppcode}
-            typedef void (*fp)(double);
-            fp f(int x) {...}
+                typedef void (*fp)(double);
+                fp f(int x) {...}
             \end{cppcode}
             \bigbreak \noindent 
             But, what if we didn't want to use typedef. Then, we wrap the function $f$ inside the function pointer type.
@@ -1542,24 +1542,276 @@
             A classic C pattern is a tagged union:
             \bigbreak \noindent 
             \begin{cppcode}
-            enum ValueKind {
-                VALUE_INT,
-                VALUE_DOUBLE,
-                VALUE_STRING
-            };
+                enum ValueKind {
+                    VALUE_INT,
+                    VALUE_DOUBLE,
+                    VALUE_STRING
+                };
 
-            struct Value {
-                enum ValueKind kind;
+                struct Value {
+                    enum ValueKind kind;
 
-                union {
-                    int i;
-                    double d;
-                    char* s;
-                } as;
-            };
+                    union {
+                        int i;
+                        double d;
+                        char* s;
+                    } as;
+                };
             \end{cppcode}
             \bigbreak \noindent 
             The kind field tells you which union member is currently valid.
+            \item \textbf{SIZE\_MAX}: SIZE\_MAX is a macro constant in the C programming language that represents the maximum possible value of the size\_t data type. It defines the absolute upper limit for the size of any object, array, or memory allocation that the hosting architecture can handle.
+                \bigbreak \noindent 
+                Defined in
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <stdint.h>
+                \end{cppcode}
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{Linkage}
+        \begin{itemize}
+            \item \textbf{Linkage}: Linkage is about whether declarations of the same name refer to the same object/function across scopes or translation units.
+                \begin{itemize}
+                    \item \textbf{external linkage}:   same entity can be referred to from other translation units
+                    \item \textbf{internal linkage}:   same entity only within this translation unit
+                    \item \textbf{no linkage}:         name is purely local; cannot be linked to another declaration
+                \end{itemize}
+                C has mostly the same linkage / scope rules as C++, with one major difference. At file scope const variable have \textbf{external linkage}.
+                \bigbreak \noindent 
+                C23 adds a C version of constexpr for objects. A WG14 proposal states that a file-scope constexpr object has static storage duration and internal linkage, meaning each translation unit gets a separate object. So in C23, file-scope constexpr also does not need static for header safety.
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{Double pointers}
+        \begin{itemize}
+            \item \textbf{Double pointers}: In C, a double pointer is a pointer that stores the address of another pointer.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                int x = 10;
+
+                int *p = &x;    // p points to int
+                int **pp = &p;  // pp points to pointer-to-int
+                \end{cppcode}
+            \item \textbf{Modifying a pointer inside a function}: C passes arguments by value. If you pass a pointer to a function, the function receives a copy of that pointer.
+                \bigbreak \noindent 
+                To modify the caller’s pointer, pass the address of the pointer:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void good_alloc(int **p) {
+                        *p = malloc(sizeof(int));
+                        **p = 42;
+                    }
+
+                    int main(void) {
+                        int *x = NULL;
+
+                        good_alloc(&x);
+
+                        printf("%d\n", *x); // 42
+
+                        free(x);
+                    }
+                \end{cppcode}
+
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    size_t f(int** a) {
+                        size_t n_elements = 6;
+                        *a = malloc(sizeof(int) * n_elements); 
+
+                        if (*a == NULL) return 0;
+
+                        int t = 0;
+                        for (size_t i = 0; i < n_elements; ++i) {
+                            (*a)[i] = t++;
+                        }
+                        return n_elements;
+                    }
+
+                    int* x;
+                    size_t n = f(&x);
+                    for (size_t i = 0; i<n; ++i) {
+                        printf("%d, ", x[i]);
+                    }
+
+                    free(x);
+                \end{cppcode}
+
+        \end{itemize}
+
+        \pagebreak 
+        \subsection{stdarg.h}
+        \begin{itemize}
+            \item \textbf{Header}:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <stdarg.h>
+                \end{cppcode}
+                \bigbreak \noindent 
+                This gives access to 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    va_list
+                    va_start
+                    va_arg
+                    va_end
+                    va_copy
+                \end{cppcode}
+            \item \textbf{Variadic functions}: 
+                A variadic function must have at least one named parameter before ....
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void f(int x, ...) {...}
+                \end{cppcode}
+            \item \textbf{va\_list}: va\_list is an object that tracks the current position in the unnamed argument list.
+                \bigbreak \noindent 
+                You do not manually index into the stack or registers. The ABI decides where arguments live. Some may be in registers, some on the stack. va\_list hides those details.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                va_list args;
+                \end{cppcode}
+                \bigbreak \noindent 
+                the arguments are split conceptually like this:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    named/fixed parameters 
+                    unnamed variadic args 
+                \end{cppcode}
+            \item \textbf{va\_start}: Initializes args so it points to the first unnamed argument.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void f(int x, ...) {
+                        va_list args;
+
+                        // args points to first argument after x
+                        va_start(args, x); 
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                The second argument must be the last named parameter before ....
+            \item \textbf{va\_arg}: Reads the next variadic argument as the type specified, then advances the cursor.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int value = va_arg(args, int)
+                \end{cppcode}
+                \bigbreak \noindent 
+                This is dangerous because C does not store type information for variadic arguments.
+            \item \textbf{va\_end}: Cleans up the va\_list.
+            \item \textbf{Count parameter}: A variadic function has no built-in way to know how many extra arguments were passed. You must design a protocol.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                int sum(int count, ...);
+                \end{cppcode}
+                \bigbreak \noindent 
+                The first argument tells the function to read \texttt{count} values.
+            \item \textbf{Sentinel value}: We can mark the end of the parameter pack by passing NULL as the last argument.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                print_strings("hello", "world", "test", NULL);
+                \end{cppcode}
+            \item \textbf{Examples}: 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int acc(size_t count, int x, ...) {
+                        int acc = x;
+
+                        va_list args;
+                        va_start(args, x); 
+                        int arg = va_arg(args, int);
+
+                        for (size_t i = 0; i < count; ++i) {
+                            acc += arg; 
+                            arg = va_arg(args, int);
+                        }
+
+                        va_end(args);
+
+                        return acc;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int acc2(size_t count, ...) {
+                        int acc = 0;
+
+                        va_list args;
+                        va_start(args, count); 
+                        int arg = va_arg(args, int);
+
+                        for (int i = 0; i < count; ++i) {
+                            acc += arg; 
+                            arg = va_arg(args, int);
+                        }
+
+                        va_end(args);
+
+                        return acc;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    size_t ppack_len_count(const char* s1, va_list args) {
+                        if (s1 == NULL) return 0;
+                        size_t total_len = strlen(s1);
+
+                        const char* arg = NULL;
+                        while ((arg = va_arg(args, const char*)) != NULL) {
+                            size_t len = strlen(arg);
+                            // Rearranged total_len + len + 1 to avoid overflow
+                            if (total_len > SIZE_MAX - len - 1) {
+                                return 0;
+                            }
+                            total_len += len;
+                        }
+
+                        return total_len;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    char* str_concat(const char* s1, ...) {
+                        if (s1 == NULL) {
+                            return NULL;
+                        }
+
+                        va_list args;
+                        va_start(args, s1);
+
+                        size_t tlen = ppack_len_count(s1,args);
+
+                        va_end(args);
+
+                        char* final = malloc(tlen + 1);
+                        if (final == NULL) {
+                            return NULL;
+                        }
+
+                        // Moving write pointer. Final stays fixed to base
+                        char* mv_write = final;
+
+                        size_t len = strlen(s1);
+                        memcpy(mv_write, s1, len);
+                        mv_write += len;
+
+                        va_start(args, s1);
+
+                        const char* arg = NULL;
+                        while ((arg = va_arg(args, const char*)) != NULL) {
+                            len = strlen(arg);
+                            memcpy(mv_write, arg, len);
+                            mv_write += len;
+                        }
+
+                        va_end(args);
+
+                        *mv_write = '\0';
+
+                        return final;
+                    }
+                \end{cppcode}
+
         \end{itemize}
 
         \pagebreak 
@@ -1710,6 +1962,553 @@
                         printf("entered %s\n", __func__);
                     }
                 \end{cppcode}
+        \end{itemize}
+
+        \pagebreak 
+        \unsect{Memory concepts}
+        \begin{itemize}
+                        \item \textbf{uintptr\_t, intptr\_t}: uintptr\_t and intptr\_t are integer types from:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    #include <stdint.h>
+                \end{cppcode}
+                \bigbreak \noindent 
+                They are used to store pointer values as integers.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    uintptr_t  // unsigned integer type capable of holding a pointer value
+                    intptr_t   // signed integer type capable of holding a pointer value
+                \end{cppcode}
+                \bigbreak \noindent 
+                if these types exist on your platform, converting a void * pointer to uintptr\_t or intptr\_t and then back to the same pointer type preserves the original pointer value.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int x = 42;
+
+                    uintptr_t p_as_int = (uintptr_t)&x;
+
+                    int *p = (int *)p_as_int;
+
+                    printf("%d\n", *p); // 42
+                \end{cppcode}
+                \bigbreak \noindent 
+                Pointers are not necessarily the same size as int, long, or long long. On some platforms, unsigned long might not be large enough to store a pointer. uintptr\_t exists specifically for this purpose.
+                \bigbreak \noindent 
+                Usually, uintptr\_t is the one you want. Pointer values are normally treated like raw addresses, and addresses are better represented as unsigned integers.
+                \bigbreak \noindent 
+                Use intptr\_t only if you specifically need a signed integer representation of a pointer value.
+            \item \textbf{Printing a pointer as an integer}: Normally, use \%p for pointers
+                \bigbreak \noindent 
+                \begin{cppcode}
+                printf("%p\n", (void*)p);
+                \end{cppcode}
+                \bigbreak \noindent 
+                But, if you want the numeric address
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <stdint.h>
+                #include <inttypes.h>
+
+                printf("%p\n", (void*)p);
+                printf("%" PRIuPTR "\n", (uintptr_t)p);
+                printf("%" PRIxPTR "\n", (uintptr_t)p);
+
+                // 0x7ffdceb0ff5c
+                // 140728071159644
+                // 7ffdceb0ff5c
+                \end{cppcode}
+                \bigbreak \noindent 
+                On my machine, \texttt{PRIuPTR} expands to \texttt{lu}, and \texttt{PRIxPTR} expands to \texttt{lx}
+                \bigbreak \noindent 
+                Do not assume the format is \%lu, because uintptr\_t might not be unsigned long.
+            \item \textbf{Alignment checks}: 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    if (((uintptr_t)p % 16) == 0) {
+                    // p is 16-byte aligned
+                }
+                \end{cppcode}
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    if (((uintptr_t)p & 15) == 0) {
+                        // p is 16-byte aligned
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                For an alignment $A$, where $A$ is a power of two, the addr is aligned if
+                \bigbreak \noindent 
+                \begin{cppcode}
+                addr % A == 0
+                addr & (A-1) == 0 // Equivalent
+                \end{cppcode}
+            \item \textbf{Aligning an address downward}: For power-of-two alignment, the formula is
+                \bigbreak \noindent 
+                \begin{cppcode}
+                aligned = addr & ~(align - 1); 
+                \end{cppcode}
+                \bigbreak \noindent 
+                Consider the case where we want to round an address down to the previous 16-byte boundary. In that case, we know that the address is aligned to a 16-byte boundary if its bottom four bites are cleared, since $16-1=15=0xF=0b1111$.
+                \bigbreak \noindent 
+                If we take an address and divide it by $16$, then its remainder $r$ must obey $ 0 \leq r < 16$. That is, the remainder is between zero and $16-1$ inclusive.
+                \bigbreak \noindent 
+                Consider a number $a$ and an alignment $A$. In base two,
+                \begin{align*}
+                    a = &\lambda_{n}2^{n} + \lambda_{n-1}2^{n-1} + \ldots + \lambda_{\ell}2^{\ell} + \ldots  \\
+                        &+ \lambda_{\log_{2}(A)}2^{\log_{2}(A)} + \lambda_{\log_{2}(A)-1}2^{\log_{2}(A)-1} \\
+                        &+\lambda_{\log_{2}(A)-2}2^{\log_{2}(A)-2} + \ldots + \lambda_{1}2^{1} + \lambda_{0}2^{0}
+                .\end{align*}
+                Note that $\lambda_{i} \in \left\{0,1\right\}$. If $a$ has alignment $A$, then $a$ has no remainder when divided by $A$. Observe that
+                \begin{align*}
+                    A = \lambda_{\log_{2}(A)}2^{\log_{2}(A)}
+                \end{align*}
+                when $\lambda_{\log_{2}(A)} = 1$, and all terms that come before this term are divisible by $A$. All terms that come before this term are in the form
+                \begin{align*}
+                    \lambda_{\log_{2}(A)+k}2^{\log_{2}(A) + k}
+                .\end{align*}
+                for $k \in \mathbb{Z}_{>0}$, and $\log_{2}(A)+k \leq n$. Observe that if $\lambda_{\log_{2}{(A)}+k} = 1$,
+                \begin{align*}
+                    \frac{2^{\log_{2}{(A)}+k}}{2^{\log_{2}{(A)}}} = 2^{k} \in \mathbb{Z}
+                ,\end{align*}
+                and if $\lambda_{\log_{2}{(A) + k}} = 0$,
+                \begin{align*}
+                    \frac{0}{2^{\log_{2}{(A)}}} = 0 
+                .\end{align*}
+                Thus, $a$ will only have a remainder after being divided by $A$  when all terms of the form
+                \begin{align*}
+                    \lambda_{\log_{2}{(A) - j}}2^{\log_{2}{(A)-j}} 
+                \end{align*}
+                have $\lambda_{\log_{2}{(A)-j}} =0$, since none of these terms are divisible by $A$. Note that $j \in \mathbb{Z}_{>0}$ and $\log_{2}{(A) - j} \geq 0$
+                \bigbreak \noindent 
+                This is precisely why the check
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    a & (A-1) == 0
+                \end{cppcode}
+                \bigbreak \noindent 
+                Checks if $a$ has remainder zero when divided by $A$. Now, consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                ~(A-1) 
+                \end{cppcode}
+                \bigbreak \noindent 
+                This is the number with all terms greater than or equal to $2^{\log_{2}{(A)}}$ non zero, and all terms less than $2^{\log_{2}{(A)}}$ zero. In essence, all bits left of  and including the $\log_{2}{(A)}$th one, and all bits to the right zero. For example, take $A = 16$, then 
+                \begin{align*}
+                    \sim(A - 1) = \sim(15) = 0b1111\ldots11110000
+                .\end{align*}
+                So, the bitwise and of a number $a$ with this mask turns off those bottom bits. Thus, it rounds $a$ down to the nearest boundary such that it is $A$ aligned.
+            \item \textbf{Aligning an address upward}:  For power-of-two alignment, the formula is
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    aligned = (addr + align - 1) & ~(align - 1);
+                \end{cppcode}
+                \bigbreak \noindent 
+                Adding align - 1 moves the address such that it is inside the next highest boundary, then we take the bitwise and of the negation of the alignment -1 (see above). This rounds it down to the bottom of that next highest boundary. Thus, a round up of the original boundary.
+            \item \textbf{Pointer tagging}: Some low-level code stores flags in unused low bits of aligned pointers.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    #define FLAG 1u
+
+                    uintptr_t tagged = ((uintptr_t)p) | FLAG;
+
+                    int *real_ptr = (int *)(tagged & ~(uintptr_t)FLAG);
+                    int flag_set = tagged & FLAG;
+                \end{cppcode}
+                \bigbreak \noindent 
+                This only works when you know the pointer is aligned enough that the low bit is unused.
+            \item \textbf{Dangers with uinptr\_t}: This type does not make pointer arithmetic magically safe. The following is okay 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                uintptr_t n = (uintptr_t)p;
+                p = (int*)n;
+                \end{cppcode}
+                \bigbreak \noindent 
+                This is much more dangerous
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    uintptr_t n = (uintptr_t)p;
+                    n += 100;
+                    p = (int *)n;
+                \end{cppcode}
+                \bigbreak \noindent 
+                That may produce a pointer that does not point to a valid object. Dereferencing it would be undefined behavior unless you know exactly what memory layout you are working with.
+
+        \end{itemize}
+
+        \pagebreak 
+        \unsect{Idioms}
+        \begin{itemize}
+            \item \textbf{(void*)-1}: Casting -1 to void* in C is a common idiom used to represent an error, sentinel, or special map value.
+                \bigbreak \noindent 
+                While NULL (typically (void *)0) signifies "nothing" or "not found," APIs often need a distinct value to indicate an actual failure or error state.
+                \bigbreak \noindent 
+                When you cast the signed integer -1 to a pointer type, the compiler converts its bit pattern into an address.
+                \bigbreak \noindent 
+                On modern architectures utilizing two's complement arithmetic, -1 translates to all bits set to 1 (e.g., 0xFFFFFFFF on a 32-bit system or 0xFFFFFFFFFFFFFFFF on a 64-bit system).
+                \bigbreak \noindent 
+                This effectively places the pointer at the very top of the addressable memory space, a region generally reserved for the operating system kernel. As a result, this pointer is safely outside the range of normal user-space application memory.
+                \bigbreak \noindent 
+                Attempting to read or write to (void *)-1 (e.g., *(int *)ptr) will immediately trigger a segmentation fault or an access violation because user applications do not have permission to access that extreme address boundary.
+                \bigbreak \noindent 
+                Converting integers directly to pointers is technically implementation-defined by the C standard. While it works predictably across standard compilers (GCC, Clang, MSVC), you should use the integer type uintptr\_t or intptr\_t from <stdint.h> if you are passing custom integer IDs inside pointer variables:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void* ptr = (void*)(uintptr_t)int_id;
+                \end{cppcode}
+
+        \end{itemize}
+
+
+        \pagebreak 
+        \unsect{Memory allocator}
+        \begin{itemize}
+            \item \textbf{sbrk and brk}:
+                \begin{cppcode}
+                    int brk(void *addr);
+                    void *sbrk(intptr_t increment);
+                \end{cppcode}
+                \bigbreak \noindent 
+                brk() and sbrk() change the location of the program break, which defines the end of the process's data segment (i.e., the program break is the first location after the end of the uninitialized data segment).  Increasing the program break has the effect of allocating memory to the process; decreasing the break deallocates memory.
+                \bigbreak \noindent 
+                brk() sets the end of the data segment to the value specified by addr, when that value is reasonable, the system has enough memory, and the process does not exceed its maximum data size
+                \bigbreak \noindent 
+                sbrk() increments the program's data space by increment bytes. Calling sbrk() with an increment of 0 can be used to find the current location of the program break.
+                \bigbreak \noindent 
+                On success, brk() returns zero.  On error, -1 is returned, and errno is set to ENOMEM.
+                \bigbreak \noindent 
+                On success, sbrk() returns the previous program break.  (If the break was increased, then this value is a pointer to the start of the newly allocated memory).  On error, (void *) -1 is returned, and errno is set to ENOMEM.
+
+            \item \textbf{System calls for obtaining memory}: A custom allocator needs to get large chunks of memory from the operating system. 
+                \bigbreak \noindent 
+                Historically, allocators use
+                \bigbreak \noindent 
+                \begin{cppcode}
+                sbrk()
+                brk
+                \end{cppcode}
+                \bigbreak \noindent 
+                Modern allocators often use:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                mmap();
+                munmap();
+                \end{cppcode}
+            \item \textbf{Process}: 
+                \begin{itemize}
+                    \item OS gives allocator a large memory region.
+                    \item Allocator splits that region into smaller blocks.
+                    \item User calls malloc/free implementation that uses the allocator.
+                    \item Allocator hands out and recycles blocks.
+                \end{itemize}
+            \item \textbf{Block metadata}: Every allocated or free block usually has a hidden header.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                typedef struct block {
+                    size_t size;
+                    int free;
+                    struct block *next;
+                } block_t;
+                \end{cppcode}
+                \bigbreak \noindent 
+                The real memory may look like this:
+                \begin{verbatim}
+                    +----------------------+----------------------+
+                    | allocator metadata   | user memory          |
+                    | size, free, next     | returned by malloc   |
+                    +----------------------+----------------------+
+                    ^                      ^
+                    block header           pointer returned to user
+                \end{verbatim}
+                If the user requests
+                \bigbreak \noindent
+                \begin{cppcode}
+                int *p = malloc(100);
+                \end{cppcode}
+                \bigbreak \noindent 
+                Your allocator may actually reserve
+                \bigbreak \noindent 
+                \begin{cppcode}
+                sizeof(block_t) + 100 bytes
+                \end{cppcode}
+                \bigbreak \noindent 
+                Then it returns the address just after the metadata. 
+                \bigbreak \noindent 
+                \textbf{Note:} \textbf{free} is a flag that records whether that block is currently available for reuse.
+                \bigbreak \noindent 
+                We call \texttt{free} an integer here because historically $C$ did not have a boolean type. However, now that it does, you are free to mark \texttt{free} as a boolean.
+                \bigbreak \noindent 
+                The \texttt{size} member usually records the size of the usable memory area after the header.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void *a = malloc(16);
+                    void *b = malloc(64);
+                    void *c = malloc(200);
+                \end{cppcode}
+                \begin{verbatim}
+                    +--------+-------------+
+                    | header | 16 bytes    |
+                    +--------+-------------+
+
+                    +--------+-------------+
+                    | header | 64 bytes    |
+                    +--------+-------------+
+
+                    +--------+-------------+
+                    | header | 208 bytes   |
+                    +--------+-------------+
+                \end{verbatim}
+                If we call the size after the header the \textbf{payload}, then total block size is header plus payload.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                sizeof(block_t) + block->size
+                \end{cppcode}
+            \item \textbf{alignof and max\_align\_t}: In C, alignof is an operator that returns the CPU-enforced memory alignment requirement of a type. 
+                \bigbreak \noindent 
+                Note that C11 introduced alignof as
+                \bigbreak \noindent 
+                \begin{cppcode}
+                size_t _Alignof()
+                \end{cppcode}
+                \bigbreak \noindent 
+                with a macro
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #define _Alignof(x) alignof(x)
+                \end{cppcode}
+                \bigbreak \noindent 
+                found in 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <stdalign.h>
+                \end{cppcode}
+                \bigbreak \noindent 
+                While C23 made it available as \texttt{alignof} without the header \texttt{stdalign.h}.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                size_t alignof()
+                \end{cppcode}
+                \bigbreak \noindent 
+                Defined in <stddef.h>, max\_align\_t is a built-in type that guarantees an alignment boundary at least as large as any basic C data type (like double, long double, long long, or pointers).
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #include <stddef.h>
+                \end{cppcode}
+            \item \textbf{\_Alignas / alignas}: The alignas specifier in C and C++ dictates the custom memory alignment for variables or user-defined types.
+                \bigbreak \noindent 
+                Values must be an integral constant expression that evaluates to zero or a power of 2 (e.g., 1, 2, 4, 8, 16). If multiple alignas specifiers are applied, the compiler respects the largest value.
+                \bigbreak \noindent 
+                In C, it was introduced as \_Alignas (in C11). As of C23, it is available as the alignas keyword.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                alignas(8) int my_variable;
+                \end{cppcode}
+                \bigbreak \noindent 
+                 If the type naturally requires a larger alignment (e.g., a hardware type demanding 8 bytes), using alignas(4) is ignored.
+            \item \textbf{Alignment}: malloc must return memory aligned enough for any normal object type. For example, this should be valid
+                \bigbreak \noindent 
+                \begin{cppcode}
+                long double *x = malloc(sizeof(long double));
+                \end{cppcode}
+                \bigbreak \noindent 
+                So your allocator cannot return arbitrary byte addresses. It must return properly aligned addresses.
+                \bigbreak \noindent 
+                If the allocator uses 8-byte alignment, then every returned block size should be a multiple of 8. So, if a user requests 13 bytes, the allocator must return 16 bytes.
+                \bigbreak \noindent 
+                For a general-purpose malloc-style allocator, choose an alignment that is valid for any ordinary C object the user might store in the returned memory.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                alignment = _Alignof(max_align_t)
+                \end{cppcode}
+                \bigbreak \noindent 
+                A portable alignment helper would be 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                #define ALIGNMENT _Alignof(max_align_t)
+
+                static size_t align_up(size_t n) {
+                    return (n + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
+                }
+                \end{cppcode}
+                \bigbreak \noindent 
+                This assumes ALIGNMENT is a power of two, which it normally is for C object alignments.
+            \item \textbf{Free lists}: A simple allocator usually keeps a linked list of blocks. When malloc(64) is called, the allocator searches the list for a free block large enough.
+                \bigbreak \noindent 
+                when \texttt{free(p)} is called, the allocator marks the block as free.
+                \begin{itemize}
+                    \item \textbf{malloc}:
+                        \begin{itemize}
+                            \item search free list
+                            \item find a big enough free block
+                            \item mark it used
+                            \item return pointer to user memory
+                        \end{itemize}
+                    \item \textbf{free}:
+                        \begin{itemize}
+                            \item find block header
+                            \item mark block free
+                        \end{itemize}
+                \end{itemize}
+                If the allocator cannot find a free block large enough to satisfy the request, it usually asks the OS for more memory and creates a new block from that memory.
+                \bigbreak \noindent 
+                The important idea is that malloc does not create memory from nothing. It manages memory it already has, and when that is insufficient, it asks the operating system for a larger region.
+            \item \textbf{Two models}:
+                \begin{enumerate}
+                    \item \textbf{One linked list of all blocks}: Whether free or in use. This is the simpler beginner allocator design.
+                    \item \textbf{Separate free list}: More realistic allocators often maintain a list containing only free blocks.
+                        \bigbreak \noindent 
+                        In this model, when a block is allocated, it is removed from the free list.
+                        \bigbreak \noindent 
+                        When a block is freed, it is inserted into the free list
+                        \bigbreak \noindent 
+                        But usually there is not also a normal “in-use list” for allocated blocks. The allocator does not need one for ordinary operation. When the user calls 
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                        free(ptr)
+                        \end{cppcode}
+                        \bigbreak \noindent 
+                        The allocator can find the block header directly
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                        block_t* block = (block_t*)ptr-1;
+                        \end{cppcode}
+                \end{enumerate}
+            \item \textbf{Finding the block header from the user pointer}: This is a core trick. If malloc returns a pointer after the header
+                \begin{verbatim}
+                    +---------+----------------+
+                    | header  | user memory    |
+                    +---------+----------------+
+                              ^
+                              returned pointer
+                \end{verbatim}
+                Then free(ptr) must recover the header by moving backward:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                block_t* block = (block_t* ptr) - 1;
+                \end{cppcode}
+                \bigbreak \noindent 
+                This works if the returned pointer was created like this:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                return block + 1
+                \end{cppcode}
+                \bigbreak \noindent 
+                Thus,
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    void my_free(void *ptr) {
+                        block_t *block = (block_t *)ptr - 1;
+                        block->free = 1;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                Recall that arithmetic on pointers moves the pointer using the size of the type pointed to.
+            \item \textbf{Splitting blocks}: Suppose the allocator has this free block:
+                \begin{verbatim}
+                    +-----------------------+
+                    | free block: 1024 bytes|
+                    +-----------------------+
+                \end{verbatim}
+                Then the user requests 100 bytes. A simple allocator could give the entire 1024-byte block to the user, but that wastes memory. 
+                \bigbreak \noindent 
+                Instead, it can split the block:
+                \begin{verbatim}
+                    before:
+
+                    [ free 1024 ]
+
+                    after malloc(100):
+
+                    [ used 100 ][ free 900-ish ]
+                \end{verbatim}
+                You need to understand how to split one block into two valid blocks with separate headers.
+            \item \textbf{Coalescing adjacent free blocks}: When blocks are freed, memory can become fragmented:
+                \begin{verbatim}
+                    [ used ][ free ][ free ][ used ]
+                \end{verbatim}
+                The two adjacent free blocks should often be merged:
+                \begin{verbatim}
+                    [ used ][ larger free ][ used ]
+                \end{verbatim}
+                This is called \textbf{coalescing}.
+                \bigbreak \noindent 
+                Without coalescing, your allocator may fail large allocations even though there is enough total free memory.
+            \item \textbf{Fragmentation}: There are two major kinds.
+                \begin{enumerate}
+                    \item \textbf{Internal fragmentation}: The allocator gives more memory than requested.
+                    \item \textbf{External fragmentation}: There is enough total free memory, but it is split into small pieces.
+                \end{enumerate}
+            \item \textbf{Allocation strategies}: When searching the free list, the allocator needs a policy.
+                \begin{itemize}
+                    \item \textbf{First fit}:	Use the first free block large enough
+                    \item \textbf{Best fit}:	Use the smallest free block large enough
+                    \item \textbf{Worst fit}:	Use the largest free block
+                    \item \textbf{Next fit}:	Continue searching from the previous search position
+                \end{itemize}
+            \item \textbf{Boundary tags}: More advanced allocators store metadata at both the beginning and end of a block.
+                \begin{verbatim}
+                    +--------+-------------+--------+
+                    | header | user memory | footer |
+                    +--------+-------------+--------+
+                \end{verbatim}
+                This makes it easier to find neighboring blocks and coalesce them efficiently.
+                \bigbreak \noindent 
+                Without boundary tags, coalescing can require scanning the whole list.
+            \item \textbf{Bins and segregated free lists}: A simple allocator may keep one global free list.
+                \bigbreak \noindent 
+                More advanced allocators keep separate lists for different block sizes:
+                \begin{itemize}
+                    \item 8-byte blocks    -> list
+                    \item 16-byte blocks   -> list
+                    \item 32-byte blocks   -> list
+                    \item 64-byte blocks   -> list
+                    \item large blocks     -> list
+                \end{itemize}
+                These are often called bins, size classes, or segregated free lists. This improves performance because malloc(16) does not need to search through large unrelated blocks.
+            \item \textbf{Thread safety}: A basic allocator is not thread-safe. If two threads call malloc at the same time, they may corrupt the allocator’s internal structures. 
+                \bigbreak \noindent 
+                You need to eventually understand:
+                \begin{enumerate}
+                    \item mutexes
+                    \item atomic operations
+                    \item per-thread arenas
+                    \item lock contention
+                    \item reentrancy
+                \end{enumerate}
+            \item \textbf{Debugging allocator bugs}: Allocator bugs are often severe because they corrupt memory silently.
+                \bigbreak \noindent 
+                You need to understand common failure cases:
+                \begin{enumerate}
+                    \item double free
+                    \item use after free
+                    \item buffer overflow
+                    \item freeing invalid pointers
+                    \item metadata corruption
+                    \item returning unaligned pointers
+                    \item overlapping allocations
+                    \item losing blocks from the free list
+                \end{enumerate}
+                You should also write internal consistency checks.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                void heap_check(void);
+                \end{cppcode}
+                \bigbreak \noindent 
+                This can verify that block sizes, free-list links, and address ranges make sense.
+            \item \textbf{Minimum concepts for a first allocator}
+                \begin{enumerate}
+                    \item void *, char *, and pointer arithmetic
+                    \item Process heap and sbrk()
+                    \item Block headers
+                    \item Alignment
+                    \item Linked-list free list
+                    \item First-fit allocation
+                    \item Finding the header from a user pointer
+                    \item Splitting free blocks
+                    \item Marking blocks free
+                    \item Coalescing adjacent free blocks
+                \end{enumerate}
+
+
+
 
         \end{itemize}
 
