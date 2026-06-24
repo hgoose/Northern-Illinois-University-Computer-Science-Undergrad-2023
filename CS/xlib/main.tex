@@ -116,14 +116,14 @@
         \item \textbf{Xlib function requests}: Most of the functions in Xlib just add requests to an output buffer. These requests later execute asynchronously on the X server. Functions that return values of information stored in the server do not return (that is, they block) until an explicit reply is received or an error occurs. You can provide an error handler, which will be called when the error is reported.
         \item \textbf{XSync}: If a client does not want a request to execute asynchronously, it can follow the request with a call to XSync, which blocks until all previously buffered asynchronous events have been sent and acted on. As an important side effect, the output buffer in Xlib is always flushed by a call to any function that returns a value from the server or waits for input.
         \item \textbf{Resource ID}: Many Xlib functions will return an integer resource ID, which allows you to refer to objects stored on the X server. These can be of type \textbf{Window, Font, Pixmap, Colormap, Cursor, and GContext}, as defined in the file \textbf{<X11/X.h>}. These resources are created by requests and are destroyed (or freed) by requests or when connections are closed. Most of these resources are potentially sharable between applications, and in fact, windows are manipulated explicitly by window manager programs. Fonts and cursors are shared automatically across multiple screens. Fonts are loaded and unloaded as needed and are shared by multiple clients. Fonts are often cached in the server. Xlib provides no support for sharing graphics contexts between applications
-        \item \textbf{Client programs and events}: Client programs are informed of events. Events may either be side effects of a request (for example, restacking windows generates Expose ev ents) or completely asynchronous (for example, from the keyboard). A client program asks to be informed of events. Because other applications can send events to your application, programs must be prepared to handle (or ignore) events of all types.
+        \item \textbf{Client programs and events}: Client programs are informed of events. Events may either be side effects of a request (for example, restacking windows generates Expose events) or completely asynchronous (for example, from the keyboard). A client program asks to be informed of events. Because other applications can send events to your application, programs must be prepared to handle (or ignore) events of all types.
             \bigbreak \noindent 
             Input events (for example, a key pressed or the pointer moved) arrive asynchronously from the server and are queued until they are requested by an explicit call (for example, \textbf{XNextEvent} or \textbf{XWindowEvent}). In addition, some library functions (for example, \textbf{XRaiseWindow}) generate Expose and \textbf{ConfigureRequest} events. These events also arrive asynchronously, but the client may wish to explicitly wait for them by calling \textbf{XSync} after calling a function that can cause the server to generate events.
         \item \textbf{Errors}: Some functions return \textbf{Status}, an integer error indication. If the function fails, it returns a zero. If the function returns a status of zero, it has not updated the return arguments. Because C does not provide multiple return values, many functions must return their results by writing into clientpassed storage. By default, errors are handled either by a standard library function or by one that you provide. Functions that return pointers to strings return NULL pointers if the string does not exist.
             \bigbreak \noindent 
             The X server reports \textbf{protocol errors} at the time that it detects them. If more than one error could be generated for a given request, the server can report any of them.
             \bigbreak \noindent 
-            Because Xlib usually does not transmit requests to the server immediately (that is, it buffers them), errors can be reported much later than they actually occur. For debugging purposes, howev er, Xlib provides a mechanism for forcing synchronous behavior. When synchronization is enabled, errors are reported as they are generated.
+            Because Xlib usually does not transmit requests to the server immediately (that is, it buffers them), errors can be reported much later than they actually occur. For debugging purposes, however, Xlib provides a mechanism for forcing synchronous behavior. When synchronization is enabled, errors are reported as they are generated.
             \bigbreak \noindent 
             When Xlib detects an error, it calls an error handler, which your program can provide. If you do not provide an error handler, the error is printed, and your program terminates.
         \item \textbf{Standard Header Files}: The following include files are part of the Xlib standard:
@@ -2411,27 +2411,27 @@
             \bigbreak \noindent 
             \begin{cppcode}
                 typedef struct {
-                    int x, y; /* location of window */
-                    int width, height; /* width and height of window */
-                    int border_width; /* border width of window */
-                    int depth; /* depth of window */
-                    Visual *visual; /* the associated visual structure */
-                    Window root; /* root of screen containing window */
-                    int class; /* InputOutput, InputOnly*/
-                    int bit_gravity; /* one of the bit gravity values */
-                    int win_gravity; /* one of the window gravity values */
-                    int backing_store; /* NotUseful, WhenMapped, Always */
-                    unsigned long backing_planes; /* planes to be preserved if possible */
-                    unsigned long backing_pixel; /* value to be used when restoring planes */
-                    Bool save_under; /* boolean, should bits under be saved? */
-                    Colormap colormap; /* color map to be associated with window */
-                    Bool map_installed; /* boolean, is color map currently installed*/
-                    int map_state; /* IsUnmapped, IsUnviewable, IsViewable */
-                    long all_event_masks; /* set of events all people have interest in*/
-                    long your_event_mask; /* my event mask */
-                    long do_not_propagate_mask; /* set of events that should not propagate */
-                    Bool override_redirect; /* boolean value for override-redirect */
-                    Screen *screen; /* back pointer to correct screen */
+                    int x, y;                           /* location of window */
+                    int width, height;                  /* width and height of window */
+                    int border_width;                   /* border width of window */
+                    int depth;                          /* depth of window */
+                    Visual *visual;                     /* the associated visual structure */
+                    Window root;                        /* root of screen containing window */
+                    int class;                          /* InputOutput, InputOnly*/
+                    int bit_gravity;                    /* one of the bit gravity values */
+                    int win_gravity;                    /* one of the window gravity values */
+                    int backing_store;                  /* NotUseful, WhenMapped, Always */
+                    unsigned long backing_planes;       /* planes to be preserved if possible */
+                    unsigned long backing_pixel;        /* value to be used when restoring planes */
+                    Bool save_under;                    /* boolean, should bits under be saved? */
+                    Colormap colormap;                  /* color map to be associated with window */
+                    Bool map_installed;                 /* boolean, is color map currently installed*/
+                    int map_state;                      /* IsUnmapped, IsUnviewable, IsViewable */
+                    long all_event_masks;               /* set of events all people have interest in*/
+                    long your_event_mask;               /* my event mask */
+                    long do_not_propagate_mask;         /* set of events that should not propagate */
+                    Bool override_redirect;             /* boolean value for override-redirect */
+                    Screen *screen;                     /* back pointer to correct screen */
                 } XWindowAttributes;
             \end{cppcode}
             \bigbreak \noindent 
@@ -2476,7 +2476,6 @@
             The screen member is set to a screen pointer that gives you a back pointer to the correct screen. This makes it easier to obtain the screen information without having to loop over the root window fields to see which field matches. \textbf{XGetWindowAttributes} can generate \textbf{BadDrawable} and \textbf{BadWindow} errors.
             \bigbreak \noindent 
             To obtain the current geometry of a given drawable, use \textbf{XGetGeometry.}
-            \bigbreak \noindent 
             \bigbreak \noindent 
             \begin{cppcode}
                 Status XGetGeometry(
@@ -3092,7 +3091,7 @@
             To free all storage associated with a specified pixmap, use \textbf{XFreePixmap.}
             \bigbreak \noindent 
             \begin{cppcode}
-                XFreePixmap (Display* display, Pixmap pixmap)
+                XFreePixmap(Display* display, Pixmap pixmap)
             \end{cppcode}
             \begin{itemize}
                 \item display Specifies the connection to the X server.
@@ -3443,7 +3442,7 @@
             To free (destroy) a given cursor, use \textbf{XFreeCursor.}
             \bigbreak \noindent 
             \begin{cppcode}
-                XFreeCursor (display, cursor)
+                XFreeCursor(display, cursor)
             \end{cppcode}
             \begin{itemize}
                 \item display Specifies the connection to the X server.
@@ -3822,8 +3821,12 @@
             To map a color name to the exact RGB value, use \textbf{XParseColor}.
             \bigbreak \noindent
             \begin{cppcode}
-                Status XParseColor(Display *display, Colormap colormap, char *spec,
-                XColor *exact_def_return)
+                Status XParseColor(
+                    Display *display,
+                    Colormap colormap,
+                    char *spec,
+                    XColor *exact_def_return
+                )
             \end{cppcode}
             \begin{itemize}
                 \item \textbf{display}: Specifies the connection to the X server.
@@ -3958,7 +3961,7 @@
                 \item \textit{color\_exact\_return}: Returns the color specification parsed from the color string or parsed from the corresponding string found in a color-name database.
                 \item \textit{result\_format}: Specifies the color format for the returned color specifications, namely the \textit{color\_screen\_return} and \textit{color\_exact\_return} arguments. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a numerical color specification, the specification is returned in the format used in that numerical color specification. If the format is \textbf{XcmsUndefinedFormat} and the color string contains a color name, the specification is returned in the format used to store the color in the database.
             \end{itemize}
-            \noindent
+            \bigbreak\noindent
             The \textbf{XcmsAllocNamedColor} function is similar to \textbf{XAllocNamedColor} except that the color returned can be in any format specified. This function ultimately calls \textbf{XAllocColor} to allocate a read-only color cell with the color specified by a color string. The color string is parsed into an \textbf{XcmsColor} structure, converted to an RGB value, and finally passed to \textbf{XAllocColor}. If the color name is not in the Host Portable Character Encoding, the result is implementation-dependent. Use of uppercase or lowercase does not matter.
             \bigbreak \noindent
             This function returns both the color specification as a result of parsing, called the exact specification, and the actual color specification stored, called the screen specification. This screen specification is the result of converting the RGB value returned by \textbf{XAllocColor} into the format specified in \textit{result\_format}. If there is no interest in a returned color specification, unnecessary computation can be bypassed if \textit{result\_format} is set to \textbf{XcmsRGBFormat}. If \textit{color\_screen\_return} and \textit{color\_exact\_return} point to the same structure, the pixel field will be set correctly, but the color values are undefined.
