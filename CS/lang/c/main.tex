@@ -2176,7 +2176,39 @@
                 On success, brk() returns zero.  On error, -1 is returned, and errno is set to ENOMEM.
                 \bigbreak \noindent 
                 On success, sbrk() returns the previous program break.  (If the break was increased, then this value is a pointer to the start of the newly allocated memory).  On error, (void *) -1 is returned, and errno is set to ENOMEM.
-
+                \bigbreak \noindent 
+                sbrk is used by old/simple allocators to move the end of the process heap. It does not “allocate an object” directly. Instead, it asks the OS/kernel to make the process’s data area larger, then the allocator manages that newly obtained region itself.
+                \bigbreak \noindent 
+                A traditional Unix process layout looks roughly like this:
+                \begin{verbatim}
+                    low addresses
+                    +----------------------+
+                    | text segment         | machine code
+                    +----------------------+
+                    | initialized data     | global/static variables with initial values
+                    +----------------------+
+                    | uninitialized data   | BSS: global/static variables initialized to zero
+                    +----------------------+
+                    | heap                 | malloc/free usually manage this region
+                    | grows upward         |
+                    +----------------------+
+                    | ... unused gap ...   |
+                    +----------------------+
+                    | stack                |
+                    | grows downward       |
+                    +----------------------+
+                    high addresses
+                \end{verbatim}
+                The heap begins after the program’s data segment, historically after the uninitialized data segment, also called BSS.
+            \item \textbf{Program break}: The program break is the address marking the current end of the process’s heap/data area.
+                \begin{verbatim}
+                    heap start                            program break
+                    |                                          |
+                    v                                          v
+                    +---+--------------------------------------+
+                    |   | memory obtained from the OS for heap |
+                    +---+--------------------------------------+
+                \end{verbatim}
             \item \textbf{System calls for obtaining memory}: A custom allocator needs to get large chunks of memory from the operating system. 
                 \bigbreak \noindent 
                 Historically, allocators use
