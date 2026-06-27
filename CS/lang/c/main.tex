@@ -1016,6 +1016,176 @@
     \end{itemize}
 
     \pagebreak 
+    \unsect{Data structures}
+    \subsection{Linked list}
+    \begin{itemize}
+        \item \textbf{Structures}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct _Node {
+                    int data;
+                    struct _Node* next;
+                } Node;
+
+                void node_init(Node* node, int data) {
+                    node->data = data;
+                    node->next = NULL;
+                } 
+
+                typedef struct _LL {
+                    Node* head, *tail;
+                } LL;
+            \end{cppcode}
+        \item \textbf{Appending}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void append(LL* list, Node* node) {
+                    if (node == NULL) return;
+
+                    node->next = NULL;
+
+                    if (list->head == NULL) {
+                        list->head = node;
+                        list->tail = node;
+                        return;
+                    }
+
+                    list->tail->next = node;
+                    list->tail = node;
+                }
+            \end{cppcode}
+            \bigbreak \noindent 
+            Its not guaranteed that 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            node->next == NULL
+            \end{cppcode}
+            \bigbreak \noindent 
+            So, we ensure this ourselves.
+        \item \textbf{Clearing}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void clear(LL* list) {
+                    if (list->head == NULL) return;
+
+                    Node* curr = list->head;
+                    while (curr != NULL) {
+                        Node* forward = curr->next;
+                        curr->next = NULL;
+                        free(curr);
+                        curr = forward;
+                    }
+
+                    list->head = NULL;
+                    list->tail = NULL;
+                }
+            \end{cppcode}
+        \item \textbf{Traversing}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void ll_print(LL* list) {
+                    Node* curr = list->head;
+                    while (curr != NULL) {
+                        printf("%d, ", curr->data);
+                        curr=curr->next;
+                    }
+                }
+            \end{cppcode}
+        \item \textbf{Usage}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                LL list = {0};
+
+                Node* n1 = malloc(sizeof(Node));
+                node_init(n1, 1);
+
+                Node* n2 = malloc(sizeof(Node));
+                node_init(n2, 2);
+
+                Node* n3 = malloc(sizeof(Node));
+                node_init(n3, 3);
+
+                Node* n4 = malloc(sizeof(Node));
+                node_init(n4, 4);
+
+                append(&list, n1);
+                append(&list, n2);
+                append(&list, n3);
+                append(&list, n4);
+
+                ll_print(&list);
+                puts("");
+
+                clear(&list);
+                ll_print(&list);
+            \end{cppcode}
+        \item \textbf{Finding}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                _Bool find(LL* list, Node* node) {
+                    if (node == NULL || list == NULL) return false;
+
+                    Node* curr = list->head;
+                    while (curr != NULL) {
+                        if (curr == node) return true;
+                        curr=curr->next;
+                    }
+                    return false;
+                }
+            \end{cppcode}
+        \item \textbf{Erase}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                void erase(LL* list, Node** node) {
+                    if (node == NULL || list == NULL) return;
+
+                    if (!find(list, *node)) return; 
+
+                    // Single element
+                    if (list->head == list->tail) {
+                        free(list->head);
+                        list->head = NULL;
+                        list->tail = NULL;
+                        *node = NULL;
+                        return;
+                    }
+
+                    // If the node we want to remove is the head
+                    if (list->head == *node) {
+                        list->head = list->head->next; 
+                        free(*node);
+                        *node = NULL;
+                        return;
+                    }
+
+                    // General case
+                    Node* curr = list->head;
+                    Node* prev = list->head;
+                    while (curr != NULL) {
+                        if (curr == *node) {
+                            curr = curr->next;
+                            break;
+                        }
+                        prev = curr;
+                        curr = curr->next;
+                    }
+
+                    // If the node we want to remove is the tail
+                    if (*node == list->tail) {
+                        list->tail = prev;
+                    }
+
+                    prev->next = curr;
+                    free(*node);
+                    *node = NULL;
+                }
+            \end{cppcode}
+
+
+    \end{itemize}
+
+
+    \pagebreak 
     \unsect{Memory operations in string.h}
     \begin{itemize}
         \item \textbf{memset}        
@@ -2135,6 +2305,72 @@
         \end{itemize}
 
         \pagebreak 
+        \unsect{The C Abstract Machine}
+        \begin{itemize}
+            \item \textbf{Idea}: The C abstract machine is the formal model that the C standard uses to define what a C program means.
+                \bigbreak \noindent 
+                It is not a real CPU. It is an imaginary execution model with objects, values, expressions, side effects, sequence rules, storage durations, and undefined behavior. The compiler is allowed to generate any real machine code that behaves \textbf{as if} the program ran according to this abstract model
+                \bigbreak \noindent 
+                That principle is called the as-if rule.
+                \bigbreak \noindent 
+                When you write:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                int x = 1;
+                x = x+2;
+                printf("%d\n", x);
+                \end{cppcode}
+                \bigbreak \noindent 
+                the C standard describes this as operations in the abstract machine:
+                \begin{enumerate}
+                    \item An int object $x$ is created.
+                    \item The value 1 is stored in it.
+                    \item The expression $x$ + 2 is evaluated.
+                    \item The result 3 is stored back into $x$.
+                    \item printf observes the value 3.
+                \end{enumerate}
+                The compiler does not have to literally generate instructions in that order. It only has to preserve the observable behavior of the program.
+                \bigbreak \noindent 
+                So the compiler could optimize this to something morally like:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                printf("%d\n", 3);
+                \end{cppcode}
+                \bigbreak \noindent 
+                because the observable result is the same.
+            \item \textbf{Undefined behavior}: The abstract machine is also where undefined behavior gets its force.
+                \bigbreak \noindent 
+                If your program does something the C standard says is undefined, then the abstract machine imposes no requirements on what happens.
+            \item \textbf{Storage duration}: The abstract machine also classifies how long objects exist.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int global;              // static storage duration
+
+                    void f(void) {
+                        int local;           // automatic storage duration
+                        static int counter;  // static storage duration
+                        int *p = malloc(16); // allocated storage duration
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                These categories matter because the abstract machine defines when objects begin and end their lifetimes.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int *bad(void) {
+                        int x = 10;
+                        return &x;
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                After bad returns, $x$ no longer exists in the abstract machine. The returned pointer does not point to a live object anymore. Dereferencing it is undefined behavior.
+            \item \textbf{Automatic storage duration}: In C programming, automatic storage duration refers to the lifetime of local variables. Memory is automatically allocated when the execution enters the block or function where the variable is defined, and it is deallocated as soon as the execution exits that block.
+
+
+
+
+        \end{itemize}
+
+        \pagebreak 
         \unsect{Idioms}
         \begin{itemize}
             \item \textbf{(void*)-1}: Casting -1 to void* in C is a common idiom used to represent an error, sentinel, or special map value.
@@ -2153,6 +2389,55 @@
                 \bigbreak \noindent 
                 \begin{cppcode}
                     void* ptr = (void*)(uintptr_t)int_id;
+                \end{cppcode}
+            \item \textbf{brace-enclosed initializer list}: Consider
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    typedef struct _S {
+                        int a,b,c;
+                    } S;
+                \end{cppcode}
+                \bigbreak \noindent 
+                We can create an instance of type $S$ and give values to its members with
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    S s = {1,2,3};
+                \end{cppcode}
+                \bigbreak \noindent 
+                If we omit some members in an aggregate initializer list, C initializes the omitted members as if they had static storage duration.
+            \item \textbf{Zero-initializing}: = \{0\} is a common C idiom for zero-initializing an aggregate, such as a struct, array, or union.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    typedef struct _S {
+                        int a;
+                        int* x;
+                    } S;
+
+
+                    int main(int argc, char** argv) {
+
+                        S s1;
+                        S s2 = {0};
+
+                        // Undefined behavior
+                        printf("%d\n", s1.a);
+
+                        // Definitely zero
+                        printf("%d\n", s2.a);
+
+                        // Not guaranteed to be NULL
+                        if (s1.x == NULL) {
+                            printf("NULL\n");
+                        } else printf("NOT NULL\n");
+
+                        // Definitely NULL
+                        if (s2.x == NULL) {
+                            printf("NULL\n");
+                        } else printf("NOT NULL\n");
+
+
+                        return EXIT_SUCCESS;
+                    }
                 \end{cppcode}
 
         \end{itemize}
@@ -2185,11 +2470,14 @@
                     +----------------------+
                     | text segment         | machine code
                     +----------------------+
-                    | initialized data     | global/static variables with initial values
+                    | initialized data     | global/static variables 
+                    |                      | with initial values
                     +----------------------+
-                    | uninitialized data   | BSS: global/static variables initialized to zero
+                    | uninitialized data   | BSS: global/static variables 
+                    |                      |      initialized to zero
                     +----------------------+
-                    | heap                 | malloc/free usually manage this region
+                    | heap                 | malloc/free usually 
+                    |                      | manage this region
                     | grows upward         |
                     +----------------------+
                     | ... unused gap ...   |
@@ -2224,6 +2512,57 @@
                 mmap();
                 munmap();
                 \end{cppcode}
+            \item \textbf{Arenas}: An arena is a region of memory that an allocator manages as a unit.
+                \bigbreak \noindent 
+                Suppose your allocator calls:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                void *arena = sbrk(4096);
+                \end{cppcode}
+                \bigbreak \noindent 
+                Now you have a 4096-byte arena. Then a user asks for 32 bytes. You do not call sbrk(32) necessarily. Instead, you split part of the arena.
+                \bigbreak \noindent 
+                So the arena is the larger pool, and each allocation is a block inside that pool. Calling the OS for memory is relatively expensive. An allocator usually does not want to ask the OS every time the user requests a tiny allocation.
+                \bigbreak \noindent 
+                With sbrk, the traditional heap itself can be treated as one arena. When the arena runs out of usable free blocks, your allocator extends it.
+                \bigbreak \noindent 
+                So in a toy allocator, your “arena” may just be the continuous heap region between the first block you got from sbrk and the current program break.
+            \item \textbf{mmap allocators}: mmap asks the OS for a separate virtual memory mapping. Calling it creates a new memory region unrelated to the sbrk heap.
+                \begin{verbatim}
+                    .data / .bss
+                    brk heap
+                    ...
+                    [ mmap allocation A ]
+                    ...
+                    [ mmap allocation B ]
+                    ...
+                    stack
+                \end{verbatim}
+                Each mapping can be independently destroyed with:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                munmap(p,size);
+                \end{cppcode}
+                \bigbreak \noindent 
+                That means an allocator can return an individual large allocation to the OS immediately, without needing it to be at the end of a contiguous heap.
+                \bigbreak \noindent 
+                With mmap, your allocator is managing independent memory mappings. With sbrk, your allocator is managing a single growing heap arena.
+                \bigbreak \noindent 
+                For example, if the user asks for 32 bytes, using mmap would be wasteful because mmap works at page granularity. The OS will usually map at least one page, commonly 4096 bytes. But if the user asks for 10 MB, using mmap is attractive because the allocator can later call munmap and return that whole region to the OS cleanly.
+                \bigbreak \noindent 
+                For mmap allocations, you still need metadata, but you must remember the exact mapping size, because munmap requires the address and length:
+                \bigbreak \noindent 
+                mmap is naturally page-oriented. If the page size is 4096, then an allocation using mmap generally rounds up to a multiple of the page size.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    if (size >= MMAP_THRESHOLD) {
+                        allocate_with_mmap(size);
+                    } else {
+                        allocate_from_heap_or_sbrk(size);
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                That is closer to how production allocators think: use internal arenas for normal allocations, and direct mappings for large blocks.
             \item \textbf{Process}: 
                 \begin{itemize}
                     \item OS gives allocator a large memory region.
@@ -2362,6 +2701,30 @@
                 \end{cppcode}
                 \bigbreak \noindent 
                 This assumes ALIGNMENT is a power of two, which it normally is for C object alignments.
+            \item \textbf{Total alignment}: The hardware is optimized around reading/writing fixed-size chunks that start at natural boundaries.
+                \bigbreak \noindent 
+                Modern CPUs often allow loads from arbitrary byte addresses, especially x86-64. However, internally, the memory system is still organized around aligned units.
+                \bigbreak \noindent 
+                Also, $C$ declares that accessing an object through a pointer that is not properly aligned for that type is undefined behavior.
+                \bigbreak \noindent 
+                We must ensure that not only the users request is aligned, but also the block header. Then, for an alignment $A$,
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    (alignup(sizeof(block_t)) + alignup(sizeof(request))) & (A-1) == 0
+                \end{cppcode}
+                \bigbreak \noindent 
+                Note that if $A$ divides \texttt{sizeof(block\_t)} and $A$ divides \texttt{sizeof(request)}, then $A$ divides the sum.
+                \bigbreak \noindent 
+                Suppose $A$ did not divide the size of the block, then the size of the block plus the requested space might not be properly aligned, even if we align up the requested space. So, we must round up both sizes.
+                \begin{itemize}
+                    \item The hardware wants data at convenient addresses.
+                    \item The ABI defines how objects are laid out and passed.
+                    \item The compiler assumes pointer types are correctly aligned.
+                    \item The C language makes misaligned typed access undefined behavior.
+                    \item Your allocator must satisfy those rules so that returned memory can safely hold arbitrary objects.
+                \end{itemize}
+                So, alignment is important.
+            \item \textbf{Over aligned objects}: In programming and computer science, an over-aligned object is a data structure or variable that requires a memory alignment boundary larger than the system's default or standard limit (known as max\_align\_t)
             \item \textbf{Free lists}: A simple allocator usually keeps a linked list of blocks. When malloc(64) is called, the allocator searches the list for a free block large enough.
                 \bigbreak \noindent 
                 when \texttt{free(p)} is called, the allocator marks the block as free.
@@ -2433,6 +2796,18 @@
                 \end{cppcode}
                 \bigbreak \noindent 
                 Recall that arithmetic on pointers moves the pointer using the size of the type pointed to.
+                \bigbreak \noindent 
+                \textbf{Note:} If we round up the block header size, then 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    return (void*)(ptr + 1)
+                \end{cppcode}
+                \bigbreak \noindent 
+                and similar operations is no longer valid, since there is now padding between the end of the header and the usable space. Instead, 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                return (void*)((char*)ptr + BLOCK_ALIGNMENT)
+                \end{cppcode}
             \item \textbf{Splitting blocks}: Suppose the allocator has this free block:
                 \begin{verbatim}
                     +-----------------------+
@@ -2463,6 +2838,33 @@
                 This is called \textbf{coalescing}.
                 \bigbreak \noindent 
                 Without coalescing, your allocator may fail large allocations even though there is enough total free memory.
+                \bigbreak \noindent 
+                \textbf{Note:} You usually coalesce when a block is freed.
+                \begin{enumerate}
+                    \item mark block as free
+                    \item try to merge with previous physical neighbor if free
+                    \item try to merge with next physical neighbor if free
+                    \item insert/adjust the resulting block in the free list
+                \end{enumerate}
+                Coalescing means merging physically adjacent free blocks, not merely adjacent nodes in the free list.
+            \item \textbf{Types of coalescing}: 
+                \begin{enumerate}
+                    \item \textbf{Immediate coalescing}: Coalesce every time the user frees a block.
+                    \item \textbf{Deferred coalescing}: Do not coalesce immediately. Instead, only coalesce later, usually when allocation fails.
+                \end{enumerate}
+            \item \textbf{Finding the next header}: While coalescing, we can perform pointer arithmetic on the current block to get the address of where the next block header would be. But, how do we know that there is truly a block header there?
+                \bigbreak \noindent 
+                If we track the position of the program break, then we can check that a header exists at that location if it is less than the program break.
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    char* next_address = (char*)block + HEADER_ALIGN + block->size;
+                    if (next_address >= program_break) {
+                        // no header exists at this location.
+                    }
+                \end{cppcode}
+            \item \textbf{Finding the previous header}: This is much harder. You cannot generally compute it from the current block alone, because the previous block may have any size.
+                \bigbreak \noindent 
+                An easy design choice is to store links in the Header struct for the previous and next Headers.
             \item \textbf{Fragmentation}: There are two major kinds.
                 \begin{enumerate}
                     \item \textbf{Internal fragmentation}: The allocator gives more memory than requested.
@@ -2539,10 +2941,161 @@
                     \item Coalescing adjacent free blocks
                 \end{enumerate}
 
+        \end{itemize}
+
+        \pagebreak 
+        \unsect{Libraries}
+        \begin{itemize}
+            \item \textbf{Static vs dynamic}: 
+                \begin{itemize}
+                    \item A static library is copied into the final executable at link time.
+                        \bigbreak \noindent 
+                        On Linux, static libraries usually have the extension:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        .a
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        You create one from object files using ar:
+                        \bigbreak \noindent 
+                        \begin{cppcode}
+                        ar rcs mylib.a file1.o file2.o ...
+                        \end{cppcode}
+                        \bigbreak \noindent 
+                        Then link it into a program:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        cc main.o -L. -lmylib -o bin
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Advantages:
+                        \begin{itemize}
+                            \item Easier deployment: one executable contains the library code.
+                            \item No runtime dependency on the .a file.
+                            \item Can be simpler for small projects.
+                        \end{itemize}
+                        Disadvantages:
+                        \begin{itemize}
+                            \item Larger executable.
+                            \item Updating the library requires relinking the program.
+                            \item Multiple programs using the same library each get their own copy of the code.
+                        \end{itemize}
+                    \item A dynamic/shared library is loaded separately, usually at program startup or sometimes later at runtime.
+                        \bigbreak \noindent 
+                        On Linux, shared libraries usually have the extension:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        .so
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        You build one like this:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                            gcc -fPIC -c mgrant.c -o mgrant.o
+                            gcc -fPIC -c mrel.c -o mrel.o
+                            gcc -fPIC -c free_list.c -o free_list.o
+                            gcc -fPIC -c block.c -o block.o
+
+                            gcc -shared -o libmayalloc.so mgrant.o mrel.o free_list.o block.o
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Then, link a program against it
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        cc main.o -L. -lmayalloc -o main
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        But unlike a static library, the executable does not contain the full library code. It records that it needs libmayalloc.so.
+                        \bigbreak \noindent 
+                        At runtime, the dynamic linker must find it.
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                            LD_LIBRARY_PATH=. ./main
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Advantages:
+                        \begin{itemize}
+                            \item Smaller executable.
+                            \item Multiple programs can share one loaded copy of the library code.
+                            \item Library can sometimes be updated without rebuilding the program.
+                            \item Required for mechanisms like LD\_PRELOAD.
+                        \end{itemize}
+                        Disadvantages:
+                        \begin{itemize}
+                            \item Runtime dependency: the .so must be installed or discoverable.
+                            \item Versioning can become more complicated.
+                            \item Slightly more moving parts during build and deployment.
+                        \end{itemize}
+                \end{itemize}
+                On Linux, put libraries in a directory the linker already searches.
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    /usr/lib
+                    /usr/local/lib
+                    /lib
+                \end{bashcode}
+                \bigbreak \noindent 
+                For your own manually installed library, prefer:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    /usr/local/lib
+                \end{bashcode}
+                \bigbreak \noindent 
+                Public headers usually go in:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    /usr/local/include
+                \end{bashcode}
+                \bigbreak \noindent 
+                Then you can compile with:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                gcc main.c -lmylib
+                \end{bashcode}
+                \bigbreak \noindent 
+                If using a shared library, refresh the runtime linker cache:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                sudo ldconfig
+                \end{bashcode}
+                \bigbreak \noindent 
+                So the usual layout is
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    /usr/local/include/may_alloc.h
+                    /usr/local/lib/libmayalloc.a
+                    /usr/local/lib/libmayalloc.so
+                \end{bashcode}
+            \item \textbf{Notes about static libraries}: When you compile a project into a static library, let the target be 
+                \bigbreak \noindent 
+                \begin{bashcode}
+                lib/libprojname.a
+                \end{bashcode}
+                \bigbreak \noindent 
+                This is convention.
+                \bigbreak \noindent 
+                Then, we can move the header and .a 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    sudo cp lib/libprojname.a /usr/local/lib
+                    sudo cp include/projname.h /usr/local/include
+                \end{cppcode}
+                \bigbreak \noindent 
+                Note that when we use the -l flag, we omit lib from the name (and the file extension .a), as these are both automatically added.
+                \bigbreak \noindent 
+                Also, for static libraries, order matters. Put the library after the object file:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                gcc obj/main.o -L/usr/local/lib -lmay -o bin/main
+                \end{bashcode}
+                \bigbreak \noindent 
+                For static libraries, the linker scans left-to-right. When it sees -lmay before obj/main.o, it has not yet seen the unresolved mgrant reference, so it does not pull mgrant from libmay.a.
+
 
 
 
         \end{itemize}
+
 
 
 
