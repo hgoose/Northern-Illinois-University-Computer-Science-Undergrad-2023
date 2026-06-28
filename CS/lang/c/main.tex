@@ -3189,6 +3189,105 @@
                     #2 append_node at list.c:30
                     #3 main at main.c:45
                 \end{cppcode}
+            \item \textbf{Valgrind}: Valgrind is an open-source instrumentation framework and tool suite used for debugging memory management errors, detecting memory leaks, and profiling program performance. It is primarily utilized for languages that require manual memory management, such as C and C++.
+                \bigbreak \noindent 
+                It runs your program inside an instrumented environment and watches memory operations. It can detect problems such as:
+                \bigbreak \noindent 
+                \begin{itemize}
+                    memory leaks
+                    invalid reads
+                    invalid writes
+                    use of uninitialized values
+                    double free
+                    invalid free
+                    mismatched allocation/deallocation
+                \end{itemize}
+                Run a program through valgrind
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    valgrind \
+                        --leak-check=full \
+                        --show-leak-kinds=all \
+                        --track-origins=yes \
+                        ./main
+                \end{bashcode}
+                \bigbreak \noindent 
+                Valgrind classifies leaks into several groups.
+                \begin{enumerate}
+                    \item \textbf{Definitely lost}:	Real leak. Your program has no pointer left to the allocation.
+                    \item \textbf{indirectly lost}:	Memory reachable only through leaked memory. Common with linked lists/trees.
+                    \item \textbf{possibly lost}:	Valgrind is unsure, often due to pointer arithmetic/interior pointers.
+                    \item \textbf{still reachable}:	Memory was not freed, but a pointer still exists at program exit. Often less serious.
+                \end{enumerate}
+                Valgrind is a framework, not just a leak checker. The tool most people use is Memcheck, but Valgrind also includes tools for profiling, heap analysis, cache behavior, and thread debugging. Valgrind can:
+                \begin{itemize}
+                    \item \textbf{Detect invalid memory access}: Valgrind can detect reads and writes outside valid memory.    
+                    \item \textbf{Detect use-after-free}: It will usually show both where the memory was originally allocated and where it was freed.
+                    \item \textbf{Detect double-free and invalid free}:
+                    \item \textbf{Detect uninitialized memory usage}: 
+                    \item \textbf{Profile heap usage with Massif}: Valgrind’s Massif tool shows how your heap grows over time.
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                           valgrind --tool=massif ./bin
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Then inspect the output:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        ms_print massif.out.<pid>
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        This helps answer questions like:
+                        \begin{itemize}
+                            \item Where is my program using the most heap memory?
+                            \item Which allocations dominate memory usage?
+                            \item Does memory usage keep growing over time?
+                        \end{itemize}
+                    \item \textbf{Profile function calls with Callgrind}: Valgrind’s Callgrind tool profiles where your program spends time.
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        valgrind --tool=callgrind ./bin/angel
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Then inspect with:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        callgrind_annotate callgrind.out.<pid>
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Or use a graphical viewer:
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        kcachegrind callgrind.out.<pid>
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        This helps answer:
+                        \begin{itemize}
+                            \item Which functions are called the most?
+                            \item Where is CPU time being spent?
+                            \item What call paths are expensive?
+                        \end{itemize}
+                    \item \textbf{Analyze cache behavior with Cachegrind}: Cachegrind simulates CPU cache behavior and branch prediction.
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                            valgrind --tool=cachegrind ./bin/angel
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        This is useful for performance-heavy code, especially if you care about cache locality, array traversal, data layout, or allocator performance.
+                    \item \textbf{Detect threading errors}: Valgrind includes tools for concurrency bugs.
+                        \bigbreak \noindent 
+                        \begin{bashcode}
+                        valgrind --tool=helgrind ./program
+                        \end{bashcode}
+                        \bigbreak \noindent 
+                        Detects issues such as 
+                        \begin{itemize}
+                            \item data races
+                            \item incorrect pthread mutex usage
+                            \item lock ordering problems
+                        \end{itemize}
+                \end{itemize}
+
 
 
 
