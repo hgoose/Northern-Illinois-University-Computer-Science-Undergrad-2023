@@ -1504,7 +1504,7 @@
             int rand(void);
             \end{cppcode}
             \bigbreak \noindent 
-            Returns a pseudo-random integer in the range 0 to RAND_MAX.
+            Returns a pseudo-random integer in the range 0 to RAND\_MAX.
         \item \textbf{srand}
             \bigbreak \noindent 
             \begin{cppcode}
@@ -2015,7 +2015,7 @@
             \item \textbf{\_\_auto\_type}: \_\_auto\_type is a GNU C compiler extension supported by GCC and Clang that enables automatic type inference in the C programming language. It allows the compiler to automatically deduce the data type of a local variable from its initialization expression, providing functionality similar to the auto keyword in C++11
                 \begin{itemize}
                     \item \textbf{Immediate Initialization Required:} You cannot declare a variable with \_\_auto\_type without assigning a value immediately.
-                    \item \textbf{Plain Identifiers Only:} The declarator must be a single, plain variable name. You cannot mix it with pointer or array syntax during declaration (e.g., \_\_auto\_type *ptr = &x; is syntax error).
+                    \item \textbf{Plain Identifiers Only:} The declarator must be a single, plain variable name. You cannot mix it with pointer or array syntax during declaration (e.g., \_\_auto\_type *ptr = \&x; is syntax error).
                     \item \textbf{Single Variable Limit:} You can only declare one variable per statement
                 \end{itemize}
                 Before \_\_auto\_type, type-generic macros relied on the typeof extension. However, typeof evaluates expressions with side effects twice. Using \_\_auto\_type safely captures values exactly once, preventing double-evaluation bugs:
@@ -2137,7 +2137,7 @@
         \pagebreak 
         \unsect{Memory concepts}
         \begin{itemize}
-                        \item \textbf{uintptr\_t, intptr\_t}: uintptr\_t and intptr\_t are integer types from:
+            \item \textbf{uintptr\_t, intptr\_t}: uintptr\_t and intptr\_t are integer types from:
                 \bigbreak \noindent 
                 \begin{cppcode}
                     #include <stdint.h>
@@ -2227,11 +2227,11 @@
                         &+ \lambda_{\log_{2}(A)}2^{\log_{2}(A)} + \lambda_{\log_{2}(A)-1}2^{\log_{2}(A)-1} \\
                         &+\lambda_{\log_{2}(A)-2}2^{\log_{2}(A)-2} + \ldots + \lambda_{1}2^{1} + \lambda_{0}2^{0}
                 .\end{align*}
-                Note that $\lambda_{i} \in \left\{0,1\right\}$. If $a$ has alignment $A$, then $a$ has no remainder when divided by $A$. Observe that
+                Note that $\lambda_{i} \in \left\{0,1\right\}$. Observe that
                 \begin{align*}
                     A = \lambda_{\log_{2}(A)}2^{\log_{2}(A)}
                 \end{align*}
-                when $\lambda_{\log_{2}(A)} = 1$, and all terms that come before this term are divisible by $A$. All terms that come before this term are in the form
+                when $\lambda_{\log_{2}(A)} = 1$. Further observe that all terms that come before this term are divisible by $A$. All terms that come before this term are in the form
                 \begin{align*}
                     \lambda_{\log_{2}(A)+k}2^{\log_{2}(A) + k}
                 .\end{align*}
@@ -2261,7 +2261,7 @@
                 ~(A-1) 
                 \end{cppcode}
                 \bigbreak \noindent 
-                This is the number with all terms greater than or equal to $2^{\log_{2}{(A)}}$ non zero, and all terms less than $2^{\log_{2}{(A)}}$ zero. In essence, all bits left of  and including the $\log_{2}{(A)}$th one, and all bits to the right zero. For example, take $A = 16$, then 
+                This is the number with all terms greater than or equal to $2^{\log_{2}{(A)}}$ non zero, and all terms less than $2^{\log_{2}{(A)}}$ zero. In essence, all bits left of  and including the $(\log_{2}{(A)}+1)$th one, and all bits to the right zero. For example, take $A = 16$, then 
                 \begin{align*}
                     \sim(A - 1) = \sim(15) = 0b1111\ldots11110000
                 .\end{align*}
@@ -2301,6 +2301,27 @@
                 \end{cppcode}
                 \bigbreak \noindent 
                 That may produce a pointer that does not point to a valid object. Dereferencing it would be undefined behavior unless you know exactly what memory layout you are working with.
+            \item \textbf{Use calloc to allocate struct memory}: calloc is commonly used to allocate user-defined structures, especially when you want the allocated memory initialized to zero. 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    typedef struct Node {
+                        int value;
+                        struct Node *next;
+                    } Node;
+
+                    Node *node = calloc(1, sizeof(Node));
+
+                    if (node == NULL) {
+                        /* allocation failed */
+                    }
+                \end{cppcode}
+                \bigbreak \noindent 
+                This allocates enough memory for one Node and sets all bytes to zero. In practice, this means:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    node->value == 0;
+                    node->next == NULL;   /* on normal hosted C implementations */
+                \end{cppcode}
 
         \end{itemize}
 
@@ -3090,6 +3111,84 @@
                 \end{bashcode}
                 \bigbreak \noindent 
                 For static libraries, the linker scans left-to-right. When it sees -lmay before obj/main.o, it has not yet seen the unresolved mgrant reference, so it does not pull mgrant from libmay.a.
+
+        \end{itemize}
+
+        \pagebreak 
+        \unsect{Finding memory leaks}
+        \begin{itemize}
+            \item \textbf{gcc AddressSanitizer (ASan)}: Passing
+                \bigbreak \noindent 
+                \begin{bashcode}
+                -fsanitize=address
+                \end{bashcode}
+                \bigbreak \noindent 
+                to gcc enables AddressSanitizer, usually abbreviated ASan. It instruments your program so that, at runtime, it can detect memory errors such as:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    heap-buffer-overflow
+                    stack-buffer-overflow
+                    use-after-free
+                    use-after-return
+                    double-free
+                    invalid free
+                \end{cppcode}
+                \bigbreak \noindent 
+                For example, 
+                \bigbreak \noindent 
+                \begin{bashcode}
+                    gcc -O0 -fsanitize=address main.c -o main
+                \end{bashcode}
+                \bigbreak \noindent 
+                If your program writes past the end of an allocation:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    int *p = malloc(sizeof(int) * 4);
+                    p[4] = 10;   // invalid: valid indexes are 0..3
+                \end{cppcode}
+                \bigbreak \noindent 
+                ASan will usually stop the program and print a stack trace showing where the invalid access happened.
+            \item \textbf{gcc LeakSanitizer (LSan)}: 
+                \bigbreak \noindent 
+                \begin{cppcode}
+                -fsanitize=leak
+                \end{cppcode}
+                \bigbreak \noindent 
+                This enables LeakSanitizer, usually abbreviated LSan. It checks whether heap allocations were never freed before the program exited.
+                \bigbreak \noindent 
+                For example,
+                \bigbreak \noindent 
+                \begin{bashcode}
+                gcc -O0 -fsanitize=leak main.c -o main
+                \end{bashcode}
+                \bigbreak \noindent 
+                Often you combine the two:
+                \bigbreak \noindent 
+                \begin{bashcode}
+                gcc -00 -fsanitize=leak,address main.c -o main
+                \end{bashcode}
+                \bigbreak \noindent 
+                \begin{bashcode}
+                -fno-omit-frame-pointer
+                \end{bashcode}
+                \bigbreak \noindent 
+                This tells the compiler: Do not remove the frame pointer register from generated function calls.
+                \bigbreak \noindent 
+                The frame pointer helps debugging tools reconstruct the call stack accurately. Without it, optimized code may be faster, but stack traces can become less reliable or harder to read. With it, tools like AddressSanitizer, LeakSanitizer, Valgrind, gdb, and profilers can usually show cleaner backtraces.
+                \bigbreak \noindent 
+                \begin{bashcode}
+                gcc -g -O0 -fsanitize=address,leak -fno-omit-frame-pointer main.c -o main
+                \end{bashcode}
+                \bigbreak \noindent 
+                This helps produce output like:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                allocated from:
+                    #0 malloc
+                    #1 make_node at list.c:12
+                    #2 append_node at list.c:30
+                    #3 main at main.c:45
+                \end{cppcode}
 
 
 

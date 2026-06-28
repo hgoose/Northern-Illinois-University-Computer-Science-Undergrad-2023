@@ -1906,6 +1906,7 @@
     \subsection{Display}
     \begin{itemize}
         \item \textbf{Getting connection to the X server}: Simply call \textbf{XOpenDisplay}
+            \bigbreak \noindent 
             \begin{cppcode}
                 Display *XOpenDisplay(char* display_name)
             \end{cppcode}
@@ -1928,6 +1929,7 @@
             }
             \end{cppcode}
         \item \textbf{Freeing resources allocated by XOpenDisplay}: For this, we use
+            \bigbreak \noindent 
             \begin{cppcode}
                 int XCloseDisplay(Display* display)
             \end{cppcode}
@@ -1952,6 +1954,7 @@
     \subsection{Errors}
     \begin{itemize}
         \item \textbf{Attaching error handler}: 
+            \bigbreak \noindent 
             \begin{cppcode}
                 int (*XSetErrorHandler(handler))(Display*, XErrorEvent*)
                     int (*handler)(Display *, XErrorEvent *)
@@ -1984,6 +1987,28 @@
     \end{itemize}
 
     \pagebreak 
+    \subsection{Flushing and Syncing}
+    \begin{itemize}
+        \begin{cppcode}
+            XFlush(Display* display);
+        \end{cppcode}
+        \bigbreak \noindent
+        Flushes the output buffer, forcing all pending requests for the display connection to be sent to the X server.
+        \begin{itemize}
+            \item \textbf{Possible errors}: None documented for the call itself. Errors from previously buffered requests may be reported after the flush.
+        \end{itemize}
+        \begin{cppcode}
+            XSync(Display* display, Bool discard);
+        \end{cppcode}
+        \bigbreak \noindent
+        Flushes the output buffer and waits until all requests have been processed by the X server.
+        \begin{itemize}
+            \item \textbf{Possible errors}: None documented for the call itself. Errors from previously buffered requests may be handled by the installed error handler.
+        \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
     \subsection{Root window}
     \begin{itemize}
         \item \textbf{Getting root window}: 
@@ -2003,6 +2028,7 @@
                 Window root = XDefaultRootWindow(dp);
             \end{bashcode}
         \item \textbf{Selecting events on root window}:
+            \bigbreak \noindent 
             \begin{cppcode}
                 XSelectInput(Display* display, Window w, long event_mask)
             \end{cppcode}
@@ -2017,9 +2043,489 @@
     \end{itemize}
 
     \pagebreak 
-    \subsection{Scanning existing windows}
+    \subsection{The client list}
     \begin{itemize}
-        \item \textbf{XQueryTree}
+        \item \textbf{Client list}: Our window manager will manage a linked list of Clients. So, we need a Client structure. A simple one is 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct Client {
+                    Window win;
+                    int x,y;
+                    int w,h;
+
+                    XWindowAttributes* attrs;
+
+                    struct Client* next;
+                } Client;
+            \end{cppcode}
+            \bigbreak \noindent 
+            We shall make a linked list of managed clients, each Client has a \texttt{next} field to make this possible.
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Scanning and managing existing windows}
+    \begin{itemize}
+        \item \textbf{XQueryTree}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Status XQueryTree(Display* display, Window w, Window* root_return, Window* parent_return, Window** children_return, unsigned int* nchildren_return)
+            \end{cppcode}
+            \bigbreak \noindent
+            Queries the window hierarchy for the specified window and returns its root, parent, children, and number of children.
+            \begin{itemize}
+                \item root\_return Returns the root window.
+                \item parent\_return Returns the parent window.
+                \item children\_return Returns the list of children.
+                \item nchildren\_return Returns the number of children.
+            \end{itemize}
+            \begin{itemize}
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textbf{BadWindow}
+                    \end{itemize}
+                \item \textbf{Status identifiers}:
+                    \begin{itemize}
+                        \item \textbf{0}: Failure.
+                        \item \textbf{Nonzero}: Success.
+                    \end{itemize}
+            \end{itemize}
+        \item \textbf{XSelectInput}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XSelectInput(Display* display, Window w, long event_mask)
+            \end{cppcode}
+            \bigbreak \noindent
+            Selects which input events the client wants to receive for the specified window.
+            \begin{itemize}
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \texttt{BadAccess}
+                        \item \texttt{BadWindow}
+                    \end{itemize}
+            \end{itemize}
+
+        \item \textbf{Scanning existing windows}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+            Window root_return;
+            Window parent_return
+            Window* children_return;
+            unsigned int nchildren_return;
+
+            Status st = XQueryTree(dp, w, &root_return, &parent_return, &children_return, &nchildren_return);
+
+            // Failure branch
+            if (st == 0) {
+                // Print error
+                ...
+                XCloseDisplay(dp);
+                exit(1);
+            }
+            \end{cppcode}
+        \item \textbf{Managing existing windows}:
+            \begin{enumerate}
+                \item \textbf{Get attributes}: Get the attributes of each children in the children list. Don't manage windows with \texttt{override\_redirect = true} and don't manage unmapped windows.
+                \item \textbf{Manage windows}: Next, we can call some function
+                    \bigbreak \noindent 
+                    \begin{cppcode}
+                    manage(w)
+                    \end{cppcode}
+                    \bigbreak \noindent 
+                    Which will 
+                    \begin{enumerate}
+                        \item Create client instance for the window
+                        \item Select input on the client
+                        \item Set the fields of the client in the client list (including attributes) 
+                        \item Add client to internal Client list
+                    \end{enumerate}
+                \item \textbf{Call layout function}: Next, we can call our layout function to tile each window.
+                \item \textbf{Focus}: After tiling each window, we should focus one of them
+            \end{enumerate}
+        \item \textbf{Event mask for a client window}
+            \begin{itemize}
+                \item \textbf{StructureNotifyMask}: Selects structure events on the selected window itself.
+                \item \textbf{EnterWindowMask}: Selects \textbf{EnterNotify} events.
+                \item \textbf{LeaveWindowMask}: Selects \textbf{LeaveNotify} events.
+                \item \textbf{PropertyChangeMask}: Selects \textbf{PropertyNotify} events.
+                \item \textbf{FocusChangeMask}: Selects \textbf{FocusIn} and \textbf{FocusOut} events.
+                \item \textbf{ButtonPressMask}: Selects \textbf{ButtonPress} events.
+                \item \textbf{ButtonReleaseMask}: Selects \textbf{ButtonRelease} events.
+                \item \textbf{PointerMotionMask}: Selects pointer motion events.
+            \end{itemize}
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Window information}
+    \begin{itemize}
+        \item \textbf{XSetWindowAttributes struct}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* Window attribute value mask bits */
+                #define CWBackPixmap        (1L<<0)
+                #define CWBackPixel         (1L<<1)
+                #define CWBorderPixmap      (1L<<2)
+                #define CWBorderPixel       (1L<<3)
+                #define CWBitGravity        (1L<<4)
+                #define CWWinGravity        (1L<<5)
+                #define CWBackingStore      (1L<<6)
+                #define CWBackingPlanes     (1L<<7)
+                #define CWBackingPixel      (1L<<8)
+                #define CWOverrideRedirect  (1L<<9)
+                #define CWSaveUnder         (1L<<10)
+                #define CWEventMask         (1L<<11)
+                #define CWDontPropagate     (1L<<12)
+                #define CWColormap          (1L<<13)
+                #define CWCursor            (1L<<14)
+            \end{cppcode}
+            \begin{cppcode}
+                typedef struct {
+                    Pixmap background_pixmap;       /* background, None, or ParentRelative */
+                    unsigned long background_pixel; /* background pixel */
+                    Pixmap border_pixmap;           /* border of the window or CopyFromParent */
+                    unsigned long border_pixel;     /* border pixel value */
+                    int bit_gravity;                /* one of bit gravity values */
+                    int win_gravity;                /* one of the window gravity values */
+                    int backing_store;              /* NotUseful, WhenMapped, Always */
+                    unsigned long backing_planes;   /* planes to be preserved if possible */
+                    unsigned long backing_pixel;    /* value to use in restoring planes */
+                    Bool save_under;                /* should bits under be saved? (popups) */
+                    long event_mask;                /* set of events that should be saved */
+                    long do_not_propagate_mask;     /* set of events that should not propagate */
+                    Bool override_redirect;         /* boolean value for override_redirect */
+                    Colormap colormap;              /* color map to be associated with window */
+                    Cursor cursor;                  /* cursor to be displayed (or None) */
+                } XSetWindowAttributes;
+            \end{cppcode}
+            \bigbreak \noindent 
+            The struct above is used with 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Window XCreateWindow(
+                    Display* display, 
+                    Window parent,
+                    int x, y, 
+                    unsigned int width, height, 
+                    unsigned int border_width,
+                    int depth,
+                    unsigned int class,
+                    Visual* visual,
+                    unsigned long valuemask,
+                    XSetWindowAttributes* attributes
+                )
+            \end{cppcode}
+            \bigbreak \noindent 
+            Creates a new window with explicitly specified geometry, depth, class, visual, and window attributes.
+            \begin{itemize}
+                \item \textbf{display}: Specifies the connection to the X server.
+                \item \textbf{parent}: Specifies the parent window.
+                \item \textbf{$\mathbf{x}, \mathbf{y}$}: Specify the $x$ and $y$ coordinates, which are the top-left outside corner of the created window’s borders and are relative to the inside of the parent window’s borders.
+                \item \textbf{width, height}: Specify the width and height, which are the created window’s inside dimensions and do not include the created window’s borders. The dimensions must be nonzero, or a \textbf{BadValue} error results.
+                \item \textbf{border\_width}: Specifies the width of the created window’s border in pixels.
+                \item \textbf{depth}: Specifies the window’s depth. A depth of \textbf{CopyFromParent} means the depth is taken from the parent.
+                \item \textbf{class}: Specifies the created window’s class. You can pass \textbf{InputOutput,} \textbf{InputOnly,} or \textbf{CopyFromParent.} A class of \textbf{CopyFromParent} means the class is taken from the parent.
+                \item \textbf{visual}: Specifies the visual type. A visual of \textbf{CopyFromParent} means the visual type is taken from the parent.
+                \item \textbf{valuemask}: Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced.
+                \item \textbf{attributes}: Specifies the structure from which the values (as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure.
+            \end{itemize}
+            \textbf{Possible errors:}
+            \begin{itemize}
+                \item \textbf{BadAlloc}
+                \item \textbf{BadColor}
+                \item \textbf{BadCursor}
+                \item \textbf{BadMatch}
+                \item \textbf{BadPixmap}
+                \item \textbf{BadValue}
+                \item \textbf{BadWindow}
+            \end{itemize}
+            The struct is also used with
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XChangeWindowAttributes(Display* display, Window w, unsigned long valuemask, XSetWindowAttributes* attributes)
+            \end{cppcode}
+            \bigbreak \noindent
+            Changes selected attributes of an existing window.
+            \begin{itemize}
+                \item valuemask Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced. The values and restrictions are the same as for XCreateWindow.
+                \item attributes Specifies the structure from which the values(as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure
+            \end{itemize}
+        \item \textbf{XWindowChanges struct}: 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                /* Configure window value mask bits */
+                #define CWX                 (1<<0)
+                #define CWY                 (1<<1)
+                #define CWWidth             (1<<2)
+                #define CWHeight            (1<<3)
+                #define CWBorderWidth       (1<<4)
+                #define CWSibling           (1<<5)
+                #define CWStackMode         (1<<6)
+
+                /* Values */
+
+                typedef struct {
+                    int x, y;
+                    int width, height;
+                    int border_width;
+                    Window sibling;
+                    int stack_mode;
+                } XWindowChanges;
+            \end{cppcode}
+            \bigbreak \noindent 
+            Used with
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values)
+            \end{cppcode}
+            \bigbreak \noindent
+            Changes the size, position, border width, or stacking order of the specified window.
+            \begin{itemize}
+                \item value\_mask Specifies which values are to be set using information in the values structure. This mask is the bitwise inclusive OR of the valid configure window values bits.
+                \item values Specifies the \textbf{XWindowChanges} structure.
+            \end{itemize}
+            \bigbreak \noindent
+            \textbf{Possible errors:}
+            \begin{itemize}
+                \item \textbf{BadMatch}
+                \item \textbf{BadValue}
+                \item \textbf{BadWindow}
+            \end{itemize}
+            and the function
+            \bigbreak \noindent 
+            \begin{cppcode}
+                Status XReconfigureWMWindow(Display* display, Window w, int screen_number, unsigned int value_mask, XWindowChanges* values)
+            \end{cppcode}
+            \bigbreak \noindent
+            Reconfigures a top-level window through the window manager when the window is managed.
+            \begin{itemize}
+                \item display Specifies the connection to the X server.
+                \item $w$ Specifies the window.
+                \item screen\_number Specifies the appropriate screen number on the host server.
+                \item value\_mask Specifies which values are to be set using information in the values structure.
+                \item This mask is the bitwise inclusive OR of the valid configure window values bits.
+                \item values Specifies the XWindowChanges structure.
+            \end{itemize}
+            \begin{itemize}
+                \item \textbf{Possible errors}: \texttt{BadValue}, \texttt{BadWindow}.
+                \item \textbf{Possible Status identifiers}: \texttt{True}, \texttt{False}.
+            \end{itemize}
+        \item \textbf{XWindowAttributes struct}:             
+            \bigbreak \noindent 
+            \begin{cppcode}
+                typedef struct {
+                    int x, y;                           /* location of window */
+                    int width, height;                  /* width and height of window */
+                    int border_width;                   /* border width of window */
+                    int depth;                          /* depth of window */
+                    Visual *visual;                     /* the associated visual structure */
+                    Window root;                        /* root of screen containing window */
+                    int class;                          /* InputOutput, InputOnly*/
+                    int bit_gravity;                    /* one of the bit gravity values */
+                    int win_gravity;                    /* one of the window gravity values */
+                    int backing_store;                  /* NotUseful, WhenMapped, Always */
+                    unsigned long backing_planes;       /* planes to be preserved if possible */
+                    unsigned long backing_pixel;        /* value to be used when restoring planes */
+                    Bool save_under;                    /* boolean, should bits under be saved? */
+                    Colormap colormap;                  /* color map to be associated with window */
+                    Bool map_installed;                 /* boolean, is color map currently installed*/
+                    int map_state;                      /* IsUnmapped, IsUnviewable, IsViewable */
+                    long all_event_masks;               /* set of events all people have interest in*/
+                    long your_event_mask;               /* my event mask */
+                    long do_not_propagate_mask;         /* set of events that should not propagate */
+                    Bool override_redirect;             /* boolean value for override-redirect */
+                    Screen *screen;                     /* back pointer to correct screen */
+                } XWindowAttributes;
+                \end{cppcode}
+                \bigbreak \noindent 
+                Used with the function
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Status XGetWindowAttributes(display, w, XWindowAttributes* window_attributes_return)
+                \end{cppcode}
+                \bigbreak \noindent
+                Retrieves the current attributes of the specified window and stores them in an XWindowAttributes structure.
+                \begin{itemize}
+                    \item \textbf{window\_attributes\_return}: Returns the specified window’s attributes in the XWindowAttributes structure.
+                \end{itemize}
+                \begin{itemize}
+                    \item \textbf{Possible errors}:
+                        \begin{itemize}
+                            \item \textbf{BadDrawable}
+                            \item \textbf{BadWindow}
+                        \end{itemize}
+                    \item \textbf{Status identifiers}:
+                        \begin{itemize}
+                            \item \textbf{0}: Failure.
+                            \item \textbf{Nonzero}: Success.
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{Getting name of a window}:
+                \bigbreak \noindent 
+                \begin{cppcode}
+                    Status XFetchName(Display* display, Window w, char** window_name_return)
+                \end{cppcode}
+                \bigbreak \noindent
+                Fetches the simple string name associated with the specified window.
+                \begin{itemize}
+                    \item display Specifies the connection to the X server.
+                    \item $w$ Specifies the window.
+                    \item window\_name\_return Returns the window name.
+                \end{itemize}
+                \begin{itemize}
+                    \item \textbf{Possible errors}: \texttt{BadWindow}.
+                    \item \textbf{Possible Status identifiers}: \texttt{True}, \texttt{False}.
+                \end{itemize}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Screens}
+    \begin{itemize}
+        \item \textbf{Getting the screen count for a display}
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ScreenCount(Display* display)
+                int XScreenCount(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Returns the number of screens attached to the display.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textit{None}: This function does not generate X protocol errors.
+                    \end{itemize}
+            \end{itemize}
+            \textbf{Note:} Screens in xlib are zero-indexed, so for $n$ screens on a display the valid indices are
+            \begin{align*}
+                0,1,2,\ldots,n-1
+            .\end{align*}
+        \item \textbf{Default screen}: In Xlib, the default screen is the screen number Xlib uses when you do not explicitly choose a screen.
+            \bigbreak \noindent 
+            Gets its number with 
+            \bigbreak \noindent 
+            \begin{cppcode}
+                DefaultScreen(Display* display)
+                int XDefaultScreen(Display* display)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Returns the default screen number for the display.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textit{None}: This function does not generate X protocol errors.
+                    \end{itemize}
+            \end{itemize}
+            The default screen is usually screen 0. On display zero, the display string would be $:0.0$
+            \bigbreak \noindent 
+            Get a pointer to the default screen structure with
+            \bigbreak \noindent 
+            \begin{cppcode}
+                \begin{cppcode}
+                    DefaultScreenOfDisplay(Display* display)
+                    Screen* XDefaultScreenOfDisplay(Display* display)
+                \end{cppcode}
+                \begin{itemize}
+                    \item \textbf{Description}: Returns a pointer to the default \texttt{Screen} structure for the display.
+                    \item \textbf{Possible errors}:
+                        \begin{itemize}
+                            \item \textit{None}: This function does not generate X protocol errors.
+                        \end{itemize}
+                \end{itemize}
+            \end{cppcode}
+        \item \textbf{Any screen}: Get a pointer to any screens structure with
+            \bigbreak \noindent 
+            \begin{cppcode}
+                ScreenOfDisplay(Display* display, int screen_number)
+                Screen* XScreenOfDisplay(Display* display, int screen_number)
+            \end{cppcode}
+            \begin{itemize}
+                \item \textbf{Description}: Returns the \texttt{Screen} structure for the specified screen number.
+                \item \textbf{Possible errors}:
+                    \begin{itemize}
+                        \item \textit{None}: This function does not generate X protocol errors.
+                    \end{itemize}
+            \end{itemize}
+
+
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Manipulating windows} 
+    \begin{itemize}
+        \item \textbf{Manipulating windows}:
+            \begin{cppcode}
+                XChangeWindowAttributes(Display* display, Window w, unsigned long valuemask, XSetWindowAttributes* attributes)
+            \end{cppcode}
+            \bigbreak \noindent
+            Changes selected attributes of an existing window.
+            \begin{itemize}
+                \item valuemask Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced. The values and restrictions are the same as for XCreateWindow.
+                \item attributes Specifies the structure from which the values(as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure
+            \end{itemize}
+            \bigbreak \noindent
+            \textbf{Possible errors:}
+            \begin{itemize}
+                \item \textbf{BadAccess}
+                \item \textbf{BadColor}
+                \item \textbf{BadCursor}
+                \item \textbf{BadMatch}
+                \item \textbf{BadPixmap}
+                \item \textbf{BadValue}
+                \item \textbf{BadWindow}
+            \end{itemize}
+        \item \textbf{Reconfigure window}:
+            \bigbreak \noindent 
+            \begin{cppcode}
+                XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values)
+            \end{cppcode}
+            \bigbreak \noindent
+            Changes the size, position, border width, or stacking order of the specified window.
+            \begin{itemize}
+                \item value\_mask Specifies which values are to be set using information in the values structure. This mask is the bitwise inclusive OR of the valid configure window values bits.
+                \item values Specifies the \textbf{XWindowChanges} structure.
+            \end{itemize}
+            \bigbreak \noindent
+            \textbf{Possible errors:}
+            \begin{itemize}
+                \item \textbf{BadMatch}
+                \item \textbf{BadValue}
+                \item \textbf{BadWindow}
+            \end{itemize}
+       
+
+    \end{itemize}
+
+    \pagebreak 
+    \subsection{Geometry}
+    \begin{itemize}
+        \item \textbf{Screen width and height}: 
+            \bigbreak \noindent 
+        \begin{cppcode}
+            DisplayWidth(Display* display, int screen_number)
+            int XDisplayWidth(Display* display, int screen_number)
+        \end{cppcode}
+        \begin{itemize}
+            \item \textbf{Description}: Returns the width of the specified screen in pixels.
+            \item \textbf{Possible errors}:
+                \begin{itemize}
+                    \item \textit{None}: This function does not generate X protocol errors.
+                \end{itemize}
+        \end{itemize}
+        \bigbreak \noindent 
+        \begin{cppcode}
+            DisplayHeight(Display* display, int screen_number)
+            int XDisplayHeight(Display* display, int screen_number)
+        \end{cppcode}
+        \begin{itemize}
+            \item \textbf{Description}: Returns the height of the specified screen in pixels.
+            \item \textbf{Possible errors}:
+                \begin{itemize}
+                    \item \textit{None}: This function does not generate X protocol errors.
+                \end{itemize}
+        \end{itemize}
+
+
     \end{itemize}
 
     \pagebreak 
